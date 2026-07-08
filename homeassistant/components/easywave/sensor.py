@@ -200,9 +200,11 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
             # in the state machine before the write.
             self.hass.loop.call_soon(_on_ha_started)
         else:
-            # async_listen_once removes itself after firing — do NOT also wrap
-            # with async_on_remove or HA raises ValueError on the double-remove.
-            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _on_ha_started)
+            self.async_on_remove(
+                self.hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STARTED, _on_ha_started
+                )
+            )
 
     @override
     @property

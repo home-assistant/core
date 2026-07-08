@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from homeassistant.components.easywave.const import DOMAIN, EVENT_EASYWAVE
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import async_setup_easywave_entry, mock_easywave_transceiver
@@ -91,3 +91,23 @@ async def test_gateway_sensor_fires_connected_event_on_transition(
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_gateway_sensor_waits_for_homeassistant_started(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Gateway sensor defers its first write until Home Assistant has started."""
+    object.__setattr__(hass, "state", CoreState.not_running)
+    await async_setup_easywave_entry(hass, mock_config_entry)
+
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "sensor", DOMAIN, f"{mock_config_entry.entry_id}_rx11_gateway"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "unknown"
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "connected"

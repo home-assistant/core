@@ -1,15 +1,15 @@
 """Device storage helpers for Easywave hub config entries."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
 
 from .const import CONF_DEVICE_DATA, CONF_DEVICE_TITLE
 from .entity import EasywaveDeviceEntry
 
-type EasywaveConfigEntry = ConfigEntry[Any]
+if TYPE_CHECKING:
+    from . import EasywaveConfigEntry
 
 
 def _device_from_stored(stored: Mapping[str, Any]) -> EasywaveDeviceEntry:

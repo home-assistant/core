@@ -336,6 +336,95 @@ async def test_get_triggers_returns_empty_for_unconfigured_easywave_device(
     assert [trigger for trigger in triggers if trigger["domain"] == DOMAIN] == []
 
 
+async def test_get_triggers_resolves_entry_via_gateway_parent(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Transmitters linked only via via_device still expose device triggers."""
+    entry = _make_gateway_entry(
+        _transmitter_device_record(button_count=1, title="Stored Device Transmitter")
+    )
+    await async_setup_easywave_entry(hass, entry)
+    transmitter = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    )
+    assert transmitter is not None
+    device_registry.async_remove_device(transmitter.id)
+
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        name="Gateway",
+    )
+    child = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)},
+        via_device=(DOMAIN, entry.entry_id),
+        name="Transmitter",
+    )
+
+    triggers = await device_trigger.async_get_triggers(hass, child.id)
+
+    assert any(trigger[CONF_TYPE] == EVENT_TYPE_BUTTON_PRESS for trigger in triggers)
+
+
+async def test_get_triggers_resolves_stored_device_without_config_entry_link(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Stored device options resolve triggers without a config entry device link."""
+    entry = _make_gateway_entry(
+        _transmitter_device_record(button_count=1, title="Stored Device Transmitter")
+    )
+    await async_setup_easywave_entry(hass, entry)
+    transmitter = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    )
+    assert transmitter is not None
+    device_registry.async_remove_device(transmitter.id)
+
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    orphan = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)},
+        name="Transmitter",
+    )
+
+    triggers = await device_trigger.async_get_triggers(hass, orphan.id)
+
+    assert any(trigger[CONF_TYPE] == EVENT_TYPE_BUTTON_PRESS for trigger in triggers)
+
+
+async def test_get_gateway_triggers_without_config_entry_link(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Gateway identifiers resolve triggers without a direct config entry link."""
+    entry = _make_gateway_entry()
+    await async_setup_easywave_entry(hass, entry)
+    gateway = device_registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    assert gateway is not None
+    device_registry.async_remove_device(gateway.id)
+
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        name="Gateway",
+    )
+
+    triggers = await device_trigger.async_get_triggers(hass, device.id)
+
+    assert {trigger[CONF_TYPE] for trigger in triggers} == {
+        EVENT_TYPE_GATEWAY_CONNECTED,
+        EVENT_TYPE_GATEWAY_DISCONNECTED,
+    }
+
+
 async def test_get_triggers_returns_empty_for_missing_device(
     hass: HomeAssistant,
 ) -> None:

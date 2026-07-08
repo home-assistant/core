@@ -7,7 +7,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
-from homeassistant.loader import async_get_integration
 
 from .const import (
     CONF_DEVICE_PATH,
@@ -84,9 +83,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
     update_gateway_device(hass, entry, transceiver)
     # Reload when devices are added or removed via the subentry flow.
     entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
-    integration = await async_get_integration(hass, DOMAIN)
-    await integration.async_get_platform("device_trigger")
-    await integration.async_get_platform("trigger")
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True
 

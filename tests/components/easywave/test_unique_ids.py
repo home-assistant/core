@@ -1,67 +1,85 @@
 """Tests to ensure all Easywave entities have valid unique IDs."""
 
-from unittest.mock import MagicMock
+from homeassistant.components.easywave.const import DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from homeassistant.components.easywave.const import (
-    CONF_BUTTON_COUNT,
-    CONF_ENTRY_TYPE,
-    CONF_GROUPING_MODE,
-    CONF_OPERATING_TYPE,
-    CONF_SENSOR_CAPABILITIES,
-    CONF_SENSOR_SERIAL,
-    CONF_SWITCH_MODE,
-    CONF_TRANSMITTER_SERIAL,
-    ENTRY_TYPE_NEO_SENSOR,
-    ENTRY_TYPE_TRANSMITTER,
-    TRANSMITTER_GROUPING_GROUP,
-    TRANSMITTER_SWITCH_IMPULSE,
+from .conftest import (
+    MOCK_ENTRY_DATA,
+    MOCK_ENTRY_ID,
+    MOCK_NEO_SENSOR_SERIAL,
+    MOCK_TRANSMITTER_SERIAL,
+    _devices_options,
+    _neo_sensor_device_record,
+    _transmitter_device_record,
+    async_setup_easywave_entry,
 )
-from homeassistant.components.easywave.entity import (
-    EasywaveDeviceEntry,
-    EasywaveTransmitterEntity,
-)
-from homeassistant.components.easywave.sensor import EasywaveNeoSensorTemperatureSensor
+
+from tests.common import MockConfigEntry
+
+NEO_SENSOR_CAPABILITIES = (1 << 4) | (1 << 5)
 
 
-def test_transmitter_entity_unique_id_with_device_id() -> None:
-    """Ensure transmitter entity generates unique_id from device_id."""
-    entry_mock = MagicMock()
-    entry_mock.entry_id = "test_entry_123"
-
-    device = EasywaveDeviceEntry(
-        device_id="my_transmitter_id",
-        title="Test Transmitter",
-        data={
-            CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
-            CONF_TRANSMITTER_SERIAL: "ABC123",
-            CONF_OPERATING_TYPE: "1",
-            CONF_BUTTON_COUNT: 4,
-            CONF_GROUPING_MODE: TRANSMITTER_GROUPING_GROUP,
-            CONF_SWITCH_MODE: TRANSMITTER_SWITCH_IMPULSE,
-        },
+async def test_transmitter_entities_have_unique_ids_from_setup(
+    hass: HomeAssistant,
+) -> None:
+    """Transmitter entities registered during setup use device-based unique IDs."""
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        entry_id=MOCK_ENTRY_ID,
+        data=MOCK_ENTRY_DATA,
+        source="usb",
+        unique_id="easywave_12345",
+        options=_devices_options(_transmitter_device_record(title="Test Transmitter")),
     )
+    await async_setup_easywave_entry(hass, entry)
 
-    entity = EasywaveTransmitterEntity(entry_mock, device, "test_suffix")
-    assert entity._attr_unique_id == "my_transmitter_id_test_suffix"
-    assert entity.transmitter_serial == "ABC123"
-    assert entity.device_id == "my_transmitter_id"
+    registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(registry, entry.entry_id)
+    transmitter_entities = [
+        entity
+        for entity in entities
+        if entity.unique_id
+        and entity.unique_id.startswith(f"transmitter_{MOCK_TRANSMITTER_SERIAL}_")
+    ]
+
+    assert len(transmitter_entities) == 2
+    unique_ids = {entity.unique_id for entity in transmitter_entities}
+    assert f"transmitter_{MOCK_TRANSMITTER_SERIAL}_last_button" in unique_ids
+    assert f"transmitter_{MOCK_TRANSMITTER_SERIAL}_battery_warning" in unique_ids
 
 
-def test_neo_sensor_entity_exposes_serial_and_device_id() -> None:
-    """Ensure neo sensor entity exposes serial and device id properties."""
-    entry_mock = MagicMock()
-    entry_mock.entry_id = "test_entry_123"
-
-    device = EasywaveDeviceEntry(
-        device_id="my_sensor_id",
-        title="Test Sensor",
-        data={
-            CONF_ENTRY_TYPE: ENTRY_TYPE_NEO_SENSOR,
-            CONF_SENSOR_SERIAL: "DEF456",
-            CONF_SENSOR_CAPABILITIES: 0,
-        },
+async def test_neo_sensor_entities_have_unique_ids_from_setup(
+    hass: HomeAssistant,
+) -> None:
+    """Neo sensor entities registered during setup use device-based unique IDs."""
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        entry_id=MOCK_ENTRY_ID,
+        data=MOCK_ENTRY_DATA,
+        source="usb",
+        unique_id="easywave_12345",
+        options=_devices_options(
+            _neo_sensor_device_record(
+                title="Neo Sensor",
+                capabilities=NEO_SENSOR_CAPABILITIES,
+            )
+        ),
     )
+    await async_setup_easywave_entry(hass, entry)
 
-    entity = EasywaveNeoSensorTemperatureSensor(entry_mock, device)
-    assert entity.sensor_serial == "DEF456"
-    assert entity.device_id == "my_sensor_id"
+    registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(registry, entry.entry_id)
+    sensor_entities = [
+        entity
+        for entity in entities
+        if entity.unique_id
+        and entity.unique_id.startswith(f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_")
+    ]
+
+    assert len(sensor_entities) == 2
+    unique_ids = {entity.unique_id for entity in sensor_entities}
+    assert f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_temperature" in unique_ids
+    assert f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_humidity" in unique_ids
