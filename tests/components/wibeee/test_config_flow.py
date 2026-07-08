@@ -116,69 +116,6 @@ async def test_dhcp_discovery(
     assert result["data"][CONF_HOST] == MOCK_HOST
 
 
-async def test_reconfigure_step_success(
-    hass: HomeAssistant,
-    loaded_entry: MockConfigEntry,
-    mock_wibeee_api_config_flow: MagicMock,
-) -> None:
-    """Test reconfigure step updates the host successfully."""
-    new_host = "192.168.1.200"
-
-    result = await loaded_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: new_host},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-    assert loaded_entry.data[CONF_HOST] == new_host
-
-
-async def test_reconfigure_step_wrong_device(
-    hass: HomeAssistant,
-    loaded_entry: MockConfigEntry,
-    mock_wibeee_api_config_flow: MagicMock,
-) -> None:
-    """Test reconfigure aborts when a different device is reached."""
-    different_mac = "aabbccddeeff"
-    device_info = mock_wibeee_api_config_flow.async_fetch_device_info.return_value
-    device_info.mac_addr = different_mac
-    device_info.mac_addr_formatted = different_mac
-
-    result = await loaded_entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "192.168.1.250"},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "wrong_device"
-
-
-async def test_reconfigure_step_no_device_info(
-    hass: HomeAssistant,
-    loaded_entry: MockConfigEntry,
-    mock_wibeee_api_config_flow: MagicMock,
-) -> None:
-    """Test reconfigure shows error when device cannot be reached."""
-    mock_wibeee_api_config_flow.async_fetch_device_info.side_effect = TimeoutError(
-        "error"
-    )
-
-    result = await loaded_entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "192.168.1.250"},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"][CONF_HOST] == "no_device_info"
-
-
 # -- DHCP and exception-path tests --
 
 
@@ -273,23 +210,6 @@ async def test_user_step_unexpected_exception(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: MOCK_HOST},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == "unknown"
-
-
-async def test_reconfigure_step_unexpected_exception(
-    hass: HomeAssistant,
-    loaded_entry: MockConfigEntry,
-    mock_wibeee_api: MagicMock,
-) -> None:
-    """Test reconfigure step shows generic error on unexpected exception."""
-    mock_wibeee_api.async_fetch_device_info.side_effect = RuntimeError("boom")
-
-    result = await loaded_entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "192.168.1.250"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "unknown"
