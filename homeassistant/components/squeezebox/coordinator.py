@@ -1,12 +1,10 @@
 """DataUpdateCoordinator for the Squeezebox integration."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pysqueezebox import Player, Server
 from pysqueezebox.player import Alarm
@@ -50,6 +48,7 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.lms = lms
         self.can_server_restart = False
 
+    @override
     async def _async_setup(self) -> None:
         """Query LMS capabilities."""
         result = await self.lms.async_query("can", "restartserver", "?")
@@ -59,6 +58,7 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         else:
             _LOGGER.warning("Can't query server capabilities %s", self.lms.name)
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from LMS status call.
 
@@ -105,10 +105,12 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.player_uuid = format_mac(player.player_id)
         self.server_uuid = server_uuid
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the Player() object if available, or listen for rediscovery if not."""
         if self.available:
-            # Only update players available at last update, unavailable players are rediscovered instead
+            # Only update players available at last update,
+            # unavailable players are rediscovered instead
             await self.player.async_update()
 
             if not self.player.connected:

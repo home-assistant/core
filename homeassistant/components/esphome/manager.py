@@ -1,13 +1,12 @@
 """Manager for esphome devices."""
 
-from __future__ import annotations
-
+import asyncio
 import base64
 from functools import partial
 import logging
 import secrets
 import struct
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, Final, NamedTuple
 
 from aioesphomeapi import (
     APIClient,
@@ -107,6 +106,9 @@ if TYPE_CHECKING:
 
 
 _LOGGER = logging.getLogger(__name__)
+
+# Max time to wait at startup for a BLE proxy to register its scanner.
+STARTUP_SCANNER_WAIT: Final = 3.0
 
 LOG_LEVEL_TO_LOGGER = {
     LogLevel.LOG_LEVEL_NONE: logging.DEBUG,
@@ -344,7 +346,7 @@ class ESPHomeManager:
         call_id: int,
         response_template: str | None = None,
     ) -> None:
-        """Handle service call that expects a response and send response back to ESPHome."""
+        """Handle service call with response and send it back to ESPHome."""
         try:
             # Call the service with response capture enabled
             action_response = await self.hass.services.async_call(
@@ -366,6 +368,7 @@ class ESPHomeManager:
                     response_dict = {"response": response}
 
                 except TemplateError as ex:
+                    # pylint: disable-next=home-assistant-exception-not-translated
                     raise HomeAssistantError(
                         f"Error rendering response template: {ex}"
                     ) from ex
@@ -670,13 +673,15 @@ class ESPHomeManager:
         if device_info.bluetooth_proxy_feature_flags_compat(api_version):
             entry_data.disconnect_callbacks.add(
                 async_connect_scanner(
-                    hass, entry_data, cli, device_info, self.device_id
+                    hass, self.entry, entry_data, cli, device_info, self.device_id
                 )
             )
         else:
             bluetooth.async_remove_scanner(
                 hass, device_info.bluetooth_mac_address or device_info.mac_address
             )
+
+        entry_data.first_connect_done.set()
 
         if device_info.voice_assistant_feature_flags_compat(api_version) and (
             Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms
@@ -912,8 +917,8 @@ class ESPHomeManager:
         # Remove this after 2026.4
         if not (
             stale_entry_entity_id := ent_reg.async_get_entity_id(
-                DOMAIN,
                 Platform.BINARY_SENSOR,
+                DOMAIN,
                 f"{self.entry_data.device_info.mac_address}-assist_in_progress",
             )
         ):
@@ -988,6 +993,21 @@ class ESPHomeManager:
                 )
 
         await reconnect_logic.start()
+
+        # Wait for a cached BLE proxy to register its scanner before finishing setup.
+        if (
+            device_info := entry_data.device_info
+        ) is not None and device_info.bluetooth_proxy_feature_flags_compat(
+            entry_data.api_version
+        ):
+            try:
+                async with asyncio.timeout(STARTUP_SCANNER_WAIT):
+                    await entry_data.first_connect_done.wait()
+            except TimeoutError:
+                _LOGGER.debug(
+                    "%s: Timed out waiting for Bluetooth scanner to register",
+                    self.host,
+                )
 
 
 @callback

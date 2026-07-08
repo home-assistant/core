@@ -16,7 +16,6 @@ from homeassistant.components.openai_conversation.const import (
     CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
@@ -47,7 +46,7 @@ from homeassistant.components.openai_conversation.const import (
     RECOMMENDED_TOP_P,
     RECOMMENDED_TTS_OPTIONS,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -119,7 +118,7 @@ async def test_form(hass: HomeAssistant) -> None:
         },
     ]
     assert result2["version"] == 2
-    assert result2["minor_version"] == 6
+    assert result2["minor_version"] == 7
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -247,9 +246,9 @@ async def test_subentry_unsupported_model(
     )
     await hass.async_block_till_done()
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -272,14 +271,16 @@ async def test_subentry_unsupported_model(
         ("gpt-5.3-codex", ["none", "low", "medium", "high", "xhigh"]),
         ("gpt-5.4", ["none", "low", "medium", "high", "xhigh"]),
         ("gpt-5.4-pro", ["medium", "high", "xhigh"]),
+        ("gpt-5.5", ["none", "low", "medium", "high", "xhigh"]),
+        ("gpt-5.5-pro", ["medium", "high", "xhigh"]),
     ],
 )
 async def test_subentry_reasoning_effort_list(
     hass: HomeAssistant,
-    mock_config_entry,
-    mock_init_component,
-    model,
-    reasoning_effort_options,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    model: str,
+    reasoning_effort_options: list[str],
 ) -> None:
     """Test the list reasoning effort options."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -299,9 +300,9 @@ async def test_subentry_reasoning_effort_list(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -314,6 +315,152 @@ async def test_subentry_reasoning_effort_list(
         subentry_flow["data_schema"].schema[CONF_REASONING_EFFORT].config["options"]
         == reasoning_effort_options
     )
+
+
+@pytest.mark.parametrize(
+    ("model", "has_reasoning_summary"),
+    [
+        ("o3", True),
+        ("o4-mini", True),
+        ("gpt-5", True),
+        ("gpt-5-mini", True),
+        ("gpt-5-pro", True),
+        ("gpt-4o", False),
+        ("gpt-4.1", False),
+    ],
+)
+async def test_subentry_reasoning_summary_visibility(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    model: str,
+    has_reasoning_summary: bool,
+) -> None:
+    """Test that reasoning_summary option is shown for all reasoning models."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
+
+    # Configure initial step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "additional"
+
+    # Configure additional step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_CHAT_MODEL: model,
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "model"
+    assert (CONF_REASONING_SUMMARY in subentry_flow["data_schema"].schema) == (
+        has_reasoning_summary
+    )
+
+
+@pytest.mark.parametrize(
+    ("model", "reasoning_summary_options"),
+    [
+        ("o3", ["off", "auto", "detailed"]),
+        ("o4-mini", ["off", "auto", "detailed"]),
+        ("gpt-5", ["off", "auto", "concise", "detailed"]),
+        ("gpt-5-mini", ["off", "auto", "concise", "detailed"]),
+    ],
+)
+async def test_subentry_reasoning_summary_options(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+    model: str,
+    reasoning_summary_options: list[str],
+) -> None:
+    """Test the list of reasoning summary options for reasoning models."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "additional"
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_CHAT_MODEL: model,
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "model"
+    assert (
+        subentry_flow["data_schema"].schema[CONF_REASONING_SUMMARY].config["options"]
+        == reasoning_summary_options
+    )
+
+
+async def test_subentry_reasoning_summary_default_sanitized_on_model_switch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Test that a stored 'concise' default is sanitized to 'auto' for o* models."""
+    subentry = next(
+        s
+        for s in mock_config_entry.subentries.values()
+        if s.subentry_type == "conversation"
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_REASONING_SUMMARY: "concise"},
+    )
+    await hass.async_block_till_done()
+
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert subentry_flow["step_id"] == "init"
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    assert subentry_flow["step_id"] == "additional"
+
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {CONF_CHAT_MODEL: "o3"},
+    )
+    assert subentry_flow["step_id"] == "model"
+
+    schema = subentry_flow["data_schema"].schema
+    summary_key = next(k for k in schema if k == CONF_REASONING_SUMMARY)
+    assert summary_key.default() == RECOMMENDED_REASONING_SUMMARY
 
 
 @pytest.mark.parametrize(
@@ -368,9 +515,9 @@ async def test_subentry_service_tier_list(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -396,7 +543,7 @@ async def test_subentry_service_tier_list(
 async def test_subentry_unsupported_reasoning_effort(
     hass: HomeAssistant, mock_config_entry, mock_init_component, parameter, error
 ) -> None:
-    """Test the subentry form giving error about unsupported minimal reasoning effort."""
+    """Test subentry form error on unsupported reasoning effort."""
     subentry = next(iter(mock_config_entry.subentries.values()))
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
@@ -414,9 +561,9 @@ async def test_subentry_unsupported_reasoning_effort(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -542,6 +689,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_MAX_TOKENS: 10000,
                 CONF_STORE_RESPONSES: False,
                 CONF_REASONING_EFFORT: "high",
+                CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                 CONF_CODE_INTERPRETER: True,
             },
         ),
@@ -808,6 +956,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_MAX_TOKENS: 1000,
                 CONF_STORE_RESPONSES: False,
                 CONF_REASONING_EFFORT: "low",
+                CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                 CONF_CODE_INTERPRETER: True,
             },
         ),
@@ -821,6 +970,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "low",
+                CONF_REASONING_SUMMARY: "auto",
                 CONF_SERVICE_TIER: "flex",
                 CONF_CODE_INTERPRETER: True,
                 CONF_VERBOSITY: "medium",
@@ -994,9 +1144,9 @@ async def test_subentry_web_search_user_location(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -1142,12 +1292,12 @@ async def test_ai_task_subentry_not_loaded(
     assert result.get("reason") == "entry_not_loaded"
 
 
-async def test_creating_ai_task_subentry_advanced(
+async def test_creating_ai_task_subentry_additional(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
 ) -> None:
-    """Test creating an AI task subentry with advanced settings."""
+    """Test creating an AI task subentry with additional settings."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "ai_task_data"),
         context={"source": config_entries.SOURCE_USER},
@@ -1156,7 +1306,7 @@ async def test_creating_ai_task_subentry_advanced(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "init"
 
-    # Go to advanced settings
+    # Go to additional settings
     result2 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
@@ -1166,9 +1316,9 @@ async def test_creating_ai_task_subentry_advanced(
     )
 
     assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "advanced"
+    assert result2.get("step_id") == "additional"
 
-    # Configure advanced settings
+    # Configure additional settings
     result3 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
@@ -1196,7 +1346,7 @@ async def test_creating_ai_task_subentry_advanced(
     assert result4.get("data") == {
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "gpt-4o",
-        CONF_IMAGE_MODEL: "gpt-image-1.5",
+        CONF_IMAGE_MODEL: "gpt-image-2",
         CONF_MAX_TOKENS: 200,
         CONF_STORE_RESPONSES: True,
         CONF_TEMPERATURE: 0.5,
@@ -1229,7 +1379,10 @@ async def test_creating_stt_subentry(
         result["flow_id"],
         {
             "name": "Custom STT",
-            CONF_PROMPT: "Umm, let me think like, hmm… Okay, here’s what I’m, like, thinking.",
+            CONF_PROMPT: (
+                "Umm, let me think like, hmm\u2026 Okay,"
+                " here’s what I’m, like, thinking."
+            ),
             CONF_CHAT_MODEL: "gpt-4o-transcribe",
         },
     )
@@ -1237,7 +1390,9 @@ async def test_creating_stt_subentry(
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "Custom STT"
     assert result.get("data") == {
-        CONF_PROMPT: "Umm, let me think like, hmm… Okay, here’s what I’m, like, thinking.",
+        CONF_PROMPT: (
+            "Umm, let me think like, hmm\u2026 Okay, here’s what I’m, like, thinking."
+        ),
         CONF_CHAT_MODEL: "gpt-4o-transcribe",
     }
 

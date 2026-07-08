@@ -2,7 +2,7 @@
 # name: test_binary_sensor_attributes_state_update
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Foyer Keypad Morning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Foyer Keypad Morning',
       'homeworks_address': '[02:08:02:01]',
     }),
     'context': <ANY>,
@@ -16,7 +16,7 @@
 # name: test_binary_sensor_attributes_state_update.1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Foyer Keypad Morning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Foyer Keypad Morning',
       'homeworks_address': '[02:08:02:01]',
     }),
     'context': <ANY>,
@@ -30,7 +30,7 @@
 # name: test_binary_sensor_attributes_state_update.2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Foyer Keypad Morning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Foyer Keypad Morning',
       'homeworks_address': '[02:08:02:01]',
     }),
     'context': <ANY>,

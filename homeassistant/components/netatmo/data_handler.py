@@ -1,7 +1,5 @@
 """The Netatmo data handler."""
 
-from __future__ import annotations
-
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -16,6 +14,7 @@ from pyatmo.modules.device_types import (
     DeviceCategory as NetatmoDeviceCategory,
     DeviceType as NetatmoDeviceType,
 )
+from pyatmo.schedule import Schedule
 
 from homeassistant.components import cloud
 from homeassistant.config_entries import ConfigEntry
@@ -28,18 +27,17 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CAMERA_CONNECTION_WEBHOOKS,
-    DATA_PERSONS,
-    DATA_SCHEDULES,
     DOMAIN,
     MANUFACTURER,
-    NETATMO_CREATE_BATTERY,
     NETATMO_CREATE_BUTTON,
     NETATMO_CREATE_CAMERA,
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_CLIMATE,
+    NETATMO_CREATE_CLIMATE_BATTERY_SENSOR,
     NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
     NETATMO_CREATE_COVER,
     NETATMO_CREATE_FAN,
+    NETATMO_CREATE_LEGACY_SENSOR,
     NETATMO_CREATE_LIGHT,
     NETATMO_CREATE_OPENING_BINARY_SENSOR,
     NETATMO_CREATE_ROOM_SENSOR,
@@ -89,6 +87,12 @@ DEFAULT_INTERVALS = {
 SCAN_INTERVAL = 60
 
 type NetatmoConfigEntry = ConfigEntry[NetatmoDataHandler]
+
+
+def async_get_loaded_entry(hass: HomeAssistant) -> NetatmoConfigEntry | None:
+    """Return the single loaded Netatmo config entry, if any."""
+    entries = hass.config_entries.async_loaded_entries(DOMAIN)
+    return entries[0] if entries else None
 
 
 @dataclass
@@ -160,6 +164,11 @@ class NetatmoDataHandler:
             self._rate_limit = DEV_LIMIT
         self.poll_start = time()
         self.poll_count = 0
+        self.persons: dict[str, dict[str, str | None]] = {}
+        self.schedules: dict[str, dict[str, Schedule]] = {}
+        self.device_ids: dict[str, str] = {}
+        self.cameras: dict[str, str] = {}
+        self.events: dict[str, dict] = {}
 
     async def async_setup(self) -> None:
         """Set up the Netatmo data handler."""
@@ -330,7 +339,7 @@ class NetatmoDataHandler:
             self.setup_rooms(home, signal_home)
             self.setup_modules(home, signal_home)
 
-            self.hass.data[DOMAIN][DATA_PERSONS][home.entity_id] = {
+            self.persons[home.entity_id] = {
                 person.entity_id: person.pseudo for person in home.persons.values()
             }
 
@@ -371,13 +380,14 @@ class NetatmoDataHandler:
             NetatmoDeviceCategory.switch: [
                 NETATMO_CREATE_LIGHT,
                 NETATMO_CREATE_SWITCH,
-                NETATMO_CREATE_SENSOR,
+                NETATMO_CREATE_LEGACY_SENSOR,
             ],
-            NetatmoDeviceCategory.meter: [NETATMO_CREATE_SENSOR],
+            NetatmoDeviceCategory.meter: [NETATMO_CREATE_LEGACY_SENSOR],
             NetatmoDeviceCategory.fan: [NETATMO_CREATE_FAN],
             NetatmoDeviceCategory.opening: [
                 NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
                 NETATMO_CREATE_OPENING_BINARY_SENSOR,
+                NETATMO_CREATE_SENSOR,
             ],
         }
         for module in home.modules.values():
@@ -430,7 +440,7 @@ class NetatmoDataHandler:
                     if module.device_category is NetatmoDeviceCategory.climate:
                         async_dispatcher_send(
                             self.hass,
-                            NETATMO_CREATE_BATTERY,
+                            NETATMO_CREATE_CLIMATE_BATTERY_SENSOR,
                             NetatmoDevice(
                                 self,
                                 module,
@@ -458,7 +468,7 @@ class NetatmoDataHandler:
         if NetatmoDeviceCategory.climate in [
             next(iter(x)) for x in [room.features for room in home.rooms.values()] if x
         ]:
-            self.hass.data[DOMAIN][DATA_SCHEDULES][home.entity_id] = self.account.homes[
+            self.schedules[home.entity_id] = self.account.homes[
                 home.entity_id
             ].schedules
 

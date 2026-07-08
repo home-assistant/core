@@ -39,6 +39,7 @@ from telegram.request import HTTPXRequest
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
+    ATTR_DATE,
     CONF_API_KEY,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_BEARER_AUTHENTICATION,
@@ -48,6 +49,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 from homeassistant.util.json import JsonValueType
 
 from .const import (
@@ -57,7 +59,6 @@ from .const import (
     ATTR_CHAT_ID,
     ATTR_CHAT_INSTANCE,
     ATTR_DATA,
-    ATTR_DATE,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
@@ -124,6 +125,8 @@ _LOGGER = logging.getLogger(__name__)
 
 type TelegramBotConfigEntry = ConfigEntry[TelegramNotificationService]
 
+_RETRY_DELAY = 1  # 1 second delay between retries
+
 
 def _get_bot_info(bot: Bot, config_entry: ConfigEntry) -> dict[str, Any]:
     return {
@@ -157,7 +160,8 @@ class BaseTelegramBot:
 
         # establish event type: text, command or callback_query
         if update.callback_query:
-            # NOTE: Check for callback query first since effective message will be populated with the message
+            # NOTE: Check for callback query first since
+            # effective message will be populated with the message
             # in .callback_query (python-telegram-bot docs are wrong)
             event_type, event_data = self._get_callback_query_event_data(
                 update.callback_query
@@ -201,7 +205,8 @@ class BaseTelegramBot:
             ATTR_MESSAGE_THREAD_ID: message.message_thread_id,
         }
         if filters.COMMAND.filter(message):
-            # This is a command message - set event type to command and split data into command and args
+            # This is a command message - set event type
+            # to command and split data into command and args
             event_type = EVENT_TELEGRAM_COMMAND
             event_data.update(self._get_command_event_data(message.text))
         elif filters.ATTACHMENT.filter(message):
@@ -223,7 +228,7 @@ class BaseTelegramBot:
             photos = cast(Sequence[PhotoSize], message.effective_attachment)
             return {
                 ATTR_FILE_ID: photos[-1].file_id,
-                ATTR_FILE_MIME_TYPE: "image/jpeg",  # telegram always uses jpeg for photos
+                ATTR_FILE_MIME_TYPE: "image/jpeg",
                 ATTR_FILE_SIZE: photos[-1].file_size,
             }
         return {
@@ -543,7 +548,7 @@ class TelegramNotificationService:
     ) -> dict[str, JsonValueType]:
         """Send media group to a chat ID.
 
-        :returns: a dict mapping each chat_id to a list of message_ids for the sent media group.
+        Returns a dict mapping each chat_id to message_ids.
         """
         params = self._get_msg_kwargs(kwargs)
 
@@ -561,7 +566,7 @@ class TelegramNotificationService:
                 authentication=entry.get(ATTR_AUTHENTICATION),
                 verify_ssl=entry[ATTR_VERIFY_SSL],
             )
-            _LOGGER.debug("downloaded: %s", entry[ATTR_URL])
+            _LOGGER.debug("downloaded: %s", entry.get(ATTR_URL) or entry.get(ATTR_FILE))
 
             caption: str | None = entry.get(ATTR_CAPTION)
             if entry[ATTR_MEDIA_TYPE] == InputMediaType.AUDIO:
@@ -1013,6 +1018,36 @@ class TelegramNotificationService:
             context=context,
         )
 
+    async def send_message_draft(
+        self,
+        message: str,
+        chat_id: int,
+        draft_id: int,
+        context: Context | None = None,
+        **kwargs: dict[str, Any],
+    ) -> None:
+        """Stream a partial message to a user while the message is being generated."""
+        params = self._get_msg_kwargs(kwargs)
+
+        _LOGGER.debug(
+            "Sending message draft %s in chat ID %s with params: %s",
+            draft_id,
+            chat_id,
+            params,
+        )
+
+        await self._send_msg(
+            self.bot.send_message_draft,
+            None,
+            chat_id=chat_id,
+            draft_id=draft_id,
+            text=message,
+            message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
+            parse_mode=params[ATTR_PARSER],
+            read_timeout=params[ATTR_TIMEOUT],
+            context=context,
+        )
+
     async def download_file(
         self,
         file_id: str,
@@ -1022,8 +1057,28 @@ class TelegramNotificationService:
         **kwargs: dict[str, Any],
     ) -> dict[str, JsonValueType]:
         """Download a file from Telegram."""
-        if not directory_path:
+        if directory_path:
+            try:
+                raise_if_invalid_path(directory_path)
+            except ValueError as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_directory_path",
+                    translation_placeholders={"directory_path": directory_path},
+                ) from err
+        else:
             directory_path = self.hass.config.path(DOMAIN)
+
+        if file_name:
+            try:
+                raise_if_invalid_filename(file_name)
+            except ValueError as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_file_name",
+                    translation_placeholders={"file_name": file_name},
+                ) from err
+
         file: File = await self._send_msg(
             self.bot.get_file,
             None,
@@ -1160,9 +1215,8 @@ async def load_data(
                     _LOGGER.warning("Empty data (retry #%s) in %s)", retry_num + 1, url)
                 retry_num += 1
                 if retry_num < num_retries:
-                    await asyncio.sleep(
-                        1
-                    )  # Add a sleep to allow other async operations to proceed
+                    # Add a sleep to allow other async operations to proceed
+                    await asyncio.sleep(_RETRY_DELAY)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_load_url",

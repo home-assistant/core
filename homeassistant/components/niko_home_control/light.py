@@ -1,8 +1,6 @@
 """Light platform Niko Home Control."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from nhc.light import NHCLight
 
@@ -51,14 +49,17 @@ class NikoHomeControlLight(NikoHomeControlEntity, LightEntity):
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
             self._attr_brightness = action.state
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         await self._action.turn_on(kwargs.get(ATTR_BRIGHTNESS))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self._action.turn_off()
 
+    @override
     def update_state(self) -> None:
         """Handle updates from the controller."""
         state = self._action.state

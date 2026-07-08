@@ -1,6 +1,6 @@
 """The Nibe Heat Pump sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from nibe.coil import Coil, CoilData
 
@@ -214,5 +214,6 @@ class Sensor(CoilEntity, SensorEntity):
             self._attr_native_unit_of_measurement = coil.unit
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
+    @override
     def _async_read_coil(self, data: CoilData):
         self._attr_native_value = data.value

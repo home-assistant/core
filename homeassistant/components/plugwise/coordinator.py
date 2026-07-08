@@ -1,5 +1,7 @@
 """DataUpdateCoordinator for Plugwise."""
 
+from typing import override
+
 from packaging.version import Version
 from plugwise import GwEntityData, Smile
 from plugwise.exceptions import (
@@ -79,6 +81,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         if self._connected and self.api.smile.type == "power":
             self.update_interval = P1_UPDATE_INTERVAL
 
+    @override
     async def _async_setup(self) -> None:
         """Initialize the update_data process."""
         device_reg = dr.async_get(self.hass)
@@ -92,6 +95,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
             if identifier[0] == DOMAIN
         }
 
+    @override
     async def _async_update_data(self) -> dict[str, GwEntityData]:
         """Fetch data from Plugwise."""
         try:
@@ -137,8 +141,10 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         """Add new Plugwise devices, remove non-existing devices."""
         set_of_data = set(data)
         # Check for new or removed devices,
-        # 'new_devices' contains all devices present in 'data' at init ('self._current_devices' is empty)
-        # this is required for the proper initialization of all the present platform entities.
+        # 'new_devices' contains all devices present in 'data'
+        # at init ('self._current_devices' is empty) this is
+        # required for the proper initialization of all the
+        # present platform entities.
         self.new_devices = set_of_data - self._current_devices
         for device_id in self.new_devices:
             self._firmware_list.setdefault(device_id, data[device_id].get("firmware"))

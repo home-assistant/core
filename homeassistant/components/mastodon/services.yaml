@@ -50,6 +50,14 @@ post:
             - private
             - direct
           translation_key: post_visibility
+    quote_approval_policy:
+      selector:
+        select:
+          options:
+            - public
+            - followers
+            - nobody
+          translation_key: quote_approval_policy
     idempotency_key:
       selector:
         text:
@@ -270,6 +278,14 @@ post:
       required: true
       selector:
         boolean:
+    in_reply_to:
+      required: false
+      selector:
+        text:
+    quoted_status:
+      required: false
+      selector:
+        text:
 update_profile:
   fields:
     config_entry_id: *config_entry_id
@@ -286,12 +302,24 @@ update_profile:
         media:
           accept:
             - "image/*"
+    delete_avatar:
+      required: false
+      selector:
+        constant:
+          value: true
+          label: ""
     header:
       required: false
       selector:
         media:
           accept:
             - "image/*"
+    delete_header:
+      required: false
+      selector:
+        constant:
+          value: true
+          label: ""
     locked:
       selector:
         boolean:

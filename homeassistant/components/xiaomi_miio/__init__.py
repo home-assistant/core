@@ -1,7 +1,5 @@
 """Support for Xiaomi Miio."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
@@ -124,6 +122,14 @@ MODEL_TO_CLASS_MAP = {
     MODEL_FAN_P18: FanMiot,
     MODEL_FAN_P5: FanP5,
     MODEL_FAN_ZA5: FanZA5,
+}
+
+# List of models requiring specific lazy_discover setting
+LAZY_DISCOVER_FOR_MODEL = {
+    "zhimi.fan.za3": True,
+    "zhimi.fan.za5": True,
+    "zhimi.airpurifier.za1": True,
+    "dmaker.fan.1c": True,
 }
 
 
@@ -309,13 +315,6 @@ async def async_create_miio_device_and_coordinator(
     update_method = _async_update_data_default
     coordinator_class: type[DataUpdateCoordinator[Any]] = DataUpdateCoordinator
 
-    # List of models requiring specific lazy_discover setting
-    LAZY_DISCOVER_FOR_MODEL = {
-        "zhimi.fan.za3": True,
-        "zhimi.fan.za5": True,
-        "zhimi.airpurifier.za1": True,
-        "dmaker.fan.1c": True,
-    }
     lazy_discover = LAZY_DISCOVER_FOR_MODEL.get(model, False)
 
     if (
@@ -356,7 +355,7 @@ async def async_create_miio_device_and_coordinator(
     elif model in MODELS_VACUUM or model.startswith(
         (ROBOROCK_GENERIC, ROCKROBO_GENERIC)
     ):
-        # TODO: add lazy_discover as argument when python-miio add support # pylint: disable=fixme
+        # TODO: add lazy_discover as argument  # pylint: disable=fixme
         device = RoborockVacuum(host, token)
         update_method = _async_update_data_vacuum
         coordinator_class = DataUpdateCoordinator[VacuumCoordinatorData]

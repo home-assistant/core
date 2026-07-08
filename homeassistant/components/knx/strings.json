@@ -154,6 +154,12 @@
     }
   },
   "config_panel": {
+    "common": {
+      "exposes_count": "Exposes: {count}",
+      "group_address": "Group address",
+      "group_addresses": "Group addresses",
+      "monitor_x_group_addresses": "Monitor {count} group addresses"
+    },
     "dashboard": {
       "connection_flow": {
         "description": "Reconfigure KNX connection or import a new KNX keyring file",
@@ -444,6 +450,19 @@
             "section_advanced_options": {
               "description": "Properties of the binary sensor state.",
               "title": "State properties"
+            }
+          }
+        },
+        "button": {
+          "description": "Entity for sending predefined values.",
+          "knx": {
+            "data": {
+              "description": "The value sent when the button is pressed. The format of the value depends on the DPT of the configured address.",
+              "label": "Data"
+            },
+            "ga_send": {
+              "description": "Group address the value is sent to.",
+              "label": "Address"
             }
           }
         },
@@ -960,6 +979,7 @@
           "description": "Minimum time between consecutive sends. This can be used to prevent high traffic on the KNX bus when values change very frequently. Only the most recent value during the cooldown period is sent.",
           "label": "Cooldown"
         },
+        "copy_info": "Copying options of {entity_name} ({entity_id}).",
         "default": {
           "description": "The value to send if the entity state is `unavailable` or `unknown`, or if the attribute is not set. If `default` is omitted, nothing is sent in these cases, but the last known value remains available for read requests.",
           "label": "Default value"
@@ -969,7 +989,11 @@
           "label": "Entity"
         },
         "ga": {
-          "label": "Group address"
+          "label": "[%key:component::knx::config_panel::common::group_address%]"
+        },
+        "notes": {
+          "label": "Notes",
+          "placeholder": "Add your notes here..."
         },
         "periodic_send": {
           "description": "Time interval to automatically resend the current value to the KNX bus, even if it hasn’t changed.",
@@ -980,7 +1004,7 @@
           "label": "[%key:component::knx::config_panel::entities::create::_::knx::respond_to_read::label%]"
         },
         "section_advanced_options": {
-          "title": "Advanced options"
+          "title": "Additional settings"
         },
         "show_raw_values": "Show raw values",
         "title": "Add exposure",
@@ -1003,6 +1027,19 @@
     "project": {
       "description": "Inspect imported group addresses",
       "title": "Project"
+    },
+    "selectors": {
+      "knx-payload-selector": {
+        "dpt_missing": "No DPT selected – Typed mode not available",
+        "mode": {
+          "label": "Payload format",
+          "raw": "Raw payload",
+          "typed": "Typed value"
+        },
+        "raw_length": "Payload length",
+        "raw_length_description": "Length of the raw payload in bytes. For DPT 1, 2 and 3 use `0`.",
+        "raw_payload": "Raw payload"
+      }
     }
   },
   "device_automation": {
@@ -1083,6 +1120,9 @@
     "integration_not_loaded": {
       "message": "KNX integration is not loaded."
     },
+    "service_event_register_ga_not_found": {
+      "message": "Could not find registered event for `{group_addresses}` to remove."
+    },
     "service_exposure_remove_not_found": {
       "message": "Could not find exposure for `{group_address}` to remove."
     },
@@ -1109,12 +1149,16 @@
               "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_file%]",
               "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_password%]"
             },
-            "description": "Telegrams for group addresses used in Home Assistant could not be decrypted because Data Secure keys are missing or invalid:\n\n{addresses}\n\nTo fix this, update the sending devices configurations via ETS and provide an updated KNX Keyring file. Make sure that the group addresses used in Home Assistant are associated with the interface used by Home Assistant (`{interface}` when the issue last occurred).",
+            "description": "Telegrams for group addresses used in Home Assistant could not be decrypted because Data Secure keys are missing or invalid:\n\n{addresses}\n\nTo fix this, update the sending devices configurations via ETS and provide an updated ETS interface information export or Keyring file. Make sure that the group addresses used in Home Assistant are associated with the interface used by Home Assistant (`{interface}` when the issue last occurred).",
             "title": "Update KNX Keyring"
           }
         }
       },
       "title": "KNX Data Secure telegrams can't be decrypted"
+    },
+    "telegram_storage_error": {
+      "description": "The configured KNX telegram storage backend failed to initialize. As a result, KNX telegrams are currently not being stored. Check the logs for details on the error and ensure your database is accessible.",
+      "title": "KNX telegram storage error"
     }
   },
   "options": {
@@ -1122,13 +1166,24 @@
       "communication_settings": {
         "data": {
           "rate_limit": "Rate limit",
-          "state_updater": "State updater",
-          "telegram_log_size": "Telegram history limit"
+          "state_updater": "State updater"
         },
         "data_description": {
           "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: `0` or between `20` and `40`",
-          "state_updater": "Sets the default behavior for reading state addresses from the KNX Bus.\nWhen enabled, Home Assistant will monitor each group address and read it from the bus if no value has been received for one hour.\nWhen disabled, state addresses will only be read once after a bus connection is established.\nThis behavior can be overridden for individual entities using the `sync_state` option.",
-          "telegram_log_size": "Telegrams to keep in memory for KNX panel group monitor. Maximum: {telegram_log_size_max}"
+          "state_updater": "Sets the default behavior for reading state addresses from the KNX Bus.\nWhen enabled, Home Assistant will monitor each group address and read it from the bus if no value has been received for one hour.\nWhen disabled, state addresses will only be read once after a bus connection is established.\nThis behavior can be overridden for individual entities using the `sync_state` option."
+        },
+        "sections": {
+          "telegram_store_section": {
+            "data": {
+              "telegram_db_load_hours": "Group monitor history",
+              "telegram_db_retention_days": "Retention period"
+            },
+            "data_description": {
+              "telegram_db_load_hours": "Number of hours of telegram history to load when the group monitor is opened.",
+              "telegram_db_retention_days": "Number of days to keep telegram history. Older telegrams are automatically deleted nightly at 3 AM. Set to `0` to delete all telegram history on every nightly run."
+            },
+            "name": "Telegram store settings"
+          }
         },
         "title": "Communication settings"
       }
@@ -1213,7 +1268,7 @@
       "fields": {
         "address": {
           "description": "Group address(es) that shall be added or removed. Lists are allowed.",
-          "name": "[%key:component::knx::services::send::fields::address::name%]"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         },
         "remove": {
           "description": "Whether the group address(es) will be removed.",
@@ -1231,7 +1286,7 @@
       "fields": {
         "address": {
           "description": "Group address state or attribute updates will be sent to. GroupValueRead requests will be answered. Per address only one exposure can be registered.",
-          "name": "[%key:component::knx::services::send::fields::address::name%]"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         },
         "attribute": {
           "description": "Attribute of the entity that shall be sent to the KNX bus. If not set, the state will be sent. Eg. for a light the state is either “on” or “off” - with attribute you can expose its “brightness”.",
@@ -1261,7 +1316,7 @@
       "fields": {
         "address": {
           "description": "Group address(es) to send read request to. Lists will read multiple group addresses.",
-          "name": "[%key:component::knx::services::send::fields::address::name%]"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         }
       },
       "name": "Read from KNX bus"
@@ -1275,7 +1330,7 @@
       "fields": {
         "address": {
           "description": "Group address(es) to write to. Lists will send to multiple group addresses successively.",
-          "name": "Group address"
+          "name": "[%key:component::knx::config_panel::common::group_address%]"
         },
         "payload": {
           "description": "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length.",

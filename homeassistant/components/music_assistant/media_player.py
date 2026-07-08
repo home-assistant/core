@@ -1,13 +1,12 @@
 """MediaPlayer platform for Music Assistant integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from contextlib import suppress
 import os
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
+from music_assistant_models.auth import UserRole
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
 from music_assistant_models.enums import (
     EventType,
@@ -60,7 +59,6 @@ from .const import (
     ATTR_REPEAT_MODE,
     ATTR_SHUFFLE_ENABLED,
     DOMAIN,
-    SOUND_MODES_TRANSLATION_KEY_PREFIX,
 )
 from .entity import MusicAssistantEntity
 from .helpers import catch_musicassistant_error
@@ -132,7 +130,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
     _attr_name = None
     _attr_media_image_remotely_accessible = True
     _attr_media_content_type = HAMediaType.MUSIC
-    _attr_translation_key = "ma_media_player"
+    _attr_translation_key = "media_player"
 
     def __init__(self, mass: MusicAssistantClient, player_id: str) -> None:
         """Initialize MediaPlayer entity."""
@@ -144,6 +142,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._source_list_mapping: dict[str, str] = {}
         self._sound_mode_list_mapping: dict[str, str] = {}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
@@ -186,6 +185,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         return self.mass.player_queues.get(self.player.active_source)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any]:
         """Return additional state attributes."""
         return {
@@ -195,6 +195,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             ),
         }
 
+    @override
     async def async_on_update(self) -> None:
         """Handle player updates."""
         if not self.available:
@@ -221,28 +222,22 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._source_list_mapping = source_mappings
         self._attr_source = active_source_name
 
-        # same for sound modes
+        # translation_key, sound_mode.id
         sound_mode_mappings: dict[str, str] = {}
+        active_sound_mode_translation_key: str | None = None
         for sound_mode in player.sound_mode_list:
             if sound_mode.passive:
                 # ignore passive sound_mode because HA does not differentiate between
                 # active and passive sound mode
                 continue
-            if (
-                sound_mode.translation_key is None
-                or SOUND_MODES_TRANSLATION_KEY_PREFIX not in sound_mode.translation_key
-            ):
-                # MA's data class initializes the translation_key to
-                # player_sound_mode.<id> automatically if it is not given, so we should
-                # always have a non None value
-                continue
-            translation_key = sound_mode.translation_key[
-                len(SOUND_MODES_TRANSLATION_KEY_PREFIX) :
-            ]
+            translation_key = sound_mode.translation_key
+            if player.active_sound_mode == sound_mode.id:
+                active_sound_mode_translation_key = translation_key
             sound_mode_mappings[translation_key] = sound_mode.id
+
         self._attr_sound_mode_list = list(sound_mode_mappings.keys())
         self._sound_mode_list_mapping = sound_mode_mappings
-        self._attr_sound_mode = player.active_sound_mode
+        self._attr_sound_mode = active_sound_mode_translation_key
 
         group_members: list[str] = []
         if player.group_members:
@@ -273,68 +268,81 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._update_media_image_url(player, active_queue)
 
     @catch_musicassistant_error
+    @override
     async def async_media_play(self) -> None:
         """Send play command to device."""
         await self.mass.players.player_command_play(self.player_id)
 
     @catch_musicassistant_error
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command to device."""
         await self.mass.players.player_command_pause(self.player_id)
 
     @catch_musicassistant_error
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command to device."""
         await self.mass.players.player_command_stop(self.player_id)
 
     @catch_musicassistant_error
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command to device."""
         await self.mass.players.player_command_next_track(self.player_id)
 
     @catch_musicassistant_error
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command to device."""
         await self.mass.players.player_command_previous_track(self.player_id)
 
     @catch_musicassistant_error
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         position = int(position)
         await self.mass.players.player_command_seek(self.player_id, position)
 
     @catch_musicassistant_error
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self.mass.players.player_command_volume_mute(self.player_id, mute)
 
     @catch_musicassistant_error
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Send new volume_level to device."""
         volume = int(volume * 100)
         await self.mass.players.player_command_volume_set(self.player_id, volume)
 
     @catch_musicassistant_error
+    @override
     async def async_volume_up(self) -> None:
         """Send new volume_level to device."""
         await self.mass.players.player_command_volume_up(self.player_id)
 
     @catch_musicassistant_error
+    @override
     async def async_volume_down(self) -> None:
         """Send new volume_level to device."""
         await self.mass.players.player_command_volume_down(self.player_id)
 
     @catch_musicassistant_error
+    @override
     async def async_turn_on(self) -> None:
         """Turn on device."""
         await self.mass.players.player_command_power(self.player_id, True)
 
     @catch_musicassistant_error
+    @override
     async def async_turn_off(self) -> None:
         """Turn off device."""
         await self.mass.players.player_command_power(self.player_id, False)
 
     @catch_musicassistant_error
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Set shuffle state."""
         if not self.active_queue:
@@ -344,6 +352,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         )
 
     @catch_musicassistant_error
+    @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat state."""
         if not self.active_queue:
@@ -353,6 +362,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         )
 
     @catch_musicassistant_error
+    @override
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         if TYPE_CHECKING:
@@ -361,6 +371,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             await self.mass.player_queues.queue_command_clear(queue.queue_id)
 
     @catch_musicassistant_error
+    @override
     async def async_play_media(
         self,
         media_type: MediaType | str,
@@ -396,6 +407,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         )
 
     @catch_musicassistant_error
+    @override
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         player_ids: list[str] = []
@@ -409,11 +421,13 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         await self.mass.players.player_command_group_many(self.player_id, player_ids)
 
     @catch_musicassistant_error
+    @override
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
         await self.mass.players.player_command_ungroup(self.player_id)
 
     @catch_musicassistant_error
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         source_id = self._source_list_mapping.get(source)
@@ -424,6 +438,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         await self.mass.players.player_command_select_source(self.player_id, source_id)
 
     @catch_musicassistant_error
+    @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         sound_mode_id = self._sound_mode_list_mapping.get(sound_mode)
@@ -442,35 +457,74 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         enqueue: MediaPlayerEnqueue | QueueOption | None = None,
         radio_mode: bool | None = None,
         media_type: str | None = None,
+        username: str | None = None,
     ) -> None:
         """Send the play_media command to the media player."""
+        # verify username availability
+        if username is not None:
+            users = await self.mass.auth.list_users()
+            available_usernames = [
+                user.username
+                for user in users
+                if user.enabled and user.role != UserRole.GUEST
+            ]
+            if username not in available_usernames:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_username",
+                    translation_placeholders={
+                        "username": username,
+                        "available_usernames": ", ".join(available_usernames),
+                    },
+                )
+
         media_uris: list[str] = []
         item: MediaItemType | ItemMapping | None = None
         # work out (all) uri(s) to play
         for media_id_str in media_id:
-            # URL or URI string
-            if "://" in media_id_str:
-                media_uris.append(media_id_str)
-                continue
-            # try content id as library id
-            if media_type and media_id_str.isnumeric():
-                with suppress(MediaNotFoundError):
-                    item = await self.mass.music.get_item(
-                        MediaType(media_type), media_id_str, "library"
-                    )
-                    if isinstance(item, MediaItemType | ItemMapping) and item.uri:
-                        media_uris.append(item.uri)
+            assert self.mass.server_info  # for type checking
+            # pre schema 33: verify_item_uri does not exist as API method
+            # with schema 33: only local files have to be verified
+            if self.mass.server_info.schema_version < 33:
+                # URL or URI string
+                if "://" in media_id_str:
+                    media_uris.append(media_id_str)
                     continue
-            # try local accessible filename
-            elif await asyncio.to_thread(os.path.isfile, media_id_str):
-                media_uris.append(media_id_str)
-                continue
+                # try content id as library id
+                if media_type and media_id_str.isnumeric():
+                    with suppress(MediaNotFoundError):
+                        item = await self.mass.music.get_item(
+                            MediaType(media_type), media_id_str, "library"
+                        )
+                        if isinstance(item, MediaItemType | ItemMapping) and item.uri:
+                            media_uris.append(item.uri)
+                        continue
+                # try local accessible filename
+                elif await asyncio.to_thread(os.path.isfile, media_id_str):
+                    media_uris.append(media_id_str)
+                    continue
+            else:
+                media_id_verify_str = media_id_str
+                if media_type and media_id_str.isnumeric():
+                    # construct in library uri as replacement for pre 33 isnumeric path
+                    media_id_verify_str = (
+                        f"library://{MediaType(media_type).value}/{media_id_str}"
+                    )
+                if await self.mass.music.verify_item_uri(
+                    uri=media_id_verify_str, username=username
+                ):
+                    media_uris.append(media_id_verify_str)
+                    continue
+                if await asyncio.to_thread(os.path.isfile, media_id_str):
+                    media_uris.append(media_id_str)
+                    continue
             # last resort: search for media item by name/search
             if item := await self.mass.music.get_item_by_name(
                 name=media_id_str,
                 artist=artist,
                 album=album,
                 media_type=MediaType(media_type) if media_type else None,
+                username=username,
             ):
                 if TYPE_CHECKING:
                     assert item.uri is not None
@@ -494,6 +548,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             media=media_uris,
             option=self._convert_queueoption_to_media_player_enqueue(enqueue),
             radio_mode=radio_mode or False,
+            username=username,
         )
 
     @catch_musicassistant_error
@@ -565,6 +620,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         )
         return response
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -578,6 +634,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             media_content_type,
         )
 
+    @override
     async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
         """Search media."""
         return await async_search_media(

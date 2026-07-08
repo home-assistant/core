@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.lovelace import cast as lovelace_cast
+from homeassistant.components.lovelace import DOMAIN, cast as lovelace_cast
 from homeassistant.components.media_player import MediaClass
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
@@ -44,7 +44,7 @@ async def mock_yaml_dashboard(hass: HomeAssistant) -> AsyncGenerator[None]:
     # Set up a YAML dashboard with 2 views.
     assert await async_setup_component(
         hass,
-        "lovelace",
+        DOMAIN,
         {
             "lovelace": {
                 "dashboards": {
@@ -101,7 +101,7 @@ async def test_root_object(hass: HomeAssistant) -> None:
 
 async def test_browse_media_error(hass: HomeAssistant) -> None:
     """Test browse media checks valid URL."""
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     with pytest.raises(HomeAssistantError):
         await lovelace_cast.async_browse_media(

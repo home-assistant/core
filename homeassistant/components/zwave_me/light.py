@@ -1,8 +1,6 @@
 """Representation of an RGB light."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from zwave_me_ws import ZWaveMeData
 
@@ -14,19 +12,18 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ZWaveMeController
-from .const import DOMAIN, ZWaveMePlatform
+from .const import ZWaveMePlatform
+from .controller import ZWaveMeConfigEntry, ZWaveMeController
 from .entity import ZWaveMeEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ZWaveMeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the rgb platform."""
@@ -34,14 +31,7 @@ async def async_setup_entry(
     @callback
     def add_new_device(new_device: ZWaveMeData) -> None:
         """Add a new device."""
-        controller = hass.data[DOMAIN][config_entry.entry_id]
-        rgb = ZWaveMeRGB(controller, new_device)
-
-        async_add_entities(
-            [
-                rgb,
-            ]
-        )
+        async_add_entities([ZWaveMeRGB(config_entry.runtime_data, new_device)])
 
     async_dispatcher_connect(
         hass, f"ZWAVE_ME_NEW_{ZWaveMePlatform.RGB_LIGHT.upper()}", add_new_device
@@ -71,10 +61,12 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
             self._attr_supported_features = LightEntityFeature.TRANSITION
         self._attr_supported_color_modes: set[ColorMode] = {self._attr_color_mode}
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self.controller.zwave_api.send_command(self.device.id, "off")
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         color: tuple[int, int, int] | None = kwargs.get(ATTR_RGB_COLOR)
@@ -108,20 +100,26 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
 
         cmd = command_id
         if command_args:
-            cmd = f"{command_id}?{'&'.join(f'{argId}={argVal}' for argId, argVal in command_args.items())}"
+            args = "&".join(
+                f"{argId}={argVal}" for argId, argVal in command_args.items()
+            )
+            cmd = f"{command_id}?{args}"
         self.controller.zwave_api.send_command(self.device.id, cmd)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the light is on."""
         return self.device.level == "on"
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of a device."""
         return max(self.device.color.values())
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int]:
         """Return the rgb color value [int, int, int]."""
         rgb = self.device.color

@@ -1,4 +1,5 @@
 """The motion_blinds component."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 import logging

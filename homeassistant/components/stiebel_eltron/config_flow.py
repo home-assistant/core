@@ -1,20 +1,48 @@
 """Config flow for the STIEBEL ELTRON integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
-from pymodbus.client import ModbusTcpClient
-from pystiebeleltron.pystiebeleltron import StiebelEltronAPI
+from pystiebeleltron import StiebelEltronModbusError, get_controller_model
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    TextSelector,
+)
 
 from .const import DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): TextSelector(),
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
+            NumberSelector(
+                NumberSelectorConfig(min=1, max=65535, mode=NumberSelectorMode.BOX)
+            ),
+            vol.Coerce(int),
+        ),
+    }
+)
+
+
+async def check_controller_model(host: str, port: int) -> str | None:
+    """Check if the controller model is valid."""
+    try:
+        await get_controller_model(host, port)
+    except StiebelEltronModbusError:
+        _LOGGER.debug("Cannot connect to Stiebel Eltron device", exc_info=True)
+        return "cannot_connect"
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        return "unknown"
+    return None
 
 
 class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -22,6 +50,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -31,52 +60,49 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(
                 {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
-            client = StiebelEltronAPI(
-                ModbusTcpClient(user_input[CONF_HOST], port=user_input[CONF_PORT]), 1
+            error = await check_controller_model(
+                user_input[CONF_HOST], user_input[CONF_PORT]
             )
-            try:
-                success = await self.hass.async_add_executor_job(client.update)
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            if error is not None:
+                errors["base"] = error
             else:
-                if not success:
-                    errors["base"] = "cannot_connect"
-            if not errors:
                 return self.async_create_entry(title="Stiebel Eltron", data=user_input)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                }
-            ),
+            data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import."""
-        self._async_abort_entries_match(
-            {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
-        )
-        client = StiebelEltronAPI(
-            ModbusTcpClient(user_input[CONF_HOST], port=user_input[CONF_PORT]), 1
-        )
-        try:
-            success = await self.hass.async_add_executor_job(client.update)
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            return self.async_abort(reason="unknown")
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow."""
+        config_entry = self._get_reconfigure_entry()
 
-        if not success:
-            return self.async_abort(reason="cannot_connect")
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
+            error = await check_controller_model(
+                user_input[CONF_HOST], user_input[CONF_PORT]
+            )
+            if error is not None:
+                errors["base"] = error
+            else:
+                return self.async_update_reload_and_abort(
+                    config_entry,
+                    data_updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                    },
+                )
 
-        return self.async_create_entry(
-            title=user_input[CONF_NAME],
-            data={
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_PORT: user_input[CONF_PORT],
-            },
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, config_entry.data
+            ),
+            errors=errors,
         )

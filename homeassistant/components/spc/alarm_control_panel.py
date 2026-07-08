@@ -1,6 +1,6 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
 
-from __future__ import annotations
+from typing import override
 
 from pyspcwebgw import SpcWebGateway
 from pyspcwebgw.area import Area
@@ -64,6 +64,7 @@ class SpcAlarm(AlarmControlPanelEntity):
         self._api = api
         self._attr_name = area.name
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call for adding new entities."""
         self.async_on_remove(
@@ -80,30 +81,36 @@ class SpcAlarm(AlarmControlPanelEntity):
         self.async_schedule_update_ha_state(True)
 
     @property
+    @override
     def changed_by(self) -> str:
         """Return the user the last change was triggered by."""
         return self._area.last_changed_by
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         return _get_alarm_state(self._area)
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
 
         await self._api.change_mode(area=self._area, new_mode=AreaMode.UNSET)
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
 
         await self._api.change_mode(area=self._area, new_mode=AreaMode.PART_SET_A)
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm home command."""
 
         await self._api.change_mode(area=self._area, new_mode=AreaMode.PART_SET_B)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
 

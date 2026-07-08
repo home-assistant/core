@@ -1,7 +1,5 @@
 """Convert the HA config to the dynalite config."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 

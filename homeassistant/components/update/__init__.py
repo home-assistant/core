@@ -1,12 +1,10 @@
 """Component to allow for providing device or service updates."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from enum import StrEnum
 from functools import lru_cache
 import logging
-from typing import Any, Final, final
+from typing import Any, Final, final, override
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
 from propcache.api import cached_property
@@ -14,7 +12,12 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_PICTURE, STATE_OFF, STATE_ON, EntityCategory
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    EntityCategory,
+    EntityStateAttribute,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -24,7 +27,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_AUTO_UPDATE,
     ATTR_BACKUP,
     ATTR_DISPLAY_PRECISION,
@@ -41,6 +44,7 @@ from .const import (
     SERVICE_INSTALL,
     SERVICE_SKIP,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,6 +80,7 @@ __all__ = [
     "UpdateEntity",
     "UpdateEntityDescription",
     "UpdateEntityFeature",
+    "UpdateEntityStateAttribute",
 ]
 
 # mypy: disallow-any-generics
@@ -213,11 +218,11 @@ class UpdateEntity(
 
     _entity_component_unrecorded_attributes = frozenset(
         {
-            ATTR_DISPLAY_PRECISION,
-            ATTR_ENTITY_PICTURE,
-            ATTR_IN_PROGRESS,
-            ATTR_RELEASE_SUMMARY,
-            ATTR_UPDATE_PERCENTAGE,
+            UpdateEntityStateAttribute.DISPLAY_PRECISION,
+            EntityStateAttribute.ENTITY_PICTURE,
+            UpdateEntityStateAttribute.IN_PROGRESS,
+            UpdateEntityStateAttribute.RELEASE_SUMMARY,
+            UpdateEntityStateAttribute.UPDATE_PERCENTAGE,
         }
     )
 
@@ -247,6 +252,7 @@ class UpdateEntity(
         """Version installed and in use."""
         return self._attr_installed_version
 
+    @override
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class.
 
@@ -255,6 +261,7 @@ class UpdateEntity(
         return self.device_class is not None
 
     @cached_property
+    @override
     def device_class(self) -> UpdateDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -273,6 +280,7 @@ class UpdateEntity(
         return 0
 
     @property
+    @override
     def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
         if hasattr(self, "_attr_entity_category"):
@@ -284,6 +292,7 @@ class UpdateEntity(
         return EntityCategory.DIAGNOSTIC
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend.
 
@@ -322,6 +331,7 @@ class UpdateEntity(
         return self._attr_release_url
 
     @cached_property
+    @override
     def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
@@ -408,6 +418,7 @@ class UpdateEntity(
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         if (installed_version := self.installed_version) is None or (
@@ -429,6 +440,7 @@ class UpdateEntity(
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         if (release_summary := self.release_summary) is not None:
@@ -458,16 +470,16 @@ class UpdateEntity(
             self.__skipped_version = None
 
         return {
-            ATTR_AUTO_UPDATE: self.auto_update,
-            ATTR_DISPLAY_PRECISION: self.display_precision,
-            ATTR_INSTALLED_VERSION: installed_version,
-            ATTR_IN_PROGRESS: in_progress,
-            ATTR_LATEST_VERSION: latest_version,
-            ATTR_RELEASE_SUMMARY: release_summary,
-            ATTR_RELEASE_URL: self.release_url,
-            ATTR_SKIPPED_VERSION: skipped_version,
-            ATTR_TITLE: self.title,
-            ATTR_UPDATE_PERCENTAGE: update_percentage,
+            UpdateEntityStateAttribute.AUTO_UPDATE: self.auto_update,
+            UpdateEntityStateAttribute.DISPLAY_PRECISION: self.display_precision,
+            UpdateEntityStateAttribute.INSTALLED_VERSION: installed_version,
+            UpdateEntityStateAttribute.IN_PROGRESS: in_progress,
+            UpdateEntityStateAttribute.LATEST_VERSION: latest_version,
+            UpdateEntityStateAttribute.RELEASE_SUMMARY: release_summary,
+            UpdateEntityStateAttribute.RELEASE_URL: self.release_url,
+            UpdateEntityStateAttribute.SKIPPED_VERSION: skipped_version,
+            UpdateEntityStateAttribute.TITLE: self.title,
+            UpdateEntityStateAttribute.UPDATE_PERCENTAGE: update_percentage,
         }
 
     @final
@@ -491,6 +503,7 @@ class UpdateEntity(
             self.__in_progress = False
             self.async_write_ha_state()
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the update entity is added to hass.
 
@@ -498,8 +511,14 @@ class UpdateEntity(
         """
         await super().async_internal_added_to_hass()
         state = await self.async_get_last_state()
-        if state is not None and state.attributes.get(ATTR_SKIPPED_VERSION) is not None:
-            self.__skipped_version = state.attributes[ATTR_SKIPPED_VERSION]
+        if (
+            state is not None
+            and state.attributes.get(UpdateEntityStateAttribute.SKIPPED_VERSION)
+            is not None
+        ):
+            self.__skipped_version = state.attributes[
+                UpdateEntityStateAttribute.SKIPPED_VERSION
+            ]
 
 
 @websocket_api.require_admin

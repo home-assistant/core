@@ -1,7 +1,5 @@
 """Component to embed Aqualink devices."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from functools import wraps
@@ -37,6 +35,7 @@ from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 from .const import DOMAIN
 from .coordinator import AqualinkDataUpdateCoordinator
 from .entity import AqualinkEntity
+from .utils import error_detail
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,20 +82,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     except AqualinkServiceUnauthorizedException as auth_exception:
         await aqualink.close()
         raise ConfigEntryAuthFailed(
-            "Invalid credentials for iAqualink"
+            "Invalid credentials for iAquaLink"
         ) from auth_exception
     except (AqualinkServiceException, TimeoutError, httpx.HTTPError) as aio_exception:
         await aqualink.close()
         raise ConfigEntryNotReady(
-            f"Error while attempting login: {aio_exception}"
+            f"Error while attempting login: {error_detail(aio_exception)}"
         ) from aio_exception
 
     try:
         systems = await aqualink.get_systems()
-    except AqualinkServiceException as svc_exception:
+    except AqualinkServiceUnauthorizedException as auth_exception:
+        await aqualink.close()
+        raise ConfigEntryAuthFailed(
+            "Invalid credentials for iAquaLink"
+        ) from auth_exception
+    except (AqualinkServiceException, TimeoutError, httpx.HTTPError) as svc_exception:
         await aqualink.close()
         raise ConfigEntryNotReady(
-            f"Error while attempting to retrieve systems list: {svc_exception}"
+            "Error while attempting to retrieve systems list: "
+            f"{error_detail(svc_exception)}"
         ) from svc_exception
 
     systems_list = list(systems.values())
@@ -116,14 +121,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     for system in systems_list:
         coordinator = AqualinkDataUpdateCoordinator(hass, entry, system)
         runtime_data.coordinators[system.serial] = coordinator
-        await coordinator.async_config_entry_first_refresh()
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except ConfigEntryAuthFailed:
+            await aqualink.close()
+            raise
 
         try:
             devices = await system.get_devices()
-        except AqualinkServiceException as svc_exception:
+        except AqualinkServiceUnauthorizedException as auth_exception:
+            await aqualink.close()
+            raise ConfigEntryAuthFailed(
+                "Invalid credentials for iAquaLink"
+            ) from auth_exception
+        except (
+            AqualinkServiceException,
+            TimeoutError,
+            httpx.HTTPError,
+        ) as svc_exception:
             await aqualink.close()
             raise ConfigEntryNotReady(
-                f"Error while attempting to retrieve devices list: {svc_exception}"
+                "Error while attempting to retrieve devices list: "
+                f"{error_detail(svc_exception)}"
             ) from svc_exception
 
         device_registry = dr.async_get(hass)

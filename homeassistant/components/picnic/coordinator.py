@@ -1,12 +1,11 @@
 """Coordinator to fetch data from the Picnic API."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 import copy
 from datetime import timedelta
 import logging
+from typing import override
 
 from python_picnic_api2 import PicnicAPI
 from python_picnic_api2.session import PicnicAuthError
@@ -46,6 +45,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=30),
         )
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
         try:
@@ -67,7 +67,10 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         return data
 
     def fetch_data(self):
-        """Fetch the data from the Picnic API and return a flat dict with only needed sensor data."""
+        """Fetch data from the Picnic API.
+
+        Return a flat dict with only needed sensor data.
+        """
         # Fetch from the API and pre-process the data
         if not (cart := self.picnic_api_client.get_cart()):
             raise UpdateFailed("API response doesn't contain expected data.")
@@ -117,7 +120,8 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
 
         # Determine the last order and return an empty dict if there is none
         try:
-            # Filter on status CURRENT and select the last on the list which is the first one to be delivered
+            # Filter on status CURRENT and select the last
+            # on the list which is the first one to be delivered
             # Make a deepcopy because some references are local
             next_deliveries = list(
                 filter(lambda d: d["status"] == "CURRENT", deliveries)
@@ -127,7 +131,8 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             )
             last_order = copy.deepcopy(deliveries[0]) if deliveries else {}
         except KeyError, TypeError:
-            # A KeyError or TypeError indicate that the response contains unexpected data
+            # A KeyError or TypeError indicate that the
+            # response contains unexpected data
             return {}, {}
 
         #  Get the next order's position details if there is an undelivered order
@@ -139,7 +144,8 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
                     next_delivery["delivery_id"]
                 )
 
-        # Determine the ETA, if available, the one from the delivery position API is more precise
+        # Determine the ETA, if available, the one from the
+        # delivery position API is more precise
         # but, it's only available shortly before the actual delivery.
         next_delivery["eta"] = delivery_position.get(
             "eta_window", next_delivery.get("eta2", {})
