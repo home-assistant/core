@@ -15,51 +15,32 @@ import voluptuous as vol
 from homeassistant import core as hacore
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.climate import (
-    ATTR_CURRENT_TEMPERATURE,
-    ATTR_FAN_MODE,
-    ATTR_FAN_MODES,
-    ATTR_HVAC_ACTION,
-    ATTR_HVAC_MODES,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
+    ClimateEntityCapabilityAttribute,
+    ClimateEntityStateAttribute,
     HVACAction,
 )
-from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
-)
+from homeassistant.components.cover import CoverEntityStateAttribute
 from homeassistant.components.fan import (
-    ATTR_DIRECTION,
-    ATTR_OSCILLATING,
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
-    ATTR_PRESET_MODES,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
+    FanEntityCapabilityAttribute,
+    FanEntityStateAttribute,
 )
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMIDITY
-from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.humidifier import (
+    HumidifierEntityCapabilityAttribute,
+    HumidifierEntityStateAttribute,
+)
+from homeassistant.components.light import LightEntityStateAttribute
 from homeassistant.components.sensor import SensorDeviceClass
-
-# Alias water_heater constants to avoid name clashes with
-# similarly named climate constants
 from homeassistant.components.water_heater import (
-    ATTR_AWAY_MODE as WATER_HEATER_ATTR_AWAY_MODE,
-    ATTR_CURRENT_TEMPERATURE as WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
-    ATTR_MAX_TEMP as WATER_HEATER_ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP as WATER_HEATER_ATTR_MIN_TEMP,
-    ATTR_OPERATION_LIST as WATER_HEATER_ATTR_OPERATION_LIST,
-    ATTR_OPERATION_MODE as WATER_HEATER_ATTR_OPERATION_MODE,
-    ATTR_TARGET_TEMP_HIGH as WATER_HEATER_ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW as WATER_HEATER_ATTR_TARGET_TEMP_LOW,
+    WaterHeaterCapabilityAttribute,
+    WaterHeaterStateAttribute,
 )
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_MODE,
-    ATTR_TEMPERATURE,
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
     PERCENTAGE,
@@ -818,13 +799,13 @@ class PrometheusMetrics:
         )
         self._float_metric(
             state,
-            ATTR_CURRENT_POSITION,
+            CoverEntityStateAttribute.CURRENT_POSITION,
             "cover_position",
             "Position of the cover (0-100)",
         )
         self._float_metric(
             state,
-            ATTR_CURRENT_TILT_POSITION,
+            CoverEntityStateAttribute.CURRENT_TILT_POSITION,
             "cover_tilt_position",
             "Tilt Position of the cover (0-100)",
         )
@@ -833,7 +814,7 @@ class PrometheusMetrics:
         if (value := self.state_as_number(state)) is None:
             return
 
-        brightness = state.attributes.get(ATTR_BRIGHTNESS)
+        brightness = state.attributes.get(LightEntityStateAttribute.BRIGHTNESS)
         if state.state == STATE_ON and brightness is not None:
             value = float(brightness) / 255.0
         value = value * 100
@@ -848,25 +829,25 @@ class PrometheusMetrics:
     def _handle_climate(self, state: State) -> None:
         self._temperature_metric(
             state,
-            ATTR_TEMPERATURE,
+            ClimateEntityStateAttribute.TEMPERATURE,
             "climate_target_temperature_celsius",
             "Target temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
-            ATTR_TARGET_TEMP_HIGH,
+            ClimateEntityStateAttribute.TARGET_TEMP_HIGH,
             "climate_target_temperature_high_celsius",
             "Target high temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
-            ATTR_TARGET_TEMP_LOW,
+            ClimateEntityStateAttribute.TARGET_TEMP_LOW,
             "climate_target_temperature_low_celsius",
             "Target low temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
-            ATTR_CURRENT_TEMPERATURE,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE,
             "climate_current_temperature_celsius",
             "Current temperature in degrees Celsius",
         )
@@ -874,7 +855,7 @@ class PrometheusMetrics:
         self._enum_metric(
             state,
             (
-                (attr := state.attributes.get(ATTR_HVAC_ACTION))
+                (attr := state.attributes.get(ClimateEntityStateAttribute.HVAC_ACTION))
                 and getattr(attr, "value", attr)
             ),
             [action.value for action in HVACAction],
@@ -885,23 +866,23 @@ class PrometheusMetrics:
         self._enum_metric(
             state,
             state.state,
-            state.attributes.get(ATTR_HVAC_MODES),
+            state.attributes.get(ClimateEntityCapabilityAttribute.HVAC_MODES),
             "climate_mode",
             "HVAC mode",
             "mode",
         )
         self._enum_metric(
             state,
-            state.attributes.get(ATTR_PRESET_MODE),
-            state.attributes.get(ATTR_PRESET_MODES),
+            state.attributes.get(ClimateEntityStateAttribute.PRESET_MODE),
+            state.attributes.get(ClimateEntityCapabilityAttribute.PRESET_MODES),
             "climate_preset_mode",
             "Preset mode enum",
             "mode",
         )
         self._enum_metric(
             state,
-            state.attributes.get(ATTR_FAN_MODE),
-            state.attributes.get(ATTR_FAN_MODES),
+            state.attributes.get(ClimateEntityStateAttribute.FAN_MODE),
+            state.attributes.get(ClimateEntityCapabilityAttribute.FAN_MODES),
             "climate_fan_mode",
             "Fan mode enum",
             "mode",
@@ -912,15 +893,15 @@ class PrometheusMetrics:
 
         self._float_metric(
             state,
-            ATTR_HUMIDITY,
+            HumidifierEntityStateAttribute.HUMIDITY,
             "humidifier_target_humidity_percent",
             "Target Relative Humidity",
         )
 
         self._enum_metric(
             state,
-            state.attributes.get(ATTR_MODE),
-            state.attributes.get(ATTR_AVAILABLE_MODES),
+            state.attributes.get(HumidifierEntityStateAttribute.MODE),
+            state.attributes.get(HumidifierEntityCapabilityAttribute.AVAILABLE_MODES),
             "humidifier_mode",
             "Humidifier Mode",
             "mode",
@@ -930,44 +911,45 @@ class PrometheusMetrics:
         # Temperatures
         self._temperature_metric(
             state,
-            ATTR_TEMPERATURE,
+            WaterHeaterStateAttribute.TEMPERATURE,
             "water_heater_temperature_celsius",
             "Target temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
-            WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
+            WaterHeaterStateAttribute.CURRENT_TEMPERATURE,
             "water_heater_current_temperature_celsius",
             "Current temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
-            WATER_HEATER_ATTR_TARGET_TEMP_HIGH,
+            WaterHeaterStateAttribute.TARGET_TEMP_HIGH,
             "water_heater_target_temperature_high_celsius",
             "Target high temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
-            WATER_HEATER_ATTR_TARGET_TEMP_LOW,
+            WaterHeaterStateAttribute.TARGET_TEMP_LOW,
             "water_heater_target_temperature_low_celsius",
             "Target low temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
-            WATER_HEATER_ATTR_MIN_TEMP,
+            WaterHeaterCapabilityAttribute.MIN_TEMP,
             "water_heater_min_temperature_celsius",
             "Minimum allowed temperature in degrees Celsius",
         )
         self._temperature_metric(
             state,
-            WATER_HEATER_ATTR_MAX_TEMP,
+            WaterHeaterCapabilityAttribute.MAX_TEMP,
             "water_heater_max_temperature_celsius",
             "Maximum allowed temperature in degrees Celsius",
         )
         self._enum_metric(
             state,
-            state.attributes.get(WATER_HEATER_ATTR_OPERATION_MODE) or state.state,
-            state.attributes.get(WATER_HEATER_ATTR_OPERATION_LIST),
+            state.attributes.get(WaterHeaterStateAttribute.OPERATION_MODE)
+            or state.state,
+            state.attributes.get(WaterHeaterCapabilityAttribute.OPERATION_LIST),
             "water_heater_operation_mode",
             "Water heater operation mode",
             "mode",
@@ -976,7 +958,7 @@ class PrometheusMetrics:
         # Away mode bool
         self._bool_metric(
             state,
-            WATER_HEATER_ATTR_AWAY_MODE,
+            WaterHeaterStateAttribute.AWAY_MODE,
             "water_heater_away_mode",
             "Whether away mode is on (0/1)",
             {STATE_ON},
@@ -989,29 +971,32 @@ class PrometheusMetrics:
     def _handle_fan(self, state: State) -> None:
         self._numeric_metric(state, "fan", "fan")
         self._float_metric(
-            state, ATTR_PERCENTAGE, "fan_speed_percent", "Fan speed percent (0-100)"
+            state,
+            FanEntityStateAttribute.PERCENTAGE,
+            "fan_speed_percent",
+            "Fan speed percent (0-100)",
         )
         self._bool_metric(
             state,
-            ATTR_OSCILLATING,
+            FanEntityStateAttribute.OSCILLATING,
             "fan_is_oscillating",
             "Whether the fan is oscillating (0/1)",
         )
 
         self._enum_metric(
             state,
-            state.attributes.get(ATTR_PRESET_MODE),
-            state.attributes.get(ATTR_PRESET_MODES),
+            state.attributes.get(FanEntityStateAttribute.PRESET_MODE),
+            state.attributes.get(FanEntityCapabilityAttribute.PRESET_MODES),
             "fan_preset_mode",
             "Fan preset mode enum",
             "mode",
         )
 
-        fan_direction = state.attributes.get(ATTR_DIRECTION)
+        fan_direction = state.attributes.get(FanEntityStateAttribute.DIRECTION)
         if fan_direction in {DIRECTION_FORWARD, DIRECTION_REVERSE}:
             self._bool_metric(
                 state,
-                ATTR_DIRECTION,
+                FanEntityStateAttribute.DIRECTION,
                 "fan_direction_reversed",
                 "Fan direction reversed (bool)",
                 {DIRECTION_REVERSE},
