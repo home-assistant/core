@@ -10,20 +10,11 @@
       "angle": {
         "default": "mdi:angle-acute"
       },
-      "apparent_power": {
-        "default": "mdi:lightning-bolt-circle"
-      },
       "capacitive_reactive_energy": {
         "default": "mdi:alpha-e-circle-outline"
       },
       "capacitive_reactive_power": {
         "default": "mdi:flash-outline"
-      },
-      "current": {
-        "default": "mdi:flash-auto"
-      },
-      "frequency": {
-        "default": "mdi:current-ac"
       },
       "inductive_reactive_energy": {
         "default": "mdi:alpha-e-circle-outline"
@@ -33,9 +24,6 @@
       },
       "phase_voltage": {
         "default": "mdi:sine-wave"
-      },
-      "power_factor": {
-        "default": "mdi:math-cos"
       },
       "thd_current": {
         "default": "mdi:chart-bubble"

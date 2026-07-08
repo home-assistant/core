@@ -147,7 +147,7 @@ async def test_sensor_native_value_non_dict_data(
     hass: HomeAssistant, loaded_entry: MockConfigEntry
 ) -> None:
     """native_value returns None when coordinator.data is not a dict."""
-    from homeassistant.components.wibeee.const import SENSOR_TYPES  # noqa: PLC0415
+    from homeassistant.components.wibeee.sensor import SENSOR_TYPES  # noqa: PLC0415
     from homeassistant.components.wibeee.sensor import WibeeeSensor  # noqa: PLC0415
 
     runtime = loaded_entry.runtime_data
@@ -167,7 +167,7 @@ async def test_sensor_native_value_phase_not_dict(
     hass: HomeAssistant, loaded_entry: MockConfigEntry
 ) -> None:
     """native_value returns None when phase data is not a dict."""
-    from homeassistant.components.wibeee.const import SENSOR_TYPES  # noqa: PLC0415
+    from homeassistant.components.wibeee.sensor import SENSOR_TYPES  # noqa: PLC0415
     from homeassistant.components.wibeee.sensor import WibeeeSensor  # noqa: PLC0415
 
     runtime = loaded_entry.runtime_data
@@ -187,7 +187,7 @@ async def test_sensor_native_value_missing_key(
     hass: HomeAssistant, loaded_entry: MockConfigEntry
 ) -> None:
     """native_value returns None when the sensor key is absent from phase."""
-    from homeassistant.components.wibeee.const import SENSOR_TYPES  # noqa: PLC0415
+    from homeassistant.components.wibeee.sensor import SENSOR_TYPES  # noqa: PLC0415
     from homeassistant.components.wibeee.sensor import WibeeeSensor  # noqa: PLC0415
 
     runtime = loaded_entry.runtime_data
@@ -207,7 +207,7 @@ async def test_sensor_native_value_invalid_number(
     hass: HomeAssistant, loaded_entry: MockConfigEntry
 ) -> None:
     """native_value returns None when value can't be parsed as a float."""
-    from homeassistant.components.wibeee.const import SENSOR_TYPES  # noqa: PLC0415
+    from homeassistant.components.wibeee.sensor import SENSOR_TYPES  # noqa: PLC0415
     from homeassistant.components.wibeee.sensor import WibeeeSensor  # noqa: PLC0415
 
     runtime = loaded_entry.runtime_data
