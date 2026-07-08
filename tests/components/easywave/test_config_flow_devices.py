@@ -1,5 +1,6 @@
 """Tests for the Easywave config flow — device learning sub-flows."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from easywave_home_control.codec import (
@@ -83,9 +84,12 @@ async def _start_neo_sensor_flow(
 ) -> dict:
     """Start the subentry flow for adding a neo sensor."""
     result = await _start_neo_sensor_flow_until_intro(hass, mock_config_entry)
-    return await hass.config_entries.subentries.async_configure(
+    result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {"next_step_id": "learn"}
     )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    await hass.async_block_till_done()
+    return await hass.config_entries.subentries.async_configure(result["flow_id"])
 
 
 _start_device_flow = _start_transmitter_flow
@@ -104,13 +108,24 @@ def _make_coordinator(
     gateway_serial: bytes | None = b"\x00" * 15 + b"\xab",
     send_ok: bool = True,
     telegram: dict | None = None,
+    defer_receive: bool = False,
 ) -> MagicMock:
     """Return a mock coordinator with transceiver configured."""
     coordinator = MagicMock()
     coordinator.transceiver.is_connected = is_connected
     coordinator.transceiver.get_gateway_serial = AsyncMock(return_value=gateway_serial)
     coordinator.transceiver.send_command = AsyncMock(return_value=send_ok)
-    coordinator.transceiver.receive_telegram = AsyncMock(return_value=telegram)
+    if defer_receive and telegram is not None:
+
+        async def _receive_telegram(*_args: object, **_kwargs: object) -> object:
+            await asyncio.sleep(0)
+            return telegram
+
+        coordinator.transceiver.receive_telegram = AsyncMock(
+            side_effect=_receive_telegram
+        )
+    else:
+        coordinator.transceiver.receive_telegram = AsyncMock(return_value=telegram)
     coordinator.suspend_telegram_listener = AsyncMock()
     coordinator.resume_telegram_listener = MagicMock()
     return coordinator
@@ -294,13 +309,11 @@ async def test_neo_sensor_flow_full(
 ) -> None:
     """Test neo sensor learning flow: learn → name → saved."""
     telegram = _make_sensor_learn_telegram()
-    coordinator = _make_coordinator(telegram=telegram)
+    coordinator = _make_coordinator(telegram=telegram, defer_receive=True)
     mock_config_entry.add_to_hass(hass)
     mock_config_entry.runtime_data = _make_connected_runtime(coordinator)
 
     result = await _start_neo_sensor_flow(hass, mock_config_entry)
-    if result["type"] is FlowResultType.SHOW_PROGRESS_DONE:
-        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "sensor_confirm"
     assert (
@@ -330,15 +343,13 @@ async def test_neo_sensor_flow_duplicate_rejected(
 ) -> None:
     """Test that a duplicate neo sensor serial is rejected."""
     telegram = _make_sensor_learn_telegram()
-    coordinator = _make_coordinator(telegram=telegram)
+    coordinator = _make_coordinator(telegram=telegram, defer_receive=True)
     mock_config_entry_with_neo_sensor.add_to_hass(hass)
     mock_config_entry_with_neo_sensor.runtime_data = _make_connected_runtime(
         coordinator
     )
 
     result = await _start_neo_sensor_flow(hass, mock_config_entry_with_neo_sensor)
-    if result["type"] is FlowResultType.SHOW_PROGRESS_DONE:
-        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 

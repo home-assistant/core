@@ -6,17 +6,24 @@ from typing import Final
 
 DOMAIN: Final = "easywave"
 
+# ── Radio Frequency / Regulatory Compliance ─────────────────────────────────
+# Home Assistant requires integrations to verify that RF hardware is permitted
+# in the user's configured country. The RX11 USB Transceiver operates on
+# 868 MHz (EU ISM band), which is only allowed in CEPT member countries.
+FREQUENCY_868MHZ: Final = "868 MHz"
+
 # ── USB Device Registry ──────────────────────────────────────────────────────
 # Single source of truth for supported USB sticks.
 # Adding a new device here is sufficient — config flow and discovery pick it up
 # automatically. Also update the `usb` list in manifest.json.
 #
 # Key:   (VID, PID) as int
-# Value: {"manufacturer": str, "product": str}
+# Value: {"manufacturer": str, "product": str, "frequency": str}
 USB_DEVICE_NAMES: Final[dict[tuple[int, int], dict[str, str]]] = {
     (0x155A, 0x1014): {
         "manufacturer": "ELDAT",
         "product": "RX11 USB Transceiver",
+        "frequency": FREQUENCY_868MHZ,
     },
 }
 
@@ -34,12 +41,6 @@ CONF_USB_PID: Final = "usb_pid"
 CONF_USB_SERIAL_NUMBER: Final = "usb_serial_number"
 CONF_USB_MANUFACTURER: Final = "usb_manufacturer"
 CONF_USB_PRODUCT: Final = "usb_product"
-
-# ── Radio Frequency / Regulatory Compliance ─────────────────────────────────
-# Home Assistant requires integrations to verify that RF hardware is permitted
-# in the user's configured country. The RX11 USB Transceiver operates on
-# 868 MHz (EU ISM band), which is only allowed in CEPT member countries.
-FREQUENCY_868MHZ: Final = "868 MHz"
 
 ALLOWED_COUNTRIES_868MHZ: Final = frozenset(
     {
@@ -110,12 +111,12 @@ def is_country_allowed_for_frequency(frequency: str, country_code: str | None) -
 
 
 def get_frequency_for_pid(pid: int | None) -> str | None:
-    """Get frequency band for a USB device PID.
-
-    RX11 USB Transceiver (0x1014) operates at 868 MHz.
-    """
-    if pid == 0x1014:
-        return FREQUENCY_868MHZ
+    """Get frequency band for a supported USB device PID."""
+    if pid is None:
+        return None
+    for (_vid, device_pid), device_info in USB_DEVICE_NAMES.items():
+        if device_pid == pid:
+            return device_info["frequency"]
     return None
 
 

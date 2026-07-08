@@ -25,6 +25,7 @@ def test_usb_device_names() -> None:
     device_info = USB_DEVICE_NAMES[(0x155A, 0x1014)]
     assert device_info["manufacturer"] == "ELDAT"
     assert device_info["product"] == "RX11 USB Transceiver"
+    assert device_info["frequency"] == FREQUENCY_868MHZ
 
 
 def test_supported_usb_ids() -> None:
