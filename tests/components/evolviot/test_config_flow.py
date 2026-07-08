@@ -2,11 +2,9 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pyevolviot import EvolvIOTConnectionError, EvolvIOTDeviceAuthorizationPending
+
 from homeassistant import config_entries
-from homeassistant.components.evolviot.api import (
-    EvolvIOTConnectionError,
-    EvolvIOTDeviceAuthorizationPending,
-)
 from homeassistant.components.evolviot.const import (
     CONF_ACCESS_TOKEN,
     CONF_API_BASE_URL,

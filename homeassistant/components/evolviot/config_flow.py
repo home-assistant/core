@@ -7,6 +7,15 @@ from io import BytesIO
 from typing import Any, override
 
 from PIL import Image
+from pyevolviot import (
+    EvolvIOTApi,
+    EvolvIOTAuthError,
+    EvolvIOTConnectionError,
+    EvolvIOTDeviceAuthorizationDenied,
+    EvolvIOTDeviceAuthorizationExpired,
+    EvolvIOTDeviceAuthorizationPending,
+    normalize_api_base_url,
+)
 import qrcode
 import voluptuous as vol
 
@@ -16,15 +25,6 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import (
-    EvolvIOTApi,
-    EvolvIOTAuthError,
-    EvolvIOTConnectionError,
-    EvolvIOTDeviceAuthorizationDenied,
-    EvolvIOTDeviceAuthorizationExpired,
-    EvolvIOTDeviceAuthorizationPending,
-    normalize_api_base_url,
-)
 from .const import (
     CONF_ACCESS_TOKEN,
     CONF_API_BASE_URL,

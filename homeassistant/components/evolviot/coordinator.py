@@ -4,11 +4,12 @@ import asyncio
 import logging
 from typing import Any, override
 
+from pyevolviot import EvolvIOTApi, EvolvIOTApiError, EvolvIOTAuthError
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import EvolvIOTApi, EvolvIOTApiError, EvolvIOTAuthError
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, STORAGE_KEY_PREFIX, STORAGE_VERSION
 
 _LOGGER = logging.getLogger(__name__)

@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["qrcode[pil]==8.2"]
+  "requirements": ["pyevolviot==0.1.0", "qrcode[pil]==8.2"]
 }

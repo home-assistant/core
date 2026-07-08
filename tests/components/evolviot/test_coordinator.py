@@ -2,9 +2,9 @@
 
 from unittest.mock import AsyncMock
 
+from pyevolviot import EvolvIOTApiError, EvolvIOTAuthError
 import pytest
 
-from homeassistant.components.evolviot.api import EvolvIOTApiError, EvolvIOTAuthError
 from homeassistant.components.evolviot.coordinator import EvolvIOTDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed

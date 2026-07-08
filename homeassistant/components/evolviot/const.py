@@ -21,9 +21,6 @@ DOMAIN = "evolviot"
 NAME = "EvolvIOT"
 
 DEFAULT_API_BASE_URL = "https://api.evolviot.com/api/homeassistant"
-DEFAULT_HEALTH_URL = "https://api.evolviot.com/health"
-DEFAULT_LOCAL_COMMAND_TIMEOUT = 3
-LOCAL_MDNS_DOMAIN = "evolviot"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 STORAGE_VERSION = 1
 STORAGE_KEY_PREFIX = DOMAIN

@@ -2166,6 +2166,9 @@ pyeverlights==0.1.0
 # homeassistant.components.evil_genius_labs
 pyevilgenius==2.0.0
 
+# homeassistant.components.evolviot
+pyevolviot==0.1.0
+
 # homeassistant.components.ezviz
 pyezvizapi==1.0.0.7
 
