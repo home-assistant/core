@@ -21,7 +21,7 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         async def async_added_to_hass(self) -> None:
             pass
     """,
-            id="no_parent",
+            id="added_to_no_parent",
         ),
         pytest.param(
             """
@@ -29,7 +29,7 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         async def async_will_remove_from_hass(self) -> None:
             pass
     """,
-            id="no_parent",
+            id="will_remove_from_no_parent",
         ),
         pytest.param(
             """
@@ -41,7 +41,7 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         async def async_added_to_hass(self) -> None:
             x = 2
         """,
-            id="empty_parent_implementation",
+            id="added_to_empty_parent_implementation",
         ),
         pytest.param(
             """
@@ -53,7 +53,7 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         async def async_will_remove_from_hass(self) -> None:
             x = 2
         """,
-            id="empty_parent_implementation",
+            id="will_remove_from_empty_parent_implementation",
         ),
         pytest.param(
             """
@@ -66,7 +66,7 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         async def async_added_to_hass(self) -> None:
             x = 2
         """,
-            id="empty_parent_implementation2",
+            id="added_to_empty_parent_implementation2",
         ),
         pytest.param(
             """
@@ -79,7 +79,7 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         async def async_will_remove_from_hass(self) -> None:
             x = 2
         """,
-            id="empty_parent_implementation2",
+            id="will_remove_from_empty_parent_implementation2",
         ),
         pytest.param(
             """
@@ -91,7 +91,7 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         async def async_added_to_hass(self) -> None:
             await super().async_added_to_hass()
         """,
-            id="correct_super_call",
+            id="added_to_correct_super_call",
         ),
         pytest.param(
             """
@@ -103,7 +103,7 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         async def async_will_remove_from_hass(self) -> None:
             await super().async_will_remove_from_hass()
         """,
-            id="correct_super_call",
+            id="will_remove_from_correct_super_call",
         ),
         pytest.param(
             """
@@ -115,7 +115,7 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         async def async_added_to_hass(self) -> None:
             return await super().async_added_to_hass()
         """,
-            id="super_call_in_return",
+            id="added_to_super_call_in_return",
         ),
         pytest.param(
             """
@@ -127,7 +127,7 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         async def async_will_remove_from_hass(self) -> None:
             return await super().async_will_remove_from_hass()
         """,
-            id="super_call_in_return",
+            id="will_remove_from_super_call_in_return",
         ),
         pytest.param(
             """
@@ -139,7 +139,7 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         def added_to_hass(self) -> None:
             super().added_to_hass()
         """,
-            id="super_call_not_async",
+            id="added_to_super_call_not_async",
         ),
         pytest.param(
             """
@@ -151,7 +151,7 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         def async_will_remove_from_hass(self) -> None:
             super().async_will_remove_from_hass()
         """,
-            id="super_call_not_async",
+            id="will_remove_from_super_call_not_async",
         ),
         pytest.param(
             """
@@ -167,7 +167,7 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         async def async_added_to_hass(self) -> None:
             await super().async_added_to_hass()
         """,
-            id="multiple_inheritance",
+            id="added_to_multiple_inheritance",
         ),
         pytest.param(
             """
@@ -183,21 +183,21 @@ from . import assert_adds_messages, assert_no_messages, walk_checker
         async def async_will_remove_from_hass(self) -> None:
             await super().async_will_remove_from_hass()
         """,
-            id="multiple_inheritance",
+            id="will_remove_from_multiple_inheritance",
         ),
         pytest.param(
             """
         async def async_added_to_hass() -> None:
             x = 2
         """,
-            id="not_a_method",
+            id="added_to_not_a_method",
         ),
         pytest.param(
             """
-        async def async_addasync_will_remove_from_hassed_to_hass() -> None:
+        async def async_will_remove_from_hass() -> None:
             x = 2
         """,
-            id="not_a_method",
+            id="will_remove_from_not_a_method",
         ),
     ],
 )
@@ -238,7 +238,7 @@ def test_enforce_super_call(
             x = 3
     """,
             1,
-            id="no_super_call",
+            id="added_to_no_super_call",
         ),
         pytest.param(
             """
@@ -251,7 +251,7 @@ def test_enforce_super_call(
             x = 3
     """,
             1,
-            id="no_super_call_remove",
+            id="will_remove_from_no_super_call",
         ),
         pytest.param(
             """
@@ -264,7 +264,7 @@ def test_enforce_super_call(
             x = 3
     """,
             1,
-            id="no_super_call_async",
+            id="added_to_no_super_call",
         ),
         pytest.param(
             """
@@ -277,7 +277,7 @@ def test_enforce_super_call(
             x = 3
     """,
             1,
-            id="no_super_call_async",
+            id="will_remove_from_no_super_call",
         ),
         pytest.param(
             """
@@ -290,7 +290,7 @@ def test_enforce_super_call(
             await Entity.async_added_to_hass()
     """,
             1,
-            id="explicit_call_to_base_implementation",
+            id="added_to_explicit_call_to_base_implementation",
         ),
         pytest.param(
             """
@@ -303,7 +303,7 @@ def test_enforce_super_call(
             await Entity.async_will_remove_from_hass()
     """,
             1,
-            id="explicit_call_to_base_implementation",
+            id="will_remove_from_explicit_call_to_base_implementation",
         ),
         pytest.param(
             """
@@ -320,7 +320,7 @@ def test_enforce_super_call(
             x = 3
     """,
             2,
-            id="multiple_inheritance",
+            id="added_to_multiple_inheritance",
         ),
         pytest.param(
             """
@@ -337,7 +337,7 @@ def test_enforce_super_call(
             x = 3
     """,
             2,
-            id="multiple_inheritance",
+            id="will_remove_from_multiple_inheritance",
         ),
     ],
 )
