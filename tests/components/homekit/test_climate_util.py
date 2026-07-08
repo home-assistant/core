@@ -6,10 +6,12 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
+    ATTR_SWING_MODES,
 )
 from homeassistant.components.homekit.climate_util import (
     HEAT_COOL_DEADBAND,
     get_fan_modes_and_speeds,
+    get_swing_on_mode,
     get_temperature_range_from_state,
     resolve_target_temp_range,
 )
@@ -82,3 +84,11 @@ def test_get_fan_modes_and_speeds_ignores_non_string() -> None:
     )
     assert fan_modes == {"low": "low", "high": "high"}
     assert speeds == ["low", "high"]
+
+
+def test_get_swing_on_mode_none_when_no_swing_modes() -> None:
+    """Test the swing helper returns None when the entity has no swing modes."""
+    assert get_swing_on_mode({}) is None
+    assert get_swing_on_mode({ATTR_SWING_MODES: []}) is None
+    assert get_swing_on_mode({ATTR_SWING_MODES: ["custom"]}) is None
+    assert get_swing_on_mode({ATTR_SWING_MODES: ["off", "vertical"]}) == "vertical"
