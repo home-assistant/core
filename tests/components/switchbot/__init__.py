@@ -1200,7 +1200,14 @@ GARAGE_DOOR_OPENER_SERVICE_INFO = BluetoothServiceInfoBleak(
 CLIMATE_PANEL_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Climate Panel",
     manufacturer_data={
+<<<<<<< Updated upstream
         2409: b"\xb0\xe9\xfe\x8e\x98Oi_\x06\x9a,\x00\x00\x00\x00\xe4\x00\x08\x04\x00\x01\x00\x00"
+=======
+        2409: (
+            b"\xb0\xe9\xfe\x8e\x98Oi_\x06\x9a,"
+            b"\x00\x00\x25\x00\xe4\x00\x08\x04\x00\x01\x00\x00"
+        )
+>>>>>>> Stashed changes
     },
     service_data={
         "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00 _\x00\x10\xf3\xd8@",

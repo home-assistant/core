@@ -297,6 +297,12 @@
       "light_level": {
         "name": "Light level"
       },
+      "off_button_counter": {
+        "name": "Off button counter"
+      },
+      "on_button_counter": {
+        "name": "On button counter"
+      },
       "water_level": {
         "name": "Water level",
         "state": {

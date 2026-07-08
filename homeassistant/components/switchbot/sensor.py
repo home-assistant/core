@@ -126,6 +126,38 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.ENUM,
         options=HumidifierWaterLevel.get_levels(),
     ),
+<<<<<<< Updated upstream
+=======
+    "battery_range": SwitchBotSensorEntityDescription(
+        key="battery_range",
+        translation_key="battery_range",
+        device_class=SensorDeviceClass.ENUM,
+        options=["critical", "low", "medium", "high"],
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda v: {
+            "<10%": "critical",
+            "10-19%": "low",
+            "20-59%": "medium",
+            ">=60%": "high",
+        }.get(str(v)),
+    ),
+    "pm25": SwitchBotSensorEntityDescription(
+        key="pm25",
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PM25,
+    ),
+    "on_button_counter": SwitchBotSensorEntityDescription(
+        key="on_button_counter",
+        translation_key="on_button_counter",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "off_button_counter": SwitchBotSensorEntityDescription(
+        key="off_button_counter",
+        translation_key="off_button_counter",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+>>>>>>> Stashed changes
 }
 
 
