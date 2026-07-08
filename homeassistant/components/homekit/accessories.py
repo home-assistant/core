@@ -163,13 +163,10 @@ def get_accessory(  # noqa: C901
             # An explicit type in the entity config overrides the routing below.
             a_type = CLIMATE_TYPES[climate_type]
         else:
-            # Use the HeaterCooler tile only when the entity exposes a control it
-            # can actually surface there; otherwise the Thermostat handles it and
-            # existing accessories are preserved. Only the ordered speeds
-            # low/middle/medium/high count as fan speeds; timing modes like auto,
-            # on, off, and circulate do not. A single speed cannot drive a useful
-            # rotation slider, so require two or more; a swing mode qualifies on
-            # its own.
+            # Route to HeaterCooler only when the entity exposes two or more
+            # ordered fan speeds (timing modes like auto or circulate do not
+            # count) or a real swing mode; otherwise the Thermostat keeps
+            # handling it and existing accessories are preserved.
             attributes = state.attributes
             has_fan = bool(features & ClimateEntityFeature.FAN_MODE) and (
                 len(get_fan_modes_and_speeds(attributes)[1]) >= 2
