@@ -2153,13 +2153,24 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
                     "condition": "zone.occupancy_is_detected",
                     "options": {"zone": "zone.school"},
                 },
+                {
+                    "condition": "time",
+                    "after": "input_datetime.start",
+                    "before": "sensor.end",
+                },
+                {
+                    "condition": "time",
+                    "after": "08:00:00",
+                },
                 Template("{{ is_state('light.example', 'on') }}", hass),
             ],
         }
     ) == {
         "device_tracker.anne_therese",
         "device_tracker.paulus",
+        "input_datetime.start",
         "person.paulus",
+        "sensor.end",
         "sensor.temperature",
         "sensor.temperature_2",
         "sensor.temperature_3",

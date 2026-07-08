@@ -219,6 +219,21 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> b
             entry, version=new_version, minor_version=new_minor_version
         )
 
+    if entry.version == 2:
+        new_version = 3
+        new_minor_version = 1
+        new_data = {**entry.data}
+
+        if "advanced_settings" in new_data:
+            new_data[SECTION_ADDITIONAL_SETTINGS] = new_data.pop("advanced_settings")
+
+        hass.config_entries.async_update_entry(
+            entry,
+            data=new_data,
+            version=new_version,
+            minor_version=new_minor_version,
+        )
+
     return True
 
 
