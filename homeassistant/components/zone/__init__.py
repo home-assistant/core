@@ -20,6 +20,7 @@ from homeassistant.const import (  # noqa: F401
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_RADIUS,
+    DEFAULT_RADIUS,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
@@ -56,7 +57,6 @@ from .const import (  # noqa: F401
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PASSIVE = False
-DEFAULT_RADIUS = 100
 
 ENTITY_ID_FORMAT = "zone.{}"
 ENTITY_ID_HOME = ENTITY_ID_FORMAT.format(HOME_ZONE)
