@@ -1,5 +1,6 @@
 """Tests for Google Health integration lifecycle (init/unloading)."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
@@ -189,6 +190,8 @@ async def test_runtime_auth_error(
         hass,
         dt_util.utcnow() + POLLING_INTERVAL + timedelta(seconds=1),
     )
+    await hass.async_block_till_done()
+    await asyncio.sleep(0)
     await hass.async_block_till_done()
 
     # Verify that the flow was initiated
