@@ -83,7 +83,7 @@ async def test_water_heater_turn_off_false(
     mock_config_entry: MockConfigEntry,
     mock_my_pv_connection: AsyncMock,
 ) -> None:
-    """Test turning on returns false."""
+    """Test turning off returns false."""
 
     mock_config_entry.add_to_hass(hass)
 
@@ -152,7 +152,7 @@ async def test_water_heater_turn_on_false(
     mock_config_entry: MockConfigEntry,
     mock_my_pv_connection: AsyncMock,
 ) -> None:
-    """Test turning off returns false."""
+    """Test turning on returns false."""
 
     mock_config_entry.add_to_hass(hass)
 
@@ -187,7 +187,7 @@ async def test_water_heater_set_operation_off(
     mock_config_entry: MockConfigEntry,
     mock_my_pv_connection: AsyncMock,
 ) -> None:
-    """Test turning the water heater on."""
+    """Test setting the operation mode to off."""
 
     mock_config_entry.add_to_hass(hass)
 
@@ -301,7 +301,7 @@ async def test_water_heater_set_temp_false(
     assert state.attributes[ATTR_TEMPERATURE] == 62.1
 
 
-async def test_water_heater_set_temp_conection_error(
+async def test_water_heater_set_temp_connection_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_connection: AsyncMock,
