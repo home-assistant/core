@@ -3,14 +3,13 @@
 from enum import StrEnum
 import logging
 
+from pynintendoparental.device import Device
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID, CONF_PIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-
-from pynintendoparental.device import Device
 
 from .const import ATTR_BONUS_TIME, DOMAIN
 from .coordinator import NintendoParentalControlsConfigEntry
