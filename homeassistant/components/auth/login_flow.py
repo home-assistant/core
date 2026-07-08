@@ -93,6 +93,7 @@ from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.network import (
     NoURLAvailableError,
+    async_get_local_networks,
     get_url,
     is_cloud_connection,
 )
@@ -239,7 +240,9 @@ class AuthProvidersView(HomeAssistantView):
                 }
             )
 
-        preselect_remember_me = not cloud_connection and is_local(remote_address)
+        preselect_remember_me = not cloud_connection and is_local(
+            remote_address, async_get_local_networks(hass)
+        )
 
         return self.json(
             {
@@ -361,7 +364,9 @@ class LoginFlowIndexView(LoginFlowBaseView):
         client_id: str = data["client_id"]
         redirect_uri: str = data["redirect_uri"]
 
-        if not indieauth.verify_client_id(client_id):
+        if not indieauth.verify_client_id(
+            client_id, async_get_local_networks(request.app[KEY_HASS])
+        ):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
 
         handler: tuple[str, str] = tuple(data["handler"])
@@ -408,7 +413,9 @@ class LoginFlowResourceView(LoginFlowBaseView):
         """Handle progressing a login flow request."""
         client_id: str = data.pop("client_id")
 
-        if not indieauth.verify_client_id(client_id):
+        if not indieauth.verify_client_id(
+            client_id, async_get_local_networks(request.app[KEY_HASS])
+        ):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
 
         try:

@@ -2,14 +2,14 @@
 
 from collections.abc import Callable
 from contextlib import suppress
-from ipaddress import ip_address
+from ipaddress import IPv6Network, ip_address
 import logging
 
 from aiohttp import hdrs
 from hass_nabucasa import remote
 import yarl
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.network import is_ip_address, is_loopback, normalize_url
 
@@ -25,6 +25,15 @@ SUPERVISOR_NETWORK_HOST = "homeassistant"
 
 class NoURLAvailableError(HomeAssistantError):
     """URL to the Home Assistant instance is not available."""
+
+
+@callback
+def async_get_local_networks(hass: HomeAssistant) -> list[IPv6Network]:
+    """Return locally reachable IPv6 networks."""
+    # Local import to avoid circular dependencies
+    from homeassistant.components import network  # noqa: PLC0415
+
+    return network.async_get_local_networks(hass)
 
 
 def is_internal_request(hass: HomeAssistant) -> bool:

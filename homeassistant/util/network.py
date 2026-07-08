@@ -1,6 +1,14 @@
 """Network utilities."""
 
-from ipaddress import IPv4Address, IPv6Address, ip_address, ip_network
+from collections.abc import Collection
+from ipaddress import (
+    IPv4Address,
+    IPv4Network,
+    IPv6Address,
+    IPv6Network,
+    ip_address,
+    ip_network,
+)
 import re
 
 import yarl
@@ -48,9 +56,39 @@ def is_link_local(address: IPv4Address | IPv6Address) -> bool:
     return address.is_link_local
 
 
-def is_local(address: IPv4Address | IPv6Address) -> bool:
-    """Check if an address is on a local network."""
-    return is_loopback(address) or is_private(address) or is_link_local(address)
+def is_local(
+    address: IPv4Address | IPv6Address,
+    local_networks: Collection[IPv4Network | IPv6Network] | None = None,
+) -> bool:
+    """Check if an address is on a local network.
+
+    ``local_networks`` should contain the host's own on-link networks, such as
+    the IPv6 GUA prefixes announced on the local network, so that addresses
+    within those ranges are also treated as local. Use
+    ``homeassistant.helpers.network.async_get_local_networks`` to obtain them.
+    """
+    if local_networks is None:
+        # Local import to avoid circular dependencies
+        from homeassistant.helpers.frame import (  # noqa: PLC0415
+            ReportBehavior,
+            report_usage,
+        )
+
+        report_usage(
+            "called homeassistant.util.network.is_local without the "
+            "local_networks argument",
+            breaks_in_ha_version="2027.8",
+            core_behavior=ReportBehavior.LOG,
+            core_integration_behavior=ReportBehavior.LOG,
+            custom_integration_behavior=ReportBehavior.LOG,
+        )
+        local_networks = ()
+    return (
+        is_loopback(address)
+        or is_private(address)
+        or is_link_local(address)
+        or any(address in network for network in local_networks)
+    )
 
 
 def is_invalid(address: IPv4Address | IPv6Address) -> bool:

@@ -1,6 +1,6 @@
 """The Network Configuration integration."""
 
-from ipaddress import IPv4Address, IPv6Address, ip_interface
+from ipaddress import IPv4Address, IPv6Address, IPv6Interface, IPv6Network, ip_interface
 import logging
 from pathlib import Path
 
@@ -19,7 +19,7 @@ from .const import (
     PUBLIC_TARGET_IP,
 )
 from .models import Adapter
-from .network import Network, async_get_loaded_network, async_get_network
+from .network import DATA_NETWORK, Network, async_get_loaded_network, async_get_network
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -112,6 +112,32 @@ def async_get_enabled_source_ips_from_adapters(
             sources.extend(addrs_ipv6)
 
     return sources
+
+
+@callback
+def async_get_local_networks(hass: HomeAssistant) -> list[IPv6Network]:
+    """Return the on-link global IPv6 networks of enabled adapters.
+
+    These are derived from the globally routable IPv6 addresses configured on
+    enabled adapters (for example a GUA prefix announced on the local network)
+    and can be passed to `homeassistant.util.network.is_local` so that addresses
+    on the local network are treated as local.
+    """
+    networks: list[IPv6Network] = []
+    if (network := hass.data.get(DATA_NETWORK)) is None:
+        return networks
+    for adapter in network.adapters:
+        if not adapter["enabled"]:
+            continue
+        for ip_info in adapter["ipv6"]:
+            if not IPv6Address(ip_info["address"]).is_global:
+                continue
+            ipv6_network = IPv6Interface(
+                f"{ip_info['address']}/{ip_info['network_prefix']}"
+            ).network
+            if ipv6_network not in networks:
+                networks.append(ipv6_network)
+    return networks
 
 
 @callback
