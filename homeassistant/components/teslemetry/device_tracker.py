@@ -12,6 +12,7 @@ from teslemetry_stream.const import TeslaLocation
 from homeassistant.components.device_tracker import (
     TrackerEntity,
     TrackerEntityDescription,
+    TrackerEntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -147,8 +148,12 @@ class TeslemetryStreamingDeviceTrackerEntity(
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         if (state := await self.async_get_last_state()) is not None:
-            self._attr_latitude = state.attributes.get("latitude")
-            self._attr_longitude = state.attributes.get("longitude")
+            self._attr_latitude = state.attributes.get(
+                TrackerEntityStateAttribute.LATITUDE
+            )
+            self._attr_longitude = state.attributes.get(
+                TrackerEntityStateAttribute.LONGITUDE
+            )
         self.async_on_remove(
             self.entity_description.value_listener(
                 self.vehicle.stream_vehicle, self._location_callback
