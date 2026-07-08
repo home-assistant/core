@@ -1,229 +1,269 @@
-"""Platform for Control4 Covers (blinds and shades)."""
+"""Platform for Control4 Covers (blinds/shades and garage doors)."""
+from __future__ import annotations
 
-from datetime import timedelta
+
+import asyncio
 import logging
-from typing import Any, override
-
-from pyControl4.blind import C4Blind
-from pyControl4.error_handling import C4Exception
+import time
+from typing import Any, Callable
 
 from homeassistant.components.cover import (
-    ATTR_POSITION,
-    CoverDeviceClass,
-    CoverEntity,
-    CoverEntityFeature,
+	ATTR_POSITION,
+	CoverDeviceClass,
+	CoverEntity,
+	CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import Control4ConfigEntry, get_items_of_category
-from .const import CONTROL4_ENTITY_TYPE
-from .director_utils import update_variables_for_config_entry
-from .entity import Control4Entity
+from pyControl4.blind import C4Blind
+
+from . import Control4Entity
+from .const import (
+	CONF_DIRECTOR,
+	CONF_DIRECTOR_ALL_ITEMS,
+	CONTROL4_ENTITY_TYPE,
+	Control4ConfigEntry,
+)
+from .director_utils import director_get_entry_variables
 
 _LOGGER = logging.getLogger(__name__)
 
-CONTROL4_CATEGORY = "blinds_shades"
+# Substrings commonly found in Control4 proxy identifiers for window coverings
+_COVER_PROXY_SUBSTRINGS = (
+	"shade",
+	"blind",
+	"windowcover",
+	"curtain",
+	"drap",
+)
 
-CONTROL4_LEVEL = "Level"
-CONTROL4_FULLY_CLOSED = "Fully Closed"
-CONTROL4_FULLY_OPEN = "Fully Open"
-CONTROL4_OPENING = "Opening"
-CONTROL4_CLOSING = "Closing"
+_DEFAULT_SUPPORTED_FEATURES = (
+	CoverEntityFeature.OPEN
+	| CoverEntityFeature.CLOSE
+	| CoverEntityFeature.STOP
+)
 
-VARIABLES_OF_INTEREST = {
-    CONTROL4_LEVEL,
-    CONTROL4_FULLY_CLOSED,
-    CONTROL4_FULLY_OPEN,
-    CONTROL4_OPENING,
-    CONTROL4_CLOSING,
+_MIN_COVER_LEVEL = 0
+_MAX_COVER_LEVEL = 100
+
+
+class Control4CoverModel:
+	"""Encapsulates device-class and state-accessor logic for a specific cover model."""
+
+	def __init__(
+		self,
+		cover_device_class: CoverDeviceClass | None = None,
+		is_stateful: bool = False,
+		fn_get_position: Callable[[dict[str, Any]], Any] | None = None,
+		fn_is_closed: Callable[[dict[str, Any]], bool | None] | None = None,
+		fn_is_closing: Callable[[dict[str, Any]], bool | None] | None = None,
+		fn_is_opening: Callable[[dict[str, Any]], bool | None] | None = None,
+		supported_features: CoverEntityFeature = _DEFAULT_SUPPORTED_FEATURES,
+	) -> None:
+		self.cover_device_class = cover_device_class
+		self.is_stateful = bool(is_stateful)
+		self.fn_get_position = fn_get_position
+		self.fn_is_closed = fn_is_closed
+		self.fn_is_closing = fn_is_closing
+		self.fn_is_opening = fn_is_opening
+		self.supported_features = supported_features
+
+	def is_positional(self) -> bool:
+		return bool(self.supported_features & CoverEntityFeature.SET_POSITION)
+
+	def is_gate(self) -> bool:
+		return self.cover_device_class == CoverDeviceClass.GATE
+
+	def get_position(self, attributes: dict[str, Any]) -> Any:
+		if self.fn_get_position is not None:
+			return self.fn_get_position(attributes)
+		return None
+
+	def get_is_closed(self, attributes: dict[str, Any]) -> bool | None:
+		if self.fn_is_closed is not None:
+			return self.fn_is_closed(attributes)
+		return None
+
+	def get_is_closing(self, attributes: dict[str, Any]) -> bool | None:
+		if self.fn_is_closing is not None:
+			return self.fn_is_closing(attributes)
+		return None
+
+	def get_is_opening(self, attributes: dict[str, Any]) -> bool | None:
+		if self.fn_is_opening is not None:
+			return self.fn_is_opening(attributes)
+		return None
+
+
+# Known driver filenames mapped to their model descriptors.
+_KNOWN_COVER_MODELS: dict[str, Control4CoverModel] = {
+	"blind_qmotion_qadvanced_roller_shade.c4z": Control4CoverModel(
+		cover_device_class=CoverDeviceClass.SHADE,
+		is_stateful=True,
+		fn_get_position=lambda attr: attr.get("Level"),
+		fn_is_closed=lambda attr: attr.get("Fully Closed"),
+		fn_is_closing=lambda attr: attr.get("Closing"),
+		fn_is_opening=lambda attr: attr.get("Opening"),
+		supported_features=_DEFAULT_SUPPORTED_FEATURES | CoverEntityFeature.SET_POSITION,
+	),
+	"gate_relay_control.c4z": Control4CoverModel(
+		cover_device_class=CoverDeviceClass.GATE,
+		is_stateful=True,
+		fn_is_closed=lambda attr: attr.get("STATE") == "Closed",
+	),
 }
+
+_DEFAULT_COVER_MODEL = Control4CoverModel()
+
+# Garage door detection constants (uibutton relay driver)
+_GARAGE_PARENT_TYPE = 6
+_GARAGE_PROXY = "uibutton"
+_GARAGE_PARENT_NAME = "relay garage door controller"
+_GARAGE_PARENT_MODEL = "1-3 relays"
+_GARAGE_STATE_VARIABLE = "STATE"
+_GARAGE_ICON_VARIABLE = "ICON"
+_GARAGE_ICON_DESCRIPTION_VARIABLE = "ICON_DESCRIPTION"
+_GARAGE_REFRESH_DELAYS = (5, 10, 20, 35, 60)
+_GARAGE_TRANSITION_TIMEOUT = 45
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: Control4ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+	hass: HomeAssistant,
+	entry: Control4ConfigEntry,
+	async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Control4 covers from a config entry."""
-    runtime_data = entry.runtime_data
+	"""Set up Control4 covers from a config entry."""
+	entry_data = entry.runtime_data
+	all_items: list[dict[str, Any]] = entry_data[CONF_DIRECTOR_ALL_ITEMS]
 
-    async def async_update_data() -> dict[int, dict[str, Any]]:
-        """Fetch data from Control4 director for blinds."""
-        try:
-            return await update_variables_for_config_entry(
-                hass, entry, VARIABLES_OF_INTEREST
-            )
-        except C4Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+	items_by_id = {item.get("id"): item for item in all_items if "id" in item}
 
-    coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
-        hass,
-        _LOGGER,
-        name="cover",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=runtime_data.scan_interval),
-        config_entry=entry,
-    )
+	def _is_cover_proxy(proxy_value: str | None) -> bool:
+		if not proxy_value or not isinstance(proxy_value, str):
+			return False
+		p = proxy_value.lower()
+		return any(s in p for s in _COVER_PROXY_SUBSTRINGS)
 
-    await coordinator.async_refresh()
+	def _get_cover_model(item: dict[str, Any]) -> Control4CoverModel | None:
+		cover_model = _KNOWN_COVER_MODELS.get(item.get("protocolFilename", ""))
+		if cover_model is not None:
+			return cover_model
+		if _is_cover_proxy(item.get("proxy")):
+			return _DEFAULT_COVER_MODEL
+		return None
 
-    items_of_category = await get_items_of_category(hass, entry, CONTROL4_CATEGORY)
-    entity_list = []
-    for item in items_of_category:
-        try:
-            if item["type"] != CONTROL4_ENTITY_TYPE:
-                continue
-            item_name = item["name"]
-            item_id = item["id"]
-            item_parent_id = item["parentId"]
-            item_manufacturer = None
-            item_device_name = None
-            item_model = None
+	def _is_garage_parent(item: dict[str, Any]) -> bool:
+		name = str(item.get("name", "")).lower()
+		model = str(item.get("model", "")).lower()
+		return (
+			item.get("type") == _GARAGE_PARENT_TYPE
+			and item.get("proxy") == _GARAGE_PROXY
+			and _GARAGE_PARENT_NAME in name
+			and _GARAGE_PARENT_MODEL in model
+		)
 
-            for parent_item in items_of_category:
-                if parent_item["id"] == item_parent_id:
-                    item_manufacturer = parent_item.get("manufacturer")
-                    item_device_name = parent_item.get("roomName")
-                    item_model = parent_item.get("model")
-        except KeyError:
-            _LOGGER.exception(
-                "Unknown device properties received from Control4: %s",
-                item,
-            )
-            continue
+	garage_parent_ids = {
+		item["id"] for item in all_items if item.get("id") and _is_garage_parent(item)
+	}
 
-        if item_id not in coordinator.data:
-            _LOGGER.warning(
-                "Couldn't get cover state data for %s (ID: %s), skipping setup",
-                item_name,
-                item_id,
-            )
-            continue
+	garage_items: list[dict[str, Any]] = [
+		item
+		for item in all_items
+		if item.get("type") == CONTROL4_ENTITY_TYPE
+		and item.get("id")
+		and item.get("proxy") == _GARAGE_PROXY
+		and item.get("parentId") in garage_parent_ids
+	]
 
-        entity_list.append(
-            Control4Cover(
-                runtime_data,
-                coordinator,
-                item_name,
-                item_id,
-                item_device_name,
-                item_manufacturer,
-                item_model,
-                item_parent_id,
-            )
-        )
+	entity_list: list[CoverEntity] = []
 
-    async_add_entities(entity_list)
+	for item in all_items:
+		if item.get("type") != CONTROL4_ENTITY_TYPE or not item.get("id"):
+			continue
 
+		cover_model = _get_cover_model(item)
+		if cover_model is None:
+			continue
 
-class Control4Cover(Control4Entity, CoverEntity):
-    """Control4 cover entity."""
+		try:
+			item_name = str(item["name"])
+			item_id = item["id"]
+			item_area = item.get("roomName")
+			item_parent_id = item["parentId"]
 
-    _attr_has_entity_name = True
-    _attr_translation_key = "blind"
-    _attr_device_class = CoverDeviceClass.SHADE
-    _attr_supported_features = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.STOP
-        | CoverEntityFeature.SET_POSITION
-    )
+			item_manufacturer = None
+			item_device_name = None
+			item_model = None
 
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return super().available and self._cover_data is not None
+			parent = items_by_id.get(item_parent_id)
+			if parent:
+				item_manufacturer = parent.get("manufacturer")
+				item_device_name = parent.get("name")
+				item_model = parent.get("model")
+		except KeyError:
+			_LOGGER.exception(
+				"Unknown device properties received from Control4: %s",
+				item,
+			)
+			continue
 
-    def _create_api_object(self) -> C4Blind:
-        """Create a pyControl4 device object.
+		item_attributes = await director_get_entry_variables(hass, entry, item_id)
 
-        This exists so the director token used is always the latest one,
-        without needing to re-init the entire entity.
-        """
-        return C4Blind(self.runtime_data.director, self._idx)
+		entity_list.append(
+			Control4Cover(
+				cover_model,
+				entry_data,
+				entry,
+				item_name,
+				item_id,
+				item_device_name,
+				item_manufacturer,
+				item_model,
+				item_parent_id,
+				item_area,
+				item_attributes,
+			)
+		)
 
-    @property
-    def _cover_data(self) -> dict[str, Any] | None:
-        """Return the cover data from the coordinator."""
-        return self.coordinator.data.get(self._idx)
+	for item in garage_items:
+		try:
+			item_name = str(item["name"])
+			item_id = item["id"]
+			item_area = item.get("roomName")
+			item_parent_id = item["parentId"]
 
-    @property
-    @override
-    def current_cover_position(self) -> int | None:
-        """Return current position of cover (0 closed, 100 open)."""
-        data = self._cover_data
-        if data is None:
-            return None
-        level = data.get(CONTROL4_LEVEL)
-        if level is None:
-            return None
-        return int(level)
+			parent = items_by_id.get(item_parent_id, {})
+			item_manufacturer = parent.get("manufacturer")
+			item_device_name = item_name
+			item_model = parent.get("model")
+		except KeyError:
+			_LOGGER.exception(
+				"Unknown garage door properties received from Control4: %s",
+				item,
+			)
+			continue
 
-    @property
-    @override
-    def is_closed(self) -> bool | None:
-        """Return if the cover is closed."""
-        data = self._cover_data
-        if data is None:
-            return None
-        if (fully_closed := data.get(CONTROL4_FULLY_CLOSED)) is not None:
-            return bool(fully_closed)
-        position = self.current_cover_position
-        if position is None:
-            return None
-        return position == 0
+		item_attributes = await director_get_entry_variables(hass, entry, item_id)
+		if _GARAGE_STATE_VARIABLE not in item_attributes:
+			item_attributes.update(
+				await director_get_entry_variables(hass, entry, item_parent_id)
+			)
 
-    @property
-    @override
-    def is_opening(self) -> bool | None:
-        """Return if the cover is opening."""
-        data = self._cover_data
-        if data is None:
-            return None
-        opening = data.get(CONTROL4_OPENING)
-        if opening is None:
-            return None
-        return bool(opening)
+		entity_list.append(
+			Control4GarageCover(
+				entry_data,
+				entry,
+				item_name,
+				item_id,
+				item_device_name,
+				item_manufacturer,
+				item_model,
+				item_parent_id,
+				item_area,
+				item_attributes,
+			)
+		)
 
-    @property
-    @override
-    def is_closing(self) -> bool | None:
-        """Return if the cover is closing."""
-        data = self._cover_data
-        if data is None:
-            return None
-        closing = data.get(CONTROL4_CLOSING)
-        if closing is None:
-            return None
-        return bool(closing)
+	async_add_entities(entity_list, True)
 
-    @override
-    async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open the cover."""
-        c4_blind = self._create_api_object()
-        await c4_blind.open()
-        await self.coordinator.async_request_refresh()
-
-    @override
-    async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close the cover."""
-        c4_blind = self._create_api_object()
-        await c4_blind.close()
-        await self.coordinator.async_request_refresh()
-
-    @override
-    async def async_stop_cover(self, **kwargs: Any) -> None:
-        """Stop the cover."""
-        c4_blind = self._create_api_object()
-        await c4_blind.stop()
-        await self.coordinator.async_request_refresh()
-
-    @override
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
-        """Move the cover to a specific position."""
-        c4_blind = self._create_api_object()
-        await c4_blind.set_level_target(kwargs[ATTR_POSITION])
-        await self.coordinator.async_request_refresh()

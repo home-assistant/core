@@ -14,23 +14,13 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
 from . import Control4ConfigEntry
-from .const import (
-    CONF_CONTROLLER_UNIQUE_ID,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    MIN_SCAN_INTERVAL,
-)
+from .const import CONF_CONTROLLER_UNIQUE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -166,17 +156,4 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
-
-        data_schema = vol.Schema(
-            {
-                # Polling interval is user-configurable, which is no longer allowed
-                # pylint: disable-next=home-assistant-config-flow-polling-field
-                vol.Optional(
-                    CONF_SCAN_INTERVAL,
-                    default=self.config_entry.options.get(
-                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                    ),
-                ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL)),
-            }
-        )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return self.async_show_form(step_id="init", data_schema=vol.Schema({}))
