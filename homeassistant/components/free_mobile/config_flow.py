@@ -1,6 +1,7 @@
 """Config flow for the Free Mobile integration."""
 
 from http import HTTPStatus
+import logging
 from typing import Any, override
 
 from freesms import FreeClient
@@ -16,6 +17,8 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import DOMAIN, VALIDATION_MESSAGE
+
+_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -84,7 +87,10 @@ class FreeMobileConfigFlow(ConfigFlow, domain=DOMAIN):
             resp = await self.hass.async_add_executor_job(
                 lambda: FreeClient(username, access_token).send_sms(VALIDATION_MESSAGE)
             )
-        except Exception:  # noqa: BLE001
+        except Exception:
+            _LOGGER.exception(
+                "Unexpected error while validating Free Mobile credentials"
+            )
             return {"base": "unknown"}
         if resp.status_code == HTTPStatus.FORBIDDEN:
             return {"base": "invalid_auth"}
