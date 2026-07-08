@@ -144,11 +144,11 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 lock_data = await cloud_client.async_get_locks()
-                self._locks = lock_data["data"]
-                self._api_token = user_input[CONF_API_TOKEN]
             except aiohttp.ClientError:
                 errors["base"] = "cannot_connect"
             else:
+                self._locks = lock_data["data"]
+                self._api_token = user_input[CONF_API_TOKEN]
                 if not self._locks:
                     errors["base"] = "no_locks"
                 elif len(self._locks) == 1:
