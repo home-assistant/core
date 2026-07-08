@@ -10,12 +10,11 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
-    ATTR_INSTALLED_VERSION,
-    ATTR_LATEST_VERSION,
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -391,7 +390,9 @@ class RpcSleepingUpdateEntity(
         if self.last_state is None:
             return None
 
-        return self.last_state.attributes.get(ATTR_INSTALLED_VERSION)
+        return self.last_state.attributes.get(
+            UpdateEntityStateAttribute.INSTALLED_VERSION
+        )
 
     @property
     @override
@@ -407,7 +408,7 @@ class RpcSleepingUpdateEntity(
         if self.last_state is None:
             return None
 
-        return self.last_state.attributes.get(ATTR_LATEST_VERSION)
+        return self.last_state.attributes.get(UpdateEntityStateAttribute.LATEST_VERSION)
 
     @property
     @override

@@ -25,6 +25,14 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_flap_id": {
+      "message": "Unknown Sure Petcare flap ID: {flap_id}"
+    },
+    "invalid_pet_name": {
+      "message": "Unknown Sure Petcare pet: {pet_name}"
+    }
+  },
   "services": {
     "set_lock_state": {
       "description": "Sets lock state.",
