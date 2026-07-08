@@ -35,7 +35,6 @@ async def async_setup_entry(
                     entity_description=SensorEntityDescription(
                         key="party_mode_url",
                         translation_key="party_mode_url",
-                        icon="mdi:link",
                     ),
                 )
             ]

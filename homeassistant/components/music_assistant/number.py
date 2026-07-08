@@ -29,12 +29,12 @@ PLAYER_OPTIONS_NUMBER: Final[dict[str, bool]] = {
 }
 
 PARTY_MODE_NUMBERS = {
-    "add_to_queue_limit": ("mdi:playlist-plus", 5, 50, EntityCategory.CONFIG),
-    "add_to_queue_refill_minutes": ("mdi:timer", 1, 30, EntityCategory.CONFIG),
-    "boost_limit": ("mdi:rocket-launch", 1, 10, EntityCategory.CONFIG),
-    "boost_refill_minutes": ("mdi:timer", 5, 120, EntityCategory.CONFIG),
-    "skip_song_limit": ("mdi:skip-next", 1, 5, EntityCategory.CONFIG),
-    "skip_song_refill_minutes": ("mdi:timer", 15, 180, EntityCategory.CONFIG),
+    "add_to_queue_limit": (5, 50, EntityCategory.CONFIG),
+    "add_to_queue_refill_minutes": (1, 30, EntityCategory.CONFIG),
+    "boost_limit": (1, 10, EntityCategory.CONFIG),
+    "boost_refill_minutes": (5, 120, EntityCategory.CONFIG),
+    "skip_song_limit": (1, 5, EntityCategory.CONFIG),
+    "skip_song_refill_minutes": (15, 180, EntityCategory.CONFIG),
 }
 
 
@@ -95,7 +95,6 @@ async def async_setup_entry(
                 entity_description=NumberEntityDescription(
                     key=number_key,
                     translation_key=f"party_mode_{number_key}",
-                    icon=icon,
                     native_min_value=min_val,
                     native_max_value=max_val,
                     native_step=1,
@@ -103,7 +102,6 @@ async def async_setup_entry(
                 ),
             )
             for number_key, (
-                icon,
                 min_val,
                 max_val,
                 category,

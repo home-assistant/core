@@ -82,11 +82,10 @@ async def async_setup_entry(
                 entity_description=SwitchEntityDescription(
                     key=f"party_mode_{switch_key}",
                     translation_key=f"party_mode_{switch_key}",
-                    icon=icon,
                     entity_category=category,
                 ),
             )
-            for switch_key, (icon, category) in PARTY_MODE_SWITCHES.items()
+            for switch_key, category in PARTY_MODE_SWITCHES.items()
         ]
         async_add_entities(entities)
 
@@ -129,18 +128,18 @@ class MusicAssistantPlayerConfigSwitch(MusicAssistantPlayerOptionEntity, SwitchE
 
 
 PARTY_MODE_SWITCHES = {
-    "enable_guest_access": ("mdi:account-group", None),
-    "karaoke_mode": ("mdi:microphone", None),
-    "highlight_ahead": ("mdi:format-color-highlight", EntityCategory.CONFIG),
-    "hide_back_button": ("mdi:arrow-left-box", EntityCategory.CONFIG),
-    "show_progress_bar": ("mdi:progress-clock", EntityCategory.CONFIG),
-    "enable_rate_limiting": ("mdi:speedometer", EntityCategory.CONFIG),
-    "enable_add_queue": ("mdi:playlist-plus", EntityCategory.CONFIG),
-    "prevent_duplicate_tracks": ("mdi:playlist-check", EntityCategory.CONFIG),
-    "enable_boost": ("mdi:rocket-launch", EntityCategory.CONFIG),
-    "enable_skip_song": ("mdi:skip-next", EntityCategory.CONFIG),
-    "anti_burn_in": ("mdi:television-shimmer", EntityCategory.CONFIG),
-    "display_lyrics": ("mdi:script-text", EntityCategory.CONFIG),
+    "enable_guest_access": None,
+    "karaoke_mode": None,
+    "highlight_ahead": EntityCategory.CONFIG,
+    "hide_back_button": EntityCategory.CONFIG,
+    "show_progress_bar": EntityCategory.CONFIG,
+    "enable_rate_limiting": EntityCategory.CONFIG,
+    "enable_add_queue": EntityCategory.CONFIG,
+    "prevent_duplicate_tracks": EntityCategory.CONFIG,
+    "enable_boost": EntityCategory.CONFIG,
+    "enable_skip_song": EntityCategory.CONFIG,
+    "anti_burn_in": EntityCategory.CONFIG,
+    "display_lyrics": EntityCategory.CONFIG,
 }
 
 

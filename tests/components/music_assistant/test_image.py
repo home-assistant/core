@@ -1,8 +1,11 @@
 """Test Music Assistant image entities."""
 
+from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -15,13 +18,25 @@ from .common import setup_integration_from_fixtures, snapshot_music_assistant_en
 from tests.common import async_fire_time_changed
 
 
+@pytest.fixture(autouse=True)
+def mock_getrandbits() -> Generator[None]:
+    """Mock image access token which normally is randomized."""
+    with patch(
+        "homeassistant.components.image.SystemRandom.getrandbits",
+        return_value=1,
+    ):
+        yield
+
+
 async def test_image_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     music_assistant_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test image entities."""
+    freezer.move_to("2024-01-01T12:00:00+00:00")
     music_assistant_client.send_command.return_value = "http://mock-party-url"
     await setup_integration_from_fixtures(hass, music_assistant_client)
     snapshot_music_assistant_entities(hass, entity_registry, snapshot, Platform.IMAGE)

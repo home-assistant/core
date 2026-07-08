@@ -42,7 +42,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:palette',
+    'original_icon': None,
     'original_name': 'Boost Badge Color',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -57,7 +57,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Boost Badge Color',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:palette',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '2d6a4f',
         'b55522',
@@ -116,7 +115,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:speaker-multiple',
+    'original_icon': None,
     'original_name': 'Party Player',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -131,7 +130,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Party Player',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:speaker-multiple',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Auto',
         'My Super Test Player 2',
@@ -190,7 +188,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:palette',
+    'original_icon': None,
     'original_name': 'Request Badge Color',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -205,7 +203,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Request Badge Color',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:palette',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '2d6a4f',
         'b55522',

@@ -39,7 +39,6 @@ async def async_setup_entry(
                     entity_description=ImageEntityDescription(
                         key="party_mode_qr",
                         translation_key="party_mode_qr",
-                        icon="mdi:qrcode",
                     ),
                 )
             ]

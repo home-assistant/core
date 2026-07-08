@@ -30,7 +30,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:playlist-plus',
+    'original_icon': None,
     'original_name': 'Add to Queue Limit',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -45,7 +45,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Add to Queue Limit',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:playlist-plus',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 50,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -90,7 +89,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:timer',
+    'original_icon': None,
     'original_name': 'Add to Queue Refill (Minutes)',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -105,7 +104,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Add to Queue Refill (Minutes)',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timer',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -150,7 +148,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:rocket-launch',
+    'original_icon': None,
     'original_name': 'Boost Limit',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -165,7 +163,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Boost Limit',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:rocket-launch',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -210,7 +207,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:timer',
+    'original_icon': None,
     'original_name': 'Boost Refill (Minutes)',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -225,7 +222,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Boost Refill (Minutes)',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timer',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 120,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -270,7 +266,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:skip-next',
+    'original_icon': None,
     'original_name': 'Skip Song Limit',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -285,7 +281,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Skip Song Limit',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:skip-next',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -330,7 +325,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:timer',
+    'original_icon': None,
     'original_name': 'Skip Song Refill (Minutes)',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -345,7 +340,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Skip Song Refill (Minutes)',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timer',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 180,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 15,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,

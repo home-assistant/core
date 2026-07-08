@@ -25,7 +25,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:television-shimmer',
+    'original_icon': None,
     'original_name': 'Anti burn-in',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -40,7 +40,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Anti burn-in',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:television-shimmer',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_anti_burn_in',
@@ -76,7 +75,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:script-text',
+    'original_icon': None,
     'original_name': 'Display Lyrics',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -91,7 +90,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Display Lyrics',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:script-text',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_display_lyrics',
@@ -127,7 +125,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:account-group',
+    'original_icon': None,
     'original_name': 'Enable guest access',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -142,7 +140,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Enable guest access',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:account-group',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_enable_guest_access',
@@ -178,7 +175,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:playlist-plus',
+    'original_icon': None,
     'original_name': 'Enable guest add to queue',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -193,7 +190,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Enable guest add to queue',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:playlist-plus',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_enable_guest_add_to_queue',
@@ -229,7 +225,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:rocket-launch',
+    'original_icon': None,
     'original_name': 'Enable guest boost',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -244,7 +240,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Enable guest boost',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:rocket-launch',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_enable_guest_boost',
@@ -280,7 +275,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:speedometer',
+    'original_icon': None,
     'original_name': 'Enable rate limiting',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -295,7 +290,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Enable rate limiting',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:speedometer',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_enable_rate_limiting',
@@ -331,7 +325,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:skip-next',
+    'original_icon': None,
     'original_name': 'Enable Skip Song',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -346,7 +340,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Enable Skip Song',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:skip-next',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_enable_skip_song',
@@ -382,7 +375,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:arrow-left-box',
+    'original_icon': None,
     'original_name': 'Hide Back Button',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -397,7 +390,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Hide Back Button',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:arrow-left-box',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_hide_back_button',
@@ -433,7 +425,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:format-color-highlight',
+    'original_icon': None,
     'original_name': 'Highlight Ahead',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -448,7 +440,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Highlight Ahead',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:format-color-highlight',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_highlight_ahead',
@@ -484,7 +475,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:microphone',
+    'original_icon': None,
     'original_name': 'Karaoke mode',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -499,7 +490,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Karaoke mode',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:microphone',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_karaoke_mode',
@@ -535,7 +525,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:playlist-check',
+    'original_icon': None,
     'original_name': 'Prevent Duplicate Tracks',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -550,7 +540,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Prevent Duplicate Tracks',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:playlist-check',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_prevent_duplicate_tracks',
@@ -586,7 +575,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:progress-clock',
+    'original_icon': None,
     'original_name': 'Show Progress Bar',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -601,7 +590,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Show Progress Bar',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:progress-clock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_show_progress_bar',

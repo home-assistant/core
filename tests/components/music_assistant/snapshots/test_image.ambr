@@ -25,7 +25,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:qrcode',
+    'original_icon': None,
     'original_name': 'Guest qr code',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -39,16 +39,15 @@
 # name: test_image_entities[image.party_mode_plugin_guest_qr_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '89a86aec9339b1408ca1a7f0bdb0754c613e106be66e18406a53461b5acd8e71',
-      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.party_mode_plugin_guest_qr_code?token=89a86aec9339b1408ca1a7f0bdb0754c613e106be66e18406a53461b5acd8e71',
+      <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.party_mode_plugin_guest_qr_code?token=1',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Guest qr code',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:qrcode',
     }),
     'context': <ANY>,
     'entity_id': 'image.party_mode_plugin_guest_qr_code',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2026-07-08T14:22:30.809349+00:00',
+    'state': '2024-01-01T12:00:00+00:00',
   })
 # ---

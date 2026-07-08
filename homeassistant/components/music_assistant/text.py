@@ -21,8 +21,8 @@ PLAYER_OPTIONS_TEXT: Final[dict[str, bool]] = {
 }
 
 PARTY_MODE_TEXTS = {
-    "party_name": ("mdi:rename-box", None),
-    "qr_text": ("mdi:text-box", EntityCategory.CONFIG),
+    "party_name": None,
+    "qr_text": EntityCategory.CONFIG,
 }
 
 
@@ -75,7 +75,7 @@ async def async_setup_entry(
         async def _add_entities() -> None:
             entities: list[MusicAssistantPartyModeText] = []
             if party_config := await mass.config.get_provider_config(instance_id):
-                for text_key, (icon, category) in PARTY_MODE_TEXTS.items():
+                for text_key, category in PARTY_MODE_TEXTS.items():
                     if text_key not in party_config.values:
                         continue
 
@@ -87,7 +87,6 @@ async def async_setup_entry(
                             entity_description=TextEntityDescription(
                                 key=f"party_mode_{text_key}",
                                 translation_key=f"party_mode_{text_key}",
-                                icon=icon,
                                 entity_category=category,
                             ),
                         )

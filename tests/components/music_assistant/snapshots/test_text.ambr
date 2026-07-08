@@ -30,7 +30,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:rename-box',
+    'original_icon': None,
     'original_name': 'Party Name',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -45,7 +45,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Party Name',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:rename-box',
       <TextEntityCapabilityAttribute.MAX: 'max'>: 255,
       <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
       <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,
@@ -90,7 +89,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:text-box',
+    'original_icon': None,
     'original_name': 'QR Text',
     'platform': 'music_assistant',
     'previous_unique_id': None,
@@ -105,7 +104,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin QR Text',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:text-box',
       <TextEntityCapabilityAttribute.MAX: 'max'>: 255,
       <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
       <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,

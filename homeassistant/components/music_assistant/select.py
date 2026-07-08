@@ -30,9 +30,9 @@ PLAYER_OPTIONS_SELECT: Final[dict[str, bool]] = {
 }
 
 PARTY_MODE_SELECTS = {
-    "player": ("mdi:speaker-multiple", None),
-    "request_badge_color": ("mdi:palette", EntityCategory.CONFIG),
-    "boost_badge_color": ("mdi:palette", EntityCategory.CONFIG),
+    "player": None,
+    "request_badge_color": EntityCategory.CONFIG,
+    "boost_badge_color": EntityCategory.CONFIG,
 }
 
 BADGE_COLORS = {
@@ -118,11 +118,10 @@ async def async_setup_entry(
                     translation_key=f"party_mode_{select_key}"
                     if select_key != "player"
                     else "party_mode_party_player",
-                    icon=icon,
                     entity_category=category,
                 ),
             )
-            for select_key, (icon, category) in PARTY_MODE_SELECTS.items()
+            for select_key, category in PARTY_MODE_SELECTS.items()
         ]
         async_add_entities(entities)
 
