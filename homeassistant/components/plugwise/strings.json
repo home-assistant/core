@@ -301,20 +301,20 @@
     },
     "water_heater": {
       "boiler_temperature": {
-        "name": "Boiler temperature"
+        "name": "Boiler temperature",
+        "state":{
+          "comfort": "Comfort",
+          "eco": "Eco",            
+        }
       },
       "dhw_temperature": {
         "name": "DHW temperature",
-        "state_attributes": {
-          "dhw_modes": {
-            "state": {
-              "auto": "Auto",
-              "boost": "Boost",
-              "comfort": "Comfort",
-              "eco": "Eco",
-              "off": "Off"
-            }
-          }
+        "state": {
+          "auto": "Auto",
+          "boost": "Boost",
+          "comfort": "Comfort",
+          "eco": "Eco",
+          "off": "Off"
         }
       }
     }
