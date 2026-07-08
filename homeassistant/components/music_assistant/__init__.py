@@ -270,14 +270,6 @@ async def async_setup_entry(  # noqa: C901
         for callback in entry.runtime_data.party_handlers.values():
             callback(instance_id)
 
-    def remove_party_mode(instance_id: str) -> None:
-        """Handle removing Party Mode as HA device + entities."""
-        dev_reg = dr.async_get(hass)
-        if hass_device := dev_reg.async_get_device({(DOMAIN, instance_id)}):
-            dev_reg.async_update_device(
-                hass_device.id, remove_config_entry_id=entry.entry_id
-            )
-
     # We use a mutable container to track if party mode was previously seen
     party_mode_state = {"instance_id": party_instance_id}
 
