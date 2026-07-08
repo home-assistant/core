@@ -71,7 +71,7 @@ class ShutterContactSensor(SHCEntity[SHCShutterContact], BinarySensorEntity):
     def __init__(
         self, device: SHCShutterContact, parent_id: str, entry_id: str
     ) -> None:
-        """Initialize an SHC shutter contact sensor.."""
+        """Initialize an SHC shutter contact sensor."""
         super().__init__(device, parent_id, entry_id)
         switcher = {
             "ENTRANCE_DOOR": BinarySensorDeviceClass.DOOR,

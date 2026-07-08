@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
 
 from boschshcpy import SHCSession
 from boschshcpy.exceptions import SHCAuthenticationError, SHCConnectionError
@@ -57,10 +56,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
         raise ConfigEntryNotReady from err
 
     shc_info = session.information
-    if TYPE_CHECKING:
-        # Always populated: the synchronous SHCSession construction above already raised otherwise.
-        assert shc_info is not None
-        assert shc_info.unique_id is not None
+    if shc_info is None or shc_info.unique_id is None:
+        raise ConfigEntryNotReady("Bosch SHC did not return controller information")
     if (
         shc_info.updateState is not None
         and shc_info.updateState.name == "UPDATE_AVAILABLE"
