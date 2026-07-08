@@ -20,12 +20,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_METHOD,
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
     UnitOfTime,
 )
 from homeassistant.core import (
@@ -389,7 +388,9 @@ class IntegrationSensor(RestoreSensor):
         return device_class
 
     def _derive_and_set_attributes_from_state(self, source_state: State) -> None:
-        source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        source_unit = source_state.attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        )
         if source_unit is not None:
             self._unit_of_measurement = self._calculate_unit(source_unit)
         else:
@@ -397,7 +398,8 @@ class IntegrationSensor(RestoreSensor):
             self._unit_of_measurement = None
 
         self._attr_device_class = self._calculate_device_class(
-            source_state.attributes.get(ATTR_DEVICE_CLASS), self.unit_of_measurement
+            source_state.attributes.get(EntityStateAttribute.DEVICE_CLASS),
+            self.unit_of_measurement,
         )
         if self._attr_device_class:
             # Remove this sensors icon default and allow
