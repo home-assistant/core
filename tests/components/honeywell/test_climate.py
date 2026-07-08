@@ -12,6 +12,7 @@ from syrupy.filters import props
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -26,6 +27,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.components.honeywell.climate import (
@@ -143,6 +145,53 @@ async def test_dynamic_attributes(
     attributes = state.attributes
     assert attributes["current_temperature"] == 61
     assert attributes["current_humidity"] == 50
+
+
+async def test_hvac_action_unreported_equipment_status(
+    hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
+) -> None:
+    """Test hvac_action is unknown when the device never reports EquipmentOutputStatus.
+
+    Some thermostat models never send EquipmentOutputStatus to the cloud API
+    (it stays None, not 0). hvac_action should be unknown in that case rather
+    than falsely reporting idle while the system may be heating or cooling.
+    """
+    await init_integration(hass, config_entry)
+
+    entity_id = f"climate.{device.name}"
+    device.system_mode = "cool"
+    device.raw_ui_data["EquipmentOutputStatus"] = None
+
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == HVACMode.COOL
+    assert ATTR_HVAC_ACTION not in state.attributes
+
+
+async def test_hvac_action_reported_idle(
+    hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
+) -> None:
+    """Test hvac_action stays idle when the device explicitly reports 0."""
+    await init_integration(hass, config_entry)
+
+    entity_id = f"climate.{device.name}"
+    device.system_mode = "cool"
+    device.raw_ui_data["EquipmentOutputStatus"] = 0
+
+    async_fire_time_changed(
+        hass,
+        utcnow() + SCAN_INTERVAL,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == HVACMode.COOL
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
 
 async def test_mode_service_calls(
