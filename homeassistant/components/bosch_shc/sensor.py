@@ -42,8 +42,7 @@ class SHCSensorEntityDescription(SensorEntityDescription):
     attributes_fn: Callable[[SHCDevice], dict[str, Any]] | None = None
 
 
-# Each entry's value_fn/attributes_fn is only ever wired to a device_helper
-# list whose concrete type actually has the attribute the cast below asserts.
+# Each entry's value_fn is only ever wired to a device_helper list whose concrete type has the cast attribute.
 _TemperatureDevice = SHCThermostat | SHCWallThermostat | SHCTwinguard
 _HumidityDevice = SHCWallThermostat | SHCTwinguard
 _PowerMeterDevice = SHCSmartPlug | SHCLightSwitchBSM | SHCSmartPlugCompact
@@ -148,8 +147,7 @@ async def async_setup_entry(
 
     shc_info = session.information
     if TYPE_CHECKING:
-        assert shc_info is not None
-        assert shc_info.unique_id is not None
+        assert shc_info is not None and shc_info.unique_id is not None
     parent_id = shc_info.unique_id
 
     entities: list[SensorEntity] = [

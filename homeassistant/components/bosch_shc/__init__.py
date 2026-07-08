@@ -49,8 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
 
     shc_info = session.information
     if TYPE_CHECKING:
-        assert shc_info is not None
-        assert shc_info.unique_id is not None
+        assert shc_info is not None and shc_info.unique_id is not None
     if (
         shc_info.updateState is not None
         and shc_info.updateState.name == "UPDATE_AVAILABLE"
