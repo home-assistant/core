@@ -84,7 +84,6 @@ def _setup_mock_api(api: MagicMock) -> None:
             "fase4": {"vrms": "230.5", "p_activa": "277"},
         }
     )
-    api.async_fetch_device_diagnostics = AsyncMock(return_value={"host": MOCK_HOST})
     api.async_fetch_status = AsyncMock(
         return_value={"model": MOCK_MODEL, "webversion": MOCK_FIRMWARE}
     )
