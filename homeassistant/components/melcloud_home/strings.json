@@ -97,6 +97,9 @@
       }
     },
     "sensor": {
+      "energy_consumed": {
+        "name": "Energy consumed (monthly)"
+      },
       "room_temperature": {
         "name": "Room temperature"
       },
