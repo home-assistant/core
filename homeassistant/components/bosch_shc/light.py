@@ -90,7 +90,7 @@ class SHCOnOffLight(SHCEntity, LightEntity):
     @override
     def is_on(self) -> bool:
         """Return true when the switch is on."""
-        return self._device.switchstate == PowerSwitchService.State.ON
+        return self._device.switchstate is PowerSwitchService.State.ON
 
     @override
     def turn_on(self, **kwargs: Any) -> None:
