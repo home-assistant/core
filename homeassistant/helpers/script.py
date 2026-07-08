@@ -451,7 +451,12 @@ class _ScriptRun:
         _timeout = (
             "" if timeout is None else f" (timeout: {timedelta(seconds=timeout)})"
         )
-        self._log("Executing step %s%s", self._script.last_action, _timeout)
+        self._log(
+            "Executing step %s%s",
+            self._script.last_action,
+            _timeout,
+            level=logging.DEBUG,
+        )
 
     async def async_run(self) -> ScriptRunResult | None:
         """Run script."""
@@ -464,7 +469,11 @@ class _ScriptRun:
         response = None
 
         try:
-            self._log("Running %s", self._script.running_description)
+            self._log(
+                "Running %s",
+                self._script.running_description,
+                level=logging.INFO if self._script.top_level else logging.DEBUG,
+            )
             for self._step, self._action in enumerate(self._script.sequence):  # noqa: B020
                 if self._stop.done():
                     script_execution_set("cancelled")
@@ -532,6 +541,7 @@ class _ScriptRun:
                         self._log(
                             "Skipped disabled step %s",
                             self._action.get(CONF_ALIAS, action),
+                            level=logging.DEBUG,
                         )
                         trace_set_result(enabled=False)
                         return
@@ -778,7 +788,12 @@ class _ScriptRun:
             self._log("Error in 'condition' evaluation:\n%s", ex, level=logging.WARNING)
             check = False
 
-        self._log("Test condition %s: %s", self._script.last_action, check)
+        self._log(
+            "Test condition %s: %s",
+            self._script.last_action,
+            check,
+            level=logging.DEBUG,
+        )
         trace_update_result(result=check)
         if not check:
             raise _ConditionFail
@@ -823,7 +838,13 @@ class _ScriptRun:
         warned_too_many_loops = False
 
         async def async_run_sequence(iteration: int, extra_msg: str = "") -> None:
-            self._log("Repeating %s: Iteration %i%s", description, iteration, extra_msg)
+            self._log(
+                "Repeating %s: Iteration %i%s",
+                description,
+                iteration,
+                extra_msg,
+                level=logging.DEBUG,
+            )
             with trace_path("sequence"):
                 await self._async_run_script(script)
 
