@@ -53,7 +53,7 @@ from .const import (
     NETATMO_CREATE_WEATHER_SENSOR,
     SIGNAL_NAME,
 )
-from .data_handler import (
+from .coordinator import (
     HOME,
     PUBLIC,
     NetatmoConfigEntry,

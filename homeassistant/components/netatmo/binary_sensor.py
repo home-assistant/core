@@ -37,7 +37,7 @@ from .const import (
     NETATMO_CREATE_OPENING_BINARY_SENSOR,
     NETATMO_CREATE_WEATHER_BINARY_SENSOR,
 )
-from .data_handler import SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
+from .coordinator import SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity, NetatmoWeatherModuleEntity
 
 _LOGGER = logging.getLogger(__name__)

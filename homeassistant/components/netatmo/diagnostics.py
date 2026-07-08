@@ -5,7 +5,7 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from .data_handler import ACCOUNT, NetatmoConfigEntry
+from .coordinator import ACCOUNT, NetatmoConfigEntry
 
 TO_REDACT = {
     "access_token",
