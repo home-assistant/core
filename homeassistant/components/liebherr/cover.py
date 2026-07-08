@@ -1,8 +1,6 @@
 """Cover platform for Liebherr integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pyliebherrhomeapi import AutoDoorControl, DoorState, ZonePosition
 
@@ -102,17 +100,20 @@ class LiebherrAutoDoor(LiebherrEntity, CoverEntity):
         return self.coordinator.data.get_auto_door_controls().get(self._zone_id)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._auto_door_control is not None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._optimistic_state = None
         super()._handle_coordinator_update()
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the door is closed."""
         if self._optimistic_state is not None:
@@ -123,6 +124,7 @@ class LiebherrAutoDoor(LiebherrEntity, CoverEntity):
         return control.value == DoorState.CLOSED
 
     @property
+    @override
     def is_opening(self) -> bool | None:
         """Return if the door is opening."""
         if self._optimistic_state is None:
@@ -130,12 +132,14 @@ class LiebherrAutoDoor(LiebherrEntity, CoverEntity):
         return self._optimistic_state
 
     @property
+    @override
     def is_closing(self) -> bool | None:
         """Return if the door is closing."""
         if self._optimistic_state is None:
             return False
         return not self._optimistic_state
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the door."""
         self._optimistic_state = True
@@ -153,6 +157,7 @@ class LiebherrAutoDoor(LiebherrEntity, CoverEntity):
             self.async_write_ha_state()
             raise
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the door."""
         self._optimistic_state = False
