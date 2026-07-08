@@ -107,7 +107,7 @@ def async_setup_forwarded(
             raise HTTPBadRequest
 
         # Ensure the IP of the connected peer is trusted
-        if not any(connected_ip in trusted_proxy for trusted_proxy in trusted_proxies):
+        if not any(connected_ip in ip_network(trusted_proxy) for trusted_proxy in trusted_proxies):
             _LOGGER.error(
                 "Received X-Forwarded-For header from an untrusted proxy %s",
                 connected_ip,
@@ -133,7 +133,7 @@ def async_setup_forwarded(
         # Find the last trusted index in the X-Forwarded-For list
         forwarded_for_index = 0
         for forwarded_ip in forwarded_for:
-            if any(forwarded_ip in trusted_proxy for trusted_proxy in trusted_proxies):
+            if any(forwarded_ip in ip_network(trusted_proxy) for trusted_proxy in trusted_proxies):
                 forwarded_for_index += 1
                 continue
             overrides["remote"] = str(forwarded_ip)
