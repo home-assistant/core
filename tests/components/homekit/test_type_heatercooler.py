@@ -2104,3 +2104,94 @@ async def test_heatercooler_fan_active_toggles_with_off_mode(
     acc.char_fan_active.client_update_value(1)
     await hass.async_block_till_done()
     assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "low"
+
+
+async def test_heatercooler_cool_only_single_threshold(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a cool-only entity exposes only the cooling threshold."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
+        ATTR_TEMPERATURE: 22.0,
+    }
+
+    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert not hasattr(acc, "char_heat")
+    assert acc.char_cool.value == pytest.approx(22.0, abs=0.1)
+
+    call_set_temperature = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
+    )
+    _write_chars(hk_driver, acc, {CHAR_COOLING_THRESHOLD_TEMPERATURE: 24.0})
+    await hass.async_block_till_done()
+    assert call_set_temperature[-1].data[ATTR_TEMPERATURE] == pytest.approx(
+        24.0, abs=0.1
+    )
+
+
+async def test_heatercooler_heat_only_single_threshold(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a heat-only entity exposes only the heating threshold."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.OFF],
+        ATTR_TEMPERATURE: 21.0,
+    }
+
+    hass.states.async_set(entity_id, HVACMode.HEAT, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert not hasattr(acc, "char_cool")
+    assert acc.char_heat.value == pytest.approx(21.0, abs=0.1)
+
+    call_set_temperature = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
+    )
+    _write_chars(hk_driver, acc, {CHAR_HEATING_THRESHOLD_TEMPERATURE: 19.0})
+    await hass.async_block_till_done()
+    assert call_set_temperature[-1].data[ATTR_TEMPERATURE] == pytest.approx(
+        19.0, abs=0.1
+    )
+
+
+async def test_heatercooler_dry_only_keeps_both_thresholds(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a dry-only entity with a setpoint keeps both thresholds."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.SWING_MODE
+        ),
+        ATTR_HVAC_MODES: [HVACMode.DRY, HVACMode.OFF],
+        ATTR_SWING_MODES: ["off", "vertical"],
+        ATTR_TEMPERATURE: 23.0,
+    }
+
+    hass.states.async_set(entity_id, HVACMode.DRY, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Neither side is capable, so both stay to keep the setpoint controllable
+    assert acc.char_cool.value == pytest.approx(23.0, abs=0.1)
+    assert acc.char_heat.value == pytest.approx(23.0, abs=0.1)

@@ -114,7 +114,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         # The thresholds double as the setpoints, so only expose them when the
         # entity accepts a target temperature; a fan/dry-only entity otherwise
         # gets sliders that dispatch set_temperature it cannot honor.
-        self._has_thresholds = bool(
+        has_thresholds = bool(
             features
             & (
                 ClimateEntityFeature.TARGET_TEMPERATURE
@@ -130,6 +130,17 @@ class HeaterCooler(HomeKitClimateAccessory):
         supports_heat_cool = (
             HVACMode.HEAT_COOL in hvac_modes or current_mode == HVACMode.HEAT_COOL
         )
+
+        # Per the HomeKit spec a heater must include the heating threshold and a
+        # cooler the cooling one, so a one sided device gets a single slider. A
+        # device with neither side (e.g. dry only with a setpoint) keeps both so
+        # the setpoint stays controllable.
+        can_cool = HVACMode.COOL in hvac_modes or supports_auto or supports_heat_cool
+        can_heat = HVACMode.HEAT in hvac_modes or supports_auto or supports_heat_cool
+        if not can_cool and not can_heat:
+            can_cool = can_heat = True
+        self._has_cool_threshold = has_thresholds and can_cool
+        self._has_heat_threshold = has_thresholds and can_heat
 
         # Only expose the targets the entity actually supports so HomeKit does
         # not offer a mode the climate service would reject. Auto is backed by
@@ -160,13 +171,10 @@ class HeaterCooler(HomeKitClimateAccessory):
             CHAR_TARGET_HEATER_COOLER_STATE,
             CHAR_CURRENT_TEMPERATURE,
         ]
-        if self._has_thresholds:
-            chars.extend(
-                (
-                    CHAR_COOLING_THRESHOLD_TEMPERATURE,
-                    CHAR_HEATING_THRESHOLD_TEMPERATURE,
-                )
-            )
+        if self._has_cool_threshold:
+            chars.append(CHAR_COOLING_THRESHOLD_TEMPERATURE)
+        if self._has_heat_threshold:
+            chars.append(CHAR_HEATING_THRESHOLD_TEMPERATURE)
 
         # The HeaterCooler service has no auto fan control, so when the entity
         # exposes an auto fan mode (and a manual mode to switch back to) the fan
@@ -208,7 +216,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         )
         self._configure_current_temperature_char(serv)
 
-        if self._has_thresholds:
+        if self._has_cool_threshold or self._has_heat_threshold:
             min_temp_hk, max_temp_hk = self.get_temperature_range(state)
             temp_properties = {
                 PROP_MIN_VALUE: min_temp_hk,
@@ -220,16 +228,18 @@ class HeaterCooler(HomeKitClimateAccessory):
             # Placeholder value within the configured range; async_update_state
             # overwrites it from the entity immediately.
             default_temp = min(max(21.0, min_temp_hk), max_temp_hk)
-            self.char_cool = serv.configure_char(
-                CHAR_COOLING_THRESHOLD_TEMPERATURE,
-                value=default_temp,
-                properties=temp_properties,
-            )
-            self.char_heat = serv.configure_char(
-                CHAR_HEATING_THRESHOLD_TEMPERATURE,
-                value=default_temp,
-                properties=temp_properties,
-            )
+            if self._has_cool_threshold:
+                self.char_cool = serv.configure_char(
+                    CHAR_COOLING_THRESHOLD_TEMPERATURE,
+                    value=default_temp,
+                    properties=temp_properties,
+                )
+            if self._has_heat_threshold:
+                self.char_heat = serv.configure_char(
+                    CHAR_HEATING_THRESHOLD_TEMPERATURE,
+                    value=default_temp,
+                    properties=temp_properties,
+                )
 
         if self.ordered_fan_speeds and not self.fan_chars:
             self.char_speed = serv.configure_char(
@@ -487,7 +497,7 @@ class HeaterCooler(HomeKitClimateAccessory):
 
     def _update_temperature_thresholds(self, state: State) -> None:
         """Update HomeKit temperature thresholds based on HA state."""
-        if not self._has_thresholds:
+        if not self._has_cool_threshold and not self._has_heat_threshold:
             return
         attributes = state.attributes
         supports_dual_temp = (
@@ -495,15 +505,23 @@ class HeaterCooler(HomeKitClimateAccessory):
         )
 
         if supports_dual_temp:
-            self._update_temperature_char(self.char_cool, state, ATTR_TARGET_TEMP_HIGH)
-            self._update_temperature_char(self.char_heat, state, ATTR_TARGET_TEMP_LOW)
+            if self._has_cool_threshold:
+                self._update_temperature_char(
+                    self.char_cool, state, ATTR_TARGET_TEMP_HIGH
+                )
+            if self._has_heat_threshold:
+                self._update_temperature_char(
+                    self.char_heat, state, ATTR_TARGET_TEMP_LOW
+                )
         elif (
             target_temp := temperature_attribute_to_homekit(
                 state, ATTR_TEMPERATURE, self._unit
             )
         ) is not None:
-            self.char_cool.set_value(target_temp)
-            self.char_heat.set_value(target_temp)
+            if self._has_cool_threshold:
+                self.char_cool.set_value(target_temp)
+            if self._has_heat_threshold:
+                self.char_heat.set_value(target_temp)
 
     def _derive_action(self, state: State, mode: HVACMode | None) -> HVACAction:
         """Infer heating / cooling when integration omits hvac_action."""
