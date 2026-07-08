@@ -19,7 +19,7 @@ update_pin_code:
   fields:
     pin:
       required: true
-      example: 1234
+      example: "1234"
       selector:
         text:
           type: password
