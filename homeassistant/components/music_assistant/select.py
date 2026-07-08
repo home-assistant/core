@@ -14,8 +14,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
 from .const import LOGGER
-from .entity import MusicAssistantPlayerOptionEntity
-from .helpers import catch_musicassistant_error, get_party_device_info
+from .entity import MusicAssistantPartyModeEntity, MusicAssistantPlayerOptionEntity
+from .helpers import catch_musicassistant_error
 
 PLAYER_OPTIONS_SELECT: Final[dict[str, bool]] = {
     # translation_key: enabled_by_default
@@ -177,11 +177,8 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
         )
 
 
-class MusicAssistantPartyModeSelect(SelectEntity):
+class MusicAssistantPartyModeSelect(MusicAssistantPartyModeEntity, SelectEntity):
     """Representation of a select entity to control party mode settings."""
-
-    _attr_has_entity_name = True
-    _attr_should_poll = False
 
     def __init__(
         self,
@@ -191,12 +188,9 @@ class MusicAssistantPartyModeSelect(SelectEntity):
         entity_description: SelectEntityDescription,
     ) -> None:
         """Initialize."""
-        self.mass = mass
-        self.instance_id = instance_id
+        super().__init__(mass, instance_id, unique_id_suffix=config_key)
         self.config_key = config_key
         self.entity_description = entity_description
-        self._attr_device_info = get_party_device_info(instance_id)
-        self._attr_unique_id = f"{instance_id}_{config_key}"
         if self.config_key != "player":
             self._attr_options = list(BADGE_COLORS.keys())
         else:
@@ -207,17 +201,11 @@ class MusicAssistantPartyModeSelect(SelectEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        await self.async_on_update()
-        self.async_on_remove(
-            self.mass.subscribe(
-                self.__on_mass_update,
-                EventType.PROVIDERS_UPDATED,
-            )
-        )
+        await super().async_added_to_hass()
         if self.config_key == "player":
             self.async_on_remove(
                 self.mass.subscribe(
-                    self.__on_mass_update,
+                    self._on_player_update,
                     (
                         EventType.PLAYER_ADDED,
                         EventType.PLAYER_REMOVED,
@@ -226,11 +214,12 @@ class MusicAssistantPartyModeSelect(SelectEntity):
                 )
             )
 
-    async def __on_mass_update(self, event: MassEvent) -> None:
+    async def _on_player_update(self, event: MassEvent) -> None:
         """Call when we receive an event from MusicAssistant."""
         await self.async_on_update()
         self.async_write_ha_state()
 
+    @override
     async def async_on_update(self) -> None:
         """Update select state."""
         try:

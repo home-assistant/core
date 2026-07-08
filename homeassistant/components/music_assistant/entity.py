@@ -1,6 +1,6 @@
 """Base entity model."""
 
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
 from music_assistant_models.enums import EventType
 from music_assistant_models.event import MassEvent
@@ -11,6 +11,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
+from .helpers import get_party_device_info
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
@@ -129,3 +130,43 @@ class MusicAssistantPlayerOptionEntity(MusicAssistantEntity):
 
     def on_player_option_update(self, player_option: PlayerOption) -> None:
         """Callback for player option updates."""
+
+
+class MusicAssistantPartyModeEntity(Entity):
+    """Base Entity for Music Assistant Party Mode."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        mass: MusicAssistantClient,
+        instance_id: str,
+        unique_id_suffix: str,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize MusicAssistantPartyModeEntity."""
+        super().__init__(**kwargs)
+        self.mass = mass
+        self.instance_id = instance_id
+        self._attr_device_info = get_party_device_info(instance_id)
+        self._attr_unique_id = f"{instance_id}_{unique_id_suffix}"
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await self.async_on_update()
+        self.async_on_remove(
+            self.mass.subscribe(
+                self.__on_mass_update,
+                EventType.PROVIDERS_UPDATED,
+            )
+        )
+
+    async def __on_mass_update(self, event: MassEvent) -> None:
+        """Call when we receive an event from MusicAssistant."""
+        await self.async_on_update()
+        self.async_write_ha_state()
+
+    async def async_on_update(self) -> None:
+        """Handle provider updates."""

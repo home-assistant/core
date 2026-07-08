@@ -3,8 +3,6 @@
 from typing import Final, override
 
 from music_assistant_client.client import MusicAssistantClient
-from music_assistant_models.enums import EventType
-from music_assistant_models.event import MassEvent
 from music_assistant_models.player import PlayerOption, PlayerOptionType
 
 from homeassistant.components.text import TextEntity, TextEntityDescription
@@ -14,8 +12,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
 from .const import LOGGER
-from .entity import MusicAssistantPlayerOptionEntity
-from .helpers import catch_musicassistant_error, get_party_device_info
+from .entity import MusicAssistantPartyModeEntity, MusicAssistantPlayerOptionEntity
+from .helpers import catch_musicassistant_error
 
 PLAYER_OPTIONS_TEXT: Final[dict[str, bool]] = {
     # translation_key: enabled_by_default
@@ -132,11 +130,8 @@ class MusicAssistantPlayerConfigText(MusicAssistantPlayerOptionEntity, TextEntit
         )
 
 
-class MusicAssistantPartyModeText(TextEntity):
+class MusicAssistantPartyModeText(MusicAssistantPartyModeEntity, TextEntity):
     """Representation of a Text entity to control party mode settings."""
-
-    _attr_has_entity_name = True
-    _attr_should_poll = False
 
     def __init__(
         self,
@@ -146,29 +141,11 @@ class MusicAssistantPartyModeText(TextEntity):
         entity_description: TextEntityDescription,
     ) -> None:
         """Initialize."""
-        self.mass = mass
-        self.instance_id = instance_id
+        super().__init__(mass, instance_id, unique_id_suffix=config_key)
         self.config_key = config_key
         self.entity_description = entity_description
-        self._attr_device_info = get_party_device_info(instance_id)
-        self._attr_unique_id = f"{instance_id}_{config_key}"
 
     @override
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        await self.async_on_update()
-        self.async_on_remove(
-            self.mass.subscribe(
-                self.__on_mass_update,
-                EventType.PROVIDERS_UPDATED,
-            )
-        )
-
-    async def __on_mass_update(self, event: MassEvent) -> None:
-        """Call when we receive an event from MusicAssistant."""
-        await self.async_on_update()
-        self.async_write_ha_state()
-
     async def async_on_update(self) -> None:
         """Update text state."""
         try:

@@ -5,9 +5,7 @@ import io
 from typing import override
 
 from music_assistant_client.client import MusicAssistantClient
-from music_assistant_models.enums import EventType
 from music_assistant_models.errors import MusicAssistantError
-from music_assistant_models.event import MassEvent
 import segno
 
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
@@ -19,7 +17,7 @@ from homeassistant.util import dt as dt_util
 
 from . import MusicAssistantConfigEntry
 from .const import LOGGER, PARTY_URL_POLL_INTERVAL
-from .helpers import get_party_device_info
+from .entity import MusicAssistantPartyModeEntity
 
 
 async def async_setup_entry(
@@ -50,11 +48,9 @@ async def async_setup_entry(
     entry.runtime_data.party_handlers.setdefault(Platform.IMAGE, add_party_mode)
 
 
-class MusicAssistantPartyModeImage(ImageEntity):
+class MusicAssistantPartyModeImage(MusicAssistantPartyModeEntity, ImageEntity):
     """Representation of an Image entity for Party Mode QR Code."""
 
-    _attr_has_entity_name = True
-    _attr_should_poll = False
     _attr_content_type = "image/png"
 
     def __init__(
@@ -65,25 +61,20 @@ class MusicAssistantPartyModeImage(ImageEntity):
         entity_description: ImageEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(hass)
-        self.mass = mass
-        self.instance_id = instance_id
+        super().__init__(
+            mass=mass,
+            instance_id=instance_id,
+            unique_id_suffix=entity_description.key,
+            hass=hass,
+        )
         self.entity_description = entity_description
         self._current_url: str | None = None
-        self._attr_device_info = get_party_device_info(instance_id)
-        self._attr_unique_id = f"{instance_id}_{entity_description.key}"
         self._image_bytes: bytes | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        await self.async_on_update()
-        self.async_on_remove(
-            self.mass.subscribe(
-                self.__on_mass_update,
-                EventType.PROVIDERS_UPDATED,
-            )
-        )
+        await super().async_added_to_hass()
         self.async_on_remove(
             async_track_time_interval(
                 self.hass,
@@ -97,11 +88,7 @@ class MusicAssistantPartyModeImage(ImageEntity):
         await self.async_on_update()
         self.async_write_ha_state()
 
-    async def __on_mass_update(self, event: MassEvent) -> None:
-        """Call when we receive an event from MusicAssistant."""
-        await self.async_on_update()
-        self.async_write_ha_state()
-
+    @override
     async def async_on_update(self) -> None:
         """Handle provider updates."""
         try:
