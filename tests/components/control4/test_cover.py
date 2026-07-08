@@ -71,11 +71,11 @@ def mock_cover_update_variables(
     """Mock update_variables for cover platform."""
 
     async def _mock_get_entry_variables(hass, entry, item_id):
-        return mock_cover_variables.get(item_id, {})
+        return mock_cover_variables.get(item_id)
 
     with patch(
         "homeassistant.components.control4.cover.director_get_entry_variables",
-        new=_mock_update_variables,
+        new=_mock_get_entry_variables,
     ) as mock_get:
         yield mock_get
 
@@ -249,7 +249,7 @@ async def test_set_cover_position(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 75},
         blocking=True,
     )
-    mock_c4_blind.set_level_target.assert_called_once_with(75)
+    mock_c4_blind.set_level_target.assert_called_once_with(level=75)
 
 
 @pytest.mark.parametrize("mock_cover_variables", [{}])

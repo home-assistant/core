@@ -34,7 +34,7 @@
     'platform': 'control4',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <MediaPlayerEntityFeature: 23821>,
+    'supported_features': <MediaPlayerEntityFeature: 679741>,
     'translation_key': None,
     'unique_id': '1',
     'unit_of_measurement': None,
@@ -43,13 +43,25 @@
 # name: test_media_player_with_and_without_sources[media_player.living_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'CURRENT MEDIA INFO': dict({
+      }),
+      'CURRENT_VIDEO_DEVICE': 100,
+      'CURRENT_VOLUME': 50,
+      'IS_MUTED': False,
+      'PAUSED': False,
+      'PLAYING': False,
+      'POWER_STATE': True,
+      'STOPPED': False,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tv',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room',
+      <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: None,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      'item id': 1,
+      'parent item id': 1,
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'TV',
       ]),
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 23821>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 679741>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.5,
     }),
     'context': <ANY>,

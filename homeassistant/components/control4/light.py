@@ -1,7 +1,5 @@
 """Platform for Control4 Lights."""
 
-from __future__ import annotations
-
 import json
 import logging
 from typing import Any
@@ -46,7 +44,11 @@ async def async_setup_entry(
     entity_list = []
     for item in items_of_category:
         try:
-            if not (item["type"] == CONTROL4_ENTITY_TYPE and item["id"] and item["proxy"] != "fan"):
+            if not (
+                item["type"] == CONTROL4_ENTITY_TYPE
+                and item["id"]
+                and item["proxy"] != "fan"
+            ):
                 continue
             item_name = str(item["name"])
             item_id = item["id"]
@@ -61,8 +63,10 @@ async def async_setup_entry(
                     item_device_name = parent_item["name"]
                     item_model = parent_item["model"]
         except KeyError:
-            _LOGGER.exception("Unknown device properties received from Control4: %s", item)            continue
-
+            _LOGGER.exception(
+                "Unknown device properties received from Control4: %s", item
+            )
+            continue
         item_attributes = await director_get_entry_variables(hass, entry, item_id)
         entity_list.append(
             Control4Light(
@@ -100,8 +104,16 @@ class Control4Light(Control4Entity, LightEntity):
     ) -> None:
         """Initialize."""
         super().__init__(
-            entry_data, entry, name, idx, device_name, device_manufacturer,
-            device_model, device_parent_id, device_area, device_attributes,
+            entry_data,
+            entry,
+            name,
+            idx,
+            device_name,
+            device_manufacturer,
+            device_model,
+            device_parent_id,
+            device_area,
+            device_attributes,
         )
         self._supports_color: bool = False
         self._supports_ct: bool = False
@@ -111,8 +123,12 @@ class Control4Light(Control4Entity, LightEntity):
         self._rate_max: int | None = None
         self._effects_by_name: dict[str, dict[str, Any]] = {}
         self._current_effect: str | None = None
-        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS} if self._is_dimmer else {ColorMode.ONOFF}
-        self._attr_color_mode = ColorMode.BRIGHTNESS if self._is_dimmer else ColorMode.ONOFF
+        self._attr_supported_color_modes = (
+            {ColorMode.BRIGHTNESS} if self._is_dimmer else {ColorMode.ONOFF}
+        )
+        self._attr_color_mode = (
+            ColorMode.BRIGHTNESS if self._is_dimmer else ColorMode.ONOFF
+        )
         self._attr_min_color_temp_kelvin = None
         self._attr_max_color_temp_kelvin = None
 
@@ -165,7 +181,7 @@ class Control4Light(Control4Entity, LightEntity):
                 self._attr_color_mode = ColorMode.BRIGHTNESS
             else:
                 self._attr_color_mode = ColorMode.ONOFF
-        except Exception:
+        except Exception:  # noqa: BLE001
             _LOGGER.debug("get_item_setup failed for %s", self._idx)
         self.async_write_ha_state()
 
@@ -190,7 +206,9 @@ class Control4Light(Control4Entity, LightEntity):
         if "LIGHT_LEVEL" in attrs:
             return value_to_brightness(CONTROL4_BRIGHTNESS_SCALE, attrs["LIGHT_LEVEL"])
         if "Brightness Percent" in attrs:
-            return value_to_brightness(CONTROL4_BRIGHTNESS_SCALE, attrs["Brightness Percent"])
+            return value_to_brightness(
+                CONTROL4_BRIGHTNESS_SCALE, attrs["Brightness Percent"]
+            )
         return None
 
     @property
@@ -199,19 +217,31 @@ class Control4Light(Control4Entity, LightEntity):
         attrs = self.extra_state_attributes
         mode = attrs.get("light_color_current_color_mode")
         cct = attrs.get("light_color_current_color_correlated_temperature")
-        if mode is not None and int(mode) == CONTROL4_COLOR_MODE_CCT and cct is not None:
+        if (
+            mode is not None
+            and int(mode) == CONTROL4_COLOR_MODE_CCT
+            and cct is not None
+        ):
             return int(cct)
         return None
 
     @property
     def min_color_temp_kelvin(self) -> int | None:
         """Return minimum color temperature."""
-        return int(self._ct_min) if self._ct_min is not None else self._attr_min_color_temp_kelvin
+        return (
+            int(self._ct_min)
+            if self._ct_min is not None
+            else self._attr_min_color_temp_kelvin
+        )
 
     @property
     def max_color_temp_kelvin(self) -> int | None:
         """Return maximum color temperature."""
-        return int(self._ct_max) if self._ct_max is not None else self._attr_max_color_temp_kelvin
+        return (
+            int(self._ct_max)
+            if self._ct_max is not None
+            else self._attr_max_color_temp_kelvin
+        )
 
     @property
     def effect(self) -> str | None:
@@ -249,7 +279,7 @@ class Control4Light(Control4Entity, LightEntity):
                 return ColorMode.COLOR_TEMP
             if mode_i == CONTROL4_COLOR_MODE_XY:
                 return ColorMode.XY
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             pass
         if self._attr_color_mode in (self._attr_supported_color_modes or set()):
             return self._attr_color_mode
@@ -265,7 +295,7 @@ class Control4Light(Control4Entity, LightEntity):
             return (float(x), float(y))
         return None
 
-    def _to_rate_ms(self, transition: float | int | None) -> int | None:
+    def _to_rate_ms(self, transition: float | None) -> int | None:
         if transition is None:
             return None
         try:
@@ -297,8 +327,14 @@ class Control4Light(Control4Entity, LightEntity):
             else:
                 x = preset.get("color_x")
                 y = preset.get("color_y")
-                if self._supports_color and isinstance(x, (int, float)) and isinstance(y, (int, float)):
-                    await c4_light.set_color_xy(float(x), float(y), rate=transition_length)
+                if (
+                    self._supports_color
+                    and isinstance(x, (int, float))
+                    and isinstance(y, (int, float))
+                ):
+                    await c4_light.set_color_xy(
+                        float(x), float(y), rate=transition_length
+                    )
                     self._attr_color_mode = ColorMode.XY
             self._current_effect = effect
             self.async_write_ha_state()
@@ -325,9 +361,15 @@ class Control4Light(Control4Entity, LightEntity):
             return
 
         if self._is_dimmer:
-            brightness = round(
-                brightness_to_value(CONTROL4_BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
-            ) if ATTR_BRIGHTNESS in kwargs else 100
+            brightness = (
+                round(
+                    brightness_to_value(
+                        CONTROL4_BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS]
+                    )
+                )
+                if ATTR_BRIGHTNESS in kwargs
+                else 100
+            )
             await c4_light.ramp_to_level(brightness, transition_length or 0)
         else:
             await c4_light.set_level(100)

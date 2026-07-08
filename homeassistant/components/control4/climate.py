@@ -1,15 +1,10 @@
 """Platform for Control4 Climate."""
 
-from __future__ import annotations
-
-
-from functools import cached_property
 import logging
 
+from pyControl4.climate import C4Climate
 
-from homeassistant.components.climate import (
-    ClimateEntity,
-)
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -20,13 +15,9 @@ from homeassistant.components.climate.const import (
     HVACAction,
     HVACMode,
 )
-
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature, PRECISION_WHOLE
-
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from pyControl4.climate import C4Climate
 
 from . import Control4Entity, get_items_of_category
 from .const import CONF_DIRECTOR, CONTROL4_ENTITY_TYPE, Control4ConfigEntry
@@ -108,7 +99,9 @@ SETUP_SETPOINT_DEADBAND_C = "setpoint_heatcool_deadband_c"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: Control4ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: Control4ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Control4 climate thermostats from a config entry."""
     entry_data = entry.runtime_data
@@ -125,7 +118,7 @@ async def async_setup_entry(
                 item_name = item["name"]
                 _LOGGER.debug("Climate Setup Name: %s", str(item_name))
                 item_id = item["id"]
-                item_area = item["roomName"]
+                item_area = item.get("roomName")
                 item_parent_id = item["parentId"]
 
                 item_manufacturer = None
@@ -149,6 +142,9 @@ async def async_setup_entry(
             continue
 
         item_attributes = await director_get_entry_variables(hass, entry, item_id)
+        if item_attributes is None:
+            _LOGGER.debug("Skipping climate %s: no initial variables", item_name)
+            continue
 
         entity_list.append(
             Control4Climate(
@@ -204,10 +200,12 @@ class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
         else:
             self._thermostat_setup = {}
         self._aux_heat_active = False
+        self._attr_translation_key = "thermostat"
         self._attr_should_poll = True
 
     def create_api_object(self):
         """Create a pyControl4 device object.
+
         This exists so the director token used is always the
         latest one, without needing to re-init the entire entity.
         """
@@ -243,7 +241,7 @@ class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
             control4_fan_modes = fan_modes.split(",")
             # Only include mapped Home Assistant fan modes
             return [FAN_MODES[x] for x in control4_fan_modes if x in FAN_MODES]
-        return list(FAN_MODES.values())
+        return None
 
     @property
     def preset_modes(self) -> list[str] | None:  # type: ignore[override]
@@ -266,10 +264,15 @@ class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
             return HVACAction.COOLING
         if "Heat" in hvac_state:
             return HVACAction.HEATING
-        fan_state = self._extra_state_attributes.get(ATTR_FAN_STATE, "")
-        if "on" in fan_state.lower():
+        if "Dry" in hvac_state:
+            return HVACAction.DRYING
+        if "Fan" in hvac_state:
             return HVACAction.FAN
-        return HVACAction.OFF
+        if "Idle" in hvac_state:
+            return HVACAction.IDLE
+        if "Off" in hvac_state:
+            return HVACAction.OFF
+        return None
 
     @property
     def hvac_mode(self) -> HVACMode | None:  # type: ignore[override]
@@ -353,6 +356,7 @@ class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
 
     @property
     def precision(self) -> float:
+        """Return the precision of the thermostat."""
         if isinstance(self._thermostat_setup, dict):
             if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
                 res = self._thermostat_setup.get(SETUP_CURRENT_TEMP_RES_F)
@@ -366,6 +370,7 @@ class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
 
     @property
     def target_temperature_step(self) -> float:  # type: ignore[override]
+        """Return the supported step of target temperature."""
         if isinstance(self._thermostat_setup, dict):
             if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
                 res = self._thermostat_setup.get(
@@ -381,15 +386,16 @@ class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
                     return res
         return PRECISION_WHOLE
 
-    @cached_property
+    @property
     def supported_features(self) -> ClimateEntityFeature:
         """Flag supported features."""
         features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             | ClimateEntityFeature.PRESET_MODE
         )
+        if self._extra_state_attributes.get(ATTR_FAN_MODES_LIST):
+            features |= ClimateEntityFeature.FAN_MODE
         return features
 
     async def async_set_hvac_mode(self, hvac_mode) -> None:
@@ -406,20 +412,23 @@ class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
                     "set hvac mode with aux: %s",
                     hvac_mode,
                 )
-                self._extra_state_attributes[ATTR_HVAC_MODE] = CONTROL4_HVAC_MODE_AUX_HEAT
+                self._extra_state_attributes[ATTR_HVAC_MODE] = (
+                    CONTROL4_HVAC_MODE_AUX_HEAT
+                )
                 await c4_climate.set_hvac_mode(CONTROL4_HVAC_MODE_AUX_HEAT)
             else:
                 self._extra_state_attributes[ATTR_HVAC_MODE] = CONTROL4_HVAC_MODE_HEAT
                 await c4_climate.set_hvac_mode(CONTROL4_HVAC_MODE_HEAT)
+        elif hvac_mode in CONTROL4_HVAC_MODES:
+            self._extra_state_attributes[ATTR_HVAC_MODE] = CONTROL4_HVAC_MODES[
+                hvac_mode
+            ]
+            await c4_climate.set_hvac_mode(CONTROL4_HVAC_MODES[hvac_mode])
         else:
-            if hvac_mode in CONTROL4_HVAC_MODES:
-                self._extra_state_attributes[ATTR_HVAC_MODE] = CONTROL4_HVAC_MODES[hvac_mode]
-                await c4_climate.set_hvac_mode(CONTROL4_HVAC_MODES[hvac_mode])
-            else:
-                _LOGGER.exception(
-                    "Request for unsupported hvac mode received:: %s",
-                    hvac_mode,
-                )
+            _LOGGER.exception(
+                "Request for unsupported hvac mode received:: %s",
+                hvac_mode,
+            )
 
     async def async_set_fan_mode(self, fan_mode) -> None:
         """Set new target fan mode."""
@@ -438,7 +447,6 @@ class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
         c4_climate = self.create_api_object()
         self._extra_state_attributes[ATTR_HOLD_MODE] = preset_mode
         await c4_climate.set_hold_mode(preset_mode)
-
 
     async def _set_cool_setpoint(self, temp) -> None:
         c4_climate = self.create_api_object()
@@ -461,6 +469,7 @@ class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
         else:
             self._extra_state_attributes[ATTR_HEAT_SETPOINT_C] = temp
             await c4_climate.set_heat_setpoint_c(temp)
+
     def _get_setpoint_deadband(self) -> float:
         if isinstance(self._thermostat_setup, dict):
             if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
@@ -493,6 +502,7 @@ class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
             await self._set_cool_setpoint(temp)
         elif self.hvac_mode == HVACMode.HEAT and temp:
             await self._set_heat_setpoint(temp)
+
     async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
         self._aux_heat_active = True

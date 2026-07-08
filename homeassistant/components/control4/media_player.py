@@ -1,6 +1,4 @@
 """Platform for Control4 Rooms Media Players."""
-from __future__ import annotations
-
 
 import base64
 from dataclasses import dataclass, field
@@ -33,9 +31,9 @@ from .const import (
     CONF_DIRECTOR,
     CONF_DIRECTOR_ALL_ITEMS,
     CONF_UI_CONFIGURATION,
-    Control4ConfigEntry,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    Control4ConfigEntry,
 )
 from .director_utils import (
     director_get_entry_variables,
@@ -101,7 +99,9 @@ async def get_rooms(hass: HomeAssistant, entry: Control4ConfigEntry):
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: Control4ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: Control4ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Control4 rooms from a config entry."""
     all_rooms = await get_rooms(hass, entry)
@@ -122,6 +122,7 @@ async def async_setup_entry(
     coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
         hass,
         _LOGGER,
+        config_entry=entry,
         name="room",
         update_method=async_update_data,
         update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
@@ -131,8 +132,7 @@ async def async_setup_entry(
     await coordinator.async_refresh()
 
     items_by_id = {
-        item["id"]: item
-        for item in entry.runtime_data[CONF_DIRECTOR_ALL_ITEMS]
+        item["id"]: item for item in entry.runtime_data[CONF_DIRECTOR_ALL_ITEMS]
     }
     item_to_parent_map = {
         k: item["parentId"]
@@ -226,7 +226,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
             device_manufacturer=None,
             device_model=None,
             device_id=room_id,
-            device_area=name,
+            device_area=None,
             device_attributes=device_attributes,
         )
         self.hass = hass
@@ -249,8 +249,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
             | MediaPlayerEntityFeature.PLAY_MEDIA
         )
         self._current_source: _RoomSource | None = None
-        self.hass.bus.async_listen(CONTROL4_MEDIA_JOIN_EVENT,
-                                   self._handle_join)
+        self.hass.bus.async_listen(CONTROL4_MEDIA_JOIN_EVENT, self._handle_join)
 
     async def _handle_join(self, event) -> None:
         joining_entities = event.data.get(CONTROL4_MEDIA_JOIN_EVENT_ENTITIES)
@@ -376,6 +375,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
 
     @property
     def media_playlist(self) -> str | None:  # type: ignore[override]
+        """Return the genre of the current media as a playlist label."""
         media_info = self._get_media_info()
         if not media_info or "genre" not in media_info:
             return None
@@ -383,6 +383,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
 
     @property
     def media_image_url(self) -> str | None:  # type: ignore[override]
+        """Return the image URL for the current media."""
         media_info = self._get_media_info()
         if not media_info or "img" not in media_info:
             return None
@@ -391,11 +392,11 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
         base_url_http = self.entry_data[CONF_DIRECTOR].base_url.replace(
             "https://", "http://"
         )  # avoid self-signed cert issue
-        url = url.replace("controller:/", base_url_http)
-        return url
+        return url.replace("controller:/", base_url_http)
 
     @property
     def media_artist(self) -> str | None:  # type: ignore[override]
+        """Return the artist of the current media."""
         media_info = self._get_media_info()
         if not media_info or "artist" not in media_info:
             return None
@@ -403,6 +404,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
 
     @property
     def media_album_name(self) -> str | None:  # type: ignore[override]
+        """Return the album name of the current media."""
         media_info = self._get_media_info()
         if not media_info or "album" not in media_info:
             return None
@@ -410,6 +412,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
 
     @property
     def media_channel(self) -> str | None:  # type: ignore[override]
+        """Return the channel of the current media."""
         media_info = self._get_media_info()
         if not media_info or "channel" not in media_info:
             return None
@@ -452,6 +455,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
 
     @property
     def group_members(self) -> list[str] | None:  # type: ignore[override]
+        """Return the group members sharing the current source."""
         current_source = self._get_current_playing_device_id()
         if not current_source or current_source not in self._sources:
             return None
@@ -477,16 +481,17 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
         await self.coordinator.async_request_refresh()
 
     async def async_join_players(self, group_members):
+        """Fire a join event so other rooms can follow this source."""
         current_source = self._get_current_playing_device_id()
         if current_source and current_source in self._sources:
             event_data = {
-                CONTROL4_MEDIA_JOIN_EVENT_SOURCE_IDX:
-                    self._sources[current_source].idx,
+                CONTROL4_MEDIA_JOIN_EVENT_SOURCE_IDX: self._sources[current_source].idx,
                 CONTROL4_MEDIA_JOIN_EVENT_ENTITIES: group_members,
             }
             self.hass.bus.async_fire(CONTROL4_MEDIA_JOIN_EVENT, event_data)
 
     async def async_unjoin_player(self):
+        """Unjoin by turning the room off."""
         await self.async_turn_off()
 
     async def async_turn_off(self):
@@ -555,7 +560,9 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
                 BrowseMedia(
                     title=source.name,
                     media_class="music" if audio_only else "video",
-                    media_content_type=MediaType.MUSIC if audio_only else MediaType.VIDEO,
+                    media_content_type=MediaType.MUSIC
+                    if audio_only
+                    else MediaType.VIDEO,
                     media_content_id=json.dumps(play_payload),
                     can_play=True,
                     can_expand=False,
@@ -571,7 +578,6 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
             can_expand=True,
             children=children,
         )
-
 
     async def async_browse_media(
         self, media_content_type: str | None = None, media_content_id: str | None = None
@@ -619,11 +625,13 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
             children=children,
         )
 
-    async def async_play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    async def async_play_media(
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """Select a source chosen from the browse tree."""
         try:
             payload = json.loads(media_id)
-        except (json.JSONDecodeError, ValueError):
+        except json.JSONDecodeError, ValueError:
             return
         if not isinstance(payload, dict):
             return

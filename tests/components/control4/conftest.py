@@ -84,13 +84,14 @@ def mock_c4_director() -> Generator[MagicMock]:
     ):
         mock_director = mock_director_class.return_value
         mock_director.director_bearer_token = "test"
-        mock_director.get_all_item_info = AsyncMock(
-            return_value=json.loads(load_fixture("director_all_items.json", DOMAIN))
-        )
+        all_items = json.loads(load_fixture("director_all_items.json", DOMAIN))
+        mock_director.get_all_item_info = AsyncMock(return_value=all_items)
+        mock_director.get_all_items_by_category = AsyncMock(return_value=all_items)
         mock_director.get_ui_configuration = AsyncMock(
             return_value=json.loads(load_fixture("ui_configuration.json", DOMAIN))
         )
         mock_director.get_item_variables = AsyncMock(return_value=[])
+        mock_director.get_item_setup = AsyncMock(return_value={})
         yield mock_director
 
 
@@ -147,6 +148,7 @@ def mock_climate_variables() -> dict:
             "HEAT_SETPOINT_F": 68.0,
             "FAN_MODE": "Auto",
             "FAN_MODES_LIST": "Auto,On,Circulate",
+            "HVAC_MODES_LIST": "Off,Heat,Cool,Auto",
             "SCALE": "FAHRENHEIT",
         }
     }
@@ -156,14 +158,14 @@ def mock_climate_variables() -> dict:
 def mock_climate_update_variables(
     mock_climate_variables: dict,
 ) -> Generator[AsyncMock]:
-    """Mock update_variables for climate platform."""
+    """Mock director_get_entry_variables for climate platform."""
 
-    async def _mock_update_variables(*args, **kwargs):
-        return mock_climate_variables
+    async def _mock_get_entry_variables(hass, entry, item_id):
+        return mock_climate_variables.get(item_id)
 
     with patch(
-        "homeassistant.components.control4.climate.update_variables_for_config_entry",
-        new=_mock_update_variables,
+        "homeassistant.components.control4.climate.director_get_entry_variables",
+        new=_mock_get_entry_variables,
     ) as mock_update:
         yield mock_update
 

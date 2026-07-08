@@ -1,10 +1,8 @@
 """The Control4 integration."""
 
-from __future__ import annotations
-
-import asyncioimport logging
-import random
 from functools import cached_property
+import logging
+import random
 from typing import Any
 
 from aiohttp import client_exceptions
@@ -23,11 +21,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, device_registry as dr, entity_registry as er
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.update_coordinator import CoordinatorEntity, DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     CONF_ACCOUNT,
@@ -39,10 +40,10 @@ from .const import (
     CONF_DIRECTOR_SW_VERSION,
     CONF_UI_CONFIGURATION,
     CONF_WEBSOCKET,
-    Control4ConfigEntry,
     DOMAIN,
     RETRY_BACKOFF_MAX_SEC,
     SCHEDULE_REFRESH_ADVANCE_SEC,
+    Control4ConfigEntry,
 )
 from .director_utils import director_get_entry_variables
 
@@ -61,14 +62,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     entry_data[CONF_CONTROLLER_UNIQUE_ID] = entry.data[CONF_CONTROLLER_UNIQUE_ID]
 
     try:
-        controller_href = (await entry_data[CONF_ACCOUNT].get_account_controllers())["href"]
-    except (client_exceptions.ClientError, asyncio.TimeoutError) as err:
+        controller_href = (await entry_data[CONF_ACCOUNT].get_account_controllers())[
+            "href"
+        ]
+    except (TimeoutError, client_exceptions.ClientError) as err:
         raise ConfigEntryNotReady(err) from err
 
     try:
-        entry_data[CONF_DIRECTOR_SW_VERSION] = await entry_data[CONF_ACCOUNT].get_controller_os_version(
-            controller_href        )
-    except (client_exceptions.ClientError, asyncio.TimeoutError) as err:
+        entry_data[CONF_DIRECTOR_SW_VERSION] = await entry_data[
+            CONF_ACCOUNT
+        ].get_controller_os_version(controller_href)
+    except (TimeoutError, client_exceptions.ClientError) as err:
         raise ConfigEntryNotReady(err) from err
 
     _, model, mac_address = entry_data[CONF_CONTROLLER_UNIQUE_ID].split("_", 3)
@@ -85,11 +89,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     )
 
     try:
-        entry_data[CONF_DIRECTOR_ALL_ITEMS] = await entry_data[CONF_DIRECTOR].get_all_item_info()
-    except (client_exceptions.ClientError, asyncio.TimeoutError) as err:
+        entry_data[CONF_DIRECTOR_ALL_ITEMS] = await entry_data[
+            CONF_DIRECTOR
+        ].get_all_item_info()
+    except (TimeoutError, client_exceptions.ClientError) as err:
         raise ConfigEntryNotReady(err) from err
 
-    entry_data[CONF_UI_CONFIGURATION] = await entry_data[CONF_DIRECTOR].get_ui_configuration()
+    entry_data[CONF_UI_CONFIGURATION] = await entry_data[
+        CONF_DIRECTOR
+    ].get_ui_configuration()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -129,25 +137,32 @@ async def refresh_tokens(hass: HomeAssistant, entry: Control4ConfigEntry) -> Non
     account = C4Account(config[CONF_USERNAME], config[CONF_PASSWORD], session)
     try:
         await account.get_account_bearer_token()
-    except (client_exceptions.ClientError, asyncio.TimeoutError) as err:
+    except (TimeoutError, client_exceptions.ClientError) as err:
         raise ConfigEntryNotReady(err) from err
     except BadCredentials as err:
         raise ConfigEntryAuthFailed(err) from err
 
     controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
     try:
-        director_token_dict = await account.get_director_bearer_token(controller_unique_id)
-    except (client_exceptions.ClientError, asyncio.TimeoutError) as err:
+        director_token_dict = await account.get_director_bearer_token(
+            controller_unique_id
+        )
+    except (TimeoutError, client_exceptions.ClientError) as err:
         raise ConfigEntryNotReady(err) from err
 
     no_verify_session = aiohttp_client.async_get_clientsession(hass, verify_ssl=False)
-    director = C4Director(config[CONF_HOST], director_token_dict[CONF_TOKEN], no_verify_session)
+    director = C4Director(
+        config[CONF_HOST], director_token_dict[CONF_TOKEN], no_verify_session
+    )
 
     entry_data = entry.runtime_data
     entry_data[CONF_ACCOUNT] = account
     entry_data[CONF_DIRECTOR] = director
 
-    if not (CONF_WEBSOCKET in entry_data and isinstance(entry_data[CONF_WEBSOCKET], C4Websocket)):
+    if not (
+        CONF_WEBSOCKET in entry_data
+        and isinstance(entry_data[CONF_WEBSOCKET], C4Websocket)
+    ):
         connection_tracker = C4WebsocketConnectionTracker(hass, entry)
         websocket = C4Websocket(
             config[CONF_HOST],
@@ -191,15 +206,23 @@ class C4WebsocketConnectionTracker:
         _LOGGER.info("WebSocket connection to Control4 re-established")
         item_callbacks = self.entry.runtime_data[CONF_WEBSOCKET].item_callbacks
         for item_id, callbacks in item_callbacks.items():
-            item_attributes = await director_get_entry_variables(self.hass, self.entry, item_id)
-            message = {"evtName": "OnDataToUI", "iddevice": item_id, "data": item_attributes}
+            item_attributes = await director_get_entry_variables(
+                self.hass, self.entry, item_id
+            )
+            message = {
+                "evtName": "OnDataToUI",
+                "iddevice": item_id,
+                "data": item_attributes,
+            }
             for callback in list(callbacks):
                 await callback(item_id, message)
         self._was_disconnected = False
 
     async def disconnect_callback(self) -> None:
         """Mark all entities unavailable on WebSocket disconnect."""
-        _LOGGER.warning("WebSocket connection to Control4 lost, attempting reconnection")
+        _LOGGER.warning(
+            "WebSocket connection to Control4 lost, attempting reconnection"
+        )
         self._was_disconnected = True
         item_callbacks = self.entry.runtime_data[CONF_WEBSOCKET].item_callbacks
         for item_id, callbacks in item_callbacks.items():
@@ -224,8 +247,10 @@ class RefreshTokensObject:
             self.retries += 1
             delay = random.uniform(0, min(2**self.retries, RETRY_BACKOFF_MAX_SEC))
             _LOGGER.warning("Token refresh failed, retrying in %.0f seconds", delay)
-            self.entry.runtime_data[CONF_CANCEL_TOKEN_REFRESH_CALLBACK] = async_call_later(
-                hass=self.hass, delay=delay, action=self.refresh_tokens
+            self.entry.runtime_data[CONF_CANCEL_TOKEN_REFRESH_CALLBACK] = (
+                async_call_later(
+                    hass=self.hass, delay=delay, action=self.refresh_tokens
+                )
             )
 
 
@@ -249,6 +274,7 @@ class Control4Entity(Entity):
         super().__init__()
         self.entry = entry
         self.entry_data = entry_data
+        self._attr_has_entity_name = True
         self._attr_name = name
         self._attr_unique_id = str(idx)
         self._idx = idx
@@ -280,20 +306,30 @@ class Control4Entity(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe WebSocket callbacks."""
         try:
-            self.entry_data[CONF_WEBSOCKET].remove_item_callback(self._idx, self._update_callback)
-            self.entry_data[CONF_WEBSOCKET].remove_item_callback(self._device_id, self._update_callback)
+            self.entry_data[CONF_WEBSOCKET].remove_item_callback(
+                self._idx, self._update_callback
+            )
+            self.entry_data[CONF_WEBSOCKET].remove_item_callback(
+                self._device_id, self._update_callback
+            )
         except KeyError:
             return
 
-    async def _update_callback(self, device: int, message: dict[str, Any] | bool) -> None:
+    async def _update_callback(
+        self, device: int, message: dict[str, Any] | bool
+    ) -> None:
         """Handle a WebSocket push event."""
         if message is False:
             if self._attr_available:
-                _LOGGER.warning("Control4 entity %s (%s) is unavailable", self.name, self._idx)
+                _LOGGER.warning(
+                    "Control4 entity %s (%s) is unavailable", self.name, self._idx
+                )
             self._attr_available = False
         elif message["evtName"] == "OnDataToUI":
             if not self._attr_available:
-                _LOGGER.info("Control4 entity %s (%s) is available again", self.name, self._idx)
+                _LOGGER.info(
+                    "Control4 entity %s (%s) is available again", self.name, self._idx
+                )
             self._attr_available = True
             await self._data_to_extra_state_attributes(message["data"])
         self.async_write_ha_state()
