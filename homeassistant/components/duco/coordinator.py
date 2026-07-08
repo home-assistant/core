@@ -1,6 +1,5 @@
 """Data update coordinator for the Duco integration."""
 
-from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass, replace
 import logging
@@ -15,7 +14,7 @@ from duco_connectivity.exceptions import (
 from duco_connectivity.models import BoardInfo, Node, NodeListActionItemList, NodeName
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -25,7 +24,6 @@ from .validation import UnsupportedBoardError, async_get_supported_board_info
 _LOGGER = logging.getLogger(__name__)
 
 type DucoConfigEntry = ConfigEntry[DucoCoordinator]
-type NodeNameUpdateCallback = Callable[[dict[int, str]], None]
 
 
 @dataclass
@@ -46,8 +44,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
     mac: str
     _supports_time_filter_remain: bool
     _configured_node_names: dict[int, str]
-    _known_node_names: dict[int, str]
-    _node_name_update_callbacks: list[NodeNameUpdateCallback]
 
     def __init__(
         self,
@@ -66,8 +62,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         self.client = client
         self._configured_node_names = {}
         self.mac = cast(str, config_entry.unique_id)
-        self._known_node_names = {}
-        self._node_name_update_callbacks = []
         self._supports_time_filter_remain = True
 
     async def _async_load_node_names(self) -> None:
@@ -85,20 +79,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             for node in configured_node_names.nodes
             if node.name is not None
         }
-
-    @callback
-    def async_add_node_name_listener(
-        self, update_callback: NodeNameUpdateCallback
-    ) -> CALLBACK_TYPE:
-        """Listen for Duco node name changes."""
-        self._node_name_update_callbacks.append(update_callback)
-
-        @callback
-        def remove_listener() -> None:
-            """Remove the node name listener."""
-            self._node_name_update_callbacks.remove(update_callback)
-
-        return remove_listener
 
     @override
     async def _async_setup(self) -> None:
@@ -197,26 +177,9 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 time_filter_remain = await self.client.async_get_time_filter_remaining()
                 self._supports_time_filter_remain = time_filter_remain is not None
 
-        data = DucoData(
+        return DucoData(
             nodes={node.node_id: node for node in nodes},
             node_actions=node_actions,
             rssi_wifi=rssi_wifi,
             time_filter_remain=time_filter_remain,
         )
-
-        current_node_names = {
-            node_id: node.general.name or f"Node {node_id}"
-            for node_id, node in data.nodes.items()
-        }
-        updated_node_names = {
-            node_id: node_name
-            for node_id, node_name in current_node_names.items()
-            if self._known_node_names.get(node_id) != node_name
-        }
-        self._known_node_names = current_node_names
-
-        if updated_node_names:
-            for update_callback in self._node_name_update_callbacks:
-                update_callback(updated_node_names)
-
-        return data
