@@ -91,10 +91,9 @@ async def test_bluetooth_step_unsupported_name_aborts(
     assert result["reason"] == "not_supported"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_besen_client", "mock_setup_entry")
 async def test_bluetooth_step_sets_discovered_context(
     hass: HomeAssistant,
-    mock_besen_client: Mock,
 ) -> None:
     """Test Bluetooth discovery normalizes the address and asks for confirmation."""
 
@@ -183,11 +182,10 @@ async def test_bluetooth_confirm_errors_can_recover(
     _assert_bluetooth_create_entry(result)
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_besen_client", "mock_setup_entry")
 async def test_bluetooth_confirm_no_connectable_path_can_recover(
     hass: HomeAssistant,
     mock_ble_device: Mock,
-    mock_besen_client: Mock,
 ) -> None:
     """Test Bluetooth confirmation recovers after a path becomes available."""
 
@@ -234,10 +232,9 @@ async def test_bluetooth_flow_existing_device_aborts(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_besen_client", "mock_setup_entry")
 async def test_user_step_success(
     hass: HomeAssistant,
-    mock_besen_client: Mock,
 ) -> None:
     """Test manual setup creates an entry."""
 
@@ -260,10 +257,9 @@ async def test_user_step_success(
     _assert_user_create_entry(result)
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_besen_client", "mock_setup_entry")
 async def test_user_step_rejects_invalid_pin(
     hass: HomeAssistant,
-    mock_besen_client: Mock,
 ) -> None:
     """Test the user step PIN schema rejects invalid values."""
 
@@ -333,11 +329,10 @@ async def test_user_step_errors_can_recover(
     _assert_user_create_entry(result)
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_besen_client", "mock_setup_entry")
 async def test_user_step_no_connectable_path_can_recover(
     hass: HomeAssistant,
     mock_ble_device: Mock,
-    mock_besen_client: Mock,
 ) -> None:
     """Test manual setup recovers after a path becomes available."""
 
@@ -407,10 +402,9 @@ async def test_user_step_no_devices_found_aborts(
     assert result["reason"] == "no_devices_found"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_besen_client", "mock_setup_entry")
 async def test_user_step_ignores_bluetooth_flow_in_progress(
     hass: HomeAssistant,
-    mock_besen_client: Mock,
 ) -> None:
     """Test manual setup can finish when a Bluetooth flow is already in progress."""
 
