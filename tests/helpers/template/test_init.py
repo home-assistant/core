@@ -907,6 +907,13 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         ("-1.0", -1.0),
         ("+1", 1),
         ("5.", 5.0),
+        ("-0", 0),
+        ("-0.0", -0.0),
+        ("+", "+"),
+        ("-", "-"),
+        (".", "."),
+        # Exceeds the int digit limit for both int() and literal_eval
+        ("9" * 5000, "9" * 5000),
         ("123_123_123", "123_123_123"),
         # ("+48100200300", "+48100200300"),  # phone number
         ("010", "010"),

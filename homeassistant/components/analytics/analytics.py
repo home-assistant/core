@@ -28,9 +28,9 @@ from homeassistant.components.recorder import (
 )
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
     ATTR_DOMAIN,
     BASE_PLATFORMS,
+    EntityStateAttribute,
     __version__ as HA_VERSION,
 )
 from homeassistant.core import (
@@ -915,7 +915,9 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
                 # It is also not present, if entity is not in the state machine,
                 # which can happen for disabled entities.
                 "assumed_state": (
-                    entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
+                    entity_state.attributes.get(
+                        EntityStateAttribute.ASSUMED_STATE, False
+                    )
                     if entity_state is not None
                     else None
                 ),
