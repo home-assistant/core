@@ -328,6 +328,28 @@ def make_entity_description(
     return msg
 
 
+def entry_to_setup_proto(entry: Any) -> pb.EntrySetup:
+    """Serialise the entry-identity fields of a ConfigEntry into EntrySetup.
+
+    Shared by the entry_setup payload and the flow proxy's reauth/reconfigure
+    entry carry — only the fields the sandbox needs to rebuild the entry
+    (integration_source / core_config are filled separately by entry_setup).
+    """
+    msg = pb.EntrySetup(
+        entry_id=entry.entry_id,
+        domain=entry.domain,
+        title=entry.title,
+        data=encode_json(dict(entry.data)),
+        options=encode_json(dict(entry.options)),
+        source=entry.source,
+        version=entry.version,
+        minor_version=entry.minor_version,
+    )
+    if entry.unique_id is not None:
+        msg.unique_id = entry.unique_id
+    return msg
+
+
 def core_config_to_proto(config: Any) -> pb.CoreConfig:
     """Snapshot a hass ``Config`` into the wire ``CoreConfig`` message.
 

@@ -239,6 +239,11 @@ message FlowInit {
   string handler = 1;
   bytes context = 2;         // dynamic, JSON object
   optional bytes data = 3;   // dynamic, JSON object (unset = no initial data)
+  // The entry a reauth / reconfigure / reset flow operates on. Main owns the
+  // ConfigEntry; the sandbox-private flow manager needs a copy so
+  // ConfigFlow._get_reauth_entry() / _get_reconfigure_entry() resolve instead
+  // of raising UnknownEntry. Unset for a plain user / discovery flow.
+  optional EntrySetup entry = 4;
 }
 
 message FlowStep {

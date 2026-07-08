@@ -269,14 +269,16 @@ class Ready(_message.Message):
     def __init__(self) -> None: ...
 
 class FlowInit(_message.Message):
-    __slots__ = ("handler", "context", "data")
+    __slots__ = ("handler", "context", "data", "entry")
     HANDLER_FIELD_NUMBER: _ClassVar[int]
     CONTEXT_FIELD_NUMBER: _ClassVar[int]
     DATA_FIELD_NUMBER: _ClassVar[int]
+    ENTRY_FIELD_NUMBER: _ClassVar[int]
     handler: str
     context: bytes
     data: bytes
-    def __init__(self, handler: _Optional[str] = ..., context: _Optional[bytes] = ..., data: _Optional[bytes] = ...) -> None: ...
+    entry: EntrySetup
+    def __init__(self, handler: _Optional[str] = ..., context: _Optional[bytes] = ..., data: _Optional[bytes] = ..., entry: _Optional[_Union[EntrySetup, _Mapping]] = ...) -> None: ...
 
 class FlowStep(_message.Message):
     __slots__ = ("flow_id", "user_input")

@@ -53,6 +53,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from ._proto import sandbox_pb2 as pb
 from .channel import Channel
+from .entry_runner import _entry_from_proto
 from .messages import (
     MSG_FLOW_ABORT,
     MSG_FLOW_INIT,
@@ -180,10 +181,25 @@ class FlowRunner:
         # dicts (the proxy flattened the *ServiceInfo / DiscoveryKey objects);
         # rebuild the real types so async_step_<source> sees what it expects.
         context, data = _rehydrate_discovery(context, data)
+        # Reauth / reconfigure / reset flows resolve the entry they operate on
+        # via ConfigFlow._get_reauth_entry() / _get_reconfigure_entry(), which
+        # look it up on this private hass. Main owns the entry, so seed a copy
+        # before the flow runs or those lookups raise UnknownEntry.
+        if msg.HasField("entry"):
+            self._ensure_flow_entry(msg.entry)
         result = await self.hass.config_entries.flow.async_init(
             msg.handler, context=context, data=data
         )
         return _marshal_result(result, self.hass.config_entries.flow)
+
+
+    def _ensure_flow_entry(self, entry_msg: pb.EntrySetup) -> None:
+        """Seed the private config_entries with the flow's target entry."""
+        config_entries = self.hass.config_entries
+        if config_entries.async_get_entry(entry_msg.entry_id) is not None:
+            return
+        entry = _entry_from_proto(entry_msg)
+        config_entries._entries[entry.entry_id] = entry  # noqa: SLF001
 
     async def _handle_flow_step(self, msg: pb.FlowStep) -> pb.FlowResult:
         user_input = (

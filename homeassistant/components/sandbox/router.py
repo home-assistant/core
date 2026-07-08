@@ -33,7 +33,7 @@ from .messages import (
     MSG_ENTRY_SETUP,
     MSG_ENTRY_UNLOAD,
     core_config_to_proto,
-    encode_json,
+    entry_to_setup_proto,
 )
 from .proxy_flow import SandboxFlowProxy
 from .sources import SandboxSourceError, async_resolve_integration_source
@@ -249,18 +249,7 @@ async def _entry_setup_payload(
     computes sun times / distances / unit conversions like main. May raise
     :class:`SandboxSourceError` if a custom integration has no source resolver.
     """
-    msg = pb.EntrySetup(
-        entry_id=entry.entry_id,
-        domain=entry.domain,
-        title=entry.title,
-        data=encode_json(dict(entry.data)),
-        options=encode_json(dict(entry.options)),
-        source=entry.source,
-        version=entry.version,
-        minor_version=entry.minor_version,
-    )
-    if entry.unique_id is not None:
-        msg.unique_id = entry.unique_id
+    msg = entry_to_setup_proto(entry)
     msg.integration_source.CopyFrom(
         await async_resolve_integration_source(hass, entry.domain)
     )
