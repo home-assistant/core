@@ -173,6 +173,10 @@
         "description": "Import a KNX project file to help configure group addresses and datapoint types",
         "title": "[%key:component::knx::config_panel::dialogs::project_upload::title%]"
       },
+      "send": {
+        "description": "Send an arbitrary telegram to the KNX bus.",
+        "title": "[%key:component::knx::config_panel::dialogs::send::title%]"
+      },
       "time_server": {
         "description": "Broadcast the current local time and date to the KNX bus",
         "title": "[%key:component::knx::config_panel::dialogs::time_server::title%]"
@@ -183,6 +187,20 @@
         "description": "Details such as group address names, datapoint types, devices and group objects are extracted from your project file. The ETS project file itself and its optional password are not stored.\n\n`.knxproj` files exported by ETS 4, 5 or 6 are supported.",
         "file_upload_label": "ETS project file",
         "title": "Import ETS project"
+      },
+      "send": {
+        "data": {
+          "description": "The data to send in the telegram. The format depends on the selected datapoint type.",
+          "label": "Data"
+        },
+        "description": "You can use the hotkey `s` to spawn this dialog from anywhere in the KNX config panel.",
+        "read_button": "Read",
+        "response": {
+          "description": "Send as GroupValueResponse telegram.",
+          "label": "Response"
+        },
+        "title": "Send KNX telegram",
+        "write_button": "Write"
       },
       "time_server": {
         "date": {
