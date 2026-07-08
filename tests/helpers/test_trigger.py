@@ -5897,6 +5897,23 @@ def mock_test_modern_trigger(hass: HomeAssistant) -> None:
             id="calendar",
         ),
         pytest.param(
+            {"platform": "time", "at": "05:00:00"},
+            [],
+            id="time-plain",
+        ),
+        pytest.param(
+            {
+                "platform": "time",
+                "at": [
+                    "05:00:00",
+                    "input_datetime.alarm",
+                    {"entity_id": "sensor.next_alarm", "offset": "-00:05:00"},
+                ],
+            },
+            ["input_datetime.alarm", "sensor.next_alarm"],
+            id="time-entities",
+        ),
+        pytest.param(
             {
                 "platform": "zone",
                 "options": {
