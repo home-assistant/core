@@ -189,7 +189,7 @@ async def test_selects(
     mock_config_entry: MockConfigEntry,
     mock_session: MagicMock,
 ) -> None:
-    """All 15 select entities are created for a fully-featured SHC installation."""
+    """All 17 select entities are created for a fully-featured SHC installation."""
     mock_session.device_helper.motion_detectors2 = [_rich_motion_detector2()]
     mock_session.device_helper.shutter_contacts2 = [_rich_shutter_contact2_plus()]
     mock_session.device_helper.smart_plugs = [_rich_smart_plug()]
@@ -450,7 +450,7 @@ async def test_terminal_type_only_for_roomthermostat2(
     assert state.state == "not_connected"
 
     await _select_option(
-        hass, "select.room_thermostat_2_terminal_type", "FLOOR_SENSOR_CONNECTED"
+        hass, "select.room_thermostat_2_terminal_type", "floor_sensor_connected"
     )
     assert device.terminal_type == TerminalConfiguration.Type.FLOOR_SENSOR_CONNECTED
 
