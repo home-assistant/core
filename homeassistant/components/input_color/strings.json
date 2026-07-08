@@ -42,57 +42,57 @@
     }
   },
   "services": {
+    "clear_brightness": {
+      "description": "Clear the stored brightness.",
+      "name": "Clear brightness"
+    },
     "reload": {
       "description": "Reloads helpers from the YAML-configuration.",
       "name": "Reload input colors"
     },
-    "set_color": {
-      "name": "Set color",
-      "description": "Set the stored color.",
-      "fields": {
-        "hex_value": {
-          "name": "Hex",
-          "description": "Hex color, for example #FF8000."
-        },
-        "rgb_color": {
-          "name": "RGB",
-          "description": "RGB triplet, components 0-255."
-        },
-        "hs_color": {
-          "name": "HS",
-          "description": "Hue (0-360) and saturation (0-100)."
-        },
-        "xy_color": {
-          "name": "CIE xy",
-          "description": "CIE 1931 chromaticity (x, y), each 0-1."
-        },
-        "color_temp_kelvin": {
-          "name": "Color temperature",
-          "description": "Color temperature in Kelvin."
-        },
-        "color_name": {
-          "name": "Color name",
-          "description": "CSS3 color name, for example crimson."
-        },
-        "brightness": {
-          "name": "Brightness",
-          "description": "Optional brightness 0-255 stored alongside the color."
-        }
-      }
-    },
     "set_brightness": {
-      "name": "Set brightness",
       "description": "Set the stored brightness.",
       "fields": {
         "brightness": {
-          "name": "Brightness",
-          "description": "Brightness 0-255."
+          "description": "Brightness 0-255.",
+          "name": "Brightness"
         }
-      }
+      },
+      "name": "Set brightness"
     },
-    "clear_brightness": {
-      "name": "Clear brightness",
-      "description": "Clear the stored brightness."
+    "set_color": {
+      "description": "Set the stored color.",
+      "fields": {
+        "brightness": {
+          "description": "Optional brightness 0-255 stored alongside the color.",
+          "name": "Brightness"
+        },
+        "color_name": {
+          "description": "CSS3 color name, for example crimson.",
+          "name": "Color name"
+        },
+        "color_temp_kelvin": {
+          "description": "Color temperature in Kelvin.",
+          "name": "Color temperature"
+        },
+        "hex_value": {
+          "description": "Hex color, for example #FF8000.",
+          "name": "Hex"
+        },
+        "hs_color": {
+          "description": "Hue (0-360) and saturation (0-100).",
+          "name": "HS"
+        },
+        "rgb_color": {
+          "description": "RGB triplet, components 0-255.",
+          "name": "RGB"
+        },
+        "xy_color": {
+          "description": "CIE 1931 chromaticity (x, y), each 0-1.",
+          "name": "CIE xy"
+        }
+      },
+      "name": "Set color"
     }
   },
   "title": "Input color"

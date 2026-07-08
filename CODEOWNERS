@@ -870,6 +870,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/input_boolean/ @home-assistant/core
 /homeassistant/components/input_button/ @home-assistant/core
 /tests/components/input_button/ @home-assistant/core
+/homeassistant/components/input_color/ @home-assistant/core
+/tests/components/input_color/ @home-assistant/core
 /homeassistant/components/input_datetime/ @home-assistant/core
 /tests/components/input_datetime/ @home-assistant/core
 /homeassistant/components/input_number/ @home-assistant/core
