@@ -21,8 +21,6 @@ from .const import (
     FOLLOW_UP_REFRESH_DELAY,
 )
 
-_FILT_TIMERS = ("filtration1", "filtration2", "filtration3")
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -120,25 +118,20 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _get_enabled_timers(self) -> list[str]:
         """Return the list of timer block names to poll each cycle.
 
-        Filtration timers are polled unconditionally because they feed the
-        aggregate filtration state; the light timer is polled only when the
-        light entity is enabled in the options.
+        The light timer is polled only when the light entity is enabled in
+        the options.
         """
-        enabled: list[str] = list(_FILT_TIMERS)
+        enabled: list[str] = []
         if self.config_entry.options.get(CONF_USE_LIGHT, False):
             enabled.append("relay_light")
         return enabled
 
     async def _read_timers_into_data(self, data: dict[str, Any]) -> None:
         """Read every enabled timer block and merge derived fields into data."""
-        prev_remaining = self.data.get("FILTRATION_REMAINING") if self.data else None
-        filtration_active = bool(data.get("Filtration Pump")) or bool(
-            prev_remaining and prev_remaining > 0
-        )
-        timers = await self.client.read_all_timers(
-            enabled_timers=self._get_enabled_timers(),
-            force_read=_FILT_TIMERS if filtration_active else None,
-        )
+        enabled = self._get_enabled_timers()
+        if not enabled:
+            return
+        timers = await self.client.read_all_timers(enabled_timers=enabled)
         for t_name, t in timers.items():
             data[f"{t_name}_enable"] = t["enable"]
             data[f"{t_name}_start"] = t["on"]  # seconds since midnight

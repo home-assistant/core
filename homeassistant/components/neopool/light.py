@@ -113,7 +113,6 @@ class NeoPoolLight(NeoPoolEntity, LightEntity):
                 translation_key="relay_in_auto_mode",
             ) from err
 
-        # Optimistic update + schedule follow-up.
         self.coordinator.async_set_updated_data({**self.coordinator.data, **overrides})
         self.coordinator.request_refresh_with_followup()
 

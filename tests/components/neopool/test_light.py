@@ -188,10 +188,10 @@ async def test_light_maps_lib_invalid_state_to_service_validation(
     )
 
 
+@pytest.mark.usefixtures("mock_neopool_client")
 async def test_light_absent_when_option_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_neopool_client: MagicMock,
 ) -> None:
     """No light entity is created while the use_light option is off."""
     await setup_integration(hass, mock_config_entry)
