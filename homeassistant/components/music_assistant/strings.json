@@ -211,7 +211,7 @@
         }
       },
       "party_mode_boost_badge_color": {
-        "name": "Boost Badge Color",
+        "name": "Boost badge color",
         "state": {
           "00bcd4": "Cyan",
           "2d6a4f": "Green (Dark)",
@@ -230,10 +230,10 @@
         }
       },
       "party_mode_party_player": {
-        "name": "Party Player"
+        "name": "Party player"
       },
       "party_mode_request_badge_color": {
-        "name": "Request Badge Color",
+        "name": "Request badge color",
         "state": {
           "00bcd4": "Cyan",
           "2d6a4f": "Green (Dark)",
@@ -313,7 +313,7 @@
         "name": "Anti burn-in"
       },
       "party_mode_display_lyrics": {
-        "name": "Display Lyrics"
+        "name": "Display lyrics"
       },
       "party_mode_enable_add_queue": {
         "name": "Enable guest add to queue"
@@ -363,10 +363,10 @@
         "name": "Network name"
       },
       "party_mode_party_name": {
-        "name": "Party Name"
+        "name": "Party name"
       },
       "party_mode_qr_text": {
-        "name": "QR Text"
+        "name": "QR text"
       }
     }
   },
