@@ -22,13 +22,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_DEVICE_CLASS,
     CONF_METHOD,
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
     UnitOfTime,
 )
 from homeassistant.core import (
@@ -430,13 +429,17 @@ class IntegrationSensor(RestoreSensor):
         return device_class
 
     def _derive_and_set_attributes_from_state(self, source_state: State) -> None:
-        source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        source_unit = source_state.attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        )
         if source_unit is not None:
             unit_of_measurement = self._calculate_unit(source_unit)
         else:
             # If the source has no defined unit we cannot derive a unit for the integral
             unit_of_measurement = None
-        source_device_class_raw = source_state.attributes.get(ATTR_DEVICE_CLASS)
+        source_device_class_raw = source_state.attributes.get(
+            EntityStateAttribute.DEVICE_CLASS
+        )
         source_device_class: SensorDeviceClass | None = None
         if isinstance(source_device_class_raw, str):
             try:
