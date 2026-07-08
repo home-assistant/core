@@ -56,13 +56,10 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_MODE,
     ATTR_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONTENT_TYPE_TEXT_PLAIN,
     EVENT_STATE_CHANGED,
     PERCENTAGE,
@@ -73,6 +70,7 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfLength,
     UnitOfTemperature,
 )
@@ -293,8 +291,8 @@ class PrometheusMetrics:
         if (
             old_state := event.data.get("old_state")
         ) is not None and old_state.attributes.get(
-            ATTR_FRIENDLY_NAME
-        ) != state.attributes.get(ATTR_FRIENDLY_NAME):
+            EntityStateAttribute.FRIENDLY_NAME
+        ) != state.attributes.get(EntityStateAttribute.FRIENDLY_NAME):
             self._remove_labelsets(old_state.entity_id)
 
         self.handle_state(state)
@@ -569,7 +567,10 @@ class PrometheusMetrics:
     def state_as_number(state: State) -> float | None:
         """Return state as a float, or None if state cannot be converted."""
         try:
-            if state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP:
+            if (
+                state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+                == SensorDeviceClass.TIMESTAMP
+            ):
                 value = as_timestamp(state.state)
             else:
                 value = state_helper.state_as_number(state)
@@ -588,7 +589,7 @@ class PrometheusMetrics:
         labels = {
             "entity": state.entity_id,
             "domain": state.domain,
-            "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
+            "friendly_name": state.attributes.get(EntityStateAttribute.FRIENDLY_NAME),
         }
         if not labels.keys().isdisjoint(extra_labels.keys()):
             conflicting_keys = labels.keys() & extra_labels.keys()
@@ -731,7 +732,9 @@ class PrometheusMetrics:
         if (value := self.state_as_number(state)) is None:
             return
 
-        if unit := self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+        if unit := self._unit_string(
+            state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        ):
             metric = self._metric(
                 f"{domain}_state_{unit}",
                 prometheus_client.Gauge,
@@ -747,7 +750,7 @@ class PrometheusMetrics:
             )
 
         if (
-            state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
             == UnitOfTemperature.FAHRENHEIT
         ):
             value = TemperatureConverter.convert(
@@ -777,7 +780,7 @@ class PrometheusMetrics:
     def _handle_geo_location(self, state: State) -> None:
         labels = self._labels(state, {"source": state.attributes.get("source", "")})
         if (value := self.state_as_number(state)) is not None:
-            unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
             if unit is not None:
                 value = DistanceConverter.convert(value, unit, UnitOfLength.METERS)
             self._metric(
@@ -1050,7 +1053,9 @@ class PrometheusMetrics:
         )
 
     def _handle_sensor(self, state: State) -> None:
-        unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+        unit = self._unit_string(
+            state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        )
 
         for metric_handler in self._sensor_metric_handlers:
             metric = metric_handler(state, unit)
@@ -1063,7 +1068,7 @@ class PrometheusMetrics:
                 documentation = f"Sensor data measured in {unit}"
 
             if (
-                state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
                 == UnitOfTemperature.FAHRENHEIT
             ):
                 value = TemperatureConverter.convert(
@@ -1085,7 +1090,7 @@ class PrometheusMetrics:
     @staticmethod
     def _sensor_attribute_metric(state: State, unit: str | None) -> str | None:
         """Get metric based on device class attribute."""
-        metric = state.attributes.get(ATTR_DEVICE_CLASS)
+        metric = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         if metric is not None:
             return f"sensor_{metric}_{unit}"
         return None
@@ -1096,7 +1101,7 @@ class PrometheusMetrics:
 
         These have no unit of measurement attribute.
         """
-        metric = state.attributes.get(ATTR_DEVICE_CLASS)
+        metric = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         if metric == SensorDeviceClass.TIMESTAMP:
             return f"sensor_{metric}_seconds"
         return None
