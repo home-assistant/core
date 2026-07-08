@@ -1,6 +1,5 @@
 """The Bosch Smart Home Controller integration."""
 
-from dataclasses import dataclass
 import logging
 
 from boschshcpy import SHCSession
@@ -25,15 +24,7 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, kw_only=True)
-class SHCData:
-    """Runtime data for the Bosch SHC integration."""
-
-    session: SHCSession
-    parent_id: str
-
-
-type BoschConfigEntry = ConfigEntry[SHCData]
+type BoschConfigEntry = ConfigEntry[SHCSession]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> bool:
@@ -56,15 +47,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
         raise ConfigEntryNotReady from err
 
     shc_info = session.information
-    if shc_info is None or shc_info.unique_id is None:
-        raise ConfigEntryNotReady("Bosch SHC did not return controller information")
+    # Always populated: the synchronous SHCSession construction above already raised otherwise.
+    assert shc_info is not None
+    assert shc_info.unique_id is not None
     if (
         shc_info.updateState is not None
         and shc_info.updateState.name == "UPDATE_AVAILABLE"
     ):
         _LOGGER.warning("Please check for software updates in the Bosch Smart Home App")
 
-    entry.runtime_data = SHCData(session=session, parent_id=shc_info.unique_id)
+    entry.runtime_data = session
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -93,6 +85,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> bool:
     """Unload a config entry."""
-    await hass.async_add_executor_job(entry.runtime_data.session.stop_polling)
+    await hass.async_add_executor_job(entry.runtime_data.stop_polling)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
