@@ -30,7 +30,6 @@ class SHCSwitchEntityDescription(SwitchEntityDescription):
     """Class describing SHC switch entities."""
 
     on_key: str
-    # Plain Enum members are stored/compared here, not StateType.
     on_value: Enum
     should_poll: bool
 

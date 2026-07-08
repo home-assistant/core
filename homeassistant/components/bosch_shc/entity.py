@@ -1,6 +1,6 @@
 """Bosch Smart Home Controller base entity."""
 
-from typing import Any, override
+from typing import override
 
 from boschshcpy import SHCDevice, SHCIntrusionSystem
 
@@ -13,7 +13,9 @@ from .const import DOMAIN
 
 
 async def async_remove_devices(
-    hass: HomeAssistant, entity: SHCBaseEntity[Any], entry_id: str
+    hass: HomeAssistant,
+    entity: SHCBaseEntity[SHCDevice | SHCIntrusionSystem],
+    entry_id: str,
 ) -> None:
     """Get item that is removed from session."""
     dev_registry = dr.async_get(hass)
@@ -22,8 +24,6 @@ async def async_remove_devices(
         dev_registry.async_update_device(device.id, remove_config_entry_id=entry_id)
 
 
-# Parameterized so each subclass's _device is statically its real concrete
-# type (SHCEntity's SHCDevice vs. SHCDomainEntity's SHCIntrusionSystem).
 class SHCBaseEntity[_DeviceT: (SHCDevice | SHCIntrusionSystem)](Entity):
     """Base representation of a SHC entity."""
 
