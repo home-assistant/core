@@ -3,6 +3,7 @@
   "name": "Modbus Connection",
   "codeowners": ["@home-assistant/core"],
   "config_flow": true,
+  "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/modbus_connection",
   "integration_type": "hub",
   "iot_class": "local_polling",
