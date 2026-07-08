@@ -471,7 +471,7 @@ class HomeAssistantHTTP:
         async def redirect(request: web.Request) -> web.StreamResponse:
             """Redirect to location."""
             # Should be instance of aiohttp.web_exceptions._HTTPMove.
-            raise redirect_exc(redirect_to)  # type: ignore[arg-type,misc]
+            raise redirect_exc(redirect_to)  # type: ignore[arg-type,call-arg]
 
         self.app[KEY_ALLOW_CONFIGURED_CORS](
             self.app.router.add_route("GET", url, redirect)
