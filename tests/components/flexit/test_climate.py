@@ -199,6 +199,15 @@ async def test_returns_none_on_failed_reads(hass: HomeAssistant) -> None:
     assert attrs["filter_hours"] is None
 
 
+async def test_filter_hours_uses_unsigned_register(hass: HomeAssistant) -> None:
+    """Test filter_hours keeps uint16 values above the signed range."""
+    registers = DEFAULT_REGISTERS.copy()
+    registers[(CALL_TYPE_REGISTER_INPUT, 8)] = 40000
+    await _setup_flexit(hass, registers)
+
+    assert hass.states.get(ENTITY_ID).attributes["filter_hours"] == 40000
+
+
 @pytest.mark.parametrize(
     ("heating", "cooling", "heat_recovery", "air_speed", "expected_action"),
     [
