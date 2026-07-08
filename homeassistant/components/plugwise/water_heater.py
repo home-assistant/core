@@ -44,7 +44,6 @@ class PlugwiseWaterHeaterEntityDescription(WaterHeaterEntityDescription):
     options_key: WaterHeaterOptionsType | None
 
 
-# Upstream + is there a reason we didn't rename this one prefixed?
 WATERHEATER_TYPES = (
     PlugwiseWaterHeaterEntityDescription(
         key=BOILER_TEMP,
