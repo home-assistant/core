@@ -467,6 +467,19 @@ NUMBER_SCHEMA = vol.All(
             vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
                 [CALL_TYPE_REGISTER_HOLDING]
             ),
+            vol.Optional(CONF_DATA_TYPE, default=DataType.INT16): vol.In(
+                [
+                    DataType.INT16,
+                    DataType.INT32,
+                    DataType.INT64,
+                    DataType.UINT16,
+                    DataType.UINT32,
+                    DataType.UINT64,
+                    DataType.FLOAT16,
+                    DataType.FLOAT32,
+                    DataType.FLOAT64,
+                ]
+            ),
             vol.Optional(CONF_DEVICE_CLASS): NUMBER_DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_MIN_VALUE, default=DEFAULT_MIN_VALUE): vol.Coerce(float),

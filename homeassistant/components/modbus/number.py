@@ -69,6 +69,8 @@ class ModbusNumber(ModbusStructEntity, RestoreNumber, NumberEntity):
         self._attr_native_min_value = entry.get(CONF_MIN_VALUE, DEFAULT_MIN_VALUE)
         self._attr_native_max_value = entry.get(CONF_MAX_VALUE, DEFAULT_MAX_VALUE)
         self._attr_native_step = entry.get(CONF_NUMBER_STEP, DEFAULT_STEP)
+        # Without this, min/max from config would alter the value read from Modbus (sensor behavior).
+        # Number entities use min/max only to limit what the user can set in the UI.
         self._min_value = None
         self._max_value = None
 
@@ -132,5 +134,8 @@ class ModbusNumber(ModbusStructEntity, RestoreNumber, NumberEntity):
                 registers,
                 CALL_TYPE_WRITE_REGISTERS,
             )
-        self._attr_available = result is not None
+        if result is None:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
         await self.async_local_update(cancel_pending_update=True)
