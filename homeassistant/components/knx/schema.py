@@ -57,6 +57,7 @@ from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
+    CONF_VALUE,
     KNX_ADDRESS,
     ClimateConf,
     ColorTempModes,
@@ -98,9 +99,12 @@ def _max_payload_value(payload_length: int) -> int:
 
 
 def button_payload_sub_validator(entity_config: OrderedDict) -> OrderedDict:
-    """Validate a button entity payload configuration."""
+    """Validate a button entity payload configuration.
+
+    Returns raw payload and length from value and type (DPT), if given.
+    """
     if _type := entity_config.get(CONF_TYPE):
-        _payload = entity_config[ButtonSchema.CONF_VALUE]
+        _payload = entity_config[CONF_VALUE]
         if (transcoder := DPTBase.parse_transcoder(_type)) is None:
             raise vol.Invalid(f"'type: {_type}' is not a valid sensor type.")
         entity_config[CONF_PAYLOAD_LENGTH] = transcoder.payload_length
@@ -233,8 +237,6 @@ class ButtonSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX buttons."""
 
     PLATFORM = Platform.BUTTON
-
-    CONF_VALUE = "value"
 
     payload_or_value_msg = f"Please use only one of `{CONF_PAYLOAD}` or `{CONF_VALUE}`"
     length_or_type_msg = (
