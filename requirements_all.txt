@@ -7,7 +7,7 @@
 AEMET-OpenData==0.6.4
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.35
+AIOSomecomfort==0.0.37
 
 # homeassistant.components.adax
 Adax-local==0.3.0
@@ -401,7 +401,7 @@ aiorecollect==2023.09.0
 aioridwell==2025.09.0
 
 # homeassistant.components.ruckus_unleashed
-aioruckus==0.42
+aioruckus==0.46.3
 
 # homeassistant.components.russound_rio
 # homeassistant.components.russound_rnet
@@ -1596,6 +1596,9 @@ moehlenhoff-alpha2==1.4.0
 
 # homeassistant.components.route_b_smart_meter
 momonga==0.3.0
+
+# homeassistant.components.monarch_money
+monarchmoneycommunity==1.5.1
 
 # homeassistant.components.monzo
 monzopy==1.5.1
@@ -3236,9 +3239,6 @@ twilio==6.32.0
 # homeassistant.components.twitch
 twitchAPI==4.2.1
 
-# homeassistant.components.monarch_money
-typedmonarchmoney==0.7.0
-
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
 
@@ -3290,7 +3290,7 @@ vehicle==3.0.0
 velbus-aio==2026.4.1
 
 # homeassistant.components.venstar
-venstarcolortouch==0.21
+venstarcolortouch==0.22
 
 # homeassistant.components.viaggiatreno
 viaggiatreno_ha==0.2.4
