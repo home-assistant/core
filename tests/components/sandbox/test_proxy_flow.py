@@ -16,7 +16,11 @@ from homeassistant.components.sandbox.manager import SandboxManager
 from homeassistant.components.sandbox.messages import decode_json_dict, encode_json
 from homeassistant.components.sandbox.proxy_flow import SandboxFlowProxy
 from homeassistant.components.sandbox.router import SandboxFlowRouter
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigEntryState,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.discovery_flow import DiscoveryKey
@@ -24,7 +28,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from ._helpers import FakeSandboxManager, make_channel_pair
 
-from tests.common import MockModule, mock_integration
+from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
 class _SandboxStub:
@@ -477,6 +481,54 @@ async def test_discovery_flow_marshals_service_info(
     assert data["ip_addresses"] == ["1.2.3.4"]
     assert data["hostname"] == "device.local."
     assert "host" not in data
+
+
+async def test_reconfigure_flow_carries_entry(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """A reconfigure flow ships main's entry so the sandbox can resolve it.
+
+    Regression for the UnknownEntry cluster: without ``FlowInit.entry`` the
+    sandbox flow's ``_get_reconfigure_entry()`` raises on the private hass.
+    """
+    mock_integration(hass, MockModule("test_proxy_reconf"))
+    entry = MockConfigEntry(
+        domain="test_proxy_reconf",
+        title="Existing",
+        data={"host": "1.2.3.4"},
+        sandbox="built-in",
+        entry_id="reconf-1",
+    )
+    entry.add_to_hass(hass)
+    responses = [
+        pb.FlowResult(
+            type=FlowResultType.FORM.value,
+            flow_id="sandbox-reconf-1",
+            handler="test_proxy_reconf",
+            step_id="reconfigure",
+        ),
+    ]
+
+    with (
+        _wired_sandbox(manager, group="built-in", responses=responses) as stub,
+        patch(
+            "homeassistant.components.sandbox.router.classify",
+            return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
+        ),
+    ):
+        await _install_router(hass, manager)
+        result = await hass.config_entries.flow.async_init(
+            "test_proxy_reconf",
+            context={"source": SOURCE_RECONFIGURE, "entry_id": entry.entry_id},
+        )
+        assert result["type"] is FlowResultType.FORM
+
+    assert len(stub.init_calls) == 1
+    init = stub.init_calls[0]
+    assert init.HasField("entry")
+    assert init.entry.entry_id == "reconf-1"
+    assert init.entry.title == "Existing"
+    assert decode_json_dict(init.entry.data) == {"host": "1.2.3.4"}
 
 
 async def _install_router(hass: HomeAssistant, manager: FakeSandboxManager) -> None:

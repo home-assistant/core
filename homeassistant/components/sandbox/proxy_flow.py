@@ -42,6 +42,7 @@ from .messages import (
     decode_json,
     decode_json_dict,
     encode_json,
+    entry_to_setup_proto,
 )
 from .schema_bridge import reconstruct_schema
 
@@ -174,6 +175,15 @@ class SandboxFlowProxy(ConfigFlow):
                 )
                 if user_input is not None:
                     request.data = encode_json(_to_jsonable(user_input))
+                # A reauth / reconfigure / reset flow operates on an existing
+                # entry that main owns. Carry a copy so the sandbox flow
+                # manager can resolve it — otherwise _get_reauth_entry() /
+                # _get_reconfigure_entry() raise UnknownEntry on the private
+                # hass.
+                if (entry_id := self.context.get("entry_id")) is not None and (
+                    entry := self.hass.config_entries.async_get_entry(entry_id)
+                ) is not None:
+                    request.entry.CopyFrom(entry_to_setup_proto(entry))
                 result = await channel.call(MSG_FLOW_INIT, request)
                 self._sandbox_flow_id = (
                     result.flow_id if result.HasField("flow_id") else None

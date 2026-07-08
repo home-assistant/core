@@ -407,3 +407,76 @@ async def test_flow_abort_is_idempotent(
     # FlowAbortResult is an empty message (was `result == {}` on the dict wire).
     assert isinstance(result, pb.FlowAbortResult)
     assert result.SerializeToString() == b""
+
+
+class _ReconfigureFlow(ConfigFlow, domain="phase4_reconfigure"):
+    """Flow whose reconfigure step reads the entry it operates on."""
+
+    VERSION = 1
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        # Raises UnknownEntry on the private hass unless flow_init seeded the
+        # entry — the whole point of the FlowInit.entry carry.
+        entry = self._get_reconfigure_entry()
+        return self.async_show_form(
+            step_id="reconfigure",
+            description_placeholders={"title": entry.title},
+        )
+
+
+async def test_flow_init_seeds_reconfigure_entry(
+    channels: tuple[Channel, Channel], runner: FlowRunner
+) -> None:
+    """FlowInit.entry lets a reconfigure flow resolve main's entry.
+
+    Regression for the UnknownEntry cluster: reauth/reconfigure flows call
+    ``_get_reconfigure_entry()`` / ``_get_reauth_entry()`` which look the
+    entry up on the private hass. Main owns it, so flow_init must seed a copy.
+    """
+    main, sandbox = channels
+    runner.register(sandbox)
+    main.start()
+    sandbox.start()
+
+    ha_config_entries.HANDLERS["phase4_reconfigure"] = _ReconfigureFlow
+    fake_module = ModuleType("homeassistant.components.phase4_reconfigure")
+    fake_flow_module = ModuleType(
+        "homeassistant.components.phase4_reconfigure.config_flow"
+    )
+    runner.hass.data[ha_loader.DATA_COMPONENTS]["phase4_reconfigure"] = fake_module
+    runner.hass.data[ha_loader.DATA_COMPONENTS][
+        "phase4_reconfigure.config_flow"
+    ] = fake_flow_module
+    runner.hass.config.components.add("phase4_reconfigure")
+    try:
+        init_msg = pb.FlowInit(handler="phase4_reconfigure")
+        init_msg.context = encode_json(
+            {"source": "reconfigure", "entry_id": "reconf-entry"}
+        )
+        init_msg.entry.CopyFrom(
+            pb.EntrySetup(
+                entry_id="reconf-entry",
+                domain="phase4_reconfigure",
+                title="Existing Device",
+                data=encode_json({"host": "1.2.3.4"}),
+                options=encode_json({}),
+                source="user",
+                version=1,
+                minor_version=1,
+            )
+        )
+        result = await main.call("sandbox/flow_init", init_msg)
+    finally:
+        ha_config_entries.HANDLERS.pop("phase4_reconfigure", None)
+        runner.hass.data[ha_loader.DATA_COMPONENTS].pop("phase4_reconfigure", None)
+        runner.hass.data[ha_loader.DATA_COMPONENTS].pop(
+            "phase4_reconfigure.config_flow", None
+        )
+
+    assert result.type == "form"
+    assert result.step_id == "reconfigure"
+    assert decode_json_dict(result.description_placeholders) == {
+        "title": "Existing Device"
+    }
