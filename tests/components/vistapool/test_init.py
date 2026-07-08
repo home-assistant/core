@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioaquarite import AquariteError, AuthenticationError
@@ -235,7 +234,7 @@ async def test_apply_optimistic_suppresses_stale_push(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
-    remote_status: Any,
+    remote_status: int | None,
 ) -> None:
     """Test a Firestore push that disagrees within the TTL keeps the optimistic value."""
     mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
