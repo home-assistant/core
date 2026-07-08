@@ -5,9 +5,12 @@ from unittest.mock import AsyncMock
 from pyevolviot import EvolvIOTApiError, EvolvIOTAuthError
 import pytest
 
+from homeassistant.components.evolviot.const import DOMAIN
 from homeassistant.components.evolviot.coordinator import EvolvIOTDataUpdateCoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
+
+from tests.common import MockConfigEntry
 
 
 def _entity() -> dict:
@@ -28,7 +31,9 @@ def _entity() -> dict:
 
 def _coordinator(hass: HomeAssistant) -> EvolvIOTDataUpdateCoordinator:
     """Return a coordinator."""
-    coordinator = EvolvIOTDataUpdateCoordinator(hass, AsyncMock(), "entry-id")
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    coordinator = EvolvIOTDataUpdateCoordinator(hass, AsyncMock(), entry)
     coordinator._store.async_save = AsyncMock()
     coordinator._store.async_load = AsyncMock()
     return coordinator

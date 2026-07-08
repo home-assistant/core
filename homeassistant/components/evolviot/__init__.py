@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         verify_ssl=verify_ssl,
         token_update_callback=async_token_updated,
     )
-    coordinator = EvolvIOTDataUpdateCoordinator(hass, api, entry.entry_id)
+    coordinator = EvolvIOTDataUpdateCoordinator(hass, api, entry)
     await coordinator.async_load_cache()
     await coordinator.async_config_entry_first_refresh()
 

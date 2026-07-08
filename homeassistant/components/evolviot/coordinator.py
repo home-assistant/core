@@ -6,6 +6,7 @@ from typing import Any, override
 
 from pyevolviot import EvolvIOTApi, EvolvIOTApiError, EvolvIOTAuthError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -18,11 +19,14 @@ _LOGGER = logging.getLogger(__name__)
 class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Fetch EvolvIOT entities and states on a shared schedule."""
 
-    def __init__(self, hass: HomeAssistant, api: EvolvIOTApi, entry_id: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, api: EvolvIOTApi, entry: ConfigEntry
+    ) -> None:
         """Initialize the data update coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
@@ -30,7 +34,7 @@ class EvolvIOTDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._store: Store[dict[str, Any]] = Store(
             hass,
             STORAGE_VERSION,
-            f"{STORAGE_KEY_PREFIX}.{entry_id}",
+            f"{STORAGE_KEY_PREFIX}.{entry.entry_id}",
         )
         self._cached_devices_payload: dict[str, Any] | None = None
 

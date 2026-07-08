@@ -65,7 +65,7 @@ class EvolvIOTEntity(CoordinatorEntity[EvolvIOTDataUpdateCoordinator]):
         entity = self.backend_entity
         state = self.backend_state
         local_available = bool(state.get("local_available"))
-        cloud_available = bool(
+        cloud_available = bool(state) and bool(
             state.get("cloud_available", state.get("available", True))
         )
         return {

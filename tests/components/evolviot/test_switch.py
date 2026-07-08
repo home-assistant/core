@@ -2,14 +2,19 @@
 
 from unittest.mock import AsyncMock, Mock
 
+from homeassistant.components.evolviot.const import DOMAIN
 from homeassistant.components.evolviot.coordinator import EvolvIOTDataUpdateCoordinator
 from homeassistant.components.evolviot.switch import EvolvIOTSwitch
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
+
 
 def _mock_coordinator(hass: HomeAssistant) -> EvolvIOTDataUpdateCoordinator:
     """Return a coordinator with switch data."""
-    coordinator = EvolvIOTDataUpdateCoordinator(hass, AsyncMock(), "entry-id")
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    coordinator = EvolvIOTDataUpdateCoordinator(hass, AsyncMock(), entry)
     coordinator.data = {
         "user_id": "user-123",
         "entities": {
