@@ -149,27 +149,27 @@ async def test_failed_fan_mode_read_clears_stale_value(hass: HomeAssistant) -> N
     assert hass.states.get(ENTITY_ID).attributes[ATTR_FAN_MODE] is None
 
 
-async def test_filter_alarm_and_heater_enabled_are_bool(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("raw_value", "expected_value"),
+    [
+        pytest.param(0, False, id="false"),
+        pytest.param(1, True, id="true"),
+    ],
+)
+async def test_filter_alarm_and_heater_enabled_are_bool(
+    hass: HomeAssistant, raw_value: int, expected_value: bool
+) -> None:
     """Test filter_alarm and heater_enabled are surfaced as bool, not int."""
     registers = DEFAULT_REGISTERS.copy()
-    registers[(CALL_TYPE_REGISTER_INPUT, 27)] = 1
-    registers[(CALL_TYPE_REGISTER_INPUT, 28)] = 1
+    registers[(CALL_TYPE_REGISTER_INPUT, 27)] = raw_value
+    registers[(CALL_TYPE_REGISTER_INPUT, 28)] = raw_value
     await _setup_flexit(hass, registers)
 
     attrs = hass.states.get(ENTITY_ID).attributes
-    assert attrs["filter_alarm"] is True
-    assert attrs["heater_enabled"] is True
+    assert attrs["filter_alarm"] is expected_value
+    assert attrs["heater_enabled"] is expected_value
     assert isinstance(attrs["filter_alarm"], bool)
     assert isinstance(attrs["heater_enabled"], bool)
-
-
-async def test_filter_alarm_and_heater_enabled_false(hass: HomeAssistant) -> None:
-    """Test filter_alarm and heater_enabled are False (bool) when register is 0."""
-    await _setup_flexit(hass)
-
-    attrs = hass.states.get(ENTITY_ID).attributes
-    assert attrs["filter_alarm"] is False
-    assert attrs["heater_enabled"] is False
 
 
 async def test_handles_negative_register_values(hass: HomeAssistant) -> None:
