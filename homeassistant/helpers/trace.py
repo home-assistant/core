@@ -308,7 +308,7 @@ def script_execution_get() -> str | None:
 class trace_path:
     """Go deeper in the config tree.
 
-    Can not be used as a decorator on coroutine functions.
+    Can not be used as a decorator.
     """
 
     __slots__ = ("_count", "_suffix")
