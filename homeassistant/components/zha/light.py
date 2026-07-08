@@ -12,7 +12,6 @@ from zha.application.platforms.light.const import (
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
@@ -21,6 +20,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, Platform
@@ -215,20 +215,27 @@ class Light(LightEntity, ZHAEntity):
         """Restore entity state."""
         color_temp = (
             color_util.color_temperature_kelvin_to_mired(color_temp_k)
-            if (color_temp_k := state.attributes.get(ATTR_COLOR_TEMP_KELVIN))
+            if (
+                color_temp_k := state.attributes.get(
+                    LightEntityStateAttribute.COLOR_TEMP_KELVIN
+                )
+            )
             else None
         )
         self.entity_data.entity.restore_external_state_attributes(
             state=(state.state == STATE_ON),
             off_with_transition=state.attributes.get(OFF_WITH_TRANSITION),
             off_brightness=state.attributes.get(OFF_BRIGHTNESS),
-            brightness=state.attributes.get(ATTR_BRIGHTNESS),
+            brightness=state.attributes.get(LightEntityStateAttribute.BRIGHTNESS),
             color_temp=color_temp,
-            xy_color=state.attributes.get(ATTR_XY_COLOR),
+            xy_color=state.attributes.get(LightEntityStateAttribute.XY_COLOR),
             color_mode=(
-                HA_TO_ZHA_COLOR_MODE[ColorMode(state.attributes[ATTR_COLOR_MODE])]
-                if state.attributes.get(ATTR_COLOR_MODE) is not None
+                HA_TO_ZHA_COLOR_MODE[
+                    ColorMode(state.attributes[LightEntityStateAttribute.COLOR_MODE])
+                ]
+                if state.attributes.get(LightEntityStateAttribute.COLOR_MODE)
+                is not None
                 else None
             ),
-            effect=state.attributes.get(ATTR_EFFECT),
+            effect=state.attributes.get(LightEntityStateAttribute.EFFECT),
         )
