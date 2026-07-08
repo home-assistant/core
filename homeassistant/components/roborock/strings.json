@@ -125,6 +125,11 @@
         "name": "Start"
       }
     },
+    "image": {
+      "map": {
+        "name": "Map"
+      }
+    },
     "number": {
       "volume": {
         "name": "Volume"
