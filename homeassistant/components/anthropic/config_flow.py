@@ -9,7 +9,7 @@ import anthropic
 import voluptuous as vol
 from voluptuous_openapi import convert
 
-from homeassistant.components.zone import ENTITY_ID_HOME
+from homeassistant.components.zone import ENTITY_ID_HOME, ZoneEntityStateAttribute
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntryState,
@@ -18,14 +18,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_API_KEY,
-    CONF_LLM_HASS_API,
-    CONF_NAME,
-    CONF_PROMPT,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.helpers.selector import (
@@ -569,8 +562,8 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     {
                         "role": "user",
                         "content": "Where are the following coordinates located: "
-                        f"({zone_home.attributes[ATTR_LATITUDE]},"
-                        f" {zone_home.attributes[ATTR_LONGITUDE]})?",
+                        f"({zone_home.attributes[ZoneEntityStateAttribute.LATITUDE]},"
+                        f" {zone_home.attributes[ZoneEntityStateAttribute.LONGITUDE]})?",
                     }
                 ],
                 max_tokens=cast(int, DEFAULT[CONF_MAX_TOKENS]),
