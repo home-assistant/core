@@ -56,7 +56,7 @@
     },
     "image": {
       "party_mode_qr": {
-        "name": "Guest qr code"
+        "name": "Guest QR code"
       }
     },
     "media_player": {
@@ -146,22 +146,22 @@
         "name": "Equalizer mid"
       },
       "party_mode_add_to_queue_limit": {
-        "name": "Add to Queue Limit"
+        "name": "Add to queue limit"
       },
       "party_mode_add_to_queue_refill_minutes": {
-        "name": "Add to Queue Refill (Minutes)"
+        "name": "Add to queue refill (minutes)"
       },
       "party_mode_boost_limit": {
-        "name": "Boost Limit"
+        "name": "Boost limit"
       },
       "party_mode_boost_refill_minutes": {
-        "name": "Boost Refill (Minutes)"
+        "name": "Boost refill (minutes)"
       },
       "party_mode_skip_song_limit": {
-        "name": "Skip Song Limit"
+        "name": "Skip song limit"
       },
       "party_mode_skip_song_refill_minutes": {
-        "name": "Skip Song Refill (Minutes)"
+        "name": "Skip song refill (minutes)"
       },
       "subwoofer_volume": {
         "name": "Subwoofer volume"
@@ -287,7 +287,7 @@
     },
     "sensor": {
       "party_mode_url": {
-        "name": "Guest url"
+        "name": "Guest URL"
       }
     },
     "switch": {
