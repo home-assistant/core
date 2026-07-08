@@ -33,7 +33,7 @@
                 'has_auto_operation_mode': True,
                 'has_cool_operation_mode': True,
                 'has_dry_operation_mode': True,
-                'has_energy_consumed_meter': False,
+                'has_energy_consumed_meter': True,
                 'has_fan_operation_mode': None,
                 'has_half_degree_increments': True,
                 'has_outdoor_temperature_sensor': False,
