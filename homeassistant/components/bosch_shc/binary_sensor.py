@@ -83,7 +83,7 @@ class ShutterContactSensor(SHCEntity[SHCShutterContact], BinarySensorEntity):
             "GENERIC": BinarySensorDeviceClass.WINDOW,
         }
         self._attr_device_class = switcher.get(
-            self._device.device_class or "GENERIC", BinarySensorDeviceClass.WINDOW
+            self._device.device_class or "", BinarySensorDeviceClass.WINDOW
         )
 
     @property
