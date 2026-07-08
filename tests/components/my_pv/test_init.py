@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_my_pv_connection")
-async def test_async_setup_entry_success(
+async def test_setup_entry_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -26,7 +26,7 @@ async def test_async_setup_entry_success(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_async_setup_entry_cannot_connect(
+async def test_setup_entry_cannot_connect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_connection: AsyncMock,
@@ -42,7 +42,7 @@ async def test_async_setup_entry_cannot_connect(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_async_setup_entry_auth_error(
+async def test_setup_entry_auth_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_connection: AsyncMock,
@@ -59,7 +59,7 @@ async def test_async_setup_entry_auth_error(
 
 
 @pytest.mark.usefixtures("mock_my_pv_connection")
-async def test_async_setup_entry_failed_first_refresh(
+async def test_setup_entry_failed_first_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -79,7 +79,7 @@ async def test_async_setup_entry_failed_first_refresh(
 
 
 @pytest.mark.usefixtures("mock_my_pv_connection")
-async def test_async_unload_entry(
+async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:

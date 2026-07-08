@@ -45,12 +45,12 @@ async def test_water_heater(
 
 
 @pytest.mark.usefixtures("mock_my_pv_connection")
-async def test_airzone_water_heater_turn_on(
+async def test_water_heater_turn_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_connection: AsyncMock,
 ) -> None:
-    """Test turning the water heater on."""
+    """Test turning the water heater off."""
 
     mock_config_entry.add_to_hass(hass)
 
@@ -76,7 +76,7 @@ async def test_airzone_water_heater_turn_on(
 
 
 @pytest.mark.usefixtures("mock_my_pv_connection")
-async def test_airzone_water_heater_turn_off(
+async def test_water_heater_turn_on(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_connection: AsyncMock,
@@ -107,7 +107,7 @@ async def test_airzone_water_heater_turn_off(
 
 
 @pytest.mark.usefixtures("mock_my_pv_connection")
-async def test_async_water_heater_set_temp(
+async def test_water_heater_set_temp(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
