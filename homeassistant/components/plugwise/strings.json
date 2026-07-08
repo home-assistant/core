@@ -298,7 +298,7 @@
     },
     "water_heater": {
       "boiler_temperature": {
-        "name": "Boiler temperature",
+        "name": "Boiler temperature"
       },
       "dhw_temperature": {
         "name": "DHW temperature",
