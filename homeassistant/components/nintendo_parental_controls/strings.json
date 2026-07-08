@@ -128,7 +128,7 @@
           "name": "Device"
         },
         "pin": {
-          "description": "The new PIN code. Enter a 4- to 8-digit PIN between 0000 and 99999999.",
+          "description": "The new PIN code. Enter a 4 to 8-digit PIN between 0000 and 99999999.",
           "name": "PIN"
         }
       },
