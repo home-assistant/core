@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from boschshcpy import BatteryLevelService, ShutterContactService
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -15,10 +16,10 @@ from .conftest import make_device
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("mock_setup_dependencies")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_setup_dependencies: MagicMock,
     mock_device_helper: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
