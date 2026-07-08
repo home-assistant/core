@@ -30,6 +30,7 @@ from homeassistant.const import (
     ATTR_SERVICE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED,
+    EntityStateAttribute,
 )
 from homeassistant.core import Context, Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
@@ -731,7 +732,10 @@ def _get_exposed_entities(
                 info["state"] = async_rounded_state(hass, state.entity_id, state)
 
             # Convert timestamp device_class states from UTC to local time
-            if state.attributes.get("device_class") == "timestamp" and state.state:
+            if (
+                state.attributes.get(EntityStateAttribute.DEVICE_CLASS) == "timestamp"
+                and state.state
+            ):
                 if (parsed_utc := dt_util.parse_datetime(state.state)) is not None:
                     info["state"] = dt_util.as_local(parsed_utc).isoformat()
 
