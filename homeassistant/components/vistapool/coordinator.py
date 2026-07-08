@@ -62,12 +62,15 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch latest pool data (fallback for manual refresh)."""
         try:
-            return await self.api.fetch_pool_data(self.pool_id)
+            data = await self.api.fetch_pool_data(self.pool_id)
         except AquariteError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from err
+        # A refresh (self-heal or manual) must not clobber optimistic writes
+        # for other paths that are still inside their own TTL window.
+        return self._merge_optimistic(data)
 
     async def subscribe(self) -> None:
         """Subscribe to Firestore real-time updates via the library."""
@@ -110,8 +113,8 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.async_set_updated_data(self.data)
 
-    def _apply_remote_data(self, data: dict[str, Any]) -> None:
-        """Apply a Firestore push, preserving unconfirmed optimistic writes."""
+    def _merge_optimistic(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Overlay unconfirmed optimistic writes onto freshly fetched data."""
         now = monotonic()
         for path, (value, written_at) in list(self._pending_optimistic.items()):
             remote_value = AquariteClient.get_value(data, path)
@@ -122,7 +125,11 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._clear_optimistic(path)
             else:
                 _set_path(data, path, value)
-        self.async_set_updated_data(data)
+        return data
+
+    def _apply_remote_data(self, data: dict[str, Any]) -> None:
+        """Apply a Firestore push, preserving unconfirmed optimistic writes."""
+        self.async_set_updated_data(self._merge_optimistic(data))
 
     def _clear_optimistic(self, value_path: str) -> None:
         """Drop a pending optimistic entry and its scheduled expiry."""

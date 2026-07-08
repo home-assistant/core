@@ -334,6 +334,36 @@ async def test_apply_optimistic_self_expires_without_push(
     assert coordinator.data["light"]["status"] == 0
 
 
+async def test_refresh_preserves_other_pending_optimistic_values(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a self-heal refresh keeps writes still inside their own TTL window."""
+    # Return a fresh dict per call so apply_optimistic's in-place mutation
+    # doesn't leak back into the mock's payload on the next fetch.
+    mock_vistapool_client.fetch_pool_data.side_effect = lambda *_a, **_k: {
+        "light": {"status": 0},
+        "relays": {"filtration": {"status": 0}},
+    }
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+
+    coordinator.apply_optimistic("light.status", 1)
+    coordinator.apply_optimistic("relays.filtration.status", 1)
+
+    # A full refresh (the path a self-heal takes) must not clobber the
+    # filtration write, which is still inside its own TTL window.
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.data["light"]["status"] == 1
+    assert coordinator.data["relays"]["filtration"]["status"] == 1
+
+
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
