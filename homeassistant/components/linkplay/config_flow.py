@@ -36,6 +36,14 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
         # Do not probe the device if the host is already configured
         self._async_abort_entries_match({CONF_HOST: discovery_info.host})
 
+        # Do not probe the device if the UUID advertised over mDNS matches
+        # an existing (or ignored) entry
+        if uuid := discovery_info.properties.get("uuid"):
+            await self.async_set_unique_id(uuid.removeprefix("uuid:"))
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: discovery_info.host}
+            )
+
         session: ClientSession = await async_get_client_session(self.hass)
         bridge: LinkPlayBridge | None = None
 
