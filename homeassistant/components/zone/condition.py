@@ -51,18 +51,18 @@ _OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
 }
 _CONDITION_SCHEMA = vol.Schema({CONF_OPTIONS: _OPTIONS_SCHEMA_DICT})
 
-_IN_ZONES_DOMAINS = {DEVICE_TRACKER_DOMAIN, PERSON_DOMAIN}
 
+def _get_in_zones_attribute(state: State) -> str | None:
+    """Return the in_zones attribute for the tracked entity, or None.
 
-def in_zones_attribute(state: State) -> str:
-    """Return the in_zones attribute matching the tracked entity domain.
-
-    Only person and device_tracker entities (``_IN_ZONES_DOMAINS``) report zone
-    membership; each exposes it under its own platform enum.
+    Only person and device_tracker entities report zone membership; each
+    exposes it under its own platform enum. Any other domain returns None.
     """
     if state.domain == PERSON_DOMAIN:
         return PersonEntityStateAttribute.IN_ZONES
-    return DeviceTrackerEntityStateAttribute.IN_ZONES
+    if state.domain == DEVICE_TRACKER_DOMAIN:
+        return DeviceTrackerEntityStateAttribute.IN_ZONES
+    return None
 
 
 def zone(
@@ -102,10 +102,9 @@ def zone(
 
     # Prefer the in_zones attribute reported by the entity (e.g. person,
     # device_tracker) over recomputing membership from coordinates.
-    if (
-        entity.domain in _IN_ZONES_DOMAINS
-        and (in_zones := entity.attributes.get(in_zones_attribute(entity))) is not None
-    ):
+    if (in_zones_attr := _get_in_zones_attribute(entity)) is not None and (
+        in_zones := entity.attributes.get(in_zones_attr)
+    ) is not None:
         return zone_ent.entity_id in in_zones
 
     latitude = entity.attributes.get(ATTR_LATITUDE)
@@ -221,8 +220,11 @@ class _ZoneTargetConditionBase(EntityConditionBase):
 
     def _in_target_zone(self, entity_state: State) -> bool:
         """Check if the entity is currently in the selected zone."""
-        in_zones = entity_state.attributes.get(in_zones_attribute(entity_state)) or ()
-        return self._zone in in_zones
+        if (in_zones_attr := _get_in_zones_attribute(entity_state)) and (
+            in_zones := entity_state.attributes.get(in_zones_attr)
+        ):
+            return self._zone in in_zones
+        return False
 
 
 class InZoneCondition(_ZoneTargetConditionBase):

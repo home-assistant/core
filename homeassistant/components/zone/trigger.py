@@ -44,7 +44,7 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import condition
-from .condition import _IN_ZONES_DOMAINS, in_zones_attribute
+from .condition import _get_in_zones_attribute
 from .const import DOMAIN
 
 EVENT_ENTER = "enter"
@@ -64,8 +64,8 @@ def _state_has_zone_info(state: State) -> bool:
     tracker); other entities are matched by their coordinates.
     """
     return location.has_location(state) or (
-        state.domain in _IN_ZONES_DOMAINS
-        and in_zones_attribute(state) in state.attributes
+        (in_zones_attr := _get_in_zones_attribute(state)) is not None
+        and in_zones_attr in state.attributes
     )
 
 
@@ -199,8 +199,11 @@ class ZoneTriggerBase(EntityTriggerBase):
 
     def _in_target_zone(self, state: State) -> bool:
         """Check if the entity is in the selected zone."""
-        in_zones = state.attributes.get(in_zones_attribute(state)) or ()
-        return self._zone in in_zones
+        if (in_zones_attr := _get_in_zones_attribute(state)) and (
+            in_zones := state.attributes.get(in_zones_attr)
+        ):
+            return self._zone in in_zones
+        return False
 
 
 class EnteredZoneTrigger(ZoneTriggerBase):
