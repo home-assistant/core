@@ -1574,8 +1574,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         self.socket_path = discovery_info.socket_path
-        # Provide home ID, host and port so the discovery card can render the
-        # flow_title; home_id resolves to "Unknown" when the proxy has no network yet.
         self.context["title_placeholders"] = {
             "host": discovery_info.ip_address,
             "port": str(discovery_info.port),
