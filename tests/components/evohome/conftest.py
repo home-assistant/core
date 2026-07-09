@@ -11,7 +11,7 @@ from evohomeasync2.auth import AbstractTokenManager, Auth
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.evohome.const import DOMAIN
+from homeassistant.components.evohome.const import CONF_LOCATION_IDX, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -146,7 +146,7 @@ async def setup_evohome(
     """
 
     # set the time zone as for the active evohome location
-    loc_idx: int = config.get("location_idx", 0)  # type: ignore[assignment]
+    loc_idx: int = config.get(CONF_LOCATION_IDX, 0)  # type: ignore[assignment]
 
     try:
         locn = user_locations_config_fixture(install)[loc_idx]
@@ -215,7 +215,7 @@ def _tcs_for_config(evo: EvohomeClient, config: dict[str, str]) -> ControlSystem
     evo.tcs, which only works for single-location accounts.
     """
 
-    loc_idx: int = config.get("location_idx", 0)  # type: ignore[assignment]
+    loc_idx: int = config.get(CONF_LOCATION_IDX, 0)  # type: ignore[assignment]
     return evo.locations[loc_idx].gateways[0].systems[0]
 
 
