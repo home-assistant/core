@@ -12,7 +12,7 @@ from homeassistant.components.bosch_shc.const import (
     DOMAIN,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -159,8 +159,11 @@ async def _setup_sensor_integration(
         **{**_EMPTY_DEVICE_BUCKETS, **device_buckets}
     )
 
-    with patch(
-        "homeassistant.components.bosch_shc.SHCSession", return_value=mock_session
+    with (
+        patch(
+            "homeassistant.components.bosch_shc.SHCSession", return_value=mock_session
+        ),
+        patch("homeassistant.components.bosch_shc.PLATFORMS", [Platform.SENSOR]),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
