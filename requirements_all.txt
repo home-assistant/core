@@ -7,7 +7,7 @@
 AEMET-OpenData==0.6.4
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.37
+AIOSomecomfort==0.0.38
 
 # homeassistant.components.adax
 Adax-local==0.3.0
@@ -1362,7 +1362,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==6.6.0
+infrared-protocols==6.6.1
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -2245,7 +2245,7 @@ pyialarm==2.2.0
 pyicloud==2.6.5
 
 # homeassistant.components.imou
-pyimouapi==1.2.8
+pyimouapi==1.3.0
 
 # homeassistant.components.insteon
 pyinsteon==1.6.4
