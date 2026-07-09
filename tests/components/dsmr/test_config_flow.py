@@ -332,9 +332,9 @@ async def test_setup_serial_encrypted_malformed_key(
     connection_factory.assert_not_called()
 
 
+@pytest.mark.usefixtures("dsmr_connection_send_validate_fixture")
 async def test_setup_serial_encrypted_cannot_communicate(
     hass: HomeAssistant,
-    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test an encrypted meter does not fall back to RFXtrx when it stays silent."""
     port = com_port()
