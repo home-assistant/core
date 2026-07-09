@@ -4,12 +4,17 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from aiomelcloudhome import MELCloudHome, UserContext
+from aiomelcloudhome.models.telemetry import TelemetryValue
 import pytest
 
 from homeassistant.components.melcloud_home.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from tests.common import MockConfigEntry, load_json_value_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 MOCK_USER_INPUT = {
     CONF_EMAIL: "user@example.com",
@@ -36,8 +41,13 @@ def mock_melcloud_client() -> Generator[AsyncMock]:
     """Mock MELCloud Home client."""
     client = AsyncMock(MELCloudHome)
     client.get_context.return_value = UserContext.model_validate(
-        load_json_value_fixture("context.json", DOMAIN)
+        load_json_object_fixture("context.json", DOMAIN)
     )
+    client.get_energy_telemetry.return_value = [
+        TelemetryValue.model_validate(value)
+        for value in load_json_array_fixture("energy.json", DOMAIN)
+    ]
+
     with (
         patch(
             "homeassistant.components.melcloud_home.MELCloudHome",
