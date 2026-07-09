@@ -75,7 +75,7 @@ class VictronBaseEntity(Entity):
             # 3. Dynamic units come from user-configured MQTT topics (e.g.
             # SwitchableOutput Settings/Unit) and have no translation file
             # entry, so we must set the unit programmatically.
-            or self._metric.metric_type == MetricType.DYNAMIC
+            or self._metric.metric_type is MetricType.DYNAMIC
         ):
             return unit_of_measurement
 
