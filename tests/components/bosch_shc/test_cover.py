@@ -1,16 +1,9 @@
-"""Tests for the Bosch SHC cover platform.
-
-Device doubles follow the same lightweight SimpleNamespace pattern used by
-the upstream HACS integration's own (much larger) cover test suite at
-https://github.com/tschamm/boschshc-hass — see tests/bosch_shc/test_cover.py
-there for the full ShutterControlCoverII feature set this simpler Core
-platform does not (yet) implement.
-"""
+"""Tests for the Bosch SHC cover platform."""
 
 from __future__ import annotations
 
 from types import SimpleNamespace
-from typing import Any, cast
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from boschshcpy import SHCShutterControl
@@ -21,7 +14,6 @@ from homeassistant.components.bosch_shc.const import (
     CONF_SSL_KEY,
     DOMAIN,
 )
-from homeassistant.components.bosch_shc.cover import ShutterControlCover
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
@@ -35,6 +27,7 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
+    STATE_CLOSED,
     STATE_OPEN,
 )
 from homeassistant.core import HomeAssistant
@@ -141,6 +134,12 @@ async def test_setup_creates_one_entity_per_shutter_control(
     assert state1 is not None
     assert state1.attributes["current_position"] == 50
     assert state1.attributes["device_class"] == CoverDeviceClass.SHUTTER
+    assert state1.attributes["supported_features"] == (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+    )
 
 
 async def test_setup_no_devices_adds_nothing(hass: HomeAssistant) -> None:
@@ -158,6 +157,26 @@ async def test_current_cover_position_open(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.state == STATE_OPEN
     assert state.attributes["current_position"] == 100
+
+
+async def test_current_cover_position_closed(hass: HomeAssistant) -> None:
+    """A fully-closed shutter (level=0.0) reports state closed and position 0."""
+    await _setup_cover_integration(hass, [_cover_device(level=0.0)])
+
+    state = hass.states.get("cover.test_cover")
+    assert state is not None
+    assert state.state == STATE_CLOSED
+    assert state.attributes["current_position"] == 0
+
+
+async def test_current_cover_position_partially_open(hass: HomeAssistant) -> None:
+    """A partially-open shutter is reported as open, not closed."""
+    await _setup_cover_integration(hass, [_cover_device(level=0.1)])
+
+    state = hass.states.get("cover.test_cover")
+    assert state is not None
+    assert state.state == STATE_OPEN
+    assert state.attributes["current_position"] == 10
 
 
 @pytest.mark.parametrize(
@@ -251,43 +270,3 @@ async def test_set_cover_position(
     )
 
     assert device.level == pytest.approx(expected_level)
-
-
-def _make_cover(
-    level: float = 0.5,
-    operation_state: SHCShutterControl.ShutterControlService.State = STOPPED,
-) -> ShutterControlCover:
-    device = _cover_device(level=level, operation_state=operation_state)
-    return ShutterControlCover(
-        device=cast(SHCShutterControl, device),
-        parent_id="test-mac",
-        entry_id="entry1",
-    )
-
-
-def test_entity_attributes() -> None:
-    """Static entity attributes match the shutter device class contract."""
-    cover = _make_cover()
-
-    assert cover._attr_name is None
-    assert cover._attr_device_class is CoverDeviceClass.SHUTTER
-    assert cover._attr_supported_features == (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.STOP
-        | CoverEntityFeature.SET_POSITION
-    )
-
-
-def test_is_closed_true_when_position_zero() -> None:
-    """is_closed reflects a fully-closed (0%) position."""
-    cover = _make_cover(level=0.0)
-
-    assert cover.is_closed is True
-
-
-def test_is_closed_false_when_position_nonzero() -> None:
-    """is_closed is False whenever position is above 0%."""
-    cover = _make_cover(level=0.1)
-
-    assert cover.is_closed is False
