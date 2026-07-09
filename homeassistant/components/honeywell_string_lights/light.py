@@ -5,9 +5,6 @@ from typing import Any, override
 from rf_protocols.codes.honeywell.string_lights import CODES
 
 from homeassistant.components.light import ColorMode, LightEntity
-from homeassistant.components.radio_frequency import (
-    RadioFrequencyTransmitterConsumerEntity,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
@@ -29,12 +26,7 @@ async def async_setup_entry(
     async_add_entities([HoneywellStringLight(config_entry)])
 
 
-class HoneywellStringLight(
-    HoneywellStringLightsEntity,
-    RadioFrequencyTransmitterConsumerEntity,
-    LightEntity,
-    RestoreEntity,
-):
+class HoneywellStringLight(HoneywellStringLightsEntity, LightEntity, RestoreEntity):
     """Representation of a Honeywell String Lights set controlled via RF."""
 
     _attr_assumed_state = True
@@ -45,7 +37,7 @@ class HoneywellStringLight(
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the entity."""
         super().__init__(entry)
-        self._rf_transmitter_entity_id = entry.data[CONF_TRANSMITTER]
+        self._rf_transmitter_entity_id_or_uuid = entry.data[CONF_TRANSMITTER]
 
     @override
     async def async_added_to_hass(self) -> None:

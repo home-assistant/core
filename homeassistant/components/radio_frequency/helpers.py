@@ -5,7 +5,7 @@ from typing import override
 
 from rf_protocols import RadioFrequencyCommand
 
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
@@ -91,8 +91,7 @@ class RadioFrequencyTransmitterConsumerEntity(Entity):
     """
 
     _attr_should_poll = False
-    # Rename-stable registry ID (or entity_id) of the transmitter, from config.
-    _rf_transmitter_entity_id: str
+    _rf_transmitter_entity_id_or_uuid: str
     _rf_unsubscribes: list[CALLBACK_TYPE]
 
     @override
@@ -104,7 +103,7 @@ class RadioFrequencyTransmitterConsumerEntity(Entity):
         self.async_on_remove(self._async_unsubscribe_rf)
         self._async_track_rf_entity(
             er.async_validate_entity_id(
-                er.async_get(self.hass), self._rf_transmitter_entity_id
+                er.async_get(self.hass), self._rf_transmitter_entity_id_or_uuid
             )
         )
 
@@ -136,7 +135,10 @@ class RadioFrequencyTransmitterConsumerEntity(Entity):
     async def _send_command(self, command: RadioFrequencyCommand) -> None:
         """Send an RF command through the RF transmitter entity."""
         await async_send_command(
-            self.hass, self._rf_transmitter_entity_id, command, context=self._context
+            self.hass,
+            self._rf_transmitter_entity_id_or_uuid,
+            command,
+            context=self._context,
         )
 
     @callback
@@ -147,9 +149,9 @@ class RadioFrequencyTransmitterConsumerEntity(Entity):
         data = event.data
         if data["action"] != "update":
             return
-        if "entity_id" not in data["changes"]:
+        if ATTR_ENTITY_ID not in data["changes"]:
             return
-        self._async_track_rf_entity(data["entity_id"])
+        self._async_track_rf_entity(data[ATTR_ENTITY_ID])
         self.async_write_ha_state()
 
     @callback

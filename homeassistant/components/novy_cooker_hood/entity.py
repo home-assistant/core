@@ -1,13 +1,15 @@
 """Common entity for the Novy Cooker Hood integration."""
 
+from homeassistant.components.radio_frequency import (
+    RadioFrequencyTransmitterConsumerEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
 
-class NovyCookerHoodEntity(Entity):
+class NovyCookerHoodEntity(RadioFrequencyTransmitterConsumerEntity):
     """Novy Cooker Hood base entity."""
 
     _attr_assumed_state = True

@@ -10,9 +10,6 @@ from homeassistant.components.fan import (
     FanEntityFeature,
     FanEntityStateAttribute,
 )
-from homeassistant.components.radio_frequency import (
-    RadioFrequencyTransmitterConsumerEntity,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
@@ -40,12 +37,7 @@ async def async_setup_entry(
     async_add_entities([NovyCookerHoodFan(config_entry)])
 
 
-class NovyCookerHoodFan(
-    NovyCookerHoodEntity,
-    RadioFrequencyTransmitterConsumerEntity,
-    FanEntity,
-    RestoreEntity,
-):
+class NovyCookerHoodFan(NovyCookerHoodEntity, FanEntity, RestoreEntity):
     """Calibration-based fan: each change resets to off then climbs to target."""
 
     _attr_name = None
@@ -59,7 +51,7 @@ class NovyCookerHoodFan(
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the fan."""
         super().__init__(entry)
-        self._rf_transmitter_entity_id = entry.data[CONF_TRANSMITTER]
+        self._rf_transmitter_entity_id_or_uuid = entry.data[CONF_TRANSMITTER]
         self._code: int = entry.data[CONF_CODE]
         self._level = 0
         self._attr_unique_id = entry.entry_id
