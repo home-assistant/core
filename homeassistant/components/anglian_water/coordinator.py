@@ -2,10 +2,14 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyanglianwater import AnglianWater
-from pyanglianwater.exceptions import ExpiredAccessTokenError, UnknownEndpointError
+from pyanglianwater.exceptions import (
+    ConsentRequiredError,
+    ExpiredAccessTokenError,
+    UnknownEndpointError,
+)
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
@@ -54,12 +58,17 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data from Anglian Water's API."""
         try:
             await self.api.update(self.config_entry.data[CONF_ACCOUNT_NUMBER])
             await self._insert_statistics()
-        except (ExpiredAccessTokenError, UnknownEndpointError) as err:
+        except (
+            ConsentRequiredError,
+            ExpiredAccessTokenError,
+            UnknownEndpointError,
+        ) as err:
             raise UpdateFailed from err
 
     async def _insert_statistics(self) -> None:

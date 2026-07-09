@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from nextdns import ConnectionStatus
 
@@ -64,6 +65,7 @@ class NextDnsBinarySensor(NextDnsEntity, BinarySensorEntity):
     entity_description: NextDnsBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
         return self.entity_description.state(

@@ -1,7 +1,7 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -9,7 +9,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfDataRate, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
+    EntityCategory,
+    UnitOfDataRate,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -45,6 +51,7 @@ CALL_SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="missed",
         native_unit_of_measurement="calls",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -53,6 +60,7 @@ DISK_PARTITION_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="partition_free_space",
         translation_key="partition_free_space",
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -80,10 +88,32 @@ async def async_setup_entry(
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
             ),
         )
         for sensor_id, sensor_name in router.sensors_temperature_names.items()
     ]
+
+    _LOGGER.debug(
+        "%s - %s - %s fan sensors",
+        router.name,
+        router.mac,
+        len(router.sensors_fan_names),
+    )
+    entities.extend(
+        FreeboxSensor(
+            router,
+            SensorEntityDescription(
+                key=fan_id,
+                name=fan_name,
+                native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+                state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                icon="mdi:fan",
+            ),
+        )
+        for fan_id, fan_name in router.sensors_fan_names.items()
+    )
 
     entities.extend(
         [FreeboxSensor(router, description) for description in CONNECTION_SENSORS]
@@ -145,6 +175,7 @@ class FreeboxSensor(SensorEntity):
         self.async_update_state()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self.async_update_state()
@@ -168,6 +199,7 @@ class FreeboxCallSensor(FreeboxSensor):
         self._call_list_for_type: list[dict[str, Any]] = []
 
     @callback
+    @override
     def async_update_state(self) -> None:
         """Update the Freebox call sensor."""
         self._call_list_for_type = []
@@ -181,6 +213,7 @@ class FreeboxCallSensor(FreeboxSensor):
         self._attr_native_value = len(self._call_list_for_type)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {
@@ -220,6 +253,7 @@ class FreeboxDiskSensor(FreeboxSensor):
         )
 
     @callback
+    @override
     def async_update_state(self) -> None:
         """Update the Freebox disk sensor."""
         value = None
@@ -237,6 +271,7 @@ class FreeboxBatterySensor(FreeboxHomeEntity, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the current state of the device."""
         return self.get_value("signal", "battery")

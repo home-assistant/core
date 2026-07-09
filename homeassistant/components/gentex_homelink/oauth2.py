@@ -3,7 +3,7 @@
 from json import JSONDecodeError
 import logging
 import time
-from typing import cast
+from typing import cast, override
 
 from aiohttp import ClientError, ClientSession
 from homelink.auth.abstract_auth import AbstractAuth
@@ -29,19 +29,23 @@ class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementatio
         self.client_id = COGNITO_CLIENT_ID
 
     @property
+    @override
     def name(self) -> str:
         """Name of the implementation."""
         return "SRPAuth"
 
     @property
+    @override
     def domain(self) -> str:
         """Domain that is providing the implementation."""
         return self._domain
 
+    @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Left intentionally blank because the auth is handled by SRP."""
         return ""
 
+    @override
     async def async_resolve_external_data(self, external_data) -> dict:
         """Format the token from the source appropriately for HomeAssistant."""
         tokens = external_data["tokens"]
@@ -79,6 +83,7 @@ class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementatio
         resp.raise_for_status()
         return cast(dict, await resp.json())
 
+    @override
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh tokens."""
         new_token = await self._token_request(

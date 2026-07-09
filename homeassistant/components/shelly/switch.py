@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
@@ -427,6 +427,7 @@ class BlockSleepingMotionSwitch(
         self.last_state: State | None = None
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """If motion is active."""
         if self.block is not None:
@@ -437,16 +438,19 @@ class BlockSleepingMotionSwitch(
 
         return self.last_state.state == STATE_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Activate switch."""
         await self.coordinator.device.set_shelly_motion_detection(True)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Deactivate switch."""
         await self.coordinator.device.set_shelly_motion_detection(False)
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -473,6 +477,7 @@ class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
         self._attr_unique_id: str = f"{coordinator.mac}-{block.description}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """If switch is on."""
         if self.control_result:
@@ -480,17 +485,20 @@ class BlockRelaySwitch(ShellyBlockAttributeEntity, SwitchEntity):
 
         return bool(self.block.output)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
         self.control_result = await self.set_state(turn="on")
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off relay."""
         self.control_result = await self.set_state(turn="off")
         self.async_write_ha_state()
 
     @callback
+    @override
     def _update_callback(self) -> None:
         """When device updates, clear control result that overrides state."""
         self.control_result = None
@@ -516,11 +524,13 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
             self._attr_name = get_rpc_channel_name(coordinator.device, key)
 
     @property
+    @override
     def is_on(self) -> bool:
         """If switch is on."""
         return self.entity_description.is_on(self.status)
 
     @rpc_call
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         method = getattr(self.coordinator.device, self.entity_description.method_on)
@@ -532,6 +542,7 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
         await method(*params)
 
     @rpc_call
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         method = getattr(self.coordinator.device, self.entity_description.method_off)

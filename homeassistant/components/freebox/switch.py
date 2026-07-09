@@ -1,12 +1,11 @@
 """Support for Freebox Delta, Revolution and Mini 4K."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from freebox_api.exceptions import InsufficientPermissionsError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -19,7 +18,6 @@ SWITCH_DESCRIPTIONS = [
     SwitchEntityDescription(
         key="wifi",
         translation_key="wifi",
-        entity_category=EntityCategory.CONFIG,
     )
 ]
 
@@ -62,10 +60,12 @@ class FreeboxSwitch(SwitchEntity):
                 " settings. Please refer to documentation"
             )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_set_state(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_set_state(False)

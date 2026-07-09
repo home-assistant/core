@@ -35,7 +35,7 @@ from .coordinator import (
 )
 
 _LOGGER: Final = logging.getLogger(__name__)
-PLATFORMS: Final = [Platform.SENSOR]
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 type FroniusConfigEntry = ConfigEntry[FroniusSolarNet]
 
@@ -212,7 +212,7 @@ class FroniusSolarNet:
                 inverter_info=_inverter_info,
                 config_entry=self.config_entry,
             )
-            if self.config_entry.state == ConfigEntryState.LOADED:
+            if self.config_entry.state is ConfigEntryState.LOADED:
                 await _coordinator.async_refresh()
             else:
                 await _coordinator.async_config_entry_first_refresh()
@@ -220,7 +220,7 @@ class FroniusSolarNet:
 
             # Only for re-scans. Initial setup adds entities
             # through sensor.async_setup_entry
-            if self.config_entry.state == ConfigEntryState.LOADED:
+            if self.config_entry.state is ConfigEntryState.LOADED:
                 async_dispatcher_send(self.hass, SOLAR_NET_DISCOVERY_NEW, _coordinator)
 
             _LOGGER.debug(
@@ -235,7 +235,7 @@ class FroniusSolarNet:
         try:
             _inverter_info = await self.fronius.inverter_info()
         except FroniusError as err:
-            if self.config_entry.state == ConfigEntryState.LOADED:
+            if self.config_entry.state is ConfigEntryState.LOADED:
                 # During a re-scan we will attempt again as per schedule.
                 _LOGGER.debug("Re-scan failed for %s", self.host)
                 return inverter_infos

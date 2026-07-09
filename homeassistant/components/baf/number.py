@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from aiobafi6 import Device
 
@@ -134,11 +134,13 @@ class BAFNumber(BAFDescriptionEntity, NumberEntity):
     entity_description: BAFNumberDescription
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
         if (value := self.entity_description.value_fn(self._device)) is not None:
             self._attr_native_value = float(value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value."""
         setattr(self._device, self.entity_description.key, int(value))

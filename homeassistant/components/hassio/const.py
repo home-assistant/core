@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from homeassistant.util.hass_dict import HassKey
 
@@ -27,6 +27,7 @@ if TYPE_CHECKING:
         HassioAddOnDataUpdateCoordinator,
         HassioMainDataUpdateCoordinator,
         HassioStatsDataUpdateCoordinator,
+        SupervisorJobsCoordinator,
     )
     from .handler import HassIO
     from .issues import SupervisorIssues
@@ -103,6 +104,9 @@ ADDONS_COORDINATOR: HassKey[HassioAddOnDataUpdateCoordinator] = HassKey(
 STATS_COORDINATOR: HassKey[HassioStatsDataUpdateCoordinator] = HassKey(
     "hassio_stats_coordinator"
 )
+JOBS_COORDINATOR: HassKey[SupervisorJobsCoordinator] = HassKey(
+    "hassio_jobs_coordinator"
+)
 
 
 DATA_COMPONENT: HassKey[HassIO] = HassKey(DOMAIN)
@@ -126,17 +130,14 @@ DATA_ADDONS_LIST: HassKey[list[InstalledAddon]] = HassKey("hassio_addons_list")
 HASSIO_MAIN_UPDATE_INTERVAL = timedelta(minutes=5)
 HASSIO_ADDON_UPDATE_INTERVAL = timedelta(minutes=15)
 HASSIO_STATS_UPDATE_INTERVAL = timedelta(seconds=60)
+SUPERVISOR_JOBS_UPDATE_INTERVAL = timedelta(minutes=15)
 
 ATTR_AUTO_UPDATE = "auto_update"
 ATTR_VERSION = "version"
 ATTR_VERSION_LATEST = "version_latest"
 ATTR_CPU_PERCENT = "cpu_percent"
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_LOCATION = "location"
 ATTR_MEMORY_PERCENT = "memory_percent"
 ATTR_SLUG = "slug"
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_STATE = "state"
 ATTR_STARTED = "started"
 ATTR_URL = "url"
 ATTR_REPOSITORY = "repository"
@@ -149,7 +150,6 @@ DATA_KEY_CORE = "core"
 DATA_KEY_HOST = "host"
 DATA_KEY_SUPERVISOR_ISSUES: HassKey[SupervisorIssues] = HassKey("supervisor_issues")
 DATA_KEY_MOUNTS = "mounts"
-DATA_HASSIO_HTTP_CONFIG: HassKey[dict[str, Any]] = HassKey("hassio_http_config")
 DATA_HASSIO_HOST: HassKey[str] = HassKey("hassio_host")
 DATA_HASSIO_SUPERVISOR_USER: HassKey[User] = HassKey("hassio_supervisor_user")
 
@@ -177,19 +177,6 @@ CORE_CONTAINER = "homeassistant"
 SUPERVISOR_CONTAINER = "hassio_supervisor"
 
 CONTAINER_STATS = "stats"
-CONTAINER_INFO = "info"
-
-# This is a mapping of which endpoint the key in the addon data
-# is obtained from so we know which endpoint to update when the
-# coordinator polls for updates.
-KEY_TO_UPDATE_TYPES: dict[str, set[str]] = {
-    ATTR_VERSION_LATEST: {CONTAINER_INFO},
-    ATTR_MEMORY_PERCENT: {CONTAINER_STATS},
-    ATTR_CPU_PERCENT: {CONTAINER_STATS},
-    ATTR_VERSION: {CONTAINER_INFO},
-    ATTR_STATE: {CONTAINER_INFO},
-}
-
 REQUEST_REFRESH_DELAY = 10
 
 HELP_URLS = {

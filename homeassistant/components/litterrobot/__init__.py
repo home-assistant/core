@@ -48,9 +48,6 @@ async def async_migrate_entry(
         entry.minor_version,
     )
 
-    if entry.version > 1:
-        return False
-
     if entry.minor_version < 2:
         account = Account(websession=async_get_clientsession(hass))
         try:

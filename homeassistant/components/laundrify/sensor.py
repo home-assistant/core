@@ -1,6 +1,7 @@
 """Platform for sensor integration."""
 
 import logging
+from typing import override
 
 from laundrify_aio import LaundrifyDevice
 from laundrify_aio.exceptions import LaundrifyDeviceException
@@ -99,6 +100,7 @@ class LaundrifyEnergySensor(
         LaundrifyBaseSensor.__init__(self, device)
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the total energy of the device."""
         device = self.coordinator.data[self._device.id]

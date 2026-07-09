@@ -5,7 +5,7 @@ import dataclasses
 from datetime import datetime
 import logging
 from pprint import pformat
-from typing import Any, cast
+from typing import Any, cast, override
 
 from propcache.api import cached_property
 from python_otbr_api import tlv_parser
@@ -27,6 +27,12 @@ STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 4
 SAVE_DELAY = 10
 
+# Bit 0x08 of the first security policy flags byte is the legacy "Beacons"
+# flag. It was removed from the Thread security policy in v1.2.1 (2022), so
+# current Thread stacks no longer set it; datasets that still carry it were
+# created by older implementations. It is ignored when comparing datasets.
+SECURITY_POLICY_BEACONS_FLAG = 0x08
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -46,6 +52,37 @@ def _format_dataset(
         else:
             result[name] = str(value)
     return result
+
+
+def _normalize_dataset(
+    dataset: dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem],
+) -> dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem]:
+    """Normalize a dataset for equivalence comparison.
+
+    Thread Border Routers may report functionally equivalent datasets without
+    incrementing the active timestamp. To recognize these as equivalent, ignore
+    the fields that don't affect how Home Assistant uses the dataset:
+    - WAKEUP_CHANNEL: added in newer OpenThread Border Router versions, but the
+      wake-up protocol isn't defined yet, so we treat it as if it were always
+      present.
+    - The legacy Beacons bit in the security policy flags: it was removed from
+      the Thread security policy in v1.2.1, so datasets created by older
+      implementations may still set it while current routers don't.
+    """
+    normalized = {
+        key: value
+        for key, value in dataset.items()
+        if key != MeshcopTLVType.WAKEUP_CHANNEL
+    }
+    if (security_policy := normalized.get(MeshcopTLVType.SECURITYPOLICY)) and len(
+        security_policy.data
+    ) > 2:
+        flags = bytearray(security_policy.data)
+        flags[2] &= ~SECURITY_POLICY_BEACONS_FLAG
+        normalized[MeshcopTLVType.SECURITYPOLICY] = tlv_parser.MeshcopTLVItem(
+            security_policy.tag, bytes(flags)
+        )
+    return normalized
 
 
 class DatasetPreferredError(HomeAssistantError):
@@ -108,6 +145,7 @@ class DatasetEntry:
 class DatasetStoreStore(Store):
     """Store Thread datasets."""
 
+    @override
     async def _async_migrate_func(
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
     ) -> dict[str, Any]:
@@ -250,13 +288,9 @@ class DatasetStore:
         entry: DatasetEntry | None
         for entry in self.datasets.values():
             if entry.dataset == dataset:
-                if (
-                    preferred_extended_address
-                    and entry.preferred_extended_address is None
-                ):
-                    self.async_set_preferred_border_agent(
-                        entry.id, preferred_border_agent_id, preferred_extended_address
-                    )
+                self._async_maybe_update_preferred_border_agent(
+                    entry, preferred_border_agent_id, preferred_extended_address
+                )
                 return
 
         # Update if dataset with same extended pan id exists and the timestamp
@@ -280,15 +314,12 @@ class DatasetStore:
             old_ts = (old_timestamp.seconds, old_timestamp.ticks)
             new_ts = (new_timestamp.seconds, new_timestamp.ticks)
             if old_ts >= new_ts:
-                # Silently accept if the only addition is WAKEUP_CHANNEL:
-                # it was added in OpenThread but the wake-up protocol isn't
-                # defined yet, so we treat it as if it were always present.
-                dataset_without_wakeup = {
-                    k: v
-                    for k, v in dataset.items()
-                    if k != MeshcopTLVType.WAKEUP_CHANNEL
-                }
-                if old_ts > new_ts or dataset_without_wakeup != entry.dataset:
+                # Silently accept datasets that are functionally equivalent but
+                # reported without a newer active timestamp by some OpenThread
+                # Border Router versions (see _normalize_dataset).
+                if old_ts > new_ts or _normalize_dataset(dataset) != _normalize_dataset(
+                    entry.dataset
+                ):
                     _LOGGER.warning(
                         "Got dataset with same extended PAN ID and same or older"
                         " active timestamp\nold:\n%s\nnew:\n%s",
@@ -307,10 +338,9 @@ class DatasetStore:
                 self.datasets[entry.id], tlv=tlv
             )
             self.async_schedule_save()
-            if preferred_extended_address and entry.preferred_extended_address is None:
-                self.async_set_preferred_border_agent(
-                    entry.id, preferred_border_agent_id, preferred_extended_address
-                )
+            self._async_maybe_update_preferred_border_agent(
+                entry, preferred_border_agent_id, preferred_extended_address
+            )
             return
 
         entry = DatasetEntry(
@@ -347,6 +377,37 @@ class DatasetStore:
     def async_get(self, dataset_id: str) -> DatasetEntry | None:
         """Get dataset by id."""
         return self.datasets.get(dataset_id)
+
+    @callback
+    def _async_maybe_update_preferred_border_agent(
+        self,
+        entry: DatasetEntry,
+        preferred_border_agent_id: str | None,
+        preferred_extended_address: str | None,
+    ) -> None:
+        """Update the preferred border agent of an existing dataset if appropriate.
+
+        Sets the preferred border agent if it was not set yet, or refreshes the
+        stored extended address when the border agent ID still matches but the
+        extended address changed. The latter happens e.g. after an OTBR upgrade
+        regenerates the extended address while keeping the same border agent ID.
+        """
+        if not preferred_extended_address:
+            return
+        if entry.preferred_extended_address is None or (
+            preferred_border_agent_id is not None
+            and preferred_border_agent_id == entry.preferred_border_agent_id
+            and preferred_extended_address != entry.preferred_extended_address
+        ):
+            _LOGGER.info(
+                "Updating extended address of preferred border agent %s from %s to %s",
+                preferred_border_agent_id,
+                entry.preferred_extended_address,
+                preferred_extended_address,
+            )
+            self.async_set_preferred_border_agent(
+                entry.id, preferred_border_agent_id, preferred_extended_address
+            )
 
     @callback
     def async_set_preferred_border_agent(

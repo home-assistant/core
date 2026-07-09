@@ -1,7 +1,7 @@
 """Support for Qbus thermostat."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from qbusmqttapi.const import KEY_PROPERTIES_REGIME, KEY_PROPERTIES_SET_TEMPERATURE
 from qbusmqttapi.discovery import QbusMqttOutput
@@ -51,7 +51,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
     _check_outputs()
-    entry.async_on_unload(coordinator.async_add_listener(_check_outputs))
+    coordinator.async_add_listener(_check_outputs)
 
 
 class QbusClimate(QbusEntity, ClimateEntity):
@@ -91,6 +91,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
 
         self._request_state_debouncer: Debouncer | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self._request_state_debouncer = Debouncer(
@@ -102,6 +103,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
         )
         await super().async_added_to_hass()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
 
@@ -120,6 +122,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
 
         await self._async_publish_output_state(state)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -130,6 +133,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
 
             await self._async_publish_output_state(state)
 
+    @override
     async def _handle_state_received(self, state: QbusMqttThermoState) -> None:
         if preset_mode := state.read_regime():
             self._attr_preset_mode = preset_mode

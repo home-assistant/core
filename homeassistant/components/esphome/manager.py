@@ -1,11 +1,12 @@
 """Manager for esphome devices."""
 
+import asyncio
 import base64
 from functools import partial
 import logging
 import secrets
 import struct
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any, Final, NamedTuple
 
 from aioesphomeapi import (
     APIClient,
@@ -105,6 +106,9 @@ if TYPE_CHECKING:
 
 
 _LOGGER = logging.getLogger(__name__)
+
+# Max time to wait at startup for a BLE proxy to register its scanner.
+STARTUP_SCANNER_WAIT: Final = 3.0
 
 LOG_LEVEL_TO_LOGGER = {
     LogLevel.LOG_LEVEL_NONE: logging.DEBUG,
@@ -669,13 +673,15 @@ class ESPHomeManager:
         if device_info.bluetooth_proxy_feature_flags_compat(api_version):
             entry_data.disconnect_callbacks.add(
                 async_connect_scanner(
-                    hass, entry_data, cli, device_info, self.device_id
+                    hass, self.entry, entry_data, cli, device_info, self.device_id
                 )
             )
         else:
             bluetooth.async_remove_scanner(
                 hass, device_info.bluetooth_mac_address or device_info.mac_address
             )
+
+        entry_data.first_connect_done.set()
 
         if device_info.voice_assistant_feature_flags_compat(api_version) and (
             Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms
@@ -911,8 +917,8 @@ class ESPHomeManager:
         # Remove this after 2026.4
         if not (
             stale_entry_entity_id := ent_reg.async_get_entity_id(
-                DOMAIN,
                 Platform.BINARY_SENSOR,
+                DOMAIN,
                 f"{self.entry_data.device_info.mac_address}-assist_in_progress",
             )
         ):
@@ -987,6 +993,21 @@ class ESPHomeManager:
                 )
 
         await reconnect_logic.start()
+
+        # Wait for a cached BLE proxy to register its scanner before finishing setup.
+        if (
+            device_info := entry_data.device_info
+        ) is not None and device_info.bluetooth_proxy_feature_flags_compat(
+            entry_data.api_version
+        ):
+            try:
+                async with asyncio.timeout(STARTUP_SCANNER_WAIT):
+                    await entry_data.first_connect_done.wait()
+            except TimeoutError:
+                _LOGGER.debug(
+                    "%s: Timed out waiting for Bluetooth scanner to register",
+                    self.host,
+                )
 
 
 @callback
@@ -1396,13 +1417,14 @@ async def async_replace_device(
     upper_mac = new_mac.upper()
     old_upper_mac = old_mac.upper()
     for entity in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
-        # <upper_mac>-<entity type>-<object_id>
-        old_unique_id = entity.unique_id.split("-")
-        new_unique_id = "-".join([upper_mac, *old_unique_id[1:]])
-        if entity.unique_id != new_unique_id and entity.unique_id.startswith(
-            old_upper_mac
-        ):
-            ent_reg.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
+        # The mac is the leading segment of the unique id in every format,
+        # so swap the prefix without parsing the rest.
+        if entity.unique_id.startswith(old_upper_mac):
+            new_unique_id = upper_mac + entity.unique_id[len(old_upper_mac) :]
+            if new_unique_id != entity.unique_id:
+                ent_reg.async_update_entity(
+                    entity.entity_id, new_unique_id=new_unique_id
+                )
 
     domain_data = DomainData.get(hass)
     store = domain_data.get_or_create_store(hass, entry)
