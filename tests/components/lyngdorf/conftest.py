@@ -50,12 +50,6 @@ def mock_setup_entry() -> Generator[None]:
 
 
 @pytest.fixture
-def mock_lyngdorf_model() -> LyngdorfModel:
-    """Return a mocked Lyngdorf model."""
-    return LyngdorfModel.MP_60
-
-
-@pytest.fixture
 def mock_receiver() -> Generator[MagicMock]:
     """Return a mocked Lyngdorf receiver."""
     with patch(

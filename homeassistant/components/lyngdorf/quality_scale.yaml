@@ -3,7 +3,9 @@ rules:
   action-setup:
     status: exempt
     comment: Integration does not register custom actions.
-  appropriate-polling: done
+  appropriate-polling:
+    status: exempt
+    comment: Integration is push-based; entities update via receiver callbacks.
   brands: done
   common-modules: done
   config-flow: done
