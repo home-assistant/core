@@ -227,7 +227,6 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
     @property
     def available(self) -> bool:
         """Gateway sensor is always available to show status."""
-        # Gateway sensor should always be available so users can see the connection status.
         return True
 
     @override
