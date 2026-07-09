@@ -5,8 +5,7 @@ import logging
 from typing import Any, override
 
 import botocore.exceptions
-import jwt
-from place.auth import login
+from place.auth import decode_sub, login
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
@@ -50,11 +49,7 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 _LOGGER.exception("An unexpected error occurred")
                 errors["base"] = "unknown"
             else:
-                access_token = jwt.decode(
-                    tokens["AuthenticationResult"]["AccessToken"],
-                    options={"verify_signature": False},
-                )
-                sub = access_token["sub"]
+                sub = decode_sub(tokens["AuthenticationResult"]["AccessToken"])
                 await self.async_set_unique_id(sub)
                 self.flow_impl = SRPAuthImplementation(self.hass, DOMAIN)
                 self.external_data = {
