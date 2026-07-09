@@ -189,7 +189,6 @@ async def make_device_data(
     if isinstance(device, Device) and device.device_type in [
         "Smart Lock Lite",
         "Smart Lock Pro",
-        "Smart Lock Ultra",
         "Smart Lock Vision",
         "Smart Lock Vision Pro",
         "Smart Lock Pro Wifi",
