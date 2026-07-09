@@ -114,7 +114,6 @@ async def _async_update_ssdp_locations(
 
 async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) -> bool:
     """Set up the Samsung TV platform."""
-    # Initialize bridge
     if entry.data.get(CONF_METHOD) == METHOD_ENCRYPTED_WEBSOCKET:
         if not entry.data.get(CONF_TOKEN) or not entry.data.get(CONF_SESSION_ID):
             raise ConfigEntryAuthFailed(
@@ -130,7 +129,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
 
     bridge.register_reauth_callback(_access_denied)
 
-    # Ensure updates get saved against the config_entry
     @callback
     def _update_config_entry(updates: Mapping[str, Any]) -> None:
         """Update config entry with the new token."""
