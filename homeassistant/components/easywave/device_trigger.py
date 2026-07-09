@@ -60,14 +60,6 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-def _device_identifier(device: dr.DeviceEntry) -> str | None:
-    """Return the Easywave identifier stored on a device registry entry."""
-    for domain, identifier in device.identifiers:
-        if domain == DOMAIN:
-            return identifier
-    return None
-
-
 class _GatewayMarker:
     """Sentinel value for the RX11 gateway device."""
 
@@ -81,7 +73,9 @@ def _subentry_data(entry: ConfigEntry, easywave_id: str) -> dict[str, Any] | Non
 
 
 def _find_easywave_config_entry(
-    hass: HomeAssistant, device: dr.DeviceEntry
+    hass: HomeAssistant,
+    device: dr.DeviceEntry,
+    easywave_id: str,
 ) -> ConfigEntry | None:
     """Return the Easywave config entry linked to a device."""
     device_registry = dr.async_get(hass)
@@ -101,10 +95,6 @@ def _find_easywave_config_entry(
             ):
                 return entry
 
-    easywave_id = _device_identifier(device)
-    if easywave_id is None:
-        return None
-
     for entry in hass.config_entries.async_loaded_entries(DOMAIN):
         if easywave_id == entry.entry_id:
             return entry
@@ -115,19 +105,12 @@ def _find_easywave_config_entry(
 
 
 def _get_device_data(
-    hass: HomeAssistant, ha_device_id: str
+    hass: HomeAssistant,
+    device: dr.DeviceEntry,
+    easywave_id: str,
 ) -> dict[str, Any] | _GatewayMarker | None:
     """Return device data from config subentries, or gateway marker."""
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get(ha_device_id)
-    if device is None:
-        return None
-
-    easywave_id = _device_identifier(device)
-    if easywave_id is None:
-        return None
-
-    entry = _find_easywave_config_entry(hass, device)
+    entry = _find_easywave_config_entry(hass, device, easywave_id)
     if entry is None:
         return None
     if easywave_id == entry.entry_id:
@@ -146,10 +129,16 @@ async def async_get_triggers(
     device = device_registry.async_get(device_id)
     if device is None:
         return []
-    if not any(identifier[0] == DOMAIN for identifier in device.identifiers):
+
+    easywave_id: str | None = None
+    for domain, identifier in device.identifiers:
+        if domain == DOMAIN:
+            easywave_id = identifier
+            break
+    if easywave_id is None:
         return []
 
-    device_data = _get_device_data(hass, device_id)
+    device_data = _get_device_data(hass, device, easywave_id)
     if device_data is None:
         return []
 

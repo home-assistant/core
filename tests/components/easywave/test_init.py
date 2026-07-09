@@ -4,7 +4,11 @@ from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.easywave import async_remove_config_entry_device
 from homeassistant.components.easywave.const import (
+    CONF_DEVICE_TITLE,
+    CONF_ENTRY_TYPE,
+    CONF_TRANSMITTER_SERIAL,
     DOMAIN,
+    ENTRY_TYPE_TRANSMITTER,
     SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
 )
 from homeassistant.components.easywave.coordinator import EasywaveCoordinator
@@ -17,6 +21,8 @@ from .conftest import (
     MOCK_ENTRY_DATA,
     MOCK_NEO_SENSOR_DEVICE_ID,
     MOCK_TRANSMITTER_DEVICE_ID,
+    MOCK_TRANSMITTER_SERIAL,
+    _bucket_subentry_data,
     _entry_with_subentries,
     _neo_sensor_device_record,
     _transmitter_device_record,
@@ -167,6 +173,53 @@ async def test_remove_config_entry_device_removes_child(
     assert len(subentries) == 1
     assert len(subentries[0].data[CONF_DEVICES]) == 1
     assert MOCK_TRANSMITTER_DEVICE_ID in subentries[0].data[CONF_DEVICES]
+
+
+async def test_remove_config_entry_device_updates_bucket_when_devices_remain(
+    hass: HomeAssistant,
+) -> None:
+    """Removing one child device keeps other devices in the same bucket."""
+    second_serial = "cc" * 16
+    second_device_id = f"transmitter_{second_serial}"
+    entry = _entry_with_subentries(
+        _bucket_subentry_data(
+            subentry_type=SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
+            devices={
+                MOCK_TRANSMITTER_DEVICE_ID: {
+                    CONF_DEVICE_TITLE: "Hall Remote",
+                    CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
+                    CONF_TRANSMITTER_SERIAL: MOCK_TRANSMITTER_SERIAL,
+                },
+                second_device_id: {
+                    CONF_DEVICE_TITLE: "Kitchen Remote",
+                    CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
+                    CONF_TRANSMITTER_SERIAL: second_serial,
+                },
+            },
+        ),
+    )
+    entry.add_to_hass(hass)
+
+    device_registry = dr.async_get(hass)
+    child_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)},
+        name="Hall Remote",
+    )
+
+    result = await async_remove_config_entry_device(hass, entry, child_device)
+    assert result is True
+    entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert entry is not None
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_EASYWAVE_TRANSMITTER)
+    assert len(subentries) == 1
+    assert subentries[0].data[CONF_DEVICES] == {
+        second_device_id: {
+            CONF_DEVICE_TITLE: "Kitchen Remote",
+            CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
+            CONF_TRANSMITTER_SERIAL: second_serial,
+        }
+    }
 
 
 async def test_get_devices_returns_configured_devices(

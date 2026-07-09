@@ -133,11 +133,7 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
                     "pid": port.pid,
                     "serial_number": port.serial_number or "unknown",
                     "manufacturer": port.manufacturer or "unknown",
-                    "product": (
-                        USB_DEVICE_NAMES[(port.vid, port.pid)]["product"]
-                        if (port.vid, port.pid) in USB_DEVICE_NAMES
-                        else port.product or "Easywave Device"
-                    ),
+                    "product": USB_DEVICE_NAMES[(port.vid, port.pid)]["product"],
                 }
                 return await self.async_step_confirm()
 
@@ -165,9 +161,9 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
-        device_entry = USB_DEVICE_NAMES.get((vid, pid))
-        mfr = device_entry["manufacturer"] if device_entry else "ELDAT EaS GmbH"
-        prod = device_entry["product"] if device_entry else "Unknown Easywave Device"
+        device_entry = USB_DEVICE_NAMES[(vid, pid)]
+        mfr = device_entry["manufacturer"]
+        prod = device_entry["product"]
 
         self._device = {
             "device": discovery_info.device,

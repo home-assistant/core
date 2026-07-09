@@ -26,7 +26,10 @@ from homeassistant.components.easywave.const import (
     EVENT_TYPE_BUTTON_PRESS,
     EVENT_TYPE_BUTTON_RELEASE,
 )
-from homeassistant.components.easywave.sensor import EasywaveNeoSensorTemperatureSensor
+from homeassistant.components.easywave.sensor import (
+    EasywaveNeoSensorHumiditySensor,
+    EasywaveNeoSensorTemperatureSensor,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -497,3 +500,172 @@ async def test_battery_sensor_ignores_ok_telegram_when_already_ok(
         _default_button_push(),
         _default_button_push(),
     )
+
+
+async def test_neo_sensor_temperature_ignores_humidity_only_measurement(
+    hass: HomeAssistant,
+) -> None:
+    """Temperature entities ignore measurement telegrams without temperature."""
+    transceiver = mock_easywave_transceiver()
+    entry = _entry_with_subentries(
+        _neo_sensor_device_record(capabilities=NEO_SENSOR_CAPABILITIES)
+    )
+
+    async def _assert_state() -> None:
+        entity_id = er.async_get(hass).async_get_entity_id(
+            "sensor",
+            DOMAIN,
+            f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_temperature",
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == "unknown"
+
+    await _run_dispatch_test(hass, entry, transceiver, _assert_state, _humidity_event())
+
+
+async def test_neo_sensor_humidity_restores_last_known_state(
+    hass: HomeAssistant,
+) -> None:
+    """Neo sensor humidity restores the last known measurement."""
+    transceiver = mock_easywave_transceiver()
+    entry = _entry_with_subentries(_neo_sensor_device_record(capabilities=(1 << 5)))
+    mock_sensor_data = MagicMock()
+    mock_sensor_data.native_value = 48.0
+
+    with patch.object(
+        EasywaveNeoSensorHumiditySensor,
+        "async_get_last_sensor_data",
+        new=AsyncMock(return_value=mock_sensor_data),
+    ):
+        await _setup_entry(hass, entry, transceiver)
+
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_humidity",
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "48.0"
+
+    await _teardown_entry(hass, entry)
+
+
+async def test_coordinator_ignores_unsupported_sensor_payload(
+    hass: HomeAssistant,
+) -> None:
+    """Unsupported neo sensor payload types are ignored at runtime."""
+    transceiver = mock_easywave_transceiver()
+    entry = _entry_with_subentries(
+        _neo_sensor_device_record(capabilities=NEO_SENSOR_CAPABILITIES)
+    )
+    unsupported_event = SensorTelegramEvent(
+        sensor_serial=bytes.fromhex(MOCK_NEO_SENSOR_SERIAL),
+        payload=MagicMock(),
+    )
+
+    async def _assert_state() -> None:
+        entity_id = er.async_get(hass).async_get_entity_id(
+            "sensor",
+            DOMAIN,
+            f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_temperature",
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == "unknown"
+
+    await _run_dispatch_test(hass, entry, transceiver, _assert_state, unsupported_event)
+
+
+async def test_coordinator_ignores_unhandled_telegram_type(
+    hass: HomeAssistant,
+) -> None:
+    """Unknown telegram event types are ignored by the listener loop."""
+    transceiver = mock_easywave_transceiver()
+    entry = _entry_with_subentries(_transmitter_device_record())
+
+    async def _assert_state() -> None:
+        entity_id = er.async_get(hass).async_get_entity_id(
+            "sensor",
+            DOMAIN,
+            f"transmitter_{MOCK_TRANSMITTER_SERIAL}_last_button",
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == "unknown"
+
+    await _run_dispatch_test(hass, entry, transceiver, _assert_state, MagicMock())
+
+
+async def test_coordinator_listener_ignores_none_telegrams(
+    hass: HomeAssistant,
+) -> None:
+    """Listener loop ignores empty receive results and keeps polling."""
+    transceiver = mock_easywave_transceiver()
+    entry = _entry_with_subentries(_transmitter_device_record())
+    receive_calls = 0
+
+    async def receive_side_effect(timeout: float = 30.0) -> object:
+        nonlocal receive_calls
+        receive_calls += 1
+        if receive_calls == 1:
+            return None
+        raise asyncio.CancelledError
+
+    transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
+
+    async def _assert_state() -> None:
+        assert receive_calls >= 2
+
+    await _run_dispatch_test(hass, entry, transceiver, _assert_state)
+
+
+async def test_coordinator_listener_recovers_from_receive_errors(
+    hass: HomeAssistant,
+) -> None:
+    """Transient receive errors do not stop the telegram listener loop."""
+    transceiver = mock_easywave_transceiver()
+    entry = _entry_with_subentries(_transmitter_device_record())
+    receive_calls = 0
+
+    async def receive_side_effect(timeout: float = 30.0) -> object:
+        nonlocal receive_calls
+        receive_calls += 1
+        if receive_calls == 1:
+            raise OSError("temporary read failure")
+        raise asyncio.CancelledError
+
+    transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
+
+    async def _assert_state() -> None:
+        assert receive_calls >= 2
+
+    with patch(
+        "homeassistant.components.easywave.coordinator.asyncio.sleep",
+        new=AsyncMock(),
+    ):
+        await _run_dispatch_test(hass, entry, transceiver, _assert_state)
+
+
+async def test_coordinator_listener_recovers_from_unexpected_errors(
+    hass: HomeAssistant,
+) -> None:
+    """Unexpected listener errors do not stop the telegram listener loop."""
+    transceiver = mock_easywave_transceiver()
+    entry = _entry_with_subentries(_transmitter_device_record())
+    receive_calls = 0
+
+    async def receive_side_effect(timeout: float = 30.0) -> object:
+        nonlocal receive_calls
+        receive_calls += 1
+        if receive_calls == 1:
+            raise RuntimeError("unexpected listener failure")
+        raise asyncio.CancelledError
+
+    transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
+
+    async def _assert_state() -> None:
+        assert receive_calls >= 2
+
+    with patch(
+        "homeassistant.components.easywave.coordinator.asyncio.sleep",
+        new=AsyncMock(),
+    ):
+        await _run_dispatch_test(hass, entry, transceiver, _assert_state)

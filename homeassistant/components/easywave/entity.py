@@ -175,11 +175,6 @@ class EasywaveNeoSensorEntity(Entity):
         """Return the sensor serial for matching telegrams."""
         return self._sensor_serial
 
-    @property
-    def device_id(self) -> str:
-        """Return the device id (used for device identifier lookup)."""
-        return self._device_id
-
     @override
     @property
     def available(self) -> bool:

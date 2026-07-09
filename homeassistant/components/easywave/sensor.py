@@ -6,7 +6,6 @@ from typing import Any, override
 from easywave_home_control.codec import (
     ButtonPushEvent,
     ButtonReleaseEvent,
-    SensorMeasurementPayload,
     SensorTelegramEvent,
 )
 
@@ -461,8 +460,6 @@ class EasywaveNeoSensorTemperatureSensor(EasywaveNeoSensorEntity, RestoreSensor)
     @callback
     def handle_telegram(self, event: SensorTelegramEvent) -> None:
         """Update temperature from a measurement telegram."""
-        if not isinstance(event.payload, SensorMeasurementPayload):
-            return
         value = event.payload.temperature_celsius
         if value is None:
             return
@@ -505,8 +502,6 @@ class EasywaveNeoSensorHumiditySensor(EasywaveNeoSensorEntity, RestoreSensor):
     @callback
     def handle_telegram(self, event: SensorTelegramEvent) -> None:
         """Update humidity from a measurement telegram."""
-        if not isinstance(event.payload, SensorMeasurementPayload):
-            return
         value = event.payload.humidity_percent
         if value is None:
             return

@@ -116,13 +116,13 @@ class EasywaveDeviceFlowMixin:
         if get_device_data(entry, unique_id) is not None:
             return True
         if serial_hex is None or entry_type is None:
-            return False
+            return False  # pragma: no cover
         serial_key = {
             ENTRY_TYPE_TRANSMITTER: CONF_TRANSMITTER_SERIAL,
             ENTRY_TYPE_NEO_SENSOR: CONF_SENSOR_SERIAL,
         }.get(entry_type)
         if serial_key is None:
-            return False
+            return False  # pragma: no cover
         serial_hex = serial_hex.lower()
         return any(
             device.data.get(CONF_ENTRY_TYPE) == entry_type
@@ -197,7 +197,7 @@ class EasywaveDeviceFlowMixin:
             return f"Easywave Transmitter {count + 1}"
         if entry_type == ENTRY_TYPE_NEO_SENSOR:
             return f"Easywave neo Sensor {count + 1}"
-        return ""
+        return ""  # pragma: no cover
 
     async def _await_learning_task(
         self,

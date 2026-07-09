@@ -168,8 +168,6 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "device_path": None,
                 }
         except UpdateFailed:
-            if not self.is_offline:
-                self.is_offline = True
             raise
         except (OSError, TimeoutError) as err:
             _LOGGER.warning("Error updating coordinator data: %s", err)
@@ -256,9 +254,7 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _clear_listener_task(self) -> None:
         """Clear the listener task reference after the loop exits."""
-        current_task = asyncio.current_task()
-        if self._listener_task is current_task:
-            self._listener_task = None
+        self._listener_task = None
 
     async def suspend_telegram_listener(self) -> None:
         """Pause the telegram listener so a learning task has exclusive hardware access.

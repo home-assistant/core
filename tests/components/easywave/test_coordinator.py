@@ -5,7 +5,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from homeassistant.components.easywave.const import DEVICE_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.easywave.const import (
+    DEVICE_SCAN_INTERVAL,
+    DOMAIN,
+    EVENT_EASYWAVE,
+)
 from homeassistant.components.easywave.coordinator import EasywaveCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -181,7 +185,14 @@ async def test_refresh_reconnects_and_updates_gateway_versions(
         identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
         name="RX11 USB Transceiver",
     )
+
+    async def receive_side_effect(timeout: float = 30.0) -> None:
+        raise asyncio.CancelledError
+
+    mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
     await coordinator.async_config_entry_first_refresh()
+    coordinator.register_transmitter_entities([MagicMock()])
+    await coordinator.hass.async_block_till_done(wait_background_tasks=True)
     coordinator.is_offline = True
     mock_transceiver.reconnect = AsyncMock(return_value=True)
     mock_transceiver.hw_version = "RX11 v1.0"
@@ -337,3 +348,105 @@ async def test_async_shutdown_error(
     await coordinator.async_shutdown()
 
     mock_transceiver.dispose.assert_awaited_once()
+
+
+async def test_ensure_telegram_listener_noops_when_offline(
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Listener startup is skipped while the coordinator is offline."""
+    await coordinator.async_config_entry_first_refresh()
+    coordinator.is_offline = True
+
+    coordinator.ensure_telegram_listener()
+
+    assert coordinator._listener_task is None
+
+
+async def test_fire_device_event_ignores_missing_device_registry_entry(
+    hass: HomeAssistant,
+    coordinator: EasywaveCoordinator,
+) -> None:
+    """Device events are not fired when the target device is not registered."""
+    await coordinator.async_config_entry_first_refresh()
+    events = []
+
+    def capture_event(event: object) -> None:
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_EASYWAVE, capture_event)
+    coordinator.fire_device_event("missing_device_id", "button_press", subtype="a")
+    await hass.async_block_till_done()
+
+    assert events == []
+
+
+async def test_async_shutdown_awaits_cancelled_listener(
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Shutdown waits for a cancelled telegram listener task."""
+    started = asyncio.Event()
+    proceed = asyncio.Event()
+
+    async def receive_side_effect(timeout: float = 30.0) -> None:
+        started.set()
+        await proceed.wait()
+
+    mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
+    await coordinator.async_config_entry_first_refresh()
+    coordinator.register_sensor_entities([MagicMock()])
+    await asyncio.wait_for(started.wait(), timeout=1)
+
+    await coordinator.async_shutdown()
+
+    mock_transceiver.dispose.assert_awaited_once()
+
+
+async def test_ensure_telegram_listener_skips_running_task(
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Listener startup is skipped when a listener task is already running."""
+    started = asyncio.Event()
+    proceed = asyncio.Event()
+
+    async def receive_side_effect(timeout: float = 30.0) -> None:
+        started.set()
+        await proceed.wait()
+
+    mock_transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
+    await coordinator.async_config_entry_first_refresh()
+    coordinator.register_sensor_entities([MagicMock()])
+    await asyncio.wait_for(started.wait(), timeout=1)
+
+    first_task = coordinator._listener_task
+    coordinator.ensure_telegram_listener()
+
+    assert coordinator._listener_task is first_task
+    proceed.set()
+    await coordinator.async_shutdown()
+
+
+async def test_ensure_telegram_listener_noops_without_entities(
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Listener startup is skipped when no entities are registered."""
+    await coordinator.async_config_entry_first_refresh()
+
+    coordinator.ensure_telegram_listener()
+
+    assert coordinator._listener_task is None
+
+
+async def test_start_telegram_listener_noops_without_entities(
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+) -> None:
+    """Direct listener startup is skipped when no entities are registered."""
+    await coordinator.async_config_entry_first_refresh()
+
+    coordinator._start_telegram_listener()
+
+    assert coordinator._listener_task is None

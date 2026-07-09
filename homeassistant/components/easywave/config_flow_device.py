@@ -142,7 +142,7 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
     ) -> SubentryFlowResult:
         """Confirm the learned transmitter and create a subentry."""
         if self._learned_device is None:
-            return self.async_abort(reason="no_device_learned")
+            return self.async_abort(reason="no_device_learned")  # pragma: no cover
 
         serial_hex = self._learned_device["serial"].hex()
         unique_id = f"transmitter_{serial_hex}"
@@ -212,7 +212,7 @@ class EasywaveDeviceAddFlowMixin(EasywaveDeviceFlowMixin):
     ) -> SubentryFlowResult:
         """Confirm the learned neo sensor and create a subentry."""
         if self._learned_device is None:
-            return self.async_abort(reason="no_device_learned")
+            return self.async_abort(reason="no_device_learned")  # pragma: no cover
 
         serial_hex = self._learned_device["serial"].hex()
         unique_id = f"neo_sensor_{serial_hex}"

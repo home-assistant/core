@@ -1,6 +1,10 @@
 """Tests for the Easywave transmitter state-sensor entities."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
+
+from easywave_home_control.codec import ButtonFunction, ButtonPushEvent
+from easywave_home_control.codec.events import EasywaveButton
 
 from homeassistant.components.easywave.const import (
     CONF_BUTTON_COUNT,
@@ -21,6 +25,8 @@ from .conftest import (
     _entry_with_subentries,
     _transmitter_device_record,
     async_setup_easywave_entry,
+    async_stop_easywave_listener,
+    mock_easywave_transceiver,
 )
 
 from tests.common import MockConfigEntry
@@ -147,3 +153,103 @@ async def test_battery_sensor_restores_last_known_state(hass: HomeAssistant) -> 
     assert entity_id is not None
     assert hass.states.get(entity_id).state == "low"
     assert hass.states.get(entity_id).attributes["icon"] == "mdi:battery-alert"
+
+
+async def _run_transmitter_telegram_test(
+    hass: HomeAssistant,
+    gateway: MockConfigEntry,
+    *telegrams: object,
+) -> None:
+    """Deliver telegrams through the coordinator listener."""
+    transceiver = mock_easywave_transceiver()
+    await async_setup_easywave_entry(hass, gateway, transceiver)
+    coordinator = gateway.runtime_data.coordinator
+    await coordinator.suspend_telegram_listener()
+
+    receive_calls = 0
+
+    async def receive_side_effect(timeout: float = 30.0) -> object:
+        nonlocal receive_calls
+        receive_calls += 1
+        if receive_calls <= len(telegrams):
+            return telegrams[receive_calls - 1]
+        raise asyncio.CancelledError
+
+    transceiver.receive_telegram = AsyncMock(side_effect=receive_side_effect)
+    coordinator.ensure_telegram_listener()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await coordinator.suspend_telegram_listener()
+    await hass.async_block_till_done()
+
+
+async def _teardown_transmitter_telegram_test(
+    hass: HomeAssistant,
+    gateway: MockConfigEntry,
+) -> None:
+    """Stop listener tasks and unload the config entry."""
+    await async_stop_easywave_listener(hass, gateway)
+    await hass.config_entries.async_unload(gateway.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_last_button_sensor_updates_from_telegram(
+    hass: HomeAssistant,
+) -> None:
+    """Last-button sensor state updates when a button press telegram arrives."""
+    gateway = _make_gateway(
+        {
+            CONF_OPERATING_TYPE: "1",
+            CONF_BUTTON_COUNT: 4,
+            CONF_GROUPING_MODE: TRANSMITTER_GROUPING_GROUP,
+        }
+    )
+
+    try:
+        await _run_transmitter_telegram_test(
+            hass,
+            gateway,
+            ButtonPushEvent(
+                transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+                button=EasywaveButton.B,
+                function=ButtonFunction.DEFAULT,
+                should_ignore=False,
+            ),
+        )
+
+        entity_id = er.async_get(hass).async_get_entity_id(
+            "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_last_button"
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == "b"
+    finally:
+        await _teardown_transmitter_telegram_test(hass, gateway)
+
+
+async def test_battery_sensor_shows_low_after_low_battery_telegram(
+    hass: HomeAssistant,
+) -> None:
+    """Battery warning sensor shows low after a low-battery telegram."""
+    gateway = _make_gateway({})
+
+    try:
+        await _run_transmitter_telegram_test(
+            hass,
+            gateway,
+            ButtonPushEvent(
+                transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+                button=EasywaveButton.A,
+                function=ButtonFunction.LOW_BATTERY,
+                should_ignore=False,
+            ),
+        )
+
+        entity_id = er.async_get(hass).async_get_entity_id(
+            "sensor", DOMAIN, f"{MOCK_DEVICE_ID}_battery_warning"
+        )
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "low"
+        assert state.attributes["icon"] == "mdi:battery-alert"
+    finally:
+        await _teardown_transmitter_telegram_test(hass, gateway)
