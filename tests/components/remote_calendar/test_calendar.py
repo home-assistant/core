@@ -573,7 +573,7 @@ async def test_coordinator_refresh_updates_upcoming_event_state(
     assert state
     assert state.attributes.get("start_time") == "2026-05-18 06:40:00"
 
-    # Serve the updated calendar and advance the clock to the next update interval.
+    # Advance clock to trigger the next update interval
     route.return_value = Response(status_code=200, text=updated_calendar)
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
     await hass.async_block_till_done()
