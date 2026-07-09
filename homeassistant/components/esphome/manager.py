@@ -9,10 +9,12 @@ import struct
 from typing import TYPE_CHECKING, Any, Final, NamedTuple
 
 from aioesphomeapi import (
+    ZERO_NOISE_PSK,
     APIClient,
     APIConnectionError,
     APIVersion,
     DeviceInfo as EsphomeDeviceInfo,
+    EncryptionHelloAPIError,
     EncryptionPlaintextAPIError,
     ExecuteServiceResponse,
     HomeassistantServiceCall,
@@ -21,6 +23,7 @@ from aioesphomeapi import (
     LogLevel,
     ReconnectLogic,
     RequiresEncryptionAPIError,
+    SocketClosedAPIError,
     SupportsResponseType,
     UserService,
     UserServiceArgType,
@@ -35,6 +38,7 @@ from homeassistant.components import bluetooth, tag, zeroconf
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_MODE,
+    CONF_PORT,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_LOGGING_CHANGED,
     Platform,
@@ -77,6 +81,7 @@ from homeassistant.util.json import json_loads_object
 
 from .bluetooth import async_connect_scanner
 from .const import (
+    CLIENT_INFO,
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_MAC_ADDRESS,
     CONF_DEVICE_NAME,
@@ -812,6 +817,65 @@ class ESPHomeManager:
         if self.reconnect_logic:
             await self.reconnect_logic.stop()
 
+    async def _async_provision_key_over_noise(self, new_key: bytes) -> bool:
+        """Send the encryption key over a short lived zero PSK Noise connection.
+
+        The well known all zeros PSK still runs a fresh ephemeral X25519
+        exchange, so the key cannot be read by a passive listener on the
+        network. This protects against sniffing only; it does not
+        authenticate either side against an active man in the middle.
+
+        Returns True if the device accepted the key. On failure the caller
+        simply returns; provisioning runs again on the next connect cycle.
+        """
+        unique_id = self.entry.unique_id
+        cli = APIClient(
+            self.host,
+            self.entry.data[CONF_PORT],
+            None,
+            client_info=CLIENT_INFO,
+            zeroconf_instance=self.zeroconf_instance,
+            noise_psk=ZERO_NOISE_PSK,
+            # Cheap hardening: verify the MAC in the server hello matches the
+            # device we think we are talking to (spoofable, but free)
+            expected_mac=unique_id if unique_id and ":" in unique_id else None,
+        )
+        device_name = self.entry.data.get(CONF_DEVICE_NAME, self.host)
+        try:
+            await cli.connect()
+            return await cli.noise_encryption_set_key(new_key)
+        except InvalidEncryptionKeyAPIError:
+            _LOGGER.warning(
+                "Device %s (%s) rejected the zero PSK handshake; it appears "
+                "to already have an encryption key set",
+                device_name,
+                unique_id,
+            )
+        except (
+            EncryptionPlaintextAPIError,
+            EncryptionHelloAPIError,
+            SocketClosedAPIError,
+        ) as ex:
+            # The device answered like plaintext-only firmware even though it
+            # advertised zero-PSK provisioning; never downgrade to plaintext
+            _LOGGER.warning(
+                "Device %s (%s) did not complete the encrypted provisioning "
+                "handshake: %s",
+                device_name,
+                unique_id,
+                ex,
+            )
+        except APIConnectionError as ex:
+            _LOGGER.warning(
+                "Error provisioning encryption key for device %s (%s): %s",
+                device_name,
+                unique_id,
+                ex,
+            )
+        finally:
+            await cli.disconnect(force=True)
+        return False
+
     async def _handle_dynamic_encryption_key(
         self, device_info: EsphomeDeviceInfo
     ) -> None:
@@ -853,18 +917,24 @@ class ESPHomeManager:
             new_key = base64.b64encode(secrets.token_bytes(32))
             new_key_str = new_key.decode()
 
-        try:
-            # Store the key on the device using the existing connection
-            result = await self.cli.noise_encryption_set_key(new_key)
-        except APIConnectionError as ex:
-            _LOGGER.error(
-                "Connection error while storing encryption key for device %s (%s): %s",
-                self.entry.data.get(CONF_DEVICE_NAME, self.host),
-                self.entry.unique_id,
-                ex,
-            )
-            return
+        if device_info.api_encryption_provisionable:
+            # New firmware: send the key over an encrypted zero PSK Noise
+            # connection so it cannot be sniffed off the network
+            if not await self._async_provision_key_over_noise(new_key):
+                return
         else:
+            # Old firmware only accepts the key over the existing plaintext
+            # connection. Deprecated; will be removed after the usual window.
+            try:
+                result = await self.cli.noise_encryption_set_key(new_key)
+            except APIConnectionError as ex:
+                _LOGGER.error(
+                    "Connection error while storing encryption key for device %s (%s): %s",
+                    self.entry.data.get(CONF_DEVICE_NAME, self.host),
+                    self.entry.unique_id,
+                    ex,
+                )
+                return
             if not result:
                 _LOGGER.error(
                     "Failed to set dynamic encryption key on device %s (%s)",

@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
-    __version__ as ha_version,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -25,7 +24,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 from . import assist_satellite, dashboard, ffmpeg_proxy, serial_proxy
-from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DOMAIN
+from .const import CLIENT_INFO, CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DOMAIN
 from .domain_data import DomainData
 from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
@@ -35,8 +34,6 @@ from .websocket_api import async_setup as async_setup_websocket_api
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-CLIENT_INFO = f"Home Assistant {ha_version}"
 
 
 @callback
