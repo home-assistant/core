@@ -63,10 +63,10 @@ class EasywaveEventTrigger(Trigger, ABC):
     def _device_ids_from_target(self) -> set[str]:
         """Return device registry IDs referenced by the trigger target."""
         referenced = async_extract_referenced_entity_ids(
-            self._hass, TargetSelection(self._target), expand_group=False
+            self._hass, TargetSelection(self._target)
         )
         device_ids = set(referenced.referenced_devices)
-        for entity_id in referenced.referenced:
+        for entity_id in referenced.referenced | referenced.indirectly_referenced:
             if device_id := async_entity_id_to_device_id(self._hass, entity_id):
                 device_ids.add(device_id)
         return device_ids

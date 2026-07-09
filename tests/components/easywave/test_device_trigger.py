@@ -88,17 +88,17 @@ async def test_get_gateway_triggers(
 
 
 @pytest.mark.parametrize(
-    ("switch_mode", "include_release"),
+    ("switch_mode", "release_subtypes"),
     [
-        (TRANSMITTER_SWITCH_IMPULSE, True),
-        (TRANSMITTER_SWITCH_PERMANENT, False),
+        (TRANSMITTER_SWITCH_IMPULSE, ("released",)),
+        (TRANSMITTER_SWITCH_PERMANENT, ()),
     ],
 )
 async def test_get_transmitter_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     switch_mode: str,
-    include_release: bool,
+    release_subtypes: tuple[str, ...],
 ) -> None:
     """Transmitter exposes button, optional release, and battery triggers."""
     await _async_setup_entry(
@@ -127,17 +127,17 @@ async def test_get_transmitter_triggers(
         }
         for subtype in ("a", "b")
     ]
-    if include_release:
-        expected.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DOMAIN: DOMAIN,
-                CONF_DEVICE_ID: device.id,
-                CONF_TYPE: EVENT_TYPE_BUTTON_RELEASE,
-                CONF_SUBTYPE: "released",
-                "metadata": {},
-            }
-        )
+    expected.extend(
+        {
+            CONF_PLATFORM: "device",
+            CONF_DOMAIN: DOMAIN,
+            CONF_DEVICE_ID: device.id,
+            CONF_TYPE: EVENT_TYPE_BUTTON_RELEASE,
+            CONF_SUBTYPE: subtype,
+            "metadata": {},
+        }
+        for subtype in release_subtypes
+    )
     expected.extend(
         {
             CONF_PLATFORM: "device",

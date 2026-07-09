@@ -201,6 +201,45 @@ async def test_user_flow_cannot_connect_on_confirm(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.parametrize(
+    "connect_side_effect",
+    [
+        OSError("port busy"),
+        TimeoutError(),
+    ],
+    ids=["oserror", "timeout"],
+)
+async def test_user_flow_cannot_connect_on_connection_error(
+    hass: HomeAssistant,
+    connect_side_effect: OSError | TimeoutError,
+) -> None:
+    """Test confirm step shows cannot_connect when connection raises."""
+    port = _make_port()
+    mock_transceiver = MagicMock()
+    mock_transceiver.connect = AsyncMock(side_effect=connect_side_effect)
+    mock_transceiver.dispose = AsyncMock()
+
+    with (
+        patch(COMPORTS_PATH, return_value=[port]),
+        patch(TRANSCEIVER_PATH, return_value=mock_transceiver),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_DEVICE_PATH: "/dev/ttyACM0"},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert result["errors"] == {"base": "cannot_connect"}
+    mock_transceiver.dispose.assert_awaited()
+
+
 async def test_user_flow_multiple_ports(hass: HomeAssistant) -> None:
     """Test user flow with multiple serial ports shows selection form."""
     port1 = _make_port()
