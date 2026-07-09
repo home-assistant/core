@@ -83,7 +83,7 @@ SENSOR_DESCRIPTIONS: tuple[SteamSensorEntityDescription, ...] = (
     SteamSensorEntityDescription(
         key=SteamSensor.LAST_ONLINE,
         translation_key=SteamSensor.LAST_ONLINE,
-        value_fn=(lambda x: dt_util.as_local(dt_util.utc_from_timestamp(x.lastlogoff))),
+        value_fn=(lambda x: dt_util.utc_from_timestamp(x.lastlogoff)),
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     SteamSensorEntityDescription(
