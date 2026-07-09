@@ -55,13 +55,13 @@ def _thumbnail_sort_key(t: EventDetectedThumbnail) -> tuple[bool, float, float]:
     return (has_lpr, confidence, clock)
 
 
-def _event_start(event: Event | ProtectEvent) -> str | None:
+def _event_start(event: Event | ProtectEvent) -> str:
     """Device-side event start timestamp (ISO) as reported by Protect."""
-    return event.start.isoformat() if event.start else None
+    return event.start.isoformat()
 
 
 def _add_ulp_user_infos(
-    bootstrap: Bootstrap, event_data: dict[str, str | None], ulp_id: str
+    bootstrap: Bootstrap, event_data: dict[str, str], ulp_id: str
 ) -> None:
     """Add ULP user information to the event data."""
     if ulp_usr := bootstrap.ulp_users.by_ulp_id(ulp_id):
