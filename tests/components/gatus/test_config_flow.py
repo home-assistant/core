@@ -36,6 +36,31 @@ async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_gatus_client")
+async def test_form_success_with_path(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test we get the form, validate the client, and create a successful entry with a sub-path."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://gatus.example.com:8080/gatus-instance/"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Gatus"
+    assert result["data"] == {
+        CONF_URL: "http://gatus.example.com:8080/gatus-instance",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_form_invalid_url(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_gatus_client: AsyncMock
 ) -> None:
