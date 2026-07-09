@@ -74,7 +74,8 @@
   "config_subentries": {
     "recipient": {
       "abort": {
-        "already_configured": "Recipient is already configured"
+        "already_configured": "Recipient is already configured",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "entry_type": "Recipient",
       "initiate_flow": {

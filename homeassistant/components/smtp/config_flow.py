@@ -359,6 +359,39 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
             ),
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure flow to update a recipient."""
+
+        entry = self._get_entry()
+        subentry = self._get_reconfigure_subentry()
+
+        if user_input is not None:
+            return self.async_update_and_abort(
+                entry,
+                subentry=subentry,
+                data_updates={},
+                unique_id=user_input[CONF_RECIPIENT],
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_RECIPIENT): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.TEXT,
+                                autocomplete="email",
+                            ),
+                        )
+                    }
+                ),
+                suggested_values={CONF_RECIPIENT: subentry.unique_id},
+            ),
+        )
+
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle options flow."""
