@@ -1,8 +1,7 @@
 """Helpers to resolve client ID/secret."""
 
-from collections.abc import Collection
 from html.parser import HTMLParser
-from ipaddress import IPv4Network, IPv6Network, ip_address
+from ipaddress import ip_address
 import logging
 from typing import override
 from urllib.parse import ParseResult, urljoin, urlparse
@@ -11,7 +10,6 @@ import aiohttp
 import aiohttp.client_exceptions
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.network import async_get_local_networks
 from homeassistant.util.network import is_local
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,7 +20,7 @@ async def verify_redirect_uri(
 ) -> bool:
     """Verify that the client and redirect uri match."""
     try:
-        client_id_parts = _parse_client_id(client_id, async_get_local_networks(hass))
+        client_id_parts = _parse_client_id(client_id, hass)
     except ValueError:
         return False
 
@@ -125,13 +123,10 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
     return [urljoin(url, found) for found in parser.found]
 
 
-def verify_client_id(
-    client_id: str,
-    local_networks: Collection[IPv4Network | IPv6Network] = (),
-) -> bool:
+def verify_client_id(client_id: str, hass: HomeAssistant | None = None) -> bool:
     """Verify that the client id is valid."""
     try:
-        _parse_client_id(client_id, local_networks)
+        _parse_client_id(client_id, hass)
     except ValueError:
         return False
     return True
@@ -154,10 +149,7 @@ def _parse_url(url: str) -> ParseResult:
     return parts
 
 
-def _parse_client_id(
-    client_id: str,
-    local_networks: Collection[IPv4Network | IPv6Network] = (),
-) -> ParseResult:
+def _parse_client_id(client_id: str, hass: HomeAssistant | None = None) -> ParseResult:
     """Test if client id is a valid URL according to IndieAuth section 3.2.
 
     https://indieauth.spec.indieweb.org/#client-identifier
@@ -218,7 +210,7 @@ def _parse_client_id(
         # Not an ip address
         pass
 
-    if address is None or is_local(address, local_networks):
+    if address is None or is_local(address, hass):
         return parts
 
     raise ValueError("Hostname should be a domain name or local IP address")

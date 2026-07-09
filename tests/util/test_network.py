@@ -1,10 +1,8 @@
 """Test Home Assistant volume utility functions."""
 
 from ipaddress import ip_address, ip_network
+from unittest.mock import Mock, patch
 
-import pytest
-
-from homeassistant.core import HomeAssistant
 from homeassistant.util import network as network_util
 
 
@@ -46,33 +44,28 @@ def test_is_invalid() -> None:
 
 def test_is_local() -> None:
     """Test local addresses."""
-    assert network_util.is_local(ip_address("192.168.0.1"), [])
-    assert network_util.is_local(ip_address("127.0.0.1"), [])
-    assert network_util.is_local(ip_address("fd12:3456:789a:1::1"), [])
-    assert network_util.is_local(ip_address("fe80::1234:5678:abcd"), [])
-    assert network_util.is_local(ip_address("::ffff:192.168.0.1"), [])
-    assert not network_util.is_local(ip_address("208.5.4.2"), [])
-    assert not network_util.is_local(ip_address("198.51.100.1"), [])
-    assert not network_util.is_local(ip_address("2001:DB8:FA1::1"), [])
-    assert not network_util.is_local(ip_address("::ffff:208.5.4.2"), [])
-
-
-def test_is_local_with_local_networks() -> None:
-    """Test addresses within the provided local networks are considered local."""
-    local_networks = [ip_network("2001:db8:fa1::/48")]
-    assert network_util.is_local(ip_address("2001:db8:fa1::1"), local_networks)
-    assert not network_util.is_local(ip_address("2001:db8:fa2::1"), local_networks)
-    # RFC-based rules still apply regardless of the provided networks.
-    assert network_util.is_local(ip_address("192.168.0.1"), local_networks)
-    assert not network_util.is_local(ip_address("208.5.4.2"), local_networks)
-
-
-async def test_is_local_without_local_networks_is_deprecated(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test calling is_local without local_networks reports a deprecation."""
     assert network_util.is_local(ip_address("192.168.0.1"))
-    assert "is_local without the local_networks argument" in caplog.text
+    assert network_util.is_local(ip_address("127.0.0.1"))
+    assert network_util.is_local(ip_address("fd12:3456:789a:1::1"))
+    assert network_util.is_local(ip_address("fe80::1234:5678:abcd"))
+    assert network_util.is_local(ip_address("::ffff:192.168.0.1"))
+    assert not network_util.is_local(ip_address("208.5.4.2"))
+    assert not network_util.is_local(ip_address("198.51.100.1"))
+    assert not network_util.is_local(ip_address("2001:DB8:FA1::1"))
+    assert not network_util.is_local(ip_address("::ffff:208.5.4.2"))
+
+
+def test_is_local_with_hass() -> None:
+    """Test the host's on-link IPv6 networks are treated as local."""
+    hass = Mock()
+    with patch(
+        "homeassistant.components.network.async_get_local_networks",
+        return_value=[ip_network("2a00:1234:5678:9abc::/64")],
+    ):
+        assert network_util.is_local(ip_address("2a00:1234:5678:9abc::1"), hass)
+        assert not network_util.is_local(ip_address("2a00:1234:5678:9abd::1"), hass)
+    # Without hass, only the RFC ranges are local.
+    assert not network_util.is_local(ip_address("2a00:1234:5678:9abc::1"))
 
 
 def test_is_ip_address() -> None:

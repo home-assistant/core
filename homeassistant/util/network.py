@@ -1,17 +1,11 @@
 """Network utilities."""
 
-from collections.abc import Collection
-from ipaddress import (
-    IPv4Address,
-    IPv4Network,
-    IPv6Address,
-    IPv6Network,
-    ip_address,
-    ip_network,
-)
+from ipaddress import IPv4Address, IPv6Address, IPv6Network, ip_address, ip_network
 import re
 
 import yarl
+
+from homeassistant.core import HomeAssistant
 
 # RFC6890 - IP addresses of loopback interfaces
 IPV6_IPV4_LOOPBACK = ip_network("::ffff:127.0.0.0/104")
@@ -58,31 +52,22 @@ def is_link_local(address: IPv4Address | IPv6Address) -> bool:
 
 def is_local(
     address: IPv4Address | IPv6Address,
-    local_networks: Collection[IPv4Network | IPv6Network] | None = None,
+    hass: HomeAssistant | None = None,
 ) -> bool:
     """Check if an address is on a local network.
 
-    ``local_networks`` should contain the host's own on-link networks, such as
-    the IPv6 GUA prefixes announced on the local network, so that addresses
-    within those ranges are also treated as local. Use
-    ``homeassistant.helpers.network.async_get_local_networks`` to obtain them.
+    When ``hass`` is provided, the host's on-link IPv6 GUA prefixes are treated
+    as local too, so that addresses on the local network are recognized in
+    addition to the loopback, private and link-local ranges.
     """
-    if local_networks is None:
+    local_networks: list[IPv6Network] = []
+    if hass is not None:
         # Local import to avoid circular dependencies
-        from homeassistant.helpers.frame import (  # noqa: PLC0415
-            ReportBehavior,
-            report_usage,
+        from homeassistant.components.network import (  # noqa: PLC0415
+            async_get_local_networks,
         )
 
-        report_usage(
-            "called homeassistant.util.network.is_local without the "
-            "local_networks argument",
-            breaks_in_ha_version="2027.8",
-            core_behavior=ReportBehavior.LOG,
-            core_integration_behavior=ReportBehavior.LOG,
-            custom_integration_behavior=ReportBehavior.LOG,
-        )
-        local_networks = ()
+        local_networks = async_get_local_networks(hass)
     return (
         is_loopback(address)
         or is_private(address)

@@ -7,7 +7,7 @@ from aiohttp.web import Request
 from homeassistant.auth.models import User
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.http import current_request
-from homeassistant.helpers.network import async_get_local_networks, is_cloud_connection
+from homeassistant.helpers.network import is_cloud_connection
 from homeassistant.util.network import is_local
 
 
@@ -37,7 +37,7 @@ def async_user_not_allowed_do_auth(
     except ValueError:
         return "Invalid remote IP"
 
-    if is_local(remote_address, async_get_local_networks(hass)):
+    if is_local(remote_address, hass):
         return None
 
     return "User cannot authenticate remotely"

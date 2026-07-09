@@ -65,7 +65,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, State
 from homeassistant.helpers.event import async_track_state_change_event
-from homeassistant.helpers.network import async_get_local_networks
 from homeassistant.util import color as color_util
 from homeassistant.util.json import json_loads
 from homeassistant.util.network import is_local
@@ -131,7 +130,7 @@ ENTITY_FEATURES_BY_DOMAIN = {
 
 def _remote_is_allowed(hass: core.HomeAssistant, address: str) -> bool:
     """Check if remote address is allowed."""
-    return is_local(ip_address(address), async_get_local_networks(hass))
+    return is_local(ip_address(address), hass)
 
 
 class HueUnauthorizedUser(HomeAssistantView):
