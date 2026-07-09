@@ -1,6 +1,13 @@
 """Network utilities."""
 
-from ipaddress import IPv4Address, IPv6Address, IPv6Network, ip_address, ip_network
+from ipaddress import (
+    IPv4Address,
+    IPv6Address,
+    IPv6Interface,
+    IPv6Network,
+    ip_address,
+    ip_network,
+)
 import re
 
 import yarl
@@ -56,23 +63,38 @@ def is_local(
 ) -> bool:
     """Check if an address is on a local network.
 
-    When ``hass`` is provided, the host's on-link IPv6 GUA prefixes are treated
-    as local too, so that addresses on the local network are recognized in
-    addition to the loopback, private and link-local ranges.
+    When ``hass`` is provided, the host's on-link IPv6 GUA prefixes (derived
+    from the enabled network adapters) are treated as local too, in addition to
+    the loopback, private and link-local ranges.
     """
     local_networks: list[IPv6Network] = []
     if hass is not None:
         # Local import to avoid circular dependencies
         from homeassistant.components.network import (  # noqa: PLC0415
-            async_get_local_networks,
+            async_get_loaded_adapters,
         )
 
-        local_networks = async_get_local_networks(hass)
+        try:
+            adapters = async_get_loaded_adapters(hass)
+        except KeyError:
+            # The network integration is not set up yet.
+            adapters = []
+        for adapter in adapters:
+            if not adapter["enabled"]:
+                continue
+            for ip_info in adapter["ipv6"]:
+                if not IPv6Address(ip_info["address"]).is_global:
+                    continue
+                ipv6_network = IPv6Interface(
+                    f"{ip_info['address']}/{ip_info['network_prefix']}"
+                ).network
+                if ipv6_network not in local_networks:
+                    local_networks.append(ipv6_network)
     return (
         is_loopback(address)
         or is_private(address)
         or is_link_local(address)
-        or any(address in network for network in local_networks)
+        or any(address in net for net in local_networks)
     )
 
 

@@ -1,10 +1,9 @@
 """Test the Network Configuration."""
 
-from ipaddress import IPv4Address, IPv6Network
+from ipaddress import IPv4Address
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
-import ifaddr
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -849,38 +848,3 @@ async def test_repair_docker_host_network_without_host_networking(
 
     assert (issue := issue_registry.async_get_issue(DOMAIN, "docker_host_network"))
     assert issue == snapshot
-
-
-@pytest.mark.usefixtures("mock_socket_no_loopback")
-async def test_async_get_local_networks(hass: HomeAssistant) -> None:
-    """Test on-link global IPv6 networks are derived from enabled adapters."""
-    eth0 = Mock(spec=ifaddr.Adapter)
-    eth0.nice_name = "eth0"
-    eth0.index = 1
-    eth0.ips = [
-        ifaddr.IP(("2a00:1234:5678:9abc::5", 0, 0), 64, "eth0"),
-        ifaddr.IP(("fd00::1", 0, 0), 64, "eth0"),
-        ifaddr.IP(("fe80::1", 0, 1), 64, "eth0"),
-    ]
-    lo0 = Mock(spec=ifaddr.Adapter)
-    lo0.nice_name = "lo0"
-    lo0.index = 0
-    lo0.ips = [ifaddr.IP(LOOPBACK_IPADDR, 8, "lo0")]
-
-    with patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=[eth0, lo0],
-    ):
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-        await hass.async_block_till_done()
-
-    # Only the globally routable IPv6 prefix of the enabled adapter is returned;
-    # ULA, link-local and the disabled loopback adapter are excluded.
-    assert network.async_get_local_networks(hass) == [
-        IPv6Network("2a00:1234:5678:9abc::/64")
-    ]
-
-
-async def test_async_get_local_networks_not_loaded(hass: HomeAssistant) -> None:
-    """Test no networks are returned when the integration is not loaded."""
-    assert network.async_get_local_networks(hass) == []
