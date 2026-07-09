@@ -13,6 +13,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     OAuth2TokenRequestError,
@@ -143,12 +144,10 @@ async def test_setup_rexel_local_uses_local_client(
     assert mock_rexel_local_config_entry.state is ConfigEntryState.LOADED
 
 
-ENTITY_BUTTON_PERGOLA_MY_POSITION = "button.bioclimatic_pergola_my_position"
-ENTITY_BUTTON_VENETIAN_BLIND_MY_POSITION = "button.venetian_blind_my_position"
-
-
 async def test_go_to_alias_button_unique_id_migration(
-    hass: HomeAssistant, mock_client: MockOverkizClient
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: MockOverkizClient,
 ) -> None:
     """Test migration of the legacy goToAlias button unique_id.
 
@@ -163,22 +162,17 @@ async def test_go_to_alias_button_unique_id_migration(
     )
     mock_entry.add_to_hass(hass)
 
-    mock_registry(
-        hass,
-        {
-            ENTITY_BUTTON_PERGOLA_MY_POSITION: RegistryEntryWithDefaults(
-                entity_id=ENTITY_BUTTON_PERGOLA_MY_POSITION,
-                unique_id="ogp://1234-1234-6233/10943109-goToAlias",
-                platform=DOMAIN,
-                config_entry_id=mock_entry.entry_id,
-            ),
-            ENTITY_BUTTON_VENETIAN_BLIND_MY_POSITION: RegistryEntryWithDefaults(
-                entity_id=ENTITY_BUTTON_VENETIAN_BLIND_MY_POSITION,
-                unique_id="ogp://1234-1234-6233/16730100-goToAlias",
-                platform=DOMAIN,
-                config_entry_id=mock_entry.entry_id,
-            ),
-        },
+    pergola_button = entity_registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        "ogp://1234-1234-6233/10943109-goToAlias",
+        config_entry=mock_entry,
+    )
+    venetian_blind_button = entity_registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        "ogp://1234-1234-6233/16730100-goToAlias",
+        config_entry=mock_entry,
     )
 
     mock_client.set_setup_fixture("setup/cloud_somfy_tahoma_v2_europe.json")
@@ -190,11 +184,9 @@ async def test_go_to_alias_button_unique_id_migration(
         assert await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-
-    assert ent_reg.async_get(ENTITY_BUTTON_PERGOLA_MY_POSITION) is None
+    assert entity_registry.async_get(pergola_button.entity_id) is None
     assert (
-        entry := ent_reg.async_get(ENTITY_BUTTON_VENETIAN_BLIND_MY_POSITION)
+        entry := entity_registry.async_get(venetian_blind_button.entity_id)
     ) is not None
     assert entry.unique_id == "ogp://1234-1234-6233/16730100-goToAlias_1"
     assert mock_entry.minor_version == 3
