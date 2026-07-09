@@ -14,9 +14,9 @@ from pyicloud.exceptions import (
 )
 from pyicloud.services.findmyiphone import AppleDevice
 
-from homeassistant.components.zone import ZoneEntityStateAttribute, async_active_zone
+from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_USERNAME, EntityStateAttribute
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -256,12 +256,8 @@ class IcloudAccount:
             for zone_state in zones:
                 if zone_state is None:
                     continue
-                zone_state_lat = zone_state.attributes[
-                    ZoneEntityStateAttribute.LATITUDE
-                ]
-                zone_state_long = zone_state.attributes[
-                    ZoneEntityStateAttribute.LONGITUDE
-                ]
+                zone_state_lat = zone_state.attributes[EntityStateAttribute.LATITUDE]
+                zone_state_long = zone_state.attributes[EntityStateAttribute.LONGITUDE]
                 zone_distance = distance(
                     device.location[DEVICE_LOCATION_LATITUDE],
                     device.location[DEVICE_LOCATION_LONGITUDE],
