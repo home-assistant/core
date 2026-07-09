@@ -131,9 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
 
     # Store all items found on controller for platforms to use
     try:
-        director_all_items: list[
-            dict[str, Any]
-        ] = await director.get_all_item_info()
+        director_all_items: list[dict[str, Any]] = await director.get_all_item_info()
     except (TimeoutError, client_exceptions.ClientError) as err:
         _LOGGER.error(
             "Timeout connecting to Control4 controller at %s",
