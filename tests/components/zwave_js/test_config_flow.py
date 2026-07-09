@@ -4896,10 +4896,11 @@ async def test_reconfigure_addon_not_installed(
     [
         pytest.param({}, id="missing"),
         pytest.param({"homeId": "not-a-number"}, id="malformed"),
+        pytest.param({"homeId": None}, id="valueless"),
     ],
 )
 async def test_zeroconf_invalid_discovery_info(
-    hass: HomeAssistant, properties: dict[str, str]
+    hass: HomeAssistant, properties: dict[str, str | None]
 ) -> None:
     """Test zeroconf discovery with invalid home ID properties."""
     result = await hass.config_entries.flow.async_init(
