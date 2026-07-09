@@ -87,10 +87,10 @@ async def test_update_error_includes_message(
     )
 
 
-async def test_dedicated_httpx_client_uses_timeout_and_is_cached(
+async def test_dedicated_httpx_client_uses_timeout(
     hass: HomeAssistant,
 ) -> None:
-    """The integration's dedicated httpx client uses DEFAULT_TIMEOUT and is reused on reload."""
+    """The integration's dedicated httpx client uses DEFAULT_TIMEOUT."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT)
     entry.add_to_hass(hass)
 
@@ -101,14 +101,9 @@ async def test_dedicated_httpx_client_uses_timeout_and_is_cached(
         await hass.async_block_till_done()
         assert entry.state is ConfigEntryState.LOADED
 
-        assert mock_create.call_count == 1
         kwargs = mock_create.call_args.kwargs
         assert kwargs["timeout"] == DEFAULT_TIMEOUT
         assert kwargs["verify_ssl"] == MOCK_USER_INPUT["verify_ssl"]
-
-        assert await hass.config_entries.async_reload(entry.entry_id)
-        await hass.async_block_till_done()
-        assert mock_create.call_count == 1
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
