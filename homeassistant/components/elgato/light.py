@@ -100,7 +100,7 @@ class ElgatoLight(ElgatoEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self.coordinator.client.light(on=False)
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     @elgato_exception_handler
     @override
@@ -143,7 +143,7 @@ class ElgatoLight(ElgatoEntity, LightEntity):
             saturation=saturation,
             temperature=temperature,
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh()
 
     @elgato_exception_handler
     async def async_identify(self) -> None:
