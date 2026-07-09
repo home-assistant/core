@@ -63,8 +63,10 @@ class NetatmoFlowHandler(
         """Handle a flow start."""
         await self.async_set_unique_id(DOMAIN)
 
-        if self.source != SOURCE_REAUTH and self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
+        if self.source != SOURCE_REAUTH:
+            self._abort_if_unique_id_configured(error="single_instance_allowed")
+            if self._async_current_entries():
+                return self.async_abort(reason="single_instance_allowed")
 
         return await super().async_step_user(user_input)
 
