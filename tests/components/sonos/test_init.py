@@ -2,6 +2,7 @@
 
 import asyncio
 from http import HTTPStatus
+from itertools import chain, repeat
 import logging
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -313,14 +314,6 @@ async def test_async_poll_manual_hosts_uid_oserror(
     soco_1 = soco_factory.cache_mock(_MockSoCoUidError(), "10.10.10.1", "Living Room")
     soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
     uid = soco_1.uid
-    uid_call_count = 0
-
-    def _uid_side_effect() -> str:
-        nonlocal uid_call_count
-        uid_call_count += 1
-        if uid_call_count == 1:
-            return uid
-        raise OSError("uid unavailable")
 
     with (
         caplog.at_level(logging.WARNING),
@@ -329,7 +322,7 @@ async def test_async_poll_manual_hosts_uid_oserror(
             "uid",
             new_callable=PropertyMock,
             create=True,
-            side_effect=_uid_side_effect,
+            side_effect=chain([uid], repeat(OSError("uid unavailable"))),
         ),
     ):
         await _setup_hass(hass)
@@ -354,21 +347,13 @@ async def test_async_poll_manual_hosts_uid_http_error(
     soco_1 = soco_factory.cache_mock(_MockSoCoUidError(), "10.10.10.1", "Living Room")
     soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
     uid = soco_1.uid
-    uid_call_count = 0
-
-    def _uid_side_effect() -> str:
-        nonlocal uid_call_count
-        uid_call_count += 1
-        if uid_call_count == 1:
-            return uid
-        raise http_error
 
     with patch.object(
         type(soco_1),
         "uid",
         new_callable=PropertyMock,
         create=True,
-        side_effect=_uid_side_effect,
+        side_effect=chain([uid], repeat(http_error)),
     ):
         await _setup_hass(hass)
 
