@@ -138,7 +138,9 @@ async def init_camera_platform_integration(
 ) -> MagicMock:
     """Set up Imou with only the camera platform loaded."""
     with patch("random.SystemRandom.getrandbits", return_value=123123123123):
-        await _init_integration_with_platforms(hass, mock_config_entry, [Platform.CAMERA])
+        await _init_integration_with_platforms(
+            hass, mock_config_entry, [Platform.CAMERA]
+        )
     return mock_imou_ha_device_manager
 
 
