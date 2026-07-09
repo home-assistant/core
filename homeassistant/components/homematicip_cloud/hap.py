@@ -1,4 +1,4 @@
-"""Access point for the HomematicIP Cloud component."""
+"""Access point for the HomematicIP Cloud integration."""
 
 import asyncio
 from collections.abc import Callable

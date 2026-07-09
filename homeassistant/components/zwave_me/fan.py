@@ -1,6 +1,6 @@
 """Representation of a fan."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
@@ -42,22 +42,26 @@ class ZWaveMeFan(ZWaveMeEntity, FanEntity):
     )
 
     @property
+    @override
     def percentage(self) -> int:
         """Return the current speed as a percentage."""
         if self.device.level == 99:  # Scale max value
             return 100
         return self.device.level
 
+    @override
     def set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         self.controller.zwave_api.send_command(
             self.device.id, f"exact?level={min(percentage, 99)}"
         )
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         self.controller.zwave_api.send_command(self.device.id, "exact?level=0")
 
+    @override
     def turn_on(
         self,
         percentage: int | None = None,

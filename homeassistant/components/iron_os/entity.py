@@ -1,6 +1,6 @@
 """Base entity for IronOS integration."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -48,6 +48,7 @@ class IronOSBaseEntity(CoordinatorEntity[IronOSLiveDataCoordinator]):
             )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.device.is_connected

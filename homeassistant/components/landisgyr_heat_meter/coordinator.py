@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from typing import override
 
 import serialx
 from ultraheat_api.response import HeatMeterResponse
@@ -39,6 +40,7 @@ class UltraheatCoordinator(DataUpdateCoordinator[HeatMeterResponse]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> HeatMeterResponse:
         """Fetch data from API endpoint."""
         try:

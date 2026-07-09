@@ -1,6 +1,6 @@
 """Support for events."""
 
-from typing import Final
+from typing import Final, override
 
 from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
 
@@ -69,6 +69,7 @@ class AlexaVoiceEvent(AmazonEntity, EventEntity):
     _last_seen_timestamp: int = 0  #  January 1, 1970 at 12:00:00 AM
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 

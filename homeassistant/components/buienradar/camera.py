@@ -3,6 +3,7 @@
 import asyncio
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 import aiohttp
 import voluptuous as vol
@@ -135,6 +136,7 @@ class BuienradarCam(Camera):
             _LOGGER.error("Failed to fetch image, %s", type(err))
             return False
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:

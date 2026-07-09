@@ -1,5 +1,7 @@
 """Binary sensor platform for the Data Grand Lyon integration."""
 
+from typing import override
+
 from data_grand_lyon_ha import VelovStationStatus
 
 from homeassistant.components.binary_sensor import (
@@ -47,6 +49,7 @@ class DataGrandLyonVelovBinarySensor(DataGrandLyonVelovEntity, BinarySensorEntit
     """Binary sensor for Data Grand Lyon Vélo'v station."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the station is open."""
         return (

@@ -1,6 +1,6 @@
 """Base entity for Habitica."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 from uuid import UUID
 
 from habiticalib import ContentData, UserData
@@ -89,6 +89,7 @@ class HabiticaPartyMemberBase(HabiticaBase):
         super().__init__(coordinator, entity_description, subentry)
 
     @property
+    @override
     def user(self) -> UserData | None:
         """Return the user data of the party member."""
         if TYPE_CHECKING:
@@ -97,11 +98,13 @@ class HabiticaPartyMemberBase(HabiticaBase):
         return self.party_coordinator.data.members.get(UUID(self.subentry.unique_id))
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
 
         return super().available and self.user is not None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
