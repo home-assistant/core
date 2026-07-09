@@ -4,6 +4,7 @@ from abc import abstractmethod
 from asyncio import Lock
 from datetime import datetime
 import logging
+from typing import override
 
 from aiohttp import ClientError
 
@@ -31,7 +32,7 @@ _BPUP_ALIVE_SCAN_INTERVAL = 60
 
 
 class BondEntity(Entity):
-    """Generic Bond entity encapsulating common features of any Bond controlled device."""
+    """Generic Bond entity encapsulating common features of any Bond device."""
 
     _attr_should_poll = False
 
@@ -73,6 +74,7 @@ class BondEntity(Entity):
         )
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Get a an HA device representing this Bond controlled device."""
         device_info = DeviceInfo(
@@ -174,6 +176,7 @@ class BondEntity(Entity):
         self._async_state_callback(json_msg["b"])
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to BPUP and start polling."""
         await super().async_added_to_hass()
@@ -190,6 +193,7 @@ class BondEntity(Entity):
             self._async_update_if_bpup_not_alive_job,
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from BPUP data on remove."""
         await super().async_will_remove_from_hass()

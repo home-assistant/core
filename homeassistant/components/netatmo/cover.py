@@ -1,7 +1,7 @@
 """Support for Netatmo/Bubendorff covers."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyatmo import modules as NaModules
 
@@ -16,8 +16,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_COVER
-from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
+from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
+from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,29 +71,36 @@ class NetatmoCover(NetatmoModuleEntity, CoverEntity):
                 },
             ]
         )
-        self._attr_unique_id = f"{self.device.entity_id}-{self.device_type}"
+        self._attr_unique_id = (
+            f"{self.device.entity_id}-{device_type_to_str(self.device_type)}"
+        )
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.device.async_close()
         self._attr_is_closed = True
         self.async_write_ha_state()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.device.async_open()
         self._attr_is_closed = False
         self.async_write_ha_state()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.device.async_stop()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover shutter to a specific position."""
         await self.device.async_set_target_position(kwargs[ATTR_POSITION])
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         self._attr_is_closed = self.device.current_position == 0

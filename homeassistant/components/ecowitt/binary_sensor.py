@@ -1,7 +1,7 @@
 """Support for Ecowitt Weather Stations."""
 
 import dataclasses
-from typing import Final
+from typing import Final, override
 
 from aioecowitt import EcoWittSensor, EcoWittSensorTypes
 
@@ -16,6 +16,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcowittConfigEntry
 from .entity import EcowittEntity
+
+PARALLEL_UPDATES = 0
 
 ECOWITT_BINARYSENSORS_MAPPING: Final = {
     EcoWittSensorTypes.LEAK: BinarySensorEntityDescription(
@@ -74,6 +76,7 @@ class EcowittBinarySensorEntity(EcowittEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return bool(self.ecowitt.value)

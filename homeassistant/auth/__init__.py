@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from datetime import datetime, timedelta
 from functools import partial
 import time
-from typing import Any, cast
+from typing import Any, cast, override
 
 import jwt
 
@@ -73,10 +73,12 @@ async def auth_manager_from_config(
         provider_hash[key] = provider
 
         if isinstance(provider, HassAuthProvider):
-            # Can be removed in 2026.7 with the legacy mode of homeassistant auth provider
-            # We need to initialize the provider to create the repair if needed as otherwise
-            # the provider will be initialized on first use, which could be rare as users
-            # don't frequently change auth settings
+            # Can be removed in 2026.7 with the legacy mode of
+            # homeassistant auth provider.
+            # We need to initialize the provider to create the repair
+            # if needed as otherwise the provider will be initialized
+            # on first use, which could be rare as users don't
+            # frequently change auth settings
             await provider.async_initialize()
 
     if module_configs:
@@ -107,6 +109,7 @@ class AuthManagerFlowManager(
         super().__init__(hass)
         self.auth_manager = auth_manager
 
+    @override
     async def async_create_flow(
         self,
         handler_key: tuple[str, str],
@@ -120,6 +123,7 @@ class AuthManagerFlowManager(
             raise KeyError(f"Unknown auth provider {handler_key}")
         return await auth_provider.async_login_flow(context)
 
+    @override
     async def async_finish_flow(
         self,
         flow: FlowHandler[AuthFlowContext, AuthFlowResult, tuple[str, str]],
@@ -132,7 +136,7 @@ class AuthManagerFlowManager(
         """
         flow = cast(LoginFlow, flow)
 
-        if result["type"] != FlowResultType.CREATE_ENTRY:
+        if result["type"] is not FlowResultType.CREATE_ENTRY:
             return result
 
         # we got final result

@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyipp import IPP, IPPError, Printer as IPPPrinter
 
@@ -45,6 +46,7 @@ class IPPDataUpdateCoordinator(DataUpdateCoordinator[IPPPrinter]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> IPPPrinter:
         """Fetch data from IPP."""
         try:

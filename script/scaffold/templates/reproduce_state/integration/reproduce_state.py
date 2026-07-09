@@ -89,4 +89,7 @@ async def async_reproduce_states(
 
     # Alternative: Reproduce states in sequence
     # for state in states:
-    #     await _async_reproduce_state(hass, state, context=context, reproduce_options=reproduce_options)
+    #     await _async_reproduce_state(
+    #         hass, state, context=context,
+    #         reproduce_options=reproduce_options,
+    #     )

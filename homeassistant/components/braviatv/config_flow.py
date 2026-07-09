@@ -1,7 +1,7 @@
 """Config flow to configure the Bravia TV integration."""
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, cast, override
 from urllib.parse import urlparse
 
 from aiohttp import CookieJar
@@ -9,7 +9,14 @@ from pybravia import BraviaAuthError, BraviaClient, BraviaError, BraviaNotSuppor
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PIN
+from homeassistant.const import (
+    ATTR_MODEL,
+    CONF_CLIENT_ID,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PIN,
+)
 from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.service_info.ssdp import (
@@ -23,7 +30,6 @@ from homeassistant.util.network import is_host_valid
 from .const import (
     ATTR_CID,
     ATTR_MAC,
-    ATTR_MODEL,
     CONF_NICKNAME,
     CONF_USE_PSK,
     CONF_USE_SSL,
@@ -99,6 +105,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self._get_reauth_entry(), data=self.device_config
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -209,6 +216,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

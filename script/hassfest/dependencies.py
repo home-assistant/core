@@ -70,7 +70,8 @@ class ImportCollector(ast.NodeVisitor):
             return
 
         if node.module.startswith("homeassistant.components."):
-            # from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
+            # from homeassistant.components.alexa.smart_home
+            #   import EVENT_ALEXA_SMART_HOME
             # from homeassistant.components.logbook import bla
             self._add_reference(node.module.split(".")[2])
 
@@ -279,7 +280,9 @@ def _check_circular_deps(
         if domain == start_domain:
             integrations[start_domain].add_error(
                 "dependencies",
-                f"Found a circular dependency with {integration.domain} ({', '.join(checking)})",
+                f"Found a circular dependency with"
+                f" {integration.domain}"
+                f" ({', '.join(checking)})",
             )
             break
 
@@ -291,7 +294,10 @@ def _check_circular_deps(
             if domain == start_domain:
                 integrations[start_domain].add_error(
                     "dependencies",
-                    f"Found a circular dependency with after dependencies of {integration.domain} ({', '.join(checking)})",
+                    f"Found a circular dependency"
+                    " with after dependencies of"
+                    f" {integration.domain}"
+                    f" ({', '.join(checking)})",
                 )
                 break
 

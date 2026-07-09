@@ -1,7 +1,7 @@
 """Support for VeSync fans."""
 
 import logging
-from typing import Any
+from typing import Any, cast, override
 
 from pyvesync.base_devices import VeSyncFanBase, VeSyncPurifier
 
@@ -116,7 +116,14 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
     ) -> None:
         """Initialize the fan."""
         super().__init__(device, coordinator)
-        if rgetattr(device, "state.oscillation_status") is not None:
+        # Tower fans expose a single-axis ``oscillation_status`` state attribute,
+        # while pedestal fans expose ``vertical_oscillation_status`` and
+        # ``horizontal_oscillation_status`` separately. The OSCILLATE feature is
+        # advertised when either form of oscillation is available.
+        if rgetattr(device, "state.oscillation_status") is not None or (
+            rgetattr(device, "state.vertical_oscillation_status") is not None
+            or rgetattr(device, "state.horizontal_oscillation_status") is not None
+        ):
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
         # Build maps for HA <-> VeSync preset modes
         self._ha_to_vs_mode_map: dict[str, str] = {}
@@ -132,16 +139,26 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
         self._available_preset_modes.sort()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if device is on."""
         return self.device.state.device_status == "on"
 
     @property
+    @override
     def oscillating(self) -> bool:
         """Return True if device is oscillating."""
-        return rgetattr(self.device, "state.oscillation_status") == "on"
+        # Tower fans report a single-axis oscillation status.
+        if rgetattr(self.device, "state.oscillation_status") == "on":
+            return True
+        # Pedestal fans report vertical and horizontal oscillation separately;
+        # the fan is considered oscillating when either axis is active.
+        if rgetattr(self.device, "state.vertical_oscillation_status") == "on":
+            return True
+        return rgetattr(self.device, "state.horizontal_oscillation_status") == "on"
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the currently set speed."""
 
@@ -158,16 +175,19 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
         return None
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return len(self.device.fan_levels)
 
     @property
+    @override
     def preset_modes(self) -> list[str]:
         """Get the list of available preset modes."""
         return self._available_preset_modes
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Get the current preset mode."""
         if self.device.state.mode is None:
@@ -179,6 +199,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
         return None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the fan."""
         attr: dict[str, Any] = {}
@@ -212,6 +233,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
 
         return attr
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the device.
 
@@ -265,6 +287,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of device."""
         if preset_mode not in self._available_preset_modes:
@@ -298,6 +321,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -318,6 +342,7 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
         else:
             await self.async_set_percentage(percentage)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         success = await self.device.turn_off()
@@ -327,16 +352,31 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
             raise HomeAssistantError("Failed to turn off fan, no response found.")
         self.async_write_ha_state()
 
+    @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
-        if hasattr(self.device, "toggle_oscillation"):
-            success = await self.device.toggle_oscillation(oscillating)
-            if not success:
+        # Pedestal fans expose per-axis oscillation; checked first because
+        # the inherited ``toggle_oscillation`` is a no-op for them.
+        if (
+            rgetattr(self.device, "state.vertical_oscillation_status") is not None
+            or rgetattr(self.device, "state.horizontal_oscillation_status") is not None
+        ):
+            device = cast(VeSyncFanBase, self.device)
+            vertical_ok = await device.toggle_vertical_oscillation(oscillating)
+            horizontal_ok = await device.toggle_horizontal_oscillation(oscillating)
+            if not vertical_ok or not horizontal_ok:
                 if self.device.last_response:
                     raise HomeAssistantError(self.device.last_response.message)
                 raise HomeAssistantError(
                     "Failed to set oscillation, no response found."
                 )
             self.async_write_ha_state()
-        else:
+            return
+        if not hasattr(self.device, "toggle_oscillation"):
             raise HomeAssistantError("Oscillation not supported by this device.")
+        success = await self.device.toggle_oscillation(oscillating)
+        if not success:
+            if self.device.last_response:
+                raise HomeAssistantError(self.device.last_response.message)
+            raise HomeAssistantError("Failed to set oscillation, no response found.")
+        self.async_write_ha_state()

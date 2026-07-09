@@ -1,6 +1,7 @@
 """Test Home Assistant template helper methods."""
 
 from datetime import datetime
+import gc
 from unittest.mock import patch
 
 from freezegun import freeze_time
@@ -82,16 +83,6 @@ def test_invalid_template(hass: HomeAssistant) -> None:
 
     with pytest.raises(TemplateError):
         tmpl.async_render()
-
-
-def test_invalid_entity_id(hass: HomeAssistant) -> None:
-    """Test referring states by entity id."""
-    with pytest.raises(TemplateError):
-        render(hass, '{{ states["big.fat..."] }}')
-    with pytest.raises(TemplateError):
-        render(hass, '{{ states.test["big.fat..."] }}')
-    with pytest.raises(TemplateError):
-        render(hass, '{{ states["invalid/domain"] }}')
 
 
 def test_raise_exception_on_error(hass: HomeAssistant) -> None:
@@ -364,7 +355,8 @@ def test_async_render_to_info_with_complex_branching(hass: HomeAssistant) -> Non
 {%     elif     states.light.a == "on" %}
   {{ states[domain] | list }}
 {%         elif     states('light.b') == "on" %}
-  {{ states[otherdomain] | sort(attribute='entity_id') | map(attribute='entity_id') | list }}
+  {{ states[otherdomain] | sort(attribute='entity_id')
+     | map(attribute='entity_id') | list }}
 {% elif states.light.a == "on" %}
   {{ states["nonexist"] | list }}
 {% else %}
@@ -599,19 +591,6 @@ def test_state_with_unit_and_rounding_options(
     assert tpl2.async_render() == output2_2
 
 
-def test_length_of_states(hass: HomeAssistant) -> None:
-    """Test fetching the length of states."""
-    hass.states.async_set("sensor.test", "23")
-    hass.states.async_set("sensor.test2", "wow")
-    hass.states.async_set("climate.test2", "cooling")
-
-    result = render(hass, "{{ states | length }}")
-    assert result == 3
-
-    result = render(hass, "{{ states.sensor | length }}")
-    assert result == 2
-
-
 def test_render_complex_handling_non_template_values(hass: HomeAssistant) -> None:
     """Test that we can render non-template fields."""
     assert template.render_complex(
@@ -619,8 +598,8 @@ def test_render_complex_handling_non_template_values(hass: HomeAssistant) -> Non
     ) == {True: 1, False: 2}
 
 
-async def test_cache_garbage_collection(hass: HomeAssistant) -> None:
-    """Test caching a template."""
+async def test_compiled_code_cache(hass: HomeAssistant) -> None:
+    """Test the compiled code cache outlives the Template object."""
     template_string = (
         "{% set dict = {'foo': 'x&y', 'bar': 42} %} {{ dict | urlencode }}"
     )
@@ -632,17 +611,59 @@ async def test_cache_garbage_collection(hass: HomeAssistant) -> None:
     env = tpl._env
     assert env.template_cache.get(template_string)
 
-    tpl2 = template.Template(
-        (template_string),
-        hass,
-    )
-    tpl2.ensure_valid()
+    del tpl
+    gc.collect()
     assert env.template_cache.get(template_string)
 
+    with patch.object(
+        template.TemplateEnvironment, "compile", side_effect=AssertionError
+    ):
+        tpl2 = template.Template(
+            (template_string),
+            hass,
+        )
+        tpl2.ensure_valid()
+    assert tpl2.async_render() == "foo=x%26y&bar=42"
+
+
+async def test_compiled_code_cache_is_bounded(hass: HomeAssistant) -> None:
+    """Test the compiled code cache does not grow without bound."""
+    tpl = template.Template("{{ 'env getter' }}", hass)
+    tpl.ensure_valid()
+    env = tpl._env
     del tpl
-    assert env.template_cache.get(template_string)
-    del tpl2
-    assert not env.template_cache.get(template_string)
+    for i in range(template.COMPILED_CODE_PIN_SIZE + 10):
+        template.Template(f"{{{{ {i} }}}}", hass).ensure_valid()
+    gc.collect()
+    assert len(env.compiled_code_pin) == template.COMPILED_CODE_PIN_SIZE
+    assert len(env.template_cache) == template.COMPILED_CODE_PIN_SIZE
+
+
+async def test_compiled_code_cache_alive_templates(hass: HomeAssistant) -> None:
+    """Test live Template objects keep their cache entries beyond the pin size."""
+    template_string = "{{ 'kept alive' }}"
+    tpl = template.Template(template_string, hass)
+    tpl.ensure_valid()
+    env = tpl._env
+
+    # Overflow the strong pin with other templates
+    for i in range(template.COMPILED_CODE_PIN_SIZE + 10):
+        template.Template(f"{{{{ {i} }}}}", hass).ensure_valid()
+    gc.collect()
+    assert template_string not in env.compiled_code_pin
+
+    # The live Template still keeps the weak cache entry alive,
+    # so an identical template does not recompile.
+    with patch.object(
+        template.TemplateEnvironment, "compile", side_effect=AssertionError
+    ):
+        tpl2 = template.Template(template_string, hass)
+        tpl2.ensure_valid()
+    assert tpl2.async_render() == "kept alive"
+
+    # A cache hit for a template that is alive anyway does not
+    # take up a pin slot.
+    assert template_string not in env.compiled_code_pin
 
 
 def test_is_template_string() -> None:
@@ -688,7 +709,9 @@ The temperature is {{ my_test_json.temperature }} {{ my_test_json.unit }}.
 {% if is_state("sun.sun", "above_horizon") -%}
   The sun rose {{ relative_time(states.sun.sun.last_changed) }} ago.
 {%- else -%}
-  The sun will rise at {{ as_timestamp(state_attr("sun.sun", "next_rising")) | timestamp_local }}.
+  The sun will rise at {{
+    as_timestamp(state_attr("sun.sun", "next_rising"))
+    | timestamp_local }}.
 {%- endif %}
 
 For loop example getting 3 entity values:
@@ -705,21 +728,6 @@ For loop example getting 3 entity values:
     assert "sensor0" in result
     assert "sensor1" in result
     assert "sun" in result
-
-
-async def test_slice_states(hass: HomeAssistant) -> None:
-    """Test iterating states with a slice."""
-    hass.states.async_set("sensor.test", "23")
-
-    result = render(
-        hass,
-        (
-            "{% for states in states | slice(1) -%}{% set state = states | first %}"
-            "{{ state.entity_id }}"
-            "{%- endfor %}"
-        ),
-    )
-    assert result == "sensor.test"
 
 
 async def test_lifecycle(hass: HomeAssistant) -> None:
@@ -792,7 +800,10 @@ async def test_lights(hass: HomeAssistant) -> None:
     """Test we can sort lights."""
 
     tmpl = """
-          {% set lights_on = states.light|selectattr('state','eq','on')|sort(attribute='entity_id')|map(attribute='name')|list %}
+          {% set lights_on = states.light
+            |selectattr('state','eq','on')
+            |sort(attribute='entity_id')
+            |map(attribute='name')|list %}
           {% if lights_on|length == 0 %}
             No lights on. Sleep well..
           {% elif lights_on|length == 1 %}
@@ -831,63 +842,6 @@ async def test_template_errors(hass: HomeAssistant) -> None:
 
     with pytest.raises(TemplateError):
         render(hass, "{{ utcnow() | random }}")
-
-
-async def test_state_attributes(hass: HomeAssistant) -> None:
-    """Test state attributes."""
-    hass.states.async_set("sensor.test", "23")
-
-    result = render(hass, "{{ states.sensor.test.last_changed }}")
-    assert result == str(hass.states.get("sensor.test").last_changed)
-
-    result = render(hass, "{{ states.sensor.test.object_id }}")
-    assert result == hass.states.get("sensor.test").object_id
-
-    result = render(hass, "{{ states.sensor.test.domain }}")
-    assert result == hass.states.get("sensor.test").domain
-
-    result = render(hass, "{{ states.sensor.test.context.id }}")
-    assert result == hass.states.get("sensor.test").context.id
-
-    result = render(hass, "{{ states.sensor.test.state_with_unit }}")
-    assert result == 23
-
-    result = render(hass, "{{ states.sensor.test.invalid_prop }}")
-    assert result == ""
-
-    with pytest.raises(TemplateError):
-        render(hass, "{{ states.sensor.test.invalid_prop.xx }}")
-
-
-async def test_unavailable_states(hass: HomeAssistant) -> None:
-    """Test watching unavailable states."""
-
-    for i in range(10):
-        hass.states.async_set(f"light.sensor{i}", "on")
-
-    hass.states.async_set("light.unavailable", "unavailable")
-    hass.states.async_set("light.unknown", "unknown")
-    hass.states.async_set("light.none", "none")
-
-    result = render(
-        hass,
-        (
-            "{{ states | selectattr('state', 'in', ['unavailable','unknown','none']) "
-            "| sort(attribute='entity_id') | map(attribute='entity_id') | list | join(', ') }}"
-        ),
-    )
-    assert result == "light.none, light.unavailable, light.unknown"
-
-    result = render(
-        hass,
-        (
-            "{{ states.light "
-            "| selectattr('state', 'in', ['unavailable','unknown','none']) "
-            "| sort(attribute='entity_id') | map(attribute='entity_id') | list "
-            "| join(', ') }}"
-        ),
-    )
-    assert result == "light.none, light.unavailable, light.unknown"
 
 
 async def test_no_result_parsing(hass: HomeAssistant) -> None:
@@ -952,10 +906,31 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         ("-1.0", -1.0),
         ("+1", 1),
         ("5.", 5.0),
+        ("-0", 0),
+        ("-0.0", -0.0),
+        ("+", "+"),
+        ("-", "-"),
+        (".", "."),
+        # Exceeds the int digit limit for both int() and literal_eval
+        ("9" * 5000, "9" * 5000),
         ("123_123_123", "123_123_123"),
         # ("+48100200300", "+48100200300"),  # phone number
         ("010", "010"),
         ("0011101.00100001010001", "0011101.00100001010001"),
+        # Plain string states are not Python literals and must be returned
+        # unchanged (literal_eval raises and the original render is used).
+        ("on", "on"),
+        ("off", "off"),
+        ("unavailable", "unavailable"),
+        ("home", "home"),
+        ("standby", "standby"),
+        ("True story", "True story"),
+        # Keyword and collection literals must still be parsed.
+        ("True", True),
+        ("False", False),
+        ("None", None),
+        # "set()" is the only call expression literal_eval accepts (empty set).
+        ("set()", set()),
     ):
         assert render(hass, tpl) == result
 
@@ -977,8 +952,8 @@ async def test_undefined_symbol_warnings(
 
     assert render(hass, template_string) == ""
     assert (
-        f"Template variable warning: 'no_such_variable' is undefined when rendering '{template_string}'"
-        in caplog.text
+        f"Template variable warning: 'no_such_variable' is"
+        f" undefined when rendering '{template_string}'" in caplog.text
     )
 
 

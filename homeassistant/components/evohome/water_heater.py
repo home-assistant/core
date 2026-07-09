@@ -2,11 +2,15 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import evohomeasync2 as evo
-from evohomeasync2.const import SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS
-from evohomeasync2.schemas.const import DhwState as EvoDhwState, ZoneMode as EvoZoneMode
+from evohomeasync2.const import (
+    SZ_STATE_STATUS,
+    SZ_TEMPERATURE_STATUS,
+    DhwState as EvoDhwState,
+    ZoneMode as EvoZoneMode,
+)
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -97,7 +101,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     async def async_set_dhw_override(
         self, state: bool, duration: timedelta | None = None
     ) -> None:
-        """Override the DHW zone's on/off state, either permanently or for a duration."""
+        """Override the DHW zone's on/off state permanently or for a duration."""
 
         if duration is None:
             until = None  # indefinitely, aka permanent override
@@ -117,6 +121,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
             )
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return the current operating mode (Auto, On, or Off)."""
         if self._evo_device.mode == EvoZoneMode.FOLLOW_SCHEDULE:
@@ -124,12 +129,14 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         return EVO_STATE_TO_HA[self._evo_device.state]
 
     @property
+    @override
     def is_away_mode_on(self) -> bool | None:
         """Return True if away mode is on."""
         is_off = EVO_STATE_TO_HA[self._evo_device.state] == STATE_OFF
         is_permanent = self._evo_device.mode == EvoZoneMode.PERMANENT_OVERRIDE
         return is_off and is_permanent
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode for a DHW controller.
 
@@ -151,18 +158,22 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
                     self._evo_device.set_off(until=until)
                 )
 
+    @override
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         await self.coordinator.call_client_api(self._evo_device.set_off())
 
+    @override
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         await self.coordinator.call_client_api(self._evo_device.reset())
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
         await self.coordinator.call_client_api(self._evo_device.set_on())
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         await self.coordinator.call_client_api(self._evo_device.set_off())

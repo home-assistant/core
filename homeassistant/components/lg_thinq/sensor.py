@@ -2,9 +2,10 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 import logging
 import random
+from typing import override
 
 from thinqconnect import USAGE_DAILY, USAGE_MONTHLY, DeviceType, ThinQAPIException
 from thinqconnect.devices.const import Property as ThinQProperty
@@ -17,9 +18,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    PERCENTAGE,
+    UnitOfDensity,
     UnitOfEnergy,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -36,25 +37,25 @@ AIR_QUALITY_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ThinQProperty.PM1: SensorEntityDescription(
         key=ThinQProperty.PM1,
         device_class=SensorDeviceClass.PM1,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ThinQProperty.PM2: SensorEntityDescription(
         key=ThinQProperty.PM2,
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ThinQProperty.PM10: SensorEntityDescription(
         key=ThinQProperty.PM10,
         device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ThinQProperty.HUMIDITY: SensorEntityDescription(
         key=ThinQProperty.HUMIDITY,
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ThinQProperty.MONITORING_ENABLED: SensorEntityDescription(
@@ -105,12 +106,12 @@ FILTER_INFO_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ),
     ThinQProperty.FILTER_REMAIN_PERCENT: SensorEntityDescription(
         key=ThinQProperty.FILTER_REMAIN_PERCENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.FILTER_LIFETIME,
     ),
     ThinQProperty.TOP_FILTER_REMAIN_PERCENT: SensorEntityDescription(
         key=ThinQProperty.TOP_FILTER_REMAIN_PERCENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.TOP_FILTER_REMAIN_PERCENT,
     ),
 }
@@ -118,7 +119,7 @@ HUMIDITY_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ThinQProperty.CURRENT_HUMIDITY: SensorEntityDescription(
         key=ThinQProperty.CURRENT_HUMIDITY,
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     )
 }
@@ -214,7 +215,7 @@ RECIPE_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ),
     ThinQProperty.BEER_REMAIN: SensorEntityDescription(
         key=ThinQProperty.BEER_REMAIN,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.BEER_REMAIN,
     ),
 }
@@ -226,7 +227,7 @@ REFRIGERATION_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ),
     ThinQProperty.FRESH_AIR_FILTER_REMAIN_PERCENT: SensorEntityDescription(
         key=ThinQProperty.FRESH_AIR_FILTER_REMAIN_PERCENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.FRESH_AIR_FILTER,
     ),
 }
@@ -317,17 +318,17 @@ WATER_FILTER_INFO_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ),
     ThinQProperty.WATER_FILTER_1_REMAIN_PERCENT: SensorEntityDescription(
         key=ThinQProperty.WATER_FILTER_1_REMAIN_PERCENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.WATER_FILTER_1_REMAIN_PERCENT,
     ),
     ThinQProperty.WATER_FILTER_2_REMAIN_PERCENT: SensorEntityDescription(
         key=ThinQProperty.WATER_FILTER_2_REMAIN_PERCENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.WATER_FILTER_2_REMAIN_PERCENT,
     ),
     ThinQProperty.WATER_FILTER_3_REMAIN_PERCENT: SensorEntityDescription(
         key=ThinQProperty.WATER_FILTER_3_REMAIN_PERCENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         translation_key=ThinQProperty.WATER_FILTER_3_REMAIN_PERCENT,
     ),
 }
@@ -518,10 +519,6 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
     ),
     DeviceType.KIMCHI_REFRIGERATOR: (
         REFRIGERATION_SENSOR_DESC[ThinQProperty.FRESH_AIR_FILTER],
-        SensorEntityDescription(
-            key=ThinQProperty.TARGET_TEMPERATURE,
-            translation_key=ThinQProperty.TARGET_TEMPERATURE,
-        ),
     ),
     DeviceType.MICROWAVE_OVEN: (RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],),
     DeviceType.OVEN: (
@@ -592,6 +589,17 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
 }
 
 
+ENUM_TEMPERATURE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = {
+    DeviceType.KIMCHI_REFRIGERATOR: (
+        SensorEntityDescription(
+            key=ThinQProperty.TARGET_TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            translation_key=ThinQProperty.TARGET_TEMPERATURE,
+        ),
+    ),
+}
+
+
 @dataclass(frozen=True, kw_only=True)
 class ThinQEnergySensorEntityDescription(SensorEntityDescription):
     """Describes ThinQ energy sensor entity."""
@@ -604,9 +612,19 @@ class ThinQEnergySensorEntityDescription(SensorEntityDescription):
     start_date_fn: Callable[[datetime], datetime]
     end_date_fn: Callable[[datetime], datetime]
     update_interval: timedelta = timedelta(days=1)
+    reset_at_midnight: bool = False
 
 
 ENERGY_USAGE_SENSORS: tuple[ThinQEnergySensorEntityDescription, ...] = (
+    ThinQEnergySensorEntityDescription(
+        key="today",
+        translation_key="energy_usage_today",
+        usage_period=USAGE_DAILY,
+        start_date_fn=lambda today: today,
+        end_date_fn=lambda today: today,
+        update_interval=timedelta(hours=1),
+        reset_at_midnight=True,
+    ),
     ThinQEnergySensorEntityDescription(
         key="yesterday",
         translation_key="energy_usage_yesterday",
@@ -639,7 +657,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an entry for sensor platform."""
-    entities: list[ThinQSensorEntity | ThinQEnergySensorEntity] = []
+    entities: list[
+        ThinQSensorEntity | ThinQEnergySensorEntity | ThinQEnumTempSensorEntity
+    ] = []
     for coordinator in entry.runtime_data.coordinators.values():
         if (
             descriptions := DEVICE_TYPE_SENSOR_MAP.get(
@@ -661,6 +681,21 @@ async def async_setup_entry(
                         ),
                     )
                 )
+
+        if (
+            descriptions := ENUM_TEMPERATURE_SENSOR_MAP.get(
+                coordinator.api.device.device_type
+            )
+        ) is not None:
+            for description in descriptions:
+                entities.extend(
+                    ThinQEnumTempSensorEntity(coordinator, description, property_id)
+                    for property_id in coordinator.api.get_active_idx(
+                        description.key,
+                        ActiveMode.READ_ONLY,
+                    )
+                )
+
         for energy_description in ENERGY_USAGE_SENSORS:
             entities.extend(
                 ThinQEnergySensorEntity(
@@ -704,6 +739,7 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
             else f"{self.location}_{ThinQProperty.CURRENT_STATE}"
         )
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -711,6 +747,7 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
         value = self.data.value
 
         if isinstance(value, time):
+            # pylint: disable-next=home-assistant-enforce-now
             local_now = datetime.now(
                 tz=dt_util.get_time_zone(self.coordinator.hass.config.time_zone)
             )
@@ -740,7 +777,9 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
                         if self.entity_description.key == TimerProperty.RUNNING
                         else (local_now + event_data)
                     )
-                    # The remain_time may change during the wash/dry operation depending on various reasons.
+                    # The remain_time may change during the
+                    # wash/dry operation depending on
+                    # various reasons.
                     # If there is a diff of more than 60sec, the new timestamp is used
                     if (
                         parse_native_value := dt_util.parse_datetime(
@@ -786,7 +825,9 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
 
     entity_description: ThinQEnergySensorEntityDescription
     _stop_update: Callable[[], None] | None = None
+    _last_fetch_date: date | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
         await super().async_added_to_hass()
@@ -803,6 +844,7 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
 
         await self._async_update_and_schedule()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._stop_update is not None:
@@ -810,10 +852,12 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
         return await super().async_will_remove_from_hass()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available or self.native_value is not None
 
+    @override
     async def async_update(self, now: datetime | None = None) -> None:
         """Update the state of the sensor."""
         await self._async_update_and_schedule()
@@ -821,25 +865,41 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
 
     async def _async_update_and_schedule(self) -> None:
         """Update the state of the sensor."""
+        # pylint: disable-next=home-assistant-enforce-now
         local_now = datetime.now(
             dt_util.get_time_zone(self.coordinator.hass.config.time_zone)
         )
         next_update = local_now + self.entity_description.update_interval
-        if self.coordinator.update_energy_at_time_of_day is not None:
-            # calculate next_update time by combining tomorrow and update_energy_at_time_of_day
+        if (
+            self.coordinator.update_energy_at_time_of_day is not None
+            and self.entity_description.update_interval >= timedelta(days=1)
+        ):
+            # For daily sensors: align to a consistent time of day to avoid
+            # clock drift and reduce the chance of multiple sensors fetching
+            # simultaneously across restarts.
             next_update = datetime.combine(
-                (next_update).date(),
+                next_update.date(),
                 self.coordinator.update_energy_at_time_of_day,
                 next_update.tzinfo,
             )
+        start_date = (self.entity_description.start_date_fn(local_now)).date()
+        end_date = (self.entity_description.end_date_fn(local_now)).date()
         try:
             self._attr_native_value = await self.coordinator.api.async_get_energy_usage(
                 energy_property=self.property_id,
                 period=self.entity_description.usage_period,
-                start_date=(self.entity_description.start_date_fn(local_now)).date(),
-                end_date=(self.entity_description.end_date_fn(local_now)).date(),
+                start_date=start_date,
+                end_date=end_date,
                 detail=False,
             )
+            if (
+                self.entity_description.reset_at_midnight
+                and start_date != self._last_fetch_date
+            ):
+                self._attr_last_reset = datetime.combine(
+                    start_date, time.min, local_now.tzinfo
+                )
+                self._last_fetch_date = start_date
         except ThinQAPIException as exc:
             _LOGGER.warning(
                 "[%s:%s] Failed to fetch energy usage data. reason=%s",
@@ -860,3 +920,41 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
                 self.async_update,
                 next_update,
             )
+
+
+class ThinQEnumTempSensorEntity(ThinQEntity, SensorEntity):
+    """Represent a thinq sensor platform."""
+
+    def __init__(
+        self,
+        coordinator: DeviceDataUpdateCoordinator,
+        entity_description: SensorEntityDescription,
+        property_id: str,
+    ) -> None:
+        """Initialize a sensor entity."""
+        super().__init__(coordinator, entity_description, property_id)
+
+        if self.data.options:
+            # some kimchi refrigerator's target temperature
+            # have data in the form of string with enum
+            # options.
+            # Set options to display the correct value in the UI.
+            self._attr_options = self.data.options
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attr_native_unit_of_measurement = None
+
+    @override
+    def _update_status(self) -> None:
+        """Update status itself."""
+        super()._update_status()
+        self._attr_native_value = self.data.value
+
+        _LOGGER.debug(
+            "[%s:%s] update status: %s -> %s, options:%s, unit:%s",
+            self.coordinator.device_name,
+            self.property_id,
+            self.data.value,
+            self.native_value,
+            self.options,
+            self.native_unit_of_measurement,
+        )

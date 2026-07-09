@@ -171,9 +171,15 @@ def mock_incomfort(
                 setattr(self, key, value)
             self.rooms = [MockRoom()]
 
-    with patch(
-        "homeassistant.components.incomfort.coordinator.InComfortGateway", MagicMock()
-    ) as patch_gateway:
+    mock_cls = MagicMock()
+    with (
+        patch(
+            "homeassistant.components.incomfort.InComfortGateway", mock_cls
+        ) as patch_gateway,
+        patch(
+            "homeassistant.components.incomfort.config_flow.InComfortGateway", mock_cls
+        ),
+    ):
         patch_gateway().heaters = AsyncMock()
         patch_gateway().heaters.return_value = [MockHeater()]
         patch_gateway().mock_heater_status = mock_heater_status

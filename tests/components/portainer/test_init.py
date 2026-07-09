@@ -1,5 +1,6 @@
 """Test the Portainer initial specific behavior."""
 
+from typing import Any, cast
 from unittest.mock import AsyncMock
 
 from pyportainer.exceptions import (
@@ -7,7 +8,7 @@ from pyportainer.exceptions import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-from pyportainer.models.docker import DockerContainer
+from pyportainer.models.docker import DockerContainer, EndpointStatus
 from pyportainer.models.portainer import Endpoint
 from pyportainer.models.stacks import Stack
 import pytest
@@ -21,6 +22,9 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_URL,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -49,9 +53,9 @@ async def test_setup_exceptions(
     expected_state: ConfigEntryState,
 ) -> None:
     """Test the _async_setup."""
-    mock_portainer_client.get_endpoints.side_effect = exception
+    mock_portainer_client.portainer_system_status.side_effect = exception
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state == expected_state
+    assert mock_config_entry.state is expected_state
 
 
 async def test_migrations(
@@ -179,11 +183,51 @@ async def test_migration_v3_to_v5(
     assert entity_after.unique_id == f"{entry.entry_id}_1_adguard_container"
 
 
+async def test_unload_entry(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_watcher: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_unload_entry."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    mock_portainer_watcher.stop.assert_called_once()
+
+
+async def test_watcher_start_stop(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_watcher: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that watcher starts and stops on HA events."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    mock_portainer_watcher.start.assert_called_once()
+
+    mock_portainer_watcher.stop.reset_mock()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_portainer_watcher.stop.assert_called_once()
+
+
 async def test_migration_v4_to_v5(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
 ) -> None:
-    """Test migration from v4 config entry updates unique_id to Portainer instance ID."""
+    """Test v4 config entry migration updates unique_id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_TEST_CONFIG,
@@ -215,7 +259,7 @@ async def test_migration_v4_to_v5_exceptions(
     mock_portainer_client: AsyncMock,
     exception: type[Exception],
 ) -> None:
-    """Test migration from v4 config entry updates unique_id to Portainer instance ID."""
+    """Test v4 config entry migration updates unique_id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_TEST_CONFIG,
@@ -231,7 +275,7 @@ async def test_migration_v4_to_v5_exceptions(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_device_registry(
@@ -302,13 +346,26 @@ async def test_container_stack_device_links(
     assert standalone_container_device.via_device_id == endpoint_device.id
 
 
+async def test_docker_system_df_refresh_runs_on_ha_start(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test docker system df coordinator refreshes DF data on HA start."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.my_environment_image_disk_usage_total_size")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+
 async def test_new_endpoint_callback(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that a new endpoint appearing in a subsequent refresh fires the callback and creates entities."""
+    """Test new endpoint creates entities after refresh."""
     mock_portainer_client.get_endpoints.return_value = []
     await setup_integration(hass, mock_config_entry)
     entities = er.async_entries_for_config_entry(
@@ -318,10 +375,11 @@ async def test_new_endpoint_callback(
 
     mock_portainer_client.get_endpoints.return_value = [
         Endpoint.from_dict(endpoint)
-        for endpoint in await async_load_json_array_fixture(
-            hass, "endpoints.json", DOMAIN
+        for endpoint in cast(
+            list[dict[str, Any]],
+            await async_load_json_array_fixture(hass, "endpoints.json", DOMAIN),
         )
-        if endpoint["Status"] == 1
+        if endpoint["Status"] == EndpointStatus.UP
     ]
 
     coordinator = mock_config_entry.runtime_data
@@ -340,7 +398,7 @@ async def test_new_container_callback(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that a new container appearing in a subsequent refresh fires the callback and creates entities."""
+    """Test new container creates entities after refresh."""
     mock_portainer_client.get_containers.return_value = []
     await setup_integration(hass, mock_config_entry)
     entities = er.async_entries_for_config_entry(
@@ -349,8 +407,9 @@ async def test_new_container_callback(
 
     mock_portainer_client.get_containers.return_value = [
         DockerContainer.from_dict(container)
-        for container in await async_load_json_array_fixture(
-            hass, "containers.json", DOMAIN
+        for container in cast(
+            list[dict[str, Any]],
+            await async_load_json_array_fixture(hass, "containers.json", DOMAIN),
         )
         if "/focused_einstein" in container["Names"]
     ]
@@ -369,7 +428,7 @@ async def test_swarm_stacks_fetched_by_swarm_id(
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that on a Swarm manager get_stacks is called with both endpoint_id and swarm_id."""
+    """Test Swarm manager calls get_stacks with both IDs."""
     await setup_integration(hass, mock_config_entry)
 
     calls = mock_portainer_client.get_stacks.call_args_list
@@ -385,7 +444,7 @@ async def test_new_stack_callback(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that a new stack appearing in a subsequent refresh fires the callback and creates entities."""
+    """Test new stack creates entities after refresh."""
     mock_portainer_client.get_stacks.return_value = []
     await setup_integration(hass, mock_config_entry)
     entities = er.async_entries_for_config_entry(
@@ -394,7 +453,10 @@ async def test_new_stack_callback(
 
     mock_portainer_client.get_stacks.return_value = [
         Stack.from_dict(stack)
-        for stack in await async_load_json_array_fixture(hass, "stacks.json", DOMAIN)
+        for stack in cast(
+            list[dict[str, Any]],
+            await async_load_json_array_fixture(hass, "stacks.json", DOMAIN),
+        )
         if stack["Name"] == "webstack"
     ]
 

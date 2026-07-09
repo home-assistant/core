@@ -1,5 +1,7 @@
 """The Husqvarna Autoconnect Bluetooth lawn mower platform."""
 
+from typing import override
+
 from automower_ble.protocol import MowerActivity, MowerState, ResponseResult
 
 from homeassistant.components import bluetooth
@@ -93,6 +95,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
         return LawnMowerActivity.ERROR
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         LOGGER.debug("AutomowerLawnMower: _handle_coordinator_update")
@@ -101,6 +104,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
         self._attr_available = self._attr_activity is not None
         super()._handle_coordinator_update()
 
+    @override
     async def async_start_mowing(self) -> None:
         """Start mowing."""
         LOGGER.debug("Starting mower")
@@ -120,6 +124,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
         self._attr_activity = self._get_activity()
         self.async_write_ha_state()
 
+    @override
     async def async_dock(self) -> None:
         """Start docking."""
         LOGGER.debug("Start docking")
@@ -137,6 +142,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
         self._attr_activity = self._get_activity()
         self.async_write_ha_state()
 
+    @override
     async def async_pause(self) -> None:
         """Pause mower."""
         LOGGER.debug("Pausing mower")

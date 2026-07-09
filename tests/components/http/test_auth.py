@@ -18,6 +18,7 @@ from homeassistant.auth.models import User
 from homeassistant.auth.providers import trusted_networks
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import websocket_api
+from homeassistant.components.http import DOMAIN
 from homeassistant.components.http.auth import (
     CONTENT_USER_NAME,
     DATA_SIGN_SECRET,
@@ -111,7 +112,7 @@ def trusted_networks_auth(
 async def test_auth_middleware_loaded_by_default(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
     with patch("homeassistant.components.http.async_setup_auth") as mock_setup:
-        await async_setup_component(hass, "http", {"http": {}})
+        await async_setup_component(hass, DOMAIN, {"http": {}})
 
     assert len(mock_setup.mock_calls) == 1
 

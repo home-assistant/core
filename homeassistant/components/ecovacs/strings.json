@@ -294,6 +294,9 @@
     "vacuum_raw_get_positions_not_supported": {
       "message": "Retrieving the positions of the chargers and the device itself is not supported"
     },
+    "vacuum_send_command_not_supported": {
+      "message": "The {command} command is not supported by {name}"
+    },
     "vacuum_send_command_params_dict": {
       "message": "Params must be a dictionary and not a list"
     },

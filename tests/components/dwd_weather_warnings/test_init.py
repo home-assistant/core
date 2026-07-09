@@ -1,6 +1,6 @@
 """Tests for Deutscher Wetterdienst (DWD) Weather Warnings integration."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
 from homeassistant.components.dwd_weather_warnings.const import (
@@ -28,6 +28,7 @@ from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.util import dt as dt_util
 
 from . import init_integration
 
@@ -55,7 +56,7 @@ async def test_load_unload_entry(
     mock_identifier_entry: MockConfigEntry,
     mock_dwdwfsapi: MagicMock,
 ) -> None:
-    """Test loading and unloading the integration with a region identifier based entry."""
+    """Test loading and unloading the integration with a region identifier entry."""
     entry = await init_integration(hass, mock_identifier_entry)
 
     assert entry.state is ConfigEntryState.LOADED
@@ -126,7 +127,7 @@ async def test_load_missing_device_tracker(
 async def test_load_missing_required_attribute(
     hass: HomeAssistant, mock_tracker_entry: MockConfigEntry
 ) -> None:
-    """Test loading the integration with a device tracker missing a required attribute."""
+    """Test loading the integration with a device tracker missing a required attr."""
     mock_tracker_entry.add_to_hass(hass)
     hass.states.async_set(
         mock_tracker_entry.data[CONF_REGION_DEVICE_TRACKER],
@@ -172,7 +173,7 @@ async def test_filter_expired_warnings(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_dwdwfsapi: MagicMock
 ) -> None:
     """Test expired-warning filtering."""
-    now = datetime.now(UTC)
+    now = dt_util.utcnow()
     mock_dwdwfsapi.data_valid = True
     mock_dwdwfsapi.warncell_id = "803000000"
     mock_dwdwfsapi.warncell_name = "Test region"

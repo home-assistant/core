@@ -12,7 +12,7 @@ from homeassistant.components.tesla_wall_connector.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -58,7 +58,6 @@ async def create_wall_connector_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4"},
-        options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
     )
 
     entry.add_to_hass(hass)
@@ -115,7 +114,7 @@ def get_lifetime_mock() -> Lifetime:
 
 @dataclass
 class EntityAndExpectedValues:
-    """Class for keeping entity id along with expected value for first and second data updates."""
+    """Class for keeping entity id along with expected update values."""
 
     entity_id: str
     first_value: Any
@@ -142,7 +141,8 @@ async def _test_sensors(
         state = hass.states.get(entity.entity_id)
         assert state, f"Unable to get state of {entity.entity_id}"
         assert state.state == entity.first_value, (
-            f"First update: {entity.entity_id} is expected to have state {entity.first_value} but has {state.state}"
+            f"First update: {entity.entity_id} is expected to have"
+            f" state {entity.first_value} but has {state.state}"
         )
 
     # Simulate second data update
@@ -165,5 +165,6 @@ async def _test_sensors(
     for entity in entities_and_expected_values:
         state = hass.states.get(entity.entity_id)
         assert state.state == entity.second_value, (
-            f"Second update: {entity.entity_id} is expected to have state {entity.second_value} but has {state.state}"
+            f"Second update: {entity.entity_id} is expected to have"
+            f" state {entity.second_value} but has {state.state}"
         )

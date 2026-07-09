@@ -1,7 +1,7 @@
 """Support for Overkiz covers - shutters etc."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyoverkiz.enums import (
     OverkizCommand,
@@ -34,6 +34,9 @@ from .entity import OverkizDescriptiveEntity
 _POSITION_MY = 108  # "My position" preset
 _POSITION_UNKNOWN = 124  # "Unknown position" preset
 
+# Default tilt step size (in degrees) used for RTS tilt commands
+_TILT_STEP_SIZE = 5
+
 
 @dataclass(frozen=True, kw_only=True)
 class OverkizCoverDescription(CoverEntityDescription):
@@ -60,7 +63,8 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     ##
     ## Overrides via UIWidget
     ##
-    # Needs override to support position (and remove support for tilt position which is not supported by this device)
+    # Needs override to support position (and remove support for
+    # tilt position which is not supported by this device)
     # uiClass is Pergola
     OverkizCoverDescription(
         key=UIWidget.PERGOLA_HORIZONTAL_AWNING,
@@ -69,6 +73,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_DEPLOYMENT,
         open_command=OverkizCommand.DEPLOY,
         close_command=OverkizCommand.UNDEPLOY,
+        stop_command=OverkizCommand.STOP,
         invert_position=False,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
     ),
@@ -79,8 +84,20 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_DEPLOYMENT,
         open_command=OverkizCommand.DEPLOY,
         close_command=OverkizCommand.UNDEPLOY,
+        stop_command=OverkizCommand.STOP,
         invert_position=False,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
+    ),
+    # Needs override to omit is_closed_state, since OpenClosedState is unreliable
+    # uiClass is RollerShutter
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_ROLLER_SHUTTER_UNO,
+        device_class=CoverDeviceClass.SHUTTER,
+        current_position_state=OverkizState.CORE_CLOSURE,
+        set_position_command=OverkizCommand.SET_CLOSURE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
     ),
     # Needs override to support lower/upper position control
     # uiClass is RollerShutter
@@ -100,17 +117,25 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_tilt_command=OverkizCommand.LOWER_CLOSE,
         stop_tilt_command=OverkizCommand.STOP,
     ),
-    # Needs override to remove open/close commands
+    # Needs override to add support for very specific tilt commands
     # uiClass is VenetianBlind
     OverkizCoverDescription(
         key=UIWidget.TILT_ONLY_VENETIAN_BLIND,
         device_class=CoverDeviceClass.BLIND,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
+        # Position commands fully open/close the tilt
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        # position (1-127), execution duration (0-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
+        open_tilt_command_args=(_TILT_STEP_SIZE,),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
+        close_tilt_command_args=(_TILT_STEP_SIZE,),
         stop_tilt_command=OverkizCommand.STOP,
     ),
-    # Needs override to support very specific tilt commands (rts:ExteriorVenetianBlindRTSComponent)
+    # Needs override to support very specific tilt commands
+    # (rts:ExteriorVenetianBlindRTSComponent)
     # uiClass is ExteriorVenetianBlind
     OverkizCoverDescription(
         key=UIWidget.UP_DOWN_EXTERIOR_VENETIAN_BLIND,
@@ -118,11 +143,212 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
+        # position (1-127), execution duration (0-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        open_tilt_command_args=(_TILT_STEP_SIZE,),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        close_tilt_command_args=(_TILT_STEP_SIZE,),
         stop_tilt_command=OverkizCommand.STOP,
+    ),
+    # Needs override to support very specific tilt commands
+    # (rts:VenetianBlindRTSComponent)
+    # uiClass is VenetianBlind
+    OverkizCoverDescription(
+        key=UIWidget.UP_DOWN_VENETIAN_BLIND,
+        device_class=CoverDeviceClass.BLIND,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        # position (1-127), execution duration (0-15, optional)
+        open_tilt_command=OverkizCommand.TILT_POSITIVE,
+        open_tilt_command_args=(_TILT_STEP_SIZE,),
+        close_tilt_command=OverkizCommand.TILT_NEGATIVE,
+        close_tilt_command_args=(_TILT_STEP_SIZE,),
+        stop_tilt_command=OverkizCommand.STOP,
+    ),
+    # Needs override to support very specific tilt commands (rts:SheerBlindRTSComponent)
+    # uiClass is VenetianBlind
+    OverkizCoverDescription(
+        key=UIWidget.UP_DOWN_SHEER_SCREEN,
+        device_class=CoverDeviceClass.BLIND,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        # position (1-127), execution duration (0-15, optional)
+        open_tilt_command=OverkizCommand.TILT_POSITIVE,
+        open_tilt_command_args=(_TILT_STEP_SIZE,),
+        close_tilt_command=OverkizCommand.TILT_NEGATIVE,
+        close_tilt_command_args=(_TILT_STEP_SIZE,),
+        stop_tilt_command=OverkizCommand.STOP,
+    ),
+    # Needs override since BioclimaticPergola uses core:SlatsOpenClosedState
+    # and core:SlateOrientationState (tilt-only, no position)
+    # uiClass is Pergola
+    OverkizCoverDescription(
+        key=UIWidget.BIOCLIMATIC_PERGOLA,
+        device_class=CoverDeviceClass.AWNING,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        is_closed_state=OverkizState.CORE_SLATS_OPEN_CLOSED,
+        current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
+        set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
+        open_tilt_command=OverkizCommand.OPEN_SLATS,
+        close_tilt_command=OverkizCommand.CLOSE_SLATS,
+        stop_tilt_command=OverkizCommand.STOP,
+    ),
+    # Needs override since PositionableGarageDoor reports
+    # core:OpenClosedUnknownState instead of core:OpenClosedState
+    # uiClass is GarageDoor
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_GARAGE_DOOR,
+        device_class=CoverDeviceClass.GARAGE,
+        current_position_state=OverkizState.CORE_CLOSURE,
+        set_position_command=OverkizCommand.SET_CLOSURE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_UNKNOWN,
+    ),
+    # Needs override since DiscretePositionableGarageDoor reports
+    # core:OpenClosedUnknownState instead of core:OpenClosedState
+    # uiClass is GarageDoor
+    OverkizCoverDescription(
+        key=UIWidget.DISCRETE_POSITIONABLE_GARAGE_DOOR,
+        device_class=CoverDeviceClass.GARAGE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_UNKNOWN,
+    ),
+    # Needs override since PositionableGarageDoorWithPartialPosition reports
+    # core:OpenClosedPartialState instead of core:OpenClosedState
+    # uiClass is GarageDoor
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_GARAGE_DOOR_WITH_PARTIAL_POSITION,
+        device_class=CoverDeviceClass.GARAGE,
+        current_position_state=OverkizState.CORE_CLOSURE,
+        set_position_command=OverkizCommand.SET_CLOSURE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PARTIAL,
+    ),
+    # Needs override since DiscreteGateWithPedestrianPosition reports
+    # core:OpenClosedPedestrianState instead of core:OpenClosedState
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.DISCRETE_GATE_WITH_PEDESTRIAN_POSITION,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
+        stop_command=OverkizCommand.STOP,
+    ),
+    # Needs override since OpenCloseGate4T only supports the cycle command
+    # (rts:GateOpenerRTS4TComponent)
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.OPEN_CLOSE_GATE_4T,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.CYCLE,
+        close_command=OverkizCommand.CYCLE,
+    ),
+    # Needs override since UpDownGarageDoor4T only supports the cycle command
+    # (rts:GarageDoor4TRTSComponent)
+    # uiClass is GarageDoor
+    OverkizCoverDescription(
+        key=UIWidget.UP_DOWN_GARAGE_DOOR_4T,
+        device_class=CoverDeviceClass.GARAGE,
+        open_command=OverkizCommand.CYCLE,
+        close_command=OverkizCommand.CYCLE,
+    ),
+    # Needs override since OpenCloseSlidingGarageDoor4T only supports the cycle command
+    # uiClass is GarageDoor
+    OverkizCoverDescription(
+        key=UIWidget.OPEN_CLOSE_SLIDING_GARAGE_DOOR_4T,
+        device_class=CoverDeviceClass.GARAGE,
+        open_command=OverkizCommand.CYCLE,
+        close_command=OverkizCommand.CYCLE,
+    ),
+    # Needs override since OpenCloseSlidingGate4T only supports the cycle command
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.OPEN_CLOSE_SLIDING_GATE_4T,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.CYCLE,
+        close_command=OverkizCommand.CYCLE,
+    ),
+    # Needs override since CyclicGarageDoor only supports the cycle command
+    # (io:CyclicGarageOpenerIOComponent)
+    # uiClass is GarageDoor
+    OverkizCoverDescription(
+        key=UIWidget.CYCLIC_GARAGE_DOOR,
+        device_class=CoverDeviceClass.GARAGE,
+        open_command=OverkizCommand.CYCLE,
+        close_command=OverkizCommand.CYCLE,
+    ),
+    # Needs override since CyclicSlidingGateOpener only supports the cycle command
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.CYCLIC_SLIDING_GATE_OPENER,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.CYCLE,
+        close_command=OverkizCommand.CYCLE,
+    ),
+    # Needs override since CyclicSwingingGateOpener only supports the cycle command
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.CYCLIC_SWINGING_GATE_OPENER,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.CYCLE,
+        close_command=OverkizCommand.CYCLE,
+    ),
+    # Needs override since SlidingDiscreteGateWithPedestrianPosition reports
+    # core:OpenClosedPedestrianState instead of core:OpenClosedState
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.SLIDING_DISCRETE_GATE_WITH_PEDESTRIAN_POSITION,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
+        stop_command=OverkizCommand.STOP,
+    ),
+    # Needs override since OpenCloseGateWithPedestrianPosition reports
+    # core:OpenClosedPedestrianState instead of core:OpenClosedState
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.OPEN_CLOSE_GATE_WITH_PEDESTRIAN_POSITION,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
+        stop_command=OverkizCommand.STOP,
+    ),
+    # Needs override since OpenCloseSlidingGateWithPedestrianPosition reports
+    # core:OpenClosedPedestrianState instead of core:OpenClosedState
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.OPEN_CLOSE_SLIDING_GATE_WITH_PEDESTRIAN_POSITION,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
+        stop_command=OverkizCommand.STOP,
+    ),
+    # Needs override since PositionableGateWithPedestrianPosition reports
+    # core:OpenClosedPedestrianState instead of core:OpenClosedState
+    # uiClass is Gate
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_GATE_WITH_PEDESTRIAN_POSITION,
+        device_class=CoverDeviceClass.GATE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
+        current_position_state=OverkizState.CORE_CLOSURE,
+        set_position_command=OverkizCommand.SET_CLOSURE,
+        stop_command=OverkizCommand.STOP,
     ),
     # Needs override to support this Generic device (rts:GenericRTSComponent)
     # uiClass is Generic (not mapped to cover as this is a Generic device class)
@@ -200,7 +426,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_state=OverkizState.CORE_OPEN_CLOSED_UNKNOWN,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
@@ -208,17 +434,20 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         device_class=CoverDeviceClass.GATE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
-        is_closed_state=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         stop_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
         key=UIClass.PERGOLA,
         device_class=CoverDeviceClass.AWNING,
-        is_closed_state=OverkizState.CORE_SLATS_OPEN_CLOSED,
+        current_position_state=OverkizState.CORE_CLOSURE,
+        set_position_command=OverkizCommand.SET_CLOSURE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+        is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
         set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
-        open_tilt_command=OverkizCommand.OPEN_SLATS,
-        close_tilt_command=OverkizCommand.CLOSE_SLATS,
         stop_tilt_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
@@ -230,6 +459,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_command=OverkizCommand.CLOSE,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
         stop_command=OverkizCommand.STOP,
+        current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
+        set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
+        stop_tilt_command=OverkizCommand.STOP,
     ),
     OverkizCoverDescription(
         key=UIClass.SCREEN,
@@ -264,9 +496,14 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
     OverkizCoverDescription(
         key=UIClass.VENETIAN_BLIND,
         device_class=CoverDeviceClass.BLIND,
+        current_position_state=OverkizState.CORE_CLOSURE,
+        set_position_command=OverkizCommand.SET_CLOSURE,
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
+        current_tilt_position_state=OverkizState.CORE_SLATE_ORIENTATION,
+        set_tilt_position_command=OverkizCommand.SET_ORIENTATION,
         open_tilt_command=OverkizCommand.TILT_UP,
         close_tilt_command=OverkizCommand.TILT_DOWN,
         stop_tilt_command=OverkizCommand.STOP,
@@ -341,56 +578,65 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         # and HA sets by default open/close as supported feature which conflicts
         supported_features = CoverEntityFeature(0)
 
-        if self.entity_description.open_command and self.executor.has_command(
+        if self.entity_description.open_command and self.device.supports_command(
             self.entity_description.open_command
         ):
             supported_features |= CoverEntityFeature.OPEN
 
-            if self.entity_description.stop_command and self.executor.has_command(
+            if self.entity_description.stop_command and self.device.supports_command(
                 self.entity_description.stop_command
             ):
                 supported_features |= CoverEntityFeature.STOP
 
-        if self.entity_description.close_command and self.executor.has_command(
+        if self.entity_description.close_command and self.device.supports_command(
             self.entity_description.close_command
         ):
             supported_features |= CoverEntityFeature.CLOSE
 
-        if self.entity_description.open_tilt_command and self.executor.has_command(
+        if self.entity_description.open_tilt_command and self.device.supports_command(
             self.entity_description.open_tilt_command
         ):
             supported_features |= CoverEntityFeature.OPEN_TILT
 
-            if self.entity_description.stop_tilt_command and self.executor.has_command(
+            if (
                 self.entity_description.stop_tilt_command
+                and self.device.supports_command(
+                    self.entity_description.stop_tilt_command
+                )
             ):
                 supported_features |= CoverEntityFeature.STOP_TILT
 
-        if self.entity_description.close_tilt_command and self.executor.has_command(
+        if self.entity_description.close_tilt_command and self.device.supports_command(
             self.entity_description.close_tilt_command
         ):
             supported_features |= CoverEntityFeature.CLOSE_TILT
 
         if (
             self.entity_description.set_tilt_position_command
-            and self.executor.has_command(
+            and self.device.supports_command(
                 self.entity_description.set_tilt_position_command
             )
         ):
             supported_features |= CoverEntityFeature.SET_TILT_POSITION
 
-        if self.entity_description.set_position_command and self.executor.has_command(
+        if (
             self.entity_description.set_position_command
+            and self.device.supports_command(
+                self.entity_description.set_position_command
+            )
         ):
             supported_features |= CoverEntityFeature.SET_POSITION
 
         self._attr_supported_features = supported_features
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if is_closed_state := self.entity_description.is_closed_state:
             if state := self.device.states.get(is_closed_state):
+                if state.value == OverkizCommandParam.UNKNOWN:
+                    return None
                 return state.value == OverkizCommandParam.CLOSED
 
         if (position := self.current_cover_position) is not None:
@@ -402,6 +648,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         return None
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -409,7 +656,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         """
         state_name = self.entity_description.current_position_state
 
-        if not state_name or not (state := self.device.states[state_name]):
+        if not state_name or not (state := self.device.states.get(state_name)):
             return None
 
         position = state.value_as_int
@@ -423,9 +670,9 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 state_name,
             )
 
-            if fallback_state := self.device.states[
+            if fallback_state := self.device.states.get(
                 OverkizState.CORE_MEMORIZED_1_POSITION
-            ]:
+            ):
                 position = fallback_state.value_as_int
             else:
                 return None
@@ -439,7 +686,9 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 state_name,
             )
 
-            if fallback_state := self.device.states[OverkizState.CORE_TARGET_CLOSURE]:
+            if fallback_state := self.device.states.get(
+                OverkizState.CORE_TARGET_CLOSURE
+            ):
                 position = fallback_state.value_as_int
             else:
                 return None
@@ -453,6 +702,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
         return position
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
@@ -462,22 +712,26 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         if command := self.entity_description.set_position_command:
             await self.executor.async_execute_command(command, position)
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if command := self.entity_description.open_command:
             await self.executor.async_execute_command(command)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if command := self.entity_description.close_command:
             await self.executor.async_execute_command(command)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         if command := self.entity_description.stop_command:
             await self.executor.async_execute_command(command)
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt.
 
@@ -485,7 +739,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         """
         state_name = self.entity_description.current_tilt_position_state
 
-        if state_name and (state := self.device.states[state_name]):
+        if state_name and (state := self.device.states.get(state_name)):
             position = state.value_as_int
             if position is None:
                 return None
@@ -497,6 +751,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
 
         return None
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         position = kwargs[ATTR_TILT_POSITION]
@@ -508,15 +763,17 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
             await self.executor.async_execute_command(command, position)
 
     async def async_set_cover_position_and_tilt(self, **kwargs: Any) -> None:
-        """Move cover and tilt to a specific position simultaneously.
+        """Move cover and tilt to a specific position.
 
-        Exposed as the `overkiz.set_cover_position_and_tilt` service action. Uses the
-        setClosureAndOrientation command to move slats and closure in a single instruction.
-        Calling set_cover_position and set_cover_tilt_position sequentially will cause
-        the motor to stop between commands on some devices (e.g. Somfy
-        DynamicExteriorVenetianBlind).
+        Exposed as the `overkiz.set_cover_position_and_tilt`
+        service action. Uses the setClosureAndOrientation
+        command to move slats and closure in a single
+        instruction. Calling set_cover_position and
+        set_cover_tilt_position sequentially will cause the
+        motor to stop between commands on some devices (e.g.
+        Somfy DynamicExteriorVenetianBlind).
         """
-        if not self.executor.has_command(OverkizCommand.SET_CLOSURE_AND_ORIENTATION):
+        if not self.device.supports_command(OverkizCommand.SET_CLOSURE_AND_ORIENTATION):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="unsupported_set_position_and_tilt",
@@ -536,6 +793,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
             tilt_position,
         )
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         if command := self.entity_description.open_tilt_command:
@@ -543,6 +801,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 command, *self.entity_description.open_tilt_command_args
             )
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         if command := self.entity_description.close_tilt_command:
@@ -550,12 +809,14 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
                 command, *self.entity_description.close_tilt_command_args
             )
 
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         if command := self.entity_description.stop_tilt_command:
             await self.executor.async_execute_command(command)
 
     @property
+    @override
     def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
         # Check if any open() commands are currently running for this device
@@ -579,6 +840,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         return self.moving_offset < 0
 
     @property
+    @override
     def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
         # Check if any close() commands are currently running for this device
@@ -606,12 +868,13 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         return any(
             execution.get("device_url") == self.device.device_url
             and execution.get("command_name") == command
-            for execution in self.coordinator.executions.values()
+            for executions in self.coordinator.executions.values()
+            for execution in executions
         )
 
     @property
     def moving_offset(self) -> int | None:
-        """Return the offset between the targeted position and the current one if the cover is moving."""
+        """Return the offset between targeted and current position."""
         moving_state = self.device.states.get(OverkizState.CORE_MOVING)
         if moving_state is None or moving_state.value_as_bool is not True:
             return None
@@ -628,6 +891,9 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         target_value = target_closure.value_as_int
 
         if current_value is None or target_value is None:
+            return None
+
+        if current_value in (_POSITION_MY, _POSITION_UNKNOWN):
             return None
 
         return current_value - target_value
@@ -648,14 +914,17 @@ class OverkizLowSpeedCover(OverkizCover):
         self._attr_name = "Low speed"
         self._attr_unique_id = f"{self._attr_unique_id}_low_speed"
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self._async_set_cover_position_low_speed(kwargs[ATTR_POSITION])
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._async_set_cover_position_low_speed(100)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._async_set_cover_position_low_speed(0)

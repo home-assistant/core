@@ -336,12 +336,12 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'available_modes': list([
+        <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
           'auto',
           'normal',
         ]),
-        'max_humidity': 80,
-        'min_humidity': 30,
+        <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+        <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -377,17 +377,17 @@
 # name: test_humidifier_state[Humidifier 200s][humidifier.humidifier_200s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'available_modes': list([
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
         'auto',
         'normal',
       ]),
-      'current_humidity': 35,
-      'friendly_name': 'Humidifier 200s',
-      'humidity': 40,
-      'max_humidity': 80,
-      'min_humidity': 30,
-      'mode': 'normal',
-      'supported_features': <HumidifierEntityFeature: 1>,
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 35,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 200s',
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 40,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'normal',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
     }),
     'context': <ANY>,
     'entity_id': 'humidifier.humidifier_200s',
@@ -438,14 +438,14 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'available_modes': list([
+        <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
           'auto',
           'humidity',
           'normal',
           'sleep',
         ]),
-        'max_humidity': 80,
-        'min_humidity': 30,
+        <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+        <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -481,19 +481,19 @@
 # name: test_humidifier_state[Humidifier 6000s][humidifier.humidifier_6000s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'available_modes': list([
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
         'auto',
         'humidity',
         'normal',
         'sleep',
       ]),
-      'current_humidity': 36,
-      'friendly_name': 'Humidifier 6000s',
-      'humidity': 40,
-      'max_humidity': 80,
-      'min_humidity': 30,
-      'mode': 'humidity',
-      'supported_features': <HumidifierEntityFeature: 1>,
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 36,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s',
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 40,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'humidity',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
     }),
     'context': <ANY>,
     'entity_id': 'humidifier.humidifier_6000s',
@@ -544,13 +544,13 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'available_modes': list([
+        <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
           'auto',
           'normal',
           'sleep',
         ]),
-        'max_humidity': 80,
-        'min_humidity': 30,
+        <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+        <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -586,18 +586,18 @@
 # name: test_humidifier_state[Humidifier 600S][humidifier.humidifier_600s]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'available_modes': list([
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
         'auto',
         'normal',
         'sleep',
       ]),
-      'current_humidity': 35,
-      'friendly_name': 'Humidifier 600S',
-      'humidity': 40,
-      'max_humidity': 80,
-      'min_humidity': 30,
-      'mode': 'normal',
-      'supported_features': <HumidifierEntityFeature: 1>,
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 35,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 600S',
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 40,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 80,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 30,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'normal',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
     }),
     'context': <ANY>,
     'entity_id': 'humidifier.humidifier_600s',
@@ -752,6 +752,43 @@
   ])
 # ---
 # name: test_humidifier_state[Wall Switch][entities]
+  list([
+  ])
+# ---
+# name: test_humidifier_state[CoreBreeze 432S][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'corebreeze432s',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LPF-R432S-AEU',
+      'model_id': None,
+      'name': 'CoreBreeze 432S',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_humidifier_state[CoreBreeze 432S][entities]
   list([
   ])
 # ---

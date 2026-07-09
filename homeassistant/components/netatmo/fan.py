@@ -1,7 +1,7 @@
 """Support for Netatmo/Bubendorff fans."""
 
 import logging
-from typing import Final
+from typing import Final, override
 
 from pyatmo import modules as NaModules
 
@@ -11,8 +11,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_FAN
-from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
+from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
+from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,13 +63,17 @@ class NetatmoFan(NetatmoModuleEntity, FanEntity):
             ]
         )
 
-        self._attr_unique_id = f"{self.device.entity_id}-{self.device_type}"
+        self._attr_unique_id = (
+            f"{self.device.entity_id}-{device_type_to_str(self.device_type)}"
+        )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         await self.device.async_set_fan_speed(PRESET_MAPPING[preset_mode])
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         if self.device.fan_speed is None:

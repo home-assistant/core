@@ -2,28 +2,24 @@
 
 import asyncio
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from dsmr_parser import obis_references as obis_ref
-from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
-from dsmr_parser.clients.rfxtrx_protocol import (
-    create_rfxtrx_dsmr_reader,
-    create_rfxtrx_tcp_dsmr_reader,
-)
+from dsmr_parser.clients.protocol import create_dsmr_reader
+from dsmr_parser.clients.rfxtrx_protocol import create_rfxtrx_dsmr_reader
 from dsmr_parser.objects import DSMRObject
-import serial
 import voluptuous as vol
 
-from homeassistant.components import usb
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL, CONF_TYPE
+from homeassistant.const import CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import SerialPortSelector
 
 from .const import (
     CONF_DSMR_VERSION,
@@ -38,17 +34,12 @@ from .const import (
     RFXTRX_DSMR_PROTOCOL,
 )
 
-CONF_MANUAL_PATH = "Enter Manually"
-
 
 class DSMRConnection:
     """Test the connection to DSMR and receive telegram to read serial ids."""
 
-    def __init__(
-        self, host: str | None, port: int, dsmr_version: str, protocol: str
-    ) -> None:
+    def __init__(self, port: str, dsmr_version: str, protocol: str) -> None:
         """Initialize."""
-        self._host = host
         self._port = port
         self._dsmr_version = dsmr_version
         self._protocol = protocol
@@ -89,35 +80,21 @@ class DSMRConnection:
                 self._telegram = telegram
                 transport.close()
 
-        if self._host is None:
-            if self._protocol == DSMR_PROTOCOL:
-                create_reader = create_dsmr_reader
-            else:
-                create_reader = create_rfxtrx_dsmr_reader
-            reader_factory = partial(
-                create_reader,
-                self._port,
-                self._dsmr_version,
-                update_telegram,
-                loop=hass.loop,
-            )
+        if self._protocol == DSMR_PROTOCOL:
+            create_reader = create_dsmr_reader
         else:
-            if self._protocol == DSMR_PROTOCOL:
-                create_reader = create_tcp_dsmr_reader
-            else:
-                create_reader = create_rfxtrx_tcp_dsmr_reader
-            reader_factory = partial(
-                create_reader,
-                self._host,
-                self._port,
-                self._dsmr_version,
-                update_telegram,
-                loop=hass.loop,
-            )
+            create_reader = create_rfxtrx_dsmr_reader
+        reader_factory = partial(
+            create_reader,
+            self._port,
+            self._dsmr_version,
+            update_telegram,
+            loop=hass.loop,
+        )
 
         try:
-            transport, protocol = await asyncio.create_task(reader_factory())
-        except serial.SerialException, OSError:
+            transport, protocol = await reader_factory()
+        except OSError:
             LOGGER.exception("Error connecting to DSMR")
             return False
 
@@ -126,7 +103,9 @@ class DSMRConnection:
                 async with asyncio.timeout(30):
                     await protocol.wait_closed()
             except TimeoutError:
-                # Timeout (no data received), close transport and return True (if telegram is empty, will result in CannotCommunicate error)
+                # Timeout (no data received), close transport
+                # and return True (if telegram is empty, will
+                # result in CannotCommunicate error)
                 transport.close()
                 await protocol.wait_closed()
         return True
@@ -137,7 +116,6 @@ async def _validate_dsmr_connection(
 ) -> dict[str, str | None]:
     """Validate the user input allows us to connect."""
     conn = DSMRConnection(
-        data.get(CONF_HOST),
         data[CONF_PORT],
         data[CONF_DSMR_VERSION],
         protocol,
@@ -164,119 +142,41 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _dsmr_version: str | None = None
-
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> DSMROptionFlowHandler:
         """Get the options flow for this handler."""
         return DSMROptionFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Step when user initializes a integration."""
-        if user_input is not None:
-            user_selection = user_input[CONF_TYPE]
-            if user_selection == "Serial":
-                return await self.async_step_setup_serial()
+        """Step when user initializes an integration.
 
-            return await self.async_step_setup_network()
-
-        list_of_types = ["Serial", "Network"]
-
-        schema = vol.Schema({vol.Required(CONF_TYPE): vol.In(list_of_types)})
-        return self.async_show_form(step_id="user", data_schema=schema)
-
-    async def async_step_setup_network(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Step when setting up network configuration."""
+        A single serial port selector handles both local serial devices and
+        network connections; a network meter can be reached by entering a URL
+        such as ``socket://host:port``.
+        """
         errors: dict[str, str] = {}
         if user_input is not None:
             data = await self.async_validate_dsmr(user_input, errors)
             if not errors:
-                return self.async_create_entry(
-                    title=f"{data[CONF_HOST]}:{data[CONF_PORT]}", data=data
-                )
+                return self.async_create_entry(title=data[CONF_PORT], data=data)
 
         schema = vol.Schema(
             {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_PORT): int,
+                vol.Required(CONF_PORT): SerialPortSelector(),
                 vol.Required(CONF_DSMR_VERSION): vol.In(DSMR_VERSIONS),
             }
         )
         return self.async_show_form(
-            step_id="setup_network",
+            step_id="user",
             data_schema=schema,
             errors=errors,
-        )
-
-    async def async_step_setup_serial(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Step when setting up serial configuration."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            user_selection = user_input[CONF_PORT]
-            if user_selection == CONF_MANUAL_PATH:
-                self._dsmr_version = user_input[CONF_DSMR_VERSION]
-                return await self.async_step_setup_serial_manual_path()
-
-            dev_path = user_selection
-
-            validate_data = {
-                CONF_PORT: dev_path,
-                CONF_DSMR_VERSION: user_input[CONF_DSMR_VERSION],
-            }
-
-            data = await self.async_validate_dsmr(validate_data, errors)
-            if not errors:
-                return self.async_create_entry(title=data[CONF_PORT], data=data)
-
-        ports = await usb.async_scan_serial_ports(self.hass)
-        list_of_ports = {
-            port.device: f"{port.device} - {port.description or 'n/a'}"
-            f", s/n: {port.serial_number or 'n/a'}"
-            + (f" - {port.manufacturer}" if port.manufacturer else "")
-            for port in ports
-        }
-        list_of_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_PORT): vol.In(list_of_ports),
-                vol.Required(CONF_DSMR_VERSION): vol.In(DSMR_VERSIONS),
-            }
-        )
-        return self.async_show_form(
-            step_id="setup_serial",
-            data_schema=schema,
-            errors=errors,
-        )
-
-    async def async_step_setup_serial_manual_path(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Select path manually."""
-        if user_input is not None:
-            validate_data = {
-                CONF_PORT: user_input[CONF_PORT],
-                CONF_DSMR_VERSION: self._dsmr_version,
-            }
-
-            errors: dict[str, str] = {}
-            data = await self.async_validate_dsmr(validate_data, errors)
-            if not errors:
-                return self.async_create_entry(title=data[CONF_PORT], data=data)
-
-        schema = vol.Schema({vol.Required(CONF_PORT): str})
-        return self.async_show_form(
-            step_id="setup_serial_manual_path",
-            data_schema=schema,
         )
 
     async def async_validate_dsmr(
