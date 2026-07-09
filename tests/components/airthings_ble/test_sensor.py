@@ -14,9 +14,15 @@ from homeassistant.components.airthings_ble.const import (
     DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
 )
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.components.airthings_ble.coordinator import (
+    AirthingsBLEDataUpdateCoordinator,
+)
+from homeassistant.components.airthings_ble.sensor import SENSORS_MAPPING_TEMPLATE
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import STATE_UNKNOWN, Platform, UnitOfRadiationConcentration
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import (
     CO2_V1,
@@ -290,6 +296,32 @@ async def test_translation_keys_wave_enhance(
 
     expected_name = f"Airthings Wave Enhance (123456) {expected_sensor_name}"
     assert state.attributes.get("friendly_name") == expected_name
+
+
+def test_radon_uses_core_device_class(
+    hass: HomeAssistant,
+) -> None:
+    """Test that BLE radon sensors expose core radon metadata."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+    coordinator = AirthingsBLEDataUpdateCoordinator(
+        hass,
+        MockConfigEntry(domain=DOMAIN, unique_id=WAVE_SERVICE_INFO.address, data={}),
+    )
+
+    for key in ("radon_1day_avg", "radon_longterm_avg"):
+        description = SENSORS_MAPPING_TEMPLATE[key]
+        assert description.device_class == SensorDeviceClass.RADON
+        assert (
+            description.native_unit_of_measurement
+            == UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER
+        )
+
+    assert coordinator.airthings.is_metric is True
+    assert (
+        SENSORS_MAPPING_TEMPLATE["radon_1day_avg"].native_unit_of_measurement
+        != UnitOfRadiationConcentration.PICOCURIES_PER_LITER
+    )
 
 
 async def test_disabled_connectivity_mode_corentium_home_2(
