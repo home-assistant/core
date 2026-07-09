@@ -5,7 +5,7 @@ from datetime import timedelta
 import pytest
 
 from homeassistant.components import configurator
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.util import dt as dt_util
@@ -40,7 +40,7 @@ async def test_request_least_info(hass: HomeAssistant) -> None:
 async def test_request_all_info(hass: HomeAssistant) -> None:
     """Test request config with all possible info."""
     exp_attr = {
-        ATTR_FRIENDLY_NAME: "Test Request",
+        EntityStateAttribute.FRIENDLY_NAME: "Test Request",
         configurator.ATTR_DESCRIPTION: """config description
 
 [link name](link url)
@@ -48,7 +48,7 @@ async def test_request_all_info(hass: HomeAssistant) -> None:
 ![Description image](config image url)""",
         configurator.ATTR_SUBMIT_CAPTION: "config submit caption",
         configurator.ATTR_FIELDS: [],
-        configurator.ATTR_ENTITY_PICTURE: "config entity picture",
+        EntityStateAttribute.ENTITY_PICTURE: "config entity picture",
         configurator.ATTR_CONFIGURE_ID: configurator.async_request_config(
             hass,
             name="Test Request",

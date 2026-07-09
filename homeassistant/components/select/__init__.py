@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -25,7 +25,7 @@ from .const import (
     SERVICE_SELECT_LAST,
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_PREVIOUS,
-    SelectEntityAttribute,
+    SelectEntityCapabilityAttribute,
     SelectServiceArgument,
 )
 
@@ -52,7 +52,7 @@ __all__ = [
     "SERVICE_SELECT_OPTION",
     "SERVICE_SELECT_PREVIOUS",
     "SelectEntity",
-    "SelectEntityAttribute",
+    "SelectEntityCapabilityAttribute",
     "SelectEntityDescription",
     "SelectServiceArgument",
 ]
@@ -125,7 +125,9 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Select entity."""
 
-    _entity_component_unrecorded_attributes = frozenset({SelectEntityAttribute.OPTIONS})
+    _entity_component_unrecorded_attributes = frozenset(
+        {SelectEntityCapabilityAttribute.OPTIONS}
+    )
 
     entity_description: SelectEntityDescription
     _attr_current_option: str | None = None
@@ -133,14 +135,16 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_state: None = None
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         return {
-            SelectEntityAttribute.OPTIONS.value: self.options,
+            SelectEntityCapabilityAttribute.OPTIONS: self.options,
         }
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         current_option = self.current_option

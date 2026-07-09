@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components.select import (
     DOMAIN,
     SelectEntity,
-    SelectEntityAttribute,
+    SelectEntityCapabilityAttribute,
     SelectServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, STATE_UNKNOWN
@@ -81,7 +81,7 @@ async def test_select(hass: HomeAssistant) -> None:
 
     assert select.select_option.call_count == 5
 
-    assert select.capability_attributes[SelectEntityAttribute.OPTIONS] == [
+    assert select.capability_attributes[SelectEntityCapabilityAttribute.OPTIONS] == [
         "option_one",
         "option_two",
         "option_three",

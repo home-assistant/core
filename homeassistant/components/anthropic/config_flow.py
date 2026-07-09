@@ -3,13 +3,13 @@
 from collections.abc import Mapping
 import json
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 import anthropic
 import voluptuous as vol
 from voluptuous_openapi import convert
 
-from homeassistant.components.zone import ENTITY_ID_HOME
+from homeassistant.components.zone import ENTITY_ID_HOME, ZoneEntityStateAttribute
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntryState,
@@ -18,17 +18,9 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_API_KEY,
-    CONF_LLM_HASS_API,
-    CONF_NAME,
-    CONF_PROMPT,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, llm
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -66,7 +58,7 @@ from .const import (
     TOOL_SEARCH_UNSUPPORTED_MODELS,
     PromptCaching,
 )
-from .coordinator import model_alias
+from .coordinator import async_create_client, model_alias
 
 if TYPE_CHECKING:
     from . import AnthropicConfigEntry
@@ -95,9 +87,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = anthropic.AsyncAnthropic(
-        api_key=data[CONF_API_KEY], http_client=get_async_client(hass)
-    )
+    client = await async_create_client(hass, data[CONF_API_KEY])
     await client.models.list(timeout=10.0)
 
 
@@ -107,6 +97,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 2
     MINOR_VERSION = 4
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -183,6 +174,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: AnthropicConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -296,7 +288,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 ):
                     self.options.pop(CONF_LLM_HASS_API)
                 if not errors:
-                    return await self.async_step_advanced()
+                    return await self.async_step_additional()
 
         return self.async_show_form(
             step_id="init",
@@ -306,10 +298,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             errors=errors or None,
         )
 
-    async def async_step_advanced(
+    async def async_step_additional(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Manage advanced options."""
+        """Manage additional options."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
@@ -358,7 +350,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 return await self.async_step_model()
 
         return self.async_show_form(
-            step_id="advanced",
+            step_id="additional",
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(step_schema), self.options
             ),
@@ -547,9 +539,8 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         location_data: dict[str, str] = {}
         zone_home = self.hass.states.get(ENTITY_ID_HOME)
         if zone_home is not None:
-            client = anthropic.AsyncAnthropic(
-                api_key=self._get_entry().data[CONF_API_KEY],
-                http_client=get_async_client(self.hass),
+            client = await async_create_client(
+                self.hass, self._get_entry().data[CONF_API_KEY]
             )
             location_schema = vol.Schema(
                 {
@@ -571,8 +562,8 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     {
                         "role": "user",
                         "content": "Where are the following coordinates located: "
-                        f"({zone_home.attributes[ATTR_LATITUDE]},"
-                        f" {zone_home.attributes[ATTR_LONGITUDE]})?",
+                        f"({zone_home.attributes[ZoneEntityStateAttribute.LATITUDE]},"
+                        f" {zone_home.attributes[ZoneEntityStateAttribute.LONGITUDE]})?",
                     }
                 ],
                 max_tokens=cast(int, DEFAULT[CONF_MAX_TOKENS]),

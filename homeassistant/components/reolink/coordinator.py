@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from reolink_aio.exceptions import (
     CredentialsInvalidError,
@@ -79,6 +80,7 @@ class ReolinkDeviceCoordinator(ReolinkCoordinator):
         self._last_known_firmware: dict[int | None, str | None] = {}
         self.firmware_coordinator: ReolinkFirmwareCoordinator | None = None
 
+    @override
     async def _async_update_data(self) -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
         async with asyncio.timeout(self._update_timeout):
@@ -156,6 +158,7 @@ class ReolinkFirmwareCoordinator(ReolinkCoordinator):
             update_interval=None,  # Do not auto-fetch, resume 24h
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Check for firmware updates."""
         async with asyncio.timeout(self._min_timeout):

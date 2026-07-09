@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
-from typing import Any, Literal, TypedDict, cast, overload
+from typing import Any, Literal, TypedDict, cast, overload, override
 
 import async_interrupt
 from propcache.api import cached_property
@@ -76,6 +76,7 @@ from homeassistant.core import (
     State,
     SupportsResponse,
     callback,
+    valid_entity_id,
 )
 from homeassistant.util import slugify
 from homeassistant.util.async_ import create_eager_task
@@ -450,7 +451,12 @@ class _ScriptRun:
         _timeout = (
             "" if timeout is None else f" (timeout: {timedelta(seconds=timeout)})"
         )
-        self._log("Executing step %s%s", self._script.last_action, _timeout)
+        self._log(
+            "Executing step %s%s",
+            self._script.last_action,
+            _timeout,
+            level=logging.DEBUG,
+        )
 
     async def async_run(self) -> ScriptRunResult | None:
         """Run script."""
@@ -463,7 +469,11 @@ class _ScriptRun:
         response = None
 
         try:
-            self._log("Running %s", self._script.running_description)
+            self._log(
+                "Running %s",
+                self._script.running_description,
+                level=logging.INFO if self._script.top_level else logging.DEBUG,
+            )
             for self._step, self._action in enumerate(self._script.sequence):  # noqa: B020
                 if self._stop.done():
                     script_execution_set("cancelled")
@@ -531,6 +541,7 @@ class _ScriptRun:
                         self._log(
                             "Skipped disabled step %s",
                             self._action.get(CONF_ALIAS, action),
+                            level=logging.DEBUG,
                         )
                         trace_set_result(enabled=False)
                         return
@@ -777,7 +788,12 @@ class _ScriptRun:
             self._log("Error in 'condition' evaluation:\n%s", ex, level=logging.WARNING)
             check = False
 
-        self._log("Test condition %s: %s", self._script.last_action, check)
+        self._log(
+            "Test condition %s: %s",
+            self._script.last_action,
+            check,
+            level=logging.DEBUG,
+        )
         trace_update_result(result=check)
         if not check:
             raise _ConditionFail
@@ -822,7 +838,13 @@ class _ScriptRun:
         warned_too_many_loops = False
 
         async def async_run_sequence(iteration: int, extra_msg: str = "") -> None:
-            self._log("Repeating %s: Iteration %i%s", description, iteration, extra_msg)
+            self._log(
+                "Repeating %s: Iteration %i%s",
+                description,
+                iteration,
+                extra_msg,
+                level=logging.DEBUG,
+            )
             with trace_path("sequence"):
                 await self._async_run_script(script)
 
@@ -1340,6 +1362,7 @@ class _QueuedScriptRun(_ScriptRun):
 
     lock_acquired = False
 
+    @override
     async def async_run(self) -> ScriptRunResult | None:
         """Run script."""
         # Wait for previous run, if any, to finish by attempting to acquire the script's
@@ -1356,6 +1379,7 @@ class _QueuedScriptRun(_ScriptRun):
         # We've acquired the lock so we can go ahead and start the run.
         return await super().async_run()
 
+    @override
     def _finish(self) -> None:
         if self.lock_acquired:
             self._script._queue_lck.release()  # noqa: SLF001
@@ -1666,6 +1690,15 @@ class Script:
                 if CONF_ELSE in step:
                     Script._find_referenced_target(target, referenced, step[CONF_ELSE])
 
+            elif action == cv.SCRIPT_ACTION_REPEAT:
+                for cond in step[CONF_REPEAT].get(CONF_WHILE, []):
+                    referenced |= condition.async_extract_targets(cond, target)
+                for cond in step[CONF_REPEAT].get(CONF_UNTIL, []):
+                    referenced |= condition.async_extract_targets(cond, target)
+                Script._find_referenced_target(
+                    target, referenced, step[CONF_REPEAT][CONF_SEQUENCE]
+                )
+
             elif action == cv.SCRIPT_ACTION_PARALLEL:
                 for script in step[CONF_PARALLEL]:
                     Script._find_referenced_target(
@@ -1707,6 +1740,12 @@ class Script:
             elif action == cv.SCRIPT_ACTION_DEVICE_AUTOMATION:
                 referenced.add(step[CONF_DEVICE_ID])
 
+            elif action == cv.SCRIPT_ACTION_FIRE_EVENT:
+                if (event_data := step.get(CONF_EVENT_DATA)) and isinstance(
+                    device_id := event_data.get(ATTR_DEVICE_ID), str
+                ):
+                    referenced.add(device_id)
+
             elif action == cv.SCRIPT_ACTION_CHOOSE:
                 for choice in step[CONF_CHOOSE]:
                     for cond in choice[CONF_CONDITIONS]:
@@ -1721,6 +1760,15 @@ class Script:
                 Script._find_referenced_devices(referenced, step[CONF_THEN])
                 if CONF_ELSE in step:
                     Script._find_referenced_devices(referenced, step[CONF_ELSE])
+
+            elif action == cv.SCRIPT_ACTION_REPEAT:
+                for cond in step[CONF_REPEAT].get(CONF_WHILE, []):
+                    referenced |= condition.async_extract_devices(cond)
+                for cond in step[CONF_REPEAT].get(CONF_UNTIL, []):
+                    referenced |= condition.async_extract_devices(cond)
+                Script._find_referenced_devices(
+                    referenced, step[CONF_REPEAT][CONF_SEQUENCE]
+                )
 
             elif action == cv.SCRIPT_ACTION_PARALLEL:
                 for script in step[CONF_PARALLEL]:
@@ -1762,6 +1810,14 @@ class Script:
             elif action == cv.SCRIPT_ACTION_ACTIVATE_SCENE:
                 referenced.add(step[CONF_SCENE])
 
+            elif action == cv.SCRIPT_ACTION_FIRE_EVENT:
+                if (
+                    (event_data := step.get(CONF_EVENT_DATA))
+                    and isinstance(entity_id := event_data.get(ATTR_ENTITY_ID), str)
+                    and valid_entity_id(entity_id)
+                ):
+                    referenced.add(entity_id)
+
             elif action == cv.SCRIPT_ACTION_CHOOSE:
                 for choice in step[CONF_CHOOSE]:
                     for cond in choice[CONF_CONDITIONS]:
@@ -1776,6 +1832,15 @@ class Script:
                 Script._find_referenced_entities(referenced, step[CONF_THEN])
                 if CONF_ELSE in step:
                     Script._find_referenced_entities(referenced, step[CONF_ELSE])
+
+            elif action == cv.SCRIPT_ACTION_REPEAT:
+                for cond in step[CONF_REPEAT].get(CONF_WHILE, []):
+                    referenced |= condition.async_extract_entities(cond)
+                for cond in step[CONF_REPEAT].get(CONF_UNTIL, []):
+                    referenced |= condition.async_extract_entities(cond)
+                Script._find_referenced_entities(
+                    referenced, step[CONF_REPEAT][CONF_SEQUENCE]
+                )
 
             elif action == cv.SCRIPT_ACTION_PARALLEL:
                 for script in step[CONF_PARALLEL]:

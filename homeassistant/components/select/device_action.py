@@ -30,7 +30,7 @@ from .const import (
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
-    SelectEntityAttribute,
+    SelectEntityCapabilityAttribute,
     SelectServiceArgument,
 )
 
@@ -142,7 +142,9 @@ async def async_get_action_capabilities(
                 hass, config[CONF_ENTITY_ID]
             )
             options = (
-                get_capability(hass, entry.entity_id, SelectEntityAttribute.OPTIONS)
+                get_capability(
+                    hass, entry.entity_id, SelectEntityCapabilityAttribute.OPTIONS
+                )
                 or []
             )
         return {

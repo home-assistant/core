@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 import wsdot as wsdot_api
@@ -118,11 +118,13 @@ class WashingtonStateTransportSensor(SensorEntity):
         self._state: int | None = None
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         return self._state
@@ -154,6 +156,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
             self._state = travel_time.CurrentTime
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other details about the sensor state."""
         if self._data is not None:

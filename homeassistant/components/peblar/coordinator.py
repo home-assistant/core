@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from peblar import (
     Peblar,
@@ -125,6 +125,7 @@ class PeblarVersionDataUpdateCoordinator(
         )
 
     @_coordinator_exception_handler
+    @override
     async def _async_update_data(self) -> PeblarVersionInformation:
         """Fetch data from the Peblar device."""
         return PeblarVersionInformation(
@@ -152,6 +153,7 @@ class PeblarDataUpdateCoordinator(DataUpdateCoordinator[PeblarData]):
         )
 
     @_coordinator_exception_handler
+    @override
     async def _async_update_data(self) -> PeblarData:
         """Fetch data from the Peblar device."""
         return PeblarData(
@@ -180,6 +182,7 @@ class PeblarUserConfigurationDataUpdateCoordinator(
         )
 
     @_coordinator_exception_handler
+    @override
     async def _async_update_data(self) -> PeblarUserConfiguration:
         """Fetch data from the Peblar device."""
         return await self.peblar.user_configuration()

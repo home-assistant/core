@@ -1,7 +1,7 @@
 """Config flow for Flux LED/MagicLight."""
 
 import contextlib
-from typing import Any, Self, cast
+from typing import Any, Self, cast, override
 
 from flux_led.const import (
     ATTR_ID,
@@ -69,12 +69,14 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: FluxLedConfigEntry,
     ) -> FluxLedOptionsFlow:
         """Get the options flow for the Flux LED component."""
         return FluxLedOptionsFlow()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -94,6 +96,7 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return await self._async_handle_discovery()
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
@@ -174,6 +177,7 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self._async_set_discovered_mac(device, True)
         return await self.async_step_discovery_confirm()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow.host == self.host
@@ -216,6 +220,7 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
             data=data,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

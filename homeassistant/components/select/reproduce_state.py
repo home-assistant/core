@@ -11,7 +11,7 @@ from homeassistant.core import Context, HomeAssistant, State
 from .const import (
     DOMAIN,
     SERVICE_SELECT_OPTION,
-    SelectEntityAttribute,
+    SelectEntityCapabilityAttribute,
     SelectServiceArgument,
 )
 
@@ -30,7 +30,9 @@ async def _async_reproduce_state(
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
 
-    if state.state not in cur_state.attributes.get(SelectEntityAttribute.OPTIONS, []):
+    if state.state not in cur_state.attributes.get(
+        SelectEntityCapabilityAttribute.OPTIONS, []
+    ):
         _LOGGER.warning(
             "Invalid state specified for %s: %s", state.entity_id, state.state
         )

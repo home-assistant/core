@@ -1,6 +1,6 @@
 """Water heater platform for Qube Heat Pump."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
@@ -61,16 +61,19 @@ class QubeWaterHeater(QubeEntity, WaterHeaterEntity):
         self._attr_unique_id = entry.entry_id
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current DHW temperature."""
         return self.coordinator.data.state.temp_dhw
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target DHW temperature."""
         return self.coordinator.data.state.setpoint_dhw
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return the current operation mode."""
         boost = self.coordinator.data.switches.get(DHW_BOOST_KEY)
@@ -80,6 +83,7 @@ class QubeWaterHeater(QubeEntity, WaterHeaterEntity):
             return STATE_PERFORMANCE
         return STATE_HEAT_PUMP
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target DHW temperature."""
         temperature = kwargs.get("temperature")
@@ -101,6 +105,7 @@ class QubeWaterHeater(QubeEntity, WaterHeaterEntity):
             )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set the operation mode."""
         boost = operation_mode == STATE_PERFORMANCE

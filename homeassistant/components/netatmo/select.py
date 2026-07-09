@@ -1,7 +1,7 @@
 """Support for the Netatmo climate schedule selector."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
+from typing import override
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
@@ -11,13 +11,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_URL_ENERGY,
-    DATA_SCHEDULES,
     DOMAIN,
     EVENT_TYPE_SCHEDULE,
     MANUFACTURER,
     NETATMO_CREATE_SELECT,
 )
-from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoHome
+from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoHome
 from .entity import NetatmoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,7 +67,7 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
             configuration_url=CONF_URL_ENERGY,
         )
 
-        self._attr_unique_id = f"{self.home.entity_id}-schedule-select"
+        self._attr_unique_id = f"{self.home.entity_id}-schedule-select"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         schedule = self.home.get_selected_schedule()
         assert schedule
@@ -77,6 +76,7 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
             schedule.name for schedule in self.home.schedules.values() if schedule.name
         ]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
@@ -98,17 +98,16 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
             return
 
         if data["event_type"] == EVENT_TYPE_SCHEDULE and "schedule_id" in data:
-            if schedule := self.hass.data[DOMAIN][DATA_SCHEDULES][
-                self.home.entity_id
-            ].get(data["schedule_id"]):
+            if schedule := self.data_handler.schedules[self.home.entity_id].get(
+                data["schedule_id"]
+            ):
                 self._attr_current_option = schedule.name
                 self.async_write_ha_state()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        for sid, schedule in self.hass.data[DOMAIN][DATA_SCHEDULES][
-            self.home.entity_id
-        ].items():
+        for sid, schedule in self.data_handler.schedules[self.home.entity_id].items():
             if schedule.name != option:
                 continue
             _LOGGER.debug(
@@ -121,14 +120,13 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
             break
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         schedule = self.home.get_selected_schedule()
         assert schedule
         self._attr_current_option = schedule.name
-        self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id] = (
-            self.home.schedules
-        )
+        self.data_handler.schedules[self.home.entity_id] = self.home.schedules
         self._attr_options = [
             schedule.name for schedule in self.home.schedules.values() if schedule.name
         ]

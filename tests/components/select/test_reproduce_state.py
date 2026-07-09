@@ -4,7 +4,7 @@ import pytest
 
 from homeassistant.components.select.const import (
     DOMAIN,
-    SelectEntityAttribute,
+    SelectEntityCapabilityAttribute,
     SelectServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID
@@ -24,7 +24,13 @@ async def test_reproducing_states(
     hass.states.async_set(
         "select.test",
         "option_one",
-        {SelectEntityAttribute.OPTIONS: ["option_one", "option_two", "option_three"]},
+        {
+            SelectEntityCapabilityAttribute.OPTIONS: [
+                "option_one",
+                "option_two",
+                "option_three",
+            ]
+        },
     )
 
     await async_reproduce_state(
