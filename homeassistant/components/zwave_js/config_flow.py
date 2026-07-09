@@ -1580,7 +1580,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             "home_id": (
                 format_home_id_for_display(discovery_info.zwave_home_id)
                 if discovery_info.zwave_home_id
-                else "New"
+                else "NEW"
             ),
         }
         self._adapter_discovered = True
