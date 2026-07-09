@@ -6,6 +6,8 @@ from types import SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from homeassistant.components.bosch_shc.const import (
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
@@ -232,12 +234,19 @@ async def test_twinguard_creates_seven_sensors(hass: HomeAssistant) -> None:
     assert air_quality_state.attributes["rating_description"] == "Air quality is good"
 
 
+@pytest.mark.parametrize(
+    "bucket",
+    [
+        pytest.param("smart_plugs", id="smart_plugs"),
+        pytest.param("light_switches_bsm", id="light_switches_bsm"),
+    ],
+)
 async def test_smart_plug_creates_power_and_energy_sensors(
-    hass: HomeAssistant,
+    hass: HomeAssistant, bucket: str
 ) -> None:
-    """A smart_plugs device yields a power sensor and an energy sensor (kWh)."""
+    """A smart_plugs or light_switches_bsm device yields a power + energy sensor (kWh)."""
     device = _smart_plug_device(powerconsumption=12.5, energyconsumption=3000.0)
-    await _setup_sensor_integration(hass, smart_plugs=[device])
+    await _setup_sensor_integration(hass, **{bucket: [device]})
 
     states = hass.states.async_all(SENSOR_DOMAIN)
     assert len(states) == 2
@@ -249,16 +258,6 @@ async def test_smart_plug_creates_power_and_energy_sensors(
         s for s in states if s.attributes.get("device_class") == "energy"
     )
     assert float(energy_state.state) == 3.0
-
-
-async def test_light_switches_bsm_creates_power_and_energy_sensors(
-    hass: HomeAssistant,
-) -> None:
-    """A light_switches_bsm device also yields a power sensor and an energy sensor."""
-    device = _smart_plug_device(device_id="hdm:HomeMaticIP:bsm1")
-    await _setup_sensor_integration(hass, light_switches_bsm=[device])
-
-    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 2
 
 
 async def test_smart_plug_compact_creates_three_sensors(hass: HomeAssistant) -> None:
