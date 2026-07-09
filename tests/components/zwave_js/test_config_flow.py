@@ -1408,6 +1408,50 @@ async def test_esphome_discovery_intent_recommended(
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
+async def test_esphome_discovery_addon_already_connected(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+    addon_options: dict[str, Any],
+    restart_addon: AsyncMock,
+) -> None:
+    """Test ESPHome discovery when the add-on already uses the socket."""
+    addon_options.update(
+        {
+            CONF_ADDON_SOCKET: "esphome://192.168.1.100:6053",
+            "s0_legacy_key": "new123",
+        }
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    with (
+        patch("homeassistant.components.zwave_js.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "intent_recommended"}
+        )
+        await hass.async_block_till_done()
+
+    # The add-on already uses the discovered socket,
+    # so the flow finishes without reconfiguring or restarting the add-on.
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["socket_path"] == "esphome://192.168.1.100:6053"
+    assert result["data"]["s0_legacy_key"] == "new123"
+    set_addon_options.assert_not_called()
+    restart_addon.assert_not_called()
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
 async def test_esphome_discovery_already_configured(
     hass: HomeAssistant,
     set_addon_options: AsyncMock,
@@ -2334,6 +2378,7 @@ async def test_not_addon(hass: HomeAssistant) -> None:
 async def test_addon_already_configured(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
 ) -> None:
     """Test flow aborts when another entry already uses the add-on."""
     addon_options["device"] = "/test"
@@ -2371,6 +2416,9 @@ async def test_addon_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_already_configured"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    # The flow must not have touched the add-on config of the existing entry.
+    set_addon_options.assert_not_called()
+    assert addon_options["device"] == "/test"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
