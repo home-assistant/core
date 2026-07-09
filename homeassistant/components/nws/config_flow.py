@@ -13,12 +13,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.location import has_location
+from homeassistant.helpers.location import get_location
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
 from . import base_unique_id
 from .const import CONF_LOCATION_ENTITY, CONF_STATION, DOMAIN
-from .helpers import location_coordinates
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,7 +113,7 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "entity_disabled"
             else:
                 state = self.hass.states.get(location_entity)
-                if state is None or not has_location(state):
+                if state is None or (coordinates := get_location(state)) is None:
                     errors["base"] = "entity_no_coordinates"
                 else:
                     data = {
@@ -124,7 +123,7 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._async_abort_entries_match(
                         {CONF_LOCATION_ENTITY: entity_entry.id}
                     )
-                    latitude, longitude = location_coordinates(state)
+                    latitude, longitude = coordinates
                     try:
                         await validate_input(
                             self.hass,

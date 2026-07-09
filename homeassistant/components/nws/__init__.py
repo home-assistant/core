@@ -18,7 +18,7 @@ from homeassistant.helpers.event import (
     async_track_entity_registry_updated_event,
     async_track_state_change_event,
 )
-from homeassistant.helpers.location import has_location
+from homeassistant.helpers.location import get_location
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
@@ -36,7 +36,6 @@ from .const import (
     RETRY_STOP,
 )
 from .coordinator import NWSObservationDataUpdateCoordinator
-from .helpers import location_coordinates
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,13 +89,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
             )
         location_entity_id = entity_entry.entity_id
         state = hass.states.get(location_entity_id)
-        if state is None or not has_location(state):
+        if state is None or (coordinates := get_location(state)) is None:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="entity_unavailable",
                 translation_placeholders={"entity_id": location_entity_id},
             )
-        latitude, longitude = location_coordinates(state)
+        latitude, longitude = coordinates
         station = None
     else:
         latitude = entry.data[CONF_LATITUDE]
@@ -208,9 +207,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
         ) -> None:
             """Request coordinator refresh when the location entity moves."""
             new_state = event.data["new_state"]
-            if new_state is None or not has_location(new_state):
+            if new_state is None or (coordinates := get_location(new_state)) is None:
                 return
-            new_lat, new_lon = location_coordinates(new_state)
+            new_lat, new_lon = coordinates
             if (
                 new_lat == entry.runtime_data.latitude
                 and new_lon == entry.runtime_data.longitude

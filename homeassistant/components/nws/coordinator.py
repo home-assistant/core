@@ -12,7 +12,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import debounce
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.location import has_location
+from homeassistant.helpers.location import get_location
 from homeassistant.helpers.update_coordinator import (
     TimestampDataUpdateCoordinator,
     UpdateFailed,
@@ -33,7 +33,6 @@ from .const import (
     RETRY_STOP,
     UPDATE_TIME_PERIOD,
 )
-from .helpers import location_coordinates
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,13 +84,13 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
             return
         self._location_state_warned = False
 
-        if not has_location(state):
+        if (coordinates := get_location(state)) is None:
             _LOGGER.debug(
                 "Location entity %s has no location attributes; skipping location update",
                 self._location_entity_id,
             )
             return
-        new_lat, new_lon = location_coordinates(state)
+        new_lat, new_lon = coordinates
         if self._previous_position is not None:
             prev_lat, prev_lon = self._previous_position
             if new_lat == prev_lat and new_lon == prev_lon:
