@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -164,44 +165,38 @@ async def test_smart_plug_creates_switch_and_routing_switch(
     assert routing_state.entity_id.endswith("_routing")
 
 
-async def test_light_switches_bsm_creates_only_switch(hass: HomeAssistant) -> None:
-    """A light_switches_bsm device yields only a switch, no routing switch."""
-    device = _light_switch_device()
-    await _setup_switch_integration(hass, light_switches_bsm=[device])
+@pytest.mark.parametrize(
+    ("device_factory", "bucket", "expected_device_class"),
+    [
+        pytest.param(
+            _light_switch_device,
+            "light_switches_bsm",
+            "switch",
+            id="light_switches_bsm",
+        ),
+        pytest.param(
+            _smart_plug_compact_device,
+            "smart_plugs_compact",
+            "outlet",
+            id="smart_plugs_compact",
+        ),
+        pytest.param(_camera_eyes_device, "camera_eyes", "switch", id="camera_eyes"),
+        pytest.param(_camera_360_device, "camera_360", "switch", id="camera_360"),
+    ],
+)
+async def test_single_bucket_creates_only_switch(
+    hass: HomeAssistant,
+    device_factory: Callable[[], SimpleNamespace],
+    bucket: str,
+    expected_device_class: str,
+) -> None:
+    """These buckets yield only a single switch, no routing switch."""
+    device = device_factory()
+    await _setup_switch_integration(hass, **{bucket: [device]})
 
     states = hass.states.async_all(SWITCH_DOMAIN)
     assert len(states) == 1
-    assert states[0].attributes["device_class"] == "switch"
-
-
-async def test_smart_plug_compact_creates_only_switch(hass: HomeAssistant) -> None:
-    """A smart_plugs_compact device yields only a switch, no routing switch."""
-    device = _smart_plug_compact_device()
-    await _setup_switch_integration(hass, smart_plugs_compact=[device])
-
-    states = hass.states.async_all(SWITCH_DOMAIN)
-    assert len(states) == 1
-    assert states[0].attributes["device_class"] == "outlet"
-
-
-async def test_camera_eyes_creates_switch(hass: HomeAssistant) -> None:
-    """A camera_eyes device yields a single switch entity."""
-    device = _camera_eyes_device()
-    await _setup_switch_integration(hass, camera_eyes=[device])
-
-    states = hass.states.async_all(SWITCH_DOMAIN)
-    assert len(states) == 1
-    assert states[0].attributes["device_class"] == "switch"
-
-
-async def test_camera_360_creates_switch(hass: HomeAssistant) -> None:
-    """A camera_360 device yields a single switch entity."""
-    device = _camera_360_device()
-    await _setup_switch_integration(hass, camera_360=[device])
-
-    states = hass.states.async_all(SWITCH_DOMAIN)
-    assert len(states) == 1
-    assert states[0].attributes["device_class"] == "switch"
+    assert states[0].attributes["device_class"] == expected_device_class
 
 
 async def test_setup_no_devices_adds_nothing(hass: HomeAssistant) -> None:
