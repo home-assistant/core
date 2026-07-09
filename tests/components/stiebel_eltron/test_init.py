@@ -81,8 +81,9 @@ async def test_async_setup_entry_coordinator_update_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_lwz_api: MagicMock,
+    mock_modbus_connection: MockModbusConnection,
 ) -> None:
-    """Test setup retries when coordinator data update raises a modbus error."""
+    """Test setup retries and closes the connection when the first update fails."""
     mock_lwz_api.async_update.side_effect = ModbusError("update failed")
     mock_config_entry.add_to_hass(hass)
 
@@ -90,6 +91,7 @@ async def test_async_setup_entry_coordinator_update_fails(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_modbus_connection.connected is False
 
 
 async def test_connection_lost_reloads_entry(

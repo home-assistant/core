@@ -29,11 +29,11 @@ async def async_setup_entry(
         connection = await connect_tcp(host, port=port)
     except ModbusConnectionError as exception:
         raise ConfigEntryNotReady("Could not connect to device") from exception
+    entry.async_on_unload(connection.close)
 
     try:
         model = await get_controller_model(connection.for_unit(DEVICE_ID))
     except StiebelEltronModbusError as exception:
-        await connection.close()
         raise ConfigEntryError(exception) from exception
 
     coordinator = StiebelEltronDataCoordinator(hass, entry, model, connection, host)
@@ -56,6 +56,4 @@ async def async_unload_entry(
     entry: StiebelEltronConfigEntry,
 ) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, _PLATFORMS):
-        await entry.runtime_data.close()
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)

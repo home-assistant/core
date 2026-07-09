@@ -42,8 +42,6 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
             # the register values), so there is nothing to diff against.
             always_update=True,
         )
-        self._host = host
-        self._connection = connection
         self.api_client = LwzStiebelEltronAPI(connection.for_unit(DEVICE_ID))
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -53,11 +51,6 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
             model_id=str(model.value),
             manufacturer=ATTR_MANUFACTURER,
         )
-
-    async def close(self) -> None:
-        """Disconnect client."""
-        _LOGGER.debug("Closing connection to %s", self._host)
-        await self._connection.close()
 
     @override
     async def _async_update_data(self) -> None:
