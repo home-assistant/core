@@ -2,8 +2,11 @@
   "domain": "cppm_tracker",
   "name": "Aruba ClearPass",
   "codeowners": [],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cppm_tracker",
+  "integration_type": "hub",
   "iot_class": "local_polling",
+  "loggers": ["clearpasspy"],
   "quality_scale": "legacy",
   "requirements": ["clearpasspy==1.0.2"]
 }

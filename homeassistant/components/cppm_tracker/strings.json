@@ -1,0 +1,31 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "client_id": "Client ID",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your ClearPass server.",
+          "client_id": "The OAuth2 client ID configured in ClearPass.",
+          "api_key": "The client secret for the OAuth2 client."
+        }
+      }
+    }
+  },
+  "issues": {
+    "yaml_import_cannot_connect": {
+      "title": "YAML import failed: cannot connect",
+      "description": "The YAML configuration for Aruba ClearPass at `{host}` could not be imported because the connection failed.\n\nPlease check that `{host}` is reachable, update your `configuration.yaml` if needed, and restart Home Assistant."
+    }
+  }
+}
