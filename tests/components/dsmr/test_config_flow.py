@@ -204,8 +204,8 @@ async def test_setup_serial(
 @pytest.mark.parametrize(
     ("version", "serial_data"),
     [
-        ("MSn", {"serial_id": "12345678", "serial_id_gas": "123456789"}),
-        ("SAGEMCOM_T210_D_R", {"serial_id": None, "serial_id_gas": None}),
+        ("MSn", SERIAL_DATA),
+        ("SAGEMCOM_T210_D_R", SERIAL_DATA_SWEDEN),
     ],
 )
 async def test_setup_serial_encrypted(
