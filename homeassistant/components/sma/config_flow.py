@@ -278,7 +278,16 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm discovery."""
         errors: dict[str, str] = {}
+
+        # Ensure the unique ID is set so Home Assistant can track/ignore it
+        await self.async_set_unique_id(self._discovered_unique_id) 
+        self._abort_if_unique_id_configured()
+        
         if user_input is not None:
+            if user_input.get("ignore"):
+                # Aborts the discovery flow and adds the device to the ignored list
+                return self.async_abort(reason="ignored")
+                
             errors, _ = await self._handle_user_input(
                 user_input=user_input, discovery=True
             )
@@ -300,6 +309,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                         GROUPS
                     ),
                     vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional("ignore", default=False): bool,
                 }
             ),
             description_placeholders={CONF_HOST: self._data[CONF_HOST]},
