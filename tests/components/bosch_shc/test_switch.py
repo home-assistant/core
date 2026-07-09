@@ -19,7 +19,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -136,8 +136,11 @@ async def _setup_switch_integration(
         **{**_EMPTY_DEVICE_BUCKETS, **device_buckets}
     )
 
-    with patch(
-        "homeassistant.components.bosch_shc.SHCSession", return_value=mock_session
+    with (
+        patch(
+            "homeassistant.components.bosch_shc.SHCSession", return_value=mock_session
+        ),
+        patch("homeassistant.components.bosch_shc.PLATFORMS", [Platform.SWITCH]),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
