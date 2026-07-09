@@ -540,6 +540,27 @@ async def test_switch_camera_detection_public_value(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
+async def test_switch_camera_highfps_public_value(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """The high FPS switch reads video_mode from the public object."""
+
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell])
+
+    description = next(d for d in CAMERA_SWITCHES if d.key == "high_fps")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, doorbell, description
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    public = make_public_camera(doorbell, video_mode=VideoMode.HIGH_FPS)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
 async def test_switch_camera_detection_unavailable_without_public(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ) -> None:
