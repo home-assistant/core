@@ -2,11 +2,10 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.test_determinism import HassTestDeterminismChecker
 import pytest
 
-from . import assert_no_messages
+from . import assert_no_messages, walk_checker
 
 
 @pytest.fixture(name="determinism_checker")
@@ -144,11 +143,9 @@ def test_no_warning(
 ) -> None:
     """Test cases that should not trigger a warning."""
     root_node = astroid.parse(code, module_name)
-    walker = ASTWalker(linter)
-    walker.add_checker(determinism_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, determinism_checker, root_node)
 
 
 def test_if_statement_flagged(
@@ -167,9 +164,7 @@ def test_sensor_value(hass) -> None:
 """,
         "tests.components.test_integration.test_sensor",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(determinism_checker)
-    walker.walk(root_node)
+    walk_checker(linter, determinism_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -193,9 +188,7 @@ def test_something(hass) -> None:
 """,
         "tests.components.test_integration.test_init",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(determinism_checker)
-    walker.walk(root_node)
+    walk_checker(linter, determinism_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 2
@@ -216,9 +209,7 @@ async def test_something(hass) -> None:
 """,
         "tests.components.test_integration.test_init",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(determinism_checker)
-    walker.walk(root_node)
+    walk_checker(linter, determinism_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -241,9 +232,7 @@ def test_something(state) -> None:
 """,
         "tests.components.test_integration.test_init",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(determinism_checker)
-    walker.walk(root_node)
+    walk_checker(linter, determinism_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1

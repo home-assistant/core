@@ -25,10 +25,11 @@ from uiprotect.data import (
     Sensor,
     Viewer,
 )
+from uiprotect.data.public_devices import SensorFeatureCapability
 from uiprotect.exceptions import GlobalAlarmManagerError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityDescription
@@ -44,6 +45,7 @@ from .entity import (
     ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
+    async_remove_unsupported_sense_entities,
 )
 from .utils import async_get_light_motion_current, async_ufp_instance_command
 
@@ -318,6 +320,7 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_enum_type=MountType,
         ufp_value="mount_type",
         ufp_set_method="set_mount_type",
+        ufp_capability=SensorFeatureCapability.OPEN,
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectSelectEntityDescription[Sensor](
@@ -357,6 +360,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up number entities for UniFi Protect integration."""
     data = entry.runtime_data
+    async_remove_unsupported_sense_entities(hass, Platform.SELECT, data, SENSE_SELECTS)
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:

@@ -36,7 +36,7 @@ from homeassistant.helpers.selector import (
     NumericThresholdSelector,
     NumericThresholdSelectorConfig,
 )
-from homeassistant.helpers.sun import get_astral_event_date, get_astral_observer
+from homeassistant.helpers.sun import get_astral_event_date, get_astral_observer, is_up
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -85,34 +85,18 @@ def sun(
     has_sunrise_condition = SUN_EVENT_SUNRISE in (before, after)
     has_sunset_condition = SUN_EVENT_SUNSET in (before, after)
 
-    after_sunrise = today > dt_util.as_local(cast(datetime, sunrise)).date()
+    after_sunrise = sunrise is not None and today > dt_util.as_local(sunrise).date()
     if after_sunrise and has_sunrise_condition:
         tomorrow = today + timedelta(days=1)
         sunrise = get_astral_event_date(hass, SUN_EVENT_SUNRISE, tomorrow)
 
-    after_sunset = today > dt_util.as_local(cast(datetime, sunset)).date()
+    after_sunset = sunset is not None and today > dt_util.as_local(sunset).date()
     if after_sunset and has_sunset_condition:
         tomorrow = today + timedelta(days=1)
         sunset = get_astral_event_date(hass, SUN_EVENT_SUNSET, tomorrow)
 
-    # Special case: before sunrise OR after sunset
-    # This will handle the very rare case in the polar region when the sun rises/sets
-    # but does not set/rise.
-    # However this entire condition does not handle those full days of darkness
-    # or light, the following should be used instead:
-    #
-    #    condition:
-    #      condition: state
-    #      entity_id: sun.sun
-    #      state: 'above_horizon' (or 'below_horizon')
-    #
-    if before == SUN_EVENT_SUNRISE and after == SUN_EVENT_SUNSET:
-        wanted_time_before = cast(datetime, sunrise) + before_offset
-        condition_trace_update_result(wanted_time_before=wanted_time_before)
-        wanted_time_after = cast(datetime, sunset) + after_offset
-        condition_trace_update_result(wanted_time_after=wanted_time_after)
-        return utcnow < wanted_time_before or utcnow > wanted_time_after
-
+    # A missing sunrise/sunset means the sun doesn't rise/set on this day, which
+    # happens in polar regions.
     if sunrise is None and has_sunrise_condition:
         # There is no sunrise today
         condition_trace_set_result(False, message="no sunrise today")
@@ -122,6 +106,16 @@ def sun(
         # There is no sunset today
         condition_trace_set_result(False, message="no sunset today")
         return False
+
+    # "before: sunrise" combined with "after: sunset" describes the dark period
+    # around midnight, so it is evaluated as an OR (true before sunrise or after
+    # sunset) rather than the usual AND of the two bounds.
+    if before == SUN_EVENT_SUNRISE and after == SUN_EVENT_SUNSET:
+        wanted_time_before = cast(datetime, sunrise) + before_offset
+        condition_trace_update_result(wanted_time_before=wanted_time_before)
+        wanted_time_after = cast(datetime, sunset) + after_offset
+        condition_trace_update_result(wanted_time_after=wanted_time_after)
+        return utcnow < wanted_time_before or utcnow > wanted_time_after
 
     if before == SUN_EVENT_SUNRISE:
         wanted_time_before = cast(datetime, sunrise) + before_offset
@@ -232,8 +226,7 @@ class _UpCondition(_SunStateCondition):
     @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
-        elevation, _ = _solar_position(self._hass)
-        return elevation >= ELEVATION_HORIZON
+        return is_up(self._hass)
 
 
 class _SetCondition(_SunStateCondition):
@@ -242,8 +235,7 @@ class _SetCondition(_SunStateCondition):
     @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
-        elevation, _ = _solar_position(self._hass)
-        return elevation < ELEVATION_HORIZON
+        return not is_up(self._hass)
 
 
 class _AscendingCondition(_SunStateCondition):

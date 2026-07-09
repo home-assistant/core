@@ -17,10 +17,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     LIGHT_LUX,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfApparentPower,
@@ -30,6 +28,7 @@ from homeassistant.const import (
     UnitOfFrequency,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
@@ -203,7 +202,7 @@ class RpcBluTrvSensor(RpcSensor):
 BLOCK_SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ("device", "battery"): BlockSensorDescription(
         key="device|battery",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda settings, _: settings.get("external_power") == 1,
@@ -350,7 +349,7 @@ BLOCK_SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ("sensor", "concentration"): BlockSensorDescription(
         key="sensor|concentration",
         translation_key="gas_concentration",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("sensor", "temp"): BlockSensorDescription(
@@ -373,7 +372,7 @@ BLOCK_SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ),
     ("sensor", "humidity"): BlockSensorDescription(
         key="sensor|humidity",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -398,7 +397,7 @@ BLOCK_SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ("relay", "totalWorkTime"): BlockSensorDescription(
         key="relay|totalWorkTime",
         translation_key="lamp_life",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value=get_shelly_air_lamp_life,
         suggested_display_precision=1,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -1255,7 +1254,7 @@ RPC_SENSORS: Final = {
     "humidity_rh": RpcSensorDescription(
         key="humidity",
         sub_key="rh",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1266,7 +1265,7 @@ RPC_SENSORS: Final = {
     "battery": RpcSensorDescription(
         key="devicepower",
         sub_key="battery",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value=lambda status, _: status["percent"],
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1296,7 +1295,7 @@ RPC_SENSORS: Final = {
         key="input",
         sub_key="percent",
         translation_key="analog",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda config, _, key: (
             config[key]["type"] != "analog" or config[key]["enable"] is False
@@ -1389,7 +1388,7 @@ RPC_SENSORS: Final = {
         key="blutrv",
         sub_key="pos",
         translation_key="valve_position",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         removal_condition=lambda config, _, key: (
@@ -1400,7 +1399,7 @@ RPC_SENSORS: Final = {
     "blutrv_battery": RpcSensorDescription(
         key="blutrv",
         sub_key="battery",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -1448,7 +1447,7 @@ RPC_SENSORS: Final = {
     "number_current_humidity": RpcSensorDescription(
         key="number",
         sub_key="value",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         suggested_display_precision=1,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1686,7 +1685,7 @@ RPC_SENSORS: Final = {
         translation_key="left_slot_level",
         value=lambda status, _: status["left"]["vial"]["level"],
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         available=lambda status: (
             (left := status["left"]) is not None
@@ -1710,7 +1709,7 @@ RPC_SENSORS: Final = {
         translation_key="right_slot_level",
         value=lambda status, _: status["right"]["vial"]["level"],
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         available=lambda status: (
             (right := status["right"]) is not None

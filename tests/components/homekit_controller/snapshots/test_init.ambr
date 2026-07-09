@@ -325,13 +325,13 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_32896_32900',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airversa AP2 1808 Filter lifetime',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.airversa_ap2_1808_filter_lifetime',
             'state': '100.0',
@@ -373,14 +373,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_2576_2580',
-            'unit_of_measurement': 'μg/m³',
+            'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Airversa AP2 1808 PM2.5 Density',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
             }),
             'entity_id': 'sensor.airversa_ap2_1808_pm2_5_density',
             'state': '3.0',
@@ -930,7 +930,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_4_101',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -938,7 +938,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'eufyCam2-0000 Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-20',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.eufycam2_0000_battery',
             'state': '17',
@@ -1192,7 +1192,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_2_101',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -1200,7 +1200,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'eufyCam2-000A Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-40',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.eufycam2_000a_battery',
             'state': '38',
@@ -1454,7 +1454,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_3_101',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -1462,7 +1462,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'eufyCam2-000A Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-alert',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.eufycam2_000a_battery_2',
             'state': '100',
@@ -1898,7 +1898,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_33_5',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -1906,7 +1906,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Contact Sensor Battery Sensor',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.contact_sensor_battery_sensor',
             'state': '100',
@@ -2321,7 +2321,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_5',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -2329,7 +2329,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Programmable Switch Battery Sensor',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.programmable_switch_battery_sensor',
             'state': '100',
@@ -2655,7 +2655,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_700',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -2663,7 +2663,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ArloBabyA0 Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-80',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.arlobabya0_battery',
             'state': '82',
@@ -2705,14 +2705,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_900',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ArloBabyA0 Humidity',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.arlobabya0_humidity',
             'state': '60.099998',
@@ -3950,14 +3950,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_16_24',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HomeW Current Humidity',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.homew_current_humidity',
             'state': '34',
@@ -4573,7 +4573,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_4295608960_192',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -4581,7 +4581,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basement Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.basement_battery',
             'state': '100',
@@ -4888,7 +4888,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_4298360914_192',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -4896,7 +4896,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Basement Window 1 Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.basement_window_1_battery',
             'state': '100',
@@ -5151,7 +5151,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_4298360921_192',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -5159,7 +5159,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Deck Door Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.deck_door_battery',
             'state': '100',
@@ -5414,7 +5414,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_4298527970_192',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -5422,7 +5422,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.front_door_battery',
             'state': '100',
@@ -5677,7 +5677,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_4298527962_192',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -5685,7 +5685,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Door Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.garage_door_battery',
             'state': '100',
@@ -5895,7 +5895,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_4295016858_192',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -5903,7 +5903,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.living_room_battery',
             'state': '100',
@@ -6210,7 +6210,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_4298360712_192',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -6218,7 +6218,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Window 1 Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.living_room_window_1_battery',
             'state': '100',
@@ -6473,7 +6473,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_4298649931_192',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -6481,7 +6481,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Loft window Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.loft_window_battery',
             'state': '100',
@@ -6691,7 +6691,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_4295608971_192',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -6699,7 +6699,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master BR Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.master_br_battery',
             'state': '100',
@@ -7006,7 +7006,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_4298584118_192',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -7014,7 +7014,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master BR Window Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.master_br_window_battery',
             'state': '100',
@@ -7363,14 +7363,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_16_24',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat Current Humidity',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.thermostat_current_humidity',
             'state': '45.0',
@@ -7632,7 +7632,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_4295016969_192',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -7640,7 +7640,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Upstairs BR Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.upstairs_br_battery',
             'state': '100',
@@ -7947,7 +7947,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_4298568508_192',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -7955,7 +7955,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Upstairs BR Window Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.upstairs_br_window_battery',
             'state': '100',
@@ -8394,14 +8394,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_16_24',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HomeW Current Humidity',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.homew_current_humidity',
             'state': '34',
@@ -8826,14 +8826,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_16_24',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HomeW Current Humidity',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.homew_current_humidity',
             'state': '34',
@@ -9683,14 +9683,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_16_24',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My ecobee Current Humidity',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.my_ecobee_current_humidity',
             'state': '55.0',
@@ -10341,7 +10341,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_17',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -10349,7 +10349,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Degree AA11 Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-60',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.eve_degree_aa11_battery',
             'state': '65',
@@ -10391,14 +10391,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_27',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Degree AA11 Humidity',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.eve_degree_aa11_humidity',
             'state': '59.4818115234375',
@@ -11350,7 +11350,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_123016423_162',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -11358,7 +11358,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Family Room North Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.family_room_north_battery',
             'state': '100',
@@ -11603,7 +11603,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_878448248_9',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -11611,7 +11611,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Window Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.kitchen_window_battery',
             'state': '100',
@@ -12255,14 +12255,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1233851541_169_180',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '89 Living Room Current Humidity',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.89_living_room_current_humidity',
             'state': '60',
@@ -12648,7 +12648,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_3982136094_604',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -12656,7 +12656,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laundry Smoke ED78 Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.laundry_smoke_ed78_battery',
             'state': '100',
@@ -12827,7 +12827,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_123016423_162',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -12835,7 +12835,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Family Room North Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.family_room_north_battery',
             'state': '100',
@@ -13080,7 +13080,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_878448248_9',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -13088,7 +13088,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Window Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.kitchen_window_battery',
             'state': '100',
@@ -13957,14 +13957,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1233851541_169_180',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '89 Living Room Current Humidity',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.89_living_room_current_humidity',
             'state': '60',
@@ -14358,14 +14358,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_293334836_8_9',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 182A Current Humidity',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.humidifier_182a_current_humidity',
             'state': '0',
@@ -14629,14 +14629,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_293334836_8_9',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 182A Current Humidity',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.humidifier_182a_current_humidity',
             'state': '0',
@@ -14902,7 +14902,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_3982136094_604',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -14910,7 +14910,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Laundry Smoke ED78 Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.laundry_smoke_ed78_battery',
             'state': '100',
@@ -16320,7 +16320,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_6623462389072572_644245094400',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -16328,7 +16328,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hue dimmer switch Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.hue_dimmer_switch_battery',
             'state': '100',
@@ -18122,14 +18122,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_100_107',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lennox Current Humidity',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.lennox_current_humidity',
             'state': '34',
@@ -19321,14 +19321,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_20_27',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mysa-85dda9 Current Humidity',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.mysa_85dda9_current_humidity',
             'state': '40',
@@ -19848,7 +19848,7 @@
             'area_id': None,
             'capabilities': dict({
               <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-                'single_press',
+                'ring',
                 'double_press',
                 'long_press',
               ]),
@@ -19887,7 +19887,7 @@
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'doorbell',
               <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
               <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
-                'single_press',
+                'ring',
                 'double_press',
                 'long_press',
               ]),
@@ -20323,14 +20323,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_10',
-            'unit_of_measurement': 'ppm',
+            'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Healthy Home Coach Carbon Dioxide sensor',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
             }),
             'entity_id': 'sensor.healthy_home_coach_carbon_dioxide_sensor',
             'state': '804',
@@ -20372,14 +20372,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_14',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Healthy Home Coach Humidity sensor',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.healthy_home_coach_humidity_sensor',
             'state': '59',
@@ -21112,7 +21112,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_2_64',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -21120,7 +21120,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Master Bath South RYSE Shade Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.master_bath_south_ryse_shade_battery',
             'state': '100',
@@ -21365,7 +21365,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_3_64',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -21373,7 +21373,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RYSE SmartShade RYSE Shade Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.ryse_smartshade_ryse_shade_battery',
             'state': '100',
@@ -21544,7 +21544,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_4_64',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -21552,7 +21552,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BR Left RYSE Shade Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.br_left_ryse_shade_battery',
             'state': '100',
@@ -21719,7 +21719,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_2_64',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -21727,7 +21727,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LR Left RYSE Shade Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-90',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.lr_left_ryse_shade_battery',
             'state': '89',
@@ -21894,7 +21894,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_3_64',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -21902,7 +21902,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LR Right RYSE Shade Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.lr_right_ryse_shade_battery',
             'state': '100',
@@ -22147,7 +22147,7 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_5_64',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
@@ -22155,7 +22155,7 @@
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'RZSS RYSE Shade Battery',
               <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-alert',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.rzss_ryse_shade_battery',
             'state': '0',
@@ -23151,14 +23151,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_14',
-            'unit_of_measurement': 'ppm',
+            'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VELUX Sensor Carbon Dioxide sensor',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
             }),
             'entity_id': 'sensor.velux_sensor_carbon_dioxide_sensor',
             'state': '1124.0',
@@ -23200,14 +23200,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_11',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VELUX Sensor Humidity sensor',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.velux_sensor_humidity_sensor',
             'state': '69.0',
@@ -23461,14 +23461,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_2_14',
-            'unit_of_measurement': 'ppm',
+            'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VELUX Sensor Carbon Dioxide sensor',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
             }),
             'entity_id': 'sensor.velux_sensor_carbon_dioxide_sensor',
             'state': '400',
@@ -23510,14 +23510,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_2_11',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VELUX Sensor Humidity sensor',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.velux_sensor_humidity_sensor',
             'state': '58',
@@ -24267,14 +24267,14 @@
             'supported_features': 0,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_30_33',
-            'unit_of_measurement': '%',
+            'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
           }),
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VOCOlinc-Flowerbud-0d324b Current Humidity',
               <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+              <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
             }),
             'entity_id': 'sensor.vocolinc_flowerbud_0d324b_current_humidity',
             'state': '45.0',
