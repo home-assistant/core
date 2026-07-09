@@ -69,6 +69,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     instance_id,
 )
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entityfilter import (
     BASE_FILTER_SCHEMA,
@@ -168,6 +169,7 @@ STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
 PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
+LABEL_CHANGE_RELOAD_COOLDOWN = 3
 
 _HOMEKIT_CONFIG_UPDATE_TIME = (
     10  # number of seconds to wait for homekit to see the c# change
@@ -496,13 +498,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
         label_snapshot = _async_label_registry_snapshot(hass)
 
         @callback
+        def _async_schedule_reload() -> None:
+            """Schedule a reload of the HomeKit config entry."""
+            hass.config_entries.async_schedule_reload(entry.entry_id)
+
+        reload_debouncer = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=LABEL_CHANGE_RELOAD_COOLDOWN,
+            immediate=False,
+            function=_async_schedule_reload,
+        )
+
+        @callback
         def _async_reload_on_label_change(event: Event[Any]) -> None:
             """Reload HomeKit when a configured label assignment changes."""
             if _async_registry_label_change_matches(
                 hass, event, label_snapshot, configured_labels
             ):
-                hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+                reload_debouncer.async_schedule_call()
 
+        entry.async_on_unload(reload_debouncer.async_shutdown)
         entry.async_on_unload(
             hass.bus.async_listen(
                 er.EVENT_ENTITY_REGISTRY_UPDATED, _async_reload_on_label_change

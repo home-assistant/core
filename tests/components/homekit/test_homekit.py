@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from uuid import uuid1
 
+from freezegun.api import FrozenDateTimeFactory
 from pyhap.accessory import Accessory
 from pyhap.const import CATEGORY_CAMERA, CATEGORY_TELEVISION
 import pytest
@@ -14,6 +15,7 @@ from homeassistant.components import homekit as homekit_base, zeroconf
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.event import EventDeviceClass
 from homeassistant.components.homekit import (
+    LABEL_CHANGE_RELOAD_COOLDOWN,
     MAX_DEVICES,
     STATUS_READY,
     STATUS_RUNNING,
@@ -83,7 +85,7 @@ from homeassistant.setup import async_setup_component
 
 from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
 
-from tests.common import MockConfigEntry, get_fixture_path
+from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
 
 IP_ADDRESS = "127.0.0.1"
 
@@ -1931,6 +1933,7 @@ async def _async_setup_label_reload_test(
 @pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_entity_label_change_reloads_for_configured_labels(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
     label_registry: lr.LabelRegistry,
 ) -> None:
@@ -1942,7 +1945,7 @@ async def test_entity_label_change_reloads_for_configured_labels(
     )
     entry = await _async_setup_label_reload_test(hass, homekit_label.label_id)
 
-    with patch.object(hass.config_entries, "async_reload", AsyncMock()) as mock_reload:
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
         entity_registry.async_update_entity(
             registry_entry.entity_id, labels={other_label.label_id}
         )
@@ -1953,12 +1956,22 @@ async def test_entity_label_change_reloads_for_configured_labels(
             registry_entry.entity_id, labels={homekit_label.label_id}
         )
         await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        entity_registry.async_update_entity(registry_entry.entity_id, labels=set())
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        freezer.tick(LABEL_CHANGE_RELOAD_COOLDOWN)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
         mock_reload.assert_called_once_with(entry.entry_id)
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_device_label_change_reloads_for_configured_labels(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     device_registry: dr.DeviceRegistry,
     label_registry: lr.LabelRegistry,
 ) -> None:
@@ -1973,12 +1986,17 @@ async def test_device_label_change_reloads_for_configured_labels(
     )
     entry = await _async_setup_label_reload_test(hass, homekit_label.label_id)
 
-    with patch.object(hass.config_entries, "async_reload", AsyncMock()) as mock_reload:
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
         device_registry.async_update_device(device.id, labels={other_label.label_id})
         await hass.async_block_till_done()
         mock_reload.assert_not_called()
 
         device_registry.async_update_device(device.id, labels={homekit_label.label_id})
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        freezer.tick(LABEL_CHANGE_RELOAD_COOLDOWN)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         mock_reload.assert_called_once_with(entry.entry_id)
 
@@ -1986,6 +2004,7 @@ async def test_device_label_change_reloads_for_configured_labels(
 @pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_area_label_change_reloads_for_configured_labels(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     area_registry: ar.AreaRegistry,
     label_registry: lr.LabelRegistry,
 ) -> None:
@@ -1995,12 +2014,17 @@ async def test_area_label_change_reloads_for_configured_labels(
     area = area_registry.async_create("Label Reload")
     entry = await _async_setup_label_reload_test(hass, homekit_label.label_id)
 
-    with patch.object(hass.config_entries, "async_reload", AsyncMock()) as mock_reload:
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
         area_registry.async_update(area.id, labels={other_label.label_id})
         await hass.async_block_till_done()
         mock_reload.assert_not_called()
 
         area_registry.async_update(area.id, labels={homekit_label.label_id})
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        freezer.tick(LABEL_CHANGE_RELOAD_COOLDOWN)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         mock_reload.assert_called_once_with(entry.entry_id)
 
