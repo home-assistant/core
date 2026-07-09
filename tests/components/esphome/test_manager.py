@@ -15,7 +15,6 @@ from aioesphomeapi import (
     AreaInfo,
     BluetoothProxyFeature,
     DeviceInfo,
-    EncryptionHelloAPIError,
     EncryptionPlaintextAPIError,
     ExecuteServiceResponse,
     HomeassistantServiceCall,
@@ -23,7 +22,6 @@ from aioesphomeapi import (
     InvalidEncryptionKeyAPIError,
     LogLevel,
     RequiresEncryptionAPIError,
-    SocketClosedAPIError,
     SubDeviceInfo,
     SupportsResponseType,
     UserService,
@@ -2730,22 +2728,21 @@ async def test_manager_handle_dynamic_encryption_key_connection_error(
 
 
 @pytest.fixture
-def mock_provisioning_client() -> Generator[Mock]:
-    """Mock the short lived zero PSK client used to provision the key."""
+def mock_provisioning_client_cls() -> Generator[Mock]:
+    """Mock the APIClient class used for the zero PSK provisioning connection.
+
+    The class mock records the constructor call; its return_value is the
+    provisioning client instance.
+    """
     client = Mock(spec=APIClient)
     client.connect = AsyncMock()
     client.disconnect = AsyncMock()
     client.noise_encryption_set_key = AsyncMock(return_value=True)
-    client.constructor_kwargs = []
-
-    def _factory(*args: Any, **kwargs: Any) -> Mock:
-        client.constructor_kwargs.append(kwargs)
-        return client
 
     with patch(
-        "homeassistant.components.esphome.manager.APIClient", side_effect=_factory
-    ):
-        yield client
+        "homeassistant.components.esphome.manager.APIClient", return_value=client
+    ) as mock_cls:
+        yield mock_cls
 
 
 def _make_provisionable_entry(hass: HomeAssistant, mac_address: str) -> MockConfigEntry:
@@ -2769,7 +2766,7 @@ async def test_dynamic_encryption_key_provisioned_over_zero_psk(
     mock_token_bytes: Mock,
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_provisioning_client: Mock,
+    mock_provisioning_client_cls: Mock,
     mock_esphome_device: MockESPHomeDeviceType,
     hass_storage: dict[str, Any],
 ) -> None:
@@ -2801,16 +2798,17 @@ async def test_dynamic_encryption_key_provisioned_over_zero_psk(
     await device.mock_connect()
 
     # The key went over the zero PSK client, not the plaintext connection
-    mock_provisioning_client.noise_encryption_set_key.assert_called_once_with(
+    provisioning_client = mock_provisioning_client_cls.return_value
+    provisioning_client.noise_encryption_set_key.assert_called_once_with(
         base64.b64encode(test_key_bytes)
     )
     mock_client.noise_encryption_set_key.assert_not_called()
 
     # The provisioning client was built with the zero PSK and the device MAC
-    kwargs = mock_provisioning_client.constructor_kwargs[0]
+    kwargs = mock_provisioning_client_cls.call_args.kwargs
     assert kwargs["noise_psk"] == ZERO_NOISE_PSK
     assert kwargs["expected_mac"] == mac_address
-    mock_provisioning_client.disconnect.assert_called_with(force=True)
+    provisioning_client.disconnect.assert_called_with(force=True)
 
     # Entry and storage were updated
     assert entry.data[CONF_NOISE_PSK] == expected_key
@@ -2823,7 +2821,7 @@ async def test_dynamic_encryption_key_provisioned_over_zero_psk(
 async def test_dynamic_encryption_key_provisioned_over_zero_psk_from_storage(
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_provisioning_client: Mock,
+    mock_provisioning_client_cls: Mock,
     mock_esphome_device: MockESPHomeDeviceType,
     hass_storage: dict[str, Any],
 ) -> None:
@@ -2857,7 +2855,7 @@ async def test_dynamic_encryption_key_provisioned_over_zero_psk_from_storage(
     await device.mock_disconnect(True)
     await device.mock_connect()
 
-    mock_provisioning_client.noise_encryption_set_key.assert_called_once_with(
+    mock_provisioning_client_cls.return_value.noise_encryption_set_key.assert_called_once_with(
         test_key.encode()
     )
     mock_client.noise_encryption_set_key.assert_not_called()
@@ -2865,14 +2863,15 @@ async def test_dynamic_encryption_key_provisioned_over_zero_psk_from_storage(
 
 
 @pytest.mark.parametrize(
-    ("connect_error", "set_key_result"),
+    "connect_error",
     [
-        (EncryptionPlaintextAPIError("plaintext"), True),
-        (EncryptionHelloAPIError("hello"), True),
-        (SocketClosedAPIError("closed"), True),
-        (InvalidEncryptionKeyAPIError("already keyed"), True),
-        (APIConnectionError("timeout"), True),
-        (None, False),
+        # Device already has a key (distinct log branch)
+        InvalidEncryptionKeyAPIError("already keyed"),
+        # Old firmware answering plaintext to the noise hello (generic branch;
+        # all connection errors are APIConnectionError subclasses)
+        EncryptionPlaintextAPIError("plaintext"),
+        # Device accepted the connection but rejected the key
+        None,
     ],
 )
 @patch("homeassistant.components.esphome.manager.secrets.token_bytes")
@@ -2880,11 +2879,10 @@ async def test_dynamic_encryption_key_zero_psk_failures_never_use_plaintext(
     mock_token_bytes: Mock,
     hass: HomeAssistant,
     mock_client: APIClient,
-    mock_provisioning_client: Mock,
+    mock_provisioning_client_cls: Mock,
     mock_esphome_device: MockESPHomeDeviceType,
     hass_storage: dict[str, Any],
     connect_error: Exception | None,
-    set_key_result: bool,
 ) -> None:
     """Test zero PSK provisioning failures do not fall back to plaintext."""
     mac_address = "11:22:33:44:55:aa"
@@ -2900,9 +2898,11 @@ async def test_dynamic_encryption_key_zero_psk_failures_never_use_plaintext(
     entry = _make_provisionable_entry(hass, mac_address)
     mock_client.noise_encryption_set_key = AsyncMock(return_value=True)
 
+    provisioning_client = mock_provisioning_client_cls.return_value
     if connect_error is not None:
-        mock_provisioning_client.connect.side_effect = connect_error
-    mock_provisioning_client.noise_encryption_set_key.return_value = set_key_result
+        provisioning_client.connect.side_effect = connect_error
+    else:
+        provisioning_client.noise_encryption_set_key.return_value = False
 
     device = await mock_esphome_device(
         mock_client=mock_client,
@@ -2925,7 +2925,7 @@ async def test_dynamic_encryption_key_zero_psk_failures_never_use_plaintext(
     mock_client.noise_encryption_set_key.assert_not_called()
     assert CONF_NOISE_PSK not in entry.data
     assert mac_address not in hass_storage[ENCRYPTION_KEY_STORAGE_KEY]["data"]["keys"]
-    mock_provisioning_client.disconnect.assert_called_with(force=True)
+    provisioning_client.disconnect.assert_called_with(force=True)
 
 
 def test_zero_noise_psk_is_not_the_probe_key() -> None:

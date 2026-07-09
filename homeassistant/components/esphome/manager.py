@@ -14,7 +14,6 @@ from aioesphomeapi import (
     APIConnectionError,
     APIVersion,
     DeviceInfo as EsphomeDeviceInfo,
-    EncryptionHelloAPIError,
     EncryptionPlaintextAPIError,
     ExecuteServiceResponse,
     HomeassistantServiceCall,
@@ -23,7 +22,6 @@ from aioesphomeapi import (
     LogLevel,
     ReconnectLogic,
     RequiresEncryptionAPIError,
-    SocketClosedAPIError,
     SupportsResponseType,
     UserService,
     UserServiceArgType,
@@ -839,6 +837,7 @@ class ESPHomeManager:
             # Cheap hardening: verify the MAC in the server hello matches the
             # device we think we are talking to (spoofable, but free)
             expected_mac=unique_id if unique_id and ":" in unique_id else None,
+            timezone=self.hass.config.time_zone,
         )
         device_name = self.entry.data.get(CONF_DEVICE_NAME, self.host)
         try:
@@ -851,21 +850,9 @@ class ESPHomeManager:
                 device_name,
                 unique_id,
             )
-        except (
-            EncryptionPlaintextAPIError,
-            EncryptionHelloAPIError,
-            SocketClosedAPIError,
-        ) as ex:
-            # The device answered like plaintext-only firmware even though it
-            # advertised zero-PSK provisioning; never downgrade to plaintext
-            _LOGGER.warning(
-                "Device %s (%s) did not complete the encrypted provisioning "
-                "handshake: %s",
-                device_name,
-                unique_id,
-                ex,
-            )
         except APIConnectionError as ex:
+            # Whatever went wrong, we never downgrade to a plaintext push;
+            # provisioning simply runs again on the next connect cycle
             _LOGGER.warning(
                 "Error provisioning encryption key for device %s (%s): %s",
                 device_name,
