@@ -79,7 +79,7 @@ def _cover_device(
     return SimpleNamespace(
         name="Test Cover",
         id=device_id,
-        root_device_id="aa:bb:cc:00:00:01",
+        root_device_id="test-mac",
         serial=f"serial-{device_id}",
         device_model="SWD",
         level=level,
