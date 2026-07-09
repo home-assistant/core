@@ -2,7 +2,7 @@
 
 import asyncio
 import base64
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
@@ -371,6 +371,139 @@ class AddonFlowManager:
         return discovery_info_config
 
 
+class NvmMigrationManager:
+    """Handle the NVM backup and restore of an adapter migration."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Set up the NVM migration manager."""
+        self.hass = hass
+        self.backup_data: bytes | None = None
+        self.backup_filepath: Path | None = None
+
+    async def async_backup(
+        self, driver: Driver, update_progress: Callable[[float], None]
+    ) -> None:
+        """Back up the NVM of the current adapter and save it to a file."""
+
+        @callback
+        def forward_progress(event: dict) -> None:
+            """Forward progress events to frontend."""
+            update_progress(event["bytesRead"] / event["total"])
+
+        controller = driver.controller
+        unsub = controller.on("nvm backup progress", forward_progress)
+        try:
+            self.backup_data = await controller.async_backup_nvm_raw()
+        except FailedCommand as err:
+            raise AbortFlow(f"Failed to backup network: {err}") from err
+        finally:
+            unsub()
+
+        # save the backup to a file just in case
+        self.backup_filepath = Path(
+            self.hass.config.path(
+                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"  # pylint: disable=home-assistant-enforce-naive-now
+            )
+        )
+        try:
+            await self.hass.async_add_executor_job(
+                self.backup_filepath.write_bytes,
+                self.backup_data,
+            )
+        except OSError as err:
+            raise AbortFlow(f"Failed to save backup file: {err}") from err
+
+    async def async_restore(
+        self,
+        config_entry: ZwaveJSConfigEntry,
+        get_driver: Callable[[], Driver],
+        update_progress: Callable[[float], None],
+    ) -> None:
+        """Restore the backup to the new adapter."""
+        assert self.backup_data is not None
+
+        # Make sure we keep the old devices
+        # so that user customizations are not lost,
+        # when loading the config entry.
+        self.hass.config_entries.async_update_entry(
+            config_entry, data=config_entry.data | {CONF_KEEP_OLD_DEVICES: True}
+        )
+
+        # Reload the config entry to reconnect the client after the addon restart
+        await self.hass.config_entries.async_reload(config_entry.entry_id)
+
+        data = config_entry.data.copy()
+        data.pop(CONF_KEEP_OLD_DEVICES, None)
+        self.hass.config_entries.async_update_entry(config_entry, data=data)
+
+        @callback
+        def forward_progress(event: dict) -> None:
+            """Forward progress events to frontend."""
+            if event["event"] == "nvm convert progress":
+                # assume convert is 50% of the total progress
+                update_progress(event["bytesRead"] / event["total"] * 0.5)
+            elif event["event"] == "nvm restore progress":
+                # assume restore is the rest of the progress
+                update_progress(event["bytesWritten"] / event["total"] * 0.5 + 0.5)
+
+        driver = get_driver()
+        controller = driver.controller
+        unsubs = [
+            controller.on("nvm convert progress", forward_progress),
+            controller.on("nvm restore progress", forward_progress),
+        ]
+
+        wait_for_driver_ready = async_wait_for_driver_ready_event(config_entry, driver)
+
+        try:
+            await controller.async_restore_nvm(
+                self.backup_data, {"preserveRoutes": False}
+            )
+        except FailedCommand as err:
+            raise AbortFlow(f"Failed to restore network: {err}") from err
+        else:
+            with suppress(TimeoutError):
+                await wait_for_driver_ready()
+            try:
+                version_info = await async_get_version_info(
+                    self.hass, config_entry.data[CONF_URL]
+                )
+            except CannotConnect:
+                # Just log this error, as there's nothing to do about it here.
+                # The stale unique id needs to be handled by a repair flow,
+                # after the config entry has been reloaded.
+                _LOGGER.error(
+                    "Failed to get server version, cannot update config entry "
+                    "unique id with new home id, after controller reset"
+                )
+            else:
+                # The reload triggered by the driver ready event runs before
+                # the unique id is updated here and hits the unknown adapter
+                # branch on setup, which sets the keep old devices flag again.
+                # Clear the flag so the reload below cleans up stale devices.
+                data = {
+                    key: value
+                    for key, value in config_entry.data.items()
+                    if key != CONF_KEEP_OLD_DEVICES
+                }
+                self.hass.config_entries.async_update_entry(
+                    config_entry, data=data, unique_id=str(version_info.home_id)
+                )
+
+            # The config entry will be also be reloaded when the driver is ready,
+            # by the listener in the package module,
+            # and two reloads are needed to clean up the stale controller device entry.
+            # Since both the old and the new controller have the same node id,
+            # but different hardware identifiers, the integration
+            # will create a new device for the new controller, on the first reload,
+            # but not immediately remove the old device.
+            await self.hass.config_entries.async_reload(config_entry.entry_id)
+
+        finally:
+            for unsub in unsubs:
+                unsub()
+
+
 class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Z-Wave JS."""
 
@@ -378,6 +511,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     def _addon_setup(self) -> AddonFlowManager:
         """Return the add-on flow manager."""
         return AddonFlowManager(self.hass)
+
+    @cached_property
+    def _migration(self) -> NvmMigrationManager:
+        """Return the NVM migration manager."""
+        return NvmMigrationManager(self.hass)
 
     VERSION = 1
 
@@ -395,8 +533,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.revert_reason: str | None = None
         self.backup_task: asyncio.Task | None = None
         self.restore_backup_task: asyncio.Task | None = None
-        self.backup_data: bytes | None = None
-        self.backup_filepath: Path | None = None
         self.use_addon = False
         self._addon_config_updates: dict[str, Any] = {}
         self._migrating = False
@@ -1226,7 +1362,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="instruct_unplug",
             description_placeholders={
-                "file_path": str(self.backup_filepath),
+                "file_path": str(self._migration.backup_filepath),
             },
         )
 
@@ -1458,18 +1594,20 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Restore failed."""
         if user_input is not None:
             return await self.async_step_restore_nvm()
-        assert self.backup_filepath is not None
-        assert self.backup_data is not None
+        backup_filepath = self._migration.backup_filepath
+        backup_data = self._migration.backup_data
+        assert backup_filepath is not None
+        assert backup_data is not None
 
         return self.async_show_form(
             step_id="restore_failed",
             description_placeholders={
-                "file_path": str(self.backup_filepath),
+                "file_path": str(backup_filepath),
                 "file_url": (
                     "data:application/octet-stream;base64,"
-                    f"{base64.b64encode(self.backup_data).decode('ascii')}"
+                    f"{base64.b64encode(backup_data).decode('ascii')}"
                 ),
-                "file_name": self.backup_filepath.name,
+                "file_name": backup_filepath.name,
             },
         )
 
@@ -1677,123 +1815,17 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_backup_network(self) -> None:
         """Backup the current network."""
-
-        @callback
-        def forward_progress(event: dict) -> None:
-            """Forward progress events to frontend."""
-            self.async_update_progress(event["bytesRead"] / event["total"])
-
-        controller = self._get_driver().controller
-        unsub = controller.on("nvm backup progress", forward_progress)
-        try:
-            self.backup_data = await controller.async_backup_nvm_raw()
-        except FailedCommand as err:
-            raise AbortFlow(f"Failed to backup network: {err}") from err
-        finally:
-            unsub()
-
-        # save the backup to a file just in case
-        self.backup_filepath = Path(
-            self.hass.config.path(
-                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"  # pylint: disable=home-assistant-enforce-naive-now
-            )
+        await self._migration.async_backup(
+            self._get_driver(), self.async_update_progress
         )
-        try:
-            await self.hass.async_add_executor_job(
-                self.backup_filepath.write_bytes,
-                self.backup_data,
-            )
-        except OSError as err:
-            raise AbortFlow(f"Failed to save backup file: {err}") from err
 
     async def _async_restore_network_backup(self) -> None:
         """Restore the backup."""
-        assert self.backup_data is not None
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
-
-        # Make sure we keep the old devices
-        # so that user customizations are not lost,
-        # when loading the config entry.
-        self.hass.config_entries.async_update_entry(
-            config_entry, data=config_entry.data | {CONF_KEEP_OLD_DEVICES: True}
+        await self._migration.async_restore(
+            config_entry, self._get_driver, self.async_update_progress
         )
-
-        # Reload the config entry to reconnect the client after the addon restart
-        await self.hass.config_entries.async_reload(config_entry.entry_id)
-
-        data = config_entry.data.copy()
-        data.pop(CONF_KEEP_OLD_DEVICES, None)
-        self.hass.config_entries.async_update_entry(config_entry, data=data)
-
-        @callback
-        def forward_progress(event: dict) -> None:
-            """Forward progress events to frontend."""
-            if event["event"] == "nvm convert progress":
-                # assume convert is 50% of the total progress
-                self.async_update_progress(event["bytesRead"] / event["total"] * 0.5)
-            elif event["event"] == "nvm restore progress":
-                # assume restore is the rest of the progress
-                self.async_update_progress(
-                    event["bytesWritten"] / event["total"] * 0.5 + 0.5
-                )
-
-        driver = self._get_driver()
-        controller = driver.controller
-        unsubs = [
-            controller.on("nvm convert progress", forward_progress),
-            controller.on("nvm restore progress", forward_progress),
-        ]
-
-        wait_for_driver_ready = async_wait_for_driver_ready_event(config_entry, driver)
-
-        try:
-            await controller.async_restore_nvm(
-                self.backup_data, {"preserveRoutes": False}
-            )
-        except FailedCommand as err:
-            raise AbortFlow(f"Failed to restore network: {err}") from err
-        else:
-            with suppress(TimeoutError):
-                await wait_for_driver_ready()
-            try:
-                version_info = await async_get_version_info(
-                    self.hass, config_entry.data[CONF_URL]
-                )
-            except CannotConnect:
-                # Just log this error, as there's nothing to do about it here.
-                # The stale unique id needs to be handled by a repair flow,
-                # after the config entry has been reloaded.
-                _LOGGER.error(
-                    "Failed to get server version, cannot update config entry "
-                    "unique id with new home id, after controller reset"
-                )
-            else:
-                # The reload triggered by the driver ready event runs before
-                # the unique id is updated here and hits the unknown adapter
-                # branch on setup, which sets the keep old devices flag again.
-                # Clear the flag so the reload below cleans up stale devices.
-                data = {
-                    key: value
-                    for key, value in config_entry.data.items()
-                    if key != CONF_KEEP_OLD_DEVICES
-                }
-                self.hass.config_entries.async_update_entry(
-                    config_entry, data=data, unique_id=str(version_info.home_id)
-                )
-
-            # The config entry will be also be reloaded when the driver is ready,
-            # by the listener in the package module,
-            # and two reloads are needed to clean up the stale controller device entry.
-            # Since both the old and the new controller have the same node id,
-            # but different hardware identifiers, the integration
-            # will create a new device for the new controller, on the first reload,
-            # but not immediately remove the old device.
-            await self.hass.config_entries.async_reload(config_entry.entry_id)
-
-        finally:
-            for unsub in unsubs:
-                unsub()
 
     def _get_driver(self) -> Driver:
         """Get the driver from the config entry."""
