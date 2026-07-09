@@ -190,17 +190,6 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Seconds between scans"
-        },
-        "description": "Specify settings for {gateway_name}",
-        "title": "[%key:component::screenlogic::config::step::gateway_entry::title%]"
-      }
-    }
-  },
   "services": {
     "set_color_mode": {
       "description": "Sets the color mode for all color-capable lights attached to this ScreenLogic gateway.",
