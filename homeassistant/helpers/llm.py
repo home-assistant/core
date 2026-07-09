@@ -6,7 +6,6 @@ from dataclasses import dataclass, field as dc_field
 from datetime import timedelta
 from decimal import Decimal
 from enum import Enum
-from functools import cache, partial
 from operator import attrgetter
 from typing import Any, cast, override
 
@@ -18,13 +17,10 @@ from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
     SERVICE_GET_EVENTS,
 )
-from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
-from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.sensor import async_rounded_state
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN, TodoServices
-from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_SERVICE,
@@ -49,11 +45,14 @@ from . import (
     selector,
     service,
 )
+from .deprecation import deprecated_function
 from .singleton import singleton
 
 ACTION_PARAMETERS_CACHE: HassKey[
     dict[str, dict[str, tuple[str | None, vol.Schema]]]
 ] = HassKey("llm_action_parameters_cache")
+
+APIS_CACHE: HassKey[dict[str, API]] = HassKey("llm_apis")
 
 
 LLM_API_ASSIST = "assist"
@@ -73,44 +72,8 @@ NO_ENTITIES_PROMPT = (
     "to their voice assistant in Home Assistant."
 )
 
-DEVICE_CONTROL_TOOL_USAGE_PROMPT = (
-    "When controlling Home Assistant always call the intent tools. "
-    "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
-    "When controlling a device, prefer passing just name and domain. "
-    "When controlling an area, prefer passing just area name and domain."
-)
 
-DYNAMIC_CONTEXT_PROMPT = (
-    "You ARE equipped to answer questions about the"
-    " current state of\n"
-    "the home using the `GetLiveContext` tool."
-    " This is a primary function."
-    " Do not state you lack the\n"
-    "functionality if the question requires live data.\n"
-    "If the user asks about device existence/type"
-    ' (e.g., "Do I have lights in the bedroom?"):'
-    " Answer\n"
-    "from the static context below.\n"
-    "If the user asks about the CURRENT state, value,"
-    ' or mode (e.g., "Is the lock locked?",\n'
-    '"Is the fan on?",'
-    ' "What mode is the thermostat in?",'
-    ' "What is the temperature outside?"):\n'
-    "    1.  Recognize this requires live data.\n"
-    "    2.  You MUST call `GetLiveContext`."
-    " This tool will provide the needed real-time"
-    " information (like temperature from the local"
-    " weather, lock status, etc.).\n"
-    "    3.  Use the tool's response** to answer the"
-    " user accurately"
-    ' (e.g., "The temperature outside is'
-    ' [value from tool].").\n'
-    "For general knowledge questions not about the"
-    " home: Answer truthfully from internal"
-    " knowledge.\n"
-)
-
-
+@deprecated_function("an empty string", breaks_in_ha_version="2027.2")
 @callback
 def async_render_no_api_prompt(hass: HomeAssistant) -> str:
     """Return the prompt to be used when no API is configured.
@@ -120,13 +83,15 @@ def async_render_no_api_prompt(hass: HomeAssistant) -> str:
     return ""
 
 
-@singleton("llm")
+@singleton(APIS_CACHE)
 @callback
 def _async_get_apis(hass: HomeAssistant) -> dict[str, API]:
-    """Get all the LLM APIs."""
-    return {
-        LLM_API_ASSIST: AssistAPI(hass=hass),
-    }
+    """Return the registry of LLM APIs.
+
+    APIs are registered by their owning integration; the Assist API is
+    registered by the ``llm`` integration during setup.
+    """
+    return {}
 
 
 @callback
@@ -457,198 +422,6 @@ class MergedAPI(API):
             return x
 
         return merged
-
-
-class AssistAPI(API):
-    """API exposing Assist API to LLMs."""
-
-    IGNORE_INTENTS = {
-        intent.INTENT_GET_TEMPERATURE,
-        INTENT_GET_WEATHER,
-        INTENT_OPEN_COVER,  # deprecated
-        INTENT_CLOSE_COVER,  # deprecated
-        intent.INTENT_GET_STATE,
-        intent.INTENT_NEVERMIND,
-        intent.INTENT_TOGGLE,
-        intent.INTENT_GET_CURRENT_DATE,
-        intent.INTENT_GET_CURRENT_TIME,
-        intent.INTENT_RESPOND,
-    }
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Init the class."""
-        super().__init__(
-            hass=hass,
-            id=LLM_API_ASSIST,
-            name="Assist",
-        )
-        self.cached_slugify = cache(
-            partial(unicode_slug.slugify, separator="_", lowercase=False)
-        )
-
-    @override
-    async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
-        """Return the instance of the API."""
-        if llm_context.assistant:
-            exposed_entities: dict | None = _get_exposed_entities(
-                self.hass, llm_context.assistant, include_state=False
-            )
-        else:
-            exposed_entities = None
-
-        return APIInstance(
-            api=self,
-            api_prompt=self._async_get_api_prompt(llm_context, exposed_entities),
-            llm_context=llm_context,
-            tools=self._async_get_tools(llm_context, exposed_entities),
-            custom_serializer=selector_serializer,
-        )
-
-    @callback
-    def _async_get_api_prompt(
-        self, llm_context: LLMContext, exposed_entities: dict | None
-    ) -> str:
-        if not exposed_entities or not exposed_entities["entities"]:
-            return NO_ENTITIES_PROMPT
-
-        # Collect all parts, filtering out any None values
-        prompt_parts = [
-            DEVICE_CONTROL_TOOL_USAGE_PROMPT,
-            DYNAMIC_CONTEXT_PROMPT,
-            *self._async_get_exposed_entities_prompt(exposed_entities),
-            self._async_get_voice_satellite_area_prompt(llm_context),
-            self._async_get_no_timer_prompt(llm_context),
-        ]
-
-        # Filter out None and empty strings before joining
-        return "\n".join([part for part in prompt_parts if part])
-
-    @callback
-    def _async_get_no_timer_prompt(self, llm_context: LLMContext) -> str | None:
-        if not llm_context.device_id or not async_device_supports_timers(
-            self.hass, llm_context.device_id
-        ):
-            return "This device is not able to start timers."
-        return None
-
-    @callback
-    def _async_get_voice_satellite_area_prompt(self, llm_context: LLMContext) -> str:
-        """Return the area prompt for the voice satellite."""
-        floor: fr.FloorEntry | None = None
-        area: ar.AreaEntry | None = None
-        extra = ""
-        if llm_context.device_id:
-            device_reg = dr.async_get(self.hass)
-            device = device_reg.async_get(llm_context.device_id)
-
-            if device:
-                area_reg = ar.async_get(self.hass)
-                if device.area_id and (area := area_reg.async_get_area(device.area_id)):
-                    floor_reg = fr.async_get(self.hass)
-                    if area.floor_id:
-                        floor = floor_reg.async_get_floor(area.floor_id)
-
-            extra = (
-                "and all generic commands like"
-                " 'turn on the lights' should target"
-                " this area."
-            )
-
-        if floor and area:
-            return f"You are in area {area.name} (floor {floor.name}) {extra}".strip()
-        if area:
-            return f"You are in area {area.name} {extra}".strip()
-        return (
-            "When a user asks to turn on all devices of a specific type, "
-            "ask the user to specify an area, unless there"
-            " is only one device of that type."
-        )
-
-    @callback
-    def _async_get_exposed_entities_prompt(
-        self, exposed_entities: dict | None
-    ) -> list[str]:
-        """Return the prompt for the API for exposed entities."""
-        prompt = []
-
-        if exposed_entities and exposed_entities["entities"]:
-            prompt.append(
-                "Static Context: An overview of the areas"
-                " and the devices in this smart home:"
-            )
-            prompt.append(yaml_util.dump(list(exposed_entities["entities"].values())))
-
-        return prompt
-
-    @callback
-    def _async_get_tools(
-        self, llm_context: LLMContext, exposed_entities: dict | None
-    ) -> list[Tool]:
-        """Return a list of LLM tools."""
-        ignore_intents = self.IGNORE_INTENTS
-        if not llm_context.device_id or not async_device_supports_timers(
-            self.hass, llm_context.device_id
-        ):
-            ignore_intents = ignore_intents | {
-                intent.INTENT_START_TIMER,
-                intent.INTENT_CANCEL_TIMER,
-                intent.INTENT_INCREASE_TIMER,
-                intent.INTENT_DECREASE_TIMER,
-                intent.INTENT_PAUSE_TIMER,
-                intent.INTENT_UNPAUSE_TIMER,
-                intent.INTENT_TIMER_STATUS,
-            }
-
-        intent_handlers = [
-            intent_handler
-            for intent_handler in intent.async_get(self.hass)
-            if intent_handler.intent_type not in ignore_intents
-        ]
-
-        exposed_domains: set[str] | None = None
-        if exposed_entities is not None:
-            exposed_domains = {
-                info["domain"] for info in exposed_entities["entities"].values()
-            }
-
-            intent_handlers = [
-                intent_handler
-                for intent_handler in intent_handlers
-                if intent_handler.platforms is None
-                or intent_handler.platforms & exposed_domains
-            ]
-
-        tools: list[Tool] = [
-            IntentTool(self.cached_slugify(intent_handler.intent_type), intent_handler)
-            for intent_handler in intent_handlers
-        ]
-
-        tools.append(GetDateTimeTool())
-
-        if exposed_entities:
-            if exposed_entities[CALENDAR_DOMAIN]:
-                names = []
-                for info in exposed_entities[CALENDAR_DOMAIN].values():
-                    names.extend(info["names"].split(", "))
-                tools.append(CalendarGetEventsTool(names))
-
-            if exposed_domains is not None and TODO_DOMAIN in exposed_domains:
-                names = []
-                for info in exposed_entities["entities"].values():
-                    if info["domain"] != TODO_DOMAIN:
-                        continue
-                    names.extend(info["names"].split(", "))
-                tools.append(TodoGetItemsTool(names))
-
-            tools.extend(
-                ScriptTool(self.hass, script_entity_id)
-                for script_entity_id in exposed_entities[SCRIPT_DOMAIN]
-            )
-
-        if exposed_domains:
-            tools.append(GetLiveContextTool())
-
-        return tools
 
 
 def _get_exposed_entities(
