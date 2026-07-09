@@ -223,16 +223,45 @@ async def test_twinguard_creates_seven_sensors(hass: HomeAssistant) -> None:
         purity=500.0,
         combined_rating="GOOD",
         description="Air quality is good",
+        temperature_rating="GOOD",
+        humidity_rating="GOOD",
+        purity_rating="GOOD",
     )
     await _setup_sensor_integration(hass, twinguards=[device])
 
     states = hass.states.async_all(SENSOR_DOMAIN)
     assert len(states) == 7
 
+    temperature_state = next(
+        s for s in states if s.attributes.get("device_class") == "temperature"
+    )
+    assert float(temperature_state.state) == 22.0
+
+    humidity_state = next(
+        s for s in states if s.attributes.get("device_class") == "humidity"
+    )
+    assert float(humidity_state.state) == 50.0
+
+    purity_state = hass.states.get("sensor.test_device_purity")
+    assert purity_state is not None
+    assert float(purity_state.state) == 500.0
+
     air_quality_state = hass.states.get("sensor.test_device_air_quality")
     assert air_quality_state is not None
     assert air_quality_state.state == "GOOD"
     assert air_quality_state.attributes["rating_description"] == "Air quality is good"
+
+    temperature_rating_state = hass.states.get("sensor.test_device_temperature_rating")
+    assert temperature_rating_state is not None
+    assert temperature_rating_state.state == "GOOD"
+
+    humidity_rating_state = hass.states.get("sensor.test_device_humidity_rating")
+    assert humidity_rating_state is not None
+    assert humidity_rating_state.state == "GOOD"
+
+    purity_rating_state = hass.states.get("sensor.test_device_purity_rating")
+    assert purity_rating_state is not None
+    assert purity_rating_state.state == "GOOD"
 
 
 @pytest.mark.parametrize(
