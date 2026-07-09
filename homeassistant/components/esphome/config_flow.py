@@ -51,6 +51,7 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.json import json_loads_object
+from homeassistant.util.network import is_ip_address
 
 from .const import (
     CONF_ALLOW_SERVICE_CALLS,
@@ -387,10 +388,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             # Don't probe to verify the mac is correct since
             # the host matches (and port matches if provided).
             raise AbortFlow("already_configured")
-        # If the entry is loaded and the device is currently connected,
-        # don't update the host. This prevents transient mDNS announcements
-        # (e.g., during WiFi mesh roaming) from overwriting a working connection.
-        if entry.state is ConfigEntryState.LOADED and entry.runtime_data.available:
+        if self._async_host_update_blocked(entry):
             raise AbortFlow("already_configured")
         configured_psk: str | None = entry.data.get(CONF_NOISE_PSK)
         await self._fetch_device_info(host, port or configured_port, configured_psk)
@@ -400,6 +398,20 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             if port is not None:
                 updates[CONF_PORT] = port
         self._abort_unique_id_configured_with_details(updates=updates)
+
+    @callback
+    def _async_host_update_blocked(self, entry: ConfigEntry) -> bool:
+        """Return True if discovery must not update the entry host."""
+        configured_host: str | None = entry.data.get(CONF_HOST)
+        if configured_host and not is_ip_address(configured_host):
+            # Entry is configured with a hostname; never replace it
+            # with a discovered IP address.
+            return True
+        # If the entry is loaded and the device is currently connected,
+        # don't update the host. This prevents transient mDNS announcements
+        # (e.g., during WiFi mesh roaming) or stale retained MQTT discovery
+        # payloads from overwriting a working connection.
+        return entry.state is ConfigEntryState.LOADED and entry.runtime_data.available
 
     @callback
     def _abort_unique_id_configured_with_details(self, updates: dict[str, Any]) -> None:
@@ -462,9 +474,14 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Check if already configured
         await self.async_set_unique_id(mac_address)
-        self._abort_unique_id_configured_with_details(
-            updates={CONF_HOST: self._host, CONF_PORT: self._port}
-        )
+        updates: dict[str, Any] = {}
+        if not (
+            entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                self.handler, mac_address
+            )
+        ) or not self._async_host_update_blocked(entry):
+            updates = {CONF_HOST: self._host, CONF_PORT: self._port}
+        self._abort_unique_id_configured_with_details(updates=updates)
 
         return await self.async_step_discovery_confirm()
 

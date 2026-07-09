@@ -864,12 +864,9 @@ async def test_discovery_already_configured(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured_updates"
-    assert result["description_placeholders"] == {
-        "title": "Mock Title",
-        "name": "unknown",
-        "mac": "11:22:33:44:55:aa",
-    }
+    assert result["reason"] == "already_configured"
+    # Entry is configured with a hostname; discovery must not replace it
+    assert entry.data[CONF_HOST] == "test8266.local"
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -943,6 +940,36 @@ async def test_discovery_does_not_update_host_when_device_is_connected_dhcp(
     assert result["reason"] == "already_configured"
     # Host should NOT be updated since the device is currently connected
     assert entry.data[CONF_HOST] == "192.168.1.2"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_discovery_dhcp_does_not_update_host_configured_hostname(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test DHCP discovery does not update a hostname configured entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "test8266.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.43.184",
+            macaddress="1122334455aa",
+            hostname="test8266",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # Entry is configured with a hostname; discovery must not replace it
+    assert entry.data[CONF_HOST] == "test8266.local"
+    # The device should not have been probed since no update is possible
+    assert len(mock_client.device_info.mock_calls) == 0
 
 
 @pytest.mark.usefixtures("mock_client", "mock_setup_entry", "mock_zeroconf")
@@ -2297,6 +2324,100 @@ async def test_discovery_mqtt_initiation(hass: HomeAssistant) -> None:
 
     assert result["result"]
     assert result["result"].unique_id == "11:22:33:44:55:aa"
+
+
+@pytest.mark.usefixtures("mock_client", "mock_setup_entry", "mock_zeroconf")
+async def test_discovery_mqtt_updates_host(hass: HomeAssistant) -> None:
+    """Test MQTT discovery updates the host of an IP configured entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    service_info = MqttServiceInfo(
+        topic="esphome/discover/test",
+        payload='{"name":"test","mac":"1122334455aa","port":6053,"ip":"192.168.43.184"}',
+        qos=0,
+        retain=False,
+        subscribed_topic="esphome/discover/#",
+        timestamp=None,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_MQTT}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured_updates"
+    assert entry.data[CONF_HOST] == "192.168.43.184"
+
+
+@pytest.mark.usefixtures("mock_client", "mock_setup_entry", "mock_zeroconf")
+async def test_discovery_mqtt_does_not_update_host_configured_hostname(
+    hass: HomeAssistant,
+) -> None:
+    """Test MQTT discovery does not update a hostname configured entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "test8266.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    service_info = MqttServiceInfo(
+        topic="esphome/discover/test",
+        payload='{"name":"test","mac":"1122334455aa","port":6053,"ip":"192.168.43.184"}',
+        qos=0,
+        retain=False,
+        subscribed_topic="esphome/discover/#",
+        timestamp=None,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_MQTT}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured_detailed"
+    # Entry is configured with a hostname; discovery must not replace it
+    assert entry.data[CONF_HOST] == "test8266.local"
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_discovery_mqtt_does_not_update_host_when_device_is_connected(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test MQTT discovery does not update host when device is connected."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.2",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+    await mock_esphome_device(mock_client=mock_client, entry=entry)
+
+    service_info = MqttServiceInfo(
+        topic="esphome/discover/test",
+        payload='{"name":"test","mac":"1122334455aa","port":6053,"ip":"192.168.1.99"}',
+        qos=0,
+        retain=False,
+        subscribed_topic="esphome/discover/#",
+        timestamp=None,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_MQTT}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured_detailed"
+    # Host should NOT be updated since the device is currently connected
+    assert entry.data[CONF_HOST] == "192.168.1.2"
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
