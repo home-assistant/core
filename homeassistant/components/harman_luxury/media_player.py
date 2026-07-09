@@ -1,7 +1,8 @@
 """Media player platform for Harman Luxury."""
 
+from collections.abc import Coroutine
 from datetime import datetime
-from typing import override
+from typing import Any, override
 
 from aioharmanluxury import HarmanLuxuryClient, HarmanLuxuryError
 
@@ -22,6 +23,9 @@ from .coordinator import HarmanLuxuryConfigEntry, HarmanLuxuryCoordinator
 
 # The device serializes control on a single session; serialize at HA's layer.
 PARALLEL_UPDATES = 1
+
+# The device exposes volume on a 0..99 scale.
+_VOLUME_MAX = 99
 
 _PLAY_STATE_MAP = {
     "playing": MediaPlayerState.PLAYING,
@@ -105,7 +109,7 @@ class HarmanLuxuryMediaPlayer(
     @override
     def volume_level(self) -> float:
         """Return the volume level (0..1)."""
-        return self.coordinator.data.volume / 99
+        return self.coordinator.data.volume / _VOLUME_MAX
 
     @property
     @override
@@ -157,10 +161,10 @@ class HarmanLuxuryMediaPlayer(
         """Return when the media position was last retrieved."""
         return self.coordinator.position_updated_at
 
-    async def _async_control(self, command: str) -> None:
-        """Send a transport command and refresh."""
+    async def _async_send(self, coro: Coroutine[Any, Any, None]) -> None:
+        """Run a client command, translating failures and refreshing state."""
         try:
-            await self._client.async_control(command)
+            await coro
         except HarmanLuxuryError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="command_failed"
@@ -170,46 +174,36 @@ class HarmanLuxuryMediaPlayer(
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
-        try:
-            await self._client.async_set_volume(round(volume * 99))
-        except HarmanLuxuryError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="command_failed"
-            ) from err
-        await self.coordinator.async_request_refresh()
+        await self._async_send(
+            self._client.async_set_volume(round(volume * _VOLUME_MAX))
+        )
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute the output."""
-        try:
-            await self._client.async_set_mute(mute)
-        except HarmanLuxuryError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="command_failed"
-            ) from err
-        await self.coordinator.async_request_refresh()
+        await self._async_send(self._client.async_set_mute(mute))
 
     @override
     async def async_media_play(self) -> None:
         """Resume playback."""
-        await self._async_control("play")
+        await self._async_send(self._client.async_control("play"))
 
     @override
     async def async_media_pause(self) -> None:
         """Pause playback."""
-        await self._async_control("pause")
+        await self._async_send(self._client.async_control("pause"))
 
     @override
     async def async_media_stop(self) -> None:
         """Stop playback."""
-        await self._async_control("stop")
+        await self._async_send(self._client.async_control("stop"))
 
     @override
     async def async_media_next_track(self) -> None:
         """Skip to the next track."""
-        await self._async_control("next")
+        await self._async_send(self._client.async_control("next"))
 
     @override
     async def async_media_previous_track(self) -> None:
         """Skip to the previous track."""
-        await self._async_control("previous")
+        await self._async_send(self._client.async_control("previous"))
