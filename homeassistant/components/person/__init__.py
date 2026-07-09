@@ -31,6 +31,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_HOME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Event,
@@ -637,9 +638,9 @@ class Person(
         }
 
         if self._latitude is not None:
-            data[PersonEntityStateAttribute.LATITUDE] = self._latitude
+            data[EntityStateAttribute.LATITUDE] = self._latitude
         if self._longitude is not None:
-            data[PersonEntityStateAttribute.LONGITUDE] = self._longitude
+            data[EntityStateAttribute.LONGITUDE] = self._longitude
         if self._gps_accuracy is not None:
             data[PersonEntityStateAttribute.GPS_ACCURACY] = self._gps_accuracy
         if self._source is not None:
