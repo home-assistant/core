@@ -26,21 +26,12 @@ from tests.common import MockConfigEntry
 _EMPTY_DEVICE_BUCKETS: dict[str, list[Any]] = {
     bucket: []
     for bucket in (
-        "shutter_controls",
         "thermostats",
         "wallthermostats",
         "twinguards",
         "smart_plugs",
         "light_switches_bsm",
         "smart_plugs_compact",
-        "shutter_contacts",
-        "shutter_contacts2",
-        "motion_detectors",
-        "smoke_detectors",
-        "universal_switches",
-        "water_leakage_detectors",
-        "camera_eyes",
-        "camera_360",
     )
 }
 
