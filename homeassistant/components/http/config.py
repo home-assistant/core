@@ -74,6 +74,9 @@ KEY_YAML_MIGRATION_DONE: Final = "yaml_migration_done"
 
 AUTO_REVERT_DELAY: Final = timedelta(minutes=5)
 
+ISSUE_PENDING_REVERTED: Final = "pending_config_reverted"
+ISSUE_PENDING_NOT_CONFIRMED: Final = "pending_config_not_confirmed"
+
 DATA_STORE: HassKey[HTTPConfigStore] = HassKey(STORAGE_KEY)
 
 
@@ -295,6 +298,9 @@ class HTTPConfigStore:
             # No need to save a pending config that is the same as stable.
             config = None
         self._pending = config
+        # The user is changing the config again; stale revert issues no
+        # longer apply.
+        self._async_clear_revert_issues()
         await self._async_persist()
 
     async def async_promote_pending(self) -> None:
@@ -309,6 +315,7 @@ class HTTPConfigStore:
         self._pending = None
         # The config is now confirmed; no need to revert it anymore.
         self._async_cancel_revert()
+        self._async_clear_revert_issues()
         await self._async_persist()
 
     @callback
@@ -356,6 +363,19 @@ class HTTPConfigStore:
         )
         self._pending = None
         await self._async_persist()
+        # Persistent so the issue survives the restart that applies stable.
+        ir.async_create_issue(
+            self._hass,
+            DOMAIN,
+            ISSUE_PENDING_NOT_CONFIRMED,
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_PENDING_NOT_CONFIRMED,
+            translation_placeholders={
+                "minutes": str(int(AUTO_REVERT_DELAY.total_seconds() // 60))
+            },
+        )
         # Imported here to avoid a circular import at module load time.
         from homeassistant.components.homeassistant import (  # noqa: PLC0415
             DOMAIN as HASS_DOMAIN,
@@ -363,6 +383,35 @@ class HTTPConfigStore:
         )
 
         await self._hass.services.async_call(HASS_DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
+
+    async def async_abort_trial(self, reason: str) -> None:
+        """Abort the running pending-config trial and reinstate stable.
+
+        Called during setup when the pending config cannot be applied at all
+        (its address cannot be bound or its SSL configuration is unusable).
+        Clears the pending config so this and future starts use stable, and
+        raises a repair issue so the user learns the change was rolled back.
+        """
+        await self.async_load()
+        self._async_cancel_revert()
+        self._pending = None
+        await self._async_persist()
+        ir.async_create_issue(
+            self._hass,
+            DOMAIN,
+            ISSUE_PENDING_REVERTED,
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_PENDING_REVERTED,
+            translation_placeholders={"error": reason},
+        )
+
+    @callback
+    def _async_clear_revert_issues(self) -> None:
+        """Remove revert repair issues once the user changes the config again."""
+        ir.async_delete_issue(self._hass, DOMAIN, ISSUE_PENDING_REVERTED)
+        ir.async_delete_issue(self._hass, DOMAIN, ISSUE_PENDING_NOT_CONFIRMED)
 
     async def async_migrate_yaml(self, config: ConfData) -> None:
         """Migrate YAML config to storage as pending if not the same as the config used for recovery."""

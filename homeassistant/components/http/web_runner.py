@@ -1,76 +1,78 @@
 """HomeAssistant specific aiohttp Site."""
 
 import asyncio
+import errno
+import os
 from pathlib import Path
 import socket
-from ssl import SSLContext
+import sys
 from typing import override
 
 from aiohttp import web
-from yarl import URL
 
 
-class HomeAssistantTCPSite(web.BaseSite):
-    """HomeAssistant specific aiohttp Site.
+def create_server_sockets(hosts: list[str], port: int) -> list[socket.socket]:
+    """Create and bind the listening sockets for the given hosts and port.
 
-    Vanilla TCPSite accepts only str as host. However, the underlying asyncio's
-    create_server() implementation does take a list of strings to bind to multiple
-    host IP's. To support multiple server_host entries (e.g. to enable dual-stack
-    explicitly), we would like to pass an array of strings. Bring our own
-    implementation inspired by TCPSite.
+    Mirrors the bind behavior of ``loop.create_server()`` (multiple hosts,
+    ``SO_REUSEADDR``, ``IPV6_V6ONLY``, skipping unavailable address families)
+    but only binds, so an unusable configuration surfaces before it is
+    applied. Serving starts later, when the sockets are handed to aiohttp.
 
-    Custom TCPSite can be dropped when https://github.com/aio-libs/aiohttp/pull/4894
-    is merged.
+    Performs blocking name resolution and is intended to be run in an
+    executor. Raises OSError (including ``socket.gaierror``) if the
+    configuration cannot be bound.
     """
-
-    __slots__ = ("_host", "_hosturl", "_port", "_reuse_address", "_reuse_port")
-
-    def __init__(
-        self,
-        runner: web.BaseRunner,
-        host: str | list[str] | None,
-        port: int,
-        *,
-        ssl_context: SSLContext | None = None,
-        backlog: int = 128,
-        reuse_address: bool | None = None,
-        reuse_port: bool | None = None,
-    ) -> None:
-        """Initialize HomeAssistantTCPSite."""
-        super().__init__(
-            runner,
-            ssl_context=ssl_context,
-            backlog=backlog,
+    # Resolve all hosts up front so an unresolvable one fails the whole
+    # configuration before any socket is bound. Dict keys de-duplicate
+    # while keeping resolution order.
+    addr_infos = {
+        info: None
+        for host in hosts
+        for info in socket.getaddrinfo(
+            host, port, type=socket.SOCK_STREAM, flags=socket.AI_PASSIVE
         )
-        self._host = host
-        self._port = port
-        self._reuse_address = reuse_address
-        self._reuse_port = reuse_port
+    }
+    reuse_address = os.name == "posix" and sys.platform != "cygwin"
 
-    @property
-    @override
-    def name(self) -> str:
-        """Return server URL."""
-        scheme = "https" if self._ssl_context else "http"
-        host = self._host[0] if isinstance(self._host, list) else "0.0.0.0"
-        return str(URL.build(scheme=scheme, host=host, port=self._port))
-
-    @override
-    async def start(self) -> None:
-        """Start server."""
-        await super().start()
-        loop = asyncio.get_running_loop()
-        server = self._runner.server
-        assert server is not None
-        self._server = await loop.create_server(
-            server,
-            self._host,
-            self._port,
-            ssl=self._ssl_context,
-            backlog=self._backlog,
-            reuse_address=self._reuse_address,
-            reuse_port=self._reuse_port,
+    sockets: list[socket.socket] = []
+    try:
+        for family, socktype, proto, _canonname, address in addr_infos:
+            try:
+                sock = socket.socket(family, socktype, proto)
+            except OSError:
+                # Address family not supported on this system
+                continue
+            sockets.append(sock)
+            if reuse_address:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # Disable IPv4/IPv6 dual stack support (enabled by default on
+            # Linux) which makes a single socket listen on both address
+            # families.
+            if family == socket.AF_INET6 and hasattr(socket, "IPPROTO_IPV6"):
+                sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
+            try:
+                sock.bind(address)
+            except OSError as err:
+                if err.errno == errno.EADDRNOTAVAIL:
+                    # Assume the address family is not enabled (bpo-30945)
+                    sockets.pop()
+                    sock.close()
+                    continue
+                raise OSError(
+                    err.errno,
+                    f"error while attempting to bind on address {address!r}: "
+                    f"{(err.strerror or str(err)).lower()}",
+                ) from None
+    except BaseException:
+        for sock in sockets:
+            sock.close()
+        raise
+    if not sockets:
+        raise OSError(
+            f"could not bind on any address out of {[info[4] for info in addr_infos]!r}"
         )
+    return sockets
 
 
 class HomeAssistantUnixSite(web.BaseSite):

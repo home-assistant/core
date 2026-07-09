@@ -8,6 +8,14 @@
       "description": "Migrating the `http` configuration from `configuration.yaml` to the integration's storage failed. Please check the logs for details and configure the `http` integration from the UI under **Settings** > **System** > **Network**.",
       "title": "Failed to import HTTP YAML configuration"
     },
+    "pending_config_not_confirmed": {
+      "description": "The new HTTP network settings were not confirmed within {minutes} minutes and have been rolled back to the previous working settings. This usually means Home Assistant was not reachable with the new settings.\n\nReview the HTTP network settings under **Settings** > **System** > **Network** and try again. This issue is dismissed automatically when the HTTP network settings are changed again.",
+      "title": "HTTP network settings change was rolled back"
+    },
+    "pending_config_reverted": {
+      "description": "The new HTTP network settings could not be applied and have been rolled back to the previous working settings:\n\n{error}\n\nReview the HTTP network settings under **Settings** > **System** > **Network** and try again. This issue is dismissed automatically when the HTTP network settings are changed again.",
+      "title": "HTTP network settings change was rolled back"
+    },
     "server_host_deprecated_hassio": {
       "description": "The deprecated `server_host` configuration option in the HTTP integration is prone to break the communication between Home Assistant Core and Supervisor, and will be removed.\n\nIf you are using this option to bind Home Assistant to specific network interfaces, please remove it from your configuration. Home Assistant will automatically bind to all available interfaces by default.\n\nIf you have specific networking requirements, consider using firewall rules or other network configuration to control access to Home Assistant.",
       "title": "The `server_host` HTTP configuration may break Home Assistant Core - Supervisor communication"

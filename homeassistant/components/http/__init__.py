@@ -59,7 +59,12 @@ from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .config import async_load_config, default_server_port
+from .config import (
+    ConfData,
+    async_get_and_load_store,
+    async_load_config,
+    default_server_port,
+)
 from .const import (  # noqa: F401
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,
@@ -89,7 +94,7 @@ from .headers import setup_headers
 from .request_context import setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
-from .web_runner import HomeAssistantTCPSite, HomeAssistantUnixSite
+from .web_runner import HomeAssistantUnixSite, create_server_sockets
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -187,6 +192,80 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     websocket_api_module.async_register_websocket_commands(hass)
 
+    source_ip_task = create_eager_task(async_get_source_ip(hass))
+
+    supervisor_unix_socket_path: Path | None = None
+    if socket_env := os.environ.get("SUPERVISOR_CORE_API_SOCKET"):
+        socket_path = Path(socket_env)
+        if socket_path.is_absolute():
+            supervisor_unix_socket_path = socket_path
+        else:
+            _LOGGER.error(
+                "Invalid Supervisor Unix socket path %s: path must be absolute",
+                socket_env,
+            )
+
+    def _make_server(conf: ConfData) -> HomeAssistantHTTP:
+        return HomeAssistantHTTP(
+            hass,
+            server_host=conf.get(CONF_SERVER_HOST, _DEFAULT_BIND),
+            server_port=conf[CONF_SERVER_PORT],
+            ssl_certificate=conf.get(CONF_SSL_CERTIFICATE),
+            ssl_peer_certificate=conf.get(CONF_SSL_PEER_CERTIFICATE),
+            ssl_key=conf.get(CONF_SSL_KEY),
+            # The loaded config stores trusted proxies as strings
+            # (JSON-serializable); the forwarded middleware needs
+            # IPv4Network/IPv6Network objects.
+            trusted_proxies=[
+                ip_network(proxy) for proxy in conf.get(CONF_TRUSTED_PROXIES) or []
+            ],
+            ssl_profile=conf[CONF_SSL_PROFILE],
+            supervisor_unix_socket_path=supervisor_unix_socket_path,
+        )
+
+    server = _make_server(conf)
+    try:
+        await server.async_bind()
+    except (HomeAssistantError, OSError) as err:
+        store = await async_get_and_load_store(hass)
+        if store.revert_deadline is not None:
+            # An unconfirmed pending config is under trial and cannot even be
+            # applied, so it is known to be bad: revert to the stable config
+            # right away and continue this same start with it, instead of
+            # waiting out the trial window and restarting.
+            _LOGGER.error(
+                "The new HTTP configuration could not be applied, reverting to "
+                "the previous configuration: %s",
+                err,
+            )
+            await store.async_abort_trial(str(err))
+            conf = store.stable
+            server = _make_server(conf)
+            try:
+                await server.async_bind()
+            except OSError as stable_err:
+                # Run without a TCP listener, as before the config trial.
+                _LOGGER.error(
+                    "Failed to create HTTP server at port %d: %s",
+                    conf[CONF_SERVER_PORT],
+                    stable_err,
+                )
+        elif isinstance(err, HomeAssistantError):
+            # Unusable SSL configuration on the stable config; failing setup
+            # activates recovery mode, which retries with an emergency
+            # self-signed certificate.
+            raise
+        else:
+            # The stable config cannot be bound (e.g. its port is taken by
+            # another service); there is no better config to fall back to, so
+            # stay up without a TCP listener (the Supervisor Unix socket may
+            # still be served).
+            _LOGGER.error(
+                "Failed to create HTTP server at port %d: %s",
+                conf[CONF_SERVER_PORT],
+                err,
+            )
+
     if CONF_SERVER_HOST in conf and is_hassio(hass):
         issue_id = "server_host_deprecated_hassio"
         ir.async_create_issue(
@@ -202,50 +281,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     server_host = conf.get(CONF_SERVER_HOST, _DEFAULT_BIND)
     server_port = conf[CONF_SERVER_PORT]
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
-    ssl_peer_certificate = conf.get(CONF_SSL_PEER_CERTIFICATE)
-    ssl_key = conf.get(CONF_SSL_KEY)
-    cors_origins = conf[CONF_CORS_ORIGINS]
-    use_x_forwarded_for = conf.get(CONF_USE_X_FORWARDED_FOR, False)
-    use_x_frame_options = conf[CONF_USE_X_FRAME_OPTIONS]
-    # The loaded config stores trusted proxies as strings (JSON-serializable);
-    # the forwarded middleware needs IPv4Network/IPv6Network objects.
-    trusted_proxies = [
-        ip_network(proxy) for proxy in conf.get(CONF_TRUSTED_PROXIES) or []
-    ]
-    is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
-    login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
-    ssl_profile = conf[CONF_SSL_PROFILE]
 
-    source_ip_task = create_eager_task(async_get_source_ip(hass))
-
-    supervisor_unix_socket_path: Path | None = None
-    if socket_env := os.environ.get("SUPERVISOR_CORE_API_SOCKET"):
-        socket_path = Path(socket_env)
-        if socket_path.is_absolute():
-            supervisor_unix_socket_path = socket_path
-        else:
-            _LOGGER.error(
-                "Invalid Supervisor Unix socket path %s: path must be absolute",
-                socket_env,
-            )
-
-    server = HomeAssistantHTTP(
-        hass,
-        server_host=server_host,
-        server_port=server_port,
-        ssl_certificate=ssl_certificate,
-        ssl_peer_certificate=ssl_peer_certificate,
-        ssl_key=ssl_key,
-        trusted_proxies=trusted_proxies,
-        ssl_profile=ssl_profile,
-        supervisor_unix_socket_path=supervisor_unix_socket_path,
-    )
     await server.async_initialize(
-        cors_origins=cors_origins,
-        use_x_forwarded_for=use_x_forwarded_for,
-        login_threshold=login_threshold,
-        is_ban_enabled=is_ban_enabled,
-        use_x_frame_options=use_x_frame_options,
+        cors_origins=conf[CONF_CORS_ORIGINS],
+        use_x_forwarded_for=conf.get(CONF_USE_X_FORWARDED_FOR, False),
+        login_threshold=conf[CONF_LOGIN_ATTEMPTS_THRESHOLD],
+        is_ban_enabled=conf[CONF_IP_BAN_ENABLED],
+        use_x_frame_options=conf[CONF_USE_X_FRAME_OPTIONS],
     )
 
     async def stop_server(event: Event) -> None:
@@ -397,9 +439,28 @@ class HomeAssistantHTTP:
         self.ssl_profile = ssl_profile
         self.supervisor_unix_socket_path = supervisor_unix_socket_path
         self.runner: web.AppRunner | None = None
-        self.site: HomeAssistantTCPSite | None = None
+        self.sites: list[web.SockSite] = []
         self.supervisor_site: HomeAssistantUnixSite | None = None
         self.context: ssl.SSLContext | None = None
+        self._sockets: list[socket.socket] | None = None
+
+    async def async_bind(self) -> None:
+        """Create the SSL context and bind the server sockets.
+
+        Called during setup so that an unusable configuration surfaces before
+        it is applied; serving starts later in ``start()``. Raises
+        ``HomeAssistantError`` if the SSL configuration is unusable and
+        ``OSError`` if the configured address cannot be bound.
+        """
+        if self.ssl_certificate:
+            self.context = await self.hass.async_add_executor_job(
+                self._create_ssl_context
+            )
+        self._sockets = await self.hass.async_add_executor_job(
+            create_server_sockets,
+            self.server_host if self.server_host is not None else _DEFAULT_BIND,
+            self.server_port,
+        )
 
     async def async_initialize(
         self,
@@ -429,11 +490,6 @@ class HomeAssistantHTTP:
 
         setup_headers(self.app, use_x_frame_options)
         setup_cors(self.app, cors_origins)
-
-        if self.ssl_certificate:
-            self.context = await self.hass.async_add_executor_job(
-                self._create_ssl_context
-            )
 
     def register_view(self, view: HomeAssistantView | type[HomeAssistantView]) -> None:
         """Register a view with the WSGI server.
@@ -663,15 +719,19 @@ class HomeAssistantHTTP:
         )
         await self.runner.setup()
 
-        self.site = HomeAssistantTCPSite(
-            self.runner, self.server_host, self.server_port, ssl_context=self.context
-        )
-        try:
-            await self.site.start()
-        except OSError as error:
+        if self._sockets is None:
+            # Binding failed during setup; run without a TCP listener (the
+            # Supervisor Unix socket may still be served).
             _LOGGER.error(
-                "Failed to create HTTP server at port %d: %s", self.server_port, error
+                "Not listening on port %d because binding failed during setup",
+                self.server_port,
             )
+            return
+
+        for sock in self._sockets:
+            site = web.SockSite(self.runner, sock, ssl_context=self.context)
+            await site.start()
+            self.sites.append(site)
 
         _LOGGER.info("Now listening on port %d", self.server_port)
 
@@ -690,7 +750,12 @@ class HomeAssistantHTTP:
                         self.supervisor_unix_socket_path,
                         err,
                     )
-        if self.site is not None:
-            await self.site.stop()
+        for site in self.sites:
+            await site.stop()
+        if self._sockets is not None:
+            # Close any socket that was bound but never served (closing an
+            # already served socket is a no-op).
+            for sock in self._sockets:
+                sock.close()
         if self.runner is not None:
             await self.runner.cleanup()
