@@ -4,6 +4,11 @@
       "favorite_now_playing": {
         "default": "mdi:heart-plus"
       }
+    },
+    "image": {
+      "party_mode_qr": {
+        "default": "mdi:qrcode"
+      }
     }
   },
   "services": {

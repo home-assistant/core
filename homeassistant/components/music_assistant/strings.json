@@ -54,6 +54,11 @@
         "name": "Favorite current song"
       }
     },
+    "image": {
+      "party_mode_qr": {
+        "name": "Guest QR code"
+      }
+    },
     "media_player": {
       "media_player": {
         "state_attributes": {
@@ -262,6 +267,9 @@
   "exceptions": {
     "invalid_username": {
       "message": "The username {username} does not exist. Available usernames are {available_usernames}."
+    },
+    "party_mode_active_device_removal": {
+      "message": "Cannot delete active Party Mode device. Disable the Party Mode provider in Music Assistant settings instead."
     }
   },
   "issues": {
