@@ -362,7 +362,7 @@ async def test_number_sense_sensitivity_set(
             blocking=True,
         )
 
-        mock_method.assert_called_once_with(60)
+        mock_method.assert_called_once_with(60.0)
 
 
 async def test_number_sense_sensitivity_unavailable_without_public(
