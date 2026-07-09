@@ -56,8 +56,8 @@ def fixture_supervisor_environ() -> Generator[None]:
 
 def mock_resolution_info(
     supervisor_client: AsyncMock,
-    unsupported: list[UnsupportedReason] | None = None,
-    unhealthy: list[UnhealthyReason] | None = None,
+    unsupported: list[UnsupportedReason | str] | None = None,
+    unhealthy: list[UnhealthyReason | str] | None = None,
     issues: list[Issue] | None = None,
     suggestions_by_issue: dict[UUID, list[Suggestion]] | None = None,
     suggestion_result: SupervisorError | None = None,
@@ -1273,6 +1273,146 @@ async def test_supervisor_issues_periodic_refresh_backstop(
     await hass.async_block_till_done()
 
     supervisor_client.resolution.info.assert_called_once()
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_suggestions_change_updates_fixable_state(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test suggestion-only issue changes are not treated as unchanged."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    supervisor_client.resolution.info.reset_mock()
+    issue_uuid = uuid4()
+
+    supervisor_client.resolution.info.return_value = ResolutionInfo(
+        unsupported=[],
+        unhealthy=[],
+        issues=[
+            Issue(
+                type="should_not_be_repair",
+                context=ContextType.SYSTEM,
+                reference=None,
+                uuid=issue_uuid,
+            )
+        ],
+        suggestions=[
+            Suggestion(
+                type=SuggestionType.EXECUTE_REBOOT,
+                context=ContextType.SYSTEM,
+                reference=None,
+                uuid=uuid4(),
+                auto=False,
+            )
+        ],
+        checks=[
+            Check(enabled=True, slug=CheckType.DOCKER_CONFIG),
+            Check(enabled=True, slug=CheckType.FREE_SPACE),
+        ],
+    )
+    supervisor_client.resolution.suggestions_for_issue.return_value = [
+        Suggestion(
+            type=SuggestionType.EXECUTE_REBOOT,
+            context=ContextType.SYSTEM,
+            reference=None,
+            uuid=uuid4(),
+            auto=False,
+        )
+    ]
+
+    issues_coordinator = get_issues_info(hass)
+    assert issues_coordinator is not None
+    events: list[str] = []
+
+    @callback
+    def _subscription_event(event: Any) -> None:
+        events.append(event.event)
+
+    unsubscribe = issues_coordinator.subscribe(
+        IssueSubscription(
+            event_callback=_subscription_event,
+            key="issue_system_should_not_be_repair",
+        )
+    )
+
+    supervisor_client_ws = await hass_supervisor_ws_client()
+    await supervisor_client_ws.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": issue_uuid.hex,
+                    "type": "should_not_be_repair",
+                    "context": "system",
+                    "reference": None,
+                },
+            },
+        }
+    )
+    msg = await supervisor_client_ws.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+    assert events == ["added"]
+
+    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+    assert events == ["added", "updated"]
+
+    unsubscribe()
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_periodic_refresh_recovers_after_initial_failure(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    resolution_info: AsyncMock,
+) -> None:
+    """Test periodic polling recovers issue state after initial refresh failure."""
+    issue_uuid = uuid4()
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type="should_not_be_repair",
+                context=ContextType.SYSTEM,
+                reference=None,
+                uuid=issue_uuid,
+            )
+        ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    SuggestionType.EXECUTE_REBOOT,
+                    context=ContextType.SYSTEM,
+                    reference=None,
+                    uuid=uuid4(),
+                    auto=False,
+                )
+            ]
+        },
+    )
+    resolution_info.side_effect = [
+        SupervisorBadRequestError("System is not ready with state: setup"),
+        resolution_info.return_value,
+    ]
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    issues_coordinator = get_issues_info(hass)
+    assert issues_coordinator is not None
+    assert len(issues_coordinator.issues) == 0
+
+    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+    assert len(issues_coordinator.issues) == 1
 
 
 @pytest.mark.usefixtures("all_setup_requests")

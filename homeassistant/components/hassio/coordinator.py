@@ -206,7 +206,8 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
                 self.hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_issues
             )
         )
-        self._noop_listener_disconnect: Callable[[], None] | None = None
+        # Keep polling active even if initial refresh fails so coordinator can recover.
+        self._noop_listener_disconnect = self.async_add_listener(lambda: None)
 
     @property
     def unhealthy_reasons(self) -> set[str]:
@@ -254,18 +255,18 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
 
         return _unsubscribe
 
-    @callback
-    @override
-    def _async_refresh_finished(self) -> None:
-        """Ensure periodic polling backstop is always active after first refresh."""
-        if self.last_update_success and self._noop_listener_disconnect is None:
-            self._noop_listener_disconnect = self.async_add_listener(lambda: None)
-
     def _process_issue_change(self, event: IssueSubscriptionEvent) -> None:
         """Process an issue change by triggering callbacks on subscribers."""
         for sub in self._subscriptions:
             if sub.matches(event.issue):
                 sub.event_callback(event)
+
+    @staticmethod
+    def _issue_equal(previous_issue: Issue, issue: Issue) -> bool:
+        """Return true if issues are equal including suggestions."""
+        return (
+            previous_issue == issue and previous_issue.suggestions == issue.suggestions
+        )
 
     def _process_reason_deltas(
         self,
@@ -382,7 +383,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
         """Create/delete issue repairs and notify subscribers based on issue deltas."""
         for issue in current_data.issues.values():
             previous_issue = previous_data.issues.get(issue.uuid)
-            if previous_issue is not None and previous_issue == issue:
+            if previous_issue is not None and self._issue_equal(previous_issue, issue):
                 continue
 
             self._create_or_update_issue_repair(issue)

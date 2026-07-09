@@ -5,7 +5,6 @@ from functools import partial
 import logging
 import os
 import struct
-from typing import Any
 
 from aiohasupervisor import SupervisorBadRequestError, SupervisorError
 from aiohasupervisor.models import (
@@ -71,6 +70,7 @@ from .coordinator import (
     HassioMainDataUpdateCoordinator,
     HassioStatsDataUpdateCoordinator,
     IssueSubscription,
+    IssueSubscriptionEvent,
     SupervisorIssuesCoordinator,
     SupervisorJobsCoordinator,
     get_addons_info,
@@ -347,7 +347,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues_coordinator
 
     @callback
-    def _refresh_main_coordinator_on_mount_issue(_: Any) -> None:
+    def _refresh_main_coordinator_on_mount_issue(_: IssueSubscriptionEvent) -> None:
         coordinator.config_entry.async_create_task(hass, coordinator.async_refresh())
 
     entry.async_on_unload(
