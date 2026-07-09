@@ -160,12 +160,18 @@ class SecurityKeys:
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
-# Steps at which another flow is only showing a discovery prompt and can be
-# aborted safely when a config entry is created by a different flow.
-DISCOVERY_PROMPT_STEPS = {
+# Steps at which another flow has not yet changed any shared state,
+# e.g. the add-on config, and can be aborted safely when a config entry
+# is created by a different flow. Steps that can be part of a migration,
+# e.g. choose_serial_port, must not be in this set.
+ABORT_SAFE_STEPS = {
+    "configure_addon_user",
+    "configure_security_keys",
     "confirm_migration",
     "hassio_confirm",
     "installation_type",
+    "network_type",
+    "on_supervisor",
     "zeroconf_confirm",
 }
 
@@ -972,6 +978,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.use_addon = True
 
+        if any(
+            entry.data.get(CONF_USE_ADDON) and entry.unique_id != self.unique_id
+            for entry in self._async_current_entries(include_ignore=False)
+        ):
+            # The add-on can only connect to a single adapter, so abort before
+            # the flow changes the add-on config of the existing entry.
+            return self.async_abort(reason="addon_already_configured")
+
         addon_info = await self._addon_setup.async_get_addon_info()
 
         if addon_info.state is AddonState.RUNNING:
@@ -983,7 +997,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self.security_keys = SecurityKeys.from_addon_config(addon_config)
 
-            if self._adapter_discovered:
+            if self._adapter_discovered and (
+                addon_config.get(CONF_ADDON_DEVICE) != self.usb_path
+                or addon_config.get(CONF_ADDON_SOCKET) != self.socket_path
+            ):
                 # Apply the discovered adapter to the add-on config and
                 # restart the add-on before connecting, so the server
                 # version info reflects the discovered adapter.
@@ -1174,7 +1191,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # further, e.g. a migration that has backed up the network,
         # must not be interrupted.
         for progress in self._async_in_progress():
-            if progress.get("step_id") in DISCOVERY_PROMPT_STEPS:
+            if progress.get("step_id") in ABORT_SAFE_STEPS:
                 self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
         return self.async_create_entry(
