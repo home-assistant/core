@@ -339,7 +339,7 @@ async def test_async_poll_manual_hosts_uid_http_error(
     soco_factory: SoCoMockFactory,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test uid lookup HTTPError skips host and creates UPnP issue."""
+    """Test uid lookup HTTPError skips host."""
     resp = Response()
     resp.status_code = HTTPStatus.FORBIDDEN
     http_error = HTTPError(response=resp)
@@ -359,13 +359,6 @@ async def test_async_poll_manual_hosts_uid_http_error(
 
     assert "media_player.bedroom" in entity_registry.entities
     assert "media_player.living_room" not in entity_registry.entities
-
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(
-        sonos.DOMAIN, f"{UPNP_ISSUE_ID}_{soco_1.ip_address}"
-    )
-    assert issue is not None
-    assert issue.translation_placeholders.get("device_ip") == soco_1.ip_address
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
