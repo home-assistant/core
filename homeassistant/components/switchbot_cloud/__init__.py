@@ -187,10 +187,8 @@ async def make_device_data(
         devices_data.vacuums.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type in [
-        "Smart Lock",
         "Smart Lock Lite",
         "Smart Lock Pro",
-        "Smart Lock Ultra",
         "Smart Lock Vision",
         "Smart Lock Vision Pro",
         "Smart Lock Pro Wifi",
