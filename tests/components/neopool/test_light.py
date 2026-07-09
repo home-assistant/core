@@ -84,8 +84,7 @@ async def test_light_turn_on_off_writes_via_relay_state(
     mock_neopool_client.async_set_relay_state.assert_awaited_once_with(
         RelayKind.LIGHT, True
     )
-    coordinator = mock_config_entry_light.runtime_data
-    assert coordinator.data.get("Pool Light") is True
+    assert hass.states.get(entity_id).state == STATE_ON
 
     mock_neopool_client.async_set_relay_state = AsyncMock(
         return_value={"Pool Light": False}
@@ -94,7 +93,7 @@ async def test_light_turn_on_off_writes_via_relay_state(
     mock_neopool_client.async_set_relay_state.assert_awaited_once_with(
         RelayKind.LIGHT, False
     )
-    assert coordinator.data.get("Pool Light") is False
+    assert hass.states.get(entity_id).state == STATE_OFF
 
 
 async def test_light_is_on_reflects_relay_state(
@@ -294,10 +293,11 @@ async def test_light_timer_data_merged_into_coordinator(
     mock_neopool_client: MagicMock,
 ) -> None:
     """The timer enable field is merged into coordinator data as relay_light_enable."""
+    # Differ from the seeded ALWAYS_OFF so the assertion catches a missing merge.
     mock_neopool_client.read_all_timers = AsyncMock(
         return_value={
             "relay_light": {
-                "enable": TimerRelayMode.ALWAYS_OFF,
+                "enable": TimerRelayMode.ALWAYS_ON,
                 "on": 3600,
                 "interval": 7200,
                 "period": 86400,
@@ -309,4 +309,4 @@ async def test_light_timer_data_merged_into_coordinator(
     await setup_integration(hass, mock_config_entry_light)
 
     coordinator = mock_config_entry_light.runtime_data
-    assert coordinator.data["relay_light_enable"] == TimerRelayMode.ALWAYS_OFF
+    assert coordinator.data["relay_light_enable"] == TimerRelayMode.ALWAYS_ON
