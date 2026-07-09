@@ -45,13 +45,13 @@ def _controller_update_info(
                 "upgrade": hardware_upgrade,
                 "currentVersion": "6.2.10.17",
                 "latestVersion": ("6.2.11.1" if hardware_upgrade else "6.2.10.17"),
-                "releaseNotes": "Controller hardware update",
+                "fwReleaseLog": "Controller hardware update",
             },
             "software": {
                 "upgrade": software_upgrade,
                 "currentVersion": "6.2.10.17",
                 "latestVersion": ("6.2.12.1" if software_upgrade else "6.2.10.17"),
-                "releaseNotes": "Controller software update",
+                "releaseLog": "Controller software update",
             },
         }
     )
@@ -322,6 +322,7 @@ async def test_controller_software_update_does_not_support_install(
     mock_config_entry: MockConfigEntry,
     mock_omada_client: MagicMock,
     entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test controller software updates expose version info without install support."""
     mock_omada_client.check_firmware_updates.return_value = _controller_update_info(
@@ -340,3 +341,15 @@ async def test_controller_software_update_does_not_support_install(
     entity_entry = entity_registry.async_get(entity_id)
     assert entity_entry is not None
     assert entity_entry.supported_features == UpdateEntityFeature.RELEASE_NOTES
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": entity_id,
+        }
+    )
+    result = await client.receive_json()
+
+    assert result["result"] == "Controller software update"

@@ -11,7 +11,7 @@ from tplink_omada_client.exceptions import (
     UnsupportedControllerVersion,
 )
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -36,6 +36,11 @@ PLATFORMS: list[Platform] = [
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type OmadaConfigEntry = ConfigEntry[OmadaSiteController]
+
+_CONTROLLER_OWNER_STATES = {
+    ConfigEntryState.LOADED,
+    ConfigEntryState.SETUP_IN_PROGRESS,
+}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -75,7 +80,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 
     entry.runtime_data = controller
 
-    _register_controller_device(hass, entry)
+    if config_entry_owns_controller_entities(hass, entry):
+        _register_controller_device(hass, entry)
 
     _remove_old_devices(hass, entry, controller.devices_coordinator.data)
 
@@ -87,6 +93,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+def config_entry_owns_controller_entities(
+    hass: HomeAssistant,
+    entry: OmadaConfigEntry,
+) -> bool:
+    """Return if this entry should own controller-level entities."""
+    controller_id = entry.runtime_data.controller_id
+    entries = [
+        config_entry
+        for config_entry in hass.config_entries.async_entries(DOMAIN)
+        if _config_entry_matches_controller(config_entry, controller_id)
+    ]
+    active_entries = [
+        config_entry
+        for config_entry in entries
+        if config_entry.state in _CONTROLLER_OWNER_STATES
+    ]
+
+    # Omada supports clustering internally, but the public Northbound API does
+    # not document how to determine the current Primary controller.
+    # Until a documented API is available, use a deterministic stable owner.
+    candidate_entries = active_entries or entries
+    owner = min(candidate_entries, key=lambda item: (item.created_at, item.entry_id))
+    return owner.entry_id == entry.entry_id
+
+
+def _config_entry_matches_controller(
+    entry: ConfigEntry,
+    controller_id: str,
+) -> bool:
+    if (runtime_data := getattr(entry, "runtime_data", None)) is not None:
+        return runtime_data.controller_id == controller_id
+    return entry.unique_id is not None and entry.unique_id.startswith(
+        f"{controller_id}_"
+    )
 
 
 def _register_controller_device(

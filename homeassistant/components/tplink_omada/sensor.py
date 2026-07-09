@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import OmadaConfigEntry
+from . import OmadaConfigEntry, config_entry_owns_controller_entities
 from .const import OmadaDeviceStatus
 from .coordinator import OmadaControllerCoordinator, OmadaDevicesCoordinator
 from .entity import OmadaControllerEntity, OmadaDeviceEntity
@@ -65,9 +65,10 @@ async def async_setup_entry(
 
     devices_coordinator = controller.devices_coordinator
 
-    async_add_entities(
-        [OmadaControllerDeviceStatusSensor(controller.controller_coordinator)]
-    )
+    if config_entry_owns_controller_entities(hass, config_entry):
+        async_add_entities(
+            [OmadaControllerDeviceStatusSensor(controller.controller_coordinator)]
+        )
 
     async def _create_device_sensor_entities(
         device: OmadaListDevice,

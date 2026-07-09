@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import OmadaConfigEntry
+from . import OmadaConfigEntry, config_entry_owns_controller_entities
 from .coordinator import OmadaControllerCoordinator, OmadaFirmwareUpdateCoordinator
 from .entity import OmadaControllerEntity, OmadaDeviceEntity
 
@@ -40,12 +40,14 @@ async def async_setup_entry(
         hass, config_entry, controller.omada_client, controller.devices_coordinator
     )
 
-    async_add_entities(
-        [
-            OmadaControllerUpdate(controller.controller_coordinator),
-            *(OmadaDeviceUpdate(coordinator, device) for device in devices.values()),
-        ]
+    entities: list[UpdateEntity] = []
+    if config_entry_owns_controller_entities(hass, config_entry):
+        entities.append(OmadaControllerUpdate(controller.controller_coordinator))
+    entities.extend(
+        OmadaDeviceUpdate(coordinator, device) for device in devices.values()
     )
+
+    async_add_entities(entities)
     await coordinator.async_request_refresh()
 
 

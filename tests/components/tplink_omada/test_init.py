@@ -1,5 +1,7 @@
 """Tests for TP-Link Omada integration init."""
 
+from datetime import UTC, datetime
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -9,6 +11,7 @@ from tplink_omada_client.exceptions import (
     UnsupportedControllerVersion,
 )
 
+from homeassistant.components.tplink_omada import config_entry_owns_controller_entities
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -23,6 +26,29 @@ MOCK_ENTRY_DATA = {
     "username": "test-username",
     "password": "test-password",
 }
+
+
+def _mock_controller_entry(
+    hass: HomeAssistant,
+    *,
+    entry_id: str,
+    site_id: str,
+    created_at: datetime,
+    state: ConfigEntryState = ConfigEntryState.NOT_LOADED,
+) -> MockConfigEntry:
+    entry = MockConfigEntry(
+        title="Test Omada Controller",
+        domain=DOMAIN,
+        data={**MOCK_ENTRY_DATA, "site": site_id},
+        entry_id=entry_id,
+        unique_id=f"12345_{site_id}",
+        version=2,
+        state=state,
+    )
+    object.__setattr__(entry, "created_at", created_at)
+    object.__setattr__(entry, "runtime_data", SimpleNamespace(controller_id="12345"))
+    entry.add_to_hass(hass)
+    return entry
 
 
 @pytest.mark.parametrize(
@@ -129,6 +155,79 @@ async def test_omada_devices_link_to_controller_device(
     assert controller_device.config_entries == {init_integration.entry_id}
     assert gateway_device.via_device_id == controller_device.id
     assert switch_device.via_device_id == controller_device.id
+
+
+@pytest.mark.parametrize(
+    "active_state",
+    [ConfigEntryState.LOADED, ConfigEntryState.SETUP_IN_PROGRESS],
+)
+async def test_controller_owner_prefers_active_entry(
+    hass: HomeAssistant,
+    active_state: ConfigEntryState,
+) -> None:
+    """Test controller entities are owned by the first active controller entry."""
+    created_at = datetime(2026, 7, 8, tzinfo=UTC)
+    older_inactive_entry = _mock_controller_entry(
+        hass,
+        entry_id="01",
+        site_id="Default",
+        created_at=created_at,
+    )
+    active_entry = _mock_controller_entry(
+        hass,
+        entry_id="02",
+        site_id="Second",
+        created_at=datetime(2026, 7, 9, tzinfo=UTC),
+        state=active_state,
+    )
+
+    assert config_entry_owns_controller_entities(hass, active_entry)
+    assert not config_entry_owns_controller_entities(hass, older_inactive_entry)
+
+
+async def test_controller_owner_falls_back_to_all_entries(
+    hass: HomeAssistant,
+) -> None:
+    """Test controller ownership falls back to all entries when none are active."""
+    owner_entry = _mock_controller_entry(
+        hass,
+        entry_id="02",
+        site_id="Default",
+        created_at=datetime(2026, 7, 8, tzinfo=UTC),
+    )
+    other_entry = _mock_controller_entry(
+        hass,
+        entry_id="01",
+        site_id="Second",
+        created_at=datetime(2026, 7, 9, tzinfo=UTC),
+    )
+
+    assert config_entry_owns_controller_entities(hass, owner_entry)
+    assert not config_entry_owns_controller_entities(hass, other_entry)
+
+
+async def test_controller_owner_tie_breaks_by_entry_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test controller ownership tie-breaks by entry id."""
+    created_at = datetime(2026, 7, 8, tzinfo=UTC)
+    owner_entry = _mock_controller_entry(
+        hass,
+        entry_id="01",
+        site_id="Default",
+        created_at=created_at,
+        state=ConfigEntryState.LOADED,
+    )
+    other_entry = _mock_controller_entry(
+        hass,
+        entry_id="02",
+        site_id="Second",
+        created_at=created_at,
+        state=ConfigEntryState.LOADED,
+    )
+
+    assert config_entry_owns_controller_entities(hass, owner_entry)
+    assert not config_entry_owns_controller_entities(hass, other_entry)
 
 
 async def test_migrate_entry_v1_to_v2(
