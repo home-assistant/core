@@ -12,7 +12,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import ALL_DEVICE_NAMES, ENTITY_FAN, mock_devices_response
+from .common import (
+    ALL_DEVICE_NAMES,
+    ENTITY_FAN,
+    ENTITY_PEDESTAL_FAN,
+    mock_devices_response,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -180,6 +185,59 @@ async def test_set_preset_mode(
 
         await hass.async_block_till_done()
         method_mock.assert_called_once()
+        update_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("action", "api_response", "expectation"),
+    [
+        ("true", True, NoException),
+        ("false", True, NoException),
+        ("true", False, pytest.raises(HomeAssistantError)),
+    ],
+)
+async def test_pedestal_fan_oscillation(
+    hass: HomeAssistant,
+    pedestal_fan_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    action: str,
+    api_response: bool,
+    expectation,
+) -> None:
+    """Test oscillation on and off for pedestal fans.
+
+    Pedestal fans (e.g. CoreBreeze 432S / LPF-R432S) expose vertical and
+    horizontal oscillation as separate toggles. The HA oscillate switch
+    should control both axes together.
+    """
+
+    with (
+        expectation,
+        patch(
+            "pyvesync.devices.vesyncfan.VeSyncPedestalFan.toggle_vertical_oscillation",
+            new_callable=AsyncMock,
+            return_value=api_response,
+        ) as vertical_mock,
+        patch(
+            "pyvesync.devices.vesyncfan.VeSyncPedestalFan."
+            "toggle_horizontal_oscillation",
+            new_callable=AsyncMock,
+            return_value=api_response,
+        ) as horizontal_mock,
+    ):
+        with patch(
+            "homeassistant.components.vesync.fan.VeSyncFanHA.async_write_ha_state"
+        ) as update_mock:
+            await hass.services.async_call(
+                FAN_DOMAIN,
+                "oscillate",
+                {ATTR_ENTITY_ID: ENTITY_PEDESTAL_FAN, "oscillating": action},
+                blocking=True,
+            )
+
+        await hass.async_block_till_done()
+        vertical_mock.assert_called_once()
+        horizontal_mock.assert_called_once()
         update_mock.assert_called_once()
 
 
