@@ -1,6 +1,7 @@
 """The tests for the nx584 sensor platform."""
 
 import logging
+import threading
 import time
 from unittest import mock
 from unittest.mock import MagicMock
@@ -434,14 +435,17 @@ def test_nx584_watcher_run_marks_zones_unavailable_on_connection_error(
 def test_nx584_watcher_stop_interrupts_retry_wait() -> None:
     """Test stop() wakes the watcher out of the post-error retry wait promptly."""
     client = mock.MagicMock()
-    client.get_events.side_effect = requests.exceptions.ConnectionError
+    hit_connection_error = threading.Event()
+
+    def raise_connection_error():
+        hit_connection_error.set()
+        raise requests.exceptions.ConnectionError
+
+    client.get_events.side_effect = raise_connection_error
     watcher = nx584.NX584Watcher(client, {})
 
     watcher.start()
-    deadline = time.monotonic() + 1
-    while client.get_events.call_count == 0 and time.monotonic() < deadline:
-        pass
-    assert client.get_events.call_count > 0
+    assert hit_connection_error.wait(timeout=1)
 
     started_stop = time.monotonic()
     watcher.stop()

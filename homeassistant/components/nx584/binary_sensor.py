@@ -125,7 +125,7 @@ class NX584ZoneSensor(BinarySensorEntity):
         zone: dict[str, Any],
         zone_type: BinarySensorDeviceClass,
     ) -> None:
-        """Initialize the nx594 binary sensor."""
+        """Initialize the nx584 binary sensor."""
         self._zone = zone
         self._attr_device_class = zone_type
 

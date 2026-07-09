@@ -516,6 +516,20 @@ async def test_import_cannot_connect(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_connect"
 
 
+async def test_import_unknown_exception(hass: HomeAssistant) -> None:
+    """Test importing YAML config aborts, instead of crashing, on an unknown error."""
+    with patch(
+        "homeassistant.components.nx584.config_flow.client.Client.list_zones",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TEST_DATA
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
+
+
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test configuring exclude_zones and zone_types through the options flow."""
     entry = MockConfigEntry(domain=DOMAIN, data=TEST_DATA)

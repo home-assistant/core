@@ -42,8 +42,8 @@ DATA_SCHEMA = vol.Schema(
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_EXCLUDE_ZONES, default=list): ObjectSelector(),
-        vol.Optional(CONF_ZONE_TYPES, default=dict): ObjectSelector(),
+        vol.Optional(CONF_EXCLUDE_ZONES, default=[]): ObjectSelector(),
+        vol.Optional(CONF_ZONE_TYPES, default={}): ObjectSelector(),
     }
 )
 
@@ -142,6 +142,9 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
             await _async_validate_connection(self.hass, host, port)
         except requests.exceptions.ConnectionError:
             return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
 
         return self.async_create_entry(
             title=host,
