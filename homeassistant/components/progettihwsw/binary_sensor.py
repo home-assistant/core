@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from ProgettiHWSW.input import Input
 
@@ -63,6 +64,7 @@ class ProgettihwswBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._sensor = sensor
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get sensor state."""
         return self.coordinator.data[self._sensor.id]

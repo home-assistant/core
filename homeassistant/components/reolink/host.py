@@ -705,7 +705,7 @@ class ReolinkHost:
                 self._api.host,
                 sub_type,
             )
-            if sub_type is SubType.push:
+            if sub_type == SubType.push:
                 await self.subscribe()
                 return
 

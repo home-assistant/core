@@ -426,3 +426,83 @@ async def test_migrate_insecure_camera_removed_disabled_not_repaired(
         )
         is None
     )
+
+
+async def test_migrate_package_binary_sensor_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """An unused package binary sensor is removed silently."""
+    package = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{doorbell.mac}_smart_obj_package",
+        config_entry=ufp.entry,
+    )
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert entity_registry.async_get(package.entity_id) is None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"package_binary_sensor_removed_{doorbell.mac}_smart_obj_package"
+        )
+        is None
+    )
+
+
+async def test_migrate_package_binary_sensor_removed_in_use(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """Removing a used package binary sensor raises an actionable repair."""
+    package = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{doorbell.mac}_smart_obj_package",
+        config_entry=ufp.entry,
+    )
+    await _load_automation(hass, package.entity_id)
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert entity_registry.async_get(package.entity_id) is None
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"package_binary_sensor_removed_{doorbell.mac}_smart_obj_package"
+    )
+    assert issue is not None
+    assert issue.translation_placeholders["entity_id"] == package.entity_id
+
+
+async def test_migrate_package_binary_sensor_removed_disabled_not_repaired(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A disabled package binary sensor is removed without a repair even if referenced."""
+    package = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{doorbell.mac}_smart_obj_package",
+        config_entry=ufp.entry,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await _load_automation(hass, package.entity_id)
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert entity_registry.async_get(package.entity_id) is None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"package_binary_sensor_removed_{doorbell.mac}_smart_obj_package"
+        )
+        is None
+    )

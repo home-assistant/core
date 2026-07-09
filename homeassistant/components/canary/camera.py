@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Final, override
 
 from aiohttp.web import Request, StreamResponse
 from canary.live_stream_api import LiveStreamSession
@@ -109,15 +109,18 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         return self.coordinator.data["locations"][self._location_id]
 
     @property
+    @override
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
         return self.location.is_recording  # type: ignore[no-any-return]
 
     @property
+    @override
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return not self.location.is_recording
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -150,6 +153,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
 
         return self._image
 
+    @override
     async def handle_async_mjpeg_stream(
         self, request: Request
     ) -> StreamResponse | None:

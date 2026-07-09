@@ -1,6 +1,6 @@
 """Allows to configure a switch using RPi GPIO."""
 
-from typing import Any
+from typing import Any, override
 
 from gpiozero import LED
 import voluptuous as vol
@@ -65,12 +65,14 @@ class RemoteRPiGPIOSwitch(SwitchEntity):
         self._attr_is_on = False
         self._switch = led
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         write_output(self._switch, 1)
         self._attr_is_on = True
         self.schedule_update_ha_state()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         write_output(self._switch, 0)

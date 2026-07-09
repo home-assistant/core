@@ -1,6 +1,6 @@
 """EHEIM Digital lights."""
 
-from typing import Any
+from typing import Any, override
 
 from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
 from eheimdigital.device import EheimDigitalDevice
@@ -83,11 +83,13 @@ class EheimDigitalClassicLEDControlLight(
         self._async_update_attrs()
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the entity is available."""
         return super().available and self._device.light_level[self._channel] is not None
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if ATTR_EFFECT in kwargs:
@@ -100,10 +102,12 @@ class EheimDigitalClassicLEDControlLight(
             )
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         await self._device.turn_off(self._channel)
 
+    @override
     def _async_update_attrs(self) -> None:
         light_level = self._device.light_level[self._channel]
 

@@ -216,9 +216,6 @@
       "overlay_show_nerd_mode": {
         "name": "Overlay: show nerd mode"
       },
-      "package_detected": {
-        "name": "Package detected"
-      },
       "person_detected": {
         "name": "Person detected"
       },
@@ -298,6 +295,16 @@
           "event_type": {
             "state": {
               "scanned": "Scanned"
+            }
+          }
+        }
+      },
+      "package": {
+        "name": "Package",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "detected": "Detected"
             }
           }
         }
@@ -747,6 +754,10 @@
     "insecure_camera_removed": {
       "description": "The camera entity `{entity_id}` used plain RTSP, which is no longer available now that streams come from the UniFi Protect public API (RTSPS only). It has been removed; use `{replacement}` instead.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Insecure camera entity removed"
+    },
+    "package_binary_sensor_removed": {
+      "description": "The binary sensor `{entity_id}` for package detection has been removed. Package detection is a momentary smart-detect event, so it is now provided by the package event entity instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Package binary sensor removed"
     },
     "remove_chime_volume": {
       "description": "The chime Volume number read the master volume but its setter only changed the per-camera ring volumes, so setting it never moved the master slider. As the UniFi Protect public API has no master-volume setter, the Volume number has been removed in favour of the per-camera ring volume numbers (Ring volume).\n\nBelow are the detected automations or scripts that use one or more of the removed entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly.",

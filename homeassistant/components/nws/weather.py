@@ -1,7 +1,7 @@
 """Support for NWS weather service."""
 
 from functools import partial
-from typing import Any, Required, TypedDict, cast
+from typing import Any, Required, TypedDict, cast, override
 
 from pynws import SimpleNWS
 import voluptuous as vol
@@ -159,6 +159,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         self._attr_unique_id = f"{get_base_unique_id(entry)}_{DAYNIGHT}"
         self._attr_device_info = device_info(entry, nws_data)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -179,11 +180,13 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return self._nws_data.api
 
     @property
+    @override
     def name(self) -> str:
         """Return the station name."""
         return self.nws.station
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the current temperature."""
         if observation := self.nws.observation:
@@ -191,6 +194,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return None
 
     @property
+    @override
     def native_pressure(self) -> int | None:
         """Return the current pressure."""
         if observation := self.nws.observation:
@@ -198,6 +202,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return None
 
     @property
+    @override
     def humidity(self) -> float | None:
         """Return the name of the sensor."""
         if observation := self.nws.observation:
@@ -205,6 +210,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return None
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the current windspeed."""
         if observation := self.nws.observation:
@@ -212,6 +218,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return None
 
     @property
+    @override
     def wind_bearing(self) -> int | None:
         """Return the current wind bearing (degrees)."""
         if observation := self.nws.observation:
@@ -219,6 +226,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return None
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return current condition."""
         weather = None
@@ -231,6 +239,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return None
 
     @property
+    @override
     def native_visibility(self) -> int | None:
         """Return visibility."""
         if observation := self.nws.observation:
@@ -318,15 +327,18 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return forecast
 
     @callback
+    @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return self._forecast(self.nws.forecast_hourly, HOURLY)
 
     @callback
+    @override
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the twice daily forecast in native units."""
         return self._forecast(self.nws.forecast, DAYNIGHT)
 
+    @override
     async def async_update(self) -> None:
         """Update the entity.
 

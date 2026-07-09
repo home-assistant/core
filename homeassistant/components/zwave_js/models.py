@@ -3,7 +3,7 @@
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from awesomeversion import AwesomeVersion
 from zwave_js_server.const import LogLevel
@@ -74,6 +74,7 @@ class FirmwareVersionRange(DataclassMustHaveAtLeastOne):
     min_ver: AwesomeVersion | None = field(default=None, init=False)
     max_ver: AwesomeVersion | None = field(default=None, init=False)
 
+    @override
     def __post_init__(self) -> None:
         """Post dataclass initialization."""
         super().__post_init__()

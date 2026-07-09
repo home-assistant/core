@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 import switchbot
 from switchbot import LockStatus, SwitchbotModel
@@ -152,6 +153,7 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
             )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._device, self._sensor)

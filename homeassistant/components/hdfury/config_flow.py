@@ -1,6 +1,6 @@
 """Config flow for HDFury Integration."""
 
-from typing import Any
+from typing import Any, override
 
 from hdfury import HDFuryAPI, HDFuryError
 import voluptuous as vol
@@ -20,6 +20,7 @@ class HDFuryConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.data: dict[str, Any] = {}
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -57,6 +58,7 @@ class HDFuryConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
