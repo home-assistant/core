@@ -26,6 +26,21 @@ def has_location(state: State) -> bool:
     )
 
 
+def get_location(state: State) -> tuple[float, float] | None:
+    """Return the state's location as a (latitude, longitude) tuple, or None.
+
+    Returns None if the state does not contain a valid location.
+
+    Async friendly.
+    """
+    if not has_location(state):
+        return None
+    return (
+        state.attributes[EntityStateAttribute.LATITUDE],
+        state.attributes[EntityStateAttribute.LONGITUDE],
+    )
+
+
 def closest(latitude: float, longitude: float, states: Iterable[State]) -> State | None:
     """Return closest state to point.
 
