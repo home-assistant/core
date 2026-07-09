@@ -108,6 +108,20 @@
         }
       }
     },
+    "number": {
+      "frost_protection_max_temp": {
+        "name": "Frost protection maximum temperature"
+      },
+      "frost_protection_min_temp": {
+        "name": "Frost protection minimum temperature"
+      },
+      "overheat_protection_max_temp": {
+        "name": "Overheat protection maximum temperature"
+      },
+      "overheat_protection_min_temp": {
+        "name": "Overheat protection minimum temperature"
+      }
+    },
     "sensor": {
       "energy_consumed": {
         "name": "Energy consumed (monthly)"
@@ -140,6 +154,12 @@
     },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate"
+    },
+    "temperature_max_below_min": {
+      "message": "The maximum temperature must be higher than the minimum temperature."
+    },
+    "temperature_min_exceeds_max": {
+      "message": "The minimum temperature must be lower than the maximum temperature."
     },
     "timeout_connect": {
       "message": "Timeout while communicating with MELCloud Home API"

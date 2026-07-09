@@ -24,6 +24,7 @@ from uiprotect.data import (
 from uiprotect.data.bootstrap import ProtectDeviceRef
 from uiprotect.data.public_devices import (
     PublicCamera,
+    PublicHdrMode,
     PublicLight,
     PublicLightDeviceSettings,
     PublicSensor,
@@ -338,17 +339,25 @@ def make_public_light(
     return public
 
 
+_HDR_DISPLAY_TO_PUBLIC = {
+    "auto": PublicHdrMode.AUTO,
+    "always": PublicHdrMode.ON,
+    "off": PublicHdrMode.OFF,
+}
+
+
 def make_public_camera(
     camera: Camera,
     *,
     state: DeviceState | None = None,
     mic_volume: int | None = None,
+    hdr_type: PublicHdrMode | None = None,
 ) -> Mock:
-    """Build a public-API camera for the migrated microphone volume number.
+    """Build a public-API camera mirroring a private camera's migrated fields.
 
-    ``mic_volume`` defaults to the private fixture's value so the public mirror
-    matches it; pass an override to assert a value the private object would not
-    produce.
+    ``mic_volume`` and ``hdr_type`` default to values derived from the private
+    fixture so the public mirror matches it; pass an override to assert a value
+    the private object would not produce.
     """
     public = Mock(spec=PublicCamera)
     public.id = camera.id
@@ -356,6 +365,11 @@ def make_public_camera(
     public.model = ModelType.CAMERA
     public.state = DeviceState[camera.state.name] if state is None else state
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
+    public.hdr_type = (
+        _HDR_DISPLAY_TO_PUBLIC[camera.hdr_mode_display]
+        if hdr_type is None
+        else hdr_type
+    )
     return public
 
 
@@ -424,7 +438,7 @@ def setup_public_camera(ufp: MockUFPFixture) -> None:
     """Expose private cameras over the public API via a real ``PublicBootstrap``.
 
     Mirrors ``setup_public_sensor`` for ``ModelType.CAMERA`` so the migrated
-    microphone volume number reads from the public object.
+    camera config entities read from the public object.
     """
     public_bootstrap = PublicBootstrap()
     pb = Mock(spec=PublicBootstrap)
