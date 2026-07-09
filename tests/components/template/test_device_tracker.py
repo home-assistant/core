@@ -21,12 +21,15 @@ from homeassistant.helpers.typing import ConfigType
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
 from tests.common import MockConfigEntry, async_setup_component
@@ -35,6 +38,7 @@ from tests.conftest import WebSocketGenerator
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_LATITUDE_ENTITY_ID = "sensor.test_latitude"
 TEST_LONGITUDE_ENTITY_ID = "sensor.test_longitude"
+TEST_LOCATION_ACCURACY_ENTITY_ID = "sensor.test_location_accuracy"
 TEST_AVAILABILITY_ENTITY_ID = "binary_sensor.availability"
 TEST_TRACKER = TemplatePlatformSetup(
     device_tracker.DOMAIN,
@@ -43,6 +47,7 @@ TEST_TRACKER = TemplatePlatformSetup(
         TEST_AVAILABILITY_ENTITY_ID,
         TEST_LATITUDE_ENTITY_ID,
         TEST_LONGITUDE_ENTITY_ID,
+        TEST_LOCATION_ACCURACY_ENTITY_ID,
         TEST_STATE_ENTITY_ID,
     ),
 )
@@ -623,3 +628,146 @@ async def test_flow_preview(
     assert state["state"] == STATE_NOT_HOME
     assert state["attributes"]["latitude"] == 10.0
     assert state["attributes"]["longitude"] == 40.0
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "in_zones": "{{ state_attr('sensor.test_state', 'in_zones') }}",
+            "latitude": "{{ states('sensor.test_latitude') | float(None) }}",
+            "longitude": "{{ states('sensor.test_longitude') | float(None) }}",
+            "location_accuracy": "{{ states('sensor.test_location_accuracy') | float(None) }}",
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    (
+        "saved_state",
+        "saved_extra_data",
+        "initial_state",
+        "initial_attributes",
+    ),
+    [
+        (
+            STATE_HOME,
+            {
+                "in_zones": ["zone.home"],
+                "latitude": 32.87336,
+                "longitude": 117.228743,
+                "location_accuracy": 5.0,
+            },
+            STATE_HOME,
+            {
+                "in_zones": ["zone.home"],
+                "latitude": 32.87336,
+                "longitude": 117.228743,
+                "gps_accuracy": 5.0,
+            },
+        ),
+        (
+            STATE_NOT_HOME,
+            {
+                "in_zones": [],
+                "latitude": 15.0,
+                "longitude": 15.0,
+                "location_accuracy": 10.0,
+            },
+            STATE_NOT_HOME,
+            {
+                "in_zones": [],
+                "latitude": 15.0,
+                "longitude": 15.0,
+                "gps_accuracy": 10.0,
+            },
+        ),
+        (
+            STATE_UNAVAILABLE,
+            {
+                "in_zones": [],
+                "latitude": 15.0,
+                "longitude": 15.0,
+                "location_accuracy": 10.0,
+            },
+            STATE_UNKNOWN,
+            {
+                "in_zones": [],
+                "latitude": None,
+                "longitude": None,
+                "gps_accuracy": None,
+            },
+        ),
+        (
+            STATE_UNKNOWN,
+            {
+                "in_zones": [],
+                "latitude": 15.0,
+                "longitude": 15.0,
+                "location_accuracy": 10.0,
+            },
+            STATE_UNKNOWN,
+            {
+                "in_zones": [],
+                "latitude": None,
+                "longitude": None,
+                "gps_accuracy": None,
+            },
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    config: ConfigType,
+    style: ConfigurationStyle,
+    saved_state: str,
+    saved_extra_data: dict | None,
+    initial_state: str,
+    initial_attributes: ConfigType,
+) -> None:
+    """Test restoring trigger template device tracker."""
+
+    restored_attributes = {  # These should be ignored
+        "latitude": 5,
+        "longitude": 5,
+        "location_accuracy": 2.0,
+    }
+
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_TRACKER,
+        saved_state,
+        saved_extra_data=saved_extra_data,
+        saved_attributes=restored_attributes,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_TRACKER,
+        style,
+        config,
+        "states('sensor.test_latitude') | float(0) > 19.9",
+    )
+
+    state = assert_state_and_attributes(
+        hass,
+        TEST_TRACKER,
+        initial_state,
+        initial_attributes,
+    )
+
+    await async_trigger(
+        hass, "sensor.test_state", "anything", {"in_zones": ["zone.home"]}
+    )
+    await async_trigger(hass, "sensor.test_latitude", "32.88")
+    await async_trigger(hass, "sensor.test_longitude", "117.24")
+    await async_trigger(hass, "sensor.test_location_accuracy", "20")
+
+    state = hass.states.get(TEST_TRACKER.entity_id)
+    assert state.state == STATE_HOME
+    assert state.attributes["in_zones"] == ["zone.home"]
+    assert state.attributes["latitude"] == 32.88
+    assert state.attributes["longitude"] == 117.24
+    assert state.attributes["gps_accuracy"] == 20.0
