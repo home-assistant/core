@@ -32,9 +32,10 @@ CAMERA_EYES_OFF = SHCCameraEyes.CameraLightService.State.OFF
 PRIVACY_ENABLED = SHCCamera360.PrivacyModeService.State.ENABLED
 PRIVACY_DISABLED = SHCCamera360.PrivacyModeService.State.DISABLED
 
-# Every device_helper bucket bosch_shc's platforms iterate over, defaulted to
-# empty so a full component setup only ever creates the switch entities under
-# test here, regardless of what other platforms look for.
+# Every device_helper bucket the switch platform itself iterates over
+# (smart_plugs, light_switches_bsm, smart_plugs_compact, camera_eyes,
+# camera_360), defaulted to empty so a test only creates entities for the
+# bucket(s) it explicitly passes.
 _EMPTY_DEVICE_BUCKETS: dict[str, list[Any]] = {
     bucket: []
     for bucket in (
