@@ -8,7 +8,7 @@ from homeassistant.components.repairs import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
-from .const import DOMAIN
+from .const import CONF_KEEP_OLD_DEVICES, DOMAIN
 from .helpers import async_get_node_from_device_id, format_home_id_for_display
 
 
@@ -100,8 +100,16 @@ class MigrateUniqueIDFlow(RepairsFlow):
             )
             # If config entry was removed, we can ignore the issue.
             if config_entry is not None:
+                # The user confirmed the new adapter, so clear the keep old
+                # devices flag to let the reload clean up stale devices.
+                data = {
+                    key: value
+                    for key, value in config_entry.data.items()
+                    if key != CONF_KEEP_OLD_DEVICES
+                }
                 self.hass.config_entries.async_update_entry(
                     config_entry,
+                    data=data,
                     unique_id=self._new_unique_id,
                 )
                 self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
