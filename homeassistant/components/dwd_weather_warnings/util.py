@@ -1,6 +1,6 @@
 """Util functions for the dwd_weather_warnings integration."""
 
-from homeassistant.components.device_tracker import TrackerEntityStateAttribute
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -20,20 +20,20 @@ def get_position_data(
     if entity is None:
         raise EntityNotFoundError(f"Failed to find entity {registry_entry.entity_id}")
 
-    latitude = entity.attributes.get(TrackerEntityStateAttribute.LATITUDE)
+    latitude = entity.attributes.get(EntityStateAttribute.LATITUDE)
     if not latitude:
         raise AttributeError(
-            f"Failed to find attribute '{TrackerEntityStateAttribute.LATITUDE}'"
+            f"Failed to find attribute '{EntityStateAttribute.LATITUDE}'"
             f" in {registry_entry.entity_id}",
-            TrackerEntityStateAttribute.LATITUDE,
+            EntityStateAttribute.LATITUDE,
         )
 
-    longitude = entity.attributes.get(TrackerEntityStateAttribute.LONGITUDE)
+    longitude = entity.attributes.get(EntityStateAttribute.LONGITUDE)
     if not longitude:
         raise AttributeError(
-            f"Failed to find attribute '{TrackerEntityStateAttribute.LONGITUDE}'"
+            f"Failed to find attribute '{EntityStateAttribute.LONGITUDE}'"
             f" in {registry_entry.entity_id}",
-            TrackerEntityStateAttribute.LONGITUDE,
+            EntityStateAttribute.LONGITUDE,
         )
 
     return (latitude, longitude)
