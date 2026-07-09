@@ -779,10 +779,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Ask for config for Z-Wave JS add-on."""
 
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            self.usb_path = user_input.get(CONF_USB_PATH)
-            self.socket_path = user_input.get(CONF_SOCKET_PATH)
-            return await self.async_step_network_type()
+            self.usb_path = user_input.get(CONF_USB_PATH) or None
+            self.socket_path = user_input.get(CONF_SOCKET_PATH) or None
+            if error := self._validate_usb_or_socket_path():
+                errors["base"] = error
+            else:
+                return await self.async_step_network_type()
 
         if self._adapter_discovered:
             return await self.async_step_network_type()
@@ -806,8 +811,17 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="configure_addon_user", data_schema=data_schema
+            step_id="configure_addon_user", data_schema=data_schema, errors=errors
         )
+
+    @callback
+    def _validate_usb_or_socket_path(self) -> str | None:
+        """Validate that exactly one of USB path and socket path is set."""
+        if self.usb_path and self.socket_path:
+            return "usb_and_socket_path"
+        if not self.usb_path and not self.socket_path:
+            return "missing_usb_or_socket_path"
+        return None
 
     async def async_step_network_type(
         self, user_input: dict[str, Any] | None = None
@@ -1254,6 +1268,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         addon_info = await self._async_get_addon_info()
         addon_config = addon_info.options
 
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             # The revert helper only passes keys present in the original
             # add-on config, which may lack some of the security keys,
@@ -1270,35 +1286,38 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             self.lr_s2_authenticated_key = user_input.get(
                 CONF_LR_S2_AUTHENTICATED_KEY, ""
             )
-            self.usb_path = user_input.get(CONF_USB_PATH)
-            self.socket_path = user_input.get(CONF_SOCKET_PATH)
+            self.usb_path = user_input.get(CONF_USB_PATH) or None
+            self.socket_path = user_input.get(CONF_SOCKET_PATH) or None
 
-            addon_config_updates = {
-                CONF_ADDON_DEVICE: self.usb_path,
-                CONF_ADDON_SOCKET: self.socket_path,
-                CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
-                CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
-            }
+            if error := self._validate_usb_or_socket_path():
+                errors["base"] = error
+            else:
+                addon_config_updates = {
+                    CONF_ADDON_DEVICE: self.usb_path,
+                    CONF_ADDON_SOCKET: self.socket_path,
+                    CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
+                    CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
+                    CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
+                    CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
+                    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
+                    CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                }
 
-            addon_config_updates = self._addon_config_updates | addon_config_updates
-            self._addon_config_updates = {}
+                addon_config_updates = self._addon_config_updates | addon_config_updates
+                self._addon_config_updates = {}
 
-            await self._async_set_addon_config(addon_config_updates)
+                await self._async_set_addon_config(addon_config_updates)
 
-            if addon_info.state is AddonState.RUNNING and not self.restart_addon:
-                return await self.async_step_finish_addon_setup_reconfigure()
+                if addon_info.state is AddonState.RUNNING and not self.restart_addon:
+                    return await self.async_step_finish_addon_setup_reconfigure()
 
-            if (
-                config_entry := self._reconfigure_config_entry
-            ) and config_entry.data.get(CONF_USE_ADDON):
-                # Disconnect integration before restarting add-on.
-                await self.hass.config_entries.async_unload(config_entry.entry_id)
+                if (
+                    config_entry := self._reconfigure_config_entry
+                ) and config_entry.data.get(CONF_USE_ADDON):
+                    # Disconnect integration before restarting add-on.
+                    await self.hass.config_entries.async_unload(config_entry.entry_id)
 
-            return await self.async_step_start_addon()
+                return await self.async_step_start_addon()
 
         usb_path = addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
         socket_path = addon_config.get(CONF_ADDON_SOCKET, self.socket_path or "")
@@ -1368,19 +1387,26 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="configure_addon_reconfigure", data_schema=data_schema
+            step_id="configure_addon_reconfigure",
+            data_schema=data_schema,
+            errors=errors,
         )
 
     async def async_step_choose_serial_port(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose a serial port."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            self.usb_path = user_input.get(CONF_USB_PATH)
-            self.socket_path = user_input.get(CONF_SOCKET_PATH)
-            self._addon_config_updates[CONF_ADDON_DEVICE] = self.usb_path
-            self._addon_config_updates[CONF_ADDON_SOCKET] = self.socket_path
-            return await self.async_step_start_addon()
+            self.usb_path = user_input.get(CONF_USB_PATH) or None
+            self.socket_path = user_input.get(CONF_SOCKET_PATH) or None
+            if error := self._validate_usb_or_socket_path():
+                errors["base"] = error
+            else:
+                self._addon_config_updates[CONF_ADDON_DEVICE] = self.usb_path
+                self._addon_config_updates[CONF_ADDON_SOCKET] = self.socket_path
+                return await self.async_step_start_addon()
 
         try:
             ports = await async_get_usb_ports(self.hass)
@@ -1409,7 +1435,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_show_form(
-            step_id="choose_serial_port", data_schema=data_schema
+            step_id="choose_serial_port", data_schema=data_schema, errors=errors
         )
 
     async def async_step_backup_failed(
