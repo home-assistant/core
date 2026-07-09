@@ -273,6 +273,7 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
     ) -> None:
         """Install an update."""
         await update_os(self.hass, version, backup)
+        await self.coordinator.async_refresh()
 
 
 class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
