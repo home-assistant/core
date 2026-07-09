@@ -1,5 +1,14 @@
 """Constants for the Imou tests."""
 
+from pyimouapi.const import (
+    PARAM_BATTERY,
+    PARAM_STATE,
+    PARAM_STATE_VARIANT,
+    PARAM_STATUS,
+    PARAM_STORAGE_USED,
+    STATE_VARIANT_ENUM,
+    STATE_VARIANT_NUMERIC,
+)
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 
 from homeassistant.components.imou.button import (
@@ -15,8 +24,6 @@ from homeassistant.components.imou.const import (
     PARAM_LIGHT,
     PARAM_MOTION_DETECT,
     PARAM_PLUG_SWITCH,
-    PARAM_STATE,
-    PARAM_STATUS,
 )
 
 TEST_APP_ID = "test_app_id"
@@ -37,12 +44,20 @@ CONFIG_ENTRY_DATA = {
 
 UNKNOWN_BUTTON_KEY = "legacy_unknown_button"
 UNKNOWN_SWITCH_KEY = "legacy_unknown_switch"
+UNKNOWN_SENSOR_KEY = "legacy_unknown_sensor"
 
 DEFAULT_SWITCHES = {
     PARAM_MOTION_DETECT: {PARAM_STATE: False},
     PARAM_HEADER_DETECT: {PARAM_STATE: True},
     PARAM_LIGHT: {PARAM_STATE: False},
     PARAM_PLUG_SWITCH: {PARAM_STATE: True},
+}
+
+DEFAULT_SENSORS = {
+    PARAM_STATUS: {PARAM_STATE: "online", PARAM_STATE_VARIANT: STATE_VARIANT_ENUM},
+    PARAM_BATTERY: {PARAM_STATE: 85, PARAM_STATE_VARIANT: STATE_VARIANT_NUMERIC},
+    PARAM_STORAGE_USED: {PARAM_STATE: 42, PARAM_STATE_VARIANT: STATE_VARIANT_NUMERIC},
+    "use_time": {PARAM_STATE: 120, PARAM_STATE_VARIANT: STATE_VARIANT_NUMERIC},
 }
 
 
@@ -100,7 +115,10 @@ def create_device(
         device.set_channel_id(channel_id)
     for key in button_keys:
         device._buttons[key] = {}
-    device._sensors[PARAM_STATUS] = {PARAM_STATE: status.value}
+    device._sensors[PARAM_STATUS] = {
+        PARAM_STATE: status.value,
+        PARAM_STATE_VARIANT: STATE_VARIANT_ENUM,
+    }
     if switches:
         device._switches.update(switches)
     if sensors:
@@ -108,10 +126,29 @@ def create_device(
     return device
 
 
-DEFAULT_MOCK_DEVICES = [
-    create_online_device(
-        "d1",
-        "Device 1",
-        button_keys=(PARAM_MUTE, PARAM_PTZ_UP, PARAM_RESTART_DEVICE),
-    ),
-]
+def default_mock_devices() -> list[ImouHaDevice]:
+    """Return a fresh default device list for tests."""
+    return [
+        create_online_device(
+            "d1",
+            "Device 1",
+            button_keys=(PARAM_MUTE, PARAM_PTZ_UP, PARAM_RESTART_DEVICE),
+        ),
+    ]
+
+
+def sensor_mock_devices() -> list[ImouHaDevice]:
+    """Return a fresh sensor-focused device list for tests."""
+    return [
+        create_online_device(
+            "d1",
+            "Device 1",
+            button_keys=(),
+            sensors=DEFAULT_SENSORS,
+        ),
+    ]
+
+
+DEFAULT_MOCK_DEVICES = default_mock_devices()
+
+SENSOR_MOCK_DEVICES = sensor_mock_devices()

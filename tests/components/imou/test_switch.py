@@ -49,7 +49,7 @@ SWITCH_MOCK_DEVICES = [
 
 
 @pytest.mark.parametrize("imou_mock_devices", [SWITCH_MOCK_DEVICES], indirect=True)
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_switch_platform_integration")
 async def test_switch_entities_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

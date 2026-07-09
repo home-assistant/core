@@ -75,6 +75,51 @@
       "white_light": {
         "name": "White light"
       }
+    },
+    "sensor": {
+      "storage_used": {
+        "name": "Storage used",
+        "state": {
+          "e1": "No storage medium",
+          "e2": "Abnormal"
+        }
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "online": "Online",
+          "offline": "Offline",
+          "sleep": "Sleep",
+          "upgrading": "Upgrading"
+        }
+      },
+      "battery": {
+        "name": "Battery"
+      },
+      "temperature_current": {
+        "name": "Temperature"
+      },
+      "humidity_current": {
+        "name": "Humidity"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "voltage": {
+        "name": "Voltage"
+      },
+      "current": {
+        "name": "Current"
+      },
+      "switch_cnt": {
+        "name": "Cycles today"
+      },
+      "use_electricity": {
+        "name": "Energy consumption"
+      },
+      "use_time": {
+        "name": "Usage duration"
+      }
     }
   },
   "selector": {

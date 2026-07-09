@@ -26,7 +26,7 @@ from .const import UNKNOWN_BUTTON_KEY, create_online_device
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_button_platform_integration")
 async def test_button_entities_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -50,7 +50,7 @@ async def test_button_entities_snapshot(
     ],
     indirect=True,
 )
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_button_platform_integration")
 async def test_setup_ignores_unknown_button_types(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

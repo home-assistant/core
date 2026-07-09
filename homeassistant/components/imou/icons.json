@@ -36,6 +36,23 @@
       "white_light": {
         "default": "mdi:light-flood-down"
       }
+    },
+    "sensor": {
+      "storage_used": {
+        "default": "mdi:harddisk"
+      },
+      "status": {
+        "default": "mdi:lan-connect",
+        "state": {
+          "online": "mdi:check-network",
+          "offline": "mdi:close-network",
+          "sleep": "mdi:sleep",
+          "upgrading": "mdi:cloud-arrow-up"
+        }
+      },
+      "switch_cnt": {
+        "default": "mdi:counter"
+      }
     }
   }
 }

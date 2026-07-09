@@ -62,7 +62,8 @@ def _camera_entity_id(
     indirect=True,
 )
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "init_integration_stable_camera"
+    "entity_registry_enabled_by_default",
+    "init_camera_platform_integration",
 )
 async def test_camera_entities_snapshot(
     hass: HomeAssistant,
