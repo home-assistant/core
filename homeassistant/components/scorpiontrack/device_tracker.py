@@ -1,5 +1,7 @@
 """Device tracker platform for ScorpionTrack."""
 
+from typing import override
+
 from pyscorpiontrack import ScorpionTrackVehicle
 
 from homeassistant.components.device_tracker import TrackerEntity
@@ -43,6 +45,7 @@ class ScorpionTrackTrackerEntity(ScorpionTrackEntity, TrackerEntity):
         return self.get_vehicle()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the tracker is available."""
         vehicle = self._available_vehicle()
@@ -55,6 +58,7 @@ class ScorpionTrackTrackerEntity(ScorpionTrackEntity, TrackerEntity):
         )
 
     @property
+    @override
     def latitude(self) -> float | None:
         """Return the latitude."""
         vehicle = self._available_vehicle()
@@ -63,6 +67,7 @@ class ScorpionTrackTrackerEntity(ScorpionTrackEntity, TrackerEntity):
         return vehicle.position.latitude
 
     @property
+    @override
     def longitude(self) -> float | None:
         """Return the longitude."""
         vehicle = self._available_vehicle()

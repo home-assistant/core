@@ -1,5 +1,7 @@
 """Shared entity helpers for ScorpionTrack."""
 
+from typing import override
+
 from pyscorpiontrack import ScorpionTrackShare, ScorpionTrackVehicle
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -36,6 +38,7 @@ class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
         return self.coordinator.vehicles_by_id[self._vehicle_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self._vehicle_id in self.coordinator.vehicles_by_id

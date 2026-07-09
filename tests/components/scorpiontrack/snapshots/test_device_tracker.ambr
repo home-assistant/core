@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'tracking_type': <TrackingType.POSITION: 'position'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,14 +41,14 @@
 # name: test_device_tracker_state[device_tracker.ab12_cde-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AB12 CDE',
-      'gps_accuracy': 0,
-      'in_zones': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AB12 CDE',
+      <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 0,
+      <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      'latitude': 51.5074,
-      'longitude': -0.1278,
-      'source_type': <SourceType.GPS: 'gps'>,
-      'tracking_type': <TrackingType.POSITION: 'position'>,
+      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 51.5074,
+      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: -0.1278,
+      <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
+      <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.ab12_cde',

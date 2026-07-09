@@ -1,6 +1,7 @@
 """Coordinator for ScorpionTrack."""
 
 import logging
+from typing import override
 
 from pyscorpiontrack import (
     ScorpionTrackClient,
@@ -45,6 +46,7 @@ class ScorpionTrackCoordinator(DataUpdateCoordinator[ScorpionTrackShare]):
             always_update=False,
         )
 
+    @override
     async def _async_update_data(self) -> ScorpionTrackShare:
         """Fetch updated share data."""
         try:
