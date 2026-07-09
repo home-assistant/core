@@ -14,7 +14,9 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  docs-triggers: done
+  docs-triggers:
+    status: exempt
+    comment: Integration does not register custom triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
