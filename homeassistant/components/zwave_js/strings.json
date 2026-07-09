@@ -23,11 +23,9 @@
       "not_zwave_device": "Discovered device is not a Z-Wave device.",
       "not_zwave_js_addon": "Discovered app is not the official Z-Wave JS app.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "reset_failed": "Failed to reset adapter.",
       "usb_ports_failed": "Failed to get USB devices."
     },
     "error": {
-      "addon_start_failed": "Failed to start the Z-Wave JS app. Check the configuration.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_ws_url": "Invalid websocket URL",
       "missing_usb_or_socket_path": "Select a USB device or provide a socket path.",
