@@ -54,7 +54,7 @@ async def test_flow_user(
 @pytest.mark.parametrize(
     ("side_effect", "error_msg"),
     [
-        (steam.api.HTTPTimeoutError, "cannot_connect"),
+        (steam.api.HTTPTimeoutError, "timeout_connect"),
         (steam.api.HTTPError, "cannot_connect"),
         (steam.api.HTTPError("403"), "invalid_auth"),
         (ValueError, "unknown"),
@@ -64,7 +64,7 @@ async def test_flow_user(
 async def test_flow_user_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    side_effect: Exception | dict[str, Any],
+    side_effect: type[Exception] | dict[str, Any],
     error_msg: str,
     steam_api: MagicMock,
 ) -> None:
@@ -146,7 +146,7 @@ async def test_flow_reauth(
 @pytest.mark.parametrize(
     ("side_effect", "error_msg"),
     [
-        (steam.api.HTTPTimeoutError, "cannot_connect"),
+        (steam.api.HTTPTimeoutError, "timeout_connect"),
         (steam.api.HTTPError, "cannot_connect"),
         (steam.api.HTTPError("403"), "invalid_auth"),
         (ValueError, "unknown"),
@@ -157,7 +157,7 @@ async def test_flow_reauth_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     steam_api: MagicMock,
-    side_effect: Exception | dict[str, Any],
+    side_effect: type[Exception] | dict[str, Any],
     error_msg: str,
 ) -> None:
     """Test reauth step with errors."""

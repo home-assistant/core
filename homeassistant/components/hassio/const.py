@@ -27,6 +27,7 @@ if TYPE_CHECKING:
         HassioAddOnDataUpdateCoordinator,
         HassioMainDataUpdateCoordinator,
         HassioStatsDataUpdateCoordinator,
+        SupervisorJobsCoordinator,
     )
     from .handler import HassIO
     from .issues import SupervisorIssues
@@ -103,6 +104,9 @@ ADDONS_COORDINATOR: HassKey[HassioAddOnDataUpdateCoordinator] = HassKey(
 STATS_COORDINATOR: HassKey[HassioStatsDataUpdateCoordinator] = HassKey(
     "hassio_stats_coordinator"
 )
+JOBS_COORDINATOR: HassKey[SupervisorJobsCoordinator] = HassKey(
+    "hassio_jobs_coordinator"
+)
 
 
 DATA_COMPONENT: HassKey[HassIO] = HassKey(DOMAIN)
@@ -126,6 +130,7 @@ DATA_ADDONS_LIST: HassKey[list[InstalledAddon]] = HassKey("hassio_addons_list")
 HASSIO_MAIN_UPDATE_INTERVAL = timedelta(minutes=5)
 HASSIO_ADDON_UPDATE_INTERVAL = timedelta(minutes=15)
 HASSIO_STATS_UPDATE_INTERVAL = timedelta(seconds=60)
+SUPERVISOR_JOBS_UPDATE_INTERVAL = timedelta(minutes=15)
 
 ATTR_AUTO_UPDATE = "auto_update"
 ATTR_VERSION = "version"

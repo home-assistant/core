@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
@@ -176,6 +177,33 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
             HIGH,
         ],
     ),
+    TeslemetrySelectEntityDescription(
+        # remote_seat_cooler_request uses 1-indexed positions (front-left=1,
+        # front-right=2), unlike the 0-indexed Seat enum used for heaters.
+        # Polled state comes from the seat_fan_front_* vehicle_data fields.
+        key="climate_state_seat_fan_front_left",
+        select_fn=lambda api, level: api.remote_seat_cooler_request(1, level),
+        supported_fn=lambda data: bool(data.get("has_seat_cooling")),
+        streaming_listener=lambda x, y: x.listen_ClimateSeatCoolingFrontLeft(y),
+        options=[
+            OFF,
+            LOW,
+            MEDIUM,
+            HIGH,
+        ],
+    ),
+    TeslemetrySelectEntityDescription(
+        key="climate_state_seat_fan_front_right",
+        select_fn=lambda api, level: api.remote_seat_cooler_request(2, level),
+        supported_fn=lambda data: bool(data.get("has_seat_cooling")),
+        streaming_listener=lambda x, y: x.listen_ClimateSeatCoolingFrontRight(y),
+        options=[
+            OFF,
+            LOW,
+            MEDIUM,
+            HIGH,
+        ],
+    ),
 )
 
 
@@ -193,7 +221,7 @@ async def async_setup_entry(
                     vehicle, description, entry.runtime_data.scopes
                 )
                 if vehicle.poll
-                or vehicle.firmware < "2024.26"
+                or not firmware_at_least(vehicle.firmware, "2024.26")
                 or description.streaming_listener is None
                 else TeslemetryStreamingSelectEntity(
                     vehicle, description, entry.runtime_data.scopes
@@ -261,10 +289,14 @@ class TeslemetryVehiclePollingSelectEntity(
     def _async_update_attrs(self) -> None:
         """Handle updated data from the coordinator."""
         self._climate = bool(self.get("climate_state_is_climate_on"))
-        if not isinstance(self._value, int):
-            self._attr_current_option = None
+        value = self._value
+        # Defensive clamp: Tesla could report a level outside the modeled
+        # range, so map it to the nearest known option rather than erroring.
+        if isinstance(value, int):
+            options = self.entity_description.options
+            self._attr_current_option = options[max(0, min(value, len(options) - 1))]
         else:
-            self._attr_current_option = self.entity_description.options[self._value]
+            self._attr_current_option = None
 
 
 class TeslemetryStreamingSelectEntity(
@@ -308,10 +340,13 @@ class TeslemetryStreamingSelectEntity(
 
     def _value_callback(self, value: int | None) -> None:
         """Update the value of the entity."""
-        if value is None:
-            self._attr_current_option = None
+        # Defensive clamp: Tesla could report a level outside the modeled
+        # range, so map it to the nearest known option rather than erroring.
+        if isinstance(value, int):
+            options = self.entity_description.options
+            self._attr_current_option = options[max(0, min(value, len(options) - 1))]
         else:
-            self._attr_current_option = self.entity_description.options[value]
+            self._attr_current_option = None
         self.async_write_ha_state()
 
     def _climate_callback(self, value: bool | None) -> None:

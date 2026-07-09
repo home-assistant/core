@@ -339,7 +339,20 @@ class Telegrams:
             )
             return
 
-        stored_telegrams = [self.dict_to_model(t) for t in json_data]
+        # Legacy JSON data from older HA instances might miss fields added later
+        # (e.g., data_secure was added in 2026.3, value, payload, dpt_main/sub, names might also be missing)
+        default_migration_values = {
+            "value": None,
+            "payload": None,
+            "dpt_main": None,
+            "dpt_sub": None,
+            "source_name": "",
+            "destination_name": "",
+            "data_secure": False,
+        }
+        stored_telegrams = [
+            self.dict_to_model(default_migration_values | t) for t in json_data
+        ]
         try:
             if stored_telegrams:
                 await self.store.store_many(stored_telegrams)

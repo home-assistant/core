@@ -7,10 +7,14 @@ import logging
 from typing import cast, override
 
 from uiprotect.data import Camera, Chime, Light, ModelType, ProtectAdoptableDeviceModel
-from uiprotect.data.public_devices import PublicDeviceModel, PublicLight
+from uiprotect.data.public_devices import (
+    PublicDeviceModel,
+    PublicLight,
+    SensorFeatureCapability,
+)
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, Platform, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -22,6 +26,7 @@ from .entity import (
     ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
+    async_remove_unsupported_sense_entities,
 )
 from .utils import async_ufp_instance_command
 
@@ -197,6 +202,7 @@ SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_step=1,
         ufp_value="motion_settings.sensitivity",
         ufp_set_method="set_motion_sensitivity",
+        ufp_capability=SensorFeatureCapability.MOTION,
         ufp_perm=PermRequired.WRITE,
     ),
 )
@@ -275,6 +281,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up number entities for UniFi Protect integration."""
     data = entry.runtime_data
+    async_remove_unsupported_sense_entities(hass, Platform.NUMBER, data, SENSE_NUMBERS)
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
