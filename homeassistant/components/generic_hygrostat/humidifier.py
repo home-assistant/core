@@ -7,7 +7,6 @@ import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant.components.humidifier import (
-    ATTR_HUMIDITY,
     MODE_AWAY,
     MODE_NORMAL,
     PLATFORM_SCHEMA as HUMIDIFIER_PLATFORM_SCHEMA,
@@ -15,11 +14,11 @@ from homeassistant.components.humidifier import (
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
+    HumidifierEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_MODE,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_UNIQUE_ID,
@@ -266,12 +265,17 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
 
         if (old_state := await self.async_get_last_state()) is not None:
-            if old_state.attributes.get(ATTR_MODE) == MODE_AWAY:
+            if (
+                old_state.attributes.get(HumidifierEntityStateAttribute.MODE)
+                == MODE_AWAY
+            ):
                 self._is_away = True
                 self._saved_target_humidity = self._target_humidity
                 self._target_humidity = self._away_humidity or self._target_humidity
-            if old_state.attributes.get(ATTR_HUMIDITY):
-                self._target_humidity = int(old_state.attributes[ATTR_HUMIDITY])
+            if old_state.attributes.get(HumidifierEntityStateAttribute.HUMIDITY):
+                self._target_humidity = int(
+                    old_state.attributes[HumidifierEntityStateAttribute.HUMIDITY]
+                )
             if old_state.attributes.get(ATTR_SAVED_HUMIDITY):
                 self._saved_target_humidity = int(
                     old_state.attributes[ATTR_SAVED_HUMIDITY]

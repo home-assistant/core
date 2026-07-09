@@ -28,9 +28,11 @@ from uiprotect.data.public_devices import (
     PublicLight,
     PublicLightDeviceSettings,
     PublicSensor,
+    PublicSensorLeakSettings,
     PublicSensorMotionSettingsRead,
     PublicWirelessBatteryStatus,
     PublicWirelessConnectionState,
+    SensorFeatureCapability,
 )
 from uiprotect.test_util.anonymize import random_hex
 from uiprotect.websocket import WebsocketState
@@ -236,13 +238,23 @@ def make_public_sensor(
     is_motion_detected: bool | None = None,
     motion_enabled: bool | None = None,
     mount_type: MountType | None = None,
+    is_opened: bool | None = None,
+    is_leak_detected: bool | None = None,
+    is_tampering_detected: bool | None = None,
+    capabilities: set[SensorFeatureCapability] | None = None,
+    leak_internal_enabled: bool = False,
+    leak_external_enabled: bool = False,
 ) -> Mock:
     """Build a public-API sensor mirroring a private sensor's migrated fields.
 
-    Real ``wireless_connection_state`` / ``motion_settings`` models back the
-    migrated value paths so a wrong ``ufp_public_value`` path fails the test;
-    identifiers come from the (synthetic) private sensor fixture, never from real
-    capture data. Each ``*`` override lets a test diverge from the private value.
+    Real ``wireless_connection_state`` / ``motion_settings`` / ``leak_settings``
+    models back the migrated value paths so a wrong ``ufp_public_value`` path
+    fails the test; identifiers come from the (synthetic) private sensor fixture,
+    never from real capture data. Each ``*`` override lets a test diverge from
+    the private value. The mount-derived enablement properties are computed from
+    the resolved mount type so a ``mount_type`` override stays consistent.
+    ``capabilities`` mimics the capability map of newer firmware; ``None`` (the
+    default) models older firmware without a map, where every entity is created.
     """
     public = Mock(spec=PublicSensor)
     public.id = sensor.id
@@ -250,6 +262,31 @@ def make_public_sensor(
     public.model = ModelType.SENSOR
     public.state = DeviceState[sensor.state.name] if state is None else state
     public.mount_type = sensor.mount_type if mount_type is None else mount_type
+    public.is_contact_sensor_enabled = public.mount_type in {
+        MountType.DOOR,
+        MountType.WINDOW,
+        MountType.GARAGE,
+    }
+    public.is_leak_sensor_enabled = public.mount_type is MountType.LEAK
+    public.is_opened = sensor.is_opened if is_opened is None else is_opened
+    public.is_leak_detected = (
+        sensor.is_leak_detected if is_leak_detected is None else is_leak_detected
+    )
+    public.is_tampering_detected = (
+        sensor.is_tampering_detected
+        if is_tampering_detected is None
+        else is_tampering_detected
+    )
+    public.has_feature_flags = capabilities is not None
+    public.supports = Mock(
+        side_effect=lambda capability: (
+            capabilities is not None and capability in capabilities
+        )
+    )
+    public.leak_settings = PublicSensorLeakSettings(
+        is_internal_enabled=leak_internal_enabled,
+        is_external_enabled=leak_external_enabled,
+    )
     public.is_motion_detected = (
         sensor.is_motion_detected if is_motion_detected is None else is_motion_detected
     )
@@ -334,12 +371,16 @@ def make_public_camera(
     return public
 
 
-def setup_public_sensor(ufp: MockUFPFixture) -> None:
+def setup_public_sensor(
+    ufp: MockUFPFixture,
+    capabilities: set[SensorFeatureCapability] | None = None,
+) -> None:
     """Expose private sensors over the public API via a real ``PublicBootstrap``.
 
     Lookups go through the real ``PublicBootstrap.get``; the mirror resolves
     against the private bootstrap at call time, so it is robust to ``init_entry``
-    regenerating device ids.
+    regenerating device ids. ``capabilities`` is forwarded to the mirror to model
+    newer firmware with a capability map.
     """
     public_bootstrap = PublicBootstrap()
     pb = Mock(spec=PublicBootstrap)
@@ -354,7 +395,9 @@ def setup_public_sensor(ufp: MockUFPFixture) -> None:
             model is ModelType.SENSOR
             and (private := ufp.api.bootstrap.sensors.get(obj_id)) is not None
         ):
-            public_bootstrap.sensors[obj_id] = make_public_sensor(private)
+            public_bootstrap.sensors[obj_id] = make_public_sensor(
+                private, capabilities=capabilities
+            )
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get

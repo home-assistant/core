@@ -46,6 +46,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -422,7 +423,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """The base class for camera entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {CameraEntityStateAttribute.ACCESS_TOKEN, "entity_picture"}
+        {CameraEntityStateAttribute.ACCESS_TOKEN, EntityStateAttribute.ENTITY_PICTURE}
     )
 
     # Entity Properties
