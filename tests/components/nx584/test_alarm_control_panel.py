@@ -67,7 +67,7 @@ async def test_async_setup_entry_creates_alarm_panel(hass: HomeAssistant) -> Non
     )
     entry.add_to_hass(hass)
 
-    with mock.patch("homeassistant.components.nx584.client.Client") as mock_client_cls:
+    with mock.patch("nx584.client.Client") as mock_client_cls:
         mock_client = mock_client_cls.return_value
         mock_client.list_zones.return_value = []
         mock_client.list_partitions.return_value = [
@@ -89,7 +89,7 @@ async def test_async_setup_entry_uses_configured_name(hass: HomeAssistant) -> No
     )
     entry.add_to_hass(hass)
 
-    with mock.patch("homeassistant.components.nx584.client.Client") as mock_client_cls:
+    with mock.patch("nx584.client.Client") as mock_client_cls:
         mock_client = mock_client_cls.return_value
         mock_client.list_zones.return_value = []
         mock_client.list_partitions.return_value = [

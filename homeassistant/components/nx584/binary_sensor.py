@@ -2,7 +2,6 @@
 
 import logging
 import threading
-import time
 from typing import Any, override
 
 from nx584 import client as nx584_client
@@ -209,4 +208,4 @@ class NX584Watcher(threading.Thread):
             except requests.exceptions.ConnectionError:
                 _LOGGER.error("Failed to reach NX584 server")
                 self._set_zones_available(False)
-                time.sleep(10)
+                self._stop_event.wait(10)

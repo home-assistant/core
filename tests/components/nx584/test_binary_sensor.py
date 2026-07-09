@@ -1,6 +1,7 @@
 """The tests for the nx584 sensor platform."""
 
 import logging
+import time
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -144,7 +145,7 @@ async def test_async_setup_entry_creates_zone_sensors(
     entry.add_to_hass(hass)
 
     with (
-        mock.patch("homeassistant.components.nx584.client.Client") as mock_client_cls,
+        mock.patch("nx584.client.Client") as mock_client_cls,
         mock.patch("homeassistant.components.nx584.binary_sensor.NX584Watcher"),
     ):
         mock_client = mock_client_cls.return_value
@@ -190,7 +191,7 @@ async def test_async_setup_entry_applies_options(
     entry.add_to_hass(hass)
 
     with (
-        mock.patch("homeassistant.components.nx584.client.Client") as mock_client_cls,
+        mock.patch("nx584.client.Client") as mock_client_cls,
         mock.patch("homeassistant.components.nx584.binary_sensor.NX584Watcher"),
     ):
         mock_client = mock_client_cls.return_value
@@ -225,7 +226,7 @@ async def test_async_setup_entry_skips_zone_sensors_on_version_too_old(
     entry.add_to_hass(hass)
 
     with (
-        mock.patch("homeassistant.components.nx584.client.Client") as mock_client_cls,
+        mock.patch("nx584.client.Client") as mock_client_cls,
         mock.patch(
             "homeassistant.components.nx584.binary_sensor.NX584Watcher"
         ) as mock_watcher_cls,
@@ -254,7 +255,7 @@ async def test_async_setup_entry_stops_watcher_on_unload(
     entry.add_to_hass(hass)
 
     with (
-        mock.patch("homeassistant.components.nx584.client.Client") as mock_client_cls,
+        mock.patch("nx584.client.Client") as mock_client_cls,
         mock.patch(
             "homeassistant.components.nx584.binary_sensor.NX584Watcher"
         ) as mock_watcher_cls,
@@ -384,8 +385,7 @@ def test_nx584_watcher_run_with_zone_events() -> None:
     assert client.get_events.call_count == 3
 
 
-@mock.patch("time.sleep")
-def test_nx584_watcher_run_retries_failures(mock_sleep: MagicMock) -> None:
+def test_nx584_watcher_run_retries_failures() -> None:
     """Test the retries with failures."""
     empty_me = [1, 2]
 
@@ -397,18 +397,20 @@ def test_nx584_watcher_run_retries_failures(mock_sleep: MagicMock) -> None:
         raise StopMe
 
     watcher = nx584.NX584Watcher(None, {})
-    with mock.patch.object(watcher, "_run") as mock_inner:
+    with (
+        mock.patch.object(watcher._stop_event, "wait") as mock_wait,
+        mock.patch.object(watcher, "_run") as mock_inner,
+    ):
         mock_inner.side_effect = fake_run
         with pytest.raises(StopMe):
             watcher.run()
         assert mock_inner.call_count == 3
-    mock_sleep.assert_has_calls([mock.call(10), mock.call(10)])
+    mock_wait.assert_has_calls([mock.call(10), mock.call(10)])
 
 
 @mock.patch.object(nx584.NX584ZoneSensor, "schedule_update_ha_state")
-@mock.patch("time.sleep")
 def test_nx584_watcher_run_marks_zones_unavailable_on_connection_error(
-    mock_sleep: MagicMock, mock_update: MagicMock
+    mock_update: MagicMock,
 ) -> None:
     """Test zone sensors are marked unavailable when the host disconnects."""
     zone_sensor = nx584.NX584ZoneSensor(
@@ -417,13 +419,36 @@ def test_nx584_watcher_run_marks_zones_unavailable_on_connection_error(
     )
     watcher = nx584.NX584Watcher(None, {1: zone_sensor})
 
-    with mock.patch.object(watcher, "_run") as mock_inner:
+    with (
+        mock.patch.object(watcher._stop_event, "wait"),
+        mock.patch.object(watcher, "_run") as mock_inner,
+    ):
         mock_inner.side_effect = [requests.exceptions.ConnectionError, StopMe]
         with pytest.raises(StopMe):
             watcher.run()
 
     assert zone_sensor.available is False
     assert mock_update.called
+
+
+def test_nx584_watcher_stop_interrupts_retry_wait() -> None:
+    """Test stop() wakes the watcher out of the post-error retry wait promptly."""
+    client = mock.MagicMock()
+    client.get_events.side_effect = requests.exceptions.ConnectionError
+    watcher = nx584.NX584Watcher(client, {})
+
+    watcher.start()
+    deadline = time.monotonic() + 1
+    while client.get_events.call_count == 0 and time.monotonic() < deadline:
+        pass
+    assert client.get_events.call_count > 0
+
+    started_stop = time.monotonic()
+    watcher.stop()
+    watcher.join(timeout=1)
+
+    assert not watcher.is_alive()
+    assert time.monotonic() - started_stop < 1
 
 
 def test_nx584_watcher_stop_signals_run_loop_to_exit() -> None:

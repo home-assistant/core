@@ -18,7 +18,7 @@ TEST_DATA = {CONF_HOST: "1.1.1.1", CONF_PORT: 5007}
 @pytest.fixture(name="nx584_client")
 def nx584_client_fixture():
     """Mock the nx584 client used by the config entry."""
-    with patch("homeassistant.components.nx584.client.Client") as mock_client_cls:
+    with patch("nx584.client.Client") as mock_client_cls:
         mock_client = mock_client_cls.return_value
         mock_client.list_zones.return_value = []
         mock_client.list_partitions.return_value = [

@@ -522,7 +522,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with (
-        patch("homeassistant.components.nx584.client.Client") as mock_client_cls,
+        patch("nx584.client.Client") as mock_client_cls,
         patch("homeassistant.components.nx584.binary_sensor.NX584Watcher"),
     ):
         mock_client_cls.return_value.list_zones.return_value = []
@@ -551,7 +551,7 @@ async def test_options_flow_missing_exclude_zones_defaults_to_empty(
     entry.add_to_hass(hass)
 
     with (
-        patch("homeassistant.components.nx584.client.Client") as mock_client_cls,
+        patch("nx584.client.Client") as mock_client_cls,
         patch("homeassistant.components.nx584.binary_sensor.NX584Watcher"),
     ):
         mock_client_cls.return_value.list_zones.return_value = []
@@ -576,7 +576,7 @@ async def test_options_flow_invalid_input(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with (
-        patch("homeassistant.components.nx584.client.Client") as mock_client_cls,
+        patch("nx584.client.Client") as mock_client_cls,
         patch("homeassistant.components.nx584.binary_sensor.NX584Watcher"),
     ):
         mock_client_cls.return_value.list_zones.return_value = []
