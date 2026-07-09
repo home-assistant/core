@@ -25,9 +25,9 @@ class SteamEntity(CoordinatorEntity[SteamDataUpdateCoordinator]):
         self.entity_description = description
         self._attr_unique_id = f"{steamid}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            configuration_url="https://store.steampowered.com",
+            configuration_url=str(coordinator.data[steamid].profileurl),
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            identifiers={(DOMAIN, steamid)},
             manufacturer=DEFAULT_NAME,
-            name=DEFAULT_NAME,
+            name=str(coordinator.data[steamid].personaname),
         )
