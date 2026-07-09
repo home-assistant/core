@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, override
 
 from electrolux_group_developer_sdk.client.appliances.ac_appliance import ACAppliance
 from electrolux_group_developer_sdk.client.appliances.ap_appliance import APAppliance
@@ -343,6 +343,7 @@ class ElectroluxSensor(ElectroluxBaseEntity[T], BinarySensorEntity):
         super().__init__(appliance_data, coordinator, description.key)
         self.entity_description = description
 
+    @override
     def _update_attr_state(self) -> bool:
         new_value = self._get_value()
         if self._attr_is_on != new_value:
@@ -395,6 +396,7 @@ class ElectroluxSubmoduleSensor(ElectroluxBaseEntity[T], BinarySensorEntity):
         self.entity_description = description
         self._attr_translation_key = translation_key
 
+    @override
     def _update_attr_state(self) -> bool:
         new_value = self._get_value()
         if self._attr_is_on != new_value:

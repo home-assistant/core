@@ -3,6 +3,7 @@
 from asyncio import Task
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from electrolux_group_developer_sdk.client.appliance_client import (
     ApplianceClient,
@@ -60,6 +61,7 @@ class ElectroluxDataUpdateCoordinator(DataUpdateCoordinator[ApplianceState]):
             always_update=False,
         )
 
+    @override
     async def _async_update_data(self) -> ApplianceState:
         """Return the current appliance state (SSE keeps it updated)."""
         try:
