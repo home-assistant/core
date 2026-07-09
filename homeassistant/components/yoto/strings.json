@@ -45,6 +45,48 @@
         "name": "Headphones"
       }
     },
+    "number": {
+      "day_mode_brightness": {
+        "name": "Day mode brightness"
+      },
+      "day_mode_max_volume": {
+        "name": "Day mode maximum volume"
+      },
+      "night_mode_brightness": {
+        "name": "Night mode brightness"
+      },
+      "night_mode_max_volume": {
+        "name": "Night mode maximum volume"
+      }
+    },
+    "select": {
+      "day_mode_color": {
+        "name": "Day mode color",
+        "state": {
+          "apple_green": "Apple green",
+          "bumblebee_yellow": "Bumblebee yellow",
+          "lilac": "Lilac",
+          "off": "[%key:common::state::off%]",
+          "orange_peel": "Orange peel",
+          "sky_blue": "Sky blue",
+          "tambourine_red": "Tambourine red",
+          "white": "White"
+        }
+      },
+      "night_mode_color": {
+        "name": "Night mode color",
+        "state": {
+          "apple_green": "[%key:component::yoto::entity::select::day_mode_color::state::apple_green%]",
+          "bumblebee_yellow": "[%key:component::yoto::entity::select::day_mode_color::state::bumblebee_yellow%]",
+          "lilac": "[%key:component::yoto::entity::select::day_mode_color::state::lilac%]",
+          "off": "[%key:common::state::off%]",
+          "orange_peel": "[%key:component::yoto::entity::select::day_mode_color::state::orange_peel%]",
+          "sky_blue": "[%key:component::yoto::entity::select::day_mode_color::state::sky_blue%]",
+          "tambourine_red": "[%key:component::yoto::entity::select::day_mode_color::state::tambourine_red%]",
+          "white": "[%key:component::yoto::entity::select::day_mode_color::state::white%]"
+        }
+      }
+    },
     "sensor": {
       "card_insertion_state": {
         "name": "Card slot",
@@ -61,6 +103,20 @@
           "day": "Day",
           "night": "Night"
         }
+      }
+    },
+    "switch": {
+      "bluetooth_pairing": {
+        "name": "Bluetooth pairing"
+      },
+      "day_mode_auto_brightness": {
+        "name": "Day mode automatic brightness"
+      },
+      "max_headphone_volume": {
+        "name": "Maximum headphone volume"
+      },
+      "night_mode_auto_brightness": {
+        "name": "Night mode automatic brightness"
       }
     },
     "time": {

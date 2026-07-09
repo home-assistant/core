@@ -1,7 +1,7 @@
 """Config flow for Radio Thermostat integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.error import URLError
 
 from radiotherm.validate import RadiothermTstatError
@@ -41,6 +41,7 @@ class RadioThermConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovered_ip: str | None = None
         self.discovered_init_data: RadioThermInitData | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -84,6 +85,7 @@ class RadioThermConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=placeholders,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

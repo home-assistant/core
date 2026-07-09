@@ -1,6 +1,6 @@
 """Fan platform for the Helty Flow integration."""
 
-from typing import Any
+from typing import Any, override
 
 from pyhelty import FanMode, HeltyError
 
@@ -69,11 +69,13 @@ class HeltyFan(HeltyEntity, FanEntity):
         return self.coordinator.data.fan_mode
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the fan is running."""
         return self._mode is not FanMode.OFF
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed as a percentage, or None when on a preset."""
         if self._mode in ORDERED_SPEEDS:
@@ -81,10 +83,12 @@ class HeltyFan(HeltyEntity, FanEntity):
         return None
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the active preset, or None when running on a discrete speed."""
         return MODE_TO_PRESET.get(self._mode)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set a discrete fan speed from a percentage."""
         if percentage == 0:
@@ -94,10 +98,12 @@ class HeltyFan(HeltyEntity, FanEntity):
             percentage_to_ordered_list_item(ORDERED_SPEEDS, percentage)
         )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set a preset mode."""
         await self._async_set_mode(PRESET_TO_MODE[preset_mode])
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -112,6 +118,7 @@ class HeltyFan(HeltyEntity, FanEntity):
         else:
             await self._async_set_mode(FanMode.LOW)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._async_set_mode(FanMode.OFF)

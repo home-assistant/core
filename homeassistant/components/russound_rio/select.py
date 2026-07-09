@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiorussound.rio.client import Controller, ZoneControlSurface
 from aiorussound.rio.models import PartyMode
@@ -75,11 +76,13 @@ class RussoundSelectEntity(RussoundBaseEntity, SelectEntity):
         )
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the state of the select."""
         return self.entity_description.value_fn(self._zone)
 
     @command
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.set_value_fn(self._zone, option)

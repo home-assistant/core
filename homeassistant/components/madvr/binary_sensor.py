@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -78,6 +79,7 @@ class MadvrBinarySensor(MadVREntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.mac}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self.coordinator)

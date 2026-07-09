@@ -1,6 +1,7 @@
 """The IntelliFire integration."""
 
 from datetime import timedelta
+from typing import override
 
 import aiohttp
 from intellifire4py import UnifiedFireplace
@@ -51,6 +52,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntelliFirePollData
         """Return the control API."""
         return self.fireplace.control_api
 
+    @override
     async def _async_update_data(self) -> IntelliFirePollData:
         try:
             await self.fireplace.perform_poll()

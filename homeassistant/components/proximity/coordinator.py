@@ -3,16 +3,19 @@
 from collections import defaultdict
 from dataclasses import dataclass
 import logging
-from typing import cast
+from typing import cast, override
 
-from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
+from homeassistant.components.device_tracker import ATTR_IN_ZONES
+from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN, ENTITY_ID_HOME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_ZONE,
+    STATE_HOME,
 )
 from homeassistant.core import (
     Event,
@@ -80,7 +83,6 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         self.tracked_entities: list[str] = config_entry.data[CONF_TRACKED_ENTITIES]
         self.tolerance: int = config_entry.data[CONF_TOLERANCE]
         self.proximity_zone_id: str = config_entry.data[CONF_ZONE]
-        self.proximity_zone_name: str = self.proximity_zone_id.split(".")[-1]
         self.unit_of_measurement: str = config_entry.data.get(
             CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
         )
@@ -141,18 +143,55 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 },
             )
 
+    def _tracked_entity_in_zone(self, zone: State, tracked_entity_state: State) -> bool:
+        """Return whether the tracked entity is currently in the proximity zone."""
+
+        # Modern entity-based trackers and person entities always report zone
+        # membership authoritatively in the ``in_zones`` attribute (a list of zone
+        # entity IDs), so a present, empty list genuinely means "in no zone".
+
+        # The state-based fallback below is a temporary shim for two deprecated
+        # producers whose ``in_zones`` cannot be trusted as authoritative:
+
+        # - Legacy (non-entity) device trackers omit ``in_zones`` entirely
+        # (deprecated, removed in HA Core 2027.5).
+        # - Trackers using the deprecated ``location_name`` report an empty
+        # ``in_zones`` while their state still names their location
+        # (deprecated, removed in HA Core 2027.7).
+
+        # For both, an empty or absent ``in_zones`` does not imply "in no zone", so we
+        # fall back to matching the tracked entity state against the zone's friendly name
+        # (what a tracked entity's state is set to for non-home zones), plus an explicit
+        # home-zone check. Once both deprecations are gone, ``in_zones`` is
+        # authoritative for every tracked entity and this method should reduce to the
+        # membership check alone; the fallback must be removed, as second-guessing an
+        # empty list would then be incorrect.
+        if in_zones := tracked_entity_state.attributes.get(ATTR_IN_ZONES):
+            return zone.entity_id in in_zones
+
+        # Remove once legacy device trackers (2027.5) and location_name (2027.7)
+        # are gone, see detailed comment above
+        zone_friendly_name = zone.attributes.get(ATTR_FRIENDLY_NAME)
+        return (
+            zone_friendly_name is not None
+            and tracked_entity_state.state.lower() == zone_friendly_name.lower()
+        ) or (
+            tracked_entity_state.state == STATE_HOME
+            and zone.entity_id == ENTITY_ID_HOME
+        )
+
     def _calc_distance_to_zone(
         self,
         zone: State,
-        device: State,
+        tracked_entity_state: State,
         latitude: float | None,
         longitude: float | None,
     ) -> int | None:
-        if device.state.lower() == self.proximity_zone_name.lower():
+        if self._tracked_entity_in_zone(zone, tracked_entity_state):
             _LOGGER.debug(
                 "%s: %s in zone -> distance=0",
                 self.name,
-                device.entity_id,
+                tracked_entity_state.entity_id,
             )
             return 0
 
@@ -160,7 +199,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             _LOGGER.debug(
                 "%s: %s has no coordinates -> distance=None",
                 self.name,
-                device.entity_id,
+                tracked_entity_state.entity_id,
             )
             return None
 
@@ -184,17 +223,17 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
     def _calc_direction_of_travel(
         self,
         zone: State,
-        device: State,
+        tracked_entity_state: State,
         old_latitude: float | None,
         old_longitude: float | None,
         new_latitude: float | None,
         new_longitude: float | None,
     ) -> str | None:
-        if device.state.lower() == self.proximity_zone_name.lower():
+        if self._tracked_entity_in_zone(zone, tracked_entity_state):
             _LOGGER.debug(
                 "%s: %s in zone -> direction_of_travel=arrived",
                 self.name,
-                device.entity_id,
+                tracked_entity_state.entity_id,
             )
             return "arrived"
 
@@ -233,6 +272,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
         return "stationary"
 
+    @override
     async def _async_update_data(self) -> ProximityData:
         """Calculate Proximity data."""
         if (zone_state := self.hass.states.get(self.proximity_zone_id)) is None:

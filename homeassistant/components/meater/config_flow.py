@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from meater import AuthenticationError, MeaterApi, ServiceUnavailableError
 import voluptuous as vol
@@ -27,6 +27,7 @@ class MeaterConfigFlow(ConfigFlow, domain=DOMAIN):
     _data_schema = USER_SCHEMA
     _username: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
