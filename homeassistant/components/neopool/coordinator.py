@@ -6,7 +6,11 @@ from typing import Any, override
 
 from neopool_modbus import NeoPoolModbusClient
 from neopool_modbus.exceptions import NeoPoolError
-from neopool_modbus.registers import MAX_RELAY_GPIO, find_corrupted_gpio_registers
+from neopool_modbus.registers import (
+    MAX_RELAY_GPIO,
+    find_corrupted_gpio_registers,
+    is_valid_relay_gpio,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -113,14 +117,18 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Clear a previously raised repair issue once the device is healthy.
             ir.async_delete_issue(self.hass, DOMAIN, "corrupted_gpio")
 
-    def _get_enabled_timers(self) -> list[str]:
+    def _get_enabled_timers(self, data: dict[str, Any]) -> list[str]:
         """Return the list of timer block names to poll each cycle.
 
         The light timer is polled only when the light entity is enabled in
-        the options.
+        the options and the lighting GPIO is valid; the entity gates on the
+        same condition, so relay_light_enable would have no consumer
+        otherwise.
         """
         enabled: list[str] = []
-        if self.config_entry.options.get(CONF_USE_LIGHT, False):
+        if self.config_entry.options.get(CONF_USE_LIGHT, False) and is_valid_relay_gpio(
+            data.get("MBF_PAR_LIGHTING_GPIO", 0) or 0
+        ):
             enabled.append("relay_light")
         return enabled
 
@@ -132,7 +140,7 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         Further derived keys will be added by follow-up platform PRs that
         consume them.
         """
-        enabled = self._get_enabled_timers()
+        enabled = self._get_enabled_timers(data)
         if not enabled:
             return
         timers = await self.client.read_all_timers(enabled_timers=enabled)
