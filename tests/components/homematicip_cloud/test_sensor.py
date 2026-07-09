@@ -26,6 +26,7 @@ from homeassistant.components.homematicip_cloud.sensor import (
     ATTR_TEMPERATURE_OFFSET,
     ATTR_WIND_DIRECTION,
     ATTR_WIND_DIRECTION_VARIATION,
+    SENSOR_DESCRIPTIONS_BY_DEVICE,
 )
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
@@ -1080,3 +1081,18 @@ async def test_hmip_soil_temperature_sensor(
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "18.3"
+
+
+def test_simple_sensor_descriptions_no_overlap() -> None:
+    """Every device class must match at most one description group."""
+    device_classes = list(SENSOR_DESCRIPTIONS_BY_DEVICE)
+    for i, cls_a in enumerate(device_classes):
+        for cls_b in device_classes[i + 1 :]:
+            assert not issubclass(cls_a, cls_b), (
+                f"{cls_a.__name__} matches both {cls_a.__name__} and "
+                f"{cls_b.__name__}; duplicate entities would be created"
+            )
+            assert not issubclass(cls_b, cls_a), (
+                f"{cls_b.__name__} matches both {cls_b.__name__} and "
+                f"{cls_a.__name__}; duplicate entities would be created"
+            )

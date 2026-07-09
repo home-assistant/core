@@ -400,7 +400,9 @@ TILT_ANGLE_DESC = HmipSensorDescription[Device](
 )
 
 
-# Keys must not subclass each other: the isinstance loop matches all hits.
+# Keys must not subclass each other so each device matches one key; the setup
+# loop breaks after the first match (enforced by
+# test_simple_sensor_descriptions_no_overlap).
 SENSOR_DESCRIPTIONS_BY_DEVICE: dict[
     type[Device], tuple[HmipSensorDescription[Device], ...]
 ] = {
@@ -551,12 +553,17 @@ async def async_setup_entry(
 
     for device in hap.home.devices:
         for device_class, descriptions in SENSOR_DESCRIPTIONS_BY_DEVICE.items():
-            if isinstance(device, device_class):
-                entities.extend(
-                    HomematicipSensor(hap, device, description)
-                    for description in descriptions
-                    if description.exists_fn(device)
-                )
+            if not isinstance(device, device_class):
+                continue
+            entities.extend(
+                HomematicipSensor(hap, device, description)
+                for description in descriptions
+                if description.exists_fn(device)
+            )
+            # Each device matches at most one map key (enforced by
+            # test_simple_sensor_descriptions_no_overlap), so further
+            # iteration cannot add entities.
+            break
 
     device_handlers = get_device_handlers(hap)
 
