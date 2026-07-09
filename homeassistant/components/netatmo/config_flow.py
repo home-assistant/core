@@ -61,8 +61,6 @@ class NetatmoFlowHandler(
     @override
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Handle a flow start."""
-        # Single-instance enforcement is handled by ``single_config_entry`` in
-        # the manifest; the flow manager aborts duplicates before this runs.
         await self.async_set_unique_id(DOMAIN)
         return await super().async_step_user(user_input)
 
