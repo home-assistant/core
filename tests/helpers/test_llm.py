@@ -770,13 +770,16 @@ Static Context: An overview of the areas and the devices in this smart home:
     )
 
 
-async def test_script_tool(
+async def test_action_tool(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     area_registry: ar.AreaRegistry,
     floor_registry: fr.FloorRegistry,
 ) -> None:
-    """Test ScriptTool for the assist API."""
+    """Test ActionTool schema, area/floor resolution and parameter caching.
+
+    Exercised through scripts, the only ActionTool the assist API builds.
+    """
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
     context = Context()
@@ -984,45 +987,6 @@ async def test_script_tool(
             vol.Schema({}),
         ),
     }
-
-
-async def test_script_tool_name(hass: HomeAssistant) -> None:
-    """Test that script tool name is not started with a digit."""
-    assert await async_setup_component(hass, "homeassistant", {})
-    context = Context()
-    llm_context = llm.LLMContext(
-        platform="test_platform",
-        context=context,
-        language="*",
-        assistant="conversation",
-        device_id=None,
-    )
-
-    # Create a script with a unique ID
-    assert await async_setup_component(
-        hass,
-        "script",
-        {
-            "script": {
-                "123456": {
-                    "description": "This is a test script",
-                    "sequence": [],
-                    "fields": {
-                        "beer": {"description": "Number of beers", "required": True},
-                    },
-                },
-            }
-        },
-    )
-    async_expose_entity(hass, "conversation", "script.123456", True)
-
-    api = await llm.async_get_api(hass, "assist", llm_context)
-
-    tools = [tool for tool in api.tools if isinstance(tool, llm.ActionTool)]
-    assert len(tools) == 1
-
-    tool = tools[0]
-    assert tool.name == "_123456"
 
 
 async def test_selector_serializer(
