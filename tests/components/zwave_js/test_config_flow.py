@@ -4315,6 +4315,147 @@ async def test_reconfigure_addon_restart_failed(
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+@pytest.mark.parametrize("restart_addon_side_effect", [[SupervisorError()]])
+async def test_reconfigure_addon_revert_without_adapter(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test revert aborts when the original config has no adapter set."""
+    addon_options.update({"s0_legacy_key": "old123"})
+    entry = integration
+    hass.config_entries.async_update_entry(entry, unique_id="1234")
+    client.driver.controller.data["homeId"] = 1234
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "usb_path": "/new",
+            "s0_legacy_key": "old123",
+        },
+    )
+
+    assert set_addon_options.call_count == 1
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    # The original config has neither a USB path nor a socket path,
+    # so the revert aborts instead of showing a form with an error.
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_start_failed"
+    assert set_addon_options.call_count == 1
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.parametrize("restart_addon_side_effect", [[SupervisorError(), None]])
+async def test_reconfigure_addon_revert_after_rf_region(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+) -> None:
+    """Test revert restores the config from before the RF region was set."""
+    hass.config.country = None
+    addon_options.update(
+        {
+            "device": "/test",
+            "s0_legacy_key": "old123",
+        }
+    )
+    entry = integration
+    hass.config_entries.async_update_entry(entry, unique_id="1234")
+    client.driver.controller.data["homeId"] = 1234
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "usb_path": "/new",
+            "s0_legacy_key": "old123",
+        },
+    )
+
+    assert set_addon_options.call_count == 1
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "rf_region"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"rf_region": "Europe"}
+    )
+
+    assert set_addon_options.call_count == 2
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+
+    assert restart_addon.call_count == 1
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    # The revert restores the device from before the flow,
+    # not from before the RF region change.
+    assert set_addon_options.call_count == 3
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                "device": "/test",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "",
+                "s2_authenticated_key": "",
+                "s2_unauthenticated_key": "",
+                "lr_s2_access_control_key": "",
+                "lr_s2_authenticated_key": "",
+                "rf_region": "Europe",
+            }
+        ),
+    )
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+
+    assert restart_addon.call_count == 2
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_start_failed"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
 @pytest.mark.parametrize("server_version_side_effect", [aiohttp.ClientError("Boom")])
 async def test_reconfigure_addon_running_server_info_failure(
     hass: HomeAssistant,
