@@ -121,7 +121,7 @@ def dsmr_connection_send_validate_fixture() -> Generator[
                     LUXEMBOURG_EQUIPMENT_IDENTIFIER, [{"value": "12345678", "unit": ""}]
                 ),
             }
-        if args[1] == "5S":
+        if args[1] in ("5S", "SAGEMCOM_T210_D_R"):
             protocol.telegram = {
                 P1_MESSAGE_TIMESTAMP: CosemObject(
                     P1_MESSAGE_TIMESTAMP, [{"value": "12345678", "unit": ""}]

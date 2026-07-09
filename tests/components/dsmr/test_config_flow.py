@@ -200,9 +200,18 @@ async def test_setup_serial(
     assert result["data"] == entry_data
 
 
+@pytest.mark.parametrize(
+    ("version", "serial_data"),
+    [
+        ("MSn", {"serial_id": "12345678", "serial_id_gas": "123456789"}),
+        ("SAGEMCOM_T210_D_R", {"serial_id": None, "serial_id_gas": None}),
+    ],
+)
 async def test_setup_serial_encrypted(
     hass: HomeAssistant,
     dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    version: str,
+    serial_data: dict[str, str | None],
 ) -> None:
     """Test we can setup an encrypted meter that asks for an encryption key."""
     (connection_factory, _transport, _protocol) = dsmr_connection_send_validate_fixture
@@ -217,7 +226,7 @@ async def test_setup_serial_encrypted(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"port": port.device, "dsmr_version": "MSn"},
+        {"port": port.device, "dsmr_version": version},
     )
 
     # An encrypted version asks for the encryption key in a second step
@@ -235,11 +244,10 @@ async def test_setup_serial_encrypted(
     assert result["title"] == port.device
     assert result["data"] == {
         "port": port.device,
-        "dsmr_version": "MSn",
+        "dsmr_version": version,
         "protocol": "dsmr_protocol",
         "encryption_key": "aabbccddeeff00112233445566778899",
-        "serial_id": "12345678",
-        "serial_id_gas": "123456789",
+        **serial_data,
     }
     # The key is decrypted without verifying the GCM authentication tag
     assert (

@@ -31,6 +31,7 @@ from .const import (
     DOMAIN,
     DSMR_PROTOCOL,
     DSMR_VERSIONS,
+    DSMR_VERSIONS_WITHOUT_EQUIPMENT_ID,
     ENCRYPTED_DSMR_VERSIONS,
     LOGGER,
     RFXTRX_DSMR_PROTOCOL,
@@ -85,8 +86,12 @@ class DSMRConnection:
             if self._equipment_identifier in telegram:
                 self._telegram = telegram
                 transport.close()
-            # Swedish meters have no equipment identifier
-            if self._dsmr_version == "5S" and obis_ref.P1_MESSAGE_TIMESTAMP in telegram:
+            # Some meters (e.g. Swedish, Austrian Sagemcom) have no equipment
+            # identifier, so fall back to the telegram timestamp.
+            if (
+                self._dsmr_version in DSMR_VERSIONS_WITHOUT_EQUIPMENT_ID
+                and obis_ref.P1_MESSAGE_TIMESTAMP in telegram
+            ):
                 self._telegram = telegram
                 transport.close()
 
@@ -161,7 +166,10 @@ async def _validate_dsmr_connection(
     equipment_identifier_gas = conn.equipment_identifier_gas()
 
     # Check only for equipment identifier in case no gas meter is connected
-    if equipment_identifier is None and data[CONF_DSMR_VERSION] != "5S":
+    if (
+        equipment_identifier is None
+        and data[CONF_DSMR_VERSION] not in DSMR_VERSIONS_WITHOUT_EQUIPMENT_ID
+    ):
         raise CannotCommunicate
 
     return {
