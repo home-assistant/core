@@ -1247,7 +1247,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
-        if config_entry.state is ConfigEntryState.NOT_LOADED:
+        if (
+            # The entry may have been removed while the flow was pending.
+            self.hass.config_entries.async_get_entry(config_entry.entry_id) is not None
+            and config_entry.state is ConfigEntryState.NOT_LOADED
+        ):
             self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
     async def async_step_intent_reconfigure(

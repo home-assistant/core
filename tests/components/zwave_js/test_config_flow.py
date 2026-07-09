@@ -5739,6 +5739,49 @@ async def test_migrate_flow_abandoned_reloads_entry(
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_migrate_flow_abandoned_after_entry_removed(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test abandoning a migration flow after the entry was removed."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="1234", data={**entry.data, "use_addon": True}
+    )
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.flow.async_progress()
+    assert "Error removing zwave_js flow" not in caplog.text
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_create_entry_spares_migration_flow(
     hass: HomeAssistant,
     integration: MockConfigEntry,
