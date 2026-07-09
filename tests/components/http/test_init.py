@@ -172,6 +172,43 @@ async def test_proxy_config(hass: HomeAssistant) -> None:
     )
 
 
+async def test_proxy_config_forwarded_request(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a request with X-Forwarded-For from a trusted proxy is accepted.
+
+    The config store persists trusted proxies as strings; this exercises the
+    forwarded middleware with a config loaded from the store to guard against
+    passing the strings through instead of IP network objects.
+    """
+    hass_storage[DOMAIN] = {
+        "version": 2,
+        "key": DOMAIN,
+        "data": {
+            "stable": {
+                "server_port": 8123,
+                "cors_allowed_origins": ["https://cast.home-assistant.io"],
+                "use_x_forwarded_for": True,
+                "trusted_proxies": ["127.0.0.0/8"],
+                "ip_ban_enabled": True,
+                "login_attempts_threshold": -1,
+                "ssl_profile": "modern",
+                "use_x_frame_options": True,
+            },
+            "pending": None,
+            "yaml_migration_done": True,
+        },
+    }
+    assert await async_setup_component(hass, "api", {})
+    client = await hass_client()
+
+    resp = await client.get("/api/", headers={"X-Forwarded-For": "203.0.113.5"})
+
+    assert resp.status == HTTPStatus.OK
+
+
 async def test_proxy_config_only_use_xff(hass: HomeAssistant) -> None:
     """Test use_x_forwarded_for must config together with trusted_proxies."""
     assert (
