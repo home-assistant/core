@@ -11,6 +11,7 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     llm,
 )
 from homeassistant.setup import async_setup_component
@@ -78,6 +79,100 @@ async def test_get_live_context_tool(hass: HomeAssistant) -> None:
     )
     assert response["success"] is True
     assert "Kitchen Light" in response["result"]
+
+
+def _location_context(device_id: str | None) -> llm.LLMContext:
+    """Return an LLM context bound to a specific device."""
+    return llm.LLMContext(
+        platform="test_platform",
+        context=Context(),
+        language="*",
+        assistant="conversation",
+        device_id=device_id,
+    )
+
+
+async def test_get_current_location_not_offered_without_device(
+    hass: HomeAssistant,
+) -> None:
+    """Test GetCurrentLocation and its prompt depend on a device_id being set."""
+    without_device = await llm_component.async_get_tools(
+        hass, _location_context(None), "assist"
+    )
+    assert "GetCurrentLocation" not in [tool.name for tool in without_device.tools]
+    assert without_device.prompt == ha_llm.GENERIC_DEVICE_WITHOUT_AREA_PROMPT
+
+    with_device = await llm_component.async_get_tools(
+        hass, _location_context("some-device"), "assist"
+    )
+    assert "GetCurrentLocation" in [tool.name for tool in with_device.tools]
+    assert with_device.prompt == ha_llm.GENERIC_DEVICE_WITH_AREA_PROMPT
+
+
+async def test_get_current_location_tool(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test the GetCurrentLocation tool resolves the device's area and floor."""
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("test", "abc")},
+    )
+
+    llm_context = _location_context(device.id)
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
+    tool = next(tool for tool in result.tools if tool.name == "GetCurrentLocation")
+
+    async def _get_location(context: llm.LLMContext) -> dict:
+        return await tool.async_call(
+            hass, llm.ToolInput("GetCurrentLocation", {}), context
+        )
+
+    # Device with no area
+    assert await _get_location(llm_context) == {
+        "success": False,
+        "error": "The requesting device is not assigned to an area",
+    }
+
+    # Unknown device_id
+    assert await _get_location(_location_context("does-not-exist")) == {
+        "success": False,
+        "error": "The requesting device was not found",
+    }
+
+    # No device_id at all
+    assert await _get_location(_location_context(None)) == {
+        "success": False,
+        "error": "This request is not associated with a device",
+    }
+
+    # Device in an area without a floor
+    area = area_registry.async_create("Kitchen")
+    device_registry.async_update_device(device.id, area_id=area.id)
+    assert await _get_location(llm_context) == {
+        "success": True,
+        "result": {"area": "Kitchen"},
+    }
+
+    # Area looked up but missing from the registry
+    device_registry.async_update_device(device.id, area_id="does-not-exist")
+    assert await _get_location(llm_context) == {
+        "success": False,
+        "error": "The area assigned to the requesting device was not found",
+    }
+
+    # Device in an area with a floor
+    device_registry.async_update_device(device.id, area_id=area.id)
+    floor = floor_registry.async_create("Ground")
+    area_registry.async_update(area.id, floor_id=floor.floor_id)
+    assert await _get_location(llm_context) == {
+        "success": True,
+        "result": {"area": "Kitchen", "floor": "Ground"},
+    }
 
 
 async def test_get_exposed_entities_timestamp_conversion(hass: HomeAssistant) -> None:
