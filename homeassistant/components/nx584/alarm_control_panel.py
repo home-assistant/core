@@ -25,13 +25,12 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import NX584ConfigEntry, async_import_yaml_config
-from .const import DEFAULT_HOST, DEFAULT_PORT
+from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-DEFAULT_NAME = "NX584"
 SERVICE_BYPASS_ZONE = "bypass_zone"
 SERVICE_UNBYPASS_ZONE = "unbypass_zone"
 ATTR_ZONE = "zone"
@@ -81,9 +80,10 @@ async def async_setup_entry(
     data = entry.runtime_data
 
     # NX584Alarm has no unique_id, so its entity_id is derived from this name.
-    # Use the same stable default YAML used rather than entry.title (the host),
-    # so entity_id doesn't change for existing users migrating from YAML.
-    entity = NX584Alarm(DEFAULT_NAME, data.client)
+    # Use the name configured on the entry (config flow or YAML import) rather
+    # than entry.title (the host), so entity_id doesn't change for existing
+    # users migrating from YAML.
+    entity = NX584Alarm(entry.data.get(CONF_NAME, DEFAULT_NAME), data.client)
     async_add_entities([entity])
 
     _async_register_services()

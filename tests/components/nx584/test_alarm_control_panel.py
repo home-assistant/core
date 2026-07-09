@@ -8,7 +8,7 @@ import requests
 from homeassistant.components.nx584 import alarm_control_panel as nx584
 from homeassistant.components.nx584.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers import issue_registry as ir
@@ -78,6 +78,28 @@ async def test_async_setup_entry_creates_alarm_panel(hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
 
     assert hass.states.get("alarm_control_panel.nx584") is not None
+
+
+async def test_async_setup_entry_uses_configured_name(hass: HomeAssistant) -> None:
+    """Test the alarm entity uses the name stored on the config entry, if any."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 5007, CONF_NAME: "Home Alarm"},
+        title="1.1.1.1",
+    )
+    entry.add_to_hass(hass)
+
+    with mock.patch("homeassistant.components.nx584.client.Client") as mock_client_cls:
+        mock_client = mock_client_cls.return_value
+        mock_client.list_zones.return_value = []
+        mock_client.list_partitions.return_value = [
+            {"armed": False, "condition_flags": []}
+        ]
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("alarm_control_panel.home_alarm") is not None
 
 
 def test_update_marks_entity_unavailable_on_connection_error() -> None:

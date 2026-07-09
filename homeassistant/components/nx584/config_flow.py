@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import ObjectSelector
@@ -24,6 +24,7 @@ from .const import (
     CONF_EXCLUDE_ZONES,
     CONF_ZONE_TYPES,
     DEFAULT_HOST,
+    DEFAULT_NAME,
     DEFAULT_PORT,
     DOMAIN,
     EXCLUDE_ZONES_SCHEMA,
@@ -93,19 +94,27 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
         host: str = import_config[CONF_HOST]
         port: int = import_config[CONF_PORT]
 
-        # Only the binary_sensor YAML platform supports exclude_zones/zone_types;
-        # whichever platform's import runs first creates the entry, so the other
-        # platform's import must still be able to apply these to it afterwards.
+        # Only the binary_sensor YAML platform supports exclude_zones/zone_types,
+        # and only the alarm_control_panel YAML platform supports name; whichever
+        # platform's import runs first creates the entry, so the other platform's
+        # import must still be able to apply its own data to it afterwards.
         zone_options: dict[str, Any] | None = None
         if CONF_EXCLUDE_ZONES in import_config:
             zone_options = {
                 CONF_EXCLUDE_ZONES: import_config[CONF_EXCLUDE_ZONES],
                 CONF_ZONE_TYPES: import_config[CONF_ZONE_TYPES],
             }
+        name: str | None = import_config.get(CONF_NAME)
 
         for entry in self._async_current_entries(include_ignore=False):
             if entry.data[CONF_HOST] != host or entry.data[CONF_PORT] != port:
                 continue
+
+            data_updates: dict[str, Any] = {}
+            if name is not None and entry.data.get(CONF_NAME, DEFAULT_NAME) != name:
+                data_updates[CONF_NAME] = name
+
+            options_updates: dict[str, Any] | None = None
             if zone_options is not None:
                 # Options are persisted as JSON, so zone_types keys come back
                 # as strings; re-run the schema so the comparison below isn't
@@ -118,9 +127,15 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
                     != zone_options[CONF_EXCLUDE_ZONES]
                     or current_zone_types != zone_options[CONF_ZONE_TYPES]
                 ):
-                    return self.async_update_reload_and_abort(
-                        entry, options=zone_options, reason="already_configured"
-                    )
+                    options_updates = zone_options
+
+            if data_updates or options_updates is not None:
+                update_kwargs: dict[str, Any] = {"reason": "already_configured"}
+                if data_updates:
+                    update_kwargs["data_updates"] = data_updates
+                if options_updates is not None:
+                    update_kwargs["options"] = options_updates
+                return self.async_update_reload_and_abort(entry, **update_kwargs)
             return self.async_abort(reason="already_configured")
 
         try:
@@ -130,7 +145,7 @@ class NX584ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=host,
-            data={CONF_HOST: host, CONF_PORT: port},
+            data={CONF_HOST: host, CONF_PORT: port, CONF_NAME: name or DEFAULT_NAME},
             options=zone_options or {},
         )
 

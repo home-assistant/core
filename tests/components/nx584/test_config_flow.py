@@ -7,8 +7,8 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.components.nx584 import config_flow
-from homeassistant.components.nx584.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.components.nx584.const import DEFAULT_NAME, DOMAIN
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
@@ -153,7 +153,130 @@ async def test_import_success(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_DATA[CONF_HOST]
-    assert result["data"] == TEST_DATA
+    assert result["data"] == {**TEST_DATA, CONF_NAME: "NX584"}
+
+
+async def test_import_alarm_control_panel_propagates_custom_name(
+    hass: HomeAssistant,
+) -> None:
+    """Test importing alarm_control_panel YAML with a custom name stores it."""
+    import_config = {**TEST_DATA, CONF_NAME: "Home Alarm"}
+
+    with (
+        patch(
+            "homeassistant.components.nx584.config_flow.client.Client.list_zones",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.nx584.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=import_config,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {**TEST_DATA, CONF_NAME: "Home Alarm"}
+
+
+async def test_import_binary_sensor_after_alarm_control_panel_keeps_custom_name(
+    hass: HomeAssistant,
+) -> None:
+    """Test a later import with no name info doesn't reset a custom name.
+
+    Only the alarm_control_panel YAML platform supports name; the binary_sensor
+    platform's later import must not clobber a name already applied.
+    """
+    alarm_control_panel_import_config = {**TEST_DATA, CONF_NAME: "Home Alarm"}
+
+    with (
+        patch(
+            "homeassistant.components.nx584.config_flow.client.Client.list_zones",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.nx584.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=alarm_control_panel_import_config,
+        )
+        await hass.async_block_till_done()
+
+        entries = hass.config_entries.async_entries(DOMAIN)
+        assert len(entries) == 1
+        assert entries[0].data[CONF_NAME] == "Home Alarm"
+
+        binary_sensor_import_config = {
+            **TEST_DATA,
+            "exclude_zones": [2],
+            "zone_types": {3: "motion"},
+        }
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=binary_sensor_import_config,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entries[0].data[CONF_NAME] == "Home Alarm"
+
+
+async def test_import_alarm_control_panel_after_binary_sensor_applies_custom_name(
+    hass: HomeAssistant,
+) -> None:
+    """Test a later alarm_control_panel import can still apply its custom name."""
+    binary_sensor_import_config = {
+        **TEST_DATA,
+        "exclude_zones": [2],
+        "zone_types": {3: "motion"},
+    }
+
+    with (
+        patch(
+            "homeassistant.components.nx584.config_flow.client.Client.list_zones",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.nx584.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=binary_sensor_import_config,
+        )
+        await hass.async_block_till_done()
+
+        entries = hass.config_entries.async_entries(DOMAIN)
+        assert len(entries) == 1
+        assert entries[0].data[CONF_NAME] == DEFAULT_NAME
+
+        alarm_control_panel_import_config = {**TEST_DATA, CONF_NAME: "Home Alarm"}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=alarm_control_panel_import_config,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entries[0].data[CONF_NAME] == "Home Alarm"
+    assert entries[0].options == {
+        "exclude_zones": [2],
+        "zone_types": {3: "motion"},
+    }
 
 
 async def test_import_binary_sensor_after_alarm_control_panel_applies_zone_options(
@@ -305,6 +428,43 @@ async def test_import_after_restart_does_not_reload_with_same_zone_options(
     assert mock_setup_entry.call_count == 1
 
 
+async def test_import_does_not_reload_with_same_name(hass: HomeAssistant) -> None:
+    """Test re-importing the same name doesn't reload the entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**TEST_DATA, CONF_NAME: "Home Alarm"},
+    )
+    entry.add_to_hass(hass)
+
+    alarm_control_panel_import_config = {**TEST_DATA, CONF_NAME: "Home Alarm"}
+
+    with (
+        patch(
+            "homeassistant.components.nx584.config_flow.client.Client.list_zones",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.nx584.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_setup_entry.call_count == 1
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data=alarm_control_panel_import_config,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_NAME] == "Home Alarm"
+    assert mock_setup_entry.call_count == 1
+
+
 async def test_import_second_panel_creates_separate_entry(hass: HomeAssistant) -> None:
     """Test importing a second panel with a different host/port is not treated as a match."""
     MockConfigEntry(domain=DOMAIN, data=TEST_DATA).add_to_hass(hass)
@@ -327,7 +487,7 @@ async def test_import_second_panel_creates_separate_entry(hass: HomeAssistant) -
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == other_panel[CONF_HOST]
-    assert result["data"] == other_panel
+    assert result["data"] == {**other_panel, CONF_NAME: DEFAULT_NAME}
 
 
 async def test_import_already_configured(hass: HomeAssistant) -> None:

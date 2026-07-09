@@ -10,6 +10,7 @@ from homeassistant.helpers import config_validation as cv
 DOMAIN = "nx584"
 
 DEFAULT_HOST = "localhost"
+DEFAULT_NAME = "NX584"
 DEFAULT_PORT = 5007
 
 CONF_EXCLUDE_ZONES = "exclude_zones"
