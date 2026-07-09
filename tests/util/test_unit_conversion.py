@@ -22,6 +22,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
     UnitOfRatio,
     UnitOfReactiveEnergy,
     UnitOfReactivePower,
@@ -57,6 +58,7 @@ from homeassistant.util.unit_conversion import (
     OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
+    RadiationConcentrationConverter,
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
@@ -95,6 +97,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         OzoneConcentrationConverter,
         PowerConverter,
         PressureConverter,
+        RadiationConcentrationConverter,
         ReactiveEnergyConverter,
         ReactivePowerConverter,
         SpeedConverter,
@@ -181,6 +184,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     ),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
     PressureConverter: (UnitOfPressure.HPA, UnitOfPressure.INHG, 33.86389),
+    RadiationConcentrationConverter: (
+        UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+        UnitOfRadiationConcentration.PICOCURIES_PER_LITER,
+        37,
+    ),
     ReactiveEnergyConverter: (
         UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
         UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
@@ -873,6 +881,20 @@ _CONVERTED_VALUE: dict[
         (30, UnitOfPressure.MMHG, 1.181102, UnitOfPressure.INHG),
         (30, UnitOfPressure.MMHG, 16.0572051431838, UnitOfPressure.INH2O),
         (5, UnitOfPressure.BAR, 72.51887, UnitOfPressure.PSI),
+    ],
+    RadiationConcentrationConverter: [
+        (
+            37,
+            UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+            1,
+            UnitOfRadiationConcentration.PICOCURIES_PER_LITER,
+        ),
+        (
+            1,
+            UnitOfRadiationConcentration.PICOCURIES_PER_LITER,
+            37,
+            UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+        ),
     ],
     ReactiveEnergyConverter: [
         (

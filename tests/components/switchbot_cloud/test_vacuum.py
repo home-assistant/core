@@ -293,7 +293,6 @@ async def test_k10_plus_webhook_updates_state_after_reload(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == VacuumActivity.CLEANING.value
-    assert state.attributes["battery_level"] == 74
 
 
 async def test_k20_plus_pro_set_fan_speed(

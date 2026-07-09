@@ -3,6 +3,7 @@
   "name": "Monoprice 6-Zone Amplifier",
   "codeowners": ["@etsinko", "@OnFreund"],
   "config_flow": true,
+  "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/monoprice",
   "integration_type": "hub",
   "iot_class": "local_polling",

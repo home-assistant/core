@@ -8,9 +8,11 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.data_grand_lyon.const import (
     CONF_LINE,
+    CONF_PARK_ID,
     CONF_STATION_ID,
     CONF_STOP_ID,
     DOMAIN,
+    SUBENTRY_TYPE_PARK_AND_RIDE,
     SUBENTRY_TYPE_STOP,
     SUBENTRY_TYPE_VELOV_STATION,
 )
@@ -591,6 +593,129 @@ async def test_velov_station_subentry_picker_load_errors(
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_VELOV_STATION),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+# Park-and-ride subentry tests
+
+
+@pytest.mark.parametrize("mock_subentries", [[]])
+async def test_park_and_ride_subentry_picker_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test adding a park-and-ride subentry by picking one from the list."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_PARK_AND_RIDE),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert mock_tcl_client.get_tcl_park_and_rides.await_count == 1
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_PARK_ID: "P+R Gorge de Loup"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Gorge de Loup"
+    assert result["data"] == {CONF_PARK_ID: "P+R Gorge de Loup"}
+    assert result["unique_id"] == "park_and_ride_P+R Gorge de Loup"
+
+
+@pytest.mark.parametrize("mock_subentries", [[]])
+async def test_park_and_ride_subentry_custom_value_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test adding a park-and-ride by typing an ID not present in the list."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_PARK_AND_RIDE),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_PARK_ID: "P+R Unknown"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "P+R Unknown"
+    assert result["data"] == {CONF_PARK_ID: "P+R Unknown"}
+    assert result["unique_id"] == "park_and_ride_P+R Unknown"
+
+
+async def test_park_and_ride_subentry_already_configured(
+    hass: HomeAssistant,
+    mock_park_and_ride_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test park-and-ride subentry aborts if same facility already exists."""
+    mock_park_and_ride_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_park_and_ride_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_park_and_ride_config_entry.entry_id, SUBENTRY_TYPE_PARK_AND_RIDE),
+        context={"source": config_entries.SOURCE_USER},
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_PARK_ID: "P+R Gorge de Loup"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "reason"),
+    [
+        (
+            ClientResponseError(request_info=None, history=(), status=500),
+            "cannot_connect",
+        ),
+        (
+            ClientResponseError(request_info=None, history=(), status=401),
+            "invalid_auth",
+        ),
+        (ClientConnectionError("boom"), "cannot_connect"),
+        (TimeoutError("boom"), "cannot_connect"),
+        (RuntimeError("boom"), "unknown"),
+    ],
+)
+@pytest.mark.parametrize("mock_subentries", [[]])
+async def test_park_and_ride_subentry_picker_load_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+    side_effect: Exception,
+    reason: str,
+) -> None:
+    """Test picker aborts with the right reason when loading park-and-rides fails."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_tcl_client.get_tcl_park_and_rides.side_effect = side_effect
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_PARK_AND_RIDE),
         context={"source": config_entries.SOURCE_USER},
     )
 
