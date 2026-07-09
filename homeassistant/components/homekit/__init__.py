@@ -231,67 +231,47 @@ def _entity_filter_config(config: dict[str, Any]) -> dict[str, Any]:
 
 
 @callback
-def _async_label_registry_snapshot(
-    hass: HomeAssistant,
-) -> dict[str, dict[str, set[str]]]:
-    """Return labels for registries that can expand label targets."""
-    return {
-        "area": {
-            area.id: set(area.labels) for area in ar.async_get(hass).areas.values()
-        },
-        "device": {
-            device.id: set(device.labels)
-            for device in dr.async_get(hass).devices.values()
-        },
-        "entity": {
-            entity.entity_id: set(entity.labels)
-            for entity in er.async_get(hass).entities.values()
-        },
-    }
+def _async_label_filtered_entity_ids(
+    hass: HomeAssistant, labels: list[str]
+) -> set[str]:
+    """Expand label ids to entity ids."""
+    if not labels:
+        return set()
+    selected = async_extract_referenced_entity_ids(
+        hass, TargetSelection({ATTR_LABEL_ID: labels})
+    )
+    return selected.referenced | selected.indirectly_referenced
 
 
 @callback
-def _async_registry_label_change_matches(
-    hass: HomeAssistant,
-    event: Event[Any],
-    label_snapshot: dict[str, dict[str, set[str]]],
-    configured_labels: set[str],
-) -> bool:
-    """Return if a registry label change affects configured labels."""
-    registry: str
-    item_id: str | None
-    new_labels: set[str]
+def _async_label_target_snapshot(
+    hass: HomeAssistant, include_labels: list[str], exclude_labels: list[str]
+) -> tuple[set[str], set[str]]:
+    """Return expanded include and exclude label targets."""
+    return (
+        _async_label_filtered_entity_ids(hass, include_labels),
+        _async_label_filtered_entity_ids(hass, exclude_labels),
+    )
+
+
+@callback
+def _async_registry_change_affects_label_targets(event: Event[Any]) -> bool:
+    """Return whether a registry change can affect expanded label targets."""
     data = event.data
+    action: str = data["action"]
+    if action != "update":
+        return action != "reorder"
 
     if event.event_type == er.EVENT_ENTITY_REGISTRY_UPDATED:
-        registry = "entity"
-        item_id = data["entity_id"]
-        if data["action"] == "update" and "labels" not in data.get("changes", {}):
-            return False
-        entity_entry = er.async_get(hass).async_get(item_id)
-        new_labels = set(entity_entry.labels) if entity_entry else set()
-    elif event.event_type == dr.EVENT_DEVICE_REGISTRY_UPDATED:
-        registry = "device"
-        item_id = data["device_id"]
-        if data["action"] == "update" and "labels" not in data.get("changes", {}):
-            return False
-        device_entry = dr.async_get(hass).async_get(item_id)
-        new_labels = set(device_entry.labels) if device_entry else set()
-    else:
-        registry = "area"
-        item_id = data["area_id"]
-        if item_id is None:
-            return False
-        area_entry = ar.async_get(hass).async_get_area(item_id)
-        new_labels = set(area_entry.labels) if area_entry else set()
+        return "old_entity_id" in data or bool(
+            {"area_id", "device_id", "entity_category", "hidden_by", "labels"}
+            & data["changes"].keys()
+        )
+    if event.event_type == dr.EVENT_DEVICE_REGISTRY_UPDATED:
+        return bool({"area_id", "labels"} & data["changes"].keys())
 
-    old_labels = label_snapshot[registry].get(item_id, set())
-    if data["action"] == "remove":
-        label_snapshot[registry].pop(item_id, None)
-    else:
-        label_snapshot[registry][item_id] = new_labels
-
-    return bool((old_labels ^ new_labels) & configured_labels)
+    # Area update events do not include changed fields.
+    return True
 
 
 BRIDGE_SCHEMA = vol.All(
@@ -492,10 +472,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, homekit.async_stop)
     )
 
-    if configured_labels := set(filter_config[CONF_INCLUDE_LABELS]) | set(
-        filter_config[CONF_EXCLUDE_LABELS]
-    ):
-        label_snapshot = _async_label_registry_snapshot(hass)
+    include_labels = filter_config[CONF_INCLUDE_LABELS]
+    exclude_labels = filter_config[CONF_EXCLUDE_LABELS]
+    if include_labels or exclude_labels:
+        label_target_snapshot = _async_label_target_snapshot(
+            hass, include_labels, exclude_labels
+        )
 
         @callback
         def _async_schedule_reload() -> None:
@@ -511,27 +493,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
         )
 
         @callback
-        def _async_reload_on_label_change(event: Event[Any]) -> None:
-            """Reload HomeKit when a configured label assignment changes."""
-            if _async_registry_label_change_matches(
-                hass, event, label_snapshot, configured_labels
-            ):
-                reload_debouncer.async_schedule_call()
+        def _async_reload_on_label_target_change(event: Event[Any]) -> None:
+            """Reload HomeKit when expanded label targets change."""
+            nonlocal label_target_snapshot
+
+            if not _async_registry_change_affects_label_targets(event):
+                return
+            new_snapshot = _async_label_target_snapshot(
+                hass, include_labels, exclude_labels
+            )
+            if new_snapshot == label_target_snapshot:
+                return
+            label_target_snapshot = new_snapshot
+            reload_debouncer.async_schedule_call()
 
         entry.async_on_unload(reload_debouncer.async_shutdown)
         entry.async_on_unload(
             hass.bus.async_listen(
-                er.EVENT_ENTITY_REGISTRY_UPDATED, _async_reload_on_label_change
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                _async_reload_on_label_target_change,
             )
         )
         entry.async_on_unload(
             hass.bus.async_listen(
-                dr.EVENT_DEVICE_REGISTRY_UPDATED, _async_reload_on_label_change
+                dr.EVENT_DEVICE_REGISTRY_UPDATED,
+                _async_reload_on_label_target_change,
             )
         )
         entry.async_on_unload(
             hass.bus.async_listen(
-                ar.EVENT_AREA_REGISTRY_UPDATED, _async_reload_on_label_change
+                ar.EVENT_AREA_REGISTRY_UPDATED,
+                _async_reload_on_label_target_change,
             )
         )
 
@@ -1041,12 +1033,7 @@ class HomeKit:
     @callback
     def _async_label_filtered_entity_ids(self, labels: list[str]) -> set[str]:
         """Expand label ids to entity ids."""
-        if not labels:
-            return set()
-        selected = async_extract_referenced_entity_ids(
-            self.hass, TargetSelection({ATTR_LABEL_ID: labels})
-        )
-        return selected.referenced | selected.indirectly_referenced
+        return _async_label_filtered_entity_ids(self.hass, labels)
 
     async def async_start(self, *args: Any) -> None:
         """Load storage and start."""

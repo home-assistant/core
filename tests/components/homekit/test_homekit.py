@@ -1973,6 +1973,7 @@ async def test_device_label_change_reloads_for_configured_labels(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     label_registry: lr.LabelRegistry,
 ) -> None:
     """Test configured device label changes reload HomeKit."""
@@ -1983,6 +1984,13 @@ async def test_device_label_change_reloads_for_configured_labels(
     device = device_registry.async_get_or_create(
         config_entry_id=device_config_entry.entry_id,
         identifiers={("test", "label_reload")},
+    )
+    entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "device_label_reload",
+        suggested_object_id="device_label_reload",
+        device_id=device.id,
     )
     entry = await _async_setup_label_reload_test(hass, homekit_label.label_id)
 
@@ -2006,12 +2014,20 @@ async def test_area_label_change_reloads_for_configured_labels(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
     label_registry: lr.LabelRegistry,
 ) -> None:
     """Test configured area label changes reload HomeKit."""
     homekit_label = label_registry.async_create("HomeKit")
     other_label = label_registry.async_create("Other")
     area = area_registry.async_create("Label Reload")
+    area_entity = entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "area_label_reload",
+        suggested_object_id="area_label_reload",
+    )
+    entity_registry.async_update_entity(area_entity.entity_id, area_id=area.id)
     entry = await _async_setup_label_reload_test(hass, homekit_label.label_id)
 
     with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
@@ -2020,6 +2036,67 @@ async def test_area_label_change_reloads_for_configured_labels(
         mock_reload.assert_not_called()
 
         area_registry.async_update(area.id, labels={homekit_label.label_id})
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        freezer.tick(LABEL_CHANGE_RELOAD_COOLDOWN)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        mock_reload.assert_called_once_with(entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_indirect_label_target_changes_are_debounced(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test indirect label target changes schedule one HomeKit reload."""
+    homekit_label = label_registry.async_create("HomeKit")
+    labeled_area = area_registry.async_create(
+        "Labeled Area", labels={homekit_label.label_id}
+    )
+    device_config_entry = MockConfigEntry(domain="test")
+    device_config_entry.add_to_hass(hass)
+    labeled_device = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("test", "labeled_device")},
+    )
+    device_registry.async_update_device(
+        labeled_device.id, labels={homekit_label.label_id}
+    )
+    area_device = device_registry.async_get_or_create(
+        config_entry_id=device_config_entry.entry_id,
+        identifiers={("test", "area_device")},
+    )
+    area_entity = entity_registry.async_get_or_create(
+        "light", "demo", "area_entity", suggested_object_id="area_entity"
+    )
+    device_entity = entity_registry.async_get_or_create(
+        "light", "demo", "device_entity", suggested_object_id="device_entity"
+    )
+    entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "area_device_entity",
+        suggested_object_id="area_device_entity",
+        device_id=area_device.id,
+    )
+    entry = await _async_setup_label_reload_test(hass, homekit_label.label_id)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        entity_registry.async_update_entity(
+            area_entity.entity_id, area_id=labeled_area.id
+        )
+        await hass.async_block_till_done()
+        entity_registry.async_update_entity(
+            device_entity.entity_id, device_id=labeled_device.id
+        )
+        await hass.async_block_till_done()
+        device_registry.async_update_device(area_device.id, area_id=labeled_area.id)
         await hass.async_block_till_done()
         mock_reload.assert_not_called()
 
