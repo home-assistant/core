@@ -127,9 +127,3 @@ class SteamSensorEntity(SteamEntity, SensorEntity):
         if player.gameid is not None and player.gameid in self.coordinator.game_icons:
             return self.coordinator.game_icons[player.gameid]
         return None
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self._steamid in self.coordinator.data

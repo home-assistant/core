@@ -1,7 +1,9 @@
 """Entity classes for the Steam integration."""
 
-from homeassistant.components.sensor import SensorEntityDescription
+from typing import override
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN
@@ -17,7 +19,7 @@ class SteamEntity(CoordinatorEntity[SteamDataUpdateCoordinator]):
         self,
         coordinator: SteamDataUpdateCoordinator,
         steamid: str,
-        description: SensorEntityDescription,
+        description: EntityDescription,
     ) -> None:
         """Initialize a Steam entity."""
         super().__init__(coordinator)
@@ -25,9 +27,15 @@ class SteamEntity(CoordinatorEntity[SteamDataUpdateCoordinator]):
         self.entity_description = description
         self._attr_unique_id = f"{steamid}_{description.key}"
         self._attr_device_info = DeviceInfo(
-            configuration_url=str(coordinator.data[steamid].profileurl),
+            configuration_url=coordinator.data[steamid].profileurl,
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, steamid)},
             manufacturer=DEFAULT_NAME,
-            name=str(coordinator.data[steamid].personaname),
+            name=coordinator.data[steamid].personaname,
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._steamid in self.coordinator.data
