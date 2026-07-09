@@ -13,6 +13,7 @@ from soco.data_structures import (
     DidlPlaylistContainer,
     SearchResult,
 )
+from soco.exceptions import SoCoUPnPException
 from sonos_websocket.exception import SonosWebsocketError
 from syrupy.assertion import SnapshotAssertion
 
@@ -49,6 +50,7 @@ from homeassistant.components.sonos.const import (
     SOURCE_LINEIN,
     SOURCE_TV,
 )
+from homeassistant.components.sonos.exception import SonosUpdateError
 from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
     VOLUME_INCREMENT,
@@ -324,6 +326,39 @@ async def test_play_media_library_content_error(
             },
             blocking=True,
         )
+
+
+async def test_play_media_includes_upnp_code_and_hint(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+) -> None:
+    """Test play_media surfaces UPnP error details for music service unavailable."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    soco_mock.play_uri.side_effect = SoCoUPnPException(
+        "UPnP Error 800 received", "800", ""
+    )
+
+    with pytest.raises(SonosUpdateError) as err:
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "track",
+                ATTR_MEDIA_CONTENT_ID: _track_url,
+                ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "upnp_call_failed_music_service_unavailable"
+    assert err.value.translation_placeholders == {
+        "function": "SonosMediaPlayerEntity._play_media",
+        "target": "media_player.zone_a",
+        "error": "UPnP Error 800 received",
+        "error_code": "800",
+    }
 
 
 _track_url = "S://192.168.42.100/music/iTunes/The%20Beatles/A%20Hard%20Day%2fs%I%20Should%20Have%20Known%20Better.mp3"
