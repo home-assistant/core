@@ -71,6 +71,9 @@ from .helper import NetatmoArea
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
+
 DIRECTION_OPTIONS = [
     "n",
     "ne",
