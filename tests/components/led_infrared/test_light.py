@@ -255,7 +255,7 @@ async def test_light_actions(
     device_type: LEDIrDeviceType,
     service: str,
     service_data: dict[str, str],
-    expected_codes: list[TweenLightLEDStripCode],
+    expected_codes: list[TweenLightLEDStripCode | Generic13KeyCode],
 ) -> None:
     """Test light actions."""
     config_entry = MockConfigEntry(

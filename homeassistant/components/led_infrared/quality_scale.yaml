@@ -33,7 +33,11 @@ rules:
     status: exempt
     comment: |
       This integration does not store runtime data.
-  test-before-configure: done
+  test-before-configure:
+    status: exempt
+    comment: |
+      This integration only proxies commands through an existing infrared
+      entity, so there is no separate connection to validate during config flow.
   test-before-setup:
     status: exempt
     comment: |
