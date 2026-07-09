@@ -73,10 +73,5 @@
         }
       }
     }
-  },
-  "services": {
-    "token_lifetime": {
-      "service": "mdi:timer"
-    }
   }
 }

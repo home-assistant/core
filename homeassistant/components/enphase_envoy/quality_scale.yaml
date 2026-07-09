@@ -1,9 +1,8 @@
 rules:
   # Bronze
   action-setup:
-    status: done
-    comment: |
-      services are loaded in async_setup. In async_setup_entry, information is added to a shared data structure that services can access to find the appropriate coordinator for a given device or config entry. Services are tested in test_services.py to ensure they can be called and return expected results.
+    status: exempt
+    comment: only actions implemented are platform native ones.
   appropriate-polling: done
   brands: done
   common-modules: done

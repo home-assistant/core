@@ -771,17 +771,5 @@
         "title": "Envoy {serial} {host} options"
       }
     }
-  },
-  "services": {
-    "token_lifetime": {
-      "description": "Returns days until Envoy access token expiry.",
-      "fields": {
-        "device_id": {
-          "description": "Envoy to get data for. Not needed if only 1 Envoy is configured. Select an Envoy from the dropdown list.",
-          "name": "Envoy device ID"
-        }
-      },
-      "name": "Envoy token lifetime"
-    }
   }
 }
