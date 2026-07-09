@@ -1,0 +1,136 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands:
+    status: exempt
+    comment: DVLA is a government service and no redistributable brand asset is included.
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide triggers.
+  entity-event-setup:
+    status: exempt
+    comment: This integration does not subscribe to external entity events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: Service exception handling should be reviewed before claiming Silver.
+  config-entry-unloading:
+    status: todo
+    comment: Config entry unload support should be added before claiming Silver.
+  docs-configuration-parameters:
+    status: todo
+    comment: Documentation needs to describe configuration parameters before claiming Silver.
+  docs-installation-parameters:
+    status: todo
+    comment: Documentation needs to describe installation parameters before claiming Silver.
+  entity-unavailable:
+    status: todo
+    comment: Entity unavailable behaviour should be reviewed before claiming Silver.
+  integration-owner:
+    status: todo
+    comment: Ownership should be confirmed before claiming Silver.
+  log-when-unavailable:
+    status: todo
+    comment: Availability logging behaviour should be reviewed before claiming Silver.
+  parallel-updates:
+    status: todo
+    comment: Parallel update behaviour should be defined before claiming Silver.
+  reauthentication-flow:
+    status: exempt
+    comment: The DVLA Vehicle Enquiry Service uses an application API key and has no user reauthentication flow.
+  test-coverage:
+    status: todo
+    comment: Coverage should be measured before claiming Silver.
+
+  # Gold
+  devices:
+    status: done
+    comment: Each configured vehicle is represented as a Home Assistant device.
+  diagnostics:
+    status: todo
+    comment: Diagnostics are not implemented.
+  discovery:
+    status: exempt
+    comment: Vehicles are added manually by registration number and cannot be discovered.
+  discovery-update-info:
+    status: exempt
+    comment: This integration does not use discovery.
+  docs-data-update:
+    status: todo
+    comment: Documentation should describe the daily polling behaviour.
+  docs-examples:
+    status: todo
+    comment: Documentation should include automation examples before claiming Gold.
+  docs-known-limitations:
+    status: todo
+    comment: Documentation should describe DVLA API rate limits and availability.
+  docs-supported-devices:
+    status: done
+    comment: Documentation still needs to describe supported vehicles.
+  docs-supported-functions:
+    status: todo
+    comment: Documentation should list supported entities and service actions.
+  docs-troubleshooting:
+    status: todo
+    comment: Troubleshooting documentation is not yet complete.
+  docs-use-cases:
+    status: todo
+    comment: Use cases should be documented before claiming Gold.
+  dynamic-devices:
+    status: exempt
+    comment: Vehicles are statically configured by config entries.
+  entity-category:
+    status: todo
+    comment: Entity categories should be reviewed before claiming Gold.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: todo
+    comment: Default-enabled entities should be reviewed before claiming Gold.
+  entity-translations:
+    status: todo
+    comment: Entity translation coverage should be reviewed before claiming Gold.
+  exception-translations:
+    status: todo
+    comment: Exception translations should be reviewed before claiming Gold.
+  icon-translations:
+    status: todo
+    comment: Icon translations should be reviewed before claiming Gold.
+  reconfiguration-flow:
+    status: todo
+    comment: Reconfiguration flow is not implemented.
+  repair-issues:
+    status: todo
+    comment: Repair issues are not implemented.
+  stale-devices:
+    status: exempt
+    comment: Vehicles are removed by removing their config entry.
+
+  # Platinum
+  async-dependency:
+    status: done
+    comment: The integration uses async I/O.
+  inject-websession:
+    status: done
+    comment: The integration receives the Home Assistant aiohttp client session.
+  strict-typing:
+    status: todo
+    comment: Strict typing has not been enabled yet.

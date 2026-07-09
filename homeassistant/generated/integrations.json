@@ -1549,6 +1549,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "dvla": {
+      "name": "DVLA Vehicle Enquiry Service",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "dwd_weather_warnings": {
       "name": "Deutscher Wetterdienst (DWD) Weather Warnings",
       "integration_type": "service",
