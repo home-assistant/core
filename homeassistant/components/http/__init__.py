@@ -207,7 +207,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     cors_origins = conf[CONF_CORS_ORIGINS]
     use_x_forwarded_for = conf.get(CONF_USE_X_FORWARDED_FOR, False)
     use_x_frame_options = conf[CONF_USE_X_FRAME_OPTIONS]
-    trusted_proxies = conf.get(CONF_TRUSTED_PROXIES) or []
+    # The loaded config stores trusted proxies as strings (JSON-serializable);
+    # the forwarded middleware needs IPv4Network/IPv6Network objects.
+    trusted_proxies = [
+        ip_network(proxy) for proxy in conf.get(CONF_TRUSTED_PROXIES) or []
+    ]
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
