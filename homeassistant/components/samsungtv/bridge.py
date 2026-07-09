@@ -658,7 +658,9 @@ class SamsungTVWSBridge(
             except (WebSocketException, AsyncioTimeoutError, OSError) as err:
                 LOGGER.debug("Failed to get remote for %s: %s", self.host, repr(err))
                 self._remote = None
-            else:
+
+            # All exception handlers set self._remote to None above
+            if self._remote is not None:
                 LOGGER.debug("Created SamsungTVWSBridge for %s", self.host)
                 if self._device_info is None:
                     await self.async_device_info()
