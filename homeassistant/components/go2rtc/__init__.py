@@ -224,7 +224,7 @@ async def async_get_rtsp_stream_url(hass: HomeAssistant, entity_id: str) -> str 
     try:
         camera = get_camera_from_entity_id(hass, entity_id)
         await provider.async_update_stream_source(camera)
-    except HomeAssistantError as err:
+    except (HomeAssistantError, Go2RtcClientError) as err:
         _LOGGER.debug("Not providing RTSP restream URL for %s: %s", entity_id, err)
         return None
     return f"rtsp://127.0.0.1:{HA_MANAGED_RTSP_PORT}/{get_camera_identifier(camera)}"
