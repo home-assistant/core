@@ -1,6 +1,7 @@
 """The TP-Link Omada integration."""
 
 import logging
+from typing import cast
 
 from tplink_omada_client import OmadaSite
 from tplink_omada_client.devices import OmadaListDevice
@@ -125,7 +126,7 @@ def _config_entry_matches_controller(
     controller_id: str,
 ) -> bool:
     if (runtime_data := getattr(entry, "runtime_data", None)) is not None:
-        return runtime_data.controller_id == controller_id
+        return cast(OmadaSiteController, runtime_data).controller_id == controller_id
     return entry.unique_id is not None and entry.unique_id.startswith(
         f"{controller_id}_"
     )
