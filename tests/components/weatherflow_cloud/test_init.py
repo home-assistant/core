@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from websockets.exceptions import ConnectionClosedError
 
 from homeassistant.config_entries import ConfigEntryState
@@ -11,9 +12,9 @@ from homeassistant.util.ssl import client_context
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_rest_api")
 async def test_websocket_connect_called_once(
     hass: HomeAssistant,
-    mock_rest_api: AsyncMock,
     mock_websocket_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -26,9 +27,9 @@ async def test_websocket_connect_called_once(
     mock_websocket_api.connect.assert_awaited_once_with(client_context())
 
 
+@pytest.mark.usefixtures("mock_rest_api")
 async def test_entry_unload(
     hass: HomeAssistant,
-    mock_rest_api: AsyncMock,
     mock_websocket_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -45,9 +46,9 @@ async def test_entry_unload(
     mock_websocket_api.close.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("mock_rest_api")
 async def test_setup_failure_cleans_up_websocket(
     hass: HomeAssistant,
-    mock_rest_api: AsyncMock,
     mock_websocket_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -63,20 +64,20 @@ async def test_setup_failure_cleans_up_websocket(
     mock_websocket_api.close.assert_awaited_once()
 
 
-async def test_websocket_connect_failure_sets_entry_error(
+@pytest.mark.usefixtures("mock_rest_api")
+async def test_websocket_connect_failure_sets_entry_not_ready(
     hass: HomeAssistant,
-    mock_rest_api: AsyncMock,
     mock_websocket_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test websocket connection failure raises setup error."""
+    """Test websocket connection failure triggers setup retry."""
     mock_config_entry.add_to_hass(hass)
     mock_websocket_api.connect.side_effect = OSError("connect failed")
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_websocket_api.connect.assert_awaited_once_with(client_context())
     mock_websocket_api.stop_all_listeners.assert_not_awaited()
     mock_websocket_api.close.assert_not_awaited()
