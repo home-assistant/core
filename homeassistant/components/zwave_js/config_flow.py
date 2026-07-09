@@ -456,13 +456,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         self.ws_address = f"ws://{discovery_info.host}:{discovery_info.port}"
         home_id_display = format_home_id_for_display(int(home_id))
-        # Show home ID and network location in discovery notification
         self.context.update(
             {
                 "title_placeholders": {
-                    "host": discovery_info.host,
-                    "port": str(discovery_info.port),
-                    "home_id": home_id_display,
+                    CONF_NAME: (
+                        f"Network {home_id_display} at "
+                        f"{discovery_info.host}:{discovery_info.port}"
+                    )
                 }
             }
         )
@@ -1575,13 +1575,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.socket_path = discovery_info.socket_path
         self.context["title_placeholders"] = {
-            "host": discovery_info.ip_address,
-            "port": str(discovery_info.port),
-            "home_id": (
-                format_home_id_for_display(discovery_info.zwave_home_id)
-                if discovery_info.zwave_home_id
-                else "NEW"
-            ),
+            CONF_NAME: (
+                f"{discovery_info.name} at "
+                f"{discovery_info.ip_address}:{discovery_info.port}"
+            )
         }
         self._adapter_discovered = True
 

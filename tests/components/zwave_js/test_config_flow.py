@@ -1188,19 +1188,14 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
 
 
 @pytest.mark.parametrize(
-    ("service_info", "expected_home_id"),
-    [
-        (ESPHOME_DISCOVERY_INFO, "0x000004d2"),  # 1234
-        (ESPHOME_DISCOVERY_INFO_CLEAN, "NEW"),
-    ],
+    "service_info", [ESPHOME_DISCOVERY_INFO, ESPHOME_DISCOVERY_INFO_CLEAN]
 )
 @pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_esphome_discovery_title_placeholders(
     hass: HomeAssistant,
     service_info: ESPHomeServiceInfo,
-    expected_home_id: str,
 ) -> None:
-    """Test ESPHome discovery sets title placeholders for the flow_title."""
+    """Test ESPHome discovery sets the name placeholder for the flow_title."""
     await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ESPHOME},
@@ -1209,10 +1204,10 @@ async def test_esphome_discovery_title_placeholders(
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    title_placeholders = flows[0]["context"]["title_placeholders"]
-    assert title_placeholders["host"] == "192.168.1.100"
-    assert title_placeholders["port"] == "6053"
-    assert title_placeholders["home_id"] == expected_home_id
+    assert (
+        flows[0]["context"]["title_placeholders"]["name"]
+        == "mock-name at 192.168.1.100:6053"
+    )
 
 
 @pytest.mark.parametrize(
@@ -4115,9 +4110,10 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     flow = flows[0]
-    assert flow["context"]["title_placeholders"]["host"] == "127.0.0.1"
-    assert flow["context"]["title_placeholders"]["port"] == "3000"
-    assert flow["context"]["title_placeholders"]["home_id"] == "0x000004d2"  # 1234
+    assert (
+        flow["context"]["title_placeholders"]["name"]
+        == "Network 0x000004d2 at 127.0.0.1:3000"
+    )
 
     with (
         patch(
