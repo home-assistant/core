@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import pizone
 import voluptuous as vol
@@ -45,6 +45,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
     _user_discovered_controllers: list[pizone.Controller] | None = None
     _discovered_controller_ip: str | None = None
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Match in-progress flows for the same controller UID."""
         self_uid = _flow_uid_for_matching(self)
@@ -82,6 +83,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
         # not misleadingly show "No devices found" when setup is actually in progress.
         return self.async_abort(reason="discovery_started")
 
+    @override
     async def async_step_user(
         self, _user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -181,6 +183,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"controllers": controllers_lines},
         )
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -227,6 +230,7 @@ class IZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:

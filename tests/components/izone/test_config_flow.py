@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.izone import config_flow, discovery as izone_discovery
-from homeassistant.components.izone.const import DATA_DISCOVERY_SERVICE, IZONE
+from homeassistant.components.izone.const import DATA_DISCOVERY_SERVICE, DOMAIN
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -23,8 +23,6 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
-
-DOMAIN = IZONE
 
 
 def _make_homekit_info(md: str, host: str | None = None) -> SimpleNamespace:
