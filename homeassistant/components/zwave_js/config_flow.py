@@ -496,7 +496,7 @@ class NvmMigrationManager:
                     config_entry, data=data, unique_id=str(version_info.home_id)
                 )
 
-            # The config entry will be also be reloaded when the driver is ready,
+            # The config entry will also be reloaded when the driver is ready,
             # by the listener in the package module,
             # and two reloads are needed to clean up the stale controller device entry.
             # Since both the old and the new controller have the same node id,
@@ -1234,8 +1234,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._entry_unloaded_by_flow = False
         self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
-    @override
     @callback
+    @override
     def async_remove(self) -> None:
         """Reload the config entry if the flow unloaded it and left it down.
 
