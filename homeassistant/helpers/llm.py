@@ -51,7 +51,6 @@ ACTION_PARAMETERS_CACHE: HassKey[
     dict[str, dict[str, tuple[str | None, vol.Schema]]]
 ] = HassKey("llm_action_parameters_cache")
 
-# Namespaced so it cannot collide with hass.data[DOMAIN] of the "llm" integration.
 APIS_CACHE: HassKey[dict[str, API]] = HassKey("llm_apis")
 
 
