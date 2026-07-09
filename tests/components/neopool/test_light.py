@@ -62,9 +62,9 @@ def _light_entity_id(hass: HomeAssistant, entry: MockConfigEntry) -> str:
     entries = [
         e
         for e in er.async_entries_for_config_entry(registry, entry.entry_id)
-        if e.domain == "light"
+        if e.domain == LIGHT_DOMAIN
     ]
-    assert entries, "expected exactly one neopool light entity"
+    assert len(entries) == 1, "expected exactly one neopool light entity"
     return entries[0].entity_id
 
 
@@ -221,7 +221,7 @@ async def test_light_absent_when_option_off(
     light_entries = [
         e
         for e in er.async_entries_for_config_entry(registry, mock_config_entry.entry_id)
-        if e.domain == "light"
+        if e.domain == LIGHT_DOMAIN
     ]
     assert light_entries == []
 
@@ -244,7 +244,7 @@ async def test_light_absent_when_gpio_unassigned(
         for e in er.async_entries_for_config_entry(
             registry, mock_config_entry_light.entry_id
         )
-        if e.domain == "light"
+        if e.domain == LIGHT_DOMAIN
     ]
     assert light_entries == []
 
