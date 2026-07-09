@@ -75,10 +75,7 @@ async def async_setup_entry(
         await websocket_api.stop_all_listeners()
         await websocket_api.close()
 
-    # Connect the websocket once before setting up coordinators.
-    # Both coordinators share this single instance; calling connect() inside
-    # each coordinator's async_setup() would open two listen tasks on the same
-    # socket, causing ConnectionClosedOK errors (issue #164441).
+    # Connect once because both websocket coordinators share this API instance.
     try:
         await websocket_api.connect(client_context())
     except (OSError, WebSocketException) as err:
@@ -86,11 +83,13 @@ async def async_setup_entry(
 
     entry.async_on_unload(_async_disconnect_websocket)
 
-    # Register callbacks and subscribe each coordinator to its device messages
-    await asyncio.gather(
-        websocket_wind_coordinator.async_setup(),
-        websocket_observation_coordinator.async_setup(),
-    )
+    try:
+        await asyncio.gather(
+            websocket_wind_coordinator.async_setup(),
+            websocket_observation_coordinator.async_setup(),
+        )
+    except (OSError, WebSocketException) as err:
+        raise ConfigEntryNotReady("Error setting up WeatherFlow websocket") from err
 
     entry.runtime_data = WeatherFlowCoordinators(
         rest_data_coordinator,

@@ -59,7 +59,7 @@ async def test_setup_failure_cleans_up_websocket(
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is not ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_websocket_api.stop_all_listeners.assert_awaited_once()
     mock_websocket_api.close.assert_awaited_once()
 
