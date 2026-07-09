@@ -49,8 +49,13 @@ class CCLCoordinator(DataUpdateCoordinator[dict[str, CCLSensor]]):
             self.device.device_id,
             time.monotonic(),
         )
+
+        last_update_time = self.device.last_update_time
+        if last_update_time is None:
+            return {}
+
         # Compare the last update time to the current time in monotonic time.
-        if time.monotonic() - self.device.last_update_time >= _CHECKING_INTERVAL:
+        if time.monotonic() - last_update_time >= _CHECKING_INTERVAL:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="device_timed_out",
