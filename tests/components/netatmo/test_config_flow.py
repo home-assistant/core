@@ -60,7 +60,7 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
         ),
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
 
 
 async def test_abort_if_legacy_entry_without_unique_id(hass: HomeAssistant) -> None:

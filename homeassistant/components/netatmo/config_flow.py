@@ -7,7 +7,7 @@ import uuid
 
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_SHOW_ON_MAP, CONF_UUID
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
@@ -61,13 +61,9 @@ class NetatmoFlowHandler(
     @override
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Handle a flow start."""
+        # Single-instance enforcement is handled by ``single_config_entry`` in
+        # the manifest; the flow manager aborts duplicates before this runs.
         await self.async_set_unique_id(DOMAIN)
-
-        if self.source != SOURCE_REAUTH:
-            self._abort_if_unique_id_configured(error="single_instance_allowed")
-            if self._async_current_entries():
-                return self.async_abort(reason="single_instance_allowed")
-
         return await super().async_step_user(user_input)
 
     async def async_step_reauth(
