@@ -1199,7 +1199,7 @@ async def test_supervisor_issues_subscription_events(
     msg = await client.receive_json()
     assert msg["success"]
     await hass.async_block_till_done()
-    assert events == ["added"]
+    assert events == ["changed"]
 
     await client.send_json(
         {
@@ -1219,7 +1219,7 @@ async def test_supervisor_issues_subscription_events(
     msg = await client.receive_json()
     assert msg["success"]
     await hass.async_block_till_done()
-    assert events == ["added", "updated"]
+    assert events == ["changed", "changed"]
 
     await client.send_json(
         {
@@ -1239,7 +1239,7 @@ async def test_supervisor_issues_subscription_events(
     msg = await client.receive_json()
     assert msg["success"]
     await hass.async_block_till_done()
-    assert events == ["added", "updated", "removed"]
+    assert events == ["changed", "changed", "removed"]
 
     unsubscribe()
 
@@ -1360,11 +1360,11 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
     msg = await supervisor_client_ws.receive_json()
     assert msg["success"]
     await hass.async_block_till_done()
-    assert events == ["added"]
+    assert events == ["changed"]
 
-    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await issues_coordinator.async_refresh()
     await hass.async_block_till_done()
-    assert events == ["added", "updated"]
+    assert events == ["changed", "changed"]
 
     unsubscribe()
 
@@ -1375,7 +1375,7 @@ async def test_supervisor_issues_periodic_refresh_recovers_after_initial_failure
     supervisor_client: AsyncMock,
     resolution_info: AsyncMock,
 ) -> None:
-    """Test periodic polling recovers issue state after initial refresh failure."""
+    """Test a later refresh recovers issue state after initial refresh failure."""
     issue_uuid = uuid4()
     mock_resolution_info(
         supervisor_client,
@@ -1411,7 +1411,7 @@ async def test_supervisor_issues_periodic_refresh_recovers_after_initial_failure
     assert issues_coordinator is not None
     assert len(issues_coordinator.issues) == 0
 
-    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await issues_coordinator.async_refresh()
     await hass.async_block_till_done()
     assert len(issues_coordinator.issues) == 1
 

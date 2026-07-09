@@ -169,7 +169,7 @@ class IssueSubscription:
 class IssueSubscriptionEvent:
     """Issue subscription event."""
 
-    event: Literal["added", "updated", "removed"]
+    event: Literal["changed", "removed"]
     issue: Issue
 
 
@@ -237,18 +237,9 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
         self._subscriptions.add(subscription)
 
         for match in [issue for issue in self.issues if subscription.matches(issue)]:
-            try:
-                subscription.event_callback(
-                    IssueSubscriptionEvent(event="added", issue=match)
-                )
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.error(
-                    "Error encountered processing Supervisor issue (%s %s %s) - %s",
-                    match.key,
-                    match.reference,
-                    match.uuid,
-                    err,
-                )
+            self._notify_issue_subscription_event(
+                subscription, IssueSubscriptionEvent(event="changed", issue=match)
+            )
 
         def _unsubscribe() -> None:
             self._subscriptions.discard(subscription)
@@ -259,7 +250,22 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
         """Process an issue change by triggering callbacks on subscribers."""
         for sub in self._subscriptions:
             if sub.matches(event.issue):
-                sub.event_callback(event)
+                self._notify_issue_subscription_event(sub, event)
+
+    def _notify_issue_subscription_event(
+        self, subscription: IssueSubscription, event: IssueSubscriptionEvent
+    ) -> None:
+        """Run a subscription callback and log callback failures."""
+        try:
+            subscription.event_callback(event)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error(
+                "Error encountered processing Supervisor issue (%s %s %s) - %s",
+                event.issue.key,
+                event.issue.reference,
+                event.issue.uuid,
+                err,
+            )
 
     @staticmethod
     def _issue_equal(previous_issue: Issue, issue: Issue) -> bool:
@@ -388,10 +394,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
 
             self._create_or_update_issue_repair(issue)
             self._process_issue_change(
-                IssueSubscriptionEvent(
-                    event="added" if previous_issue is None else "updated",
-                    issue=issue,
-                )
+                IssueSubscriptionEvent(event="changed", issue=issue)
             )
 
         for issue_uuid, issue in previous_data.issues.items():
@@ -409,10 +412,14 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
         except SupervisorError as err:
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
-        issues: dict[UUID, Issue] = {}
-        for issue in data.issues:
-            if issue_from_data := await self._issue_from_data(issue):
-                issues[issue_from_data.uuid] = issue_from_data
+        issue_from_data_results = await asyncio.gather(
+            *(self._issue_from_data(issue) for issue in data.issues)
+        )
+        issues = {
+            issue_from_data.uuid: issue_from_data
+            for issue_from_data in issue_from_data_results
+            if issue_from_data is not None
+        }
 
         return SupervisorIssuesData(
             unhealthy_reasons={str(reason) for reason in data.unhealthy},
