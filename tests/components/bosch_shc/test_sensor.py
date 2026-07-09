@@ -19,9 +19,10 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-# Every device_helper bucket bosch_shc's platforms iterate over, defaulted to
-# empty so a full component setup only ever creates the sensor entities under
-# test here, regardless of what other platforms look for.
+# Every device_helper bucket the sensor platform itself iterates over
+# (thermostats, wallthermostats, twinguards, smart_plugs, light_switches_bsm,
+# smart_plugs_compact), defaulted to empty so a test only creates entities
+# for the bucket(s) it explicitly passes.
 _EMPTY_DEVICE_BUCKETS: dict[str, list[Any]] = {
     bucket: []
     for bucket in (
