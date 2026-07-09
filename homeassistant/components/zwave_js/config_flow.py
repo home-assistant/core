@@ -2,7 +2,9 @@
 
 import asyncio
 import base64
+from collections.abc import Mapping
 from contextlib import suppress
+from dataclasses import dataclass
 from datetime import datetime
 import logging
 from pathlib import Path
@@ -95,6 +97,73 @@ ADDON_USER_INPUT_MAP = {
 }
 
 CONF_ADDON_RF_REGION = "rf_region"
+
+# Security key fields as (field name, add-on config key, config entry key).
+KEY_FIELDS: tuple[tuple[str, str, str], ...] = (
+    ("s0_legacy", CONF_ADDON_S0_LEGACY_KEY, CONF_S0_LEGACY_KEY),
+    ("s2_access_control", CONF_ADDON_S2_ACCESS_CONTROL_KEY, CONF_S2_ACCESS_CONTROL_KEY),
+    ("s2_authenticated", CONF_ADDON_S2_AUTHENTICATED_KEY, CONF_S2_AUTHENTICATED_KEY),
+    (
+        "s2_unauthenticated",
+        CONF_ADDON_S2_UNAUTHENTICATED_KEY,
+        CONF_S2_UNAUTHENTICATED_KEY,
+    ),
+    (
+        "lr_s2_access_control",
+        CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY,
+        CONF_LR_S2_ACCESS_CONTROL_KEY,
+    ),
+    (
+        "lr_s2_authenticated",
+        CONF_ADDON_LR_S2_AUTHENTICATED_KEY,
+        CONF_LR_S2_AUTHENTICATED_KEY,
+    ),
+)
+
+
+@dataclass
+class SecurityKeys:
+    """Security keys of a Z-Wave network."""
+
+    s0_legacy: str | None = None
+    s2_access_control: str | None = None
+    s2_authenticated: str | None = None
+    s2_unauthenticated: str | None = None
+    lr_s2_access_control: str | None = None
+    lr_s2_authenticated: str | None = None
+
+    @classmethod
+    def from_addon_config(
+        cls, addon_config: Mapping[str, Any], defaults: SecurityKeys | None = None
+    ) -> SecurityKeys:
+        """Return keys from an add-on config, falling back to defaults."""
+        return cls(
+            **{
+                field: addon_config.get(
+                    addon_key,
+                    ((getattr(defaults, field) if defaults else None) or ""),
+                )
+                for field, addon_key, _ in KEY_FIELDS
+            }
+        )
+
+    def updated_from_user_input(self, user_input: Mapping[str, Any]) -> SecurityKeys:
+        """Return keys updated from user input, with these keys as defaults."""
+        return SecurityKeys(
+            **{
+                field: user_input.get(entry_key, getattr(self, field) or "")
+                for field, _, entry_key in KEY_FIELDS
+            }
+        )
+
+    def to_addon_config(self) -> dict[str, str | None]:
+        """Return the keys as add-on config options."""
+        return {addon_key: getattr(self, field) for field, addon_key, _ in KEY_FIELDS}
+
+    def to_entry_data(self) -> dict[str, str | None]:
+        """Return the keys as config entry data."""
+        return {entry_key: getattr(self, field) for field, _, entry_key in KEY_FIELDS}
+
 
 EXAMPLE_SERVER_URL = "ws://localhost:3000"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
@@ -202,12 +271,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Set up flow instance."""
-        self.s0_legacy_key: str | None = None
-        self.s2_access_control_key: str | None = None
-        self.s2_authenticated_key: str | None = None
-        self.s2_unauthenticated_key: str | None = None
-        self.lr_s2_access_control_key: str | None = None
-        self.lr_s2_authenticated_key: str | None = None
+        self.security_keys = SecurityKeys()
         self.usb_path: str | None = None
         self.socket_path: str | None = None  # ESPHome socket
         self.ws_address: str | None = None
@@ -770,22 +834,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.usb_path = addon_config.get(CONF_ADDON_DEVICE)
                 self.socket_path = addon_config.get(CONF_ADDON_SOCKET)
 
-            self.s0_legacy_key = addon_config.get(CONF_ADDON_S0_LEGACY_KEY, "")
-            self.s2_access_control_key = addon_config.get(
-                CONF_ADDON_S2_ACCESS_CONTROL_KEY, ""
-            )
-            self.s2_authenticated_key = addon_config.get(
-                CONF_ADDON_S2_AUTHENTICATED_KEY, ""
-            )
-            self.s2_unauthenticated_key = addon_config.get(
-                CONF_ADDON_S2_UNAUTHENTICATED_KEY, ""
-            )
-            self.lr_s2_access_control_key = addon_config.get(
-                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, ""
-            )
-            self.lr_s2_authenticated_key = addon_config.get(
-                CONF_ADDON_LR_S2_AUTHENTICATED_KEY, ""
-            )
+            self.security_keys = SecurityKeys.from_addon_config(addon_config)
 
             if self._adapter_discovered:
                 # Apply the discovered adapter to the add-on config and
@@ -866,39 +915,16 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if user_input["network_type"] == NETWORK_TYPE_NEW:
                 addon_info = await self._async_get_addon_info()
-                addon_config = addon_info.options
                 # Keep existing keys from the add-on config so the keys of a
                 # previously configured network are not destroyed.
                 # Keys left empty are generated by the add-on on start.
-                self.s0_legacy_key = addon_config.get(CONF_ADDON_S0_LEGACY_KEY, "")
-                self.s2_access_control_key = addon_config.get(
-                    CONF_ADDON_S2_ACCESS_CONTROL_KEY, ""
-                )
-                self.s2_authenticated_key = addon_config.get(
-                    CONF_ADDON_S2_AUTHENTICATED_KEY, ""
-                )
-                self.s2_unauthenticated_key = addon_config.get(
-                    CONF_ADDON_S2_UNAUTHENTICATED_KEY, ""
-                )
-                self.lr_s2_access_control_key = addon_config.get(
-                    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, ""
-                )
-                self.lr_s2_authenticated_key = addon_config.get(
-                    CONF_ADDON_LR_S2_AUTHENTICATED_KEY, ""
-                )
+                self.security_keys = SecurityKeys.from_addon_config(addon_info.options)
 
-                addon_config_updates = {
+                self._addon_config_updates = {
                     CONF_ADDON_DEVICE: self.usb_path,
                     CONF_ADDON_SOCKET: self.socket_path,
-                    CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
-                    CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                    CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                    CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                    CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                    **self.security_keys.to_addon_config(),
                 }
-
-                self._addon_config_updates = addon_config_updates
                 return await self.async_step_start_addon()
 
             # Network already exists, go to security keys step
@@ -920,77 +946,24 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Ask for security keys for existing Z-Wave network."""
         addon_info = await self._async_get_addon_info()
-        addon_config = addon_info.options
-
-        s0_legacy_key = addon_config.get(
-            CONF_ADDON_S0_LEGACY_KEY, self.s0_legacy_key or ""
-        )
-        s2_access_control_key = addon_config.get(
-            CONF_ADDON_S2_ACCESS_CONTROL_KEY, self.s2_access_control_key or ""
-        )
-        s2_authenticated_key = addon_config.get(
-            CONF_ADDON_S2_AUTHENTICATED_KEY, self.s2_authenticated_key or ""
-        )
-        s2_unauthenticated_key = addon_config.get(
-            CONF_ADDON_S2_UNAUTHENTICATED_KEY, self.s2_unauthenticated_key or ""
-        )
-        lr_s2_access_control_key = addon_config.get(
-            CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, self.lr_s2_access_control_key or ""
-        )
-        lr_s2_authenticated_key = addon_config.get(
-            CONF_ADDON_LR_S2_AUTHENTICATED_KEY, self.lr_s2_authenticated_key or ""
+        default_keys = SecurityKeys.from_addon_config(
+            addon_info.options, self.security_keys
         )
 
         if user_input is not None:
-            self.s0_legacy_key = user_input.get(CONF_S0_LEGACY_KEY, s0_legacy_key)
-            self.s2_access_control_key = user_input.get(
-                CONF_S2_ACCESS_CONTROL_KEY, s2_access_control_key
-            )
-            self.s2_authenticated_key = user_input.get(
-                CONF_S2_AUTHENTICATED_KEY, s2_authenticated_key
-            )
-            self.s2_unauthenticated_key = user_input.get(
-                CONF_S2_UNAUTHENTICATED_KEY, s2_unauthenticated_key
-            )
-            self.lr_s2_access_control_key = user_input.get(
-                CONF_LR_S2_ACCESS_CONTROL_KEY, lr_s2_access_control_key
-            )
-            self.lr_s2_authenticated_key = user_input.get(
-                CONF_LR_S2_AUTHENTICATED_KEY, lr_s2_authenticated_key
-            )
+            self.security_keys = default_keys.updated_from_user_input(user_input)
 
-            addon_config_updates = {
+            self._addon_config_updates = {
                 CONF_ADDON_DEVICE: self.usb_path,
                 CONF_ADDON_SOCKET: self.socket_path,
-                CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
-                CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                **self.security_keys.to_addon_config(),
             }
-
-            self._addon_config_updates = addon_config_updates
             return await self.async_step_start_addon()
 
         data_schema = vol.Schema(
             {
-                vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
-                vol.Optional(
-                    CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
-                ): str,
-                vol.Optional(
-                    CONF_S2_AUTHENTICATED_KEY, default=s2_authenticated_key
-                ): str,
-                vol.Optional(
-                    CONF_S2_UNAUTHENTICATED_KEY, default=s2_unauthenticated_key
-                ): str,
-                vol.Optional(
-                    CONF_LR_S2_ACCESS_CONTROL_KEY, default=lr_s2_access_control_key
-                ): str,
-                vol.Optional(
-                    CONF_LR_S2_AUTHENTICATED_KEY, default=lr_s2_authenticated_key
-                ): str,
+                vol.Optional(entry_key, default=getattr(default_keys, field)): str
+                for field, _, entry_key in KEY_FIELDS
             }
         )
 
@@ -1028,12 +1001,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_URL: self.ws_address,
                 CONF_USB_PATH: self.usb_path,
                 CONF_SOCKET_PATH: self.socket_path,
-                CONF_S0_LEGACY_KEY: self.s0_legacy_key,
-                CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                CONF_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                CONF_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                **self.security_keys.to_entry_data(),
             },
             error=(
                 "migration_successful"
@@ -1068,12 +1036,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_URL: self.ws_address,
                 CONF_USB_PATH: self.usb_path,
                 CONF_SOCKET_PATH: self.socket_path,
-                CONF_S0_LEGACY_KEY: self.s0_legacy_key,
-                CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                CONF_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                CONF_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                **self.security_keys.to_entry_data(),
                 CONF_USE_ADDON: self.use_addon,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             },
@@ -1346,19 +1309,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # The revert helper only passes keys present in the original
             # add-on config, which may lack some of the security keys,
-            # so don't index the keys directly.
-            self.s0_legacy_key = user_input.get(CONF_S0_LEGACY_KEY, "")
-            self.s2_access_control_key = user_input.get(CONF_S2_ACCESS_CONTROL_KEY, "")
-            self.s2_authenticated_key = user_input.get(CONF_S2_AUTHENTICATED_KEY, "")
-            self.s2_unauthenticated_key = user_input.get(
-                CONF_S2_UNAUTHENTICATED_KEY, ""
-            )
-            self.lr_s2_access_control_key = user_input.get(
-                CONF_LR_S2_ACCESS_CONTROL_KEY, ""
-            )
-            self.lr_s2_authenticated_key = user_input.get(
-                CONF_LR_S2_AUTHENTICATED_KEY, ""
-            )
+            # so treat missing keys as empty.
+            self.security_keys = SecurityKeys().updated_from_user_input(user_input)
             self.usb_path = user_input.get(CONF_USB_PATH) or None
             self.socket_path = user_input.get(CONF_SOCKET_PATH) or None
 
@@ -1368,12 +1320,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 addon_config_updates = {
                     CONF_ADDON_DEVICE: self.usb_path,
                     CONF_ADDON_SOCKET: self.socket_path,
-                    CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
-                    CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                    CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                    CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                    CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                    **self.security_keys.to_addon_config(),
                 }
 
                 addon_config_updates = self._addon_config_updates | addon_config_updates
@@ -1394,24 +1341,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         usb_path = addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
         socket_path = addon_config.get(CONF_ADDON_SOCKET, self.socket_path or "")
-        s0_legacy_key = addon_config.get(
-            CONF_ADDON_S0_LEGACY_KEY, self.s0_legacy_key or ""
-        )
-        s2_access_control_key = addon_config.get(
-            CONF_ADDON_S2_ACCESS_CONTROL_KEY, self.s2_access_control_key or ""
-        )
-        s2_authenticated_key = addon_config.get(
-            CONF_ADDON_S2_AUTHENTICATED_KEY, self.s2_authenticated_key or ""
-        )
-        s2_unauthenticated_key = addon_config.get(
-            CONF_ADDON_S2_UNAUTHENTICATED_KEY, self.s2_unauthenticated_key or ""
-        )
-        lr_s2_access_control_key = addon_config.get(
-            CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, self.lr_s2_access_control_key or ""
-        )
-        lr_s2_authenticated_key = addon_config.get(
-            CONF_ADDON_LR_S2_AUTHENTICATED_KEY, self.lr_s2_authenticated_key or ""
-        )
+        default_keys = SecurityKeys.from_addon_config(addon_config, self.security_keys)
 
         try:
             ports = await async_get_usb_ports(self.hass)
@@ -1433,29 +1363,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_SOCKET_PATH, description={"suggested_value": socket_path}
                 ): str,
-                vol.Optional(
-                    CONF_S0_LEGACY_KEY, description={"suggested_value": s0_legacy_key}
-                ): str,
-                vol.Optional(
-                    CONF_S2_ACCESS_CONTROL_KEY,
-                    description={"suggested_value": s2_access_control_key},
-                ): str,
-                vol.Optional(
-                    CONF_S2_AUTHENTICATED_KEY,
-                    description={"suggested_value": s2_authenticated_key},
-                ): str,
-                vol.Optional(
-                    CONF_S2_UNAUTHENTICATED_KEY,
-                    description={"suggested_value": s2_unauthenticated_key},
-                ): str,
-                vol.Optional(
-                    CONF_LR_S2_ACCESS_CONTROL_KEY,
-                    description={"suggested_value": lr_s2_access_control_key},
-                ): str,
-                vol.Optional(
-                    CONF_LR_S2_AUTHENTICATED_KEY,
-                    description={"suggested_value": lr_s2_authenticated_key},
-                ): str,
+                **{
+                    vol.Optional(
+                        entry_key,
+                        description={"suggested_value": getattr(default_keys, field)},
+                    ): str
+                    for field, _, entry_key in KEY_FIELDS
+                },
             }
         )
 
@@ -1566,12 +1480,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_URL: ws_address,
                 CONF_USB_PATH: self.usb_path,
                 CONF_SOCKET_PATH: self.socket_path,
-                CONF_S0_LEGACY_KEY: self.s0_legacy_key,
-                CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                CONF_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                CONF_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                **self.security_keys.to_entry_data(),
                 CONF_USE_ADDON: True,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             },
@@ -1616,12 +1525,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_URL: self.ws_address,
                 CONF_USB_PATH: self.usb_path,
                 CONF_SOCKET_PATH: self.socket_path,
-                CONF_S0_LEGACY_KEY: self.s0_legacy_key,
-                CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                CONF_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                CONF_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                **self.security_keys.to_entry_data(),
                 CONF_USE_ADDON: True,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             }
