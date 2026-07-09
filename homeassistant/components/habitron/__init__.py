@@ -7,11 +7,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.typing import ConfigType
 
+from .communicate import HbtnComm
 from .const import DOMAIN
-from .coordinator import HabitronConfigEntry
-from .services import async_setup_services
+from .coordinator import HabitronConfigEntry, HbtnCoordinator
 from .smart_hub import SmartHub
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -19,29 +18,19 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Register the Habitron domain services.
-
-    Services live on the domain (not on a config entry) so automations that
-    reference them validate — and raise a clear "no hub loaded" error — even
-    before a hub is set up (quality-scale ``action-setup``).
-    """
-    async_setup_services(hass)
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: HabitronConfigEntry) -> bool:
     """Set up Habitron from a config entry."""
+    comm = HbtnComm(hass, entry)
+    coordinator = HbtnCoordinator(hass, entry, comm)
+    entry.runtime_data = coordinator
     try:
-        smhub = SmartHub(hass, entry)
-        await smhub.async_setup()
-        # Central first refresh — done once here instead of per platform.
-        await smhub.coordinator.async_config_entry_first_refresh()
+        # First refresh runs the SmartHub setup (connect + build model + register
+        # devices) via the coordinator, then the first bus poll.
+        await coordinator.async_config_entry_first_refresh()
 
-        entry.runtime_data = smhub
         entry.async_on_unload(entry.add_update_listener(update_listener))
 
-        _async_cleanup_stale_devices(hass, entry, smhub)
+        _async_cleanup_stale_devices(hass, entry, coordinator.smart_hub)
 
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -88,7 +77,7 @@ async def async_remove_config_entry_device(
     device_entry: DeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
-    smhub = config_entry.runtime_data
+    smhub = config_entry.runtime_data.smart_hub
     return not any(
         identifier
         for identifier in device_entry.identifiers
@@ -102,12 +91,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: HabitronConfigEntry) ->
     if not unload_ok:
         return False
 
-    smhub = entry.runtime_data
-    await smhub.async_close()
+    await entry.runtime_data.smart_hub.async_close()
 
-    # Domain services are registered once in ``async_setup`` and live for the
-    # lifetime of the integration (quality-scale ``action-setup``); they are
-    # intentionally not removed on entry unload.
     return True
 
 

@@ -1,23 +1,17 @@
 """Tests for the Habitron config flow."""
 
-import asyncio
-import json
 import socket
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from habitron_client import HabitronTimeoutError
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.habitron.config_flow import (
-    DISCOVERY_MESSAGE,
-    DISCOVERY_PORT,
     KEY_HOST,
     ConfigFlow,
     HostNotFound,
     InvalidHost,
-    UDPDiscoveryProtocol,
-    _get_local_ip,
     validate_input,
 )
 from homeassistant.components.habitron.const import DOMAIN
@@ -29,14 +23,7 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
-from .const import (
-    MOCK_CONFIG_DATA,
-    MOCK_HOST,
-    MOCK_NAME,
-    MOCK_SERIAL,
-    MOCK_UDN,
-    MOCK_UID,
-)
+from .const import MOCK_CONFIG_DATA, MOCK_HOST, MOCK_NAME, MOCK_SERIAL, MOCK_UDN
 
 from tests.common import MockConfigEntry
 
@@ -93,7 +80,7 @@ async def test_user_flow_already_configured(
     """An identical config aborts with ``already_configured``.
 
     The user step falls back to ``habitron_{host}`` for the unique id
-    when no UDP probe response arrives, so we register an existing
+    when no discovery response arrives, so we register an existing
     entry with that same id to trigger the abort path.
     """
     MockConfigEntry(
@@ -259,54 +246,14 @@ async def test_user_flow_exception_mapping(
     assert result["errors"] == {"base": expected}
 
 
-async def test_options_flow(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_config_entry: MockConfigEntry,
-    mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
-    mock_coordinator_refresh,
-) -> None:
-    """The options flow updates the entry's options."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    new_input = {
-        "habitron_host": MOCK_HOST,
-        "websock_token": "test-token-not-real",
-    }
-    with patch.object(hass.config_entries, "async_reload", return_value=True):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input=new_input
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
 # ---------- unit tests for the helper layer ----------
-
-
-async def test_get_local_ip_falls_back_on_exception(hass: HomeAssistant) -> None:
-    """``_get_local_ip`` returns 127.0.0.1 when the network helper raises."""
-
-    with patch(
-        "homeassistant.components.habitron.config_flow.network.async_get_source_ip",
-        side_effect=RuntimeError("no source"),
-    ):
-        assert await _get_local_ip(hass) == "127.0.0.1"
 
 
 async def test_validate_input_local_loopback_rewrites_host(
     hass: HomeAssistant,
     mock_habitron_client: MagicMock,
 ) -> None:
-    """A host equal to the local IP is rewritten to the literal ``local``."""
+    """A host equal to one of our own IPs is rewritten to ``local``."""
 
     data = {KEY_HOST: "192.168.1.10", "websock_token": ""}
     info = await validate_input(hass, data)
@@ -319,8 +266,9 @@ async def test_validate_input_invalid_host_too_short(hass: HomeAssistant) -> Non
 
     with (
         patch(
-            "homeassistant.components.habitron.config_flow._get_local_ip",
-            return_value="10.0.0.5",
+            "homeassistant.components.habitron.config_flow."
+            "network.async_get_enabled_source_ips",
+            new=AsyncMock(return_value=["10.0.0.5"]),
         ),
         pytest.raises(InvalidHost),
     ):
@@ -337,8 +285,9 @@ async def test_validate_input_host_not_found_for_dns_failure(
 
     with (
         patch(
-            "homeassistant.components.habitron.config_flow._get_local_ip",
-            return_value="10.0.0.5",
+            "homeassistant.components.habitron.config_flow."
+            "network.async_get_enabled_source_ips",
+            new=AsyncMock(return_value=["10.0.0.5"]),
         ),
         patch(
             "homeassistant.components.habitron.config_flow.test_connection",
@@ -350,60 +299,6 @@ async def test_validate_input_host_not_found_for_dns_failure(
             hass,
             {KEY_HOST: MOCK_HOST, "websock_token": ""},
         )
-
-
-# ---------- UDPDiscoveryProtocol unit tests ----------
-
-
-def test_udp_discovery_protocol_connection_made_sends_broadcast() -> None:
-    """``connection_made`` enables broadcast and sends the discovery packet."""
-
-    proto = UDPDiscoveryProtocol()
-    transport = MagicMock(spec=asyncio.DatagramTransport)
-    sock = MagicMock()
-    transport.get_extra_info.return_value = sock
-
-    proto.connection_made(transport)
-    sock.setsockopt.assert_called()
-    transport.sendto.assert_called_with(
-        DISCOVERY_MESSAGE, ("255.255.255.255", DISCOVERY_PORT)
-    )
-
-
-def test_udp_discovery_protocol_connection_made_no_socket() -> None:
-    """``connection_made`` is robust against a missing socket info."""
-
-    proto = UDPDiscoveryProtocol()
-    transport = MagicMock(spec=asyncio.DatagramTransport)
-    transport.get_extra_info.return_value = None
-    proto.connection_made(transport)
-    transport.sendto.assert_called()
-
-
-def test_udp_discovery_protocol_datagram_collects_unique_devices() -> None:
-    """``datagram_received`` collects host/ip pairs and dedupes by ip."""
-
-    proto = UDPDiscoveryProtocol()
-    payload = json.dumps({"host": "hub1", "ip": "10.0.0.1"}).encode()
-    proto.datagram_received(payload, ("10.0.0.1", 7777))
-    proto.datagram_received(payload, ("10.0.0.1", 7777))  # duplicate
-    assert len(proto.found_devices) == 1
-
-
-def test_udp_discovery_protocol_datagram_swallows_bad_payload() -> None:
-    """Non-JSON datagrams are ignored without raising."""
-
-    proto = UDPDiscoveryProtocol()
-    proto.datagram_received(b"\xff\xfe garbage", ("10.0.0.1", 7777))
-    assert proto.found_devices == []
-
-
-def test_udp_discovery_protocol_error_received_logs() -> None:
-    """``error_received`` accepts a generic error without raising."""
-
-    proto = UDPDiscoveryProtocol()
-    proto.error_received(RuntimeError("oops"))
-    proto.connection_lost(None)
 
 
 # ---------- ConfigFlow._is_device_already_configured ----------
@@ -440,65 +335,17 @@ async def test_is_device_already_configured_ip_match(hass: HomeAssistant) -> Non
     assert flow._is_device_already_configured("hub-x", ip="10.0.0.1") is True
 
 
-# ---------- _discover_habitron OS-error fallback ----------
+# ---------- SSDP with no UDN + discovery fallback ----------
 
 
-async def test_discover_habitron_handles_oserror(hass: HomeAssistant) -> None:
-    """A datagram-endpoint failure makes ``_discover_habitron`` return []."""
-
-    flow = ConfigFlow()
-    flow.hass = hass
-
-    async def _raise(*args, **kwargs):
-        raise OSError("address in use")
-
-    with patch("asyncio.get_running_loop") as mock_loop:
-        loop = MagicMock()
-        loop.create_datagram_endpoint = _raise
-        mock_loop.return_value = loop
-        result = await flow._discover_habitron()
-    assert result == []
-
-
-async def test_discover_habitron_returns_found_devices(hass: HomeAssistant) -> None:
-    """A successful discovery returns whatever the protocol collected."""
-
-    flow = ConfigFlow()
-    flow.hass = hass
-
-    transport = MagicMock()
-    protocol = MagicMock()
-    protocol.found_devices = [{"host": "h1", "ip": "10.0.0.1"}]
-
-    async def _ok(*args, **kwargs):
-        return transport, protocol
-
-    async def _no_sleep(_):
-        return None
-
-    with (
-        patch("asyncio.get_running_loop") as mock_loop,
-        patch("asyncio.sleep", new=_no_sleep),
-    ):
-        loop = MagicMock()
-        loop.create_datagram_endpoint = _ok
-        mock_loop.return_value = loop
-        result = await flow._discover_habitron()
-    assert result == [{"host": "h1", "ip": "10.0.0.1"}]
-    transport.close.assert_called()
-
-
-# ---------- SSDP with no UDN + UDP fallback ----------
-
-
-async def test_ssdp_discovery_falls_back_to_udp_serial(
+async def test_ssdp_discovery_falls_back_to_discovery_serial(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
     mock_smart_hub_setup: None,
     mock_coordinator_refresh,
 ) -> None:
-    """A discovery without UDN/serial picks the serial from the UDP probe."""
+    """A discovery without UDN/serial picks the serial from the network probe."""
     discovery = SsdpServiceInfo(
         ssdp_usn="dummy",
         ssdp_st="urn:habitron-com:device:SmartHub:1",
@@ -507,8 +354,8 @@ async def test_ssdp_discovery_falls_back_to_udp_serial(
     )
 
     with patch(
-        "homeassistant.components.habitron.config_flow.ConfigFlow._discover_habitron",
-        return_value=[{"host": MOCK_HOST, "ip": MOCK_HOST, "serial": "UDP-SER-1"}],
+        "homeassistant.components.habitron.config_flow.discover_smarthubs",
+        new=AsyncMock(return_value=[{"ip": MOCK_HOST, "serial": "UDP-SER-1"}]),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -524,14 +371,14 @@ async def test_ssdp_discovery_falls_back_to_udp_serial(
     assert entry.unique_id == "UDP-SER-1"
 
 
-async def test_ssdp_discovery_no_udn_no_udp_falls_back_to_host_id(
+async def test_ssdp_discovery_no_udn_no_probe_falls_back_to_host_id(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
     mock_smart_hub_setup: None,
     mock_coordinator_refresh,
 ) -> None:
-    """Without UDN, serial or matching UDP device, the host string is used."""
+    """Without UDN, serial or matching probe device, the host string is used."""
     discovery = SsdpServiceInfo(
         ssdp_usn="dummy",
         ssdp_st="urn:habitron-com:device:SmartHub:1",
@@ -540,8 +387,8 @@ async def test_ssdp_discovery_no_udn_no_udp_falls_back_to_host_id(
     )
 
     with patch(
-        "homeassistant.components.habitron.config_flow.ConfigFlow._discover_habitron",
-        return_value=[],
+        "homeassistant.components.habitron.config_flow.discover_smarthubs",
+        new=AsyncMock(return_value=[]),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -627,57 +474,6 @@ async def test_user_flow_truly_unknown_exception_maps_to_unknown(
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_reconfigure_flow_host_not_found_via_validate_input(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_habitron_client: MagicMock,
-) -> None:
-    """The reconfigure flow maps HostNotFound to ``host_not_found``."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_NAME,
-        unique_id=MOCK_UID,
-        data=MOCK_CONFIG_DATA,
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reconfigure_flow(hass)
-    with patch(
-        "homeassistant.components.habitron.config_flow.validate_input",
-        side_effect=HostNotFound("dns"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_CONFIG_DATA
-        )
-    assert result["errors"] == {"base": "host_not_found"}
-
-
-async def test_reconfigure_flow_truly_unknown_exception(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_habitron_client: MagicMock,
-) -> None:
-    """An exception in the reconfigure flow surfaces as ``unknown``."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_NAME,
-        unique_id=MOCK_UID,
-        data=MOCK_CONFIG_DATA,
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reconfigure_flow(hass)
-    with patch(
-        "homeassistant.components.habitron.config_flow.validate_input",
-        side_effect=ValueError("totally unexpected"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_CONFIG_DATA
-        )
-    assert result["errors"] == {"base": "unknown"}
-
-
 async def test_user_flow_short_host_maps_to_host_not_found(
     hass: HomeAssistant,
     setup_homeassistant: None,
@@ -700,7 +496,7 @@ async def test_user_flow_unexpected_exception_maps_to_unknown(
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
 ) -> None:
-    """An unexpected error surfaces as ``unknown``."""
+    """An unexpected error surfaces as ``cannot_connect``."""
     mock_habitron_client.side_effect = RuntimeError("boom")
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -712,184 +508,25 @@ async def test_user_flow_unexpected_exception_maps_to_unknown(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-# ---------- reconfigure flow ----------
+# ---------- user step pre-fill from discovery ----------
 
 
-async def test_reconfigure_flow_shows_form_with_existing_data(
+async def test_user_step_prefills_host_from_discovery(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
 ) -> None:
-    """The reconfigure flow shows a form pre-populated with the entry data."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_NAME,
-        unique_id=MOCK_UID,
-        data=MOCK_CONFIG_DATA,
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-
-
-async def test_reconfigure_flow_updates_entry_on_success(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
-    mock_coordinator_refresh,
-) -> None:
-    """A successful reconfigure updates the entry and reloads."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_NAME,
-        unique_id=MOCK_UID,
-        data=MOCK_CONFIG_DATA,
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reconfigure_flow(hass)
-    new_input = {
-        "habitron_host": "10.0.0.99",
-        "websock_token": "",
-    }
-    with patch.object(hass.config_entries, "async_reload", return_value=True):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=new_input
-        )
-        await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-
-async def test_reconfigure_flow_surfaces_cannot_connect(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_habitron_client: MagicMock,
-) -> None:
-    """When the hub probe fails the reconfigure form surfaces cannot_connect."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_NAME,
-        unique_id=MOCK_UID,
-        data=MOCK_CONFIG_DATA,
-    )
-    entry.add_to_hass(hass)
-    mock_habitron_client.return_value = (False, "")
-
-    result = await entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_CONFIG_DATA
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_reconfigure_flow_surfaces_unknown(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_habitron_client: MagicMock,
-) -> None:
-    """An unexpected error in reconfigure surfaces as ``unknown``."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=MOCK_NAME,
-        unique_id=MOCK_UID,
-        data=MOCK_CONFIG_DATA,
-    )
-    entry.add_to_hass(hass)
-
-    result = await entry.start_reconfigure_flow(hass)
-
-    # Path of least resistance: feed an invalid host that maps to host_not_found
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={**MOCK_CONFIG_DATA, "habitron_host": "x"},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "host_not_found"}
-
-
-# ---------- options flow error branches ----------
-
-
-async def test_options_flow_surfaces_cannot_connect(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_config_entry: MockConfigEntry,
-    mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
-    mock_coordinator_refresh,
-) -> None:
-    """A failing connect probe in the options flow surfaces ``cannot_connect``."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    mock_habitron_client.return_value = (False, "")
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    new_input = {
-        "habitron_host": MOCK_HOST,
-        "websock_token": "",
-    }
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input=new_input
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_options_flow_surfaces_unknown_exception(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_config_entry: MockConfigEntry,
-    mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
-    mock_coordinator_refresh,
-) -> None:
-    """An unexpected error in the options flow surfaces as ``unknown``."""
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-
+    """The user step pre-fills the host field from a discovered device."""
     with patch(
-        "homeassistant.components.habitron.config_flow.validate_input",
-        side_effect=ValueError("boom"),
-    ):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                "habitron_host": MOCK_HOST,
-                "websock_token": "",
-            },
-        )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-
-# ---------- user step pre-fill from UDP discovery ----------
-
-
-async def test_user_step_prefills_host_from_udp_discovery(
-    hass: HomeAssistant,
-    setup_homeassistant: None,
-    mock_habitron_client: MagicMock,
-) -> None:
-    """The user step pre-fills the host field from a UDP-discovered device."""
-    with patch(
-        "homeassistant.components.habitron.config_flow.ConfigFlow._discover_habitron",
-        return_value=[{"host": "udp-host", "ip": "10.0.0.99"}],
+        "homeassistant.components.habitron.config_flow.discover_smarthubs",
+        new=AsyncMock(return_value=[{"ip": "10.0.0.99", "serial": "s"}]),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # The form's data-schema default should now reflect the discovered host.
+    # The form's data-schema default should now reflect the discovered ip.
     schema = result["data_schema"].schema
     # Find the KEY_HOST default by walking the schema vol.Required keys.
     default = None
@@ -897,20 +534,20 @@ async def test_user_step_prefills_host_from_udp_discovery(
         if getattr(key, "schema", None) == "habitron_host":
             default = key.default()
             break
-    assert default == "udp-host"
+    assert default == "10.0.0.99"
 
 
-async def test_user_flow_picks_up_serial_from_udp_probe(
+async def test_user_flow_picks_up_serial_from_discovery_probe(
     hass: HomeAssistant,
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
     mock_smart_hub_setup: None,
     mock_coordinator_refresh,
 ) -> None:
-    """A matching UDP serial becomes the unique id."""
+    """A matching discovery serial becomes the unique id."""
     with patch(
-        "homeassistant.components.habitron.config_flow.ConfigFlow._discover_habitron",
-        return_value=[{"host": MOCK_HOST, "ip": MOCK_HOST, "serial": "SERIAL-X"}],
+        "homeassistant.components.habitron.config_flow.discover_smarthubs",
+        new=AsyncMock(return_value=[{"ip": MOCK_HOST, "serial": "SERIAL-X"}]),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

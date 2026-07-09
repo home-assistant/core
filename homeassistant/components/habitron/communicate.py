@@ -5,7 +5,7 @@ import ipaddress
 import logging
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 import anyio
 from habitron_client import (
@@ -27,9 +27,6 @@ from homeassistant.loader import async_get_integration
 
 from .const import DOMAIN
 
-if TYPE_CHECKING:
-    from .smart_hub import SmartHub
-
 DATA_FILES_ADDON_DIR = "/addon_configs/"
 DEF_TOKEN_FILE = "def_token.set"
 
@@ -37,13 +34,10 @@ DEF_TOKEN_FILE = "def_token.set"
 class HbtnComm:
     """Habitron communication wrapper class mapping to Home Assistant."""
 
-    def __init__(
-        self, hass: HomeAssistant, config: ConfigEntry, smhub: SmartHub
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config: ConfigEntry) -> None:
         """Init CommTest for connection test."""
         self._name: str = "HbtnComm"
         self._host_conf: str = config.data["habitron_host"]
-        self.smhub: SmartHub = smhub
         self.logger = logging.getLogger(__name__)
 
         if self.is_valid_ipv4(self._host_conf):
@@ -82,7 +76,8 @@ class HbtnComm:
         # other's dedup (extra reads, occasionally a missed status change).
         self.crc: int = 0
         self._stream_crc: dict[str, int] = {}
-        self._rtr: Router
+        # Empty model until ``set_router`` stores the built one.
+        self._rtr: Router = Router()
         self.update_suspended: bool = False
         self._last_status: bytes = b""  # last compact status, for change detection
         self.is_addon: bool = True  # will be set in get_smhub_info()
@@ -110,8 +105,6 @@ class HbtnComm:
     @property
     def router(self) -> Router:
         """Return the parsed router model."""
-        if not hasattr(self, "_rtr"):
-            return self.smhub.router
         return self._rtr
 
     def _module_by_addr(self, mod_addr: int) -> Module | None:
@@ -300,8 +293,6 @@ class HbtnComm:
         if self.update_suspended:
             # disable update to avoid conflict with SmartConfig or other communication
             return self.crc
-        # Refresh the hub-level diagnostics (CPU/memory/...) alongside the bus.
-        await self.smhub.update()
         self.crc = await async_refresh_system(
             self.client, self.router, last_crc=self.crc
         )

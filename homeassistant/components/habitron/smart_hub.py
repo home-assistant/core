@@ -14,9 +14,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, device_registry as dr
 
-from .communicate import HbtnComm as hbtn_com
+from .communicate import HbtnComm
 from .const import DOMAIN
-from .coordinator import HbtnCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,16 +29,23 @@ def _area_name(router: Router, area_no: int) -> str:
 
 
 class SmartHub:
-    """Habitron SmartHub: connects, builds the device model, owns the coordinator."""
+    """Habitron SmartHub: connects and builds the device model.
+
+    Receives the ``HbtnComm`` transport from the coordinator (which owns both);
+    the SmartHub connects, builds the bus model, registers the hub/bus devices
+    and refreshes the hub host-diagnostics.
+    """
 
     manufacturer = "Habitron GmbH"
 
-    def __init__(self, hass: HomeAssistant, config: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config: ConfigEntry, comm: HbtnComm
+    ) -> None:
         """Init SmartHub."""
         self.hass: HomeAssistant = hass
         self.config: ConfigEntry = config
         self._name: str = config.title
-        self.comm = hbtn_com(hass, config, self)
+        self.comm = comm
 
         # Temporary placeholders until async_setup runs
         self._mac = "00:00:00:00:00:00"
@@ -50,7 +56,6 @@ class SmartHub:
         self.online: bool = True
         # Empty model until async_setup builds it from the bus.
         self.router: Router = Router()
-        self.coordinator: HbtnCoordinator = HbtnCoordinator(hass, config, self.comm)
         self.addon_slug: str = ""
         self.base_url: str = ""
         self.host = self.comm.com_ip

@@ -16,6 +16,12 @@
       "logic_state": {
         "default": "mdi:counter"
       },
+      "module_status": {
+        "default": "mdi:lan-disconnect",
+        "state": {
+          "0": "mdi:lan-check"
+        }
+      },
       "time_out": {
         "default": "mdi:timer-alert-outline"
       },
