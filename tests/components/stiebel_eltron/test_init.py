@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from modbus_connection import ModbusError
+from modbus_connection import ModbusError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import StiebelEltronModbusError
 
@@ -60,6 +60,21 @@ async def test_async_setup_entry_without_port(
 
     assert result is True
     mock_connect_tcp.assert_called_once_with("192.168.1.100", port=502)
+
+
+async def test_async_setup_entry_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connect_tcp: AsyncMock,
+) -> None:
+    """Test setup retries when the connection cannot be opened."""
+    mock_connect_tcp.side_effect = ModbusTimeoutError("could not connect")
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert result is False
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_async_setup_entry_modbus_error(

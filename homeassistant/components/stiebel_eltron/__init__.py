@@ -2,7 +2,7 @@
 
 import logging
 
-from modbus_connection import ModbusConnectionError
+from modbus_connection import ModbusError
 from modbus_connection.pymodbus import connect_tcp
 from pystiebeleltron import StiebelEltronModbusError, get_controller_model
 
@@ -27,7 +27,7 @@ async def async_setup_entry(
 
     try:
         connection = await connect_tcp(host, port=port)
-    except ModbusConnectionError as exception:
+    except ModbusError as exception:
         raise ConfigEntryNotReady("Could not connect to device") from exception
     entry.async_on_unload(connection.close)
 
