@@ -320,6 +320,8 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
                 mail.sendmail(self._sender, recipients, msg.as_string())
                 break
             except SMTPServerDisconnected as e:
+                with suppress(SMTPException):
+                    mail.quit()
                 if attempt == self.tries - 1:
                     _LOGGER.debug("Full exception:", exc_info=True)
                     raise HomeAssistantError(
@@ -330,11 +332,10 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
                     "SMTPServerDisconnected sending mail: retrying connection",
                     exc_info=_LOGGER.isEnabledFor(logging.DEBUG),
                 )
-                with suppress(SMTPException):
-                    mail.quit()
-
                 mail = self.connect()
             except SMTPException as e:
+                with suppress(SMTPException):
+                    mail.quit()
                 if attempt == self.tries - 1:
                     _LOGGER.debug("Full exception:", exc_info=True)
                     raise HomeAssistantError(
@@ -345,8 +346,6 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
                     "SMTPException sending mail: retrying connection",
                     exc_info=_LOGGER.isEnabledFor(logging.DEBUG),
                 )
-                with suppress(SMTPException):
-                    mail.quit()
                 mail = self.connect()
         with suppress(SMTPException):
             mail.quit()
