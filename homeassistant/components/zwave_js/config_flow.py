@@ -1191,13 +1191,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # so only one config entry may use the add-on.
             return self.async_abort(reason="addon_already_configured")
 
-        # Abort other flows that are still at a discovery prompt, since the
-        # new entry may make them redundant. Flows that have progressed
-        # further, e.g. a migration that has backed up the network,
-        # must not be interrupted.
-        for progress in self._async_in_progress():
-            if progress.get("step_id") in ABORT_SAFE_STEPS:
-                self.hass.config_entries.flow.async_abort(progress["flow_id"])
+        self._async_abort_other_prompt_flows()
 
         return self.async_create_entry(
             title=TITLE,
@@ -1642,7 +1636,20 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Migration done."""
+        self._async_abort_other_prompt_flows()
         return self.async_abort(reason="migration_successful")
+
+    @callback
+    def _async_abort_other_prompt_flows(self) -> None:
+        """Abort other flows that are only showing a prompt.
+
+        A created entry or a finished migration may make them redundant.
+        Flows that have progressed further, e.g. a migration that has
+        backed up the network, must not be interrupted.
+        """
+        for progress in self._async_in_progress():
+            if progress.get("step_id") in ABORT_SAFE_STEPS:
+                self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
     async def async_step_finish_addon_setup_migrate(
         self, user_input: dict[str, Any] | None = None
@@ -1726,6 +1733,19 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if not is_hassio(self.hass):
             return self.async_abort(reason="not_hassio")
 
+        if any(
+            flow
+            for flow in self._async_in_progress()
+            if flow["context"].get("source") != SOURCE_ZEROCONF
+            and flow.get("step_id") not in ABORT_SAFE_STEPS
+        ):
+            # Another flow is past the point of only showing a prompt,
+            # e.g. a migration that has backed up the network.
+            # This discovery may change the shared add-on config,
+            # so don't interfere. ESPHome fires the discovery again
+            # on the next device reconnect.
+            return self.async_abort(reason="already_in_progress")
+
         if discovery_info.zwave_home_id:
             existing_entry: ConfigEntry | None = None
             if (
@@ -1778,13 +1798,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="already_configured")
 
             # We are not aborting if home ID configured
-            # here, we just want to make sure that it's set
+            # here, we just want to make sure that it's set.
             # We will update a USB based config entry
             # automatically in
-            # `async_step_finish_addon_setup_user`
-            await self.async_set_unique_id(
-                str(discovery_info.zwave_home_id), raise_on_progress=False
-            )
+            # `async_step_finish_addon_setup_user`.
+            # Raise on progress to avoid a duplicate prompt when the same
+            # adapter is rediscovered, e.g. with a new IP address.
+            await self.async_set_unique_id(str(discovery_info.zwave_home_id))
 
         self.socket_path = discovery_info.socket_path
         home_id_display = format_home_id_for_display(discovery_info.zwave_home_id)
