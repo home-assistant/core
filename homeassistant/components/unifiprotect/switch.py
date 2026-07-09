@@ -9,6 +9,7 @@ from uiprotect.data import (
     Camera,
     ModelType,
     ProtectAdoptableDeviceModel,
+    PublicDeviceModel,
     PublicHdrMode,
     PublicRelayOutput,
     RecordingMode,
@@ -18,7 +19,7 @@ from uiprotect.data import (
     SmartDetectObjectType,
     VideoMode,
 )
-from uiprotect.data.public_devices import PublicCamera, PublicDeviceModel
+from uiprotect.data.public_devices import PublicCamera
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -659,14 +660,19 @@ class ProtectRelayOutputSwitch(SwitchEntity):
         )
 
     @callback
-    def _async_updated(self, relay: Relay) -> None:
-        """Handle a public relay WS update for this relay."""
+    def _async_updated(self, _obj: PublicDeviceModel | None) -> None:
+        """Handle a public devices WS update for this relay.
+
+        The state is always re-read from the public bootstrap: the library
+        merges WS updates into it before dispatching, and ``None`` carries no
+        object to read.
+        """
         prev_state = (self._attr_available, self._attr_is_on)
-        self._update_from_relay(relay)
-        # If the relay was removed from the bootstrap while the WS update
-        # was in flight, mark unavailable so commands cannot succeed.
-        if self._relay is None:
+        if (relay := self._relay) is None:
+            # Gone from the bootstrap (delete event): commands cannot succeed.
             self._attr_available = False
+        else:
+            self._update_from_relay(relay)
         if (self._attr_available, self._attr_is_on) != prev_state:
             self.async_write_ha_state()
 
@@ -675,8 +681,11 @@ class ProtectRelayOutputSwitch(SwitchEntity):
         """Subscribe to public relay WS updates dispatched by ProtectData."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.data.async_subscribe_relay(self._relay_mac, self._async_updated)
+            self.data.async_subscribe_public(self._relay_mac, self._async_updated)
         )
+        # Refresh from the bootstrap: a WS update or delete that landed between
+        # entity construction and this subscription would otherwise be missed.
+        self._async_updated(None)
 
     async def _activate_output(self, state: Literal["on", "off"]) -> None:
         """Send activate_output to the relay, raising if unavailable."""

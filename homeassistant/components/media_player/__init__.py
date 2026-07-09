@@ -202,31 +202,31 @@ MEDIA_PLAYER_BROWSE_MEDIA_SCHEMA = {
 }
 
 
-ATTR_TO_PROPERTY = [
-    MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
-    MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED,
-    MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID,
-    MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE,
-    MediaPlayerEntityStateAttribute.MEDIA_DURATION,
-    MediaPlayerEntityStateAttribute.MEDIA_POSITION,
-    MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT,
-    MediaPlayerEntityStateAttribute.MEDIA_TITLE,
-    MediaPlayerEntityStateAttribute.MEDIA_ARTIST,
-    MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME,
-    MediaPlayerEntityStateAttribute.MEDIA_ALBUM_ARTIST,
-    MediaPlayerEntityStateAttribute.MEDIA_TRACK,
-    MediaPlayerEntityStateAttribute.MEDIA_SERIES_TITLE,
-    MediaPlayerEntityStateAttribute.MEDIA_SEASON,
-    MediaPlayerEntityStateAttribute.MEDIA_EPISODE,
-    MediaPlayerEntityStateAttribute.MEDIA_CHANNEL,
-    MediaPlayerEntityStateAttribute.MEDIA_PLAYLIST,
-    MediaPlayerEntityStateAttribute.APP_ID,
-    MediaPlayerEntityStateAttribute.APP_NAME,
-    MediaPlayerEntityStateAttribute.INPUT_SOURCE,
-    MediaPlayerEntityStateAttribute.SOUND_MODE,
-    MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE,
-    MediaPlayerEntityStateAttribute.MEDIA_REPEAT,
-]
+PROP_TO_ATTR = {
+    "volume_level": MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
+    "is_volume_muted": MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED,
+    "media_content_id": MediaPlayerEntityStateAttribute.MEDIA_CONTENT_ID,
+    "media_content_type": MediaPlayerEntityStateAttribute.MEDIA_CONTENT_TYPE,
+    "media_duration": MediaPlayerEntityStateAttribute.MEDIA_DURATION,
+    "media_position": MediaPlayerEntityStateAttribute.MEDIA_POSITION,
+    "media_position_updated_at": MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT,
+    "media_title": MediaPlayerEntityStateAttribute.MEDIA_TITLE,
+    "media_artist": MediaPlayerEntityStateAttribute.MEDIA_ARTIST,
+    "media_album_name": MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME,
+    "media_album_artist": MediaPlayerEntityStateAttribute.MEDIA_ALBUM_ARTIST,
+    "media_track": MediaPlayerEntityStateAttribute.MEDIA_TRACK,
+    "media_series_title": MediaPlayerEntityStateAttribute.MEDIA_SERIES_TITLE,
+    "media_season": MediaPlayerEntityStateAttribute.MEDIA_SEASON,
+    "media_episode": MediaPlayerEntityStateAttribute.MEDIA_EPISODE,
+    "media_channel": MediaPlayerEntityStateAttribute.MEDIA_CHANNEL,
+    "media_playlist": MediaPlayerEntityStateAttribute.MEDIA_PLAYLIST,
+    "app_id": MediaPlayerEntityStateAttribute.APP_ID,
+    "app_name": MediaPlayerEntityStateAttribute.APP_NAME,
+    "source": MediaPlayerEntityStateAttribute.INPUT_SOURCE,
+    "sound_mode": MediaPlayerEntityStateAttribute.SOUND_MODE,
+    "shuffle": MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE,
+    "repeat": MediaPlayerEntityStateAttribute.MEDIA_REPEAT,
+}
 
 # mypy: disallow-any-generics
 
@@ -1141,8 +1141,8 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if self.state == MediaPlayerState.OFF:
             return state_attr
 
-        for attr in ATTR_TO_PROPERTY:
-            if (value := getattr(self, attr)) is not None:
+        for prop, attr in PROP_TO_ATTR.items():
+            if (value := getattr(self, prop)) is not None:
                 state_attr[attr] = value
 
         if self.media_image_remotely_accessible:

@@ -76,6 +76,7 @@ __all__ = [
     "PLATFORM_SCHEMA_BASE",
     "NumberDeviceClass",
     "NumberEntity",
+    "NumberEntityCapabilityAttribute",
     "NumberEntityDescription",
     "NumberExtraStoredData",
     "NumberMode",
