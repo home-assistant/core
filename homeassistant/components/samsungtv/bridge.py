@@ -649,7 +649,6 @@ class SamsungTVWSBridge(
                 )
                 self._remote = None
             except ConnectionFailure as err:
-                error_details = err.args[0]
                 if "ms.channel.timeOut" in (error_details := repr(err)):
                     # The websocket was connected, but the TV is probably asleep
                     LOGGER.debug(

@@ -344,3 +344,121 @@ async def test_coordinator_mixed_partial_failure(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+# Park-and-ride sensor tests
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_park_and_ride_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_park_and_ride_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test all park-and-ride sensor entities (state, attributes, registry)."""
+    with patch("homeassistant.components.data_grand_lyon.PLATFORMS", [Platform.SENSOR]):
+        mock_park_and_ride_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_park_and_ride_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_park_and_ride_config_entry.entry_id
+    )
+
+
+async def test_park_and_ride_sensor_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_park_and_ride_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test that diagnostic park-and-ride sensors are disabled by default."""
+    mock_park_and_ride_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_park_and_ride_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for unique_id in ("park_and_ride_P+R Gorge de Loup-accessible_spaces",):
+        entry = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        assert entry is not None, unique_id
+        reg_entry = entity_registry.async_get(entry)
+        assert reg_entry is not None, unique_id
+        assert reg_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    for unique_id in (
+        "park_and_ride_P+R Gorge de Loup-available_spaces",
+        "park_and_ride_P+R Gorge de Loup-capacity",
+    ):
+        entry = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        assert entry is not None, unique_id
+        reg_entry = entity_registry.async_get(entry)
+        assert reg_entry is not None, unique_id
+        assert reg_entry.disabled_by is None
+
+
+async def test_park_and_ride_sensor_no_data(
+    hass: HomeAssistant,
+    mock_park_and_ride_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test that park-and-ride sensors are unavailable when facility not found."""
+    mock_tcl_client.get_tcl_park_and_rides.return_value = []
+    mock_park_and_ride_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_park_and_ride_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.gorge_de_loup_available_parking_spaces")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_coordinator_park_and_ride_auth_error(
+    hass: HomeAssistant,
+    mock_park_and_ride_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test coordinator triggers reauth on park-and-ride auth failure."""
+    mock_tcl_client.get_tcl_park_and_rides.side_effect = ClientResponseError(
+        Mock(), (), status=401
+    )
+    mock_park_and_ride_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_park_and_ride_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_park_and_ride_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert any(flow["context"].get("source") == SOURCE_REAUTH for flow in flows)
+
+
+async def test_coordinator_park_and_ride_http_error(
+    hass: HomeAssistant,
+    mock_park_and_ride_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test coordinator raises UpdateFailed on non-auth HTTP errors for P+R."""
+    mock_tcl_client.get_tcl_park_and_rides.side_effect = ClientResponseError(
+        Mock(), (), status=500
+    )
+    mock_park_and_ride_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_park_and_ride_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_park_and_ride_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_park_and_ride_fetch_error(
+    hass: HomeAssistant,
+    mock_park_and_ride_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test coordinator raises UpdateFailed on park-and-ride fetch error."""
+    mock_tcl_client.get_tcl_park_and_rides.side_effect = ClientConnectionError(
+        "API down"
+    )
+    mock_park_and_ride_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_park_and_ride_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_park_and_ride_config_entry.state is ConfigEntryState.SETUP_RETRY
