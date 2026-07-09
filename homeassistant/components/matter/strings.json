@@ -155,6 +155,11 @@
         "name": "Temporary mute"
       }
     },
+    "camera": {
+      "camera": {
+        "name": "[%key:component::camera::title%]"
+      }
+    },
     "climate": {
       "thermostat": {
         "name": "Thermostat",
