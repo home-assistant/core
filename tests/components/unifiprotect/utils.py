@@ -439,9 +439,7 @@ def setup_public_camera(ufp: MockUFPFixture) -> None:
             model is ModelType.CAMERA
             and (private := ufp.api.bootstrap.cameras.get(obj_id)) is not None
         ):
-            public_bootstrap.cameras[obj_id] = make_public_camera(
-                private, mic_volume=private.mic_volume
-            )
+            public_bootstrap.cameras[obj_id] = make_public_camera(private)
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
