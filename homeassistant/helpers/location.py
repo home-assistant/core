@@ -35,7 +35,10 @@ def get_location(state: State) -> tuple[float, float] | None:
     """
     if not has_location(state):
         return None
-    return (state.attributes[ATTR_LATITUDE], state.attributes[ATTR_LONGITUDE])
+    return (
+        state.attributes[EntityStateAttribute.LATITUDE],
+        state.attributes[EntityStateAttribute.LONGITUDE],
+    )
 
 
 def closest(latitude: float, longitude: float, states: Iterable[State]) -> State | None:
