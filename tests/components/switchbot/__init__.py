@@ -589,7 +589,7 @@ CIRCULATOR_FAN_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
-REMOTE_WITH_SCREEN_SERVICE_INFO = BluetoothServiceInfoBleak(
+UNIVERSAL_REMOTE_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="Universal Remote",
     manufacturer_data={
         2409: b"\xaa\xbb\xcc\xdd\xee\xff\x00\x00\x00\x50\x00\x00\x00\x00\x00\x00"

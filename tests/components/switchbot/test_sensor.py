@@ -41,7 +41,7 @@ from . import (
     PRESENCE_SENSOR_SERVICE_INFO,
     RELAY_SWITCH_2PM_SERVICE_INFO,
     REMOTE_SERVICE_INFO,
-    REMOTE_WITH_SCREEN_SERVICE_INFO,
+    UNIVERSAL_REMOTE_SERVICE_INFO,
     WEATHER_STATION_SERVICE_INFO,
     WOHAND_SERVICE_INFO,
     WOHUB2_SERVICE_INFO,
@@ -295,17 +295,17 @@ async def test_remote(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_remote_with_screen_sensor(hass: HomeAssistant) -> None:
-    """Test setting up the Remote With Screen (Universal Remote) battery sensor."""
+async def test_universal_remote_sensor(hass: HomeAssistant) -> None:
+    """Test setting up the Universal Remote battery sensor."""
     await async_setup_component(hass, DOMAIN, {})
-    inject_bluetooth_service_info(hass, REMOTE_WITH_SCREEN_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, UNIVERSAL_REMOTE_SERVICE_INFO)
 
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
             CONF_NAME: "test-name",
-            CONF_SENSOR_TYPE: "remote_with_screen",
+            CONF_SENSOR_TYPE: "universal_remote",
         },
         unique_id="aabbccddeeff",
     )

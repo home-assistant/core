@@ -192,7 +192,7 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
     ],
     SupportedModels.WEATHER_STATION.value: [Platform.SENSOR],
-    SupportedModels.REMOTE_WITH_SCREEN.value: [Platform.SENSOR],
+    SupportedModels.UNIVERSAL_REMOTE.value: [Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -210,7 +210,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.ROLLER_SHADE.value: switchbot.SwitchbotRollerShade,
     SupportedModels.CIRCULATOR_FAN.value: switchbot.SwitchbotFan,
     SupportedModels.STANDING_FAN.value: switchbot.SwitchbotStandingFan,
-    SupportedModels.REMOTE_WITH_SCREEN.value: switchbot.SwitchbotRemoteWithScreen,
+    SupportedModels.UNIVERSAL_REMOTE.value: switchbot.SwitchbotUniversalRemote,
     SupportedModels.S10_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.S20_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.K10_VACUUM.value: switchbot.SwitchbotVacuum,
