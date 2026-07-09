@@ -3,8 +3,8 @@
 import pytest
 
 from homeassistant.components.select.const import (
+    ATTR_OPTIONS,
     DOMAIN,
-    SelectEntityCapabilityAttribute,
     SelectServiceArgument,
 )
 from homeassistant.const import ATTR_ENTITY_ID
@@ -25,7 +25,7 @@ async def test_reproducing_states(
         "select.test",
         "option_one",
         {
-            SelectEntityCapabilityAttribute.OPTIONS: [
+            ATTR_OPTIONS: [
                 "option_one",
                 "option_two",
                 "option_three",
