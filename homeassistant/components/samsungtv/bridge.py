@@ -502,11 +502,11 @@ class SamsungTVWSBridge(
         self._rest_api: SamsungTVAsyncRest | None = None
         self._device_info: dict[str, Any] | None = None
 
-    def _get_device_spec(self, key: str) -> Any | None:
+    def _get_device_spec(self, key: str) -> str | None:
         """Check if a flag exists in latest device info."""
         if not ((info := self._device_info) and (device := info.get("device"))):
             return None
-        return device.get(key)
+        return cast(str | None, device.get(key))
 
     @override
     async def async_is_on(self) -> bool:

@@ -164,7 +164,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
                 await self._dmr_device.async_unsubscribe_services()
             return
 
-        startup_tasks: list[asyncio.Task[Any]] = []
+        startup_tasks: list[asyncio.Task[None]] = []
 
         if not self._app_list_event.is_set():
             startup_tasks.append(create_eager_task(self._async_startup_app_list()))
