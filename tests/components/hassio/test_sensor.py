@@ -120,7 +120,7 @@ async def test_sensor(
         result = await async_setup_component(
             hass,
             DOMAIN,
-            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+            {"hassio": {}},
         )
         assert result
     await hass.async_block_till_done()
@@ -171,7 +171,7 @@ async def test_stats_addon_sensor(
     assert await async_setup_component(
         hass,
         DOMAIN,
-        {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        {"hassio": {}},
     )
     await hass.async_block_till_done()
 

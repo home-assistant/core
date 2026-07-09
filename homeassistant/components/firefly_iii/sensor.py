@@ -1,5 +1,7 @@
 """Sensor platform for Firefly III integration."""
 
+from typing import override
+
 from pyfirefly.models import Account, Budget, Category
 
 from homeassistant.components.sensor import (
@@ -93,6 +95,7 @@ class FireflyAccountBalanceSensor(FireflyAccountBaseEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return current account balance."""
         return self._account.attributes.current_balance
@@ -106,6 +109,7 @@ class FireflyAccountRoleSensor(FireflyAccountBaseEntity, SensorEntity):
     _attr_entity_registry_enabled_default = True
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return account role."""
 
@@ -140,6 +144,7 @@ class FireflyAccountTypeSensor(FireflyAccountBaseEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return account type."""
         return self._account.attributes.type
@@ -165,6 +170,7 @@ class FireflyCategorySensor(FireflyCategoryBaseEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return net spent+earned value for this category in the period."""
         spent_items = self._category.attributes.spent or []
@@ -196,6 +202,7 @@ class FireflyBudgetSensor(FireflyBudgetBaseEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return spent value for this budget in the period."""
         spent_items = self._budget.attributes.spent or []

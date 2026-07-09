@@ -1,6 +1,6 @@
 """Config flow for WiiM integration."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from wiim.discovery import async_probe_wiim_device
@@ -43,6 +43,7 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _discovered_info: WiimProbeResult | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -77,6 +78,7 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

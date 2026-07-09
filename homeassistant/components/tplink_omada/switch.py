@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from tplink_omada_client import (
     GatewayPortSettings,
@@ -294,6 +294,7 @@ class OmadaDevicePortSwitchEntity[
         self._attr_unique_id = f"{device.mac}_{port_id}_{entity_description.key}"
         self._attr_translation_placeholders = {"port_name": port_name or port_id}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -312,15 +313,18 @@ class OmadaDevicePortSwitchEntity[
             await self.coordinator.async_request_refresh()
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._async_turn_on_off(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._async_turn_on_off(False)
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if entity is available."""
         return bool(
@@ -338,6 +342,7 @@ class OmadaDevicePortSwitchEntity[
             self._attr_is_on = self.entity_description.update_func(self._port_details)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._do_update()

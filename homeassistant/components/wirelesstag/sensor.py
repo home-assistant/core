@@ -1,6 +1,7 @@
 """Sensor support for Wireless Sensor Tags platform."""
 
 import logging
+from typing import override
 
 import voluptuous as vol
 from wirelesstagpy import SensorTag
@@ -117,6 +118,7 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         # sensor.bedroom_2 for humidity
         self.entity_id = f"sensor.{DOMAIN}_{self.underscored_name}_{self._sensor_type}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -133,16 +135,19 @@ class WirelessTagSensor(WirelessTagBaseSensor, SensorEntity):
         return self.name.lower().replace(" ", "_")
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._sensor.unit
 
     @property
+    @override
     def principal_value(self):
         """Return sensor current value."""
         return self._sensor.value

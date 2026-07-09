@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import enum
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyControl4.error_handling import C4Exception
 from pyControl4.room import C4Room
@@ -268,6 +268,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def device_class(self) -> MediaPlayerDeviceClass | None:
         """Return the class of this entity."""
         for avail_source in self._sources.values():
@@ -276,6 +277,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         return MediaPlayerDeviceClass.SPEAKER
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """Return whether this room is on or idle."""
 
@@ -288,6 +290,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         return MediaPlayerState.IDLE
 
     @property
+    @override
     def source(self) -> str | None:
         """Get the current source."""
         current_source = self._get_current_playing_device_id()
@@ -296,6 +299,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         return self._sources[current_source].name
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Get the Media Title."""
         media_info = self._get_media_info()
@@ -309,6 +313,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
         return self._sources[current_source].name
 
     @property
+    @override
     def media_content_type(self) -> MediaType | None:
         """Get current content type if available."""
         current_source = self._get_current_playing_device_id()
@@ -318,6 +323,7 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             return MediaType.VIDEO
         return MediaType.MUSIC
 
+    @override
     async def async_media_play_pause(self) -> None:
         """If possible, toggle the current play/pause state.
 
@@ -329,20 +335,24 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             await super().async_media_play_pause()
 
     @property
+    @override
     def source_list(self) -> list[str]:
         """Get the available source."""
         return [x.name for x in self._sources.values()]
 
     @property
+    @override
     def volume_level(self) -> float:
         """Get the volume level."""
         return self.coordinator.data[self._idx][CONTROL4_VOLUME_STATE] / 100
 
     @property
+    @override
     def is_volume_muted(self) -> bool:
         """Check if the volume is muted."""
         return bool(self.coordinator.data[self._idx][CONTROL4_MUTED_STATE])
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select a new source."""
         for avail_source in self._sources.values():
@@ -358,11 +368,13 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
 
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off the room."""
         await self._create_api_object().setRoomOff()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the room."""
         if mute:
@@ -371,31 +383,37 @@ class Control4Room(Control4Entity, MediaPlayerEntity):
             await self._create_api_object().setMuteOff()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set room volume, 0-1 scale."""
         await self._create_api_object().setVolume(int(volume * 100))
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_volume_up(self) -> None:
         """Increase the volume by 1."""
         await self._create_api_object().setIncrementVolume()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_volume_down(self) -> None:
         """Decrease the volume by 1."""
         await self._create_api_object().setDecrementVolume()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_media_pause(self) -> None:
         """Issue a pause command."""
         await self._create_api_object().setPause()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_media_play(self) -> None:
         """Issue a play command."""
         await self._create_api_object().setPlay()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_media_stop(self) -> None:
         """Issue a stop command."""
         await self._create_api_object().setStop()

@@ -5,7 +5,7 @@ from copy import deepcopy
 from enum import StrEnum
 from functools import cache
 import importlib
-from typing import Any, Literal, Required, TypedDict, cast
+from typing import Any, Literal, Required, TypedDict, cast, override
 from uuid import UUID
 
 import voluptuous as vol
@@ -67,6 +67,7 @@ class Selector[_T: Mapping[str, Any]]:
         """Instantiate a selector."""
         self.config = self.CONFIG_SCHEMA(config)
 
+    @override
     def __eq__(self, other: object) -> bool:
         """Check equality."""
         if not isinstance(other, Selector):
@@ -581,6 +582,7 @@ class ChooseSelector(Selector[ChooseSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
+    @override
     def serialize(self) -> dict[str, dict[str, ChooseSelectorConfig]]:
         """Serialize ChooseSelectorConfig for voluptuous_serialize."""
         _config = deepcopy(self.config)
@@ -1676,6 +1678,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
+    @override
     def serialize(self) -> dict[str, dict[str, ObjectSelectorConfig]]:
         """Serialize ObjectSelector for voluptuous_serialize."""
         _config = deepcopy(self.config)

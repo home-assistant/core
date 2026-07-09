@@ -2,7 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
 from teslemetry_stream import TeslemetryStreamVehicle
 from teslemetry_stream.const import TeslaLocation
@@ -77,7 +79,9 @@ async def async_setup_entry(
 
     for vehicle in entry.runtime_data.vehicles:
         for description in DESCRIPTIONS:
-            if vehicle.poll or vehicle.firmware < description.streaming_firmware:
+            if vehicle.poll or not firmware_at_least(
+                vehicle.firmware, description.streaming_firmware
+            ):
                 if description.polling_prefix:
                     entities.append(
                         TeslemetryVehiclePollingDeviceTrackerEntity(
@@ -108,6 +112,7 @@ class TeslemetryVehiclePollingDeviceTrackerEntity(
         self.entity_description = description
         super().__init__(vehicle, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_latitude = self.get(
@@ -137,6 +142,7 @@ class TeslemetryStreamingDeviceTrackerEntity(
         self.entity_description = description
         super().__init__(vehicle, description.key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()

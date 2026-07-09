@@ -1,7 +1,7 @@
 """Support for the Mailgun mail notifications."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pymailgunner import (
     Client,
@@ -92,6 +92,7 @@ class MailgunNotificationService(BaseNotificationService):
             return False
         return True
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a mail to the recipient."""
 

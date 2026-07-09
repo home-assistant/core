@@ -15,6 +15,7 @@ from uiprotect.data import (
     Sensor,
 )
 from uiprotect.data.nvr import EventMetadata
+from uiprotect.data.public_devices import SensorFeatureCapability
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
@@ -92,6 +93,36 @@ async def test_sensor_sensor_remove(
     assert_entity_counts(hass, Platform.SENSOR, 12, 9)
     await adopt_devices(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+
+
+async def test_sensor_sense_capability_creation_filter(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A capability map limits sensor entity creation to the advertised capabilities."""
+    setup_public_sensor(
+        ufp,
+        capabilities={SensorFeatureCapability.OPEN, SensorFeatureCapability.TAMPER},
+    )
+    await init_entry(hass, ufp, [sensor_all])
+
+    for key, created in (
+        ("battery_level", True),
+        ("door_last_trip_time", True),
+        ("tampering_last_trip_time", True),
+        ("temperature_level", False),
+        ("humidity_level", False),
+        ("light_level", False),
+        ("alarm_sound", False),
+        ("motion_last_trip_time", False),
+    ):
+        description = next(d for d in SENSE_SENSORS if d.key == key)
+        _, entity_id = await ids_from_device_description(
+            hass, Platform.SENSOR, sensor_all, description
+        )
+        assert (entity_registry.async_get(entity_id) is not None) is created, key
 
 
 async def test_sensor_setup_sensor(

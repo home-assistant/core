@@ -1,6 +1,7 @@
 """Support for Ubiquiti's UniFi Protect NVR."""
 
 import logging
+from typing import override
 
 from uiprotect.data import (
     Camera as UFPCamera,
@@ -213,6 +214,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._stream_source = source
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         updated_device = self.device
@@ -239,6 +241,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             ATTR_CHANNEL_ID: channel.id,
         }
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -252,16 +255,19 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         )
         return self._last_image
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the Stream Source."""
         return self._stream_source
 
     @async_ufp_instance_command
+    @override
     async def async_enable_motion_detection(self) -> None:
         """Call the job and enable motion detection."""
         await self.device.set_motion_detection(True)
 
     @async_ufp_instance_command
+    @override
     async def async_disable_motion_detection(self) -> None:
         """Call the job and disable motion detection."""
         await self.device.set_motion_detection(False)
