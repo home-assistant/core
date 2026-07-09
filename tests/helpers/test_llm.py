@@ -2021,3 +2021,14 @@ async def test_get_exposed_entities_timestamp_conversion(hass: HomeAssistant) ->
         hass, "conversation", include_state=False
     )
     assert "state" not in exposed_no_state["entities"]["sensor.test_timestamp"]
+
+
+async def test_deprecated_async_render_no_api_prompt(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the deprecated async_render_no_api_prompt helper."""
+    assert llm.async_render_no_api_prompt(hass) == ""
+    assert (
+        "The deprecated function async_render_no_api_prompt was called. It will be "
+        "removed in HA Core 2027.2. Use an empty string instead"
+    ) in caplog.text
