@@ -271,6 +271,23 @@ async def test_all_number(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                 ]
             },
         ),
+        (
+            # unswapped registers would be struct.unpack(">HH", struct.pack(">i", 32)) = (0, 32);
+            # word swap reverses that order before writing.
+            32,
+            list(reversed(struct.unpack(">HH", struct.pack(">i", 32)))),
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_SLAVE: 10,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_SWAP: CONF_SWAP_WORD,
+                    }
+                ]
+            },
+        ),
     ],
 )
 async def test_service_number_set_value(
