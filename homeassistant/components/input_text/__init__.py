@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.components.text import TextEntity
 from homeassistant.const import (  # noqa: F401
-    ATTR_EDITABLE,
     ATTR_MODE,
     CONF_ICON,
     CONF_ID,
@@ -24,6 +23,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
+
+from .const import InputTextEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -192,7 +193,7 @@ class InputTextStorageCollection(collection.DictStorageCollection):
 class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
     """Represent a text box."""
 
-    _unrecorded_attributes = frozenset({ATTR_EDITABLE})
+    _unrecorded_attributes = frozenset({InputTextEntityStateAttribute.EDITABLE})
 
     _attr_should_poll = False
     editable: bool
@@ -234,7 +235,7 @@ class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return {ATTR_EDITABLE: self.editable}
+        return {InputTextEntityStateAttribute.EDITABLE: self.editable}
 
     @override
     async def async_added_to_hass(self) -> None:
