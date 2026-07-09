@@ -1577,7 +1577,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {
             "host": discovery_info.ip_address,
             "port": str(discovery_info.port),
-            "home_id": format_home_id_for_display(discovery_info.zwave_home_id),
+            "home_id": (
+                format_home_id_for_display(discovery_info.zwave_home_id)
+                if discovery_info.zwave_home_id
+                else "New"
+            ),
         }
         self._adapter_discovered = True
 

@@ -1191,7 +1191,7 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     ("service_info", "expected_home_id"),
     [
         (ESPHOME_DISCOVERY_INFO, "0x000004d2"),  # 1234
-        (ESPHOME_DISCOVERY_INFO_CLEAN, "Unknown"),
+        (ESPHOME_DISCOVERY_INFO_CLEAN, "New"),
     ],
 )
 @pytest.mark.usefixtures("supervisor", "addon_info")
