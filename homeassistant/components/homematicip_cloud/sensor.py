@@ -132,6 +132,18 @@ SMOKE_DETECTOR_SENSORS: tuple[HmipSmokeDetectorSensorDescription, ...] = (
     ),
 )
 
+
+@dataclass(frozen=True, kw_only=True)
+class HmipSensorDescription[_DeviceT: Device](SensorEntityDescription):
+    """Describe a simple HomematicIP sensor."""
+
+    value_fn: Callable[[_DeviceT], StateType]
+    exists_fn: Callable[[_DeviceT], bool] = lambda _: True
+    extra_attrs_fn: Callable[[_DeviceT], dict[str, Any]] | None = None
+    icon_fn: Callable[[_DeviceT], str] | None = None
+    channel: int
+
+
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
 ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE = "acceleration_sensor_trigger_angle"
 ATTR_ACCELERATION_SENSOR_SECOND_TRIGGER_ANGLE = (
@@ -168,72 +180,300 @@ TILT_STATE_VALUES = ["neutral", "tilted", "non_neutral"]
 WINDOW_STATE_VALUES = ["open", "closed", "tilted"]
 
 
-def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
-    """Generate a mapping of device types to handler functions."""
+def _temperature_value(device: Device) -> float | None:
+    if hasattr(device, "valveActualTemperature"):
+        return device.valveActualTemperature
+    return getattr(device, "actualTemperature", None)
+
+
+def _temperature_extras(device: Device) -> dict[str, Any]:
+    offset = getattr(device, "temperatureOffset", None)
+    if offset is not None:
+        return {ATTR_TEMPERATURE_OFFSET: offset}
+    return {}
+
+
+def _illuminance_value(device: Device) -> float | None:
+    if hasattr(device, "averageIllumination"):
+        return device.averageIllumination
+    return getattr(device, "illumination", None)
+
+
+def _illuminance_extras(device: Device) -> dict[str, Any]:
     return {
-        HomeControlAccessPoint: lambda device: [
-            HomematicipAccesspointDutyCycle(hap, device)
-        ],
-        HeatingThermostat: lambda device: [
-            HomematicipHeatingThermostat(hap, device),
-            HomematicipTemperatureSensor(hap, device),
-        ],
-        HeatingThermostatCompact: lambda device: [
-            HomematicipHeatingThermostat(hap, device),
-            HomematicipTemperatureSensor(hap, device),
-        ],
-        HeatingThermostatEvo: lambda device: [
-            HomematicipHeatingThermostat(hap, device),
-            HomematicipTemperatureSensor(hap, device),
-        ],
-        TemperatureHumiditySensorDisplay: lambda device: [
-            HomematicipTemperatureSensor(hap, device),
-            HomematicipHumiditySensor(hap, device),
-            HomematicipAbsoluteHumiditySensor(hap, device),
-        ],
-        TemperatureHumiditySensorWithoutDisplay: lambda device: [
-            HomematicipTemperatureSensor(hap, device),
-            HomematicipHumiditySensor(hap, device),
-            HomematicipAbsoluteHumiditySensor(hap, device),
-        ],
-        TemperatureHumiditySensorOutdoor: lambda device: [
-            HomematicipTemperatureSensor(hap, device),
-            HomematicipHumiditySensor(hap, device),
-            HomematicipAbsoluteHumiditySensor(hap, device),
-        ],
-        RoomControlDeviceAnalog: lambda device: [
-            HomematicipTemperatureSensor(hap, device),
-        ],
+        attr_key: value
+        for attr, attr_key in ILLUMINATION_DEVICE_ATTRIBUTES.items()
+        if (value := getattr(device, attr, None)) is not None
+    }
+
+
+def _absolute_humidity_value(device: Device) -> float | None:
+    value = getattr(device, "vaporAmount", None)
+    if value is None or value == "":
+        return None
+    return value
+
+
+def _windspeed_extras(device: Device) -> dict[str, Any]:
+    extras: dict[str, Any] = {}
+    wind_direction = getattr(device, "windDirection", None)
+    if wind_direction is not None:
+        extras[ATTR_WIND_DIRECTION] = _get_wind_direction(wind_direction)
+    wind_direction_variation = getattr(device, "windDirectionVariation", None)
+    if wind_direction_variation is not None:
+        extras[ATTR_WIND_DIRECTION_VARIATION] = wind_direction_variation
+    return extras
+
+
+def _heating_valve_value(device: Device) -> int | None:
+    if device.valveState != ValveState.ADAPTION_DONE:
+        return None
+    return round(device.valvePosition * 100)
+
+
+def _heating_valve_icon(device: Device) -> str:
+    if device.valveState != ValveState.ADAPTION_DONE:
+        return "mdi:alert"
+    return "mdi:radiator"
+
+
+def _passage_counter_extras(device: Device) -> dict[str, Any]:
+    return {
+        ATTR_LEFT_COUNTER: device.leftCounter,
+        ATTR_RIGHT_COUNTER: device.rightCounter,
+    }
+
+
+def _tilt_angle_value(device: Device) -> int | None:
+    channels = getattr(device, "functionalChannels", None)
+    if not channels:
+        return None
+    ch = (
+        channels.get(1)
+        if isinstance(channels, dict)
+        else (channels[1] if len(channels) > 1 else None)
+    )
+    return getattr(ch, "absoluteAngle", None) if ch else None
+
+
+TEMPERATURE_DESC = HmipSensorDescription[Device](
+    key="temperature",
+    device_class=SensorDeviceClass.TEMPERATURE,
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=_temperature_value,
+    extra_attrs_fn=_temperature_extras,
+    channel=1,
+)
+
+HUMIDITY_DESC = HmipSensorDescription[Device](
+    key="humidity",
+    device_class=SensorDeviceClass.HUMIDITY,
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda d: d.humidity,
+    channel=1,
+)
+
+ABSOLUTE_HUMIDITY_DESC = HmipSensorDescription[Device](
+    key="absolute_humidity",
+    device_class=SensorDeviceClass.ABSOLUTE_HUMIDITY,
+    native_unit_of_measurement=UnitOfDensity.GRAMS_PER_CUBIC_METER,
+    suggested_display_precision=1,
+    suggested_unit_of_measurement=UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=_absolute_humidity_value,
+    channel=1,
+)
+
+ILLUMINANCE_DESC = HmipSensorDescription[Device](
+    key="illuminance",
+    device_class=SensorDeviceClass.ILLUMINANCE,
+    native_unit_of_measurement=LIGHT_LUX,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=_illuminance_value,
+    extra_attrs_fn=_illuminance_extras,
+    channel=1,
+)
+
+POWER_DESC = HmipSensorDescription[Device](
+    key="power",
+    device_class=SensorDeviceClass.POWER,
+    native_unit_of_measurement=UnitOfPower.WATT,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda d: d.currentPowerConsumption,
+    channel=1,
+)
+
+ENERGY_DESC = HmipSensorDescription[Device](
+    key="energy",
+    device_class=SensorDeviceClass.ENERGY,
+    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    state_class=SensorStateClass.TOTAL_INCREASING,
+    value_fn=lambda d: d.energyCounter,
+    channel=1,
+)
+
+WIND_SPEED_DESC = HmipSensorDescription[Device](
+    key="wind_speed",
+    device_class=SensorDeviceClass.WIND_SPEED,
+    native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda d: d.windSpeed,
+    extra_attrs_fn=_windspeed_extras,
+    channel=1,
+)
+
+TODAY_RAIN_DESC = HmipSensorDescription[Device](
+    key="today_rain",
+    translation_key="today_rain",
+    device_class=SensorDeviceClass.PRECIPITATION,
+    native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda d: round(d.todayRainCounter, 2),
+    channel=1,
+)
+
+TEMPERATURE_EXTERNAL_CH1_DESC = HmipSensorDescription[Device](
+    key="temperature_external_ch1",
+    translation_key="channel_1_temperature",
+    device_class=SensorDeviceClass.TEMPERATURE,
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda d: d.temperatureExternalOne,
+    channel=1,
+)
+
+TEMPERATURE_EXTERNAL_CH2_DESC = HmipSensorDescription[Device](
+    key="temperature_external_ch2",
+    translation_key="channel_2_temperature",
+    device_class=SensorDeviceClass.TEMPERATURE,
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda d: d.temperatureExternalTwo,
+    channel=1,
+)
+
+TEMPERATURE_EXTERNAL_DELTA_DESC = HmipSensorDescription[Device](
+    key="temperature_external_delta",
+    translation_key="delta_temperature",
+    device_class=SensorDeviceClass.TEMPERATURE,
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda d: d.temperatureExternalDelta,
+    channel=1,
+)
+
+DUTY_CYCLE_DESC = HmipSensorDescription[Device](
+    key="duty_cycle",
+    translation_key="duty_cycle",
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+    state_class=SensorStateClass.MEASUREMENT,
+    icon="mdi:access-point-network",
+    value_fn=lambda d: d.dutyCycleLevel,
+    channel=0,
+)
+
+VALVE_POSITION_DESC = HmipSensorDescription[Device](
+    key="valve_position",
+    translation_key="heating",
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+    value_fn=_heating_valve_value,
+    icon_fn=_heating_valve_icon,
+    channel=1,
+)
+
+PASSAGE_COUNTER_DESC = HmipSensorDescription[Device](
+    key="passage_counter",
+    value_fn=lambda d: d.leftRightCounterDelta,
+    extra_attrs_fn=_passage_counter_extras,
+    channel=1,
+)
+
+TILT_ANGLE_DESC = HmipSensorDescription[Device](
+    key="tilt_angle",
+    translation_key="tilt_angle",
+    native_unit_of_measurement=DEGREE,
+    state_class=SensorStateClass.MEASUREMENT_ANGLE,
+    value_fn=_tilt_angle_value,
+    channel=1,
+)
+
+
+# Keys must not subclass each other: the isinstance loop matches all hits.
+SENSOR_DESCRIPTIONS_BY_DEVICE: dict[
+    type[Device], tuple[HmipSensorDescription[Device], ...]
+] = {
+    HomeControlAccessPoint: (DUTY_CYCLE_DESC,),
+    HeatingThermostat: (VALVE_POSITION_DESC, TEMPERATURE_DESC),
+    HeatingThermostatCompact: (VALVE_POSITION_DESC, TEMPERATURE_DESC),
+    HeatingThermostatEvo: (VALVE_POSITION_DESC, TEMPERATURE_DESC),
+    TemperatureHumiditySensorDisplay: (
+        TEMPERATURE_DESC,
+        HUMIDITY_DESC,
+        ABSOLUTE_HUMIDITY_DESC,
+    ),
+    TemperatureHumiditySensorWithoutDisplay: (
+        TEMPERATURE_DESC,
+        HUMIDITY_DESC,
+        ABSOLUTE_HUMIDITY_DESC,
+    ),
+    TemperatureHumiditySensorOutdoor: (
+        TEMPERATURE_DESC,
+        HUMIDITY_DESC,
+        ABSOLUTE_HUMIDITY_DESC,
+    ),
+    RoomControlDeviceAnalog: (TEMPERATURE_DESC,),
+    LightSensor: (ILLUMINANCE_DESC,),
+    MotionDetectorIndoor: (ILLUMINANCE_DESC,),
+    MotionDetectorOutdoor: (ILLUMINANCE_DESC,),
+    PresenceDetectorIndoor: (ILLUMINANCE_DESC,),
+    SwitchMeasuring: (POWER_DESC, ENERGY_DESC),
+    PassageDetector: (PASSAGE_COUNTER_DESC,),
+    TemperatureDifferenceSensor2: (
+        TEMPERATURE_EXTERNAL_CH1_DESC,
+        TEMPERATURE_EXTERNAL_CH2_DESC,
+        TEMPERATURE_EXTERNAL_DELTA_DESC,
+    ),
+    TiltVibrationSensor: (TILT_ANGLE_DESC,),
+    WeatherSensor: (
+        TEMPERATURE_DESC,
+        HUMIDITY_DESC,
+        ILLUMINANCE_DESC,
+        WIND_SPEED_DESC,
+        ABSOLUTE_HUMIDITY_DESC,
+    ),
+    WeatherSensorPlus: (
+        TEMPERATURE_DESC,
+        HUMIDITY_DESC,
+        ILLUMINANCE_DESC,
+        WIND_SPEED_DESC,
+        TODAY_RAIN_DESC,
+        ABSOLUTE_HUMIDITY_DESC,
+    ),
+    WeatherSensorPro: (
+        TEMPERATURE_DESC,
+        HUMIDITY_DESC,
+        ILLUMINANCE_DESC,
+        WIND_SPEED_DESC,
+        TODAY_RAIN_DESC,
+        ABSOLUTE_HUMIDITY_DESC,
+    ),
+}
+
+
+def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
+    """Return a mapping of device types to handler functions.
+
+    Covers multi-channel and special-setup sensor entities only;
+    ``SENSOR_DESCRIPTIONS_BY_DEVICE`` handles all simple non-multi-channel sensors.
+    """
+    return {
         RotaryHandleSensor: lambda device: [
             HomematicipWindowStateSensor(hap, device),
         ],
-        LightSensor: lambda device: [
-            HomematicipIlluminanceSensor(hap, device),
-        ],
-        MotionDetectorIndoor: lambda device: [
-            HomematicipIlluminanceSensor(hap, device),
-        ],
-        MotionDetectorOutdoor: lambda device: [
-            HomematicipIlluminanceSensor(hap, device),
-        ],
-        PresenceDetectorIndoor: lambda device: [
-            HomematicipIlluminanceSensor(hap, device),
-        ],
-        SwitchMeasuring: lambda device: [
-            HomematicipPowerSensor(hap, device),
-            HomematicipEnergySensor(hap, device),
-        ],
-        PassageDetector: lambda device: [
-            HomematicipPassageDetectorDeltaCounter(hap, device),
-        ],
-        TemperatureDifferenceSensor2: lambda device: [
-            HomematicpTemperatureExternalSensorCh1(hap, device),
-            HomematicpTemperatureExternalSensorCh2(hap, device),
-            HomematicpTemperatureExternalSensorDelta(hap, device),
-        ],
         TiltVibrationSensor: lambda device: [
             HomematicipTiltStateSensor(hap, device),
-            HomematicipTiltAngleSensor(hap, device),
         ],
         WateringActuator: lambda device: [
             entity
@@ -257,29 +497,6 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
                     channel=ch.index,
                 ),
             )
-        ],
-        WeatherSensor: lambda device: [
-            HomematicipTemperatureSensor(hap, device),
-            HomematicipHumiditySensor(hap, device),
-            HomematicipIlluminanceSensor(hap, device),
-            HomematicipWindspeedSensor(hap, device),
-            HomematicipAbsoluteHumiditySensor(hap, device),
-        ],
-        WeatherSensorPlus: lambda device: [
-            HomematicipTemperatureSensor(hap, device),
-            HomematicipHumiditySensor(hap, device),
-            HomematicipIlluminanceSensor(hap, device),
-            HomematicipWindspeedSensor(hap, device),
-            HomematicipTodayRainSensor(hap, device),
-            HomematicipAbsoluteHumiditySensor(hap, device),
-        ],
-        WeatherSensorPro: lambda device: [
-            HomematicipTemperatureSensor(hap, device),
-            HomematicipHumiditySensor(hap, device),
-            HomematicipIlluminanceSensor(hap, device),
-            HomematicipWindspeedSensor(hap, device),
-            HomematicipTodayRainSensor(hap, device),
-            HomematicipAbsoluteHumiditySensor(hap, device),
         ],
         EnergySensorsInterface: lambda device: _handle_energy_sensor_interface(
             hap, device
@@ -332,7 +549,15 @@ async def async_setup_entry(
     hap = config_entry.runtime_data
     entities: list[HomematicipGenericEntity] = []
 
-    # Get device handlers dynamically
+    for device in hap.home.devices:
+        for device_class, descriptions in SENSOR_DESCRIPTIONS_BY_DEVICE.items():
+            if isinstance(device, device_class):
+                entities.extend(
+                    HomematicipSensor(hap, device, description)
+                    for description in descriptions
+                    if description.exists_fn(device)
+                )
+
     device_handlers = get_device_handlers(hap)
 
     # Process all devices
@@ -449,23 +674,6 @@ class HomematicipWaterVolumeSinceOpenSensor(HomematicipWaterVolumeSensor):
         )
 
 
-class HomematicipTiltAngleSensor(HomematicipGenericEntity, SensorEntity):
-    """Representation of the HomematicIP tilt angle sensor."""
-
-    _attr_native_unit_of_measurement = DEGREE
-    _attr_state_class = SensorStateClass.MEASUREMENT_ANGLE
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the tilt angle sensor device."""
-        super().__init__(hap, device, post="Tilt Angle", feature_id="tilt_angle")
-
-    @property
-    @override
-    def native_value(self) -> int | None:
-        """Return the state."""
-        return getattr(self.functional_channel, "absoluteAngle", None)
-
-
 class HomematicipTiltStateSensor(HomematicipGenericEntity, SensorEntity):
     """Representation of the HomematicIP tilt sensor."""
 
@@ -512,7 +720,9 @@ class HomematicipWindowStateSensor(HomematicipGenericEntity, SensorEntity):
 
     def __init__(self, hap: HomematicipHAP, device: RotaryHandleSensor) -> None:
         """Initialize the window state sensor."""
-        super().__init__(hap, device, feature_id="window_state")
+        super().__init__(
+            hap, device, feature_id="window_state", use_description_name=True
+        )
 
     @property
     @override
@@ -570,321 +780,6 @@ class HomematicipFloorTerminalBlockMechanicChannelValve(
         if channel.valveState != ValveState.ADAPTION_DONE:
             return None
         return round(channel.valvePosition * 100)
-
-
-class HomematicipAccesspointDutyCycle(HomematicipGenericEntity, SensorEntity):
-    """Representation of then HomeMaticIP access point."""
-
-    _attr_icon = "mdi:access-point-network"
-    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize access point status entity."""
-        super().__init__(
-            hap, device, post="Duty Cycle", channel=0, feature_id="duty_cycle"
-        )
-
-    @property
-    @override
-    def native_value(self) -> float:
-        """Return the state of the access point."""
-        return self._device.dutyCycleLevel
-
-
-class HomematicipHeatingThermostat(HomematicipGenericEntity, SensorEntity):
-    """Representation of the HomematicIP heating thermostat."""
-
-    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize heating thermostat device."""
-        super().__init__(hap, device, post="Heating", feature_id="valve_position")
-
-    @property
-    @override
-    def icon(self) -> str | None:
-        """Return the icon."""
-        if super().icon:
-            return super().icon
-        if self._device.valveState != ValveState.ADAPTION_DONE:
-            return "mdi:alert"
-        return "mdi:radiator"
-
-    @property
-    @override
-    def native_value(self) -> int | None:
-        """Return the state of the radiator valve."""
-        if self._device.valveState != ValveState.ADAPTION_DONE:
-            return None
-        return round(self._device.valvePosition * 100)
-
-
-class HomematicipHumiditySensor(HomematicipGenericEntity, SensorEntity):
-    """Representation of the HomematicIP humidity sensor."""
-
-    _attr_device_class = SensorDeviceClass.HUMIDITY
-    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the thermometer device."""
-        super().__init__(hap, device, post="Humidity", feature_id="humidity")
-
-    @property
-    @override
-    def native_value(self) -> int:
-        """Return the state."""
-        return self._device.humidity
-
-
-class HomematicipTemperatureSensor(HomematicipGenericEntity, SensorEntity):
-    """Representation of the HomematicIP thermometer."""
-
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the thermometer device."""
-        super().__init__(hap, device, post="Temperature", feature_id="temperature")
-
-    @property
-    @override
-    def native_value(self) -> float:
-        """Return the state."""
-        if hasattr(self._device, "valveActualTemperature"):
-            return self._device.valveActualTemperature
-
-        return self._device.actualTemperature
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the windspeed sensor."""
-        state_attr = super().extra_state_attributes
-
-        temperature_offset = getattr(self._device, "temperatureOffset", None)
-        if temperature_offset:
-            state_attr[ATTR_TEMPERATURE_OFFSET] = temperature_offset
-
-        return state_attr
-
-
-class HomematicipAbsoluteHumiditySensor(HomematicipGenericEntity, SensorEntity):
-    """Representation of the HomematicIP absolute humidity sensor."""
-
-    _attr_device_class = SensorDeviceClass.ABSOLUTE_HUMIDITY
-    _attr_native_unit_of_measurement = UnitOfDensity.GRAMS_PER_CUBIC_METER
-    _attr_suggested_display_precision = 1
-    _attr_suggested_unit_of_measurement = UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the thermometer device."""
-        super().__init__(
-            hap, device, post="Absolute Humidity", feature_id="absolute_humidity"
-        )
-
-    @property
-    @override
-    def native_value(self) -> float | None:
-        """Return the state."""
-        value = self._device.vaporAmount
-        if value is None or value == "":
-            return None
-
-        return value
-
-
-class HomematicipIlluminanceSensor(HomematicipGenericEntity, SensorEntity):
-    """Representation of the HomematicIP Illuminance sensor."""
-
-    _attr_device_class = SensorDeviceClass.ILLUMINANCE
-    _attr_native_unit_of_measurement = LIGHT_LUX
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the  device."""
-        super().__init__(hap, device, post="Illuminance", feature_id="illuminance")
-
-    @property
-    @override
-    def native_value(self) -> float:
-        """Return the state."""
-        if hasattr(self._device, "averageIllumination"):
-            return self._device.averageIllumination
-
-        return self._device.illumination
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the wind speed sensor."""
-        state_attr = super().extra_state_attributes
-
-        for attr, attr_key in ILLUMINATION_DEVICE_ATTRIBUTES.items():
-            if attr_value := getattr(self._device, attr, None):
-                state_attr[attr_key] = attr_value
-
-        return state_attr
-
-
-class HomematicipPowerSensor(HomematicipGenericEntity, SensorEntity):
-    """Representation of the HomematicIP power measuring sensor."""
-
-    _attr_device_class = SensorDeviceClass.POWER
-    _attr_native_unit_of_measurement = UnitOfPower.WATT
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the  device."""
-        super().__init__(hap, device, post="Power", feature_id="power")
-
-    @property
-    @override
-    def native_value(self) -> float:
-        """Return the power consumption value."""
-        return self._device.currentPowerConsumption
-
-
-class HomematicipEnergySensor(HomematicipGenericEntity, SensorEntity):
-    """Representation of the HomematicIP energy measuring sensor."""
-
-    _attr_device_class = SensorDeviceClass.ENERGY
-    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-    _attr_state_class = SensorStateClass.TOTAL_INCREASING
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the device."""
-        super().__init__(hap, device, post="Energy", feature_id="energy")
-
-    @property
-    @override
-    def native_value(self) -> float:
-        """Return the energy counter value."""
-        return self._device.energyCounter
-
-
-class HomematicipWindspeedSensor(HomematicipGenericEntity, SensorEntity):
-    """Representation of the HomematicIP wind speed sensor."""
-
-    _attr_device_class = SensorDeviceClass.WIND_SPEED
-    _attr_native_unit_of_measurement = UnitOfSpeed.KILOMETERS_PER_HOUR
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the windspeed sensor."""
-        super().__init__(hap, device, post="Windspeed", feature_id="wind_speed")
-
-    @property
-    @override
-    def native_value(self) -> float:
-        """Return the wind speed value."""
-        return self._device.windSpeed
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the wind speed sensor."""
-        state_attr = super().extra_state_attributes
-
-        wind_direction = getattr(self._device, "windDirection", None)
-        if wind_direction is not None:
-            state_attr[ATTR_WIND_DIRECTION] = _get_wind_direction(wind_direction)
-
-        wind_direction_variation = getattr(self._device, "windDirectionVariation", None)
-        if wind_direction_variation:
-            state_attr[ATTR_WIND_DIRECTION_VARIATION] = wind_direction_variation
-
-        return state_attr
-
-
-class HomematicipTodayRainSensor(HomematicipGenericEntity, SensorEntity):
-    """Representation of the HomematicIP rain counter of a day sensor."""
-
-    _attr_device_class = SensorDeviceClass.PRECIPITATION
-    _attr_native_unit_of_measurement = UnitOfPrecipitationDepth.MILLIMETERS
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the  device."""
-        super().__init__(hap, device, post="Today Rain", feature_id="today_rain")
-
-    @property
-    @override
-    def native_value(self) -> float:
-        """Return the today's rain value."""
-        return round(self._device.todayRainCounter, 2)
-
-
-class HomematicpTemperatureExternalSensorCh1(HomematicipGenericEntity, SensorEntity):
-    """Representation of the HomematicIP device HmIP-STE2-PCB."""
-
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the  device."""
-        super().__init__(
-            hap,
-            device,
-            post="Channel 1 Temperature",
-            feature_id="temperature_external_ch1",
-        )
-
-    @property
-    @override
-    def native_value(self) -> float:
-        """Return the state."""
-        return self._device.temperatureExternalOne
-
-
-class HomematicpTemperatureExternalSensorCh2(HomematicipGenericEntity, SensorEntity):
-    """Representation of the HomematicIP device HmIP-STE2-PCB."""
-
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the  device."""
-        super().__init__(
-            hap,
-            device,
-            post="Channel 2 Temperature",
-            feature_id="temperature_external_ch2",
-        )
-
-    @property
-    @override
-    def native_value(self) -> float:
-        """Return the state."""
-        return self._device.temperatureExternalTwo
-
-
-class HomematicpTemperatureExternalSensorDelta(HomematicipGenericEntity, SensorEntity):
-    """Representation of the HomematicIP device HmIP-STE2-PCB."""
-
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the  device."""
-        super().__init__(
-            hap,
-            device,
-            post="Delta Temperature",
-            feature_id="temperature_external_delta",
-        )
-
-    @property
-    @override
-    def native_value(self) -> float:
-        """Return the state."""
-        return self._device.temperatureExternalDelta
 
 
 class HmipEsiSensorEntity(HomematicipGenericEntity, SensorEntity):
@@ -1080,31 +975,6 @@ class HmipEsiLedEnergyCounterHighTariff(HmipEsiSensorEntity):
         )
 
 
-class HomematicipPassageDetectorDeltaCounter(HomematicipGenericEntity, SensorEntity):
-    """Representation of the HomematicIP passage detector delta counter."""
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the passage detector delta counter."""
-        super().__init__(hap, device, feature_id="passage_counter")
-
-    @property
-    @override
-    def native_value(self) -> int:
-        """Return the passage detector delta counter value."""
-        return self._device.leftRightCounterDelta
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes of the delta counter."""
-        state_attr = super().extra_state_attributes
-
-        state_attr[ATTR_LEFT_COUNTER] = self._device.leftCounter
-        state_attr[ATTR_RIGHT_COUNTER] = self._device.rightCounter
-
-        return state_attr
-
-
 class HmipSmokeDetectorSensor(HomematicipGenericEntity, SensorEntity):
     """Sensor for HomematicIP smoke detector extended properties."""
 
@@ -1132,6 +1002,53 @@ class HmipSmokeDetectorSensor(HomematicipGenericEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the sensor value."""
         return self.entity_description.value_fn(self._device)
+
+
+class HomematicipSensor[_DeviceT: Device](HomematicipGenericEntity, SensorEntity):
+    """A description-driven HomematicIP sensor."""
+
+    entity_description: HmipSensorDescription[_DeviceT]
+
+    def __init__(
+        self,
+        hap: HomematicipHAP,
+        device: _DeviceT,
+        description: HmipSensorDescription[_DeviceT],
+    ) -> None:
+        """Initialize the described sensor."""
+        super().__init__(
+            hap,
+            device,
+            feature_id=description.key,
+            channel=description.channel,
+            use_description_name=True,
+        )
+        self.entity_description = description
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the sensor value."""
+        return self.entity_description.value_fn(self._device)
+
+    @property
+    @override
+    def icon(self) -> str | None:
+        """Return the icon."""
+        if (parent_icon := super().icon) is not None:
+            return parent_icon
+        if self.entity_description.icon_fn is not None:
+            return self.entity_description.icon_fn(self._device)
+        return self.entity_description.icon
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes of the sensor."""
+        state_attr = super().extra_state_attributes
+        if self.entity_description.extra_attrs_fn is not None:
+            state_attr.update(self.entity_description.extra_attrs_fn(self._device))
+        return state_attr
 
 
 class HomematicipSoilMoistureSensor(HomematicipGenericEntity, SensorEntity):

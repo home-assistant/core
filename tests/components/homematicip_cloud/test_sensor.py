@@ -51,7 +51,7 @@ async def test_hmip_accesspoint_status(
 ) -> None:
     """Test HomematicipSwitch."""
     entity_id = "sensor.home_control_access_point_duty_cycle"
-    entity_name = "HOME_CONTROL_ACCESS_POINT Duty Cycle"
+    entity_name = "HOME_CONTROL_ACCESS_POINT Duty cycle"
     device_model = "HmIP-HAP"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["HOME_CONTROL_ACCESS_POINT"]
@@ -63,6 +63,7 @@ async def test_hmip_accesspoint_status(
     assert hmip_device
     assert ha_state.state == "8.0"
     assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == PERCENTAGE
+    assert ha_state.attributes["icon"] == "mdi:access-point-network"
 
 
 async def test_hmip_heating_thermostat(
@@ -368,8 +369,8 @@ async def test_hmip_windspeed_sensor(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipWindspeedSensor."""
-    entity_id = "sensor.wettersensor_pro_windspeed"
-    entity_name = "Wettersensor - pro Windspeed"
+    entity_id = "sensor.wettersensor_pro_wind_speed"
+    entity_name = "Wettersensor - pro Wind speed"
     device_model = "HmIP-SWO-PR"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Wettersensor - pro"]
@@ -421,7 +422,7 @@ async def test_hmip_today_rain_sensor(
 ) -> None:
     """Test HomematicipTodayRainSensor."""
     entity_id = "sensor.weather_sensor_plus_today_rain"
-    entity_name = "Weather Sensor – plus Today Rain"
+    entity_name = "Weather Sensor – plus Today rain"
     device_model = "HmIP-SWO-PL"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Weather Sensor – plus"]
@@ -444,7 +445,7 @@ async def test_hmip_temperature_external_sensor_channel_1(
 ) -> None:
     """Test HomematicipTemperatureDifferenceSensor Channel 1 HmIP-STE2-PCB."""
     entity_id = "sensor.ste2_channel_1_temperature"
-    entity_name = "STE2 Channel 1 Temperature"
+    entity_name = "STE2 Channel 1 temperature"
     device_model = "HmIP-STE2-PCB"
 
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["STE2"])
@@ -469,7 +470,7 @@ async def test_hmip_temperature_external_sensor_channel_2(
 ) -> None:
     """Test HomematicipTemperatureDifferenceSensor Channel 2 HmIP-STE2-PCB."""
     entity_id = "sensor.ste2_channel_2_temperature"
-    entity_name = "STE2 Channel 2 Temperature"
+    entity_name = "STE2 Channel 2 temperature"
     device_model = "HmIP-STE2-PCB"
 
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["STE2"])
@@ -494,7 +495,7 @@ async def test_hmip_temperature_external_sensor_delta(
 ) -> None:
     """Test HomematicipTemperatureDifferenceSensor Delta HmIP-STE2-PCB."""
     entity_id = "sensor.ste2_delta_temperature"
-    entity_name = "STE2 Delta Temperature"
+    entity_name = "STE2 Delta temperature"
     device_model = "HmIP-STE2-PCB"
 
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(test_devices=["STE2"])
@@ -806,7 +807,7 @@ async def test_hmip_tilt_vibration_sensor_tilt_angle(
 ) -> None:
     """Test HomematicipTiltVibrationSensor."""
     entity_id = "sensor.neigungssensor_tor_tilt_angle"
-    entity_name = "Neigungssensor Tor Tilt Angle"
+    entity_name = "Neigungssensor Tor Tilt angle"
     device_model = "ELV-SH-CTV"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Neigungssensor Tor"]
@@ -824,7 +825,7 @@ async def test_hmip_absolute_humidity_sensor(
 ) -> None:
     """Test absolute humidity sensor (vaporAmount)."""
     entity_id = "sensor.elvshctv_absolute_humidity"
-    entity_name = "elvshctv Absolute Humidity"
+    entity_name = "elvshctv Absolute humidity"
     device_model = "ELV-SH-CTH"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["elvshctv"]
@@ -842,7 +843,7 @@ async def test_hmip_absolute_humidity_sensor_invalid_value(
 ) -> None:
     """Test absolute humidity sensor with invalid value for vaporAmount."""
     entity_id = "sensor.elvshctv_absolute_humidity"
-    entity_name = "elvshctv Absolute Humidity"
+    entity_name = "elvshctv Absolute humidity"
     device_model = "ELV-SH-CTH"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["elvshctv"]
