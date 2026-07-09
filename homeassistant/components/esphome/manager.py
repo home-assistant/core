@@ -830,7 +830,7 @@ class ESPHomeManager:
         cli = APIClient(
             self.host,
             self.entry.data[CONF_PORT],
-            None,
+            self.password,
             client_info=CLIENT_INFO,
             zeroconf_instance=self.zeroconf_instance,
             noise_psk=ZERO_NOISE_PSK,
