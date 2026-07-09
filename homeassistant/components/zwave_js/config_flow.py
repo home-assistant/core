@@ -1546,6 +1546,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 # Only update config automatically if using socket
                 if existing_entry.data.get(CONF_SOCKET_PATH):
+                    if (
+                        existing_entry.data[CONF_SOCKET_PATH]
+                        == discovery_info.socket_path
+                    ):
+                        # The ESPHome device fires discovery on every
+                        # reconnect, so don't touch the add-on config or
+                        # reload the entry if nothing changed.
+                        return self.async_abort(reason="already_configured")
                     manager = get_addon_manager(self.hass)
                     await self._async_set_addon_config(
                         {CONF_ADDON_SOCKET: discovery_info.socket_path}
