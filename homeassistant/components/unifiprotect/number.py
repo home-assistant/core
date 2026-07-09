@@ -6,7 +6,14 @@ from datetime import timedelta
 import logging
 from typing import cast, override
 
-from uiprotect.data import Camera, Chime, Light, ModelType, ProtectAdoptableDeviceModel
+from uiprotect.data import (
+    Camera,
+    Chime,
+    Light,
+    ModelType,
+    ProtectAdoptableDeviceModel,
+    Sensor,
+)
 from uiprotect.data.public_devices import (
     PublicDeviceModel,
     PublicLight,
@@ -54,6 +61,11 @@ def _get_pir_duration_public(obj: PublicDeviceModel) -> int | None:
 
 async def _set_pir_duration(obj: Light, value: float) -> None:
     await obj.set_duration_public(timedelta(seconds=value))
+
+
+async def _set_motion_sensitivity(obj: Sensor, value: float) -> None:
+    # The public API types sensitivity as an integer.
+    await obj.set_motion_sensitivity_public(int(value))
 
 
 def _get_chime_duration(obj: Camera) -> int:
@@ -201,8 +213,8 @@ SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_min=0,
         ufp_max=100,
         ufp_step=1,
-        ufp_value="motion_settings.sensitivity",
-        ufp_set_method="set_motion_sensitivity",
+        ufp_public_value="motion_settings.sensitivity",
+        ufp_set_method_fn=_set_motion_sensitivity,
         ufp_capability=SensorFeatureCapability.MOTION,
         ufp_perm=PermRequired.WRITE,
     ),
