@@ -53,6 +53,10 @@
         "description": "Check all cameras that support native H.264 streams. If the camera does not output a H.264 stream, the system will transcode the video to H.264 for HomeKit. Transcoding requires a performant CPU and is unlikely to work on single-board computers.",
         "title": "Camera configuration"
       },
+      "climate": {
+        "description": "Choose which accessory each climate entity uses in HomeKit. Heater Cooler puts the mode, temperature, fan speed, and swing on one air conditioner style tile; Thermostat is the classic temperature dial with a separate fan. Automatic picks based on what the entity supports. Changing the accessory type keeps the room and name, but HomeKit scenes or automations that used the old controls may need to be recreated.",
+        "title": "Climate accessory configuration"
+      },
       "exclude": {
         "data": {
           "entities": "[%key:component::homekit::options::step::include::data::entities%]"
@@ -79,6 +83,15 @@
       "yaml": {
         "description": "This entry is controlled via YAML",
         "title": "Adjust HomeKit options"
+      }
+    }
+  },
+  "selector": {
+    "climate_accessory_type": {
+      "options": {
+        "automatic": "Automatic",
+        "heater_cooler": "Heater Cooler",
+        "thermostat": "Thermostat"
       }
     }
   },
