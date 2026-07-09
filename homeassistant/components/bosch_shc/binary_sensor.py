@@ -8,6 +8,7 @@ from boschshcpy import (
     SHCShutterContact,
     ShutterContactService,
 )
+from boschshcpy.device import SHCDevice
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -72,9 +73,7 @@ class ShutterContactSensor(SHCEntity, BinarySensorEntity):
     _attr_name = None
     _device: SHCShutterContact
 
-    def __init__(
-        self, device: SHCShutterContact, parent_id: str, entry_id: str
-    ) -> None:
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
         """Initialize an SHC shutter contact sensor."""
         super().__init__(device, parent_id, entry_id)
         switcher = {
@@ -100,7 +99,7 @@ class BatterySensor(SHCEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.BATTERY
     _device: SHCBatteryDevice
 
-    def __init__(self, device: SHCBatteryDevice, parent_id: str, entry_id: str) -> None:
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
         """Initialize an SHC battery reporting sensor."""
         super().__init__(device, parent_id, entry_id)
         self._attr_unique_id = f"{device.serial}_battery"
