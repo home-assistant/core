@@ -814,6 +814,7 @@ def fake_q10_vacuum_api_fixture(
         api.vacuum.stop_clean.side_effect = send_message_exception
         api.vacuum.return_to_dock.side_effect = send_message_exception
         api.vacuum.set_fan_level.side_effect = send_message_exception
+        api.vacuum.clean_segments.side_effect = send_message_exception
         api.command.send.side_effect = send_message_exception
     return api
 
@@ -1069,3 +1070,100 @@ async def test_q10_ha_refresh(
 
     # Verify that refresh was called
     fake_q10_vacuum.b01_q10_properties.refresh.assert_called()
+
+
+async def test_q10_get_segments(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that async_get_segments returns rooms from the Q10 map."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": Q10_ENTITY_ID}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "segments": [
+            {"id": "9", "name": "Bedroom", "group": None},
+            {"id": "10", "name": "Living Room", "group": None},
+        ]
+    }
+
+
+async def test_q10_get_segments_no_rooms(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that async_get_segments returns empty list when no map has been received."""
+    assert fake_q10_vacuum.b01_q10_properties is not None
+    fake_q10_vacuum.b01_q10_properties.map.rooms = []
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": Q10_ENTITY_ID}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"segments": []}
+
+
+async def test_q10_clean_segments(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    q10_vacuum_api: Mock,
+) -> None:
+    """Test that clean_area service calls clean_segments with the correct room ids."""
+    entity_registry.async_update_entity_options(
+        Q10_ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            "area_mapping": {"bedroom": ["9"]},
+            "last_seen_segments": [
+                {"id": "9", "name": "Bedroom", "group": None},
+                {"id": "10", "name": "Living Room", "group": None},
+            ],
+        },
+    )
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_CLEAN_AREA,
+        {ATTR_ENTITY_ID: Q10_ENTITY_ID, "cleaning_area_id": ["bedroom"]},
+        blocking=True,
+    )
+
+    assert q10_vacuum_api.vacuum.clean_segments.call_count == 1
+    assert q10_vacuum_api.vacuum.clean_segments.call_args == call([9])
+
+
+@pytest.mark.parametrize("send_message_exception", [RoborockException()])
+async def test_q10_clean_segments_failed(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    q10_vacuum_api: Mock,
+) -> None:
+    """Test that a clean_segments failure raises HomeAssistantError."""
+    entity_registry.async_update_entity_options(
+        Q10_ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            "area_mapping": {"bedroom": ["9"]},
+            "last_seen_segments": [
+                {"id": "9", "name": "Bedroom", "group": None},
+            ],
+        },
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_CLEAN_AREA,
+            {ATTR_ENTITY_ID: Q10_ENTITY_ID, "cleaning_area_id": ["bedroom"]},
+            blocking=True,
+        )

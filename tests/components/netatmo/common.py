@@ -121,12 +121,12 @@ async def simulate_webhook(hass: HomeAssistant, webhook_id: str, response) -> No
 def selected_platforms(platforms: list[Platform]) -> Iterator[None]:
     """Restrict loaded platforms to list given."""
     with (
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", platforms),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", platforms),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ),
     ):
         yield
