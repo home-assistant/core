@@ -687,8 +687,16 @@ async def test_options_flow_include_mode_with_labels(hass: HomeAssistant) -> Non
         user_input={"entities": ["climate.new"], "include_labels": ["homekit"]},
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "bridged_device_triggers"
+
+    result3 = await hass.config_entries.options.async_configure(
+        result2["flow_id"], user_input={}
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
+        "devices": [],
         "mode": "bridge",
         "filter": {
             "exclude_domains": [],
@@ -729,8 +737,16 @@ async def test_options_flow_exclude_mode_with_labels(hass: HomeAssistant) -> Non
         user_input={"entities": ["climate.old"], "exclude_labels": ["private"]},
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "bridged_device_triggers"
+
+    result3 = await hass.config_entries.options.async_configure(
+        result2["flow_id"], user_input={}
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
+        "devices": [],
         "mode": "bridge",
         "filter": {
             "exclude_domains": [],
