@@ -159,7 +159,6 @@ async def test_smart_plug_creates_switch_and_routing_switch(
     outlet_state = next(
         s for s in states if s.attributes.get("device_class") == "outlet"
     )
-    assert outlet_state is not None
 
     routing_state = next(s for s in states if s != outlet_state)
     assert routing_state.entity_id.endswith("_routing")
