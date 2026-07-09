@@ -131,6 +131,56 @@ async def test_disconnect_callback_is_forwarded(
     callback.assert_called_once()
 
 
+async def test_connected_notify_without_callback(
+    hass: HomeAssistant, mock_gateway: MagicMock
+) -> None:
+    """Connect notifications are ignored when no callback is registered."""
+    with patch(GATEWAY_PATH, return_value=mock_gateway):
+        transceiver = RX11Transceiver(hass, DEVICE_PATH)
+        transceiver._notify_connected(MagicMock())
+
+
+async def test_disconnect_notify_without_callback(
+    hass: HomeAssistant, mock_gateway: MagicMock
+) -> None:
+    """Disconnect notifications are ignored when no callback is registered."""
+    with patch(GATEWAY_PATH, return_value=mock_gateway):
+        transceiver = RX11Transceiver(hass, DEVICE_PATH)
+        transceiver._notify_disconnect()
+
+
+async def test_connected_notify_logs_callback_error(
+    hass: HomeAssistant, mock_gateway: MagicMock
+) -> None:
+    """Connect callback scheduling errors are logged without raising."""
+    callback = MagicMock()
+    with patch(GATEWAY_PATH, return_value=mock_gateway):
+        transceiver = RX11Transceiver(hass, DEVICE_PATH)
+        transceiver.set_connected_callback(callback)
+        with patch.object(
+            hass.loop, "call_soon_threadsafe", side_effect=RuntimeError("loop closed")
+        ):
+            transceiver._notify_connected(MagicMock())
+
+    callback.assert_not_called()
+
+
+async def test_disconnect_notify_logs_callback_error(
+    hass: HomeAssistant, mock_gateway: MagicMock
+) -> None:
+    """Disconnect callback scheduling errors are logged without raising."""
+    callback = MagicMock()
+    with patch(GATEWAY_PATH, return_value=mock_gateway):
+        transceiver = RX11Transceiver(hass, DEVICE_PATH)
+        transceiver.set_disconnect_callback(callback)
+        with patch.object(
+            hass.loop, "call_soon_threadsafe", side_effect=OSError("loop closed")
+        ):
+            transceiver._notify_disconnect()
+
+    callback.assert_not_called()
+
+
 def test_properties_proxy_gateway_state(mock_gateway: MagicMock) -> None:
     """Transceiver properties mirror the gateway state."""
     mock_gateway.is_connected = True

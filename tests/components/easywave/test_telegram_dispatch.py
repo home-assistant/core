@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from easywave_home_control.codec import (
     ButtonFunction,
@@ -14,6 +14,7 @@ from easywave_home_control.codec import (
 from easywave_home_control.codec.common import TimerDuration
 from easywave_home_control.codec.events import EasywaveButton
 from easywave_home_control.codec.sensors import (
+    SensorLearnPayload,
     SensorMeasurementPayload,
     SensorPayloadFormat,
 )
@@ -24,6 +25,7 @@ from homeassistant.components.easywave.const import (
     EVENT_TYPE_BUTTON_PRESS,
     EVENT_TYPE_BUTTON_RELEASE,
 )
+from homeassistant.components.easywave.sensor import EasywaveNeoSensorTemperatureSensor
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -165,6 +167,13 @@ async def test_button_press_low_battery_skips_press_event(
         assert not any(
             event.data.get("type") == EVENT_TYPE_BUTTON_PRESS for event in events
         )
+        entity_id = er.async_get(hass).async_get_entity_id(
+            "sensor",
+            DOMAIN,
+            f"transmitter_{MOCK_TRANSMITTER_SERIAL}_battery_warning",
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == "low"
 
     await _run_dispatch_test(
         hass,
@@ -339,3 +348,167 @@ async def test_neo_sensor_temperature_matches_serial_case_insensitively(
         _assert_state,
         _temperature_event(MOCK_NEO_SENSOR_SERIAL.lower()),
     )
+
+
+def _humidity_event(serial: str = MOCK_NEO_SENSOR_SERIAL) -> SensorTelegramEvent:
+    """Return a humidity measurement telegram."""
+    return SensorTelegramEvent(
+        sensor_serial=bytes.fromhex(serial),
+        payload=SensorMeasurementPayload(
+            version=0,
+            has_battery=True,
+            battery_level=7,
+            wire_measurement_type=5,
+            measurement_type=MeasurementType.HUMIDITY,
+            payload_format=SensorPayloadFormat.NEO,
+            should_ignore=False,
+            has_reference=False,
+            raw_value=5500,
+            reference_value=0,
+            max_interval=TimerDuration(mantissa=0, exponent=0, factor_minutes=15.0),
+        ),
+    )
+
+
+async def test_neo_sensor_humidity_updates_from_telegram(
+    hass: HomeAssistant,
+) -> None:
+    """Neo sensor measurement telegrams update the humidity entity state."""
+    transceiver = mock_easywave_transceiver()
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        entry_id=MOCK_ENTRY_ID,
+        title=MOCK_GATEWAY_TITLE,
+        data=MOCK_ENTRY_DATA,
+        source="usb",
+        unique_id="easywave_12345",
+        options=_devices_options(_neo_sensor_device_record(capabilities=(1 << 5))),
+    )
+
+    async def _assert_state() -> None:
+        entity_id = er.async_get(hass).async_get_entity_id(
+            "sensor",
+            DOMAIN,
+            f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_humidity",
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == "55.0"
+        coordinator = entry.runtime_data.coordinator
+        assert (
+            coordinator._sensor_entities[0].device_id
+            == f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}"
+        )
+
+    await _run_dispatch_test(hass, entry, transceiver, _assert_state, _humidity_event())
+
+
+async def test_neo_sensor_learn_telegram_is_ignored_at_runtime(
+    hass: HomeAssistant,
+) -> None:
+    """Runtime learn telegrams are ignored by the coordinator listener."""
+    transceiver = mock_easywave_transceiver()
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        entry_id=MOCK_ENTRY_ID,
+        title=MOCK_GATEWAY_TITLE,
+        data=MOCK_ENTRY_DATA,
+        source="usb",
+        unique_id="easywave_12345",
+        options=_devices_options(
+            _neo_sensor_device_record(capabilities=NEO_SENSOR_CAPABILITIES)
+        ),
+    )
+
+    async def _assert_state() -> None:
+        entity_id = er.async_get(hass).async_get_entity_id(
+            "sensor",
+            DOMAIN,
+            f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_temperature",
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == "unknown"
+
+    learn_event = SensorTelegramEvent(
+        sensor_serial=bytes.fromhex(MOCK_NEO_SENSOR_SERIAL),
+        payload=SensorLearnPayload(
+            version=0,
+            has_battery=True,
+            battery_level=7,
+            capabilities=NEO_SENSOR_CAPABILITIES,
+        ),
+    )
+    await _run_dispatch_test(hass, entry, transceiver, _assert_state, learn_event)
+
+
+async def test_neo_sensor_unknown_serial_is_ignored(
+    hass: HomeAssistant,
+) -> None:
+    """Measurement telegrams from unconfigured sensors do not update entities."""
+    transceiver = mock_easywave_transceiver()
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        entry_id=MOCK_ENTRY_ID,
+        title=MOCK_GATEWAY_TITLE,
+        data=MOCK_ENTRY_DATA,
+        source="usb",
+        unique_id="easywave_12345",
+        options=_devices_options(
+            _neo_sensor_device_record(capabilities=NEO_SENSOR_CAPABILITIES)
+        ),
+    )
+
+    async def _assert_state() -> None:
+        entity_id = er.async_get(hass).async_get_entity_id(
+            "sensor",
+            DOMAIN,
+            f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_temperature",
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == "unknown"
+
+    await _run_dispatch_test(
+        hass,
+        entry,
+        transceiver,
+        _assert_state,
+        _temperature_event("cc" * 16),
+    )
+
+
+async def test_neo_sensor_temperature_restores_last_known_state(
+    hass: HomeAssistant,
+) -> None:
+    """Neo sensor temperature restores the last known measurement."""
+    transceiver = mock_easywave_transceiver()
+    entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        entry_id=MOCK_ENTRY_ID,
+        title=MOCK_GATEWAY_TITLE,
+        data=MOCK_ENTRY_DATA,
+        source="usb",
+        unique_id="easywave_12345",
+        options=_devices_options(_neo_sensor_device_record(capabilities=(1 << 4))),
+    )
+    mock_sensor_data = MagicMock()
+    mock_sensor_data.native_value = 21.5
+
+    with patch.object(
+        EasywaveNeoSensorTemperatureSensor,
+        "async_get_last_sensor_data",
+        new=AsyncMock(return_value=mock_sensor_data),
+    ):
+        await _setup_entry(hass, entry, transceiver)
+
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}_temperature",
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "21.5"
+
+    await _teardown_entry(hass, entry)

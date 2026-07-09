@@ -119,7 +119,12 @@ class EasywaveDeviceFlowMixin:
     def _save_device(
         self, *, title: str, unique_id: str, data: dict[str, Any]
     ) -> SubentryFlowResult:
-        """Persist a learned device on the gateway config entry."""
+        """Persist a learned device on the gateway config entry.
+
+        Child devices are stored in entry options rather than native config
+        subentries so the UI shows a flat two-level hierarchy (USB gateway and
+        child devices) without an intermediate subentry layer.
+        """
         entry = self._get_entry()
         devices = get_stored_devices(entry)
         devices.append(

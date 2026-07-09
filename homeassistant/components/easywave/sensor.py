@@ -158,7 +158,7 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
         if self._ha_started:
             if new_status != self._last_status:
                 old_status = self._last_status
-                _LOGGER.info("Gateway status: %s -> %s", old_status, new_status)
+                _LOGGER.debug("Gateway status: %s -> %s", old_status, new_status)
                 self._last_status = new_status
 
                 if new_status == "connected":

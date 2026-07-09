@@ -291,6 +291,32 @@ async def test_telegram_listener_restarts_after_suspend_resume(
         await coordinator.async_shutdown()
 
 
+async def test_transceiver_connected_updates_gateway_device(
+    hass: HomeAssistant,
+    coordinator: EasywaveCoordinator,
+    mock_transceiver: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Transceiver connect callback refreshes gateway device metadata."""
+    device_registry.async_get_or_create(
+        config_entry_id=coordinator.config_entry.entry_id,
+        identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+        name="RX11 USB Transceiver",
+    )
+    await coordinator.async_config_entry_first_refresh()
+    mock_transceiver.hw_version = "RX11 v2.0"
+    connected_callback = mock_transceiver.set_connected_callback.call_args[0][0]
+
+    connected_callback()
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, coordinator.config_entry.entry_id)}
+    )
+    assert device is not None
+    assert device.hw_version == "RX11 v2.0"
+
+
 async def test_async_shutdown(
     coordinator: EasywaveCoordinator,
     mock_transceiver: MagicMock,

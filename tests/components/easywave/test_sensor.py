@@ -111,3 +111,65 @@ async def test_gateway_sensor_waits_for_homeassistant_started(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "connected"
+
+
+async def test_gateway_sensor_fires_disconnected_event_on_transition(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Gateway disconnected device event is fired when status becomes disconnected."""
+    transceiver = mock_easywave_transceiver()
+    await async_setup_easywave_entry(hass, mock_config_entry, transceiver)
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "sensor", DOMAIN, f"{mock_config_entry.entry_id}_rx11_gateway"
+    )
+    assert entity_id is not None
+
+    events = async_capture_events(hass, EVENT_EASYWAVE)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "connected"
+
+    transceiver.is_connected = False
+    coordinator.is_offline = False
+    coordinator.async_set_updated_data(
+        {"is_connected": False, "device_path": "/dev/ttyACM0"}
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "disconnected"
+    assert any(event.data["type"] == "gateway_disconnected" for event in events)
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_gateway_sensor_reports_disconnected_when_link_is_down(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Gateway status is disconnected when the transceiver link is down but not offline."""
+    transceiver = mock_easywave_transceiver()
+    await async_setup_easywave_entry(hass, mock_config_entry, transceiver)
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "sensor", DOMAIN, f"{mock_config_entry.entry_id}_rx11_gateway"
+    )
+    assert entity_id is not None
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    transceiver.is_connected = False
+    coordinator.is_offline = False
+    coordinator.async_set_updated_data(
+        {"is_connected": False, "device_path": "/dev/ttyACM0"}
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "disconnected"

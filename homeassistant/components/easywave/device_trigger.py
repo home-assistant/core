@@ -179,9 +179,7 @@ async def async_get_triggers(
             },
         ]
 
-    if not isinstance(device_data, dict):
-        return []
-
+    assert isinstance(device_data, dict)
     if device_data.get(CONF_ENTRY_TYPE) != ENTRY_TYPE_TRANSMITTER:
         return []
 
