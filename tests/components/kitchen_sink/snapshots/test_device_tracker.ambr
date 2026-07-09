@@ -41,8 +41,8 @@
         <ZoneEntityStateAttribute.EDITABLE: 'editable'>: True,
         <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test home',
         <EntityStateAttribute.ICON: 'icon'>: 'mdi:home',
-        <ZoneEntityStateAttribute.LATITUDE: 'latitude'>: 32.87336,
-        <ZoneEntityStateAttribute.LONGITUDE: 'longitude'>: -117.22743,
+        <EntityStateAttribute.LATITUDE: 'latitude'>: 32.87336,
+        <EntityStateAttribute.LONGITUDE: 'longitude'>: -117.22743,
         <ZoneEntityStateAttribute.PASSIVE: 'passive'>: False,
         <ZoneEntityStateAttribute.PERSONS: 'persons'>: list([
         ]),
