@@ -1032,6 +1032,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry_from_vars(self) -> ConfigFlowResult:
         """Return a config entry for the flow."""
+        if self.use_addon and any(
+            entry.data.get(CONF_USE_ADDON)
+            for entry in self._async_current_entries(include_ignore=False)
+        ):
+            # The add-on can only connect to a single adapter,
+            # so only one config entry may use the add-on.
+            return self.async_abort(reason="addon_already_configured")
+
         # Abort any other flows that may be in progress
         for progress in self._async_in_progress():
             self.hass.config_entries.flow.async_abort(progress["flow_id"])
