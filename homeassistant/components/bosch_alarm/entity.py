@@ -48,7 +48,7 @@ class BoschAlarmEntity(Entity):
         """Stop observing state changes."""
         self.panel.connection_status_observer.detach(self.schedule_update_ha_state)
         if self._observe_faults:
-            self.panel.faults_observer.attach(self.schedule_update_ha_state)
+            self.panel.faults_observer.detach(self.schedule_update_ha_state)
 
 
 class BoschAlarmAreaEntity(BoschAlarmEntity):
@@ -92,7 +92,7 @@ class BoschAlarmAreaEntity(BoschAlarmEntity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
-        await super().async_added_to_hass()
+        await super().async_will_remove_from_hass()
         if self._observe_alarms:
             self._area.alarm_observer.detach(self.schedule_update_ha_state)
         if self._observe_ready:
@@ -126,7 +126,7 @@ class BoschAlarmPointEntity(BoschAlarmEntity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
-        await super().async_added_to_hass()
+        await super().async_will_remove_from_hass()
         self._point.status_observer.detach(self.schedule_update_ha_state)
 
 
@@ -155,7 +155,7 @@ class BoschAlarmDoorEntity(BoschAlarmEntity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
-        await super().async_added_to_hass()
+        await super().async_will_remove_from_hass()
         self._door.status_observer.detach(self.schedule_update_ha_state)
 
 
@@ -184,5 +184,5 @@ class BoschAlarmOutputEntity(BoschAlarmEntity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop observing state changes."""
-        await super().async_added_to_hass()
+        await super().async_will_remove_from_hass()
         self._output.status_observer.detach(self.schedule_update_ha_state)
