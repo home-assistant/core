@@ -1,11 +1,77 @@
 """The UniFi AP Direct integration."""
 
-from homeassistant.const import Platform
+import logging
+
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_HOSTS,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 
+from .const import DEFAULT_SSH_PORT
 from .coordinator import UniFiDirectConfigEntry, UniFiDirectDataUpdateCoordinator
 
+_LOGGER = logging.getLogger(__name__)
+
 PLATFORMS = [Platform.DEVICE_TRACKER]
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: UniFiDirectConfigEntry
+) -> bool:
+    """Migrate config entries to the multi-host format."""
+    if config_entry.version == 1 and config_entry.minor_version < 2:
+        host_configs: list[dict[str, object]] = []
+        host_entries = config_entry.data.get(CONF_HOSTS)
+        if host_entries is None:
+            host = config_entry.data.get(CONF_HOST)
+            if host is not None:
+                host_configs.append(
+                    {
+                        CONF_HOST: host,
+                        CONF_USERNAME: config_entry.data.get(CONF_USERNAME, ""),
+                        CONF_PASSWORD: config_entry.data.get(CONF_PASSWORD, ""),
+                        CONF_PORT: config_entry.data.get(CONF_PORT, DEFAULT_SSH_PORT),
+                    }
+                )
+        elif isinstance(host_entries, dict):
+            host_configs.append(
+                {
+                    CONF_HOST: host_entries.get(CONF_HOST),
+                    CONF_USERNAME: host_entries.get(CONF_USERNAME, ""),
+                    CONF_PASSWORD: host_entries.get(CONF_PASSWORD, ""),
+                    CONF_PORT: host_entries.get(CONF_PORT, DEFAULT_SSH_PORT),
+                }
+            )
+        elif isinstance(host_entries, list):
+            host_configs.extend(
+                {
+                    CONF_HOST: entry.get(CONF_HOST),
+                    CONF_USERNAME: entry.get(CONF_USERNAME, ""),
+                    CONF_PASSWORD: entry.get(CONF_PASSWORD, ""),
+                    CONF_PORT: entry.get(CONF_PORT, DEFAULT_SSH_PORT),
+                }
+                for entry in host_entries
+                if isinstance(entry, dict)
+            )
+
+        if host_configs:
+            hass.config_entries.async_update_entry(
+                config_entry, data={CONF_HOSTS: host_configs}, minor_version=2
+            )
+        else:
+            hass.config_entries.async_update_entry(config_entry, minor_version=2)
+
+        _LOGGER.debug(
+            "Migrated UniFi Direct config entry %s to minor version 2",
+            config_entry.entry_id,
+        )
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: UniFiDirectConfigEntry) -> bool:

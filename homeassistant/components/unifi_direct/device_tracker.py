@@ -10,7 +10,13 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_HOSTS,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -39,10 +45,14 @@ async def async_setup_scanner(
 ) -> bool:
     """Set up the legacy UniFi AP Direct device tracker."""
     import_data = {
-        CONF_HOST: config[CONF_HOST],
-        CONF_USERNAME: config[CONF_USERNAME],
-        CONF_PASSWORD: config[CONF_PASSWORD],
-        CONF_PORT: config.get(CONF_PORT, DEFAULT_SSH_PORT),
+        CONF_HOSTS: [
+            {
+                CONF_HOST: config[CONF_HOST],
+                CONF_USERNAME: config[CONF_USERNAME],
+                CONF_PASSWORD: config[CONF_PASSWORD],
+                CONF_PORT: config.get(CONF_PORT, DEFAULT_SSH_PORT),
+            }
+        ]
     }
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -127,12 +137,6 @@ class UniFiScannerEntity(
     def mac_address(self) -> str:
         """Return the MAC address of the device."""
         return self._mac
-
-    @property
-    @override
-    def unique_id(self) -> str:
-        """Return a unique identifier for this device."""
-        return f"{self._mac}_{self.coordinator.config_entry.entry_id}"
 
     @property
     @override

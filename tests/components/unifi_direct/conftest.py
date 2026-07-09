@@ -6,7 +6,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.unifi_direct.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_HOSTS,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
 
 from tests.common import MockConfigEntry
 
@@ -17,17 +23,25 @@ MOCK_PASSWORD = "password"
 MOCK_PORT = 22
 
 MOCK_CONFIG = {
-    CONF_HOST: MOCK_HOST,
-    CONF_USERNAME: MOCK_USERNAME,
-    CONF_PASSWORD: MOCK_PASSWORD,
-    CONF_PORT: MOCK_PORT,
+    CONF_HOSTS: [
+        {
+            CONF_HOST: MOCK_HOST,
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_PORT: MOCK_PORT,
+        }
+    ]
 }
 
 MOCK_SECOND_CONFIG = {
-    CONF_HOST: MOCK_SECOND_HOST,
-    CONF_USERNAME: MOCK_USERNAME,
-    CONF_PASSWORD: MOCK_PASSWORD,
-    CONF_PORT: MOCK_PORT,
+    CONF_HOSTS: [
+        {
+            CONF_HOST: MOCK_SECOND_HOST,
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_PORT: MOCK_PORT,
+        }
+    ]
 }
 
 MOCK_DEVICE_DATA = {
@@ -60,14 +74,6 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_second_config_entry() -> MockConfigEntry:
-    """Return a mock config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN, data=MOCK_SECOND_CONFIG, title=f"UniFi AP ({MOCK_SECOND_HOST})"
-    )
-
-
-@pytest.fixture
 def mock_unifiap() -> Generator[MagicMock]:
     """Mock UniFiAP to return known clients."""
     with (
@@ -90,7 +96,11 @@ def mock_unifiap() -> Generator[MagicMock]:
             target = kwargs.get("target")
             if target is None and args:
                 target = args[0]
-            return _build_ap_instance(target if isinstance(target, str) else None)
+            if isinstance(target, str):
+                if target == MOCK_HOST:
+                    return default_ap_instance
+                return _build_ap_instance(target)
+            return default_ap_instance
 
         mock.side_effect = _mock_unifiap
         yield mock
