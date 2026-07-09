@@ -1,7 +1,6 @@
 """Config flow for place."""
 
 from collections.abc import Mapping
-import functools
 import logging
 from typing import Any, override
 
@@ -39,13 +38,10 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                get_tokens = functools.partial(
-                    login,
-                    username=user_input[CONF_EMAIL],
-                    password=user_input[CONF_PASSWORD],
-                )
                 tokens = await self.hass.async_add_executor_job(
-                    get_tokens,
+                    login,
+                    user_input[CONF_EMAIL],
+                    user_input[CONF_PASSWORD],
                 )
             except botocore.exceptions.ClientError as err:
                 _LOGGER.error("Failed to get tokens: %s", err)
