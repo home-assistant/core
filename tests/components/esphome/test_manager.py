@@ -2794,6 +2794,79 @@ async def test_zwave_proxy_request_home_id_change(
         assert call_args[0][1] == "zwave_js"
 
 
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
+async def test_zwave_proxy_flow_uses_dynamically_provisioned_key(
+    mock_token_bytes: Mock,
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the Z-Wave flow uses a dynamically provisioned encryption key.
+
+    A fresh adapter connects without a key, so a key is generated and stored
+    in the config entry, but cannot be applied to the already connected client.
+    The Z-Wave flow must still be created with that key so the add-on can
+    connect to the now-encrypted device.
+    """
+    mac_address = "11:22:33:44:55:aa"
+    test_key_bytes = b"test_key_32_bytes_long_exactly!"
+    mock_token_bytes.return_value = test_key_bytes
+    expected_key = base64.b64encode(test_key_bytes).decode()
+
+    # Create entry without noise PSK
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test-zwave-proxy",
+        },
+        unique_id=mac_address,
+    )
+    entry.add_to_hass(hass)
+
+    mock_client.noise_encryption_set_key = AsyncMock(return_value=True)
+
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        device_info={
+            "name": "test-zwave-proxy",
+            "mac_address": mac_address,
+            "api_encryption_supported": True,
+            "zwave_proxy_feature_flags": 1,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # The dynamic key was generated and written to the config entry
+    assert entry.data[CONF_NOISE_PSK] == expected_key
+
+    zwave_proxy_callback = None
+    for call_item in mock_client.subscribe_zwave_proxy_request.call_args_list:
+        if call_item[0]:
+            zwave_proxy_callback = call_item[0][0]
+            break
+    assert zwave_proxy_callback is not None
+
+    request = ZWaveProxyRequest(
+        type=ZWaveProxyRequestType.HOME_ID_CHANGE,
+        data=(1234567890).to_bytes(4, byteorder="big"),
+    )
+
+    with patch(
+        "homeassistant.helpers.discovery_flow.async_create_flow"
+    ) as mock_create_flow:
+        zwave_proxy_callback(request)
+        await hass.async_block_till_done()
+
+        mock_create_flow.assert_called_once()
+        service_info = mock_create_flow.call_args[0][3]
+        assert service_info.noise_psk == expected_key
+
+
 async def test_no_zwave_proxy_subscribe_without_feature_flags(
     hass: HomeAssistant,
     mock_client: APIClient,
