@@ -109,6 +109,9 @@
     "announce_media_error": {
       "message": "Announcing clip {media_id} failed {response}"
     },
+    "call_failed": {
+      "message": "Error calling {function} on {target}: {error}"
+    },
     "entity_not_found": {
       "message": "Entity {entity_id} not found."
     },
@@ -141,6 +144,12 @@
     },
     "toggle_failed": {
       "message": "Could not toggle {entity_id}."
+    },
+    "upnp_call_failed": {
+      "message": "Error calling {function} on {target} (UPnP error code {error_code}): {error}"
+    },
+    "upnp_call_failed_music_service_unavailable": {
+      "message": "Error calling {function} on {target} (UPnP error code {error_code}): {error} This may indicate the selected music service is not available on the speaker."
     }
   },
   "issues": {
