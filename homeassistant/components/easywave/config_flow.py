@@ -81,6 +81,8 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
         transceiver = RX11Transceiver(self.hass, device_path)
         try:
             return await transceiver.connect()
+        except (OSError, TimeoutError):
+            return False
         finally:
             await transceiver.dispose()
 
