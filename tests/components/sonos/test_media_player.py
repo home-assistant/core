@@ -328,16 +328,54 @@ async def test_play_media_library_content_error(
         )
 
 
-async def test_play_media_includes_upnp_code_and_hint(
+@pytest.mark.parametrize(
+    ("error", "translation_key", "translation_placeholders"),
+    [
+        pytest.param(
+            OSError("Network down"),
+            "call_failed",
+            {
+                "function": "SonosMediaPlayerEntity._play_media",
+                "target": "media_player.zone_a",
+                "error": "Network down",
+            },
+            id="generic-error",
+        ),
+        pytest.param(
+            SoCoUPnPException("UPnP Error 701 received", "701", ""),
+            "upnp_call_failed",
+            {
+                "function": "SonosMediaPlayerEntity._play_media",
+                "target": "media_player.zone_a",
+                "error": "UPnP Error 701 received",
+                "error_code": "701",
+            },
+            id="upnp-error",
+        ),
+        pytest.param(
+            SoCoUPnPException("UPnP Error 800 received", "800", ""),
+            "upnp_call_failed_music_service_unavailable",
+            {
+                "function": "SonosMediaPlayerEntity._play_media",
+                "target": "media_player.zone_a",
+                "error": "UPnP Error 800 received",
+                "error_code": "800",
+            },
+            id="upnp-error-800-music-service-unavailable",
+        ),
+    ],
+)
+async def test_play_media_error_translation(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
     async_autosetup_sonos,
+    error: Exception,
+    translation_key: str,
+    translation_placeholders: dict[str, str],
 ) -> None:
-    """Test play_media surfaces UPnP error details for music service unavailable."""
+    """Test play_media surfaces translated error details for failures."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
-    soco_mock.play_uri.side_effect = SoCoUPnPException(
-        "UPnP Error 800 received", "800", ""
-    )
+    soco_mock.play_uri.side_effect = error
 
     with pytest.raises(SonosUpdateError) as err:
         await hass.services.async_call(
@@ -352,13 +390,8 @@ async def test_play_media_includes_upnp_code_and_hint(
             blocking=True,
         )
 
-    assert err.value.translation_key == "upnp_call_failed_music_service_unavailable"
-    assert err.value.translation_placeholders == {
-        "function": "SonosMediaPlayerEntity._play_media",
-        "target": "media_player.zone_a",
-        "error": "UPnP Error 800 received",
-        "error_code": "800",
-    }
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == translation_placeholders
 
 
 _track_url = "S://192.168.42.100/music/iTunes/The%20Beatles/A%20Hard%20Day%2fs%I%20Should%20Have%20Known%20Better.mp3"
