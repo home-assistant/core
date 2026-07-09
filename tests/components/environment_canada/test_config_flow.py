@@ -9,12 +9,16 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.environment_canada.const import (
+    CONF_RADAR_DURATION,
+    CONF_RADAR_FPS,
     CONF_RADAR_LAYER,
     CONF_RADAR_LEGEND,
     CONF_RADAR_OPACITY,
     CONF_RADAR_RADIUS,
     CONF_RADAR_TIMESTAMP,
     CONF_STATION,
+    DEFAULT_RADAR_DURATION,
+    DEFAULT_RADAR_FPS,
     DEFAULT_RADAR_LAYER,
     DEFAULT_RADAR_LEGEND,
     DEFAULT_RADAR_OPACITY,
@@ -246,6 +250,8 @@ async def test_options_flow_form(hass: HomeAssistant, ec_data: dict[str, Any]) -
         CONF_RADAR_TIMESTAMP,
         CONF_RADAR_OPACITY,
         CONF_RADAR_RADIUS,
+        CONF_RADAR_DURATION,
+        CONF_RADAR_FPS,
     }
 
 
@@ -261,6 +267,8 @@ async def test_options_flow_save(hass: HomeAssistant, ec_data: dict[str, Any]) -
         CONF_RADAR_TIMESTAMP: False,
         CONF_RADAR_OPACITY: 30,
         CONF_RADAR_RADIUS: 100,
+        CONF_RADAR_DURATION: 30,
+        CONF_RADAR_FPS: 10,
     }
     with patch(
         "homeassistant.components.environment_canada.async_setup_entry",
@@ -286,6 +294,8 @@ async def test_options_flow_prefills_saved_options(
         CONF_RADAR_TIMESTAMP: False,
         CONF_RADAR_OPACITY: 50,
         CONF_RADAR_RADIUS: 300,
+        CONF_RADAR_DURATION: 60,
+        CONF_RADAR_FPS: 15,
     }
     config_entry = await init_integration(hass, ec_data, options=saved_options)
 
@@ -297,6 +307,8 @@ async def test_options_flow_prefills_saved_options(
     assert defaults[CONF_RADAR_TIMESTAMP] is False
     assert defaults[CONF_RADAR_OPACITY] == 50
     assert defaults[CONF_RADAR_RADIUS] == 300
+    assert defaults[CONF_RADAR_DURATION] == 60
+    assert defaults[CONF_RADAR_FPS] == 15
 
 
 @pytest.mark.parametrize(
@@ -310,6 +322,8 @@ async def test_options_flow_prefills_saved_options(
                 "timestamp": DEFAULT_RADAR_TIMESTAMP,
                 "layer_opacity": DEFAULT_RADAR_OPACITY,
                 "radius": DEFAULT_RADAR_RADIUS,
+                "loop_minutes": DEFAULT_RADAR_DURATION,
+                "fps": DEFAULT_RADAR_FPS,
             },
             id="defaults",
         ),
@@ -320,6 +334,8 @@ async def test_options_flow_prefills_saved_options(
                 CONF_RADAR_TIMESTAMP: False,
                 CONF_RADAR_OPACITY: 40.0,
                 CONF_RADAR_RADIUS: 150.0,
+                CONF_RADAR_DURATION: 30.0,
+                CONF_RADAR_FPS: 10.0,
             },
             {
                 "layer": "snow",
@@ -327,6 +343,8 @@ async def test_options_flow_prefills_saved_options(
                 "timestamp": False,
                 "layer_opacity": 40,
                 "radius": 150,
+                "loop_minutes": 30,
+                "fps": 10,
             },
             id="custom",
         ),
@@ -351,3 +369,7 @@ async def test_ecmap_built_from_options(
     assert isinstance(kwargs["layer_opacity"], int)
     assert kwargs["radius"] == expected["radius"]
     assert isinstance(kwargs["radius"], int)
+    assert kwargs["loop_minutes"] == expected["loop_minutes"]
+    assert isinstance(kwargs["loop_minutes"], int)
+    assert kwargs["fps"] == expected["fps"]
+    assert isinstance(kwargs["fps"], int)
