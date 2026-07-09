@@ -512,6 +512,42 @@ async def test_luxembourg_meter(
     )
 
 
+@pytest.mark.parametrize("dsmr_version", ["MSn", "SAGEMCOM_T210_D_R"])
+async def test_encrypted_meter_forwards_key(
+    hass: HomeAssistant,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    dsmr_version: str,
+) -> None:
+    """Test that an encrypted meter's stored key reaches the reader."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": dsmr_version,
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+        "encryption_key": "aabbccddeeff00112233445566778899",
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr",
+        unique_id="/dev/ttyUSB0",
+        data=entry_data,
+        options={"time_between_update": 0},
+    )
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The key is decrypted without verifying the GCM authentication tag
+    assert (
+        connection_factory.call_args.kwargs["encryption_key"]
+        == "aabbccddeeff00112233445566778899"
+    )
+    assert connection_factory.call_args.kwargs["authentication_key"] is None
+
+
 async def test_eonhu_meter(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
