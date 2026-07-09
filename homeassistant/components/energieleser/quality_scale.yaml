@@ -67,7 +67,9 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
-  icon-translations: done
+  icon-translations:
+    status: exempt
+    comment: Entities rely on device-class and default icons; no custom icon translations are needed.
   reconfiguration-flow: done
   repair-issues: done
   stale-devices:

@@ -82,7 +82,7 @@ class EnergieleserCoordinator(DataUpdateCoordinator[EnergieleserDevice]):
 
         if isinstance(device, StromleserOneDevice):
             issue_id = f"pin_locked_{self.config_entry.entry_id}"
-            if getattr(device, "pin_locked", False):
+            if device.pin_locked:
                 ir.async_create_issue(
                     self.hass,
                     DOMAIN,
