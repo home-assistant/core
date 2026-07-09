@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, create_autospec, patch
 
 from boschshcpy import SHCBatteryDevice, SHCShutterContact
 import pytest
@@ -55,49 +55,50 @@ def _shutter_contact_device(
     device_class: str = "ENTRANCE_DOOR",
     state: SHCShutterContact.ShutterContactService.State = CLOSED,
     batterylevel: SHCBatteryDevice.BatteryLevelService.State = BATTERY_OK,
-) -> SimpleNamespace:
-    """Build a minimal shutter-contact device double."""
-    return SimpleNamespace(
-        name="Test Contact",
-        id=device_id,
-        root_device_id="test-mac",
-        serial=f"serial-{device_id}",
-        device_class=device_class,
-        state=state,
-        batterylevel=batterylevel,
-        device_services=[],
-        manufacturer="Bosch",
-        device_model="SWD",
-        status="AVAILABLE",
-        deleted=False,
-        subscribe_callback=MagicMock(),
-        unsubscribe_callback=MagicMock(),
-    )
+) -> SHCShutterContact:
+    """Build a minimal shutter-contact device double.
+
+    spec_set against the real class so a future boschshcpy rename of an
+    attribute the platform relies on (device_class, state, batterylevel, ...)
+    fails the test instead of silently mismatching.
+    """
+    device = create_autospec(SHCShutterContact, instance=True, spec_set=True)
+    device.name = "Test Contact"
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.device_class = device_class
+    device.state = state
+    device.batterylevel = batterylevel
+    device.device_services = []
+    device.manufacturer = "Bosch"
+    device.device_model = "SWD"
+    device.status = "AVAILABLE"
+    device.deleted = False
+    return device
 
 
 def _battery_only_device(
     device_id: str = "hdm:HomeMaticIP:motion1",
     batterylevel: SHCBatteryDevice.BatteryLevelService.State = BATTERY_OK,
-) -> SimpleNamespace:
+) -> SHCBatteryDevice:
     """Build a minimal device double for a battery-only bucket (e.g. motion_detectors)."""
-    return SimpleNamespace(
-        name="Test Motion",
-        id=device_id,
-        root_device_id="test-mac",
-        serial=f"serial-{device_id}",
-        batterylevel=batterylevel,
-        device_services=[],
-        manufacturer="Bosch",
-        device_model="MD",
-        status="AVAILABLE",
-        deleted=False,
-        subscribe_callback=MagicMock(),
-        unsubscribe_callback=MagicMock(),
-    )
+    device = create_autospec(SHCBatteryDevice, instance=True, spec_set=True)
+    device.name = "Test Motion"
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.batterylevel = batterylevel
+    device.device_services = []
+    device.manufacturer = "Bosch"
+    device.device_model = "MD"
+    device.status = "AVAILABLE"
+    device.deleted = False
+    return device
 
 
 async def _setup_binary_sensor_integration(
-    hass: HomeAssistant, **device_buckets: list[SimpleNamespace]
+    hass: HomeAssistant, **device_buckets: list[Any]
 ) -> MockConfigEntry:
     """Set up bosch_shc with the given device_helper buckets, via a mocked session."""
     entry = MockConfigEntry(
