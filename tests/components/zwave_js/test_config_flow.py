@@ -1403,8 +1403,6 @@ async def test_esphome_discovery_intent_recommended(
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
@@ -1657,6 +1655,7 @@ async def test_esphome_discovery_migration(
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
+    assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
         "core_zwave_js",
         AddonsOptions(
@@ -2336,7 +2335,7 @@ async def test_discovery_not_blocked_by_zeroconf_flow(hass: HomeAssistant) -> No
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "installation_type"
 
-    # A USB flow does touch the add-on, so it still blocks add-on discovery.
+    # Abort the USB flow so it doesn't block the add-on discovery below.
     hass.config_entries.flow.async_abort(result["flow_id"])
 
     result = await hass.config_entries.flow.async_init(
@@ -5138,6 +5137,16 @@ async def test_reconfigure_migrate_with_addon(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
+
+    # Selecting the socket option without providing a socket path
+    # shows an error and keeps the flow on the same step.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USB_PATH: ""}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "choose_serial_port"
+    assert result["errors"] == {"base": "missing_usb_or_socket_path"}
 
     _set_home_id(get_server_version, 5678)
 
