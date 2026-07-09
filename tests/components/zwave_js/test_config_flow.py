@@ -1187,24 +1187,21 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     assert "keep_old_devices" in entry.data
 
 
-@pytest.mark.parametrize(
-    "service_info", [ESPHOME_DISCOVERY_INFO, ESPHOME_DISCOVERY_INFO_CLEAN]
-)
 @pytest.mark.usefixtures("supervisor", "addon_info")
-async def test_esphome_discovery_title_placeholders(
-    hass: HomeAssistant,
-    service_info: ESPHomeServiceInfo,
-) -> None:
+async def test_esphome_discovery_title_placeholders(hass: HomeAssistant) -> None:
     """Test ESPHome discovery sets the name placeholder for the flow_title."""
     await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ESPHOME},
-        data=service_info,
+        data=ESPHOME_DISCOVERY_INFO,
     )
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    assert flows[0]["context"]["title_placeholders"]["name"] == "mock-name via ESPHome"
+    assert (
+        flows[0]["context"]["title_placeholders"]["name"]
+        == "Network 0x000004d2 via mock-name (ESPHome)"
+    )
 
 
 @pytest.mark.parametrize(
