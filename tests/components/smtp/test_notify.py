@@ -393,3 +393,4 @@ async def test_legacy_notify_exception(
         )
 
     assert e.value.translation_key == "send_mail_connection_error"
+    assert smtp.sendmail.call_count == 2
