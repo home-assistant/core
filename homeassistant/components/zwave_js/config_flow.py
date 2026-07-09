@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, override
 
 from awesomeversion import AwesomeVersion
+from propcache.api import cached_property
 import voluptuous as vol
 from zwave_js_server.client import Client
 from zwave_js_server.exceptions import FailedCommand
@@ -18,12 +19,7 @@ from zwave_js_server.model.driver import Driver
 from zwave_js_server.version import VersionInfo
 
 from homeassistant.components import usb
-from homeassistant.components.hassio import (
-    AddonError,
-    AddonInfo,
-    AddonManager,
-    AddonState,
-)
+from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
 from homeassistant.config_entries import (
     SOURCE_ESPHOME,
     SOURCE_USB,
@@ -264,8 +260,124 @@ async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     return non_na_ports or port_descriptions
 
 
+class AddonFlowManager:
+    """Manage the Z-Wave JS add-on for the config flow.
+
+    Wraps the add-on manager with flow-friendly error handling
+    and tracks the original add-on config for reverts.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Set up the add-on flow manager."""
+        self.hass = hass
+        self.addon_manager = get_addon_manager(hass)
+        # Set to True if the add-on was running when its config was changed,
+        # meaning a restart instead of a start is needed.
+        self.restart_addon = False
+        # The add-on config before this flow changed it, for reverts.
+        self.original_config: dict[str, Any] | None = None
+
+    async def async_get_addon_info(self) -> AddonInfo:
+        """Return Z-Wave JS add-on info."""
+        try:
+            addon_info: AddonInfo = await self.addon_manager.async_get_addon_info()
+        except AddonError as err:
+            _LOGGER.error(err)
+            raise AbortFlow("addon_info_failed") from err
+
+        return addon_info
+
+    async def async_set_addon_config(self, config_updates: dict) -> None:
+        """Set Z-Wave JS add-on config."""
+        addon_info = await self.async_get_addon_info()
+        addon_config = addon_info.options
+
+        new_addon_config = addon_config | config_updates
+
+        if new_addon_config.get(CONF_ADDON_DEVICE) is None:
+            new_addon_config.pop(CONF_ADDON_DEVICE, None)
+        if new_addon_config.get(CONF_ADDON_SOCKET) is None:
+            new_addon_config.pop(CONF_ADDON_SOCKET, None)
+
+        if new_addon_config == addon_config:
+            return
+
+        if addon_info.state is AddonState.RUNNING:
+            self.restart_addon = True
+        # Copy the add-on config to keep the objects separate.
+        self.original_config = dict(addon_config)
+        # Remove legacy network_key
+        new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
+        try:
+            await self.addon_manager.async_set_addon_options(new_addon_config)
+        except AddonError as err:
+            _LOGGER.error(err)
+            raise AbortFlow("addon_set_config_failed") from err
+
+    async def async_install_addon(self) -> None:
+        """Install the Z-Wave JS add-on."""
+        await self.addon_manager.async_schedule_install_addon()
+
+    async def async_stop_addon(self) -> None:
+        """Stop the Z-Wave JS add-on."""
+        await self.addon_manager.async_stop_addon()
+
+    async def async_start_addon_and_wait(
+        self, ws_address: str | None
+    ) -> tuple[str, VersionInfo]:
+        """(Re)start the add-on and wait until the server is reachable.
+
+        Return the server websocket address and version info.
+        """
+        if self.restart_addon:
+            await self.addon_manager.async_schedule_restart_addon()
+        else:
+            await self.addon_manager.async_schedule_start_addon()
+        version_info: VersionInfo | None = None
+        # Sleep some seconds to let the add-on start properly before connecting.
+        for _ in range(ADDON_SETUP_TIMEOUT_ROUNDS):
+            await asyncio.sleep(ADDON_SETUP_TIMEOUT)
+            try:
+                if not ws_address:
+                    discovery_info = await self.async_get_addon_discovery_info()
+                    ws_address = (
+                        f"ws://{discovery_info['host']}:{discovery_info['port']}"
+                    )
+                version_info = await async_get_version_info(self.hass, ws_address)
+            except (AbortFlow, CannotConnect) as err:
+                _LOGGER.debug(
+                    "Add-on not ready yet, waiting %s seconds: %s",
+                    ADDON_SETUP_TIMEOUT,
+                    err,
+                )
+            else:
+                break
+        else:
+            raise CannotConnect("Failed to start Z-Wave JS add-on: timeout")
+
+        assert version_info is not None
+        return ws_address, version_info
+
+    async def async_get_addon_discovery_info(self) -> dict:
+        """Return add-on discovery info."""
+        try:
+            discovery_info_config = (
+                await self.addon_manager.async_get_addon_discovery_info()
+            )
+        except AddonError as err:
+            _LOGGER.error(err)
+            raise AbortFlow("addon_get_discovery_info_failed") from err
+
+        return discovery_info_config
+
+
 class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Z-Wave JS."""
+
+    @cached_property
+    def _addon_setup(self) -> AddonFlowManager:
+        """Return the add-on flow manager."""
+        return AddonFlowManager(self.hass)
 
     VERSION = 1
 
@@ -275,13 +387,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.usb_path: str | None = None
         self.socket_path: str | None = None  # ESPHome socket
         self.ws_address: str | None = None
-        self.restart_addon: bool = False
         # If we install the add-on we should uninstall it on entry remove.
         self.integration_created_addon = False
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
         self.version_info: VersionInfo | None = None
-        self.original_addon_config: dict[str, Any] | None = None
         self.revert_reason: str | None = None
         self.backup_task: asyncio.Task | None = None
         self.restore_backup_task: asyncio.Task | None = None
@@ -301,7 +411,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Install Z-Wave JS add-on."""
         if not self.install_task:
-            self.install_task = self.hass.async_create_task(self._async_install_addon())
+            self.install_task = self.hass.async_create_task(
+                self._addon_setup.async_install_addon()
+            )
 
         if not self.install_task.done():
             return self.async_show_progress(
@@ -336,7 +448,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             not self._rf_region or self._rf_region == "Automatic"
         ):
             # If the country is not set, we need to check the RF region add-on config.
-            addon_info = await self._async_get_addon_info()
+            addon_info = await self._addon_setup.async_get_addon_info()
             rf_region: str | None = addon_info.options.get(CONF_ADDON_RF_REGION)
             self._rf_region = rf_region
             if rf_region is None or rf_region == "Automatic":
@@ -346,7 +458,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # If we have updates to the add-on config,
             # set them before starting the add-on.
             self._addon_config_updates = {}
-            await self._async_set_addon_config(config_updates)
+            await self._addon_setup.async_set_addon_config(config_updates)
 
         if not self.start_task:
             self.start_task = self.hass.async_create_task(self._async_start_addon())
@@ -380,34 +492,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_start_addon(self) -> None:
         """Start the Z-Wave JS add-on."""
-        addon_manager: AddonManager = get_addon_manager(self.hass)
         self.version_info = None
-        if self.restart_addon:
-            await addon_manager.async_schedule_restart_addon()
-        else:
-            await addon_manager.async_schedule_start_addon()
-        # Sleep some seconds to let the add-on start properly before connecting.
-        for _ in range(ADDON_SETUP_TIMEOUT_ROUNDS):
-            await asyncio.sleep(ADDON_SETUP_TIMEOUT)
-            try:
-                if not self.ws_address:
-                    discovery_info = await self._async_get_addon_discovery_info()
-                    self.ws_address = (
-                        f"ws://{discovery_info['host']}:{discovery_info['port']}"
-                    )
-                self.version_info = await async_get_version_info(
-                    self.hass, self.ws_address
-                )
-            except (AbortFlow, CannotConnect) as err:
-                _LOGGER.debug(
-                    "Add-on not ready yet, waiting %s seconds: %s",
-                    ADDON_SETUP_TIMEOUT,
-                    err,
-                )
-            else:
-                break
-        else:
-            raise CannotConnect("Failed to start Z-Wave JS add-on: timeout")
+        (
+            self.ws_address,
+            self.version_info,
+        ) = await self._addon_setup.async_start_addon_and_wait(self.ws_address)
 
     async def async_step_configure_addon(
         self, user_input: dict[str, Any] | None = None
@@ -430,61 +519,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._reconfigure_config_entry:
             return await self.async_step_finish_addon_setup_reconfigure(user_input)
         return await self.async_step_finish_addon_setup_user(user_input)
-
-    async def _async_get_addon_info(self) -> AddonInfo:
-        """Return and cache Z-Wave JS add-on info."""
-        addon_manager: AddonManager = get_addon_manager(self.hass)
-        try:
-            addon_info: AddonInfo = await addon_manager.async_get_addon_info()
-        except AddonError as err:
-            _LOGGER.error(err)
-            raise AbortFlow("addon_info_failed") from err
-
-        return addon_info
-
-    async def _async_set_addon_config(self, config_updates: dict) -> None:
-        """Set Z-Wave JS add-on config."""
-        addon_info = await self._async_get_addon_info()
-        addon_config = addon_info.options
-
-        new_addon_config = addon_config | config_updates
-
-        if new_addon_config.get(CONF_ADDON_DEVICE) is None:
-            new_addon_config.pop(CONF_ADDON_DEVICE, None)
-        if new_addon_config.get(CONF_ADDON_SOCKET) is None:
-            new_addon_config.pop(CONF_ADDON_SOCKET, None)
-
-        if new_addon_config == addon_config:
-            return
-
-        if addon_info.state is AddonState.RUNNING:
-            self.restart_addon = True
-        # Copy the add-on config to keep the objects separate.
-        self.original_addon_config = dict(addon_config)
-        # Remove legacy network_key
-        new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
-        addon_manager: AddonManager = get_addon_manager(self.hass)
-        try:
-            await addon_manager.async_set_addon_options(new_addon_config)
-        except AddonError as err:
-            _LOGGER.error(err)
-            raise AbortFlow("addon_set_config_failed") from err
-
-    async def _async_install_addon(self) -> None:
-        """Install the Z-Wave JS add-on."""
-        addon_manager: AddonManager = get_addon_manager(self.hass)
-        await addon_manager.async_schedule_install_addon()
-
-    async def _async_get_addon_discovery_info(self) -> dict:
-        """Return add-on discovery info."""
-        addon_manager: AddonManager = get_addon_manager(self.hass)
-        try:
-            discovery_info_config = await addon_manager.async_get_addon_discovery_info()
-        except AddonError as err:
-            _LOGGER.error(err)
-            raise AbortFlow("addon_get_discovery_info_failed") from err
-
-        return discovery_info_config
 
     @override
     async def async_step_user(
@@ -616,7 +650,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             usb.get_serial_by_id, discovery_info.device
         )
 
-        addon_info = await self._async_get_addon_info()
+        addon_info = await self._addon_setup.async_get_addon_info()
         if (
             addon_info.state not in (AddonState.NOT_INSTALLED, AddonState.INSTALLING)
             and (addon_device := addon_info.options.get(CONF_ADDON_DEVICE)) is not None
@@ -825,7 +859,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.use_addon = True
 
-        addon_info = await self._async_get_addon_info()
+        addon_info = await self._addon_setup.async_get_addon_info()
 
         if addon_info.state is AddonState.RUNNING:
             addon_config = addon_info.options
@@ -914,7 +948,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             if user_input["network_type"] == NETWORK_TYPE_NEW:
-                addon_info = await self._async_get_addon_info()
+                addon_info = await self._addon_setup.async_get_addon_info()
                 # Keep existing keys from the add-on config so the keys of a
                 # previously configured network are not destroyed.
                 # Keys left empty are generated by the add-on on start.
@@ -945,7 +979,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Ask for security keys for existing Z-Wave network."""
-        addon_info = await self._async_get_addon_info()
+        addon_info = await self._addon_setup.async_get_addon_info()
         default_keys = SecurityKeys.from_addon_config(
             addon_info.options, self.security_keys
         )
@@ -980,7 +1014,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         Set unique id and abort if already configured.
         """
         if not self.ws_address:
-            discovery_info = await self._async_get_addon_discovery_info()
+            discovery_info = await self._addon_setup.async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
 
         if not self.unique_id or self.source == SOURCE_USB:
@@ -1280,17 +1314,16 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             if config_entry.data.get(CONF_USE_ADDON):
                 # Unload the config entry before stopping the add-on.
                 await self._async_unload_entry_for_flow()
-                addon_manager = get_addon_manager(self.hass)
                 _LOGGER.debug("Stopping Z-Wave JS app")
                 try:
-                    await addon_manager.async_stop_addon()
+                    await self._addon_setup.async_stop_addon()
                 except AddonError as err:
                     _LOGGER.error(err)
                     self._async_schedule_entry_reload()
                     raise AbortFlow("addon_stop_failed") from err
             return await self.async_step_manual_reconfigure()
 
-        addon_info = await self._async_get_addon_info()
+        addon_info = await self._addon_setup.async_get_addon_info()
 
         if addon_info.state is AddonState.NOT_INSTALLED:
             return await self.async_step_install_addon()
@@ -1301,7 +1334,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Ask for config for Z-Wave JS add-on."""
-        addon_info = await self._async_get_addon_info()
+        addon_info = await self._addon_setup.async_get_addon_info()
         addon_config = addon_info.options
 
         errors: dict[str, str] = {}
@@ -1326,9 +1359,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 addon_config_updates = self._addon_config_updates | addon_config_updates
                 self._addon_config_updates = {}
 
-                await self._async_set_addon_config(addon_config_updates)
+                await self._addon_setup.async_set_addon_config(addon_config_updates)
 
-                if addon_info.state is AddonState.RUNNING and not self.restart_addon:
+                if (
+                    addon_info.state is AddonState.RUNNING
+                    and not self._addon_setup.restart_addon
+                ):
                     return await self.async_step_finish_addon_setup_reconfigure()
 
                 if (
@@ -1401,7 +1437,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Failed to get USB ports: %s", err)
             return self.async_abort(reason="usb_ports_failed")
 
-        addon_info = await self._async_get_addon_info()
+        addon_info = await self._addon_setup.async_get_addon_info()
         addon_config = addon_info.options
         old_usb_path = addon_config.get(CONF_ADDON_DEVICE, "")
         # Remove the old controller from the ports list.
@@ -1500,13 +1536,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
         if self.revert_reason:
-            self.original_addon_config = None
+            self._addon_setup.original_config = None
             reason = self.revert_reason
             self.revert_reason = None
             return await self.async_revert_addon_config(reason=reason)
 
         if not self.ws_address:
-            discovery_info = await self._async_get_addon_discovery_info()
+            discovery_info = await self._addon_setup.async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
 
         if not self.version_info:
@@ -1574,12 +1610,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                         # reconnect, so don't touch the add-on config or
                         # reload the entry if nothing changed.
                         return self.async_abort(reason="already_configured")
-                    manager = get_addon_manager(self.hass)
-                    await self._async_set_addon_config(
+                    await self._addon_setup.async_set_addon_config(
                         {CONF_ADDON_SOCKET: discovery_info.socket_path}
                     )
-                    if self.restart_addon:
-                        await manager.async_stop_addon()
+                    if self._addon_setup.restart_addon:
+                        await self._addon_setup.async_stop_addon()
                     self.hass.config_entries.async_update_entry(
                         existing_entry,
                         data={
@@ -1640,7 +1675,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 reason,
             )
 
-        if self.revert_reason or not self.original_addon_config:
+        if self.revert_reason or not self._addon_setup.original_config:
             config_entry = self._reconfigure_config_entry
             assert config_entry is not None
             self._async_schedule_entry_reload()
@@ -1649,7 +1684,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.revert_reason = reason
         addon_config_input = {
             ADDON_USER_INPUT_MAP[addon_key]: addon_val
-            for addon_key, addon_val in self.original_addon_config.items()
+            for addon_key, addon_val in self._addon_setup.original_config.items()
             if addon_key in ADDON_USER_INPUT_MAP
         }
         _LOGGER.debug("Reverting app options, reason: %s", reason)
