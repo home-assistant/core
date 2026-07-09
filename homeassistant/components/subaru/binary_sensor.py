@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -310,6 +310,7 @@ class SubaruBinarySensor(SubaruCoordinatorEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if the sensor is on (open / unlocked / has trouble)."""
         return self.entity_description.is_on_fn(self.coordinator.data[self.vin])

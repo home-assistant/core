@@ -1,6 +1,6 @@
 """Base entities for the Subaru integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -53,6 +53,7 @@ class SubaruCoordinatorEntity(
         SubaruEntity.__init__(self, vehicle_info, unique_id_suffix)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.vin in self.coordinator.data
