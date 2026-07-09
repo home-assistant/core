@@ -67,11 +67,11 @@ class SubaruDeviceTracker(SubaruCoordinatorEntity, TrackerEntity):
     def available(self) -> bool:
         """Return if entity is available.
 
-        Adds a check on top of the base availability that at least one of
-        the lat/long/timestamp keys is present in vehicle_status — without
-        any of these the location entity has nothing meaningful to report.
+        Deliberately not routed through the base class's last_update_success
+        check: a transient failed poll shouldn't hide a still-valid
+        last-known position, only the absence of usable location data should.
         """
-        if not super().available:
+        if not (vehicle_data := (self.coordinator.data or {}).get(self.vin)):
             return False
-        status = self.coordinator.data[self.vin].get(VEHICLE_STATUS) or {}
+        status = vehicle_data.get(VEHICLE_STATUS) or {}
         return bool(status.keys() & {LATITUDE, LONGITUDE, TIMESTAMP})

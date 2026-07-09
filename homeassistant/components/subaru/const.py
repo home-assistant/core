@@ -41,12 +41,9 @@ API_GEN_3 = "g3"
 API_GEN_4 = "g4"
 
 # Telematics generations that report Gen2-and-newer data (vehicle_status,
-# vehicle_health, condition endpoint, etc.). Used by sensor.py and
-# binary_sensor.py to gate entity creation; add new generations here once.
+# vehicle_health, condition endpoint, etc.). Used by binary_sensor.py to
+# gate entity creation; add new generations here once.
 GEN_2_AND_NEWER = (API_GEN_2, API_GEN_3, API_GEN_4)
-# Telematics generations that report Gen3-and-newer data (e.g. remaining
-# fuel percent).
-GEN_3_AND_NEWER = (API_GEN_3, API_GEN_4)
 
 MANUFACTURER = "Subaru"
 

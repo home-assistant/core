@@ -86,6 +86,9 @@
       "health_istrouble": {
         "name": "Vehicle health"
       },
+      "is_charging": {
+        "name": "Charging"
+      },
       "lock_status_boot": {
         "name": "Lock status tailgate"
       },
@@ -230,13 +233,11 @@
       "vehicle_state": {
         "name": "Vehicle state",
         "state": {
+          "engine_on_remote_start": "Engine on (remote start)",
           "ignition_acc": "Accessory power",
           "ignition_off": "Ignition off",
           "ignition_on": "Ignition on"
         }
-      },
-      "vehicle_state_raw": {
-        "name": "Vehicle state (raw)"
       }
     }
   },

@@ -53,22 +53,18 @@ LOCK_STATUS_KEYS: dict[str, str] = {
 # Any other value (including UNPLUGGED / UNKNOWN / None) counts as not plugged in.
 EV_PLUGGED_IN_STATES = frozenset({"CHARGING", "LOCKED_CONNECTED", "UNLOCKED_CONNECTED"})
 API_KEY_EV_IS_PLUGGED_IN = "EV_IS_PLUGGED_IN"
+API_KEY_EV_CHARGER_STATE_TYPE = "EV_CHARGER_STATE_TYPE"
+EV_CHARGING_STATE = "CHARGING"
 
 # vehicle_health response shape (see integration debug diagnostics)
 HEALTH_ISTROUBLE = "ISTROUBLE"
 HEALTH_FEATURES = "FEATURES"
 
-# Subaru MIL (Malfunction Indicator Lamp) feature codes mapped to translation keys.
-# The vehicle reports which MILs it has via vehicle_features; we only create
-# entities for the ones it actually has.
-#
-# Name mapping cross-references three sources:
-#   1. featureCode  — the canonical key used in vehicle_health.FEATURES
-#   2. b2cCode      — Subaru's own category label from the API health response,
-#                     used here to disambiguate (e.g. ATF_MIL b2cCode is
-#                     "oilTemp", confirming it's the AT oil temperature warning
-#                     light, not a fluid-level warning)
-#   3. The Subaru owner manual's dashboard indicator legend
+# Subaru MIL (Malfunction Indicator Lamp) feature codes -> translation keys.
+# Only codes the vehicle actually reports (via vehicle_features) get entities.
+# b2cCode (Subaru's own API category label) disambiguates codes whose meaning
+# isn't obvious from the featureCode alone, e.g. ATF_MIL's b2cCode is
+# "oilTemp" — a temperature warning, not a fluid-level one.
 MIL_TRANSLATION_KEYS: dict[str, str] = {
     # SRS = Supplemental Restraint System; b2cCode "airbag"
     "SRS_MIL": "mil_srs",
@@ -113,7 +109,9 @@ MIL_TRANSLATION_KEYS: dict[str, str] = {
 # Status values that mean a door/window is closed. The API has used both
 # "CLOSED" (doors) and "CLOSE" (windows) historically.
 OPENING_CLOSED_VALUES = frozenset({"CLOSED", "CLOSE"})
-UNKNOWN_STATUS = "UNKNOWN"
+# Per-field sentinels meaning "no data", distinct from the whole-coordinator
+# unavailable state. Compared case-insensitively since the API is inconsistent.
+UNKNOWN_STATUSES = frozenset({"UNKNOWN", "UNAVAILABLE"})
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -129,14 +127,18 @@ def _vehicle_status_is_on(
 ) -> Callable[[dict[str, Any]], bool | None]:
     """Build an is_on getter for a single vehicle_status string field.
 
-    The predicate is applied to the raw API value (e.g. "CLOSED", "LOCKED",
-    "UNLOCKED_CONNECTED"). Missing or UNKNOWN values short-circuit to None
-    so the entity reports as `unknown` rather than off.
+    The predicate is applied to the raw API value, uppercased (e.g. "CLOSED",
+    "LOCKED", "UNLOCKED_CONNECTED") since the API is inconsistent about
+    casing. Missing or unknown/unavailable values short-circuit to None so
+    the entity reports as `unknown` rather than a false off/on.
     """
 
     def getter(vehicle_data: dict[str, Any]) -> bool | None:
         status = (vehicle_data.get(VEHICLE_STATUS) or {}).get(api_key)
-        if status is None or status == UNKNOWN_STATUS:
+        if status is None:
+            return None
+        status = status.upper()
+        if status in UNKNOWN_STATUSES:
             return None
         return is_on(status)
 
@@ -178,6 +180,11 @@ def _is_unlocked(status: str) -> bool:
 def _is_plugged_in(status: str) -> bool:
     """EV plug predicate — any documented connected state counts as plugged in."""
     return status in EV_PLUGGED_IN_STATES
+
+
+def _is_charging(status: str) -> bool:
+    """EV charging predicate — only CHARGING means actively charging."""
+    return status == EV_CHARGING_STATE
 
 
 # Static descriptions for entities that are created for every Gen2+ vehicle.
@@ -227,6 +234,14 @@ EV_PLUG_BINARY_SENSOR = SubaruBinarySensorEntityDescription(
     is_on_fn=_vehicle_status_is_on(API_KEY_EV_IS_PLUGGED_IN, _is_plugged_in),
 )
 
+EV_CHARGING_BINARY_SENSOR = SubaruBinarySensorEntityDescription(
+    key=API_KEY_EV_CHARGER_STATE_TYPE,
+    translation_key="is_charging",
+    device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+    entity_registry_enabled_default=False,
+    is_on_fn=_vehicle_status_is_on(API_KEY_EV_CHARGER_STATE_TYPE, _is_charging),
+)
+
 
 def _build_mil_descriptions(
     features: list[str],
@@ -266,8 +281,9 @@ async def async_setup_entry(
         descriptions.append(OVERALL_HEALTH_BINARY_SENSOR)
         if info[VEHICLE_HAS_EV]:
             descriptions.append(EV_PLUG_BINARY_SENSOR)
+            descriptions.append(EV_CHARGING_BINARY_SENSOR)
 
-        vehicle_data = coordinator.data.get(info[VEHICLE_VIN]) or {}
+        vehicle_data = (coordinator.data or {}).get(info[VEHICLE_VIN]) or {}
         features = vehicle_data.get(VEHICLE_FEATURES) or []
         descriptions.extend(_build_mil_descriptions(features))
 
@@ -296,7 +312,4 @@ class SubaruBinarySensor(SubaruCoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return True if the sensor is on (open / unlocked / has trouble)."""
-        vehicle_data = self.coordinator.data.get(self.vin)
-        if vehicle_data is None:
-            return None
-        return self.entity_description.is_on_fn(vehicle_data)
+        return self.entity_description.is_on_fn(self.coordinator.data[self.vin])
