@@ -490,7 +490,7 @@ async def test_storing_config(
     config = {
         http.CONF_SERVER_PORT: unused_tcp_port_factory(),
         "use_x_forwarded_for": True,
-        "trusted_proxies": ["192.168.1.100"],
+        "trusted_proxies": ["192.168.1.100", "10.0.0.0/24"],
     }
 
     assert await async_setup_component(hass, http.DOMAIN, {http.DOMAIN: config})
@@ -501,7 +501,9 @@ async def test_storing_config(
     await hass.async_block_till_done()
 
     restored = await http.async_get_last_config(hass)
-    restored["trusted_proxies"][0] = ip_network(restored["trusted_proxies"][0])
+    restored["trusted_proxies"] = [
+        ip_network(proxy) for proxy in restored["trusted_proxies"]
+    ]
 
     assert restored == http.HTTP_SCHEMA(config)
 
