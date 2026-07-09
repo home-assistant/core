@@ -40,9 +40,9 @@
 # name: test_entities[media_player.mock_lyngdorf_main_zone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'receiver',
-      'friendly_name': 'Mock Lyngdorf Main zone',
-      'supported_features': <MediaPlayerEntityFeature: 69004>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lyngdorf Main zone',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 69004>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.mock_lyngdorf_main_zone',
@@ -93,9 +93,9 @@
 # name: test_entities[media_player.mock_lyngdorf_zone_b-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'receiver',
-      'friendly_name': 'Mock Lyngdorf Zone B',
-      'supported_features': <MediaPlayerEntityFeature: 3468>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lyngdorf Zone B',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 3468>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.mock_lyngdorf_zone_b',

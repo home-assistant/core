@@ -1,6 +1,6 @@
 """Config flow for Lyngdorf integration."""
 
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from lyngdorf.device import (
@@ -42,6 +42,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
             return f"{self._device_model} ({self._name})"
         return self._name or DEFAULT_DEVICE_NAME
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -86,6 +87,7 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

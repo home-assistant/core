@@ -1,5 +1,7 @@
 """Media player platform for Lyngdorf integration."""
 
+from typing import override
+
 from lyngdorf.device import Receiver
 
 from homeassistant.components.media_player import (
@@ -114,6 +116,7 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
             FEATURES_ZONE_B,
         )
 
+    @override
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
@@ -121,11 +124,13 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
             return MediaPlayerState.ON
         return MediaPlayerState.OFF
 
+    @override
     @property
     def is_volume_muted(self) -> bool | None:
         """Return boolean if volume is currently muted."""
         return self._receiver.zone_b_mute_enabled
 
+    @override
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
@@ -133,10 +138,12 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
             return None
         return _to_ha_volume(self._receiver.zone_b_volume)
 
+    @override
     def turn_on(self) -> None:
         """Turn on media player."""
         self._receiver.zone_b_power_on = True
 
+    @override
     def turn_off(self) -> None:
         """Turn off media player."""
         self._receiver.zone_b_power_on = False
@@ -149,24 +156,29 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
         """Volume down the media player."""
         self._receiver.zone_b_volume_down()
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._receiver.zone_b_volume = _to_lyngdorf_volume(volume)
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         self._receiver.zone_b_mute_enabled = mute
 
+    @override
     @property
     def source(self) -> str | None:
         """Return the current input source."""
         return self._receiver.zone_b_source
 
+    @override
     @property
     def source_list(self) -> list[str] | None:
         """Return the list of available sources."""
         return self._receiver.zone_b_available_sources
 
+    @override
     def select_source(self, source: str) -> None:
         """Select input source."""
         self._receiver.zone_b_source = source
@@ -191,6 +203,7 @@ class LyngdorfMainDevice(LyngdorfDevice):
             FEATURES_MAIN,
         )
 
+    @override
     @property
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
@@ -198,21 +211,25 @@ class LyngdorfMainDevice(LyngdorfDevice):
             return MediaPlayerState.ON
         return MediaPlayerState.OFF
 
+    @override
     @property
     def source_list(self) -> list[str] | None:
         """Return a list of available input sources."""
         return self._receiver.available_sources
 
+    @override
     @property
     def sound_mode_list(self) -> list[str] | None:
         """Return a list of available sound modes."""
         return self._receiver.available_sound_modes
 
+    @override
     @property
     def is_volume_muted(self) -> bool | None:
         """Return boolean if volume is currently muted."""
         return self._receiver.mute_enabled
 
+    @override
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
@@ -220,20 +237,24 @@ class LyngdorfMainDevice(LyngdorfDevice):
             return None
         return _to_ha_volume(self._receiver.volume)
 
+    @override
     @property
     def source(self) -> str | None:
         """Return the current input source."""
         return self._receiver.source
 
+    @override
     @property
     def sound_mode(self) -> str | None:
         """Return the current sound mode."""
         return self._receiver.sound_mode
 
+    @override
     def turn_on(self) -> None:
         """Turn on media player."""
         self._receiver.power_on = True
 
+    @override
     def turn_off(self) -> None:
         """Turn off media player."""
         self._receiver.power_on = False
@@ -246,18 +267,22 @@ class LyngdorfMainDevice(LyngdorfDevice):
         """Volume down the media player."""
         self._receiver.volume_down()
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._receiver.volume = _to_lyngdorf_volume(volume)
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         self._receiver.mute_enabled = mute
 
+    @override
     def select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         self._receiver.sound_mode = sound_mode
 
+    @override
     def select_source(self, source: str) -> None:
         """Select input source."""
         self._receiver.source = source

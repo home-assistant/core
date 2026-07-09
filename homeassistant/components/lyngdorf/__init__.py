@@ -6,7 +6,7 @@ from lyngdorf.device import async_create_receiver, lookup_receiver_model
 
 from homeassistant.const import CONF_HOST, CONF_MODEL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -19,14 +19,12 @@ from .models import LyngdorfConfigEntry, LyngdorfRuntimeData
 _LOGGER = logging.getLogger(__name__)
 
 
-def _serial_as_mac(serial: str | None) -> str | None:
+def _serial_as_mac(serial: str) -> str | None:
     """Return a normalized MAC if the serial is one, otherwise None.
 
     Lyngdorf reports the device MAC in the UPnP serialNumber field, but this is
     not formally guaranteed — fall back gracefully if the value is not a MAC.
     """
-    if not serial:
-        return None
     cleaned = serial.replace(":", "").replace("-", "").replace(".", "")
     if len(cleaned) != 12 or not all(c in "0123456789abcdefABCDEF" for c in cleaned):
         return None
@@ -38,12 +36,7 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Lyngdorf from a config entry."""
     lyngdorf_model = lookup_receiver_model(config_entry.data[CONF_MODEL])
-    if lyngdorf_model is None:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="unsupported_model",
-            translation_placeholders={"model": config_entry.data[CONF_MODEL]},
-        )
+    assert lyngdorf_model is not None
 
     try:
         receiver = await async_create_receiver(
@@ -64,7 +57,7 @@ async def async_setup_entry(
         ) from err
 
     assert config_entry.unique_id
-    serial = config_entry.data.get(CONF_SERIAL_NUMBER)
+    serial = config_entry.data[CONF_SERIAL_NUMBER]
     mac = _serial_as_mac(serial)
     connections = {(CONNECTION_NETWORK_MAC, mac)} if mac else set()
 
