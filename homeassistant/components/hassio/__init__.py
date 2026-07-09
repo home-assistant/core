@@ -5,6 +5,7 @@ from functools import partial
 import logging
 import os
 import struct
+from typing import Any
 
 from aiohasupervisor import SupervisorBadRequestError, SupervisorError
 from aiohasupervisor.models import (
@@ -60,6 +61,7 @@ from .const import (
     DATA_HASSIO_SUPERVISOR_USER,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
+    ISSUE_MOUNT_MOUNT_FAILED,
     JOBS_COORDINATOR,
     MAIN_COORDINATOR,
     STATS_COORDINATOR,
@@ -68,6 +70,8 @@ from .coordinator import (
     HassioAddOnDataUpdateCoordinator,
     HassioMainDataUpdateCoordinator,
     HassioStatsDataUpdateCoordinator,
+    IssueSubscription,
+    SupervisorIssuesCoordinator,
     SupervisorJobsCoordinator,
     get_addons_info,
     get_addons_list,
@@ -87,7 +91,6 @@ from .exceptions import HassioNotReadyError
 from .handler import HassIO, async_update_diagnostics, get_supervisor_client
 from .http import HassIOView
 from .ingress import async_setup_ingress_view
-from .issues import SupervisorIssues
 from .services import async_setup_services
 from .websocket_api import async_load_websocket_api
 
@@ -340,18 +343,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await stats_coordinator.async_config_entry_first_refresh()
     hass.data[STATS_COORDINATOR] = stats_coordinator
 
-    # All coordinators refreshed successfully. Start the issues listener and
-    # install the stop handler now so they are never left in a partial state
-    # if a coordinator refresh raises ConfigEntryNotReady.
-    hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass)
+    issues_coordinator = SupervisorIssuesCoordinator(hass, entry)
+    hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues_coordinator
 
-    def _unload_supervisor_issues() -> None:
-        if (
-            supervisor_issues := hass.data.pop(DATA_KEY_SUPERVISOR_ISSUES, None)
-        ) is not None:
-            supervisor_issues.unload()
+    @callback
+    def _refresh_main_coordinator_on_mount_issue(_: Any) -> None:
+        coordinator.config_entry.async_create_task(hass, coordinator.async_refresh())
 
-    entry.async_on_unload(_unload_supervisor_issues)
+    entry.async_on_unload(
+        issues_coordinator.subscribe(
+            IssueSubscription(
+                event_callback=_refresh_main_coordinator_on_mount_issue,
+                key=ISSUE_MOUNT_MOUNT_FAILED,
+            )
+        )
+    )
 
     async def _async_stop(hass: HomeAssistant, restart: bool) -> None:
         """Stop or restart home assistant."""
@@ -407,9 +413,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "Failed to update Home Assistant options in Supervisor: %s", err
             )
 
-    # Push initial config to Supervisor and start issues listener
+    # Push initial config to Supervisor and refresh issues state
     await asyncio.gather(
-        update_hass_api(refresh_token), push_config(None), issues.setup()
+        update_hass_api(refresh_token),
+        push_config(None),
+        issues_coordinator.async_refresh(),
     )
 
     # Setup hardware integration for the detected board type
@@ -442,5 +450,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.pop(ADDONS_COORDINATOR, None)
     hass.data.pop(STATS_COORDINATOR, None)
     hass.data.pop(JOBS_COORDINATOR, None)
+    hass.data.pop(DATA_KEY_SUPERVISOR_ISSUES, None)
 
     return unload_ok

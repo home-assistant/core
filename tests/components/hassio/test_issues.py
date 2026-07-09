@@ -1,7 +1,6 @@
 """Test issues from supervisor issues."""
 
 from collections.abc import Generator
-from datetime import timedelta
 import os
 from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
@@ -24,17 +23,21 @@ from aiohasupervisor.models import (
     UnhealthyReason,
     UnsupportedReason,
 )
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.hassio.const import DOMAIN
-from homeassistant.components.hassio.coordinator import get_issues_info
+from homeassistant.components.hassio.const import DOMAIN, HASSIO_ISSUES_UPDATE_INTERVAL
+from homeassistant.components.hassio.coordinator import (
+    IssueSubscription,
+    get_issues_info,
+)
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .test_init import MOCK_ENVIRON
 
+from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -683,9 +686,8 @@ async def test_supervisor_issues_initial_failure(
     supervisor_client: AsyncMock,
     resolution_info: AsyncMock,
     hass_ws_client: WebSocketGenerator,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test issues manager retries after initial update failure."""
+    """Test initial issues refresh failure does not block hassio setup."""
     mock_resolution_info(
         supervisor_client,
         unsupported=[],
@@ -715,24 +717,14 @@ async def test_supervisor_issues_initial_failure(
         resolution_info.return_value,
     ]
 
-    with patch("homeassistant.components.hassio.issues.REQUEST_REFRESH_DELAY", new=0.1):
-        result = await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        assert result
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
 
-        client = await hass_ws_client(hass)
-
-        await client.send_json({"id": 1, "type": "repairs/list_issues"})
-        msg = await client.receive_json()
-        assert msg["success"]
-        assert len(msg["result"]["issues"]) == 0
-
-        freezer.tick(timedelta(milliseconds=200))
-        await hass.async_block_till_done()
-        await client.send_json({"id": 2, "type": "repairs/list_issues"})
-        msg = await client.receive_json()
-        assert msg["success"]
-        assert len(msg["result"]["issues"]) == 1
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 0
 
 
 @pytest.mark.usefixtures("all_setup_requests")
@@ -884,15 +876,16 @@ async def test_supervisor_remove_missing_issue_without_error(
 async def test_system_is_not_ready(
     hass: HomeAssistant,
     resolution_info: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Ensure hassio starts despite error."""
+    """Ensure hassio starts despite issues refresh errors."""
     resolution_info.side_effect = SupervisorBadRequestError(
         "System is not ready with state: setup"
     )
 
     assert await async_setup_component(hass, DOMAIN, {})
-    assert "Failed to update supervisor issues" in caplog.text
+    issues_coordinator = get_issues_info(hass)
+    assert issues_coordinator is not None
+    assert not issues_coordinator.issues
 
 
 @pytest.mark.parametrize(
@@ -1155,6 +1148,131 @@ async def test_supervisor_issues_addon_pwned(
             "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
         },
     )
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_subscription_events(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test subscription callbacks for issue add/update/remove by key."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    issues_coordinator = get_issues_info(hass)
+    assert issues_coordinator is not None
+
+    events: list[str] = []
+
+    @callback
+    def _handle_subscription_event(event: Any) -> None:
+        events.append(event.event)
+
+    unsubscribe = issues_coordinator.subscribe(
+        IssueSubscription(
+            event_callback=_handle_subscription_event,
+            key="issue_system_should_not_be_repair",
+        )
+    )
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "should_not_be_repair",
+                    "context": "system",
+                    "reference": None,
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+    assert events == ["added"]
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": issue_uuid,
+                    "type": "should_not_be_repair",
+                    "context": "system",
+                    "reference": "updated",
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+    assert events == ["added", "updated"]
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_removed",
+                "data": {
+                    "uuid": issue_uuid,
+                    "type": "should_not_be_repair",
+                    "context": "system",
+                    "reference": "updated",
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+    assert events == ["added", "updated", "removed"]
+
+    unsubscribe()
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_periodic_refresh_backstop(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test issues coordinator polls periodically without requiring subscribers."""
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type="should_not_be_repair",
+                context=ContextType.SYSTEM,
+                reference=None,
+                uuid=uuid4(),
+            )
+        ],
+    )
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    issues_coordinator = get_issues_info(hass)
+    assert issues_coordinator is not None
+
+    supervisor_client.resolution.info.reset_mock()
+
+    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    supervisor_client.resolution.info.assert_called_once()
 
 
 @pytest.mark.usefixtures("all_setup_requests")
