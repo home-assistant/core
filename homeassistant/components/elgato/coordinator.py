@@ -38,7 +38,7 @@ class ElgatoDataUpdateCoordinator(DataUpdateCoordinator[ElgatoData]):
     """Class to manage fetching Elgato data."""
 
     config_entry: ElgatoConfigEntry
-    has_battery: bool | None = None
+    has_battery: bool
 
     def __init__(self, hass: HomeAssistant, entry: ElgatoConfigEntry) -> None:
         """Initialize the coordinator."""
@@ -56,12 +56,25 @@ class ElgatoDataUpdateCoordinator(DataUpdateCoordinator[ElgatoData]):
         )
 
     @override
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+        try:
+            self.has_battery = await self.client.has_battery()
+        except ElgatoConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from err
+        except ElgatoError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unknown_error",
+            ) from err
+
+    @override
     async def _async_update_data(self) -> ElgatoData:
         """Fetch data from the Elgato device."""
         try:
-            if self.has_battery is None:
-                self.has_battery = await self.client.has_battery()
-
             return ElgatoData(
                 battery=await self.client.battery() if self.has_battery else None,
                 info=await self.client.info(),
