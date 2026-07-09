@@ -391,12 +391,8 @@ class DriverEvents:
             controller.on("identify", self.controller_events.async_on_identify)
         )
 
-        # The keep old devices flag is a one-shot flag that protects the device
-        # cleanup below for a single setup, e.g. while a migration flow is
-        # connected to the new, still empty, adapter before the NVM backup has
-        # been restored. Capture it before the branches below update the entry
-        # data, since clearing the flag must not disable the protection for
-        # the setup that consumes it.
+        # One-shot protection of the device cleanup below, e.g. during migration.
+        # Capture before the branches below clear the flag from the entry data.
         keep_old_devices = bool(self.config_entry.data.get(CONF_KEEP_OLD_DEVICES))
         if (
             old_unique_id := self.config_entry.unique_id
