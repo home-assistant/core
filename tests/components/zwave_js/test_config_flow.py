@@ -1620,6 +1620,23 @@ async def test_esphome_discovery_migration(
     # The add-on config is not touched before the user confirms.
     set_addon_options.assert_not_called()
 
+    # A zeroconf discovery prompt shows up while the migration is pending.
+    zeroconf_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties={"homeId": "9999"},
+        ),
+    )
+    assert zeroconf_result["type"] is FlowResultType.FORM
+    assert zeroconf_result["step_id"] == "zeroconf_confirm"
+
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
@@ -1674,6 +1691,98 @@ async def test_esphome_discovery_migration(
     assert entry.data["usb_path"] is None
     assert entry.data["socket_path"] == "esphome://192.168.1.100:6053"
     assert entry.data["use_addon"] is True
+    # The finished migration cleans up the pending discovery prompt.
+    assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_blocked_during_migration(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test ESPHome discovery aborts while a migration is in progress."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="4321", data={**entry.data, "use_addon": True}
+    )
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+    set_addon_options.assert_not_called()
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_deduplicated(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+) -> None:
+    """Test rediscovery of the same adapter does not add a second prompt."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="4321", data={**entry.data, "use_addon": True}
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_migration"
+
+    # The same adapter is rediscovered, e.g. with a new IP address.
+    rediscovery_info = ESPHomeServiceInfo(
+        name=ESPHOME_DISCOVERY_INFO.name,
+        zwave_home_id=ESPHOME_DISCOVERY_INFO.zwave_home_id,
+        ip_address="192.168.1.201",
+        port=ESPHOME_DISCOVERY_INFO.port,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=rediscovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+    assert (
+        len(
+            hass.config_entries.flow.async_progress_by_handler(
+                DOMAIN, match_context={"source": config_entries.SOURCE_ESPHOME}
+            )
+        )
+        == 1
+    )
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
