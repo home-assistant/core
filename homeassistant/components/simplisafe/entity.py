@@ -6,6 +6,7 @@ from typing import override
 from simplipy.device import Device, DeviceTypes
 from simplipy.system.v3 import SystemV3
 from simplipy.websocket import (
+    EVENT_CAMERA_MOTION_DETECTED,
     EVENT_CONNECTION_LOST,
     EVENT_CONNECTION_RESTORED,
     EVENT_LOCK_LOCKED,
@@ -40,6 +41,7 @@ DEFAULT_ENTITY_MODEL = "Alarm control panel"
 DEFAULT_ERROR_THRESHOLD = 2
 
 WEBSOCKET_EVENTS_REQUIRING_SERIAL = [
+    EVENT_CAMERA_MOTION_DETECTED,
     EVENT_LOCK_LOCKED,
     EVENT_LOCK_UNLOCKED,
     EVENT_SECRET_ALERT_TRIGGERED,
