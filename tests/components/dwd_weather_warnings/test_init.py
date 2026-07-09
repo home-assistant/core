@@ -159,7 +159,7 @@ async def test_load_valid_device_tracker(
     hass.states.async_set(
         mock_tracker_entry.data[CONF_REGION_DEVICE_TRACKER],
         STATE_HOME,
-        {ATTR_LATITUDE: "50.180454", ATTR_LONGITUDE: "7.610263"},
+        {ATTR_LATITUDE: 50.180454, ATTR_LONGITUDE: 7.610263},
     )
 
     await hass.config_entries.async_setup(mock_tracker_entry.entry_id)

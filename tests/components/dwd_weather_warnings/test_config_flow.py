@@ -114,7 +114,7 @@ async def test_create_entry_gps(
     hass.states.async_set(
         DEMO_CONFIG_ENTRY_GPS[CONF_REGION_DEVICE_TRACKER],
         STATE_HOME,
-        {ATTR_LATITUDE: "50.180454", ATTR_LONGITUDE: "7.610263"},
+        {ATTR_LATITUDE: 50.180454, ATTR_LONGITUDE: 7.610263},
     )
 
     mock_dwdwfsapi.__bool__.return_value = False
