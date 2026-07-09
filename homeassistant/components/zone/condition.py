@@ -107,6 +107,8 @@ def zone(
     ) is not None:
         return zone_ent.entity_id in in_zones
 
+    # Coordinate fallback matches any entity reporting a position, not just
+    # person/device_tracker, so no single platform enum applies here.
     latitude = entity.attributes.get(ATTR_LATITUDE)
     longitude = entity.attributes.get(ATTR_LONGITUDE)
 
