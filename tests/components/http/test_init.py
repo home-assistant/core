@@ -183,24 +183,12 @@ async def test_proxy_config_forwarded_request(
     forwarded middleware with a config loaded from the store to guard against
     passing the strings through instead of IP network objects.
     """
-    hass_storage[DOMAIN] = {
-        "version": 2,
-        "key": DOMAIN,
-        "data": {
-            "stable": {
-                "server_port": 8123,
-                "cors_allowed_origins": ["https://cast.home-assistant.io"],
-                "use_x_forwarded_for": True,
-                "trusted_proxies": ["127.0.0.0/8"],
-                "ip_ban_enabled": True,
-                "login_attempts_threshold": -1,
-                "ssl_profile": "modern",
-                "use_x_frame_options": True,
-            },
-            "pending": None,
-            "yaml_migration_done": True,
-        },
-    }
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "use_x_forwarded_for": True,
+            "trusted_proxies": ["127.0.0.0/8"],
+        }
+    )
     assert await async_setup_component(hass, "api", {})
     client = await hass_client()
 
