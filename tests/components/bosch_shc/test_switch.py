@@ -229,9 +229,21 @@ async def test_smart_plug_is_on(
     assert outlet_state.state == expected_ha_state
 
 
-async def test_turn_on_sets_on_key_true(hass: HomeAssistant) -> None:
-    """turn_on sets the description's on_key attribute to True."""
-    device = _smart_plug_device(switchstate=SMART_PLUG_OFF)
+@pytest.mark.parametrize(
+    ("service", "initial_switchstate", "expected_switchstate"),
+    [
+        pytest.param(SERVICE_TURN_ON, SMART_PLUG_OFF, True, id="turn_on"),
+        pytest.param(SERVICE_TURN_OFF, SMART_PLUG_ON, False, id="turn_off"),
+    ],
+)
+async def test_turn_on_off_sets_on_key(
+    hass: HomeAssistant,
+    service: str,
+    initial_switchstate: SHCSmartPlug.PowerSwitchService.State,
+    expected_switchstate: bool,
+) -> None:
+    """turn_on/turn_off set the description's on_key attribute to True/False."""
+    device = _smart_plug_device(switchstate=initial_switchstate)
     await _setup_switch_integration(hass, smart_plugs=[device])
 
     outlet_state = next(
@@ -241,32 +253,12 @@ async def test_turn_on_sets_on_key_true(hass: HomeAssistant) -> None:
     )
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: outlet_state.entity_id},
         blocking=True,
     )
 
-    assert device.switchstate is True
-
-
-async def test_turn_off_sets_on_key_false(hass: HomeAssistant) -> None:
-    """turn_off sets the description's on_key attribute to False."""
-    device = _smart_plug_device(switchstate=SMART_PLUG_ON)
-    await _setup_switch_integration(hass, smart_plugs=[device])
-
-    outlet_state = next(
-        s
-        for s in hass.states.async_all(SWITCH_DOMAIN)
-        if s.attributes.get("device_class") == "outlet"
-    )
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: outlet_state.entity_id},
-        blocking=True,
-    )
-
-    assert device.switchstate is False
+    assert device.switchstate is expected_switchstate
 
 
 async def test_camera_eyes_update_entity_calls_device_update(
