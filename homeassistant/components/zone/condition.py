@@ -106,9 +106,6 @@ def zone(
     ) is not None:
         return zone_ent.entity_id in in_zones
 
-    # Coordinate fallback matches any entity reporting a position, not just
-    # person/device_tracker; latitude/longitude are read from the base enum,
-    # while gps_accuracy has no base member and stays on ATTR_GPS_ACCURACY.
     latitude = entity.attributes.get(EntityStateAttribute.LATITUDE)
     longitude = entity.attributes.get(EntityStateAttribute.LONGITUDE)
 
