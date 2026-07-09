@@ -8,6 +8,7 @@ from dsmr_parser.exceptions import DecryptionError
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.dsmr.config_flow import CannotCommunicate
 from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.usb import SerialDevice
 from homeassistant.core import HomeAssistant
@@ -288,6 +289,41 @@ async def test_setup_serial_encrypted_invalid_key(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
     assert result["errors"] == {"base": "invalid_key"}
+
+
+async def test_setup_serial_encrypted_cannot_communicate(
+    hass: HomeAssistant,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test an encrypted meter does not fall back to RFXtrx when it stays silent."""
+    port = com_port()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"port": port.device, "dsmr_version": "MSn"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+
+    with patch(
+        "homeassistant.components.dsmr.config_flow._validate_dsmr_connection",
+        side_effect=CannotCommunicate,
+    ) as validate:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"encryption_key": "aabbccddeeff00112233445566778899"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+    assert result["errors"] == {"base": "cannot_communicate"}
+    # Encrypted meters must not retry over the RFXtrx protocol
+    assert validate.call_count == 1
 
 
 async def test_setup_serial_rfxtrx(
