@@ -110,6 +110,29 @@ async def test_number_set_value(
     )
 
 
+async def test_number_inverted_memorized_position_set(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+) -> None:
+    """Test that setting a cover's "My position" inverts before sending."""
+    await setup_overkiz_integration(fixture=OFFICE_BLINDS_MEMORIZED_POSITION.fixture)
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: OFFICE_BLINDS_MEMORIZED_POSITION.entity_id, ATTR_VALUE: 15},
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client,
+        device_url=OFFICE_BLINDS_MEMORIZED_POSITION.device_url,
+        command_name="setMemorized1Position",
+        parameters=[85],
+    )
+
+
 async def test_number_dynamic_min_max(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
