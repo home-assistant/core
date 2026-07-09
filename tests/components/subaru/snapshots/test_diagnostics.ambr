@@ -10,6 +10,12 @@
     }),
     'data': list([
       dict({
+        'vehicle_health': dict({
+          'RECOMMENDED_TIRE_PRESSURE': dict({
+            'FRONT_TIRES': 35,
+            'REAR_TIRES': 33,
+          }),
+        }),
         'vehicle_status': dict({
           'AVG_FUEL_CONSUMPTION': 51.1,
           'DISTANCE_TO_EMPTY_FUEL': 170,
@@ -61,6 +67,12 @@
       'username': '**REDACTED**',
     }),
     'data': dict({
+      'vehicle_health': dict({
+        'RECOMMENDED_TIRE_PRESSURE': dict({
+          'FRONT_TIRES': 35,
+          'REAR_TIRES': 33,
+        }),
+      }),
       'vehicle_status': dict({
         'AVG_FUEL_CONSUMPTION': 51.1,
         'DISTANCE_TO_EMPTY_FUEL': 170,
