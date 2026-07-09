@@ -59,7 +59,7 @@ from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .config import async_load_config, default_server_port
+from .config import async_get_and_load_store, async_load_config, default_server_port
 from .const import (  # noqa: F401
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,
@@ -256,7 +256,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Start the server."""
         with async_start_setup(hass, integration="http", phase=SetupPhases.SETUP):
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
-            await server.start()
+            try:
+                await server.start()
+            except HomeAssistantHTTPBindError:
+                # The configured host/port cannot be bound. If we are trialing a
+                # pending (unconfirmed) config it is already known to be
+                # unusable, so revert to the stable config right away instead of
+                # waiting out the auto-revert trial window. A pending config is
+                # only under trial when a revert is scheduled; on the stable
+                # config there is nothing better to try, so we stay up without
+                # an HTTP server.
+                store = await async_get_and_load_store(hass)
+                if store.revert_deadline is not None:
+                    _LOGGER.error(
+                        "Reverting pending HTTP config to stable because the "
+                        "server could not bind to port %d",
+                        server.server_port,
+                    )
+                    await store.async_revert_to_stable_now()
 
     async_when_setup_or_start(hass, "frontend", start_server)
 
@@ -361,6 +378,17 @@ async def _serve_file_with_cache_headers(
 
 async def _serve_file(path: str, request: web.Request) -> web.FileResponse:
     return web.FileResponse(path)
+
+
+class HomeAssistantHTTPBindError(HomeAssistantError):
+    """Error raised when the HTTP server cannot bind to the configured address.
+
+    ``loop.create_server()`` only resolves the host and stands up the listening
+    socket, so any error from it means the configured host/port is unusable
+    (port in use, privileged port, unavailable host, DNS failure, ...). These
+    are permanent for the current config, so a pending config that hits one can
+    be reverted immediately instead of waiting out the trial window.
+    """
 
 
 class HomeAssistantHTTP:
@@ -672,6 +700,9 @@ class HomeAssistantHTTP:
             _LOGGER.error(
                 "Failed to create HTTP server at port %d: %s", self.server_port, error
             )
+            raise HomeAssistantHTTPBindError(
+                f"Could not bind the HTTP server to port {self.server_port}: {error}"
+            ) from error
 
         _LOGGER.info("Now listening on port %d", self.server_port)
 

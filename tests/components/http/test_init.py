@@ -2,10 +2,12 @@
 
 import asyncio
 from collections.abc import Callable
+import errno
 from http import HTTPStatus
 import logging
 import os
 from pathlib import Path
+import socket
 from typing import Any
 from unittest.mock import ANY, Mock, patch
 
@@ -1475,6 +1477,81 @@ async def test_pending_config_promote_cancels_revert(
 
     assert hass_storage["http"]["data"] == {
         "stable": HTTP_STORAGE_SCHEMA({"server_port": 9999}),
+        "pending": None,
+        "yaml_migration_done": True,
+    }
+    assert len(restart_calls) == 0
+
+
+@pytest.mark.parametrize(
+    "bind_error",
+    [
+        # Port already in use (e.g. taken by another proxy): OSError, errno 98.
+        OSError(errno.EADDRINUSE, "Address already in use"),
+        # Privileged port without CAP_NET_BIND_SERVICE: PermissionError, errno 13.
+        PermissionError(errno.EACCES, "Permission denied"),
+        # Configured host is not a local address: OSError with no errno.
+        OSError("could not bind on any address out of [('10.0.0.1', 80)]"),
+        # Unresolvable host name: gaierror (an OSError subclass), negative errno.
+        socket.gaierror(socket.EAI_NONAME, "Name or service not known"),
+    ],
+    ids=["address-in-use", "permission-denied", "no-bindable-address", "bad-host"],
+)
+async def test_pending_config_reverts_immediately_on_bind_failure(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    bind_error: OSError,
+) -> None:
+    """A pending config that cannot bind its address reverts without waiting.
+
+    Any failure to stand up the listener (not just ``EADDRINUSE``) is a
+    permanent fault for the current config, so the trial is abandoned at once.
+    """
+    hass_storage["http"] = _stable_http_storage(
+        {"server_port": 9876}, pending={"server_port": 80}
+    )
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    with patch(
+        "asyncio.BaseEventLoop.create_server",
+        side_effect=bind_error,
+    ):
+        assert await async_setup_component(hass, "http", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # The pending config is dropped and a restart requested right away, without
+    # waiting out AUTO_REVERT_DELAY.
+    assert hass_storage["http"]["data"] == {
+        "stable": HTTP_STORAGE_SCHEMA({"server_port": 9876}),
+        "pending": None,
+        "yaml_migration_done": True,
+    }
+    assert len(restart_calls) == 1
+    assert "could not bind to port 80" in caplog.text
+
+
+async def test_stable_config_bind_failure_does_not_revert(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """A bind failure on the stable config must not clear config or restart."""
+    hass_storage["http"] = _stable_http_storage({"server_port": 80})
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    with patch(
+        "asyncio.BaseEventLoop.create_server",
+        side_effect=OSError(errno.EADDRINUSE, "Address already in use"),
+    ):
+        assert await async_setup_component(hass, "http", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert hass_storage["http"]["data"] == {
+        "stable": HTTP_STORAGE_SCHEMA({"server_port": 80}),
         "pending": None,
         "yaml_migration_done": True,
     }

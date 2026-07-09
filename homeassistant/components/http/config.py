@@ -345,15 +345,29 @@ class HTTPConfigStore:
         self._revert_deadline = None
 
     async def _async_revert_to_stable(self, _now: datetime) -> None:
-        """Clear the unconfirmed pending config and restart to apply stable."""
-        self._async_cancel_revert()
+        """Revert to stable because the pending trial window expired."""
         if self._pending is None:
+            self._async_cancel_revert()
             return
         _LOGGER.warning(
             "Pending HTTP config was not confirmed within %s; reverting to the "
             "stable config and restarting",
             AUTO_REVERT_DELAY,
         )
+        await self.async_revert_to_stable_now()
+
+    async def async_revert_to_stable_now(self) -> None:
+        """Clear the unconfirmed pending config and restart to apply stable.
+
+        Unlike the scheduled revert, this happens immediately. It is used when
+        the pending config is already known to be unusable (e.g. its port could
+        not be bound), so waiting out the trial window would only delay
+        recovery.
+        """
+        await self.async_load()
+        self._async_cancel_revert()
+        if self._pending is None:
+            return
         self._pending = None
         await self._async_persist()
         # Imported here to avoid a circular import at module load time.
