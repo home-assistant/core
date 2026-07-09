@@ -246,17 +246,15 @@ class ProtectData:
         Each non-eviction change is dispatched — a detection type may surface at
         the event start, on a later update, or only as it ends — routed to the
         subscribers registered for this device and event type; entities fire each
-        ``(event, type)`` once. The device is resolved by ``device_id`` (the
-        stable cross-API join key), not the public ``device_mac``, so the key
-        comes from the same store the entities derive ``self.device.mac`` from and
-        matches without assuming both mac strings are byte-identical.
+        ``(event, type)`` once. Subscriptions are keyed by ``device_id`` (the
+        stable cross-API join key, shared by the private and public bootstraps),
+        so the event routes directly without a bootstrap lookup.
         """
         if change is EventChange.REMOVED:
             return
-        device = self.api.bootstrap.get_device_from_id(event.device_id)
-        if device is None or not (
+        if not (
             subscriptions := self._public_event_subscriptions.get(
-                (device.mac, event.type)
+                (event.device_id, event.type)
             )
         ):
             return
@@ -492,12 +490,12 @@ class ProtectData:
     @callback
     def async_subscribe_public_event(
         self,
-        mac: str,
+        device_id: str,
         event_type: EventType,
         update_callback: Callable[[ProtectEvent], None],
     ) -> CALLBACK_TYPE:
-        """Add a callback subscriber for public events of a type by device mac."""
-        key = (mac, event_type)
+        """Add a callback subscriber for public events of a type by device id."""
+        key = (device_id, event_type)
         self._public_event_subscriptions[key].add(update_callback)
         return partial(self._async_unsubscribe_public_event, key, update_callback)
 

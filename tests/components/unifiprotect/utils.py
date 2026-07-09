@@ -26,6 +26,7 @@ from uiprotect.data import (
 from uiprotect.data.bootstrap import ProtectDeviceRef
 from uiprotect.data.public_devices import (
     PublicCamera,
+    PublicHdrMode,
     PublicLight,
     PublicLightDeviceSettings,
     PublicSensor,
@@ -341,6 +342,13 @@ def make_public_light(
     return public
 
 
+_HDR_DISPLAY_TO_PUBLIC = {
+    "auto": PublicHdrMode.AUTO,
+    "always": PublicHdrMode.ON,
+    "off": PublicHdrMode.OFF,
+}
+
+
 def setup_public_sensor(
     ufp: MockUFPFixture,
     capabilities: set[SensorFeatureCapability] | None = None,
@@ -427,12 +435,16 @@ def make_public_camera(
     is_glass_break_currently_detected: bool = False,
     object_types: list[SmartDetectObjectType] | None = None,
     audio_types: list[SmartDetectAudioType] | None = None,
+    hdr_type: PublicHdrMode | None = None,
 ) -> Mock:
-    """Build a public-API camera carrying the migrated detection-state booleans.
+    """Build a public-API camera mirroring a private camera's migrated fields.
 
     The ``is_*`` flags back the migrated ``ufp_public_value`` paths; the
     ``smart_detect_settings`` types back the per-type ``ufp_public_enabled_fn``
-    gates (default: all types enabled, so the entity is available).
+    gates (default: all types enabled, so the entity is available). ``hdr_type``
+    defaults to the public mode derived from the private ``hdr_mode_display`` so
+    the migrated HDR select reads the same value the private object would
+    produce.
     """
     public = Mock(spec=PublicCamera)
     public.id = camera.id
@@ -458,6 +470,11 @@ def make_public_camera(
         object_types=_ALL_OBJECT_TYPES if object_types is None else object_types,
         audio_types=_ALL_AUDIO_TYPES if audio_types is None else audio_types,
     )
+    public.hdr_type = (
+        _HDR_DISPLAY_TO_PUBLIC[camera.hdr_mode_display]
+        if hdr_type is None
+        else hdr_type
+    )
     return public
 
 
@@ -465,7 +482,7 @@ def setup_public_camera(ufp: MockUFPFixture) -> None:
     """Expose private cameras over the public API via a real ``PublicBootstrap``.
 
     Mirrors ``setup_public_sensor`` for ``ModelType.CAMERA`` so the migrated
-    detection binary sensors read sustained state from the public object.
+    camera config entities read from the public object.
     """
     public_bootstrap = PublicBootstrap()
     pb = Mock(spec=PublicBootstrap)

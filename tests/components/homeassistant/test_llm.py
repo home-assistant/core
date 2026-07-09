@@ -53,6 +53,22 @@ async def test_no_tools_for_other_api(hass: HomeAssistant) -> None:
     assert ha_llm.async_get_tools(hass, _llm_context(), "other") is None
 
 
+async def test_prompt_includes_context(hass: HomeAssistant) -> None:
+    """Test the platform contributes the live-context and static-overview prompt."""
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    assert result.prompt is not None
+    assert ha_llm.DYNAMIC_CONTEXT_PROMPT in result.prompt
+    assert "Static Context:" in result.prompt
+    assert "Kitchen Light" in result.prompt
+
+
+async def test_prompt_no_entities(hass: HomeAssistant) -> None:
+    """Test the platform contributes the no-entities prompt when nothing is exposed."""
+    async_expose_entity(hass, "conversation", ENTITY_ID, False)
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    assert result.prompt == llm.NO_ENTITIES_PROMPT
+
+
 async def test_get_live_context_no_exposed_entities(hass: HomeAssistant) -> None:
     """Test GetLiveContext reports an error when nothing is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)

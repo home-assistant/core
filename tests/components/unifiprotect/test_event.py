@@ -247,11 +247,13 @@ async def test_package_detected(
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    # The camera is resolved by device_id, not by the public device_mac, so a
-    # missing device_mac must still dispatch.
+    # Subscriptions are keyed by device_id alone: an event still dispatches when
+    # it carries no device_mac and the device is absent from the private
+    # bootstrap, proving the public event path does not depend on it.
+    ufp.api.bootstrap.id_lookup.pop(doorbell.id, None)
     ufp.events_msg(
         ProtectEvent(
-            id="test_package_event_fallback",
+            id="test_package_event_no_private_device",
             type=EventType.SMART_DETECT,
             channel=ProtectEventChannel.DETECTION,
             device_id=doorbell.id,
@@ -265,10 +267,10 @@ async def test_package_detected(
     await hass.async_block_till_done()
     assert len(events) == 2
     assert events[1].data["new_state"].attributes[ATTR_EVENT_ID] == (
-        "test_package_event_fallback"
+        "test_package_event_no_private_device"
     )
 
-    # An event for a device absent from the private bootstrap is dropped.
+    # An event for a device without a matching subscription is dropped.
     ufp.events_msg(
         ProtectEvent(
             id="test_package_event_unknown",
