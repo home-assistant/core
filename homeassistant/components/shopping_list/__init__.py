@@ -107,7 +107,7 @@ async def async_setup_entry(
             await data.async_remove(str(item["id"]))
 
     async def complete_item_service(call: ServiceCall) -> None:
-        """Mark the first item with matching `name` as completed."""
+        """Mark all incomplete items with matching `name` as completed."""
         name = call.data[ATTR_NAME]
         try:
             await config_entry.runtime_data.async_complete(name)
