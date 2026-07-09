@@ -1218,6 +1218,9 @@ habluetooth==6.7.4
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
 
+# homeassistant.components.harbor
+harbor-python==1.2.1
+
 # homeassistant.components.cloud
 hass-nabucasa==2.2.0
 

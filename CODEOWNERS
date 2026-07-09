@@ -703,6 +703,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/habitica/ @tr4nt0r
 /homeassistant/components/hanna/ @bestycame
 /tests/components/hanna/ @bestycame
+/homeassistant/components/harbor/ @Lash-L @afgarcia86
+/tests/components/harbor/ @Lash-L @afgarcia86
 /homeassistant/components/hardkernel/ @home-assistant/core
 /tests/components/hardkernel/ @home-assistant/core
 /homeassistant/components/hardware/ @home-assistant/core

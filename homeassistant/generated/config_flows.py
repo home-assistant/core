@@ -296,6 +296,7 @@ FLOWS = {
         "guntamatic",
         "habitica",
         "hanna",
+        "harbor",
         "harmony",
         "hdfury",
         "hegel",

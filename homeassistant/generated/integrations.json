@@ -2755,6 +2755,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "harbor": {
+      "name": "Harbor Sleep",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "hardkernel": {
       "name": "Hardkernel",
       "integration_type": "hardware",
