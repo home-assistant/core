@@ -99,6 +99,15 @@ EXAMPLE_SERVER_URL = "ws://localhost:3000"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
+# Steps at which another flow is only showing a discovery prompt and can be
+# aborted safely when a config entry is created by a different flow.
+DISCOVERY_PROMPT_STEPS = {
+    "confirm_usb_migration",
+    "hassio_confirm",
+    "installation_type",
+    "zeroconf_confirm",
+}
+
 NETWORK_TYPE_NEW = "new"
 NETWORK_TYPE_EXISTING = "existing"
 ZWAVE_JS_SERVER_INSTRUCTIONS = (
@@ -1036,9 +1045,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # so only one config entry may use the add-on.
             return self.async_abort(reason="addon_already_configured")
 
-        # Abort any other flows that may be in progress
+        # Abort other flows that are still at a discovery prompt, since the
+        # new entry may make them redundant. Flows that have progressed
+        # further, e.g. a migration that has backed up the network,
+        # must not be interrupted.
         for progress in self._async_in_progress():
-            self.hass.config_entries.flow.async_abort(progress["flow_id"])
+            if progress.get("step_id") in DISCOVERY_PROMPT_STEPS:
+                self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
         return self.async_create_entry(
             title=TITLE,
