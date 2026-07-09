@@ -1,6 +1,6 @@
 {
   "application_credentials": {
-    "description": "The **Client Secret** is ignored, enter any value. Follow the [setup instructions]({more_info_url}) to obtain the Client ID."
+    "description": "The **client secret** is ignored, enter any value. Follow the [setup instructions]({more_info_url}) to obtain the Client ID."
   },
   "config": {
     "abort": {
