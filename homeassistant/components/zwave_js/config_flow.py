@@ -686,7 +686,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         try:
             home_id = int(discovery_info.properties["homeId"])
-        except KeyError, ValueError:
+        except KeyError, TypeError, ValueError:
+            # A valueless homeId TXT record decodes to None.
             return self.async_abort(reason="invalid_discovery_info")
         await self.async_set_unique_id(str(home_id))
         self._abort_if_unique_id_configured()
