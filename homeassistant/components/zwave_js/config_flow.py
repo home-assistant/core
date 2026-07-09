@@ -767,6 +767,19 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             self.lr_s2_authenticated_key = addon_config.get(
                 CONF_ADDON_LR_S2_AUTHENTICATED_KEY, ""
             )
+
+            if self._adapter_discovered:
+                # Apply the discovered adapter to the add-on config and
+                # restart the add-on before connecting, so the server
+                # version info reflects the discovered adapter.
+                self._addon_config_updates.update(
+                    {
+                        CONF_ADDON_DEVICE: self.usb_path,
+                        CONF_ADDON_SOCKET: self.socket_path,
+                    }
+                )
+                return await self.async_step_start_addon()
+
             return await self.async_step_finish_addon_setup_user()
 
         if addon_info.state is AddonState.NOT_RUNNING:
@@ -990,24 +1003,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(
                 str(self.version_info.home_id), raise_on_progress=False
             )
-
-        # When we came from discovery, make sure we update the add-on
-        if self._adapter_discovered and self.use_addon:
-            await self._async_set_addon_config(
-                {
-                    CONF_ADDON_DEVICE: self.usb_path,
-                    CONF_ADDON_SOCKET: self.socket_path,
-                    CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
-                    CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                    CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                    CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                    CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
-                }
-            )
-            if self.restart_addon:
-                manager = get_addon_manager(self.hass)
-                await manager.async_stop_addon()
 
         self._abort_if_unique_id_configured(
             updates={
@@ -1652,6 +1647,24 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_NAME: f"Network {home_id_display} via {discovery_info.name} (ESPHome)"
         }
         self._adapter_discovered = True
+
+        # A discovered adapter that doesn't belong to an existing add-on based
+        # entry is a different adapter, so offer to migrate the existing
+        # network to it instead of repointing the shared add-on config.
+        discovered_home_id = (
+            str(discovery_info.zwave_home_id) if discovery_info.zwave_home_id else None
+        )
+        if addon_entry := next(
+            (
+                entry
+                for entry in self._async_current_entries(include_ignore=False)
+                if entry.data.get(CONF_USE_ADDON)
+                and entry.unique_id != discovered_home_id
+            ),
+            None,
+        ):
+            self._reconfigure_config_entry = addon_entry
+            return await self.async_step_confirm_usb_migration()
 
         return await self.async_step_installation_type()
 
