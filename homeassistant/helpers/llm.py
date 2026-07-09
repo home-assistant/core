@@ -30,6 +30,7 @@ from homeassistant.const import (
     ATTR_SERVICE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED,
+    EntityStateAttribute,
 )
 from homeassistant.core import Context, Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
@@ -191,7 +192,7 @@ class LLMContext:
     language: str | None
     """Language of the LLM request."""
 
-    assistant: str | None
+    assistant: str
     """Assistant domain that is handling the LLM request."""
 
     device_id: str | None
@@ -731,7 +732,10 @@ def _get_exposed_entities(
                 info["state"] = async_rounded_state(hass, state.entity_id, state)
 
             # Convert timestamp device_class states from UTC to local time
-            if state.attributes.get("device_class") == "timestamp" and state.state:
+            if (
+                state.attributes.get(EntityStateAttribute.DEVICE_CLASS) == "timestamp"
+                and state.state
+            ):
                 if (parsed_utc := dt_util.parse_datetime(state.state)) is not None:
                     info["state"] = dt_util.as_local(parsed_utc).isoformat()
 
@@ -1278,11 +1282,6 @@ class GetLiveContextTool(Tool):
         llm_context: LLMContext,
     ) -> JsonObjectType:
         """Get the current state of exposed entities."""
-        if llm_context.assistant is None:
-            # Note this doesn't happen in practice since this tool won't be
-            # exposed if no assistant is configured.
-            return {"success": False, "error": "No assistant configured"}
-
         args = self.parameters(tool_input.tool_args)
         exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
 

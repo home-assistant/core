@@ -19,7 +19,7 @@ from .const import (
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_LIGHT,
 )
-from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
+from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize a Netatmo Presence camera light."""
         super().__init__(netatmo_device)
-        self._attr_unique_id = f"{self.device.entity_id}-light"
+        self._attr_unique_id = f"{self.device.entity_id}-light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         self._signal_name = f"{HOME}-{self.home.entity_id}"
         self._publishers.extend(
@@ -154,7 +154,7 @@ class NetatmoLight(NetatmoModuleEntity, LightEntity):
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize a Netatmo light."""
         super().__init__(netatmo_device)
-        self._attr_unique_id = f"{self.device.entity_id}-light"
+        self._attr_unique_id = f"{self.device.entity_id}-light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         if self.device.brightness is not None:
             self._attr_color_mode = ColorMode.BRIGHTNESS
