@@ -25,6 +25,7 @@ from homeassistant.components.hassio import (
 from homeassistant.config_entries import (
     SOURCE_ESPHOME,
     SOURCE_USB,
+    SOURCE_ZEROCONF,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -512,12 +513,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if any(
             flow
             for flow in self._async_in_progress()
-            if flow["context"].get("source") != SOURCE_USB
+            if flow["context"].get("source") not in (SOURCE_USB, SOURCE_ZEROCONF)
         ):
             # Allow multiple USB discovery flows to be in progress.
             # Migration requires more than one USB stick to be connected,
             # which can cause more than one discovery flow to be in progress,
             # at least for a short time.
+            # Zeroconf flows never touch the add-on,
+            # so an idle discovery prompt should not block USB discovery.
             return self.async_abort(reason="already_in_progress")
         if current_config_entries := self._async_current_entries(include_ignore=False):
             self._reconfigure_config_entry = next(
@@ -659,7 +662,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the Z-Wave JS add-on.
         """
-        if self._async_in_progress():
+        if any(
+            flow
+            for flow in self._async_in_progress()
+            # Zeroconf flows never touch the add-on, so an idle discovery
+            # prompt should not block the add-on discovery.
+            if flow["context"].get("source") != SOURCE_ZEROCONF
+        ):
             return self.async_abort(reason="already_in_progress")
 
         if discovery_info.slug != ADDON_SLUG:
