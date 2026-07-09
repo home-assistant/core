@@ -35,7 +35,7 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 )
 
 
-@pytest.mark.usefixtures("mock_my_pv_connection", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_my_pv_client", "mock_setup_entry")
 async def test_step_user(
     hass: HomeAssistant,
 ) -> None:
@@ -63,7 +63,7 @@ async def test_step_user(
     assert result["result"].unique_id == ELWA2_SERIAL_NUMBER
 
 
-@pytest.mark.usefixtures("mock_my_pv_connection")
+@pytest.mark.usefixtures("mock_my_pv_client")
 async def test_step_user_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -92,7 +92,7 @@ async def test_step_user_already_configured(
 
 async def test_step_user_cannot_connect(
     hass: HomeAssistant,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test if we get the local setup form with error if we can not connect to device."""
     result = await hass.config_entries.flow.async_init(
@@ -103,7 +103,7 @@ async def test_step_user_cannot_connect(
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    mock_my_pv_connection.open.return_value = False
+    mock_my_pv_client.connect.return_value = False
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -120,7 +120,7 @@ async def test_step_user_cannot_connect(
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_auth(
     hass: HomeAssistant,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test we get the authentication form."""
     result = await hass.config_entries.flow.async_init(
@@ -131,7 +131,7 @@ async def test_step_auth(
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    mock_my_pv_connection.open.side_effect = MyPVAuthenticationError()
+    mock_my_pv_client.connect.side_effect = MyPVAuthenticationError()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -144,7 +144,7 @@ async def test_step_auth(
     assert result["step_id"] == "auth"
     assert not result["errors"]
 
-    mock_my_pv_connection.open.side_effect = None
+    mock_my_pv_client.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -164,7 +164,7 @@ async def test_step_auth(
 
 async def test_step_auth_cannot_connect(
     hass: HomeAssistant,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test we get the authentication form with error if we can not connect to device."""
     result = await hass.config_entries.flow.async_init(
@@ -175,7 +175,7 @@ async def test_step_auth_cannot_connect(
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    mock_my_pv_connection.open.side_effect = MyPVAuthenticationError()
+    mock_my_pv_client.connect.side_effect = MyPVAuthenticationError()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -188,8 +188,8 @@ async def test_step_auth_cannot_connect(
     assert result["step_id"] == "auth"
     assert not result["errors"]
 
-    mock_my_pv_connection.open.return_value = False
-    mock_my_pv_connection.open.side_effect = None
+    mock_my_pv_client.connect.return_value = False
+    mock_my_pv_client.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -203,7 +203,7 @@ async def test_step_auth_cannot_connect(
     assert result["errors"]["base"] == "cannot_connect"
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_my_pv_connection")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_my_pv_client")
 async def test_step_dhcp(
     hass: HomeAssistant,
 ) -> None:
@@ -231,7 +231,7 @@ async def test_step_dhcp(
     assert result["result"].unique_id == ELWA2_SERIAL_NUMBER
 
 
-@pytest.mark.usefixtures("mock_my_pv_connection")
+@pytest.mark.usefixtures("mock_my_pv_client")
 async def test_step_dhcp_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -253,11 +253,11 @@ async def test_step_dhcp_already_configured(
 
 async def test_step_dhcp_cannot_connect(
     hass: HomeAssistant,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test for DHCP discovery that can not connect."""
 
-    mock_my_pv_connection.open.return_value = False
+    mock_my_pv_client.connect.return_value = False
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -274,11 +274,11 @@ async def test_step_dhcp_cannot_connect(
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_dhcp_auth(
     hass: HomeAssistant,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test for DHCP discovery that requires a password."""
 
-    mock_my_pv_connection.open.side_effect = MyPVAuthenticationError()
+    mock_my_pv_client.connect.side_effect = MyPVAuthenticationError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -292,7 +292,7 @@ async def test_step_dhcp_auth(
     assert result["step_id"] == "discovery_auth"
     assert not result["errors"]
 
-    mock_my_pv_connection.open.side_effect = None
+    mock_my_pv_client.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: "test-password"}
@@ -309,11 +309,11 @@ async def test_step_dhcp_auth(
 
 async def test_step_dhcp_auth_wrong_password(
     hass: HomeAssistant,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test for DHCP discovery with an incorrect password."""
 
-    mock_my_pv_connection.open.side_effect = MyPVAuthenticationError()
+    mock_my_pv_client.connect.side_effect = MyPVAuthenticationError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -339,11 +339,11 @@ async def test_step_dhcp_auth_wrong_password(
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_zeroconf(
     hass: HomeAssistant,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test for Zeroconf discovery that requires a password."""
 
-    mock_my_pv_connection.open.side_effect = MyPVAuthenticationError()
+    mock_my_pv_client.connect.side_effect = MyPVAuthenticationError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -357,7 +357,7 @@ async def test_step_zeroconf(
     assert result["step_id"] == "discovery_auth"
     assert not result["errors"]
 
-    mock_my_pv_connection.open.side_effect = None
+    mock_my_pv_client.connect.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: "test-password"}
@@ -375,12 +375,12 @@ async def test_step_zeroconf(
 async def test_step_zeroconf_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test for Zeroconf discovery that is already configured."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_connection.open.side_effect = MyPVAuthenticationError()
+    mock_my_pv_client.connect.side_effect = MyPVAuthenticationError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -396,11 +396,11 @@ async def test_step_zeroconf_already_configured(
 
 async def test_step_zeroconf_cannot_connect(
     hass: HomeAssistant,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test for Zeroconf discovery that can not connect."""
 
-    mock_my_pv_connection.open.return_value = False
+    mock_my_pv_client.connect.return_value = False
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -416,11 +416,11 @@ async def test_step_zeroconf_cannot_connect(
 
 async def test_step_zeroconf_wrong_password(
     hass: HomeAssistant,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test for Zeroconf discovery with an incorrect password."""
 
-    mock_my_pv_connection.open.side_effect = MyPVAuthenticationError()
+    mock_my_pv_client.connect.side_effect = MyPVAuthenticationError()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

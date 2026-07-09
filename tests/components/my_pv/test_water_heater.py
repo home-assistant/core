@@ -1,6 +1,6 @@
 """Test the my-PV water heater."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from my_pv.exceptions import MyPVConnectionError
 import pytest
@@ -28,14 +28,18 @@ from homeassistant.exceptions import HomeAssistantError
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_my_pv_connection")
 async def test_water_heater(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test successful setup of a water heater."""
 
     mock_config_entry.add_to_hass(hass)
+
+    mock_my_pv_client.get_setup_configuration = Mock(
+        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
+    )
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -51,19 +55,23 @@ async def test_water_heater(
 async def test_water_heater_turn_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test turning the water heater off."""
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_connection.fetch_setup.return_value["devmode"] = 1
+    mock_my_pv_client.get_setup_configuration = Mock(
+        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
+    )
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
     assert state.state == STATE_ELECTRIC
+
+    mock_my_pv_client.is_on = False
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
@@ -81,13 +89,15 @@ async def test_water_heater_turn_off(
 async def test_water_heater_turn_off_false(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test turning off returns false."""
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_connection.fetch_setup.return_value["devmode"] = 1
+    mock_my_pv_client.get_setup_configuration = Mock(
+        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
+    )
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -95,7 +105,7 @@ async def test_water_heater_turn_off_false(
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
     assert state.state == STATE_ELECTRIC
 
-    mock_my_pv_connection.set_setup_value.return_value = False
+    mock_my_pv_client.turn_off = AsyncMock(return_value=False)
 
     with (
         pytest.raises(HomeAssistantError),
@@ -116,13 +126,16 @@ async def test_water_heater_turn_off_false(
 async def test_water_heater_turn_on(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test turning the water heater on."""
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_connection.fetch_setup.return_value["devmode"] = 0
+    mock_my_pv_client.get_setup_configuration = Mock(
+        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
+    )
+    mock_my_pv_client.is_on = False
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -130,9 +143,7 @@ async def test_water_heater_turn_on(
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
     assert state.state == STATE_OFF
 
-    mock_my_pv_connection.fetch_setup.return_value = {
-        "devmode": False,
-    }
+    mock_my_pv_client.is_on = True
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
@@ -150,13 +161,16 @@ async def test_water_heater_turn_on(
 async def test_water_heater_turn_on_false(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test turning on returns false."""
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_connection.fetch_setup.return_value["devmode"] = 0
+    mock_my_pv_client.get_setup_configuration = Mock(
+        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
+    )
+    mock_my_pv_client.is_on = False
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -164,7 +178,7 @@ async def test_water_heater_turn_on_false(
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
     assert state.state == STATE_OFF
 
-    mock_my_pv_connection.set_setup_value.return_value = False
+    mock_my_pv_client.turn_on = AsyncMock(return_value=False)
 
     with (
         pytest.raises(HomeAssistantError),
@@ -185,19 +199,23 @@ async def test_water_heater_turn_on_false(
 async def test_water_heater_set_operation_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test setting the operation mode to off."""
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_connection.fetch_setup.return_value["devmode"] = 1
+    mock_my_pv_client.get_setup_configuration = Mock(
+        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
+    )
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
     assert state.state == STATE_ELECTRIC
+
+    mock_my_pv_client.is_on = False
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
@@ -216,19 +234,24 @@ async def test_water_heater_set_operation_off(
 async def test_water_heater_set_operation_electric(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test setting the operation mode to electric."""
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_connection.fetch_setup.return_value["devmode"] = 0
+    mock_my_pv_client.get_setup_configuration = Mock(
+        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
+    )
+    mock_my_pv_client.is_on = False
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
     assert state.state == STATE_OFF
+
+    mock_my_pv_client.is_on = True
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
@@ -244,17 +267,26 @@ async def test_water_heater_set_operation_electric(
     assert state.state == STATE_ELECTRIC
 
 
-@pytest.mark.usefixtures("mock_my_pv_connection")
 async def test_water_heater_set_temp(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test setting the target temperature."""
 
     mock_config_entry.add_to_hass(hass)
 
+    mock_my_pv_client.get_setup_configuration = Mock(
+        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
+    )
+
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    state = hass.states.get("water_heater.my_pv_ac_elwa_2")
+    assert state.attributes[ATTR_TEMPERATURE] == 62.1
+
+    mock_my_pv_client.target_temperature = 35
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
@@ -273,16 +305,20 @@ async def test_water_heater_set_temp(
 async def test_water_heater_set_temp_false(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test setting the target temperature returns false."""
 
     mock_config_entry.add_to_hass(hass)
 
+    mock_my_pv_client.get_setup_configuration = Mock(
+        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
+    )
+
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_my_pv_connection.set_setup_value.return_value = False
+    mock_my_pv_client.set_target_temperature = AsyncMock(return_value=False)
 
     with (
         pytest.raises(HomeAssistantError),
@@ -304,16 +340,20 @@ async def test_water_heater_set_temp_false(
 async def test_water_heater_set_temp_connection_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test connection error when setting the target temperature."""
 
     mock_config_entry.add_to_hass(hass)
 
+    mock_my_pv_client.get_setup_configuration = Mock(
+        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
+    )
+
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_my_pv_connection.set_setup_value.side_effect = MyPVConnectionError()
+    mock_my_pv_client.set_target_temperature.side_effect = MyPVConnectionError()
 
     with (
         pytest.raises(HomeAssistantError),

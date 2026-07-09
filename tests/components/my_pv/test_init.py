@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_my_pv_connection")
+@pytest.mark.usefixtures("mock_my_pv_client")
 async def test_setup_entry_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -29,12 +29,12 @@ async def test_setup_entry_success(
 async def test_setup_entry_cannot_connect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test setup of a config entry when unable to connect."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_connection.open.return_value = False
+    mock_my_pv_client.connect.return_value = False
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -45,12 +45,12 @@ async def test_setup_entry_cannot_connect(
 async def test_setup_entry_auth_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_my_pv_connection: AsyncMock,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test setup of a config entry when authentication fails."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_connection.open.side_effect = MyPVAuthenticationError()
+    mock_my_pv_client.connect.side_effect = MyPVAuthenticationError()
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -58,7 +58,7 @@ async def test_setup_entry_auth_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.usefixtures("mock_my_pv_connection")
+@pytest.mark.usefixtures("mock_my_pv_client")
 async def test_setup_entry_failed_first_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -78,7 +78,7 @@ async def test_setup_entry_failed_first_refresh(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.usefixtures("mock_my_pv_connection")
+@pytest.mark.usefixtures("mock_my_pv_client")
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

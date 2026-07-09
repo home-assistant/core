@@ -38,39 +38,38 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_my_pv_connection() -> Generator[AsyncMock]:
-    """Mock the my-PV connection across the integration."""
+def mock_my_pv_client() -> Generator[AsyncMock]:
+    """Mock the my-PV client across the integration."""
     with (
         patch(
-            "my_pv.connection.MyPVConnection",
+            "my_pv.MyPVLocalDevice",
+            # side_effect=MyPVLocalDevice,
             autospec=True,
-        ) as mock_connection,
-        patch("my_pv.MyPVHTTPConnection", new=mock_connection),
-        patch("my_pv.MyPVHTTPSConnection", new=mock_connection),
+        ) as mock_client,
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice",
+            new=mock_client,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.my_pv.coordinator.MyPVDevice",
+            new=mock_client,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.my_pv.config_flow.MyPVLocalDevice",
+            new=mock_client,
+        ),
     ):
-        connection = mock_connection.return_value
-        connection.mypv_dev = {
-            "device": "AC ELWA 2",
-            "number": 1,
-            "sn": ELWA2_SERIAL_NUMBER,
-            "fwversion": "e0002200",
-        }
-        connection.fetch_setup = AsyncMock(
-            return_value={
-                "device": "AC ELWA 2",
-                "fwversion": "e0002200",
-                "fwvers_bl": 101,
-                "psversion": "ep108",
-                "hwvers": "v1.5A",
-                "serialno": ELWA2_SERIAL_NUMBER,
-                "macadr": "98-6d-35-c0-00-00",
-                "devmode": 1,
-                "ww1target": 621,
-            }
-        )
-        connection.fetch_data = AsyncMock(return_value={"temp1": 543})
-        connection.set_setup_value = AsyncMock(return_value=True)
-        connection.send_command = AsyncMock(return_value=True)
-        connection.uri = "http://127.0.0.1/"
+        client = mock_client.return_value
+        client.connect = AsyncMock(return_value=True)
+        client.disconnect = AsyncMock(return_value=True)
+        client.serial_number = ELWA2_SERIAL_NUMBER
+        client.model = "AC ELWA 2"
+        client.mac_address = "98:6d:35:c0:00:00"
+        client.setup_uri = "http://127.0.0.1/"
+        client.setup_uri = None
+        client.hardware_version = "v1.5A"
+        client.firmware_version = "e0002200"
+        client.current_temperature = 54.3
+        client.target_temperature = 62.1
 
-        yield connection
+        yield client
