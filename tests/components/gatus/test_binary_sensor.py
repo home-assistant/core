@@ -119,10 +119,7 @@ async def test_binary_sensor_empty_results(
     assert state is not None
     assert state.state == "unavailable"
 
-    # Verify underlying properties return None/False directly on empty results
-    entity = hass.data["entity_components"]["binary_sensor"].get_entity(
-        "binary_sensor.backend_service"
-    )
+    entity = hass.data["binary_sensor"].get_entity("binary_sensor.backend_service")
     assert entity is not None
     assert entity.latest_result is None
     assert entity.is_on is None

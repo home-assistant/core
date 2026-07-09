@@ -71,7 +71,8 @@ class GatusEndpointBinarySensor(
     @override
     def is_on(self) -> bool | None:
         """Return true if the endpoint is up and healthy."""
-        if (latest_result := self.latest_result) is None:
+        latest_result = self.latest_result
+        if latest_result is None:
             return None
 
         return bool(latest_result["success"])
@@ -81,7 +82,7 @@ class GatusEndpointBinarySensor(
     def available(self) -> bool:
         """Return True if entity is available."""
         data = self.coordinator.data
-        # Guard for empty results list, which could imply a brand new device
+        # Guard for empty results list, which could imply a brand new endpoint
         return (
             super().available
             and self._endpoint_key in data
@@ -97,6 +98,6 @@ class GatusEndpointBinarySensor(
     def latest_result(self) -> dict[str, Any] | None:
         """Return the most recent monitoring result (Gatus appends newest last)."""
         data = self.endpoint_data
-        if not data.get("results"):
+        if not data["results"]:
             return None
         return cast(dict[str, Any], data["results"][-1])
