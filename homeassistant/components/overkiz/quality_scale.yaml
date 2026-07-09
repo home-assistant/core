@@ -15,7 +15,7 @@ rules:
   docs-removal-instructions: done
   test-before-setup: done
   docs-high-level-description: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage: todo
   docs-actions: done
   docs-conditions:
     status: exempt
@@ -41,7 +41,7 @@ rules:
 
   # Gold
   docs-examples: todo
-  discovery-update-info: done
+  discovery-update-info: todo
   entity-device-class: done
   entity-translations: todo
   docs-data-update: done
