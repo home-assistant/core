@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Final, Self
+from typing import TYPE_CHECKING, Any, Final, Self, override
 
 import voluptuous as vol
 
@@ -20,12 +20,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_METHOD,
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
     UnitOfTime,
 )
 from homeassistant.core import (
@@ -129,11 +128,13 @@ class _IntegrationMethod(ABC):
 
 
 class _Trapezoidal(_IntegrationMethod):
+    @override
     def calculate_area_with_two_states(
         self, elapsed_time: Decimal, left: Decimal, right: Decimal
     ) -> Decimal:
         return elapsed_time * (left + right) / 2
 
+    @override
     def validate_states(self, left: str, right: str) -> tuple[Decimal, Decimal] | None:
         if (left_dec := _decimal_state(left)) is None or (
             right_dec := _decimal_state(right)
@@ -143,11 +144,13 @@ class _Trapezoidal(_IntegrationMethod):
 
 
 class _Left(_IntegrationMethod):
+    @override
     def calculate_area_with_two_states(
         self, elapsed_time: Decimal, left: Decimal, right: Decimal
     ) -> Decimal:
         return self.calculate_area_with_one_state(elapsed_time, left)
 
+    @override
     def validate_states(self, left: str, right: str) -> tuple[Decimal, Decimal] | None:
         if (left_dec := _decimal_state(left)) is None:
             return None
@@ -155,11 +158,13 @@ class _Left(_IntegrationMethod):
 
 
 class _Right(_IntegrationMethod):
+    @override
     def calculate_area_with_two_states(
         self, elapsed_time: Decimal, left: Decimal, right: Decimal
     ) -> Decimal:
         return self.calculate_area_with_one_state(elapsed_time, right)
 
+    @override
     def validate_states(self, left: str, right: str) -> tuple[Decimal, Decimal] | None:
         if (right_dec := _decimal_state(right)) is None:
             return None
@@ -192,6 +197,7 @@ class IntegrationSensorExtraStoredData(SensorExtraStoredData):
     source_entity: str | None
     last_valid_state: Decimal | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the utility sensor data."""
         data = super().as_dict()
@@ -202,6 +208,7 @@ class IntegrationSensorExtraStoredData(SensorExtraStoredData):
         return data
 
     @classmethod
+    @override
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored sensor state from a dict."""
         extra = SensorExtraStoredData.from_dict(restored)
@@ -381,7 +388,9 @@ class IntegrationSensor(RestoreSensor):
         return device_class
 
     def _derive_and_set_attributes_from_state(self, source_state: State) -> None:
-        source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        source_unit = source_state.attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        )
         if source_unit is not None:
             self._unit_of_measurement = self._calculate_unit(source_unit)
         else:
@@ -389,7 +398,8 @@ class IntegrationSensor(RestoreSensor):
             self._unit_of_measurement = None
 
         self._attr_device_class = self._calculate_device_class(
-            source_state.attributes.get(ATTR_DEVICE_CLASS), self.unit_of_measurement
+            source_state.attributes.get(EntityStateAttribute.DEVICE_CLASS),
+            self.unit_of_measurement,
         )
         if self._attr_device_class:
             # Remove this sensors icon default and allow
@@ -409,6 +419,7 @@ class IntegrationSensor(RestoreSensor):
         )
         self._last_valid_state = self._state
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -624,6 +635,7 @@ class IntegrationSensor(RestoreSensor):
         self._max_sub_interval_exceeded_callback()
 
     @property
+    @override
     def native_value(self) -> Decimal | None:
         """Return the state of the sensor."""
         if isinstance(self._state, Decimal) and self._round_digits:
@@ -631,11 +643,13 @@ class IntegrationSensor(RestoreSensor):
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes of the sensor."""
         return {
@@ -643,6 +657,7 @@ class IntegrationSensor(RestoreSensor):
         }
 
     @property
+    @override
     def extra_restore_state_data(self) -> IntegrationSensorExtraStoredData:
         """Return sensor specific state data to be restored."""
         return IntegrationSensorExtraStoredData(
@@ -652,6 +667,7 @@ class IntegrationSensor(RestoreSensor):
             self._last_valid_state,
         )
 
+    @override
     async def async_get_last_sensor_data(
         self,
     ) -> IntegrationSensorExtraStoredData | None:

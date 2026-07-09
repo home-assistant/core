@@ -278,6 +278,7 @@ async def test_notify_send_message(
             "Content-Transfer-Encoding: 7bit\n"
             "Subject: Home Assistant\n"
             "From: Home Assistant <email@example.com>\n"
+            "To: Recipient <recipient@example.com>\n"
             "X-Mailer: Home Assistant\n"
             "Date: Sat, 02 May 2026 20:09:37 -0700\n"
             "Message-Id: <177777777700.12345.12345678901234567890@mock>\n\n"
@@ -328,3 +329,34 @@ async def test_notify_send_message_exceptions(
         )
 
     assert e.value.translation_key == translation_key
+
+
+@pytest.mark.usefixtures("make_msgid")
+@pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
+async def test_notify_retry_on_disconnect_with_broken_quit(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    smtp: MagicMock,
+) -> None:
+    """Test retry succeeds when quit() raises on a dead connection."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    smtp.sendmail.side_effect = [SMTPServerDisconnected("gone"), None]
+    smtp.quit.side_effect = SMTPServerDisconnected("please run connect() first")
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.home_assistant_recipient",
+            ATTR_MESSAGE: "Hello World",
+        },
+        blocking=True,
+    )
+
+    assert smtp.sendmail.call_count == 2

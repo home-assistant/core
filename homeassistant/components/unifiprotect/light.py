@@ -1,7 +1,7 @@
 """Component providing Lights for UniFi Protect."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from uiprotect.data import Light, ModelType, ProtectAdoptableDeviceModel
 from uiprotect.data.devices import LightDeviceSettings
@@ -62,6 +62,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_brightness")
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         updated_device = self.device
@@ -71,6 +72,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         )
 
     @async_ufp_instance_command
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -101,6 +103,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         )
 
     @async_ufp_instance_command
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         _LOGGER.debug("Turning off light")

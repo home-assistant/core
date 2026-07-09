@@ -9,37 +9,21 @@ from homeassistant.helpers.significant_change import (
     check_valid_float,
 )
 
-from .const import (
-    ATTR_WEATHER_APPARENT_TEMPERATURE,
-    ATTR_WEATHER_CLOUD_COVERAGE,
-    ATTR_WEATHER_DEW_POINT,
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_OZONE,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_PRESSURE_UNIT,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_TEMPERATURE_UNIT,
-    ATTR_WEATHER_UV_INDEX,
-    ATTR_WEATHER_VISIBILITY,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_GUST_SPEED,
-    ATTR_WEATHER_WIND_SPEED,
-    ATTR_WEATHER_WIND_SPEED_UNIT,
-)
+from .const import WeatherEntityStateAttribute
 
 SIGNIFICANT_ATTRIBUTES: set[str] = {
-    ATTR_WEATHER_APPARENT_TEMPERATURE,
-    ATTR_WEATHER_CLOUD_COVERAGE,
-    ATTR_WEATHER_DEW_POINT,
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_OZONE,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_UV_INDEX,
-    ATTR_WEATHER_VISIBILITY,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_GUST_SPEED,
-    ATTR_WEATHER_WIND_SPEED,
+    WeatherEntityStateAttribute.APPARENT_TEMPERATURE,
+    WeatherEntityStateAttribute.CLOUD_COVERAGE,
+    WeatherEntityStateAttribute.DEW_POINT,
+    WeatherEntityStateAttribute.HUMIDITY,
+    WeatherEntityStateAttribute.OZONE,
+    WeatherEntityStateAttribute.PRESSURE,
+    WeatherEntityStateAttribute.TEMPERATURE,
+    WeatherEntityStateAttribute.UV_INDEX,
+    WeatherEntityStateAttribute.VISIBILITY,
+    WeatherEntityStateAttribute.WIND_BEARING,
+    WeatherEntityStateAttribute.WIND_GUST_SPEED,
+    WeatherEntityStateAttribute.WIND_SPEED,
 }
 
 VALID_CARDINAL_DIRECTIONS: list[str] = [
@@ -99,7 +83,7 @@ def async_check_significant_change(
         old_attr_value = old_attrs.get(attr_name)
         new_attr_value = new_attrs.get(attr_name)
         absolute_change: float | None = None
-        if attr_name == ATTR_WEATHER_WIND_BEARING:
+        if attr_name == WeatherEntityStateAttribute.WIND_BEARING:
             old_attr_value = _cardinal_to_degrees(old_attr_value)
             new_attr_value = _cardinal_to_degrees(new_attr_value)
 
@@ -112,23 +96,23 @@ def async_check_significant_change(
             return True
 
         if attr_name in (
-            ATTR_WEATHER_APPARENT_TEMPERATURE,
-            ATTR_WEATHER_DEW_POINT,
-            ATTR_WEATHER_TEMPERATURE,
+            WeatherEntityStateAttribute.APPARENT_TEMPERATURE,
+            WeatherEntityStateAttribute.DEW_POINT,
+            WeatherEntityStateAttribute.TEMPERATURE,
         ):
             if (
-                unit := new_attrs.get(ATTR_WEATHER_TEMPERATURE_UNIT)
+                unit := new_attrs.get(WeatherEntityStateAttribute.TEMPERATURE_UNIT)
             ) is not None and unit == UnitOfTemperature.FAHRENHEIT:
                 absolute_change = 1.0
             else:
                 absolute_change = 0.5
 
         if attr_name in (
-            ATTR_WEATHER_WIND_GUST_SPEED,
-            ATTR_WEATHER_WIND_SPEED,
+            WeatherEntityStateAttribute.WIND_GUST_SPEED,
+            WeatherEntityStateAttribute.WIND_SPEED,
         ):
             if (
-                unit := new_attrs.get(ATTR_WEATHER_WIND_SPEED_UNIT)
+                unit := new_attrs.get(WeatherEntityStateAttribute.WIND_SPEED_UNIT)
             ) is None or unit in (
                 UnitOfSpeed.KILOMETERS_PER_HOUR,
                 UnitOfSpeed.MILES_PER_HOUR,  # 1km/h = 0.62mi/s
@@ -139,19 +123,23 @@ def async_check_significant_change(
                 absolute_change = 0.5
 
         if attr_name in (
-            ATTR_WEATHER_CLOUD_COVERAGE,  # range 0-100%
-            ATTR_WEATHER_HUMIDITY,  # range 0-100%
-            ATTR_WEATHER_OZONE,  # range ~20-100ppm
-            ATTR_WEATHER_VISIBILITY,  # range 0-240km (150mi)
-            ATTR_WEATHER_WIND_BEARING,  # range 0-359°
+            WeatherEntityStateAttribute.CLOUD_COVERAGE,  # range 0-100%
+            WeatherEntityStateAttribute.HUMIDITY,  # range 0-100%
+            WeatherEntityStateAttribute.OZONE,  # range ~20-100ppm
+            WeatherEntityStateAttribute.VISIBILITY,  # range 0-240km (150mi)
+            WeatherEntityStateAttribute.WIND_BEARING,  # range 0-359°
         ):
             absolute_change = 1.0
 
-        if attr_name == ATTR_WEATHER_UV_INDEX:  # range 1-11
+        if attr_name == WeatherEntityStateAttribute.UV_INDEX:  # range 1-11
             absolute_change = 0.1
 
-        if attr_name == ATTR_WEATHER_PRESSURE:  # local variation of around 100 hpa
-            if (unit := new_attrs.get(ATTR_WEATHER_PRESSURE_UNIT)) is None or unit in (
+        if (
+            attr_name == WeatherEntityStateAttribute.PRESSURE
+        ):  # local variation of around 100 hpa
+            if (
+                unit := new_attrs.get(WeatherEntityStateAttribute.PRESSURE_UNIT)
+            ) is None or unit in (
                 UnitOfPressure.HPA,
                 UnitOfPressure.MBAR,  # 1hPa = 1mbar
                 UnitOfPressure.MMHG,  # 1hPa = 0.75mmHg

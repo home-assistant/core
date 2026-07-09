@@ -11,6 +11,8 @@ DOMAIN: Final = "switchbot_cloud"
 ENTRY_TITLE = "SwitchBot Cloud"
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=600)
 
+CONF_CLOUDHOOK_URL: Final = "cloudhook_url"
+
 SENSOR_KIND_TEMPERATURE = "temperature"
 SENSOR_KIND_HUMIDITY = "humidity"
 SENSOR_KIND_BATTERY = "battery"
@@ -22,6 +24,8 @@ VACUUM_FAN_SPEED_MAX = "max"
 
 
 CLIMATE_PRESET_SCHEDULE = "schedule"
+
+AI_ART_FRAME_UPLOAD_IMAGE_SERVICE = "upload_art_frame_image"
 
 AFTER_COMMAND_REFRESH = 5
 COVER_ENTITY_AFTER_COMMAND_REFRESH = 10
@@ -120,5 +124,14 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "WoIOSensor": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
     "Hub 2": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
     "MeterPro": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
+    "Smart Lock": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.BINARY_SENSOR, Platform.SENSOR, Platform.LOCK)
+    ),
+    "Smart Lock Ultra": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
+    ),
     "MeterPro(CO2)": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
+    "AI Art Frame": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BUTTON, Platform.IMAGE)
+    ),
 }

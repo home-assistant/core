@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from PyTado.exceptions import TadoException
 from PyTado.http import DeviceActivationStatus
@@ -58,6 +58,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -170,6 +171,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
         del self.login_task
         return await self.async_step_user()
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -188,6 +190,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: TadoConfigEntry,
     ) -> OptionsFlowHandler:

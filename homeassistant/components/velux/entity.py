@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyvlx import Node, PyVLXException
 
@@ -68,7 +68,6 @@ class VeluxEntity(Entity):
     def __init__(self, node: Node, config_entry_id: str) -> None:
         """Initialize the Velux device."""
         self.node = node
-
         self._attr_unique_id = velux_unique_id(node, config_entry_id)
         self._attr_device_info = velux_device_info(node, config_entry_id)
 
@@ -85,12 +84,14 @@ class VeluxEntity(Entity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback and store reference for cleanup."""
 
         self.update_callback = self.after_update_callback
         self.node.register_device_updated_cb(self.update_callback)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up registered callbacks."""
         if self.update_callback:

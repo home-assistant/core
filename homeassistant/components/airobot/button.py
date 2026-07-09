@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyairobotrest.exceptions import (
     AirobotConnectionError,
@@ -32,6 +32,7 @@ class AirobotButtonEntityDescription(ButtonEntityDescription):
     """Describes Airobot button entity."""
 
     press_fn: Callable[[AirobotDataUpdateCoordinator], Coroutine[Any, Any, None]]
+    ignore_connection_errors: bool = False
 
 
 BUTTON_TYPES: tuple[AirobotButtonEntityDescription, ...] = (
@@ -40,6 +41,7 @@ BUTTON_TYPES: tuple[AirobotButtonEntityDescription, ...] = (
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda coordinator: coordinator.client.reboot_thermostat(),
+        ignore_connection_errors=True,
     ),
     AirobotButtonEntityDescription(
         key="recalibrate_co2",
@@ -79,14 +81,19 @@ class AirobotButton(AirobotEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data.status.device_id}_{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         try:
             await self.entity_description.press_fn(self.coordinator)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except AirobotConnectionError, AirobotTimeoutError:
+        except (AirobotConnectionError, AirobotTimeoutError) as err:
+            if not self.entity_description.ignore_connection_errors:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="button_press_failed",
+                    translation_placeholders={"button": self.entity_description.key},
+                ) from err
             # Connection errors during reboot are expected as device restarts
-            pass
         except AirobotError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

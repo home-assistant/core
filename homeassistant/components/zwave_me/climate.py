@@ -1,6 +1,6 @@
 """Representation of a thermostat."""
 
-from typing import Any
+from typing import Any, override
 
 from zwave_me_ws import ZWaveMeData
 
@@ -49,6 +49,7 @@ class ZWaveMeClimate(ZWaveMeEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -59,26 +60,31 @@ class ZWaveMeClimate(ZWaveMeEntity, ClimateEntity):
         )
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the temperature_unit."""
         return self.device.scaleTitle
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Return the state of the sensor."""
         return self.device.level
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return min temperature for the device."""
         return self.device.max
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return max temperature for the device."""
         return self.device.min
 
     @property
+    @override
     def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         return TEMPERATURE_DEFAULT_STEP

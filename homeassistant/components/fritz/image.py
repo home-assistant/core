@@ -2,17 +2,18 @@
 
 from io import BytesIO
 import logging
+from typing import override
 
 from requests.exceptions import RequestException
 
 from homeassistant.components.image import ImageEntity
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import DOMAIN, Platform
+from .const import DOMAIN
 from .coordinator import AvmWrapper, FritzConfigEntry
 from .entity import FritzBoxBaseEntity
 
@@ -102,6 +103,7 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
 
         return qr_bytes
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Fetch and set initial data and state."""
         self._current_qr_bytes = await self.hass.async_add_executor_job(
@@ -126,6 +128,7 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
             self._current_qr_bytes = qr_bytes
             self.async_write_ha_state()
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return bytes of image."""
         return self._current_qr_bytes

@@ -1,7 +1,7 @@
 """Config flow for Environment Canada integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 import xml.etree.ElementTree as ET
 
 import aiohttp
@@ -30,6 +30,8 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_RADAR_DURATION,
+    CONF_RADAR_FPS,
     CONF_RADAR_LAYER,
     CONF_RADAR_LEGEND,
     CONF_RADAR_OPACITY,
@@ -37,6 +39,8 @@ from .const import (
     CONF_RADAR_TIMESTAMP,
     CONF_STATION,
     CONF_TITLE,
+    DEFAULT_RADAR_DURATION,
+    DEFAULT_RADAR_FPS,
     DEFAULT_RADAR_LAYER,
     DEFAULT_RADAR_LEGEND,
     DEFAULT_RADAR_OPACITY,
@@ -84,6 +88,7 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
@@ -96,6 +101,7 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
             self._station_codes = await get_ec_sites_list()
         return self._station_codes
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -206,6 +212,22 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 ): NumberSelector(
                     NumberSelectorConfig(
                         min=10, max=2000, step=10, unit_of_measurement="km"
+                    )
+                ),
+                vol.Required(
+                    CONF_RADAR_DURATION,
+                    default=options.get(CONF_RADAR_DURATION, DEFAULT_RADAR_DURATION),
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=0, max=180, step=5, unit_of_measurement="min"
+                    )
+                ),
+                vol.Required(
+                    CONF_RADAR_FPS,
+                    default=options.get(CONF_RADAR_FPS, DEFAULT_RADAR_FPS),
+                ): NumberSelector(
+                    NumberSelectorConfig(
+                        min=1, max=30, step=1, unit_of_measurement="fps"
                     )
                 ),
             }

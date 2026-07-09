@@ -67,7 +67,7 @@ from homeassistant.components.telegram_bot.const import (
     PARSER_MD2,
     PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
     SERVICE_ANSWER_CALLBACK_QUERY,
     SERVICE_DELETE_MESSAGE,
     SERVICE_EDIT_CAPTION,
@@ -287,7 +287,7 @@ async def test_send_message_with_inline_keyboard(
         AsyncMock(
             return_value=Message(
                 message_id=12345,
-                date=datetime.now(),
+                date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
                 chat=Chat(id=12345678, type=ChatType.PRIVATE),
             )
         ),
@@ -1093,7 +1093,7 @@ async def test_send_message_no_chat_id_error(
         data={
             CONF_PLATFORM: PLATFORM_BROADCAST,
             CONF_API_KEY: "mock api key",
-            SECTION_ADVANCED_SETTINGS: {},
+            SECTION_ADDITIONAL_SETTINGS: {},
         },
         options={ATTR_PARSER: PARSER_PLAIN_TEXT},
     )
