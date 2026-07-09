@@ -1057,6 +1057,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/lovelace/ @home-assistant/frontend
 /tests/components/lovelace/ @home-assistant/frontend
 /homeassistant/components/luci/ @mzdrale
+/tests/components/luci/ @mzdrale
 /homeassistant/components/luftdaten/ @fabaff @frenck
 /tests/components/luftdaten/ @fabaff @frenck
 /homeassistant/components/lunatone/ @MoonDevLT
