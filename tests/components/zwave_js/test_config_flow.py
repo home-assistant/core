@@ -1453,6 +1453,49 @@ async def test_esphome_discovery_already_configured(
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
+async def test_esphome_discovery_same_socket_no_reload(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+    addon_options: dict[str, Any],
+    stop_addon: AsyncMock,
+) -> None:
+    """Test ESPHome rediscovery with unchanged socket does not reload."""
+    addon_options[CONF_ADDON_SOCKET] = "esphome://192.168.1.100:6053"
+
+    entry = MockConfigEntry(
+        entry_id="mock-entry-id",
+        domain=DOMAIN,
+        data={
+            CONF_SOCKET_PATH: "esphome://192.168.1.100:6053",
+            "use_addon": True,
+            "integration_created_addon": True,
+        },
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ESPHOME},
+            data=ESPHOME_DISCOVERY_INFO,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    mock_reload.assert_not_called()
+    set_addon_options.assert_not_called()
+    stop_addon.assert_not_called()
+    assert entry.data == {
+        CONF_SOCKET_PATH: "esphome://192.168.1.100:6053",
+        "use_addon": True,
+        "integration_created_addon": True,
+    }
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
 async def test_esphome_discovery_already_configured_unmanaged_addon(
     hass: HomeAssistant,
     set_addon_options: AsyncMock,
