@@ -14,8 +14,6 @@ from homeassistant.components.person import (
 )
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_ENTITY_ID,
     CONF_FOR,
     CONF_OPTIONS,
@@ -23,6 +21,7 @@ from homeassistant.const import (
     CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ConditionErrorContainer, ConditionErrorMessage
@@ -108,9 +107,10 @@ def zone(
         return zone_ent.entity_id in in_zones
 
     # Coordinate fallback matches any entity reporting a position, not just
-    # person/device_tracker, so no single platform enum applies here.
-    latitude = entity.attributes.get(ATTR_LATITUDE)
-    longitude = entity.attributes.get(ATTR_LONGITUDE)
+    # person/device_tracker; latitude/longitude are read from the base enum,
+    # while gps_accuracy has no base member and stays on ATTR_GPS_ACCURACY.
+    latitude = entity.attributes.get(EntityStateAttribute.LATITUDE)
+    longitude = entity.attributes.get(EntityStateAttribute.LONGITUDE)
 
     if latitude is None:
         raise ConditionErrorMessage(
