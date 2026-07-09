@@ -1205,11 +1205,10 @@ async def test_basic_auth_with_debug_ui(hass: HomeAssistant, server_dir: Path) -
         assert call_kwargs["password"] == "test_pass"
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("init_integration", "init_test_integration")
 async def test_get_rtsp_stream_url(
     hass: HomeAssistant,
     rest_client: AsyncMock,
-    init_test_integration: MockCamera,
 ) -> None:
     """The helper registers the stream and returns the managed RTSP URL."""
     url = await async_get_rtsp_stream_url(hass, "camera.test")
@@ -1223,6 +1222,30 @@ async def test_get_rtsp_stream_url(
     )
 
 
+@pytest.mark.usefixtures("init_integration")
+async def test_get_rtsp_stream_url_generic_camera(
+    hass: HomeAssistant,
+    rest_client: AsyncMock,
+    init_test_integration: MockCamera,
+) -> None:
+    """A generic camera's source resolves through the ffmpeg wrapping."""
+    camera = init_test_integration
+    camera.set_stream_source("https://my_stream_url.m3u8")
+
+    with patch.object(camera.platform.platform_data, "platform_name", "generic"):
+        url = await async_get_rtsp_stream_url(hass, "camera.test")
+        identifier = get_camera_identifier(camera)
+
+    assert url == f"rtsp://127.0.0.1:{HA_MANAGED_RTSP_PORT}/{identifier}"
+    rest_client.streams.add.assert_called_once_with(
+        identifier,
+        [
+            "ffmpeg:https://my_stream_url.m3u8",
+            f"ffmpeg:{identifier}#audio=opus#query=log_level=debug",
+        ],
+    )
+
+
 @pytest.mark.usefixtures("init_test_integration")
 async def test_get_rtsp_stream_url_not_setup(hass: HomeAssistant) -> None:
     """The helper returns None when go2rtc is not set up."""
@@ -1230,11 +1253,13 @@ async def test_get_rtsp_stream_url_not_setup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures(
-    "rest_client", "mock_is_docker_env", "mock_get_binary", "server"
+    "rest_client",
+    "mock_is_docker_env",
+    "mock_get_binary",
+    "server",
+    "init_test_integration",
 )
-async def test_get_rtsp_stream_url_external_server(
-    hass: HomeAssistant, init_test_integration: MockCamera
-) -> None:
+async def test_get_rtsp_stream_url_external_server(hass: HomeAssistant) -> None:
     """The helper returns None for an external server whose RTSP endpoint is unknown."""
     config = {DOMAIN: {CONF_URL: "http://localhost:1984/"}}
     assert await async_setup_component(hass, DOMAIN, config)
