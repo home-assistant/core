@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from afsapi import AFSAPI, FSConnectionError, FSNotImplementedError, InvalidPinError
@@ -52,6 +52,7 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
     _name: str
     _webfsapi_url: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -70,6 +71,7 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                self._async_abort_entries_match({CONF_WEBFSAPI_URL: self._webfsapi_url})
                 return await self._async_step_device_config_if_needed()
 
         data_schema = self.add_suggested_values_to_schema(
@@ -79,6 +81,7 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

@@ -1,6 +1,7 @@
 """Immich as a media source."""
 
 from logging import getLogger
+from typing import override
 
 from aiohttp.web import HTTPNotFound, Request, Response, StreamResponse
 from aioimmich.assets.models import ImmichAsset
@@ -56,6 +57,7 @@ class ImmichMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,
@@ -323,6 +325,7 @@ class ImmichMediaSource(MediaSource):
 
         return ret
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         try:

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from lektricowifi import Device
 
@@ -79,10 +79,12 @@ class LektricoSelect(LektricoEntity, SelectEntity):
         self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the state of the select."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.set_value_fn(

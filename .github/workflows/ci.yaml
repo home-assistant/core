@@ -37,9 +37,9 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 3
+  CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2026.7"
+  HA_SHORT_VERSION: "2026.8"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
@@ -89,6 +89,8 @@ jobs:
       mariadb_groups: ${{ steps.info.outputs.mariadb_groups }}
       postgresql_groups: ${{ steps.info.outputs.postgresql_groups }}
       python_versions: ${{ steps.info.outputs.python_versions }}
+      default_python: ${{ steps.info.outputs.default_python }}
+      uv_version: ${{ steps.info.outputs.uv_version }}
       test_full_suite: ${{ steps.info.outputs.test_full_suite }}
       test_group_count: ${{ steps.info.outputs.test_group_count }}
       test_groups: ${{ steps.info.outputs.test_groups }}
@@ -98,7 +100,7 @@ jobs:
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Generate partial Python venv restore key
@@ -114,7 +116,7 @@ jobs:
           # of a new uv cache entry after a version bump.
           echo "key=venv-${CACHE_VERSION}-${HA_SHORT_VERSION}-${HASH_REQUIREMENTS_TEST}-${HASH_REQUIREMENTS}-${HASH_REQUIREMENTS_ALL}-${HASH_PACKAGE_CONSTRAINTS}-${HASH_GEN_REQUIREMENTS}" >> $GITHUB_OUTPUT
       - name: Filter for core changes
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         id: core
         with:
           filters: .core_files.yaml
@@ -129,7 +131,7 @@ jobs:
           echo "Result:"
           cat .integration_paths.yaml
       - name: Filter for integration changes
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         id: integrations
         with:
           filters: .integration_paths.yaml
@@ -235,6 +237,11 @@ jobs:
           echo "postgresql_groups=${postgresql_groups}" >> $GITHUB_OUTPUT
           echo "python_versions: ${all_python_versions}"
           echo "python_versions=${all_python_versions}" >> $GITHUB_OUTPUT
+          echo "default_python: ${default_python}"
+          echo "default_python=${default_python}" >> $GITHUB_OUTPUT
+          uv_version=$(grep '^uv==' requirements.txt | cut -d'=' -f3)
+          echo "uv_version: ${uv_version}"
+          echo "uv_version=${uv_version}" >> $GITHUB_OUTPUT
           echo "test_full_suite: ${test_full_suite}"
           echo "test_full_suite=${test_full_suite}" >> $GITHUB_OUTPUT
           echo "integrations_glob: ${integrations_glob}"
@@ -264,7 +271,7 @@ jobs:
       && github.event.inputs.audit-licenses-only != 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Register problem matchers
@@ -274,7 +281,7 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"
           echo "::add-matcher::.github/workflows/matchers/codespell.json"
       - name: Run prek
-        uses: j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d # v2.0.4
+        uses: j178/prek-action@e98a699c41eb69ab013a45817a0406469a748f8d # v2.0.5
         env:
           PREK_SKIP: no-commit-to-branch,mypy,pylint,gen_requirements_all,hassfest,hassfest-metadata,hassfest-mypy-config,zizmor
           RUFF_OUTPUT_FORMAT: github
@@ -291,11 +298,11 @@ jobs:
       && github.event.inputs.audit-licenses-only != 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Run zizmor
-        uses: j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d # v2.0.4
+        uses: j178/prek-action@e98a699c41eb69ab013a45817a0406469a748f8d # v2.0.5
         with:
           extra-args: --all-files zizmor
 
@@ -318,7 +325,7 @@ jobs:
           - script/hassfest/docker/Dockerfile
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Register hadolint problem matcher
@@ -341,85 +348,21 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }} and build venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore base Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
-      - name: Generate partial uv restore key
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        id: generate-uv-key
-        env:
-          RUNNER_OS: ${{ runner.os }}
-          RUNNER_ARCH: ${{ runner.arch }}
-          PYTHON_VERSION: ${{ steps.python.outputs.python-version }}
-          HASH_FILES: ${{ hashFiles('requirements.txt', 'requirements_all.txt', 'requirements_test.txt', 'homeassistant/package_constraints.txt') }}
-        run: |
-          partial_key="${RUNNER_OS}-${RUNNER_ARCH}-${PYTHON_VERSION}-uv-"
-          echo "partial_key=${partial_key}" >> $GITHUB_OUTPUT
-          echo "full_key=${partial_key}${HASH_FILES}" >> $GITHUB_OUTPUT
-      - name: Restore uv wheel cache
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: ${{ env.UV_CACHE_DIR }}
-          key: ${{ steps.generate-uv-key.outputs.full_key }}
-          restore-keys: ${{ steps.generate-uv-key.outputs.partial_key }}
-      - name: Install additional OS dependencies
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        timeout-minutes: 10
-        uses: ./.github/actions/cache-apt-packages
-        with:
-          packages: >-
-            bluez
-            ffmpeg
-            libturbojpeg
-            libxml2-utils
-            libavcodec-dev
-            libavdevice-dev
-            libavfilter-dev
-            libavformat-dev
-            libavutil-dev
-            libswresample-dev
-            libswscale-dev
-            libudev-dev
-          version: ${{ env.APT_CACHE_VERSION }}
-          execute_install_scripts: true
-      - name: Read uv version from requirements.txt
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        id: read-uv-version
-        run: |
-          echo "version=$(grep '^uv==' requirements.txt | cut -d'=' -f3)" >> "$GITHUB_OUTPUT"
-      - name: Set up uv
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-        with:
-          version: ${{ steps.read-uv-version.outputs.version }}
-      - name: Create Python virtual environment
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        id: create-venv
-        run: |
-          python -m venv venv
-          . venv/bin/activate
-          python --version
-          uv pip install -r requirements.txt
-          uv pip install -r requirements_all.txt -r requirements_test.txt
-          uv pip install -e . --config-settings editable_mode=compat
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
+          save: "true"
       - name: Dump pip freeze
         run: |
-          python -m venv venv
           . venv/bin/activate
           python --version
           uv pip freeze >> pip_freeze.txt
@@ -434,26 +377,6 @@ jobs:
       - name: Check dirty
         run: |
           ./script/check_dirty
-      - name: Prune uv cache
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        id: prune-uv-cache
-        run: |
-          . venv/bin/activate
-          uv cache prune --ci
-      - name: Save uv wheel cache
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: ${{ env.UV_CACHE_DIR }}
-          key: ${{ steps.generate-uv-key.outputs.full_key }}
-      - name: Save base Python virtual environment
-        if: always() && steps.create-venv.outcome == 'success'
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
 
   hassfest:
     name: Check hassfest
@@ -469,7 +392,7 @@ jobs:
       && github.event.inputs.audit-licenses-only != 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Install additional OS dependencies
@@ -478,21 +401,15 @@ jobs:
         with:
           packages: libturbojpeg
           version: ${{ env.APT_CACHE_VERSION }}
-      - name: Set up Python
+      - name: Set up Python and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
-          python-version-file: ".python-version"
-          check-latest: true
-      - name: Restore full Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Run hassfest
         run: |
           . venv/bin/activate
@@ -512,24 +429,18 @@ jobs:
       && github.event.inputs.audit-licenses-only != 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python
+      - name: Set up Python and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
-          python-version-file: ".python-version"
-          check-latest: true
-      - name: Restore full Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Run gen_requirements_all.py
         run: |
           . venv/bin/activate
@@ -548,18 +459,18 @@ jobs:
       && github.event.inputs.audit-licenses-only != 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Set up Python
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/setup-uv-python
         with:
-          python-version-file: ".python-version"
-          check-latest: true
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
       - name: Run gen_copilot_instructions.py
         run: |
-          python -m script.gen_copilot_instructions validate
+          uv run --no-project python -m script.gen_copilot_instructions validate
 
   dependency-review:
     name: Dependency review
@@ -576,7 +487,7 @@ jobs:
       && github.event_name == 'pull_request'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Dependency review
@@ -603,24 +514,18 @@ jobs:
         python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Extract license data
         env:
           PYTHON_VERSION: ${{ matrix.python-version }}
@@ -654,24 +559,18 @@ jobs:
       || github.event.inputs.pylint-only == 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python
+      - name: Set up Python and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
-          python-version-file: ".python-version"
-          check-latest: true
-      - name: Restore full Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Register pylint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
@@ -707,24 +606,18 @@ jobs:
       && (needs.info.outputs.tests_glob || needs.info.outputs.test_full_suite == 'true')
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python
+      - name: Set up Python and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
-          python-version-file: ".python-version"
-          check-latest: true
-      - name: Restore full Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Register pylint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
@@ -758,32 +651,26 @@ jobs:
       || github.event.inputs.mypy-only == 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Set up Python
-        id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version-file: ".python-version"
-          check-latest: true
       - name: Generate partial mypy restore key
         id: generate-mypy-key
         run: |
           mypy_version=$(cat requirements_test.txt | grep 'mypy.*=' | cut -d '=' -f 3)
           echo "version=${mypy_version}" >> $GITHUB_OUTPUT
           echo "key=mypy-${MYPY_CACHE_VERSION}-${mypy_version}-${HA_SHORT_VERSION}-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
-      - name: Restore full Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - name: Set up Python and restore venv
+        id: python
+        uses: ./.github/actions/restore-or-build-venv
         with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Restore mypy cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .mypy_cache
           key: >-
@@ -825,7 +712,7 @@ jobs:
       - base
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Install additional OS dependencies
@@ -838,21 +725,15 @@ jobs:
             libturbojpeg
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
-      - name: Set up Python
+      - name: Set up Python and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
-          python-version-file: ".python-version"
-          check-latest: true
-      - name: Restore full Python virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Run split_tests.py
         env:
           TEST_GROUP_COUNT: ${{ needs.info.outputs.test_group_count }}
@@ -889,7 +770,7 @@ jobs:
         group: ${{ fromJson(needs.info.outputs.test_groups) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Install additional OS dependencies
@@ -903,21 +784,15 @@ jobs:
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
@@ -1030,7 +905,7 @@ jobs:
         mariadb-group: ${{ fromJson(needs.info.outputs.mariadb_groups) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Install additional OS dependencies
@@ -1045,21 +920,15 @@ jobs:
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
@@ -1179,7 +1048,7 @@ jobs:
         postgresql-group: ${{ fromJson(needs.info.outputs.postgresql_groups) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Install additional OS dependencies
@@ -1201,21 +1070,15 @@ jobs:
         with:
           packages: postgresql-server-dev-14
           version: ${{ env.APT_CACHE_VERSION }}
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
@@ -1317,7 +1180,7 @@ jobs:
     if: needs.info.outputs.skip_coverage != 'true'
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Download all coverage artifacts
@@ -1355,7 +1218,7 @@ jobs:
         group: ${{ fromJson(needs.info.outputs.test_groups) }}
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Install additional OS dependencies
@@ -1369,21 +1232,15 @@ jobs:
             libxml2-utils
           version: ${{ env.APT_CACHE_VERSION }}
           execute_install_scripts: true
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }} and restore venv
         id: python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        uses: ./.github/actions/restore-or-build-venv
         with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
           python-version: ${{ matrix.python-version }}
-          check-latest: true
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: venv
-          fail-on-cache-miss: true
-          key: >-
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+          python-cache-key: ${{ needs.info.outputs.python_cache_key }}
+          uv-cache-dir: ${{ env.UV_CACHE_DIR }}
+          apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
@@ -1476,7 +1333,7 @@ jobs:
       - pytest-partial
     steps:
       - name: Check out code from GitHub
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Download all coverage artifacts

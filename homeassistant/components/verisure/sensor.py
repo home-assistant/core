@@ -1,5 +1,7 @@
 """Support for Verisure sensors."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -58,6 +60,7 @@ class VerisureThermometer(
         self.serial_number = serial_number
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         device_type = self.coordinator.data["climate"][self.serial_number]["device"][
@@ -74,11 +77,13 @@ class VerisureThermometer(
         )
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the entity."""
         return self.coordinator.data["climate"][self.serial_number]["temperatureValue"]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -108,6 +113,7 @@ class VerisureHygrometer(
         self.serial_number = serial_number
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         device_type = self.coordinator.data["climate"][self.serial_number]["device"][
@@ -124,11 +130,13 @@ class VerisureHygrometer(
         )
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the entity."""
         return self.coordinator.data["climate"][self.serial_number]["humidityValue"]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (

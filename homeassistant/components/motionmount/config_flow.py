@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Mapping
 import logging
 import socket
-from typing import Any
+from typing import Any, override
 
 import motionmount
 import voluptuous as vol
@@ -50,6 +50,7 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         self.backoff_task: asyncio.Task | None = None
         self.backoff_time: int = 0
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -91,6 +92,7 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         # No pin is needed
         return self._create_or_update_entry()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

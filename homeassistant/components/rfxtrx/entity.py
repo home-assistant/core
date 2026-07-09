@@ -1,7 +1,7 @@
 """Support for RFXtrx devices."""
 
 from collections.abc import Callable
-from typing import cast
+from typing import cast, override
 
 import RFXtrx as rfxtrxmod
 
@@ -55,6 +55,7 @@ class RfxtrxEntity(RestoreEntity):
         # group events regardless of their group indices.
         (self._group_id, _, _) = device_id.id_string.partition(":")
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore RFXtrx device state (ON/OFF)."""
         if self._event:
@@ -65,6 +66,7 @@ class RfxtrxEntity(RestoreEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device state attributes."""
         if not self._event:

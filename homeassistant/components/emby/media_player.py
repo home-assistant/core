@@ -1,6 +1,7 @@
 """Support to interface with the Emby API."""
 
 import logging
+from typing import override
 
 from pyemby import EmbyServer
 import voluptuous as vol
@@ -145,6 +146,7 @@ class EmbyDevice(MediaPlayerEntity):
 
         self._attr_unique_id = device_id
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback."""
         self.emby.add_update_callback(self.async_update_callback, self.device_id)
@@ -174,11 +176,13 @@ class EmbyDevice(MediaPlayerEntity):
         return self.device.supports_remote_control
 
     @property
+    @override
     def name(self):
         """Return the name of the device."""
         return f"Emby {self.device.name}" or DEVICE_DEFAULT_NAME
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         state = self.device.state
@@ -193,17 +197,20 @@ class EmbyDevice(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def app_name(self):
         """Return current user as app_name."""
         # Ideally the media_player object would have a user property.
         return self.device.username
 
     @property
+    @override
     def media_content_id(self):
         """Content ID of current playing media."""
         return self.device.media_id
 
     @property
+    @override
     def media_content_type(self) -> MediaType | str | None:
         """Content type of current playing media."""
         media_type = self.device.media_type
@@ -224,16 +231,19 @@ class EmbyDevice(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
         return self.device.media_runtime
 
     @property
+    @override
     def media_position(self):
         """Return the position of current playing media in seconds."""
         return self.media_status_last_position
 
     @property
+    @override
     def media_position_updated_at(self):
         """When was the position of the current playing media valid.
 
@@ -242,72 +252,87 @@ class EmbyDevice(MediaPlayerEntity):
         return self.media_status_received
 
     @property
+    @override
     def media_image_url(self):
         """Return the image URL of current playing media."""
         return self.device.media_image_url
 
     @property
+    @override
     def media_title(self):
         """Return the title of current playing media."""
         return self.device.media_title
 
     @property
+    @override
     def media_season(self):
         """Season of current playing media (TV Show only)."""
         return self.device.media_season
 
     @property
+    @override
     def media_series_title(self):
         """Return the title of the series of current playing media (TV)."""
         return self.device.media_series_title
 
     @property
+    @override
     def media_episode(self):
         """Return the episode of current playing media (TV only)."""
         return self.device.media_episode
 
     @property
+    @override
     def media_album_name(self):
         """Return the album name of current playing media (Music only)."""
         return self.device.media_album_name
 
     @property
+    @override
     def media_artist(self):
         """Return the artist of current playing media (Music track only)."""
         return self.device.media_artist
 
     @property
+    @override
     def media_album_artist(self):
         """Return the album artist of current playing media (Music only)."""
         return self.device.media_album_artist
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self.supports_remote_control:
             return SUPPORT_EMBY
         return MediaPlayerEntityFeature(0)
 
+    @override
     async def async_media_play(self) -> None:
         """Play media."""
         await self.device.media_play()
 
+    @override
     async def async_media_pause(self) -> None:
         """Pause the media player."""
         await self.device.media_pause()
 
+    @override
     async def async_media_stop(self) -> None:
         """Stop the media player."""
         await self.device.media_stop()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.device.media_next()
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send next track command."""
         await self.device.media_previous()
 
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         await self.device.media_seek(position)
