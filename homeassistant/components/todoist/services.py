@@ -31,7 +31,7 @@ from .const import (
     SECTION_NAME,
     SERVICE_NEW_TASK,
 )
-from .coordinator import TodoistConfigEntry, flatten_async_pages
+from .coordinator import TodoistConfigEntry, TodoistCoordinator, flatten_async_pages
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,10 +56,22 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema(
 )
 
 
+def _async_get_coordinator(hass: HomeAssistant) -> TodoistCoordinator:
+    """Return a coordinator to service the request.
+
+    Coordinators created by the legacy YAML calendar platform have no config
+    entry, so they are stored in hass.data and take precedence. Otherwise fall
+    back to the single loaded config entry.
+    """
+    if coordinators := hass.data.get(DOMAIN):
+        return coordinators[0]
+    entry: TodoistConfigEntry = service.async_get_config_entry(hass, DOMAIN, None)
+    return entry.runtime_data
+
+
 async def handle_new_task(call: ServiceCall) -> None:
     """Call when a user creates a new Todoist Task from Home Assistant."""
-    entry: TodoistConfigEntry = service.async_get_config_entry(call.hass, DOMAIN, None)
-    coordinator = entry.runtime_data
+    coordinator = _async_get_coordinator(call.hass)
     project_name = call.data[PROJECT_NAME]
     projects = await coordinator.async_get_projects()
     project_id: str | None = None

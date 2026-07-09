@@ -33,6 +33,7 @@ from .const import (
     CONF_PROJECT_LABEL_WHITELIST,
     CONF_PROJECT_WHITELIST,
     DESCRIPTION,
+    DOMAIN,
     DUE_TODAY,
     END,
     LABELS,
@@ -109,6 +110,10 @@ async def async_setup_platform(
     api = TodoistAPIAsync(token)
     coordinator = TodoistCoordinator(hass, _LOGGER, None, SCAN_INTERVAL, api, token)
     await coordinator.async_refresh()
+
+    # The YAML platform has no config entry, so expose the coordinator for the
+    # new_task service to reach it.
+    hass.data.setdefault(DOMAIN, []).append(coordinator)
 
     async def _shutdown_coordinator(_: Event) -> None:
         await coordinator.async_shutdown()
