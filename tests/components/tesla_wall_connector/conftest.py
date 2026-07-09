@@ -12,7 +12,7 @@ from homeassistant.components.tesla_wall_connector.const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -58,7 +58,6 @@ async def create_wall_connector_entry(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "1.2.3.4"},
-        options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
     )
 
     entry.add_to_hass(hass)
