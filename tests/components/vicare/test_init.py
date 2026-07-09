@@ -1,7 +1,7 @@
 """Test ViCare initialization and migration."""
 
 from datetime import timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
@@ -12,7 +12,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareInvalidCredentialsError,
 )
 
-from homeassistant.components.vicare.const import DOMAIN
+from homeassistant.components.vicare.const import DEFAULT_CACHE_DURATION, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -648,3 +648,47 @@ async def test_coordinator_auth_failure_triggers_reauth(
             if flow["context"]["source"] == SOURCE_REAUTH
         ]
         assert len(reauth_flows) == 1
+
+
+async def test_setup_runs_pyvicare_init_and_fetches_once_per_gateway(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Setup drives the real _setup_vicare_api path, not a prebuilt ViCareData.
+
+    Mocks PyViCare at the API boundary so the via-gateway init, gateway-based
+    cache reconfiguration, and single fetch per gateway are all exercised.
+    """
+    # Two devices behind gwA, one behind gwB: two gateways, three devices.
+    fixtures: list[Fixture] = [
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json", gateway="gwA"),
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json", gateway="gwA"),
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json", gateway="gwB"),
+    ]
+    client = MockPyViCare(fixtures)
+    client.loadViaGateway = Mock()
+    client.setCacheDuration = Mock()
+    client.initWithExternalOAuth = Mock()
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=client),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # viaGateway mode enabled, cache duration scaled to the gateway count.
+    client.loadViaGateway.assert_called_with(True)
+    assert call(DEFAULT_CACHE_DURATION * 2) in client.setCacheDuration.call_args_list
+
+    # First refresh fetches once per gateway representative, not once per device:
+    # gwA fetches via devices[0], the sibling devices[1] never fetches.
+    assert client.devices[0].service.fetch_all_features.call_count == 1
+    assert client.devices[1].service.fetch_all_features.call_count == 0
+    assert client.devices[2].service.fetch_all_features.call_count == 1
