@@ -484,7 +484,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '85',
+    'state': '15',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_air_inlet_my_position-entry]
@@ -786,7 +786,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '85',
+    'state': '15',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_office_shutter_my_position-entry]
@@ -846,7 +846,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '85',
+    'state': '15',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_study_radiator_comfort_room_temperature-entry]
@@ -1154,7 +1154,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '86',
+    'state': '14',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.garage_dining_room_shutter_my_position-entry]
@@ -1214,7 +1214,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '69',
+    'state': '31',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.garage_guest_room_shutter_my_position-entry]
@@ -1274,7 +1274,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '84',
+    'state': '16',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.guest_bedroom_kids_room_shutter_my_position-entry]
@@ -1334,7 +1334,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '86',
+    'state': '14',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.kids_room_kitchen_shutter_my_position-entry]
@@ -1394,7 +1394,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '87',
+    'state': '13',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.kids_room_office_shutter_my_position-entry]
@@ -1454,7 +1454,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '72',
+    'state': '28',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.kids_room_patio_shutter_my_position-entry]
@@ -1514,7 +1514,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '81',
+    'state': '19',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.main_bedroom_bedroom_blinds_my_position-entry]
@@ -1574,7 +1574,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '86',
+    'state': '14',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.office_garden_house_shutter_my_position-entry]
@@ -1634,7 +1634,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '86',
+    'state': '14',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.reading_nook_living_room_shutter_my_position-entry]
@@ -1694,7 +1694,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '86',
+    'state': '14',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.bathroom_blinds_my_position-entry]
@@ -1754,7 +1754,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.bedroom_blinds_my_position-entry]
@@ -1814,7 +1814,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.dining_room_blinds_my_position-entry]
@@ -1874,7 +1874,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.garage_blinds_my_position-entry]
@@ -1934,7 +1934,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.guest_room_blinds_my_position-entry]
@@ -1994,7 +1994,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.hallway_blinds_my_position-entry]
@@ -2054,7 +2054,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.kitchen_blinds_my_position-entry]
@@ -2114,7 +2114,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.living_room_blinds_my_position-entry]
@@ -2174,7 +2174,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.master_bedroom_blinds_my_position-entry]
@@ -2234,7 +2234,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.nursery_blinds_my_position-entry]
@@ -2294,7 +2294,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.office_blinds_my_position-entry]
@@ -2354,7 +2354,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '85',
+    'state': '15',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.study_blinds_my_position-entry]
@@ -2414,6 +2414,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
