@@ -37,6 +37,12 @@ CONTACT_SENSOR = FixtureDevice(
     "rtds://1234-1234-6233/394781",
     "binary_sensor.family_wing_porte_contact",
 )
+# Somfy IntelliTAG air tilt sensor (io:SomfyWindowStateSensor)
+TILT_SENSOR = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "io://1234-1234-6233/8059108#1",
+    "binary_sensor.living_room_balcony_window_tilt",
+)
 
 SNAPSHOT_FIXTURES = [
     SMOKE_SENSOR,
@@ -103,6 +109,42 @@ async def test_binary_sensor_smoke_state_update(
     )
 
     state = hass.states.get(SMOKE_SENSOR.entity_id)
+    assert state
+    assert state.state == STATE_ON
+
+
+async def test_binary_sensor_tilt_state_update(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test event-driven state update for a tilt sensor (clear → tilted)."""
+    await setup_overkiz_integration(fixture=TILT_SENSOR.fixture)
+
+    state = hass.states.get(TILT_SENSOR.entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                TILT_SENSOR.device_url,
+                [
+                    {
+                        "name": OverkizState.CORE_TILTED.value,
+                        "type": 6,
+                        "value": True,
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(TILT_SENSOR.entity_id)
     assert state
     assert state.state == STATE_ON
 
