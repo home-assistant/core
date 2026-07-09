@@ -207,7 +207,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             )
         )
         # Keep polling active even if initial refresh fails so coordinator can recover.
-        self._noop_listener_disconnect = self.async_add_listener(lambda: None)
+        self.async_add_listener(lambda: None)
 
     @property
     def unhealthy_reasons(self) -> set[str]:
@@ -404,7 +404,10 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
     @override
     async def _async_update_data(self) -> SupervisorIssuesData:
         """Update issues data from Supervisor resolution center."""
-        data = await self._supervisor_client.resolution.info()
+        try:
+            data = await self._supervisor_client.resolution.info()
+        except SupervisorError as err:
+            raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
         issues: dict[UUID, Issue] = {}
         for issue in data.issues:

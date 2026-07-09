@@ -28,6 +28,7 @@ import pytest
 from homeassistant.components.hassio.const import DOMAIN, HASSIO_ISSUES_UPDATE_INTERVAL
 from homeassistant.components.hassio.coordinator import (
     IssueSubscription,
+    IssueSubscriptionEvent,
     get_issues_info,
 )
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
@@ -1168,7 +1169,7 @@ async def test_supervisor_issues_subscription_events(
     events: list[str] = []
 
     @callback
-    def _handle_subscription_event(event: Any) -> None:
+    def _handle_subscription_event(event: IssueSubscriptionEvent) -> None:
         events.append(event.event)
 
     unsubscribe = issues_coordinator.subscribe(
@@ -1330,7 +1331,7 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
     events: list[str] = []
 
     @callback
-    def _subscription_event(event: Any) -> None:
+    def _subscription_event(event: IssueSubscriptionEvent) -> None:
         events.append(event.event)
 
     unsubscribe = issues_coordinator.subscribe(
