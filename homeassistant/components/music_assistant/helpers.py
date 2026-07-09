@@ -44,3 +44,21 @@ def get_music_assistant_client(
     if entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError("Entry not loaded")
     return entry.runtime_data.mass
+
+
+async def async_resolve_mass_username(
+    hass: HomeAssistant, user_id: str, available_usernames: list[str]
+) -> str | None:
+    """Resolve the Music Assistant username for the Home Assistant user."""
+    if (user := await hass.auth.async_get_user(user_id)) is None:
+        return None
+    for cred in user.credentials:
+        if cred.auth_provider_type == "homeassistant":
+            username: str = cred.data["username"]
+            break
+    else:
+        return None
+    username = username.strip().lower()
+    if username in available_usernames:
+        return username
+    return None

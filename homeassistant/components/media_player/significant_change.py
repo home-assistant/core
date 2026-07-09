@@ -8,21 +8,16 @@ from homeassistant.helpers.significant_change import (
     check_valid_float,
 )
 
-from . import (
-    ATTR_ENTITY_PICTURE_LOCAL,
-    ATTR_MEDIA_POSITION,
-    ATTR_MEDIA_POSITION_UPDATED_AT,
-    ATTR_MEDIA_VOLUME_LEVEL,
-    PROP_TO_ATTR,
-)
+from . import PROP_TO_ATTR
+from .const import MediaPlayerEntityStateAttribute
 
-INSIGNIFICANT_ATTRIBUTES: set[str] = {
-    ATTR_MEDIA_POSITION,
-    ATTR_MEDIA_POSITION_UPDATED_AT,
+INSIGNIFICANT_ATTRIBUTES: set[MediaPlayerEntityStateAttribute] = {
+    MediaPlayerEntityStateAttribute.MEDIA_POSITION,
+    MediaPlayerEntityStateAttribute.MEDIA_POSITION_UPDATED_AT,
 }
 
-SIGNIFICANT_ATTRIBUTES: set[str] = {
-    ATTR_ENTITY_PICTURE_LOCAL,
+SIGNIFICANT_ATTRIBUTES: set[MediaPlayerEntityStateAttribute] = {
+    MediaPlayerEntityStateAttribute.ENTITY_PICTURE_LOCAL,
     *PROP_TO_ATTR.values(),
 } - INSIGNIFICANT_ATTRIBUTES
 
@@ -49,7 +44,7 @@ def async_check_significant_change(
     changed_attrs: set[str] = {item[0] for item in old_attrs_s ^ new_attrs_s}
 
     for attr_name in changed_attrs:
-        if attr_name != ATTR_MEDIA_VOLUME_LEVEL:
+        if attr_name != MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL:
             return True
 
         old_attr_value = old_attrs.get(attr_name)
