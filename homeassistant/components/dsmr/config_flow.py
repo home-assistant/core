@@ -23,6 +23,7 @@ from homeassistant.helpers.selector import SerialPortSelector
 
 from .const import (
     CONF_DSMR_VERSION,
+    CONF_ENCRYPTION_KEY,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
@@ -30,6 +31,7 @@ from .const import (
     DOMAIN,
     DSMR_PROTOCOL,
     DSMR_VERSIONS,
+    ENCRYPTED_DSMR_VERSIONS,
     LOGGER,
     RFXTRX_DSMR_PROTOCOL,
 )
@@ -38,16 +40,24 @@ from .const import (
 class DSMRConnection:
     """Test the connection to DSMR and receive telegram to read serial ids."""
 
-    def __init__(self, port: str, dsmr_version: str, protocol: str) -> None:
+    def __init__(
+        self,
+        port: str,
+        dsmr_version: str,
+        protocol: str,
+        encryption_key: str = "",
+    ) -> None:
         """Initialize."""
         self._port = port
         self._dsmr_version = dsmr_version
         self._protocol = protocol
+        self._encryption_key = encryption_key
+        self._decryption_failed = False
         self._telegram: dict[str, DSMRObject] = {}
         self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
         if dsmr_version == "5B":
             self._equipment_identifier = obis_ref.BELGIUM_EQUIPMENT_IDENTIFIER
-        if dsmr_version in ("5L", "5EONHU"):
+        if dsmr_version in ("5L", "5EONHU", "MSn"):
             self._equipment_identifier = obis_ref.LUXEMBOURG_EQUIPMENT_IDENTIFIER
         if dsmr_version == "Q3D":
             self._equipment_identifier = obis_ref.Q3D_EQUIPMENT_IDENTIFIER
@@ -80,8 +90,17 @@ class DSMRConnection:
                 self._telegram = telegram
                 transport.close()
 
+        # The encryption key is only supported by the standard DSMR reader, not
+        # by the RFXtrx reader; encrypted meters always use DSMR_PROTOCOL.
+        # authentication_key=None opts into decrypt-without-verification (the GCM
+        # tag is not checked; integrity comes from the telegram CRC).
+        key_kwargs: dict[str, Any] = {}
         if self._protocol == DSMR_PROTOCOL:
             create_reader = create_dsmr_reader
+            key_kwargs = {
+                "encryption_key": self._encryption_key,
+                "authentication_key": None,
+            }
         else:
             create_reader = create_rfxtrx_dsmr_reader
         reader_factory = partial(
@@ -90,6 +109,7 @@ class DSMRConnection:
             self._dsmr_version,
             update_telegram,
             loop=hass.loop,
+            **key_kwargs,
         )
 
         try:
@@ -108,7 +128,16 @@ class DSMRConnection:
                 # result in CannotCommunicate error)
                 transport.close()
                 await protocol.wait_closed()
+            # A wrong key tears the connection down immediately (the protocol
+            # closes the transport on a DecryptionError), so wait_closed()
+            # returns before the timeout. Surface it as a key error.
+            if getattr(protocol, "decryption_error", None) is not None:
+                self._decryption_failed = True
         return True
+
+    def decryption_failed(self) -> bool:
+        """Return whether decryption failed (wrong key)."""
+        return self._decryption_failed
 
 
 async def _validate_dsmr_connection(
@@ -119,10 +148,14 @@ async def _validate_dsmr_connection(
         data[CONF_PORT],
         data[CONF_DSMR_VERSION],
         protocol,
+        data.get(CONF_ENCRYPTION_KEY, ""),
     )
 
     if not await conn.validate_connect(hass):
         raise CannotConnect
+
+    if conn.decryption_failed():
+        raise InvalidKey
 
     equipment_identifier = conn.equipment_identifier()
     equipment_identifier_gas = conn.equipment_identifier_gas()
@@ -141,6 +174,9 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for DSMR."""
 
     VERSION = 1
+
+    _pending_data: dict[str, Any]
+    _pending_title: str
 
     @staticmethod
     @callback
@@ -163,6 +199,11 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
         """
         errors: dict[str, str] = {}
         if user_input is not None:
+            if user_input[CONF_DSMR_VERSION] in ENCRYPTED_DSMR_VERSIONS:
+                self._pending_data = user_input
+                self._pending_title = user_input[CONF_PORT]
+                return await self.async_step_encryption_key()
+
             data = await self.async_validate_dsmr(user_input, errors)
             if not errors:
                 return self.async_create_entry(title=data[CONF_PORT], data=data)
@@ -179,6 +220,29 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_encryption_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for the decryption key of an encrypted meter.
+
+        Only the encryption key is needed: decryption does not verify the GCM
+        authentication tag (integrity comes from the telegram CRC), so no
+        authentication key is required.
+        """
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            data = await self.async_validate_dsmr(
+                {**self._pending_data, **user_input}, errors
+            )
+            if not errors:
+                return self.async_create_entry(title=self._pending_title, data=data)
+
+        return self.async_show_form(
+            step_id="encryption_key",
+            data_schema=vol.Schema({vol.Required(CONF_ENCRYPTION_KEY): str}),
+            errors=errors,
+        )
+
     async def async_validate_dsmr(
         self, input_data: dict[str, Any], errors: dict[str, str]
     ) -> dict[str, Any]:
@@ -190,6 +254,10 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
                 protocol = DSMR_PROTOCOL
                 info = await _validate_dsmr_connection(self.hass, data, protocol)
             except CannotCommunicate:
+                # Encrypted meters are only supported over the standard DSMR
+                # protocol, so don't fall back to RFXtrx for them.
+                if data[CONF_DSMR_VERSION] in ENCRYPTED_DSMR_VERSIONS:
+                    raise
                 protocol = RFXTRX_DSMR_PROTOCOL
                 info = await _validate_dsmr_connection(self.hass, data, protocol)
 
@@ -202,6 +270,8 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except CannotCommunicate:
             errors["base"] = "cannot_communicate"
+        except InvalidKey:
+            errors["base"] = "invalid_key"
 
         return data
 
@@ -237,3 +307,7 @@ class CannotConnect(HomeAssistantError):
 
 class CannotCommunicate(HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class InvalidKey(HomeAssistantError):
+    """Error to indicate the decryption key is invalid."""
