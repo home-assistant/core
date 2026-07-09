@@ -5,10 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import cast, override
 
-from homeassistant.components.device_tracker import (
-    DeviceTrackerEntityStateAttribute,
-    TrackerEntityStateAttribute,
-)
+from homeassistant.components.device_tracker import DeviceTrackerEntityStateAttribute
 from homeassistant.components.person import (
     DOMAIN as PERSON_DOMAIN,
     PersonEntityStateAttribute,
@@ -58,19 +55,10 @@ type ProximityConfigEntry = ConfigEntry[ProximityDataUpdateCoordinator]
 
 
 def _tracked_latitude_longitude(state: State) -> tuple[float | None, float | None]:
-    """Return the coordinates of a tracked entity state.
-
-    Read via the enum matching the entity domain; the config flow only allows
-    person and device_tracker entities to be tracked.
-    """
-    if state.domain == PERSON_DOMAIN:
-        return (
-            state.attributes.get(PersonEntityStateAttribute.LATITUDE),
-            state.attributes.get(PersonEntityStateAttribute.LONGITUDE),
-        )
+    """Return the coordinates of a tracked entity state."""
     return (
-        state.attributes.get(TrackerEntityStateAttribute.LATITUDE),
-        state.attributes.get(TrackerEntityStateAttribute.LONGITUDE),
+        state.attributes.get(EntityStateAttribute.LATITUDE),
+        state.attributes.get(EntityStateAttribute.LONGITUDE),
     )
 
 
@@ -241,8 +229,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             return None
 
         distance_to_centre = distance(
-            zone.attributes[ZoneEntityStateAttribute.LATITUDE],
-            zone.attributes[ZoneEntityStateAttribute.LONGITUDE],
+            zone.attributes[EntityStateAttribute.LATITUDE],
+            zone.attributes[EntityStateAttribute.LONGITUDE],
             latitude,
             longitude,
         )
@@ -283,14 +271,14 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             return None
 
         old_distance = distance(
-            zone.attributes[ZoneEntityStateAttribute.LATITUDE],
-            zone.attributes[ZoneEntityStateAttribute.LONGITUDE],
+            zone.attributes[EntityStateAttribute.LATITUDE],
+            zone.attributes[EntityStateAttribute.LONGITUDE],
             old_latitude,
             old_longitude,
         )
         new_distance = distance(
-            zone.attributes[ZoneEntityStateAttribute.LATITUDE],
-            zone.attributes[ZoneEntityStateAttribute.LONGITUDE],
+            zone.attributes[EntityStateAttribute.LATITUDE],
+            zone.attributes[EntityStateAttribute.LONGITUDE],
             new_latitude,
             new_longitude,
         )
