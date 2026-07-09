@@ -80,7 +80,10 @@ async def async_setup_entry(
     """Set up the NX584 alarm control panel from a config entry."""
     data = entry.runtime_data
 
-    entity = NX584Alarm(entry.title, data.client)
+    # NX584Alarm has no unique_id, so its entity_id is derived from this name.
+    # Use the same stable default YAML used rather than entry.title (the host),
+    # so entity_id doesn't change for existing users migrating from YAML.
+    entity = NX584Alarm(DEFAULT_NAME, data.client)
     async_add_entities([entity])
 
     _async_register_services()

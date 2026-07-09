@@ -52,11 +52,18 @@ async def test_async_setup_platform_imports_config(
 
 
 async def test_async_setup_entry_creates_alarm_panel(hass: HomeAssistant) -> None:
-    """Test setting up the alarm_control_panel platform from a config entry."""
+    """Test setting up the alarm_control_panel platform from a config entry.
+
+    The config entry title is set to the host (see config_flow.async_step_import
+    and async_step_user), not "NX584". Since NX584Alarm has no unique_id, its
+    entity_id is derived from its name, so the entity must use a stable default
+    name instead of entry.title -- otherwise entity_id changes with the host,
+    breaking existing users' automations/dashboards on YAML import.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "1.1.1.1", CONF_PORT: 5007},
-        title="NX584",
+        title="1.1.1.1",
     )
     entry.add_to_hass(hass)
 
