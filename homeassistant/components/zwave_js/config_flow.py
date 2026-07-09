@@ -405,6 +405,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._recommended_install = False
         self._rf_region: str | None = None
         self._entry_unloaded_by_flow = False
+        # The steps to continue with after the add-on is installed or started.
+        # The reconfigure and migration flows override these.
+        self._addon_configure_step = "configure_addon_user"
+        self._addon_finish_step = "finish_addon_setup_user"
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -432,7 +436,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.integration_created_addon = True
 
-        return self.async_show_progress_done(next_step_id="configure_addon")
+        return self.async_show_progress_done(next_step_id=self._addon_configure_step)
 
     async def async_step_install_failed(
         self, user_input: dict[str, Any] | None = None
@@ -478,7 +482,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             self.start_task = None
 
-        return self.async_show_progress_done(next_step_id="finish_addon_setup")
+        return self.async_show_progress_done(next_step_id=self._addon_finish_step)
 
     async def async_step_start_failed(
         self, user_input: dict[str, Any] | None = None
@@ -497,28 +501,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             self.ws_address,
             self.version_info,
         ) = await self._addon_setup.async_start_addon_and_wait(self.ws_address)
-
-    async def async_step_configure_addon(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Ask for config for Z-Wave JS add-on."""
-        if self._reconfigure_config_entry:
-            return await self.async_step_configure_addon_reconfigure(user_input)
-        return await self.async_step_configure_addon_user(user_input)
-
-    async def async_step_finish_addon_setup(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Prepare info needed to complete the config entry.
-
-        Get add-on discovery info and server version info.
-        Set unique id and abort if already configured.
-        """
-        if self._migrating:
-            return await self.async_step_finish_addon_setup_migrate(user_input)
-        if self._reconfigure_config_entry:
-            return await self.async_step_finish_addon_setup_reconfigure(user_input)
-        return await self.async_step_finish_addon_setup_user(user_input)
 
     @override
     async def async_step_user(
@@ -1125,6 +1107,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
+        self._addon_configure_step = "configure_addon_reconfigure"
+        self._addon_finish_step = "finish_addon_setup_reconfigure"
         if is_hassio(self.hass):
             return await self.async_step_on_supervisor_reconfigure()
 
@@ -1166,6 +1150,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         self._migrating = True
+        self._addon_finish_step = "finish_addon_setup_migrate"
         return await self.async_step_backup_nvm()
 
     async def async_step_backup_nvm(
