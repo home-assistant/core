@@ -92,6 +92,11 @@ def _async_register_credential_services(hass: HomeAssistant) -> None:
                 CREDENTIAL_RULE_REVERSE_MAP.keys()
             ),
             vol.Optional(const.ATTR_USER_ACTIVE): cv.boolean,
+            vol.Inclusive(const.ATTR_CREDENTIAL_TYPE, "credential"): vol.In(
+                const.WRITABLE_CREDENTIAL_TYPES
+            ),
+            vol.Optional(const.ATTR_CREDENTIAL_SLOT): uint16_id,
+            vol.Inclusive(const.ATTR_CREDENTIAL_DATA, "credential"): cv.string,
         },
         func="async_set_user",
         supports_response=SupportsResponse.ONLY,
