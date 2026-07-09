@@ -9,7 +9,7 @@ import openai
 import voluptuous as vol
 from voluptuous_openapi import convert
 
-from homeassistant.components.zone import ENTITY_ID_HOME, ZoneEntityStateAttribute
+from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -19,7 +19,13 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_LLM_HASS_API,
+    CONF_NAME,
+    CONF_PROMPT,
+    EntityStateAttribute,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.httpx_client import get_async_client
@@ -647,8 +653,8 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     {
                         "role": "system",
                         "content": "Where are the following coordinates located: "
-                        f"({zone_home.attributes[ZoneEntityStateAttribute.LATITUDE]},"
-                        f" {zone_home.attributes[ZoneEntityStateAttribute.LONGITUDE]})?",
+                        f"({zone_home.attributes[EntityStateAttribute.LATITUDE]},"
+                        f" {zone_home.attributes[EntityStateAttribute.LONGITUDE]})?",
                     }
                 ],
                 text={
