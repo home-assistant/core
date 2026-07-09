@@ -39,7 +39,10 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
         # Do not probe the device if the UUID advertised over mDNS matches
         # an existing (or ignored) entry
         if uuid := discovery_info.properties.get("uuid"):
-            await self.async_set_unique_id(uuid.removeprefix("uuid:"))
+            # The advertised UUID is prefixed and dashed
+            # (uuid:FF31F09E-5001-...), while the device API (and therefore
+            # the stored unique id) uses the dashless form
+            await self.async_set_unique_id(uuid.removeprefix("uuid:").replace("-", ""))
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: discovery_info.host}
             )

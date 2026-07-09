@@ -26,7 +26,7 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     port=59152,
     type="_linkplay._tcp.local.",
     properties={
-        "uuid": f"uuid:{UUID}",
+        "uuid": "uuid:FF31F09E-5001-FBDE-0546-2DBFFF31F09E",
         "mac": "00:2F:69:01:84:3A",
         "security": "https 2.0",
         "upnp": "1.0.0",
@@ -42,7 +42,7 @@ ZEROCONF_DISCOVERY_RE_ENTRY = ZeroconfServiceInfo(
     port=59152,
     type="_linkplay._tcp.local.",
     properties={
-        "uuid": f"uuid:{UUID}",
+        "uuid": "uuid:FF31F09E-5001-FBDE-0546-2DBFFF31F09E",
         "mac": "00:2F:69:01:84:3A",
         "security": "https 2.0",
         "upnp": "1.0.0",
