@@ -3,11 +3,11 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
+from infrared_protocols.codes.generic.led.generic_13_key import Generic13KeyCode
 from infrared_protocols.codes.tween_light.led_strip import TweenLightLEDStripCode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.led_infrared.codes import Generic13KeyCode
 from homeassistant.components.led_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,

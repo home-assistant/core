@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+from infrared_protocols.codes.generic.led.generic_13_key import Generic13KeyCode
 from infrared_protocols.codes.tween_light.led_strip import TweenLightLEDStripCode
 
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
@@ -15,7 +16,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .codes import Generic13KeyCode
 from .const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
