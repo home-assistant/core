@@ -322,6 +322,9 @@
     "credential_rejected_wrong_uuid": {
       "message": "The device rejected the credential because the user unique identifier does not match."
     },
+    "credential_required": {
+      "message": "This device requires a credential when adding a user."
+    },
     "credential_type_not_supported": {
       "message": "Credential type {credential_type} is not supported on this device"
     },
@@ -800,15 +803,27 @@
       "name": "Set lock user code"
     },
     "set_user": {
-      "description": "Creates or updates an access-control user on a lock entity. Returns the allocated user_id for each targeted lock entity.",
+      "description": "Creates or updates an access-control user on a lock entity. When no user_id is given, a new user is created. A credential (PIN code or password) can be written in the same call. Returns the allocated user_id, plus the credential_slot when a credential was written, for each targeted lock entity.",
       "fields": {
         "active": {
           "description": "Whether the user is active.",
           "name": "Active"
         },
+        "credential_data": {
+          "description": "The credential data (e.g. PIN digits or password string).",
+          "name": "Credential data"
+        },
         "credential_rule": {
           "description": "Credential rule for the user (single, dual, or triple).",
           "name": "Credential rule"
+        },
+        "credential_slot": {
+          "description": "Credential slot index. If not specified, the first available slot is used.",
+          "name": "Credential slot"
+        },
+        "credential_type": {
+          "description": "The type of credential (pin_code or password).",
+          "name": "Credential type"
         },
         "user_id": {
           "description": "User slot index. If not specified, the first available slot is used.",
