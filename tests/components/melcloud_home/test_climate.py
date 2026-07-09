@@ -1,5 +1,7 @@
 """Test the MELCloud Home climate platform."""
 
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from aiomelcloudhome import (
@@ -8,6 +10,7 @@ from aiomelcloudhome import (
     ATAVaneHorizontal,
     ATAVaneVertical,
     ATWZoneMode,
+    UserContext,
 )
 import pytest
 
@@ -24,6 +27,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
+from homeassistant.components.melcloud_home.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -36,7 +40,12 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    SnapshotAssertion,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 ATA_ENTITY_ID = "climate.living_room_ac"
 ATW_ZONE1_ENTITY_ID = "climate.heat_pump_zone_1"
@@ -59,6 +68,68 @@ async def test_climate_platform(
         await snapshot_platform(
             hass, entity_registry, snapshot, mock_config_entry.entry_id
         )
+
+
+@pytest.mark.parametrize(
+    ("apply_capabilities", "expected_hvac_modes"),
+    [
+        pytest.param(
+            lambda _: None,
+            [
+                HVACMode.OFF,
+                HVACMode.HEAT,
+                HVACMode.COOL,
+                HVACMode.AUTO,
+                HVACMode.DRY,
+                HVACMode.FAN_ONLY,
+            ],
+            id="no_capabilities",
+        ),
+        pytest.param(
+            lambda caps: caps,
+            [
+                HVACMode.OFF,
+                HVACMode.HEAT,
+                HVACMode.COOL,
+                HVACMode.AUTO,
+                HVACMode.DRY,
+                HVACMode.FAN_ONLY,
+            ],
+            id="all_modes",
+        ),
+        pytest.param(
+            lambda caps: {
+                **caps,
+                "hasCoolOperationMode": False,
+                "hasAutoOperationMode": False,
+                "hasDryOperationMode": False,
+                "hasFanOperationMode": False,
+            },
+            [HVACMode.OFF, HVACMode.HEAT],
+            id="heat_only",
+        ),
+    ],
+)
+async def test_ata_hvac_modes(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    apply_capabilities: Callable[[dict[str, Any]], dict[str, Any] | None],
+    expected_hvac_modes: list[HVACMode],
+) -> None:
+    """Test ATA hvac_modes for varying unit capabilities."""
+    context: dict[str, Any] = await async_load_json_object_fixture(
+        hass, "context.json", DOMAIN
+    )
+    ata_unit = context["buildings"][0]["airToAirUnits"][0]
+    ata_unit["capabilities"] = apply_capabilities(ata_unit["capabilities"])
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ATA_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["hvac_modes"] == expected_hvac_modes
 
 
 @pytest.mark.parametrize(

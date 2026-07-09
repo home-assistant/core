@@ -9,7 +9,7 @@ from typing import Any, override
 from lru import LRU
 from propcache.api import under_cached_property
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, EntityStateAttribute
 from homeassistant.core import (
     Context,
     HomeAssistant,
@@ -182,7 +182,7 @@ class StateTranslated:
 
         state_value = state.state
         domain = state.domain
-        device_class = state.attributes.get("device_class")
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         entry = er.async_get(self._hass).async_get(entity_id)
         platform = None if entry is None else entry.platform
         translation_key = None if entry is None else entry.translation_key
@@ -219,7 +219,7 @@ class StateAttrTranslated:
             return attr_value
 
         domain = state.domain
-        device_class = state.attributes.get("device_class")
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         entry = er.async_get(self._hass).async_get(entity_id)
         platform = None if entry is None else entry.platform
         translation_key = None if entry is None else entry.translation_key
@@ -413,7 +413,9 @@ class TemplateStateBase(State):
             state = async_rounded_state(self._hass, self._entity_id, self._state)
         else:
             state = self._state.state
-        if with_unit and (unit := self._state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+        if with_unit and (
+            unit := self._state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        ):
             return f"{state} {unit}"
         return state
 

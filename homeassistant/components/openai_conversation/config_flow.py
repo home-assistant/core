@@ -9,7 +9,7 @@ import openai
 import voluptuous as vol
 from voluptuous_openapi import convert
 
-from homeassistant.components.zone import ENTITY_ID_HOME
+from homeassistant.components.zone import ENTITY_ID_HOME, ZoneEntityStateAttribute
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -19,14 +19,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_API_KEY,
-    CONF_LLM_HASS_API,
-    CONF_NAME,
-    CONF_PROMPT,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.httpx_client import get_async_client
@@ -326,7 +319,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             options.update(user_input)
             if CONF_LLM_HASS_API in options and CONF_LLM_HASS_API not in user_input:
                 options.pop(CONF_LLM_HASS_API)
-            return await self.async_step_advanced()
+            return await self.async_step_additional()
 
         return self.async_show_form(
             step_id="init",
@@ -335,10 +328,10 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             ),
         )
 
-    async def async_step_advanced(
+    async def async_step_additional(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Manage advanced options."""
+        """Manage additional options."""
         options = self.options
         errors: dict[str, str] = {}
 
@@ -374,7 +367,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                 return await self.async_step_model()
 
         return self.async_show_form(
-            step_id="advanced",
+            step_id="additional",
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(step_schema), options
             ),
@@ -654,8 +647,8 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     {
                         "role": "system",
                         "content": "Where are the following coordinates located: "
-                        f"({zone_home.attributes[ATTR_LATITUDE]},"
-                        f" {zone_home.attributes[ATTR_LONGITUDE]})?",
+                        f"({zone_home.attributes[ZoneEntityStateAttribute.LATITUDE]},"
+                        f" {zone_home.attributes[ZoneEntityStateAttribute.LONGITUDE]})?",
                     }
                 ],
                 text={
