@@ -28,6 +28,7 @@ from uiprotect.data.bootstrap import ProtectDeviceRef
 from uiprotect.data.public_devices import (
     PublicCamera,
     PublicCameraLedSettings,
+    PublicHdrMode,
     PublicLight,
     PublicLightDeviceSettings,
     PublicOsdSettings,
@@ -344,6 +345,13 @@ def make_public_light(
     return public
 
 
+_HDR_DISPLAY_TO_PUBLIC = {
+    "auto": PublicHdrMode.AUTO,
+    "always": PublicHdrMode.ON,
+    "off": PublicHdrMode.OFF,
+}
+
+
 def make_public_camera(
     camera: Camera,
     *,
@@ -356,11 +364,14 @@ def make_public_camera(
     video_mode: VideoMode | None = None,
     object_types: list[SmartDetectObjectType] | None = None,
     audio_types: list[SmartDetectAudioType] | None = None,
+    hdr_type: PublicHdrMode | None = None,
 ) -> Mock:
-    """Build a public-API camera for the migrated camera config switches.
+    """Build a public-API camera mirroring a private camera's migrated fields.
 
-    Identifiers come from the private camera fixture; each ``*`` override lets a
-    test set a value the private object would not produce so a wrong
+    ``hdr_type`` defaults to the public mode derived from the private
+    ``hdr_mode_display`` so the migrated HDR select reads the same value the
+    private object would produce; each other ``*`` override lets a test set a
+    value the private object would not produce so a wrong
     ``ufp_public_value``/``ufp_public_value_fn`` fails the test.
     """
     public = Mock(spec=PublicCamera)
@@ -379,6 +390,11 @@ def make_public_camera(
     public.smart_detect_settings = PublicSmartDetectSettings(
         object_types=object_types or [],
         audio_types=audio_types or [],
+    )
+    public.hdr_type = (
+        _HDR_DISPLAY_TO_PUBLIC[camera.hdr_mode_display]
+        if hdr_type is None
+        else hdr_type
     )
     return public
 
@@ -448,7 +464,7 @@ def setup_public_camera(ufp: MockUFPFixture) -> None:
     """Expose private cameras over the public API via a real ``PublicBootstrap``.
 
     Mirrors ``setup_public_sensor`` for ``ModelType.CAMERA`` so the migrated
-    camera config switches read from the public object.
+    camera config entities read from the public object.
     """
     public_bootstrap = PublicBootstrap()
     pb = Mock(spec=PublicBootstrap)
