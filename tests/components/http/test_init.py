@@ -25,8 +25,12 @@ from homeassistant.components.http.config import (
     default_server_port,
 )
 from homeassistant.components.http.const import ENV_SETUP_PORT
-from homeassistant.const import HASSIO_USER_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
+    HASSIO_USER_NAME,
+)
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.network import NoURLAvailableError
@@ -1522,15 +1526,56 @@ async def test_pending_config_reverts_immediately_on_bind_failure(
         await hass.async_start()
         await hass.async_block_till_done()
 
-    # The pending config is dropped and a restart requested right away, without
-    # waiting out AUTO_REVERT_DELAY.
+    # The pending config is dropped and a restart requested once Core has
+    # started, without waiting out AUTO_REVERT_DELAY.
     assert hass_storage["http"]["data"] == {
         "stable": HTTP_STORAGE_SCHEMA({"server_port": 9876}),
         "pending": None,
         "yaml_migration_done": True,
     }
     assert len(restart_calls) == 1
-    assert "could not bind to port 80" in caplog.text
+    assert "reverting the pending HTTP config to stable" in caplog.text
+
+
+async def test_pending_bind_failure_revert_deferred_until_started(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """The revert restart is deferred until Core has started.
+
+    Restarting during bootstrap deadlocks: the restart request queues behind
+    Supervisor's Core start job, which cannot finish until Core is fully
+    started. So the revert must not be issued until EVENT_HOMEASSISTANT_STARTED.
+    """
+    hass_storage["http"] = _stable_http_storage(
+        {"server_port": 9876}, pending={"server_port": 80}
+    )
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    with patch(
+        "asyncio.BaseEventLoop.create_server",
+        side_effect=OSError(errno.EADDRINUSE, "Address already in use"),
+    ):
+        assert await async_setup_component(hass, "http", {})
+
+        # Bootstrap: the server fails to bind, but the revert must not restart
+        # yet - doing so during startup would deadlock.
+        hass.set_state(CoreState.starting)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+        assert len(restart_calls) == 0
+        assert hass_storage["http"]["data"]["pending"] == HTTP_STORAGE_SCHEMA(
+            {"server_port": 80}
+        )
+
+        # Once Core has started, the revert clears pending and restarts.
+        hass.set_state(CoreState.running)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert len(restart_calls) == 1
+    assert hass_storage["http"]["data"]["pending"] is None
 
 
 async def test_stable_config_bind_failure_does_not_revert(

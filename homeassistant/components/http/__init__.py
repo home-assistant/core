@@ -47,6 +47,7 @@ from homeassistant.helpers.http import (
 )
 from homeassistant.helpers.importlib import async_import_module
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
     SetupPhases,
@@ -261,19 +262,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             except HomeAssistantHTTPBindError:
                 # The configured host/port cannot be bound. If we are trialing a
                 # pending (unconfirmed) config it is already known to be
-                # unusable, so revert to the stable config right away instead of
-                # waiting out the auto-revert trial window. A pending config is
-                # only under trial when a revert is scheduled; on the stable
-                # config there is nothing better to try, so we stay up without
-                # an HTTP server.
+                # unusable, so revert to the stable config instead of waiting
+                # out the auto-revert trial window. A pending config is only
+                # under trial when a revert is scheduled; on the stable config
+                # there is nothing better to try, so we stay up without an HTTP
+                # server.
                 store = await async_get_and_load_store(hass)
                 if store.revert_deadline is not None:
                     _LOGGER.error(
-                        "Reverting pending HTTP config to stable because the "
-                        "server could not bind to port %d",
+                        "Could not bind to port %d; reverting the pending HTTP "
+                        "config to stable once startup has completed",
                         server.server_port,
                     )
-                    await store.async_revert_to_stable_now()
+
+                    async def _revert_to_stable(_hass: HomeAssistant) -> None:
+                        await store.async_revert_to_stable_now()
+
+                    # Defer the revert until Core has started. Restarting during
+                    # startup deadlocks: the restart request queues behind
+                    # Supervisor's Core start job, which only finishes once Core
+                    # is fully started - which is blocked waiting on this very
+                    # request.
+                    async_at_started(hass, _revert_to_stable)
 
     async_when_setup_or_start(hass, "frontend", start_server)
 
