@@ -647,3 +647,46 @@ async def test_handle_unique_id_change(
     # Verify that the old unique id is removed from the allocations
     # and that the new unique id assumes the old aid
     assert aid_storage.allocations == {"demo.light.new_unique": 4202023227}
+
+
+async def test_entity_is_allocated(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test detecting whether an entity already has an allocated aid."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    light_ent = entity_registry.async_get_or_create(
+        "light", "device", "unique_id", device_id=device_entry.id
+    )
+    hass.states.async_set(light_ent.entity_id, "on")
+    hass.states.async_set("remote.has_no_unique_id", "on")
+
+    with patch(
+        "homeassistant.components.homekit.aidmanager.AccessoryAidStorage.async_schedule_save"
+    ):
+        aid_storage = AccessoryAidStorage(hass, config_entry)
+    await aid_storage.async_initialize()
+
+    # Nothing allocated yet
+    assert not aid_storage.entity_is_allocated(light_ent.entity_id)
+    assert not aid_storage.entity_is_allocated("remote.has_no_unique_id")
+
+    # Allocation is keyed by the system unique id for registered entities
+    aid_storage.get_or_allocate_aid_for_entity_id(light_ent.entity_id)
+    assert aid_storage.entity_is_allocated(light_ent.entity_id)
+
+    # Unregistered entities are keyed by entity id
+    aid_storage.get_or_allocate_aid_for_entity_id("remote.has_no_unique_id")
+    assert aid_storage.entity_is_allocated("remote.has_no_unique_id")
+
+    # A changed unique id is still recognized through previous_unique_id
+    entity_registry.async_update_entity(
+        light_ent.entity_id, new_unique_id="new_unique_id"
+    )
+    assert aid_storage.entity_is_allocated(light_ent.entity_id)

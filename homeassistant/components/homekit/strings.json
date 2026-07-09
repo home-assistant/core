@@ -5,7 +5,7 @@
     },
     "step": {
       "pairing": {
-        "description": "To complete pairing follow the instructions in \u201cNotifications\u201d under \u201cHomeKit Pairing\u201d.",
+        "description": "To complete pairing follow the instructions in “Notifications” under “HomeKit Pairing”.",
         "title": "Pair HomeKit"
       },
       "user": {
@@ -15,6 +15,19 @@
         "description": "Choose the domains to be included. All supported entities in the domain will be included except for categorized entities. A separate HomeKit instance in accessory mode will be created for each tv/receiver media player, activity based remote, lock, and camera.",
         "title": "Select domains to be included"
       }
+    }
+  },
+  "issues": {
+    "heater_cooler_candidate": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The bridge {bridge} currently exposes {entity_id} as a Thermostat with a separate Fan. Switching to the Heater Cooler accessory puts the mode, temperature, fan speed, and swing on one tile that matches the device. The accessory keeps its room and name, but HomeKit scenes or automations that used the old Thermostat or Fan controls may need to be recreated. You can change the accessory type again at any time from the bridge options.",
+            "title": "Switch {entity_id} to the Heater Cooler accessory"
+          }
+        }
+      },
+      "title": "{entity} can use the HomeKit Heater Cooler accessory"
     }
   },
   "options": {
@@ -44,14 +57,14 @@
         "data": {
           "entities": "[%key:component::homekit::options::step::include::data::entities%]"
         },
-        "description": "All \u201c{domains}\u201d entities will be included except for the excluded entities and categorized entities.",
+        "description": "All “{domains}” entities will be included except for the excluded entities and categorized entities.",
         "title": "Select the entities to be excluded"
       },
       "include": {
         "data": {
           "entities": "Entities"
         },
-        "description": "Select entities from each domain in \u201c{domains}\u201d. The include will cover the entire domain if you do not select any entities for a given domain.",
+        "description": "Select entities from each domain in “{domains}”. The include will cover the entire domain if you do not select any entities for a given domain.",
         "title": "Select the entities to be included"
       },
       "init": {
@@ -60,7 +73,7 @@
           "include_exclude_mode": "Inclusion mode",
           "mode": "HomeKit mode"
         },
-        "description": "HomeKit can be configured to expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV or RECEIVER device class to function properly. Entities in the \u201cDomains to include\u201d will be included to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
+        "description": "HomeKit can be configured to expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV or RECEIVER device class to function properly. Entities in the “Domains to include” will be included to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
         "title": "Select mode and domains."
       },
       "yaml": {
