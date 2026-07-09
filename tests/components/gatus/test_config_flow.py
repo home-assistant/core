@@ -27,7 +27,6 @@ async def test_form_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
         result["flow_id"],
         {CONF_URL: "http://gatus.example.com:8080"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Gatus"
@@ -105,15 +104,9 @@ async def test_form_failures_and_recovery(
 
 
 async def test_form_already_configured(
-    hass: HomeAssistant, mock_gatus_client: AsyncMock
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that duplicate configurations for the same base URL abort early."""
-    old_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_URL: "http://gatus.example.com:8080"},
-    )
-    old_entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

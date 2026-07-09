@@ -9,6 +9,8 @@ from homeassistant.components.gatus.const import DOMAIN
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
 
 
@@ -28,15 +30,13 @@ def mock_gatus_client() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.gatus.coordinator.GatusClient",
             autospec=True,
-        ) as mock_coordinator_client,
+        ) as mock_client,
         patch(
             "homeassistant.components.gatus.config_flow.GatusClient",
-            autospec=True,
-        ) as mock_config_flow_client,
+            new=mock_client,
+        ),
     ):
-        client_instance = mock_coordinator_client.return_value
-        mock_config_flow_client.return_value = client_instance
-
+        client_instance = mock_client.return_value
         client_instance.get_endpoints_statuses = AsyncMock(
             return_value=[
                 {
@@ -47,7 +47,6 @@ def mock_gatus_client() -> Generator[AsyncMock]:
                 }
             ]
         )
-
         yield client_instance
 
 
@@ -58,12 +57,9 @@ async def mock_config_entry(
     """Fixture to cleanly set up and initialize a Gatus configuration entry inside Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_URL: "http://gatus.example.com:80"},
+        data={CONF_URL: "http://gatus.example.com:8080"},
         entry_id="1234567890abcdef1234567890abcdef",
     )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, entry)
 
     return entry

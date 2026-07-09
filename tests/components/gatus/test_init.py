@@ -10,6 +10,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 
+from . import setup_integration
+
 from tests.common import MockConfigEntry
 
 
@@ -20,10 +22,7 @@ async def test_setup_and_unload_entry(
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_URL: "http://gatus.example.com:8080"}
     )
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, config_entry)
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.runtime_data is not None
@@ -46,9 +45,6 @@ async def test_setup_failure_retry(
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_URL: "http://gatus.example.com:8080"}
     )
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, config_entry)
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
