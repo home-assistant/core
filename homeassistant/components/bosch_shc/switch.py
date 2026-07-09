@@ -201,7 +201,7 @@ class SHCRoutingSwitch(SHCEntity, SwitchEntity):
     _device: SHCSmartPlug
 
     def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
-        """Initialize an SHC routing switch."""
+        """Initialize an SHC communication quality reporting sensor."""
         super().__init__(device, parent_id, entry_id)
         self._attr_unique_id = f"{device.serial}_routing"
 
