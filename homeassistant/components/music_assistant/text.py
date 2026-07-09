@@ -1,6 +1,6 @@
 """Music Assistant text platform."""
 
-from typing import Final, override
+from typing import Any, Final, override
 
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.player import PlayerOption, PlayerOptionType
@@ -12,7 +12,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
 from .const import LOGGER
-from .entity import MusicAssistantPartyModeEntity, MusicAssistantPlayerOptionEntity
+from .entity import (
+    MusicAssistantPartyModeConfigEntity,
+    MusicAssistantPlayerOptionEntity,
+)
 from .helpers import catch_musicassistant_error
 
 PLAYER_OPTIONS_TEXT: Final[dict[str, bool]] = {
@@ -82,6 +85,7 @@ async def async_setup_entry(
                     entities.append(
                         MusicAssistantPartyModeText(
                             mass,
+                            entry.runtime_data.party_config_coordinator,
                             instance_id,
                             config_key=text_key,
                             entity_description=TextEntityDescription(
@@ -129,34 +133,45 @@ class MusicAssistantPlayerConfigText(MusicAssistantPlayerOptionEntity, TextEntit
         )
 
 
-class MusicAssistantPartyModeText(MusicAssistantPartyModeEntity, TextEntity):
+class MusicAssistantPartyModeText(MusicAssistantPartyModeConfigEntity, TextEntity):
     """Representation of a Text entity to control party mode settings."""
 
     def __init__(
         self,
         mass: MusicAssistantClient,
+        coordinator: Any,
         instance_id: str,
         config_key: str,
         entity_description: TextEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(mass, instance_id, unique_id_suffix=config_key)
+        super().__init__(
+            mass=mass,
+            coordinator=coordinator,
+            instance_id=instance_id,
+            unique_id_suffix=config_key,
+        )
         self.config_key = config_key
         self.entity_description = entity_description
+        self._attr_native_value = None
 
     @override
-    async def async_on_update(self) -> None:
+    def _handle_coordinator_update(self) -> None:
         """Update text state."""
+        if not (party_config := self.coordinator.data):
+            self._attr_available = False
+            super()._handle_coordinator_update()
+            return
+
         try:
-            party_config = await self.mass.config.get_provider_config(self.instance_id)
-            if value := party_config.get_value(self.config_key):
-                self._attr_native_value = str(value)
-            else:
-                self._attr_native_value = ""
+            value = party_config.get_value(self.config_key)
+            self._attr_native_value = str(value) if value is not None else None
             self._attr_available = True
         except Exception as err:  # noqa: BLE001
             LOGGER.debug("Error in text update: %s", err)
             self._attr_available = False
+
+        super()._handle_coordinator_update()
 
     @catch_musicassistant_error
     @override

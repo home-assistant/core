@@ -1,6 +1,6 @@
 """Music Assistant select platform."""
 
-from typing import Final, override
+from typing import Any, Final, override
 
 from music_assistant_client.client import MusicAssistantClient
 from music_assistant_models.enums import EventType
@@ -14,7 +14,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MusicAssistantConfigEntry
 from .const import LOGGER
-from .entity import MusicAssistantPartyModeEntity, MusicAssistantPlayerOptionEntity
+from .entity import (
+    MusicAssistantPartyModeConfigEntity,
+    MusicAssistantPlayerOptionEntity,
+)
 from .helpers import catch_musicassistant_error
 
 PLAYER_OPTIONS_SELECT: Final[dict[str, bool]] = {
@@ -117,6 +120,7 @@ async def async_setup_entry(
                     entities.append(
                         MusicAssistantPartyModeSelect(
                             mass,
+                            entry.runtime_data.party_config_coordinator,
                             instance_id,
                             config_key=select_key,
                             entity_description=SelectEntityDescription(
@@ -183,20 +187,27 @@ class MusicAssistantPlayerConfigSelect(MusicAssistantPlayerOptionEntity, SelectE
         )
 
 
-class MusicAssistantPartyModeSelect(MusicAssistantPartyModeEntity, SelectEntity):
+class MusicAssistantPartyModeSelect(MusicAssistantPartyModeConfigEntity, SelectEntity):
     """Representation of a select entity to control party mode settings."""
 
     def __init__(
         self,
         mass: MusicAssistantClient,
+        coordinator: Any,
         instance_id: str,
         config_key: str,
         entity_description: SelectEntityDescription,
     ) -> None:
         """Initialize."""
-        super().__init__(mass, instance_id, unique_id_suffix=config_key)
+        super().__init__(
+            mass=mass,
+            coordinator=coordinator,
+            instance_id=instance_id,
+            unique_id_suffix=config_key,
+        )
         self.config_key = config_key
         self.entity_description = entity_description
+        self._attr_current_option = None
         if self.config_key != "player":
             self._attr_options = list(BADGE_COLORS.keys())
         else:
@@ -222,12 +233,16 @@ class MusicAssistantPartyModeSelect(MusicAssistantPartyModeEntity, SelectEntity)
 
     async def _on_player_update(self, event: MassEvent) -> None:
         """Call when we receive an event from MusicAssistant."""
-        await self.async_on_update()
-        self.async_write_ha_state()
+        self._handle_coordinator_update()
 
     @override
-    async def async_on_update(self) -> None:
+    def _handle_coordinator_update(self) -> None:
         """Update select state."""
+        if not (party_config := self.coordinator.data):
+            self._attr_available = False
+            super()._handle_coordinator_update()
+            return
+
         try:
             if self.config_key == "player":
                 players = sorted(
@@ -241,7 +256,6 @@ class MusicAssistantPartyModeSelect(MusicAssistantPartyModeEntity, SelectEntity)
                     self._option_id_to_name[p.player_id] = p.name
                 self._attr_options = list(self._option_name_to_id.keys())
 
-            party_config = await self.mass.config.get_provider_config(self.instance_id)
             value = party_config.get_value(self.config_key)
             if self.config_key == "player":
                 self._attr_current_option = self._option_id_to_name.get(
@@ -254,6 +268,8 @@ class MusicAssistantPartyModeSelect(MusicAssistantPartyModeEntity, SelectEntity)
         except Exception as err:  # noqa: BLE001
             LOGGER.debug("Error in select update: %s", err)
             self._attr_available = False
+
+        super()._handle_coordinator_update()
 
     @catch_musicassistant_error
     @override
