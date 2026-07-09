@@ -438,6 +438,7 @@ async def test_reauth_flow_errors(hass: HomeAssistant, side_effect, error) -> No
     ("side_effect", "error"),
     [
         (ConnectError(message=""), "cannot_connect"),
+        (ConnectionError("Failed to connect to Ollama"), "cannot_connect"),
         (RuntimeError(), "unknown"),
     ],
 )
@@ -513,15 +514,23 @@ async def test_form_invalid_url(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "invalid_url"}
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        ConnectError("Connection failed"),
+        ConnectionError("Failed to connect to Ollama"),
+    ],
+)
 async def test_subentry_connection_error(
     hass: HomeAssistant,
     mock_init_component,
     mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
 ) -> None:
     """Test subentry creation when connection to Ollama server fails."""
     with patch(
         "ollama.AsyncClient.list",
-        side_effect=ConnectError("Connection failed"),
+        side_effect=side_effect,
     ):
         new_flow = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, "conversation"),
