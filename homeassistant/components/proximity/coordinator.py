@@ -359,16 +359,14 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
                 old_lat = None
                 old_lon = None
 
-            new_lat = new_state.attributes.get(EntityStateAttribute.LATITUDE)
-            new_lon = new_state.attributes.get(EntityStateAttribute.LONGITUDE)
             entities_data[state_change_data.entity_id][ATTR_DIR_OF_TRAVEL] = (
                 self._calc_direction_of_travel(
                     zone_state,
                     new_state,
                     old_lat,
                     old_lon,
-                    new_lat,
-                    new_lon,
+                    new_state.attributes.get(EntityStateAttribute.LATITUDE),
+                    new_state.attributes.get(EntityStateAttribute.LONGITUDE),
                 )
             )
 
