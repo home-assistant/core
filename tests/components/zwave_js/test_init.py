@@ -24,6 +24,7 @@ from zwave_js_server.model.version import VersionInfo
 
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
+from homeassistant.components.zwave_js.const import CONF_KEEP_OLD_DEVICES
 from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
@@ -1435,6 +1436,53 @@ async def test_removed_device(
     await hass.async_block_till_done()
 
     # Assert that the node was removed from the device registry
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, integration.entry_id
+    )
+    assert len(device_entries) == 2
+    assert (
+        device_registry.async_get_device(identifiers={get_device_id(driver, old_node)})
+        is None
+    )
+
+
+@pytest.mark.usefixtures("climate_radio_thermostat_ct100_plus", "lock_schlage_be469")
+async def test_keep_old_devices_flag(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that the keep old devices flag protects device cleanup once."""
+    driver = client.driver
+    assert driver
+    assert len(driver.controller.nodes) == 3
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, integration.entry_id
+    )
+    assert len(device_entries) == 3
+
+    # Set the flag, like the migration flow does before reloading the entry,
+    # and remove a node, like when connected to a new, empty adapter.
+    hass.config_entries.async_update_entry(
+        integration, data={**integration.data, CONF_KEEP_OLD_DEVICES: True}
+    )
+    old_node = driver.controller.nodes.pop(13)
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    # The device of the removed node is kept and the flag is consumed.
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, integration.entry_id
+    )
+    assert len(device_entries) == 3
+    assert CONF_KEEP_OLD_DEVICES not in integration.data
+
+    # Without the flag the next reload cleans up the stale device.
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
     device_entries = dr.async_entries_for_config_entry(
         device_registry, integration.entry_id
     )

@@ -4214,7 +4214,10 @@ async def test_reconfigure_migrate_low_sdk_version(
             aiohttp.ClientError("Boom"),
             "5678",
             True,
-            4,
+            # The stale devices, including the old controller device
+            # orphaned by the hardware identifier change, are kept until
+            # the user confirms the unknown adapter repair issue.
+            5,
         ),
     ],
 )
