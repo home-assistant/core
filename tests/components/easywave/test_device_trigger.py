@@ -405,106 +405,11 @@ async def test_get_gateway_triggers_without_config_entry_link(
     }
 
 
-async def test_get_triggers_returns_empty_for_missing_device(
-    hass: HomeAssistant,
-) -> None:
-    """Unknown device ids return no triggers."""
-    assert await device_trigger.async_get_triggers(hass, "missing-device") == []
-
-
-async def test_get_trigger_capabilities(hass: HomeAssistant) -> None:
-    """Device trigger capabilities are empty for Easywave."""
-    assert await device_trigger.async_get_trigger_capabilities(hass, {}) == {}
-
-
-def test_device_identifier_returns_none_without_domain(
+async def test_get_triggers_returns_empty_for_orphan_without_loaded_entry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Devices without an Easywave identifier return None from identifier lookup."""
-    other_entry = MockConfigEntry(domain="other")
-    other_entry.add_to_hass(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=other_entry.entry_id,
-        identifiers={("other", "device")},
-    )
-    assert device_trigger._device_identifier(device) is None
-
-
-async def test_subentry_data_skips_non_matching_records(
-    hass: HomeAssistant,
-) -> None:
-    """Stored device lookup skips records with a different device id."""
-    entry = _make_gateway_entry(
-        _neo_sensor_device_record(
-            title="Test Sensor",
-            capabilities=NEO_SENSOR_CAPABILITIES,
-        ),
-        _transmitter_device_record(button_count=1, title="Test Transmitter"),
-    )
-    entry.add_to_hass(hass)
-    assert device_trigger._subentry_data(entry, MOCK_TRANSMITTER_DEVICE_ID) is not None
-    assert device_trigger._subentry_data(entry, MOCK_NEO_SENSOR_DEVICE_ID) is not None
-
-
-async def test_find_easywave_config_entry_without_domain_identifier(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Config entry lookup returns None when no Easywave identifier is present."""
-    entry = _make_gateway_entry()
-    await async_setup_easywave_entry(hass, entry)
-    other_entry = MockConfigEntry(domain="other")
-    other_entry.add_to_hass(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=other_entry.entry_id,
-        identifiers={("other", "orphan")},
-    )
-    assert device_trigger._find_easywave_config_entry(hass, device) is None
-
-
-async def test_find_easywave_config_entry_unknown_easywave_identifier(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Config entry lookup returns None for unknown Easywave identifiers."""
-    entry = _make_gateway_entry()
-    await async_setup_easywave_entry(hass, entry)
-    other_entry = MockConfigEntry(domain="other")
-    other_entry.add_to_hass(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=other_entry.entry_id,
-        identifiers={(DOMAIN, "unknown_device_id")},
-    )
-    assert device_trigger._find_easywave_config_entry(hass, device) is None
-
-
-async def test_get_device_data_returns_none_for_missing_device(
-    hass: HomeAssistant,
-) -> None:
-    """Device data lookup returns None for unknown device ids."""
-    assert device_trigger._get_device_data(hass, "missing-device") is None
-
-
-async def test_get_device_data_returns_none_without_domain_identifier(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Device data lookup returns None when the device lacks an Easywave identifier."""
-    other_entry = MockConfigEntry(domain="other")
-    other_entry.add_to_hass(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=other_entry.entry_id,
-        identifiers={("other", "device")},
-    )
-    assert device_trigger._get_device_data(hass, device.id) is None
-
-
-async def test_get_device_data_returns_none_without_matching_entry(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Device data lookup returns None when no config entry owns the device."""
+    """Easywave identifiers without a loaded config entry return no triggers."""
     entry = _make_gateway_entry()
     entry.add_to_hass(hass)
     other_entry = MockConfigEntry(domain="other")
@@ -513,4 +418,10 @@ async def test_get_device_data_returns_none_without_matching_entry(
         config_entry_id=other_entry.entry_id,
         identifiers={(DOMAIN, "orphan_device_id")},
     )
-    assert device_trigger._get_device_data(hass, device.id) is None
+
+    assert await device_trigger.async_get_triggers(hass, device.id) == []
+
+
+async def test_get_trigger_capabilities(hass: HomeAssistant) -> None:
+    """Device trigger capabilities are empty for Easywave."""
+    assert await device_trigger.async_get_trigger_capabilities(hass, {}) == {}

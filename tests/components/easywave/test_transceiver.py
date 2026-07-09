@@ -1,5 +1,6 @@
 """Tests for the Easywave RX11Transceiver gateway wrapper."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -35,6 +36,11 @@ def transceiver(hass: HomeAssistant, mock_gateway: MagicMock) -> RX11Transceiver
     """Return an RX11Transceiver with a mocked gateway."""
     with patch(GATEWAY_PATH, return_value=mock_gateway):
         return RX11Transceiver(hass, DEVICE_PATH)
+
+
+def _gateway_callbacks(mock_gateway_cls: MagicMock) -> Any:
+    """Return the gateway callbacks registered with the library."""
+    return mock_gateway_cls.call_args.kwargs["callbacks"]
 
 
 async def test_connect_delegates_to_gateway(
@@ -83,10 +89,10 @@ async def test_connected_callback_is_forwarded(
 ) -> None:
     """Gateway connect events invoke the registered callback."""
     callback = MagicMock()
-    with patch(GATEWAY_PATH, return_value=mock_gateway):
+    with patch(GATEWAY_PATH, return_value=mock_gateway) as mock_gateway_cls:
         transceiver = RX11Transceiver(hass, DEVICE_PATH)
         transceiver.set_connected_callback(callback)
-        transceiver._notify_connected(MagicMock())
+        _gateway_callbacks(mock_gateway_cls).on_connected(MagicMock())
 
     await hass.async_block_till_done()
     callback.assert_called_once()
@@ -97,10 +103,10 @@ async def test_disconnect_callback_is_forwarded(
 ) -> None:
     """Gateway disconnect events invoke the registered callback."""
     callback = MagicMock()
-    with patch(GATEWAY_PATH, return_value=mock_gateway):
+    with patch(GATEWAY_PATH, return_value=mock_gateway) as mock_gateway_cls:
         transceiver = RX11Transceiver(hass, DEVICE_PATH)
         transceiver.set_disconnect_callback(callback)
-        transceiver._notify_disconnect()
+        _gateway_callbacks(mock_gateway_cls).on_disconnected()
 
     await hass.async_block_till_done()
     callback.assert_called_once()
@@ -110,18 +116,18 @@ async def test_connected_notify_without_callback(
     hass: HomeAssistant, mock_gateway: MagicMock
 ) -> None:
     """Connect notifications are ignored when no callback is registered."""
-    with patch(GATEWAY_PATH, return_value=mock_gateway):
-        transceiver = RX11Transceiver(hass, DEVICE_PATH)
-        transceiver._notify_connected(MagicMock())
+    with patch(GATEWAY_PATH, return_value=mock_gateway) as mock_gateway_cls:
+        RX11Transceiver(hass, DEVICE_PATH)
+        _gateway_callbacks(mock_gateway_cls).on_connected(MagicMock())
 
 
 async def test_disconnect_notify_without_callback(
     hass: HomeAssistant, mock_gateway: MagicMock
 ) -> None:
     """Disconnect notifications are ignored when no callback is registered."""
-    with patch(GATEWAY_PATH, return_value=mock_gateway):
-        transceiver = RX11Transceiver(hass, DEVICE_PATH)
-        transceiver._notify_disconnect()
+    with patch(GATEWAY_PATH, return_value=mock_gateway) as mock_gateway_cls:
+        RX11Transceiver(hass, DEVICE_PATH)
+        _gateway_callbacks(mock_gateway_cls).on_disconnected()
 
 
 async def test_connected_notify_logs_callback_error(
@@ -129,13 +135,13 @@ async def test_connected_notify_logs_callback_error(
 ) -> None:
     """Connect callback scheduling errors are logged without raising."""
     callback = MagicMock()
-    with patch(GATEWAY_PATH, return_value=mock_gateway):
+    with patch(GATEWAY_PATH, return_value=mock_gateway) as mock_gateway_cls:
         transceiver = RX11Transceiver(hass, DEVICE_PATH)
         transceiver.set_connected_callback(callback)
         with patch.object(
             hass.loop, "call_soon_threadsafe", side_effect=RuntimeError("loop closed")
         ):
-            transceiver._notify_connected(MagicMock())
+            _gateway_callbacks(mock_gateway_cls).on_connected(MagicMock())
 
     callback.assert_not_called()
 
@@ -145,13 +151,13 @@ async def test_disconnect_notify_logs_callback_error(
 ) -> None:
     """Disconnect callback scheduling errors are logged without raising."""
     callback = MagicMock()
-    with patch(GATEWAY_PATH, return_value=mock_gateway):
+    with patch(GATEWAY_PATH, return_value=mock_gateway) as mock_gateway_cls:
         transceiver = RX11Transceiver(hass, DEVICE_PATH)
         transceiver.set_disconnect_callback(callback)
         with patch.object(
             hass.loop, "call_soon_threadsafe", side_effect=OSError("loop closed")
         ):
-            transceiver._notify_disconnect()
+            _gateway_callbacks(mock_gateway_cls).on_disconnected()
 
     callback.assert_not_called()
 
