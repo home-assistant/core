@@ -39,11 +39,12 @@ async def async_setup_entry(
     )
 
 
-class ShutterControlCover(SHCEntity[SHCShutterControl], CoverEntity):
+class ShutterControlCover(SHCEntity, CoverEntity):
     """Representation of a SHC shutter control device."""
 
     _attr_name = None
     _attr_device_class = CoverDeviceClass.SHUTTER
+    _device: SHCShutterControl
     _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE

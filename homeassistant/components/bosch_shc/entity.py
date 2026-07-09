@@ -13,9 +13,7 @@ from .const import DOMAIN
 
 
 async def async_remove_devices(
-    hass: HomeAssistant,
-    entity: SHCBaseEntity[SHCDevice | SHCIntrusionSystem],
-    entry_id: str,
+    hass: HomeAssistant, entity: SHCBaseEntity, entry_id: str
 ) -> None:
     """Get item that is removed from session."""
     dev_registry = dr.async_get(hass)
@@ -24,15 +22,17 @@ async def async_remove_devices(
         dev_registry.async_update_device(device.id, remove_config_entry_id=entry_id)
 
 
-class SHCBaseEntity[_DeviceT: (SHCDevice | SHCIntrusionSystem)](Entity):
+class SHCBaseEntity(Entity):
     """Base representation of a SHC entity."""
 
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, device: _DeviceT, parent_id: str, entry_id: str) -> None:
+    def __init__(
+        self, device: SHCDevice | SHCIntrusionSystem, parent_id: str, entry_id: str
+    ) -> None:
         """Initialize the generic SHC device."""
-        self._device: _DeviceT = device
+        self._device = device
         self._entry_id = entry_id
 
     @override
@@ -60,10 +60,12 @@ class SHCBaseEntity[_DeviceT: (SHCDevice | SHCIntrusionSystem)](Entity):
         return self._device.id
 
 
-class SHCEntity[_SHCDeviceT: SHCDevice](SHCBaseEntity[_SHCDeviceT]):
+class SHCEntity(SHCBaseEntity):
     """Representation of a SHC device entity."""
 
-    def __init__(self, device: _SHCDeviceT, parent_id: str, entry_id: str) -> None:
+    _device: SHCDevice
+
+    def __init__(self, device: SHCDevice, parent_id: str, entry_id: str) -> None:
         """Initialize generic SHC device."""
         self._attr_unique_id = device.serial
         self._attr_device_info = DeviceInfo(
@@ -100,8 +102,10 @@ class SHCEntity[_SHCDeviceT: SHCDevice](SHCBaseEntity[_SHCDeviceT]):
         return self._device.status == "AVAILABLE"
 
 
-class SHCDomainEntity(SHCBaseEntity[SHCIntrusionSystem]):
+class SHCDomainEntity(SHCBaseEntity):
     """Representation of a SHC domain service entity."""
+
+    _device: SHCIntrusionSystem
 
     def __init__(
         self, domain: SHCIntrusionSystem, parent_id: str, entry_id: str

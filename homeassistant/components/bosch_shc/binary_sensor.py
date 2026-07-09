@@ -66,10 +66,11 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ShutterContactSensor(SHCEntity[SHCShutterContact], BinarySensorEntity):
+class ShutterContactSensor(SHCEntity, BinarySensorEntity):
     """Representation of an SHC shutter contact sensor."""
 
     _attr_name = None
+    _device: SHCShutterContact
 
     def __init__(
         self, device: SHCShutterContact, parent_id: str, entry_id: str
@@ -93,10 +94,11 @@ class ShutterContactSensor(SHCEntity[SHCShutterContact], BinarySensorEntity):
         return self._device.state is ShutterContactService.State.OPEN
 
 
-class BatterySensor(SHCEntity[SHCBatteryDevice], BinarySensorEntity):
+class BatterySensor(SHCEntity, BinarySensorEntity):
     """Representation of an SHC battery reporting sensor."""
 
     _attr_device_class = BinarySensorDeviceClass.BATTERY
+    _device: SHCBatteryDevice
 
     def __init__(self, device: SHCBatteryDevice, parent_id: str, entry_id: str) -> None:
         """Initialize an SHC battery reporting sensor."""

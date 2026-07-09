@@ -84,12 +84,11 @@ async def async_setup_entry(
     shc_info = session.information
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
-    parent_id = shc_info.unique_id
 
     entities: list[SwitchEntity] = [
         SHCSwitch(
             device=switch,
-            parent_id=parent_id,
+            parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
             description=SWITCH_TYPES["smartplug"],
         )
@@ -99,7 +98,7 @@ async def async_setup_entry(
     entities.extend(
         SHCRoutingSwitch(
             device=switch,
-            parent_id=parent_id,
+            parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
         )
         for switch in session.device_helper.smart_plugs
@@ -108,7 +107,7 @@ async def async_setup_entry(
     entities.extend(
         SHCSwitch(
             device=switch,
-            parent_id=parent_id,
+            parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
             description=SWITCH_TYPES["lightswitch"],
         )
@@ -118,7 +117,7 @@ async def async_setup_entry(
     entities.extend(
         SHCSwitch(
             device=switch,
-            parent_id=parent_id,
+            parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
             description=SWITCH_TYPES["smartplugcompact"],
         )
@@ -128,7 +127,7 @@ async def async_setup_entry(
     entities.extend(
         SHCSwitch(
             device=switch,
-            parent_id=parent_id,
+            parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
             description=SWITCH_TYPES["cameraeyes"],
         )
@@ -138,7 +137,7 @@ async def async_setup_entry(
     entities.extend(
         SHCSwitch(
             device=switch,
-            parent_id=parent_id,
+            parent_id=shc_info.unique_id,
             entry_id=config_entry.entry_id,
             description=SWITCH_TYPES["camera360"],
         )
@@ -148,7 +147,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SHCSwitch(SHCEntity[SHCDevice], SwitchEntity):
+class SHCSwitch(SHCEntity, SwitchEntity):
     """Representation of a SHC switch."""
 
     entity_description: SHCSwitchEntityDescription
@@ -194,11 +193,12 @@ class SHCSwitch(SHCEntity[SHCDevice], SwitchEntity):
         self._device.update()
 
 
-class SHCRoutingSwitch(SHCEntity[SHCSmartPlug], SwitchEntity):
+class SHCRoutingSwitch(SHCEntity, SwitchEntity):
     """Representation of a SHC routing switch."""
 
     _attr_translation_key = "routing"
     _attr_entity_category = EntityCategory.CONFIG
+    _device: SHCSmartPlug
 
     def __init__(self, device: SHCSmartPlug, parent_id: str, entry_id: str) -> None:
         """Initialize an SHC routing switch."""

@@ -148,13 +148,12 @@ async def async_setup_entry(
     shc_info = session.information
     if TYPE_CHECKING:
         assert shc_info is not None and shc_info.unique_id is not None
-    parent_id = shc_info.unique_id
 
     entities: list[SensorEntity] = [
         SHCSensor(
             device,
             SENSOR_DESCRIPTIONS[sensor_type],
-            parent_id,
+            shc_info.unique_id,
             config_entry.entry_id,
         )
         for device in session.device_helper.thermostats
@@ -165,7 +164,7 @@ async def async_setup_entry(
         SHCSensor(
             device,
             SENSOR_DESCRIPTIONS[sensor_type],
-            parent_id,
+            shc_info.unique_id,
             config_entry.entry_id,
         )
         for device in session.device_helper.wallthermostats
@@ -176,7 +175,7 @@ async def async_setup_entry(
         SHCSensor(
             device,
             SENSOR_DESCRIPTIONS[sensor_type],
-            parent_id,
+            shc_info.unique_id,
             config_entry.entry_id,
         )
         for device in session.device_helper.twinguards
@@ -195,7 +194,7 @@ async def async_setup_entry(
         SHCSensor(
             device,
             SENSOR_DESCRIPTIONS[sensor_type],
-            parent_id,
+            shc_info.unique_id,
             config_entry.entry_id,
         )
         for device in (
@@ -209,7 +208,7 @@ async def async_setup_entry(
         SHCSensor(
             device,
             SENSOR_DESCRIPTIONS[sensor_type],
-            parent_id,
+            shc_info.unique_id,
             config_entry.entry_id,
         )
         for device in session.device_helper.smart_plugs_compact
@@ -219,7 +218,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SHCSensor(SHCEntity[SHCDevice], SensorEntity):
+class SHCSensor(SHCEntity, SensorEntity):
     """Representation of a SHC sensor."""
 
     entity_description: SHCSensorEntityDescription
