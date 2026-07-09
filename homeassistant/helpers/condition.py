@@ -3,8 +3,7 @@
 import abc
 import asyncio
 from collections import deque
-from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
-from contextlib import contextmanager
+from collections.abc import Callable, Container, Coroutine, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
@@ -56,7 +55,13 @@ from homeassistant.const import (
     WEEKDAYS,
     EntityStateAttribute,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import (
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+    valid_entity_id,
+)
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -1227,25 +1232,42 @@ def condition_trace_update_result(**kwargs: Any) -> None:
     node.update_result(**kwargs)
 
 
-@contextmanager
-def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement]:
+class trace_condition:
     """Trace condition evaluation."""
-    should_pop = True
-    trace_element = trace_stack_top(trace_stack_cv)
-    if trace_element and trace_element.reuse_by_child:
-        should_pop = False
-        trace_element.reuse_by_child = False
-    else:
-        trace_element = condition_trace_append(variables, trace_path_get())
-        trace_stack_push(trace_stack_cv, trace_element)
-    try:
-        yield trace_element
-    except Exception as ex:
-        trace_element.set_error(ex)
-        raise
-    finally:
-        if should_pop:
-            trace_stack_pop(trace_stack_cv)
+
+    __slots__ = ("_should_pop", "_trace_element", "_variables")
+
+    _should_pop: bool
+    _trace_element: TraceElement
+
+    def __init__(self, variables: TemplateVarsType) -> None:
+        """Store the variables for the trace element."""
+        self._variables = variables
+
+    def __enter__(self) -> TraceElement:
+        """Start tracing the condition evaluation."""
+        should_pop = True
+        trace_element = trace_stack_top(trace_stack_cv)
+        if trace_element and trace_element.reuse_by_child:
+            should_pop = False
+            trace_element.reuse_by_child = False
+        else:
+            trace_element = condition_trace_append(self._variables, trace_path_get())
+            trace_stack_push(trace_stack_cv, trace_element)
+        self._should_pop = should_pop
+        self._trace_element = trace_element
+        return trace_element
+
+    def __exit__(
+        self, exc_type: object, exc_val: BaseException | None, exc_tb: object
+    ) -> None:
+        """Finish tracing the condition evaluation."""
+        try:
+            if exc_val is not None and isinstance(exc_val, Exception):
+                self._trace_element.set_error(exc_val)
+        finally:
+            if self._should_pop:
+                trace_stack_pop(trace_stack_cv)
 
 
 @overload
@@ -2117,6 +2139,13 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
 
         if condition in ("and", "not", "or"):
             to_process.extend(config["conditions"])
+            continue
+
+        if condition == "time":
+            # The before and after options can be a time or an entity id.
+            for key in (CONF_AFTER, CONF_BEFORE):
+                if isinstance(value := config.get(key), str) and valid_entity_id(value):
+                    referenced.add(value)
             continue
 
         entity_ids = config.get(CONF_ENTITY_ID)

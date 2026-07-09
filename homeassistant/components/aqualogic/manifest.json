@@ -2,9 +2,10 @@
   "domain": "aqualogic",
   "name": "AquaLogic",
   "codeowners": [],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aqualogic",
+  "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["aqualogic"],
-  "quality_scale": "legacy",
   "requirements": ["aqualogic==2.6"]
 }

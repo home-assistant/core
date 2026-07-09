@@ -1197,6 +1197,9 @@
     "update_failed": {
       "message": "Error fetching data from Teslemetry API: {message}"
     },
+    "update_failed_insufficient_credits": {
+      "message": "Teslemetry account has insufficient command credits, pausing updates until credits are added"
+    },
     "update_failed_invalid_data": {
       "message": "Received invalid data from API"
     },
