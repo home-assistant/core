@@ -11,9 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components import cloud, mqtt, webhook
 from homeassistant.components.device_tracker import TrackerEntityStateAttribute
-from homeassistant.components.person import PersonEntityStateAttribute
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_WEBHOOK_ID, Platform
+from homeassistant.const import CONF_WEBHOOK_ID, EntityStateAttribute, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -190,14 +189,14 @@ async def handle_webhook(
     response = [
         {
             "_type": "location",
-            "lat": person.attributes[PersonEntityStateAttribute.LATITUDE],
-            "lon": person.attributes[PersonEntityStateAttribute.LONGITUDE],
+            "lat": person.attributes[EntityStateAttribute.LATITUDE],
+            "lon": person.attributes[EntityStateAttribute.LONGITUDE],
             "tid": "".join(p[0] for p in person.name.split(" ")[:2]),
             "tst": int(person.last_updated.timestamp()),
         }
         for person in hass.states.async_all("person")
-        if PersonEntityStateAttribute.LATITUDE in person.attributes
-        and PersonEntityStateAttribute.LONGITUDE in person.attributes
+        if EntityStateAttribute.LATITUDE in person.attributes
+        and EntityStateAttribute.LONGITUDE in person.attributes
     ]
 
     if message["_type"] == "encrypted" and context.secret:
