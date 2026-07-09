@@ -1575,10 +1575,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.socket_path = discovery_info.socket_path
         self.context["title_placeholders"] = {
-            CONF_NAME: (
-                f"{discovery_info.name} at "
-                f"{discovery_info.ip_address}:{discovery_info.port}"
-            )
+            CONF_NAME: f"{discovery_info.name} via ESPHome"
         }
         self._adapter_discovered = True
 

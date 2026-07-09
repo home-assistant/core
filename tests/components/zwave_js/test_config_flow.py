@@ -1204,10 +1204,7 @@ async def test_esphome_discovery_title_placeholders(
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
-    assert (
-        flows[0]["context"]["title_placeholders"]["name"]
-        == "mock-name at 192.168.1.100:6053"
-    )
+    assert flows[0]["context"]["title_placeholders"]["name"] == "mock-name via ESPHome"
 
 
 @pytest.mark.parametrize(
