@@ -9,7 +9,6 @@ from pyflic_ble import DeviceType
 import pytest
 
 from homeassistant.components.flic_button.const import (
-    CONF_BATTERY_LEVEL,
     CONF_DEVICE_TYPE,
     CONF_PAIRING_ID,
     CONF_PAIRING_KEY,
@@ -59,7 +58,6 @@ def mock_config_entry(device_type: DeviceType) -> MockConfigEntry:
             CONF_PAIRING_ID: TEST_PAIRING_ID,
             CONF_PAIRING_KEY: TEST_PAIRING_KEY.hex(),
             CONF_SERIAL_NUMBER: serial,
-            CONF_BATTERY_LEVEL: TEST_BATTERY_LEVEL,
             CONF_DEVICE_TYPE: device_type.value,
             CONF_SIG_BITS: TEST_SIG_BITS,
         },

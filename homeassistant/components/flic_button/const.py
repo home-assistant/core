@@ -18,7 +18,6 @@ DEVICE_TYPE_MODEL_NAMES: Final = {
 CONF_PAIRING_ID: Final = "pairing_id"
 CONF_PAIRING_KEY: Final = "pairing_key"
 CONF_SERIAL_NUMBER: Final = "serial_number"
-CONF_BATTERY_LEVEL: Final = "battery_level"
 CONF_DEVICE_TYPE: Final = "device_type"
 CONF_SIG_BITS: Final = (
     "sig_bits"  # Ed25519 signature variant (0-3) for Twist quick verify
@@ -26,9 +25,6 @@ CONF_SIG_BITS: Final = (
 
 # Event classes
 EVENT_CLASS_BUTTON: Final = "button"
-
-# Flic event domain
-FLIC_BUTTON_EVENT: Final = f"{DOMAIN}_event"
 
 # Options constants
 CONF_PUSH_TWIST_MODE: Final = "push_twist_mode"

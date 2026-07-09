@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -35,7 +34,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_BATTERY_LEVEL,
     CONF_DEVICE_TYPE,
     CONF_PAIRING_ID,
     CONF_PAIRING_KEY,
@@ -75,9 +73,18 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
             client = self._client
             self._client = None
             self.hass.async_create_background_task(
-                client.disconnect(),
+                self._async_disconnect_client(client),
                 name=f"{DOMAIN}_config_flow_cleanup",
             )
+
+    async def _async_disconnect_client(self, client: FlicClient) -> None:
+        """Disconnect a BLE client, logging any failure instead of discarding it."""
+        try:
+            await client.disconnect()
+        except (BleakError, FlicProtocolError, TimeoutError) as err:
+            _LOGGER.debug("Error disconnecting Flic client during cleanup: %s", err)
+        except Exception:
+            _LOGGER.exception("Unexpected error disconnecting Flic client")
 
     @classmethod
     @callback
@@ -291,7 +298,7 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                     pairing_id,
                     pairing_key,
                     serial_number,
-                    battery_level,
+                    _,
                     sig_bits,
                     _,
                     _,
@@ -310,8 +317,7 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             finally:
                 if self._client:
-                    with contextlib.suppress(Exception):
-                        await self._client.disconnect()
+                    await self._async_disconnect_client(self._client)
                     self._client = None
 
             if not errors:
@@ -329,7 +335,6 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_PAIRING_ID: pairing_id,
                         CONF_PAIRING_KEY: pairing_key.hex(),
                         CONF_SERIAL_NUMBER: serial_number,
-                        CONF_BATTERY_LEVEL: battery_level,
                         CONF_DEVICE_TYPE: final_device_type.value,
                         CONF_SIG_BITS: sig_bits,
                     },

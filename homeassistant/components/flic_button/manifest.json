@@ -1,6 +1,6 @@
 {
   "domain": "flic_button",
-  "name": "Flic",
+  "name": "Flic Button",
   "bluetooth": [
     {
       "connectable": true,

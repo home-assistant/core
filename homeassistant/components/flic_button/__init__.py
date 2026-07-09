@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
-    CONF_BATTERY_LEVEL,
     CONF_DEVICE_TYPE,
     CONF_PAIRING_ID,
     CONF_PAIRING_KEY,
@@ -35,7 +34,6 @@ class FlicButtonData:
 
     client: FlicClient
     serial_number: str | None
-    battery_level: int | None
 
 
 type FlicButtonConfigEntry = ConfigEntry[FlicButtonData]
@@ -50,7 +48,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
     )
     pairing_key = bytes.fromhex(entry.data[CONF_PAIRING_KEY])
     serial_number = entry.data.get(CONF_SERIAL_NUMBER)
-    battery_level = entry.data.get(CONF_BATTERY_LEVEL)
     device_type = DeviceType(entry.data[CONF_DEVICE_TYPE])
     sig_bits = entry.data.get(CONF_SIG_BITS, 0)
     push_twist_mode = PushTwistMode(
@@ -71,7 +68,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
     entry.runtime_data = FlicButtonData(
         client=client,
         serial_number=serial_number,
-        battery_level=battery_level,
     )
 
     if ble_device:
