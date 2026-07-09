@@ -56,12 +56,7 @@ def _shutter_contact_device(
     state: SHCShutterContact.ShutterContactService.State = CLOSED,
     batterylevel: SHCBatteryDevice.BatteryLevelService.State = BATTERY_OK,
 ) -> SHCShutterContact:
-    """Build a minimal shutter-contact device double.
-
-    spec_set against the real class so a future boschshcpy rename of an
-    attribute the platform relies on (device_class, state, batterylevel, ...)
-    fails the test instead of silently mismatching.
-    """
+    """Build a minimal shutter-contact device double."""
     device = create_autospec(SHCShutterContact, instance=True, spec_set=True)
     device.name = "Test Contact"
     device.id = device_id
