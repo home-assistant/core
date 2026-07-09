@@ -8,18 +8,12 @@ from pynws import SimpleNWS
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_API_KEY,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-)
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.location import has_location
+from homeassistant.helpers.location import get_location
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
 from . import base_unique_id
@@ -119,9 +113,10 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "entity_disabled"
             else:
                 state = self.hass.states.get(location_entity)
-                if state is None or not has_location(state):
+                if state is None or (location := get_location(state)) is None:
                     errors["base"] = "entity_no_coordinates"
                 else:
+                    latitude, longitude = location
                     data = {
                         CONF_API_KEY: user_input[CONF_API_KEY],
                         CONF_LOCATION_ENTITY: entity_entry.id,
@@ -134,8 +129,8 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                             self.hass,
                             {
                                 CONF_API_KEY: user_input[CONF_API_KEY],
-                                CONF_LATITUDE: state.attributes[ATTR_LATITUDE],
-                                CONF_LONGITUDE: state.attributes[ATTR_LONGITUDE],
+                                CONF_LATITUDE: latitude,
+                                CONF_LONGITUDE: longitude,
                             },
                         )
                         return self.async_create_entry(title=location_entity, data=data)
