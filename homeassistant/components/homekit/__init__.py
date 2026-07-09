@@ -65,6 +65,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     instance_id,
+    issue_registry as ir,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entityfilter import (
@@ -99,7 +100,13 @@ from . import (  # noqa: F401
     type_switches,
     type_thermostats,
 )
-from .accessories import HomeAccessory, HomeBridge, HomeDriver, get_accessory
+from .accessories import (
+    HomeAccessory,
+    HomeBridge,
+    HomeDriver,
+    climate_supports_heater_cooler,
+    get_accessory,
+)
 from .aidmanager import AccessoryAidStorage
 from .const import (
     ATTR_INTEGRATION,
@@ -125,6 +132,7 @@ from .const import (
     DOMAIN,
     HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_MODES,
+    ISSUE_HEATER_COOLER_CANDIDATE,
     MANUFACTURER,
     PERSIST_LOCK_DATA,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
@@ -432,6 +440,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> 
 
 async def async_remove_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> None:
     """Remove a config entry."""
+    issue_prefix = f"{ISSUE_HEATER_COOLER_CANDIDATE}_{entry.entry_id}_"
+    issue_reg = ir.async_get(hass)
+    for domain, issue_id in list(issue_reg.issues):
+        if domain == DOMAIN and issue_id.startswith(issue_prefix):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
     await hass.async_add_executor_job(
         remove_state_files_for_entry_id, hass, entry.entry_id
     )
@@ -573,6 +586,9 @@ class HomeKit:
         self.bridge: HomeBridge | None = None
         self._reset_lock = asyncio.Lock()
         self._cancel_reload_dispatcher: CALLBACK_TYPE | None = None
+        # Existing climate entities that would route to the HeaterCooler but
+        # stay on the Thermostat until the user opts in through a repair.
+        self._heater_cooler_candidates: set[str] = set()
 
     def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> bool:
         """Set up bridge and accessory driver.
@@ -754,13 +770,18 @@ class HomeKit:
 
         assert self.aid_storage is not None
         assert self.bridge is not None
+        # Newness must be checked before the aid is allocated below.
+        is_new = not self.aid_storage.entity_is_allocated(state.entity_id)
         aid = self.aid_storage.get_or_allocate_aid_for_entity_id(state.entity_id)
         conf = self._config.get(state.entity_id, {}).copy()
+        self._async_check_heater_cooler_candidate(state, conf, is_new)
         # If an accessory cannot be created or added due to an exception
         # of any kind (usually in pyhap) it should not prevent
         # the rest of the accessories from being created
         try:
-            acc = get_accessory(self.hass, self.driver, state, aid, conf)
+            acc = get_accessory(
+                self.hass, self.driver, state, aid, conf, is_new_entity=is_new
+            )
             if acc is not None:
                 self.bridge.add_accessory(acc)
                 return acc
@@ -769,6 +790,19 @@ class HomeKit:
                 "Failed to create a HomeKit accessory for %s", state.entity_id
             )
         return None
+
+    @callback
+    def _async_check_heater_cooler_candidate(
+        self, state: State, conf: dict[str, Any], is_new: bool
+    ) -> None:
+        """Track existing climate entities that could opt into the HeaterCooler."""
+        if (
+            state.domain == "climate"
+            and not is_new
+            and CONF_TYPE not in conf
+            and climate_supports_heater_cooler(state)
+        ):
+            self._heater_cooler_candidates.add(state.entity_id)
 
     def _would_exceed_max_devices(self, name: str | None) -> bool:
         """Check if adding another devices would reach the limit and log."""
@@ -1001,6 +1035,9 @@ class HomeKit:
             return None
         state = entity_states[0]
         conf = self._config.get(state.entity_id, {}).copy()
+        # Accessory mode has no aid allocation to tell new from existing, so the
+        # entity is treated as existing and offered the repair instead.
+        self._async_check_heater_cooler_candidate(state, conf, is_new=False)
         acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
         if acc is None:
             _LOGGER.error(
@@ -1070,6 +1107,7 @@ class HomeKit:
         """Create the accessories."""
         assert self.driver is not None
 
+        self._heater_cooler_candidates.clear()
         entity_states = await self.async_configure_accessories()
         if self._homekit_mode == HOMEKIT_MODE_ACCESSORY:
             acc = self._async_create_single_accessory(entity_states)
@@ -1080,7 +1118,54 @@ class HomeKit:
             return False
         # No need to load/persist as we do it in setup
         self.driver.accessory = acc
+        self._async_update_heater_cooler_issues()
         return True
+
+    @callback
+    def _async_update_heater_cooler_issues(self) -> None:
+        """Sync the HeaterCooler migration repairs with the current candidates.
+
+        YAML configured bridges never get issues; their documented path is the
+        ``type`` option in ``entity_config``.
+        """
+        issue_prefix = f"{ISSUE_HEATER_COOLER_CANDIDATE}_{self._entry_id}_"
+        entry = self.hass.config_entries.async_get_entry(self._entry_id)
+        create_issues = entry is not None and entry.source != SOURCE_IMPORT
+        current_ids = (
+            {
+                f"{issue_prefix}{entity_id}"
+                for entity_id in self._heater_cooler_candidates
+            }
+            if create_issues
+            else set()
+        )
+        issue_reg = ir.async_get(self.hass)
+        for domain, issue_id in list(issue_reg.issues):
+            if (
+                domain == DOMAIN
+                and issue_id.startswith(issue_prefix)
+                and issue_id not in current_ids
+            ):
+                ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+        if not create_issues:
+            return
+        for entity_id in self._heater_cooler_candidates:
+            state = self.hass.states.get(entity_id)
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{issue_prefix}{entity_id}",
+                is_fixable=True,
+                is_persistent=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=ISSUE_HEATER_COOLER_CANDIDATE,
+                translation_placeholders={
+                    "entity": state.name if state else entity_id,
+                    "entity_id": entity_id,
+                    "bridge": self._name,
+                },
+                data={"entry_id": self._entry_id, "entity_id": entity_id},
+            )
 
     async def async_stop(self, *args: Any) -> None:
         """Stop the accessory driver."""

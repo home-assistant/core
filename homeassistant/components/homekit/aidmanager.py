@@ -94,6 +94,24 @@ class AccessoryAidStorage:
         self._migrate_unique_id_aid_assignment_if_needed(sys_unique_id, entry)
         return self.get_or_allocate_aid(sys_unique_id, entity_id)
 
+    def entity_is_allocated(self, entity_id: str) -> bool:
+        """Return True when the entity already has an allocated aid.
+
+        Checks every key get_or_allocate_aid_for_entity_id could resolve to,
+        without allocating, so callers can tell a previously bridged entity
+        from a new one.
+        """
+        if entity_id in self.allocations:
+            return True
+        if not (entry := self._entity_registry.async_get(entity_id)):
+            return False
+        if get_system_unique_id(entry, entry.unique_id) in self.allocations:
+            return True
+        return bool(
+            (previous_unique_id := entry.previous_unique_id)
+            and get_system_unique_id(entry, previous_unique_id) in self.allocations
+        )
+
     def _migrate_unique_id_aid_assignment_if_needed(
         self, sys_unique_id: str, entry: er.RegistryEntry
     ) -> None:

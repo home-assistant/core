@@ -628,14 +628,28 @@ def test_type_camera(type_name, entity_id, state, attrs) -> None:
 def test_climate_accessory_selection(
     type_name: str, entity_id: str, state: str, attrs: dict[str, object]
 ) -> None:
-    """Test climate entities map to HeaterCooler or Thermostat by fan/swing."""
+    """Test new climate entities map to HeaterCooler or Thermostat by fan/swing."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State(entity_id, state, attrs)
-        get_accessory(None, None, entity_state, 2, {})
+        get_accessory(None, None, entity_state, 2, {}, is_new_entity=True)
     assert mock_type.called
 
 
+def test_climate_existing_entity_stays_thermostat() -> None:
+    """Test an existing HeaterCooler capable entity keeps the Thermostat."""
+    attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
+        "fan_modes": ["low", "high"],
+    }
+    mock_type = Mock()
+    with patch.dict(TYPES, {"Thermostat": mock_type}):
+        entity_state = State("climate.test", "heat", attrs)
+        get_accessory(None, None, entity_state, 2, {}, is_new_entity=False)
+    assert mock_type.called
+
+
+@pytest.mark.parametrize("is_new_entity", [True, False])
 @pytest.mark.parametrize(
     ("config_type", "attrs", "type_name"),
     [
@@ -659,13 +673,20 @@ def test_climate_accessory_selection(
     ],
 )
 def test_climate_accessory_type_override(
-    config_type: str, attrs: dict[str, object], type_name: str
+    config_type: str, attrs: dict[str, object], type_name: str, is_new_entity: bool
 ) -> None:
-    """Test an explicit type in the entity config overrides climate routing."""
+    """Test an explicit type overrides climate routing regardless of newness."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State("climate.test", "heat", attrs)
-        get_accessory(None, None, entity_state, 2, {CONF_TYPE: config_type})
+        get_accessory(
+            None,
+            None,
+            entity_state,
+            2,
+            {CONF_TYPE: config_type},
+            is_new_entity=is_new_entity,
+        )
     assert mock_type.called
 
 

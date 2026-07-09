@@ -134,8 +134,31 @@ RELOAD_ON_CHANGE_ATTRS = (
 )
 
 
+def climate_supports_heater_cooler(state: State) -> bool:
+    """Return True when a climate entity fits the HeaterCooler accessory."""
+    attributes = state.attributes
+    features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    # Timing fan modes like auto or circulate do not count as speeds.
+    has_fan = bool(features & ClimateEntityFeature.FAN_MODE) and (
+        len(get_fan_modes_and_speeds(attributes)[1]) >= 2
+    )
+    has_swing = bool(features & ClimateEntityFeature.SWING_MODE) and (
+        get_swing_on_mode(attributes) is not None
+    )
+    # HeaterCooler cannot control a humidity setpoint; entities that
+    # expose one (e.g. econet) stay on the Thermostat, which can.
+    has_target_humidity = bool(features & ClimateEntityFeature.TARGET_HUMIDITY)
+    return (has_fan or has_swing) and not has_target_humidity
+
+
 def get_accessory(  # noqa: C901
-    hass: HomeAssistant, driver: HomeDriver, state: State, aid: int | None, config: dict
+    hass: HomeAssistant,
+    driver: HomeDriver,
+    state: State,
+    aid: int | None,
+    config: dict,
+    *,
+    is_new_entity: bool = False,
 ) -> HomeAccessory | None:
     """Take state and return an accessory object if supported."""
     if not aid:
@@ -162,22 +185,13 @@ def get_accessory(  # noqa: C901
         if climate_type := config.get(CONF_TYPE):
             # An explicit type in the entity config overrides the routing below.
             a_type = CLIMATE_TYPES[climate_type]
+        elif is_new_entity and climate_supports_heater_cooler(state):
+            # Only entities never bridged before route to the HeaterCooler
+            # automatically; existing ones keep their Thermostat and are offered
+            # the migration through a repair issue instead.
+            a_type = "HeaterCooler"
         else:
-            attributes = state.attributes
-            # Timing fan modes like auto or circulate do not count as speeds.
-            has_fan = bool(features & ClimateEntityFeature.FAN_MODE) and (
-                len(get_fan_modes_and_speeds(attributes)[1]) >= 2
-            )
-            has_swing = bool(features & ClimateEntityFeature.SWING_MODE) and (
-                get_swing_on_mode(attributes) is not None
-            )
-            # HeaterCooler cannot control a humidity setpoint; entities that
-            # expose one (e.g. econet) stay on the Thermostat, which can.
-            has_target_humidity = bool(features & ClimateEntityFeature.TARGET_HUMIDITY)
-            if (has_fan or has_swing) and not has_target_humidity:
-                a_type = "HeaterCooler"
-            else:
-                a_type = "Thermostat"
+            a_type = "Thermostat"
 
     elif state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)

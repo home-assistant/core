@@ -491,17 +491,23 @@ async def test_homekit_add_accessory(hass: HomeAssistant, mock_hap) -> None:
         mock_get_acc.side_effect = [None, mock_acc, None]
         state = State("light.demo", "on")
         homekit.add_bridge_accessory(state)
-        mock_get_acc.assert_called_with(hass, ANY, ANY, 1403373688, {})
+        mock_get_acc.assert_called_with(
+            hass, ANY, ANY, 1403373688, {}, is_new_entity=True
+        )
         assert not homekit.bridge.add_accessory.called
 
         state = State("demo.test", "on")
         homekit.add_bridge_accessory(state)
-        mock_get_acc.assert_called_with(hass, ANY, ANY, 600325356, {})
+        mock_get_acc.assert_called_with(
+            hass, ANY, ANY, 600325356, {}, is_new_entity=True
+        )
         assert homekit.bridge.add_accessory.called
 
         state = State("demo.test_2", "on")
         homekit.add_bridge_accessory(state)
-        mock_get_acc.assert_called_with(hass, ANY, ANY, 1467253281, {})
+        mock_get_acc.assert_called_with(
+            hass, ANY, ANY, 1467253281, {}, is_new_entity=True
+        )
         assert homekit.bridge.add_accessory.called
 
         await homekit.async_stop()
@@ -535,7 +541,9 @@ async def test_homekit_warn_add_accessory_bridge(
         mock_get_acc.side_effect = [None, mock_camera_acc, None]
         state = State("camera.test", "on")
         homekit.add_bridge_accessory(state)
-        mock_get_acc.assert_called_with(hass, ANY, ANY, 1508819236, {})
+        mock_get_acc.assert_called_with(
+            hass, ANY, ANY, 1508819236, {}, is_new_entity=True
+        )
         assert not homekit.bridge.add_accessory.called
         await homekit.async_stop()
 
@@ -1618,6 +1626,7 @@ async def test_homekit_finds_linked_batteries(
             "linked_battery_charging_sensor": binary_charging_sensor.entity_id,
             "linked_battery_sensor": battery_sensor.entity_id,
         },
+        is_new_entity=True,
     )
 
 
@@ -1696,6 +1705,7 @@ async def test_homekit_async_get_integration_fails(
             "linked_battery_charging_sensor": binary_charging_sensor.entity_id,
             "linked_battery_sensor": battery_sensor.entity_id,
         },
+        is_new_entity=True,
     )
 
 
@@ -1948,6 +1958,7 @@ async def test_homekit_ignored_missing_devices(
             "linked_battery_charging_sensor": binary_sensor_entity.entity_id,
             "linked_battery_sensor": sensor_entity.entity_id,
         },
+        is_new_entity=True,
     )
 
 
@@ -2024,6 +2035,7 @@ async def test_homekit_finds_linked_motion_sensors(
             "sw_version": "0.16.0",
             "linked_motion_sensor": entry.entity_id,
         },
+        is_new_entity=True,
     )
 
 
@@ -2099,6 +2111,7 @@ async def test_homekit_finds_linked_doorbell_sensors(
             "sw_version": "0.16.0",
             "linked_doorbell_sensor": entry.entity_id,
         },
+        is_new_entity=True,
     )
 
 
@@ -2172,6 +2185,7 @@ async def test_homekit_finds_linked_humidity_sensors(
             "sw_version": "0.16.1",
             "linked_humidity_sensor": humidity_sensor.entity_id,
         },
+        is_new_entity=True,
     )
 
 
@@ -2278,6 +2292,7 @@ async def test_homekit_finds_linked_air_purifier_sensors(
             "linked_pm25_sensor": pm25_sensor.entity_id,
             "linked_temperature_sensor": temperature_sensor.entity_id,
         },
+        is_new_entity=True,
     )
 
 
