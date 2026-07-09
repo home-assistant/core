@@ -16,5 +16,10 @@
         "default": "mdi:rotate-left"
       }
     }
+  },
+  "services": {
+    "set_cover_position_and_tilt": {
+      "service": "mdi:blinds-horizontal"
+    }
   }
 }
