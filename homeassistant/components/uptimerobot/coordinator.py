@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the uptimerobot integration."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pyuptimerobot import (
     UptimeRobot,
@@ -43,16 +43,22 @@ class UptimeRobotDataUpdateCoordinator(
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> dict[int, UptimeRobotMonitor]:
         """Update data."""
         try:
             response = await self.api.async_get_monitors()
         except UptimeRobotAuthenticationException as exception:
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise ConfigEntryAuthFailed(exception) from exception
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_authentication_exception",
+            ) from exception
         except UptimeRobotException as exception:
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise UpdateFailed(exception) from exception
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_generic_exception",
+                translation_placeholders={"error": "Generic UptimeRobot exception"},
+            ) from exception
 
         if TYPE_CHECKING:
             assert isinstance(response.data, list)

@@ -3,7 +3,7 @@
 from unittest.mock import Mock
 
 from homeassistant.components import hue
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -185,3 +185,22 @@ async def test_grouped_light_level_sensor(
     assert (
         sensor.state == "999"
     )  # Light level 30000 translates to 10^((30000-1)/10000) ≈ 999 lux
+
+
+async def test_light_level_sensor_none_value(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test that light level sensor handles None value without crashing."""
+    # Modify the light_level sensor to have None value (simulates sensor unavailability)
+    for resource in v2_resources_test_data:
+        if resource.get("id") == "d504e7a4-9a18-4854-90fd-c5b6ac102c40":
+            resource["light"]["light_level"] = None
+            resource["light"]["light_level_valid"] = False
+            break
+
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, Platform.SENSOR)
+
+    sensor = hass.states.get("sensor.hue_motion_sensor_illuminance")
+    assert sensor is not None
+    assert sensor.state == STATE_UNKNOWN

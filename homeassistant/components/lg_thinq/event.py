@@ -1,6 +1,7 @@
 """Support for event entity."""
 
 import logging
+from typing import override
 
 from thinqconnect import DeviceType
 from thinqconnect.integration import ActiveMode, ThinQPropertyEx
@@ -92,6 +93,7 @@ class ThinQEventEntity(ThinQEntity, EventEntity):
         # For event types.
         self._attr_event_types = self.data.options
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()

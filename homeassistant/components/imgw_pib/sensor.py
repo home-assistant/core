@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from imgw_pib.const import HYDROLOGICAL_ALERTS_MAP, NO_ALERT
 from imgw_pib.model import HydrologicalData
@@ -166,11 +166,13 @@ class ImgwPibSensorEntity(ImgwPibEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.entity_description.attrs:

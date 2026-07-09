@@ -3,7 +3,7 @@
 from asyncio.exceptions import TimeoutError
 from collections.abc import Mapping
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiocomelit import (
     ComeliteSerialBridgeApi,
@@ -65,11 +65,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             translation_placeholders={"error": repr(err)},
         ) from err
     except aiocomelit_exceptions.CannotAuthenticate as err:
-        # pylint: disable-next=home-assistant-exception-placeholder-mismatch
         raise InvalidAuth(
             translation_domain=DOMAIN,
             translation_key="cannot_authenticate",
-            translation_placeholders={"error": repr(err)},
         ) from err
     finally:
         await api.logout()
@@ -95,6 +93,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

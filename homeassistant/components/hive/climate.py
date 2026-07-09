@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from apyhiveapi import Hive
 import voluptuous as vol
@@ -104,12 +104,14 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
         self._attr_temperature_unit = TEMP_UNIT[hive_device["temperatureunit"]]
 
     @refresh_system
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         new_mode = HASS_TO_HIVE_STATE[hvac_mode]
         await self.hive.heating.setMode(self.device, new_mode)
 
     @refresh_system
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         new_temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -117,6 +119,7 @@ class HiveClimateEntity(HiveEntity, ClimateEntity):
             await self.hive.heating.setTargetTemperature(self.device, new_temperature)
 
     @refresh_system
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode == PRESET_NONE and self.preset_mode == PRESET_BOOST:

@@ -1,6 +1,6 @@
 """Integration for Redgtech switches."""
 
-from typing import Any
+from typing import Any, override
 
 from redgtech_api.api import RedgtechAuthError, RedgtechConnectionError
 
@@ -54,6 +54,7 @@ class RedgtechSwitch(CoordinatorEntity[RedgtechDataUpdateCoordinator], SwitchEnt
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         if device := self.coordinator.data.get(self.device.unique_id):
@@ -84,10 +85,12 @@ class RedgtechSwitch(CoordinatorEntity[RedgtechDataUpdateCoordinator], SwitchEnt
 
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._set_state(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._set_state(False)

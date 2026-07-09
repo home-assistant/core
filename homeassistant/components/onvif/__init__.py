@@ -1,6 +1,5 @@
 """The ONVIF integration."""
 
-import asyncio
 from contextlib import AsyncExitStack, suppress
 from http import HTTPStatus
 import logging
@@ -39,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> boo
         await async_populate_options(hass, entry)
 
     device = ONVIFDevice(hass, entry)
-    camera_address = f"{device.device.host}:{device.device.port}"
+    camera_address = f"{device.host}:{device.port}"
 
     async with AsyncExitStack() as stack:
         # Register cleanup callback for device
@@ -78,12 +77,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> boo
                 ) from err
             raise ConfigEntryNotReady(
                 f"Could not setup camera {camera_address}: {stringified_onvif_error}"
-            ) from err
-        except asyncio.CancelledError as err:
-            # After https://github.com/agronholm/anyio/issues/374 is resolved
-            # this may be able to be removed
-            raise ConfigEntryNotReady(
-                f"Setup was unexpectedly canceled: {err}"
             ) from err
 
         if not device.available:

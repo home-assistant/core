@@ -1,6 +1,6 @@
 """Support for Atlantic Electrical Heater (With Adjustable Temperature Setpoint)."""
 
-from typing import Any
+from typing import Any, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -57,6 +57,7 @@ OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
     OverkizCommandParam.STANDBY: HVACMode.OFF,  # main command
     OverkizCommandParam.AUTO: HVACMode.AUTO,
     OverkizCommandParam.EXTERNAL: HVACMode.AUTO,
+    OverkizCommandParam.PROG: HVACMode.AUTO,
     OverkizCommandParam.INTERNAL: HVACMode.AUTO,  # main command
 }
 
@@ -100,15 +101,19 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
         )
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         states = self.device.states
-        if (state := states[OverkizState.CORE_OPERATING_MODE]) and state.value_as_str:
+        if (
+            state := states.get(OverkizState.CORE_OPERATING_MODE)
+        ) and state.value_as_str:
             return OVERKIZ_TO_HVAC_MODE[state.value_as_str]
-        if (state := states[OverkizState.CORE_ON_OFF]) and state.value_as_str:
+        if (state := states.get(OverkizState.CORE_ON_OFF)) and state.value_as_str:
             return OVERKIZ_TO_HVAC_MODE[state.value_as_str]
         return HVACMode.OFF
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.executor.async_execute_command(
@@ -116,30 +121,35 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
         )
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation ie. heating, idle, off."""
         states = self.device.states
-        if (state := states[OverkizState.CORE_REGULATION_MODE]) and state.value_as_str:
+        if (
+            state := states.get(OverkizState.CORE_REGULATION_MODE)
+        ) and state.value_as_str:
             return OVERKIZ_TO_HVAC_ACTION[state.value_as_str]
         return HVACAction.OFF
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
 
         states = self.device.states
 
         if (
-            state := states[OverkizState.IO_TARGET_HEATING_LEVEL]
+            state := states.get(OverkizState.IO_TARGET_HEATING_LEVEL)
         ) and state.value_as_str:
             return OVERKIZ_TO_PRESET_MODE[state.value_as_str]
 
         if (
-            operating_mode := states[OverkizState.CORE_OPERATING_MODE]
+            operating_mode := states.get(OverkizState.CORE_OPERATING_MODE)
         ) and operating_mode.value_as_str == OverkizCommandParam.EXTERNAL:
             return PRESET_EXTERNAL
         return None
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
 
@@ -154,21 +164,26 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
         )
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature."""
-        if state := self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]:
+        if state := self.device.states.get(OverkizState.CORE_TARGET_TEMPERATURE):
             return state.value_as_float
         return None
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
-            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+            temperature := self.temperature_device.states.get(
+                OverkizState.CORE_TEMPERATURE
+            )
         ):
             return temperature.value_as_float
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
