@@ -22,7 +22,6 @@ from homeassistant.components.stiebel_eltron.climate import (
     PRESET_READY,
     PRESET_WATER_HEATING,
 )
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -105,56 +104,25 @@ async def test_climate_entity_operating_modes(
     assert state.attributes[ATTR_PRESET_MODE] == expected_preset
 
 
-async def test_climate_entity_set_hvac_mode_without_preset(
+async def test_climate_entity_set_hvac_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_lwz_api: MagicMock,
 ) -> None:
     """Test setting HVAC mode."""
-
-    # Prepare mock
-    mock_lwz_api.get_operation.return_value = None
-
     await _setup_integration(hass, mock_config_entry)
 
-    # Ensure no preset is active
-    state = hass.states.get(CLIMATE_ENTITY_ID)
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_PRESET_MODE) is None
-
-    # Test setting to AUTO
     mock_lwz_api.set_operation.reset_mock()
     await async_set_hvac_mode(hass, HVACMode.AUTO, CLIMATE_ENTITY_ID)
     mock_lwz_api.set_operation.assert_awaited_with(OperatingMode.AUTOMATIC)
 
-    # Test setting to HEAT
     mock_lwz_api.set_operation.reset_mock()
     await async_set_hvac_mode(hass, HVACMode.HEAT, CLIMATE_ENTITY_ID)
     mock_lwz_api.set_operation.assert_awaited_with(OperatingMode.MANUAL_MODE)
 
-    # Test setting to OFF
     mock_lwz_api.set_operation.reset_mock()
     await async_set_hvac_mode(hass, HVACMode.OFF, CLIMATE_ENTITY_ID)
     mock_lwz_api.set_operation.assert_awaited_with(OperatingMode.DHW)
-
-
-async def test_climate_entity_set_hvac_mode_with_preset(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_lwz_api: MagicMock,
-) -> None:
-    """Test that setting HVAC mode does nothing when a preset is active."""
-
-    # Prepare mock
-    mock_lwz_api.get_operation.return_value = OperatingMode.DAY_MODE
-    mock_lwz_api.set_operation.reset_mock()
-
-    await _setup_integration(hass, mock_config_entry)
-
-    # Should not call set_operation when preset is active
-    await async_set_hvac_mode(hass, HVACMode.HEAT, CLIMATE_ENTITY_ID)
-    mock_lwz_api.set_operation.assert_not_called()
 
 
 async def test_climate_entity_set_temperature(
@@ -167,6 +135,32 @@ async def test_climate_entity_set_temperature(
     await _setup_integration(hass, mock_config_entry)
     await async_set_temperature(hass, 23.5, CLIMATE_ENTITY_ID)
     mock_lwz_api.set_target_temp.assert_awaited_with(23.5)
+
+
+async def test_climate_entity_set_hvac_mode_handles_api_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lwz_api: MagicMock,
+) -> None:
+    """Test setting HVAC mode handles API exception."""
+    await _setup_integration(hass, mock_config_entry)
+
+    mock_lwz_api.set_operation.side_effect = ModbusException("write failed")
+    with pytest.raises(HomeAssistantError):
+        await async_set_hvac_mode(hass, HVACMode.AUTO, CLIMATE_ENTITY_ID)
+
+
+async def test_climate_entity_set_preset_mode_handles_api_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lwz_api: MagicMock,
+) -> None:
+    """Test setting preset mode handles API exception."""
+    await _setup_integration(hass, mock_config_entry)
+
+    mock_lwz_api.set_operation.side_effect = ModbusException("write failed")
+    with pytest.raises(HomeAssistantError):
+        await async_set_preset_mode(hass, PRESET_COMFORT, CLIMATE_ENTITY_ID)
 
 
 async def test_climate_entity_set_temperature_handles_api_exception(

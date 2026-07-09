@@ -5,8 +5,8 @@ from typing import Any, Self, override
 
 import voluptuous as vol
 
+from homeassistant.components.text import TextEntity
 from homeassistant.const import (  # noqa: F401
-    ATTR_EDITABLE,
     ATTR_MODE,
     CONF_ICON,
     CONF_ID,
@@ -189,27 +189,30 @@ class InputTextStorageCollection(collection.DictStorageCollection):
         return {CONF_ID: item[CONF_ID]} | update_data
 
 
-class InputText(collection.CollectionEntity, RestoreEntity):
+# pylint: disable-next=home-assistant-enforce-class-module
+class InputText(collection.CollectionEntity, TextEntity, RestoreEntity):
     """Represent a text box."""
 
-    _unrecorded_attributes = frozenset(
-        {
-            InputTextEntityStateAttribute.EDITABLE,
-            InputTextEntityStateAttribute.MAX,
-            InputTextEntityStateAttribute.MIN,
-            InputTextEntityStateAttribute.MODE,
-            InputTextEntityStateAttribute.PATTERN,
-        }
-    )
+    _unrecorded_attributes = frozenset({InputTextEntityStateAttribute.EDITABLE})
 
     _attr_should_poll = False
-    _current_value: str | None
     editable: bool
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize a text input."""
-        self._config = config
-        self._current_value = config.get(CONF_INITIAL)
+        self._attr_native_value = config.get(CONF_INITIAL)
+        self._update_config_attributes(config)
+
+    def _update_config_attributes(self, config: ConfigType) -> None:
+        """Update attributes based on the config."""
+        self._attr_icon = config.get(CONF_ICON)
+        self._attr_mode = config[CONF_MODE]
+        self._attr_name = config.get(CONF_NAME)
+        self._attr_native_min = config[CONF_MIN]
+        self._attr_native_max = config[CONF_MAX]
+        self._attr_pattern = config.get(CONF_PATTERN)
+        self._attr_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_unique_id = config[CONF_ID]
 
     @classmethod
     @override
@@ -230,85 +233,40 @@ class InputText(collection.CollectionEntity, RestoreEntity):
 
     @property
     @override
-    def name(self) -> str | None:
-        """Return the name of the text input entity."""
-        return self._config.get(CONF_NAME)
-
-    @property
-    @override
-    def icon(self) -> str | None:
-        """Return the icon to be used for this entity."""
-        return self._config.get(CONF_ICON)
-
-    @property
-    def _maximum(self) -> int:
-        """Return max len of the text."""
-        return self._config[CONF_MAX]  # type: ignore[no-any-return]
-
-    @property
-    def _minimum(self) -> int:
-        """Return min len of the text."""
-        return self._config[CONF_MIN]  # type: ignore[no-any-return]
-
-    @property
-    @override
-    def state(self) -> str | None:
-        """Return the state of the component."""
-        return self._current_value
-
-    @property
-    @override
-    def unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
-
-    @property
-    @override
-    def unique_id(self) -> str:
-        """Return unique id for the entity."""
-        return self._config[CONF_ID]  # type: ignore[no-any-return]
-
-    @property
-    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        return {
-            InputTextEntityStateAttribute.EDITABLE: self.editable,
-            InputTextEntityStateAttribute.MIN: self._minimum,
-            InputTextEntityStateAttribute.MAX: self._maximum,
-            InputTextEntityStateAttribute.PATTERN: self._config.get(CONF_PATTERN),
-            InputTextEntityStateAttribute.MODE: self._config[CONF_MODE],
-        }
+        return {InputTextEntityStateAttribute.EDITABLE: self.editable}
 
     @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        if self._current_value is not None:
+        if self._attr_native_value is not None:
             return
 
         state = await self.async_get_last_state()
         value = state.state if state else None
 
         # Check against None because value can be 0
-        if value is not None and self._minimum <= len(value) <= self._maximum:
-            self._current_value = value
+        if value is not None and self.native_min <= len(value) <= self.native_max:
+            self._attr_native_value = value
 
+    @override
     async def async_set_value(self, value: str) -> None:
         """Select new value."""
-        if len(value) < self._minimum or len(value) > self._maximum:
+        if len(value) < self.native_min or len(value) > self.native_max:
             _LOGGER.warning(
                 "Invalid value: %s (length range %s - %s)",
                 value,
-                self._minimum,
-                self._maximum,
+                self.native_min,
+                self.native_max,
             )
             return
-        self._current_value = value
+        self._attr_native_value = value
         self.async_write_ha_state()
 
     @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
-        self._config = config
+        self._update_config_attributes(config)
         self.async_write_ha_state()
