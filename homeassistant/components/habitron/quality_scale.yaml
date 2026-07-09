@@ -1,13 +1,19 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not register any actions.
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not register any actions.
   docs-conditions:
     status: exempt
     comment: |
@@ -28,7 +34,10 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: |
+      This integration does not register any actions.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -46,7 +55,7 @@ rules:
   test-coverage: done
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery: done
   discovery-update-info: done
   docs-data-update: done
@@ -69,7 +78,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues: done
   stale-devices: done
 

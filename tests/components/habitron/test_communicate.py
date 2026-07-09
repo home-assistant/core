@@ -9,14 +9,13 @@ from homeassistant.components.habitron.communicate import HbtnComm
 
 
 def _make_comm(host: str = "192.168.1.50") -> HbtnComm:
-    """Build an HbtnComm with the client + smhub stubbed out."""
+    """Build an HbtnComm with the client stubbed out."""
     hass = MagicMock()
     hass.data = {"integrations": {"habitron": MagicMock(manifest={"version": "9.9.9"})}}
     hass.async_add_executor_job = AsyncMock()
     config = MagicMock()
     config.data = {"habitron_host": host}
-    smhub = MagicMock()
-    comm = HbtnComm(hass, config, smhub)
+    comm = HbtnComm(hass, config)
     comm._client = AsyncMock(spec=HabitronClient)
     return comm
 
@@ -63,12 +62,11 @@ def test_property_accessors() -> None:
     assert comm.hbtn_version == "0.0.0"
 
 
-def test_router_property_falls_back_to_smhub_router() -> None:
-    """``router`` returns smhub.router until set_router stores one."""
+def test_router_property_returns_own_router() -> None:
+    """``router`` returns the comm's own router, set via set_router."""
     comm = _make_comm()
-    rt = Router(uid="rt_x")
-    comm.smhub.router = rt
-    assert comm.router is rt
+    # Empty placeholder model until set_router stores the built one.
+    assert isinstance(comm.router, Router)
     other = Router(uid="rt_y")
     comm.set_router(other)
     assert comm.router is other
@@ -144,26 +142,22 @@ async def test_async_system_update_suspended_returns_crc() -> None:
     comm = _make_comm()
     comm.update_suspended = True
     comm.crc = 7
-    comm.smhub.update = AsyncMock()
     with patch(
         "homeassistant.components.habitron.communicate.async_refresh_system",
         new=AsyncMock(),
     ) as refresh:
         assert await comm.async_system_update() == 7
         refresh.assert_not_called()
-        comm.smhub.update.assert_not_called()
 
 
 async def test_async_system_update_refreshes_and_returns_new_crc() -> None:
-    """A normal tick refreshes hub diagnostics + the bus, returning the new CRC."""
+    """A normal tick refreshes the bus, returning the new CRC."""
     comm = _make_comm()
-    comm.smhub.update = AsyncMock()
     with patch(
         "homeassistant.components.habitron.communicate.async_refresh_system",
         new=AsyncMock(return_value=99),
     ) as refresh:
         assert await comm.async_system_update() == 99
-        comm.smhub.update.assert_awaited()
         refresh.assert_awaited()
         assert comm.crc == 99
 

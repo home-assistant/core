@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from habitron_client import HabitronError, HabitronTimeoutError
 
@@ -11,17 +11,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .communicate import HbtnComm
 from .const import DOMAIN, SCAN_INTERVAL
+from .smart_hub import SmartHub
 
-if TYPE_CHECKING:
-    from .communicate import HbtnComm
-    from .smart_hub import SmartHub
-
-type HabitronConfigEntry = ConfigEntry["SmartHub"]
-"""Typed config entry alias. ``entry.runtime_data`` holds the SmartHub.
-
-Defined here rather than in ``smart_hub`` to avoid a circular import:
-the platform and ``smart_hub`` both need this type.
+type HabitronConfigEntry = ConfigEntry[HbtnCoordinator]
+"""Typed config entry alias. ``entry.runtime_data`` holds the HbtnCoordinator,
+which owns both the ``HbtnComm`` transport and the ``SmartHub`` model.
 """
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,11 +56,16 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
         self.config = entry
         self.rtr_id = 1
         self.previous_devices: set[str] = set()
+        self.smart_hub = SmartHub(hass, entry, hbtn_comm)
 
     @override
     async def _async_setup(self) -> None:
-        """Run a first fetch during ``async_config_entry_first_refresh``."""
-        await self._async_update_data()
+        """Connect and build the model during ``async_config_entry_first_refresh``.
+
+        Runs once before the first ``_async_update_data``: opens the client,
+        builds the bus model and registers the hub/bus devices.
+        """
+        await self.smart_hub.async_setup()
 
     @override
     async def _async_update_data(self) -> int:
@@ -91,6 +92,9 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
                 translation_key="update_network_error",
                 translation_placeholders={"error": str(err)},
             ) from err
+        # Refresh the hub host-diagnostics outside the try: it swallows its own
+        # errors, so a hub-diag hiccup must not mark every entity unavailable.
+        await self.smart_hub.update()
         self._update_router_issue()
         return crc
 

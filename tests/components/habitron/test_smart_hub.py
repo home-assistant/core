@@ -7,10 +7,6 @@ import pytest
 
 from homeassistant.components.habitron.const import DOMAIN
 from homeassistant.components.habitron.smart_hub import SmartHub
-from homeassistant.components.habitron.system_health import (
-    async_register,
-    system_health_info,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -21,37 +17,31 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture
 def smart_hub_stub() -> SmartHub:
-    """Build a SmartHub with the heavy dependencies stubbed out."""
-    with (
-        patch("homeassistant.components.habitron.smart_hub.hbtn_com") as mock_com,
-        patch("homeassistant.components.habitron.smart_hub.HbtnCoordinator"),
-    ):
-        comm = MagicMock()
-        comm.com_ip = MOCK_HOST
-        comm.com_port = 7777
-        comm.com_mac = "AA:BB:CC:DD:EE:FF"
-        comm.com_version = "9.9.9"
-        comm.com_hwtype = "Raspberry Pi 4"
-        comm.is_addon = False
-        comm.slugname = ""
-        comm.async_setup = AsyncMock()
-        comm.async_close = AsyncMock()
-        comm.get_smhub_info = AsyncMock()
-        comm.get_smhub_update = AsyncMock()
-        comm.reinit_hub = AsyncMock()
-        comm.send_network_info = AsyncMock()
-        comm.send_devregid = AsyncMock()
-        comm.set_router = MagicMock()
-        mock_com.return_value = comm
+    """Build a SmartHub with the comm transport stubbed out."""
+    comm = MagicMock()
+    comm.com_ip = MOCK_HOST
+    comm.com_port = 7777
+    comm.com_mac = "AA:BB:CC:DD:EE:FF"
+    comm.com_version = "9.9.9"
+    comm.com_hwtype = "Raspberry Pi 4"
+    comm.is_addon = False
+    comm.slugname = ""
+    comm.async_setup = AsyncMock()
+    comm.async_close = AsyncMock()
+    comm.get_smhub_info = AsyncMock()
+    comm.get_smhub_update = AsyncMock()
+    comm.reinit_hub = AsyncMock()
+    comm.send_network_info = AsyncMock()
+    comm.send_devregid = AsyncMock()
+    comm.set_router = MagicMock()
 
-        hass = MagicMock()
-        hass.async_add_executor_job = AsyncMock()
-        config = MagicMock()
-        config.title = "Habitron"
-        config.entry_id = "entry-id"
-        config.data = {"websock_token": "tok"}
-        hub = SmartHub(hass, config)
-    return hub  # noqa: RET504
+    hass = MagicMock()
+    hass.async_add_executor_job = AsyncMock()
+    config = MagicMock()
+    config.title = "Habitron"
+    config.entry_id = "entry-id"
+    config.data = {"websock_token": "tok"}
+    return SmartHub(hass, config, comm)
 
 
 def _smhub_info() -> dict:
@@ -130,9 +120,9 @@ async def test_setup_registers_hub_device(
             new=AsyncMock(return_value=router),
         ),
         patch(
-            "homeassistant.helpers.update_coordinator."
-            "DataUpdateCoordinator.async_config_entry_first_refresh",
-            new=AsyncMock(),
+            "homeassistant.components.habitron.coordinator."
+            "HbtnCoordinator._async_update_data",
+            new=AsyncMock(return_value=0),
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -219,12 +209,3 @@ async def test_async_close_delegates_to_comm(
     """async_close hands off to comm.async_close to release the bus client."""
     await smart_hub_stub.async_close()
     smart_hub_stub.comm.async_close.assert_awaited()
-
-
-def test_async_register_forwards_system_health_info() -> None:
-    """``async_register`` wires ``system_health_info`` into the registration helper."""
-
-    hass = MagicMock()
-    register = MagicMock()
-    async_register(hass, register)
-    register.async_register_info.assert_called_with(system_health_info)

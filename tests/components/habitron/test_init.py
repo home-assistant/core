@@ -6,7 +6,6 @@ from habitron_client import HabitronError
 
 from homeassistant.components.habitron import async_remove_config_entry_device
 from homeassistant.components.habitron.const import DOMAIN
-from homeassistant.components.habitron.services import SERVICE_HUB_RESTART
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -18,53 +17,22 @@ async def test_setup_entry(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
 ) -> None:
-    """A successful setup loads the entry and registers services."""
+    """A successful setup loads the entry."""
     entry = setup_integration
     assert entry.state is ConfigEntryState.LOADED
-    # runtime_data is populated with the SmartHub instance
+    # runtime_data is populated with the coordinator instance
     assert entry.runtime_data is not None
-    # Services are registered globally on the domain
-    assert hass.services.has_service(DOMAIN, SERVICE_HUB_RESTART)
 
 
 async def test_unload_entry(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
 ) -> None:
-    """Unloading the last entry tears down state; domain services persist."""
+    """Unloading the last entry tears down state."""
     entry = setup_integration
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
-    # Services are registered once in async_setup and live for the integration's
-    # lifetime (action-setup rule); they are not torn down with the entry.
-    assert hass.services.has_service(DOMAIN, SERVICE_HUB_RESTART)
-
-
-async def test_services_kept_while_other_entry_loaded(
-    hass: HomeAssistant,
-    setup_integration: MockConfigEntry,
-    mock_habitron_client: MagicMock,
-    mock_smart_hub_setup: None,
-    mock_coordinator_refresh: AsyncMock,
-) -> None:
-    """A second loaded entry keeps services alive when the first unloads."""
-    other = MockConfigEntry(
-        domain=DOMAIN,
-        title="Habitron #2",
-        unique_id="hub-2",
-        data=setup_integration.data,
-        options=setup_integration.options,
-    )
-    other.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(other.entry_id)
-    await hass.async_block_till_done()
-
-    assert await hass.config_entries.async_unload(setup_integration.entry_id)
-    await hass.async_block_till_done()
-
-    # Other entry still here → services must still be registered.
-    assert hass.services.has_service(DOMAIN, SERVICE_HUB_RESTART)
 
 
 async def test_update_listener_triggers_reload(
@@ -108,7 +76,7 @@ async def test_async_remove_config_entry_device(
     """A device matching the hub UID cannot be removed standalone."""
 
     entry = setup_integration
-    smhub = entry.runtime_data
+    smhub = entry.runtime_data.smart_hub
     dev_reg = dr.async_get(hass)
     hub_device = dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,

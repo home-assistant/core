@@ -8,7 +8,7 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["habitron_client"],
-  "quality_scale": "platinum",
+  "quality_scale": "bronze",
   "requirements": ["habitron_client==2.0.7"],
   "ssdp": [
     {
