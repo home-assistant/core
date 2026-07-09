@@ -59,9 +59,7 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         The follow-up catches delayed device state changes that may not
         be visible in Modbus registers immediately after a write.
         """
-        if self._follow_up_unsub:
-            self._follow_up_unsub()
-            self._follow_up_unsub = None
+        self.cancel_follow_up_refresh()
 
         @callback
         def _do_refresh(_now: Any) -> None:
@@ -127,18 +125,19 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return enabled
 
     async def _read_timers_into_data(self, data: dict[str, Any]) -> None:
-        """Read every enabled timer block and merge derived fields into data."""
+        """Read every enabled timer block and merge derived fields into data.
+
+        Only the ``<timer>_enable`` field is exposed: it is the sole timer
+        attribute consumed by the light platform (as a manual-mode guard).
+        Further derived keys will be added by follow-up platform PRs that
+        consume them.
+        """
         enabled = self._get_enabled_timers()
         if not enabled:
             return
         timers = await self.client.read_all_timers(enabled_timers=enabled)
         for t_name, t in timers.items():
             data[f"{t_name}_enable"] = t["enable"]
-            data[f"{t_name}_start"] = t["on"]  # seconds since midnight
-            data[f"{t_name}_interval"] = t["interval"]
-            data[f"{t_name}_period"] = t["period"]
-            data[f"{t_name}_countdown"] = t["countdown"]
-            data[f"{t_name}_stop"] = t.get("stop")
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:

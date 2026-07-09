@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from neopool_modbus import NeoPoolInvalidStateError
+from neopool_modbus.exceptions import NeoPoolConnectionError
 from neopool_modbus.registers import RelayKind, TimerRelayMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -19,13 +20,13 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -128,12 +129,12 @@ async def test_light_is_on_reflects_relay_state(
 
 
 @pytest.mark.parametrize(
-    "enable_value",
+    "relay_data",
     [
-        pytest.param(TimerRelayMode.ENABLED, id="auto"),
-        pytest.param(None, id="missing"),
-        pytest.param(0, id="disabled"),
-        pytest.param(2, id="unknown-state"),
+        pytest.param({"relay_light_enable": TimerRelayMode.ENABLED}, id="auto"),
+        pytest.param({}, id="missing"),
+        pytest.param({"relay_light_enable": 0}, id="disabled"),
+        pytest.param({"relay_light_enable": 2}, id="unknown-state"),
     ],
 )
 async def test_light_refuses_when_not_in_manual_mode(
@@ -141,18 +142,13 @@ async def test_light_refuses_when_not_in_manual_mode(
     mock_config_entry_light: MockConfigEntry,
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
-    enable_value: int | None,
+    relay_data: dict[str, int],
 ) -> None:
     """Turn on/off is rejected while the relay is not in a manual mode."""
     await setup_integration(hass, mock_config_entry_light)
     entity_id = _light_entity_id(hass, mock_config_entry_light)
 
-    data = {**MOCK_POOL_DATA}
-    if enable_value is None:
-        data.pop("relay_light_enable", None)
-    else:
-        data["relay_light_enable"] = enable_value
-    mock_neopool_client.async_read_all.return_value = data
+    mock_neopool_client.async_read_all.return_value = {**MOCK_POOL_DATA, **relay_data}
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -183,6 +179,32 @@ async def test_light_maps_lib_invalid_state_to_service_validation(
         side_effect=NeoPoolInvalidStateError("relay in auto mode")
     )
     with pytest.raises(ServiceValidationError):
+        await _turn_on(hass, entity_id)
+    mock_neopool_client.async_set_relay_state.assert_awaited_once_with(
+        RelayKind.LIGHT, True
+    )
+
+
+@pytest.mark.parametrize(
+    "write_error",
+    [
+        pytest.param(NeoPoolConnectionError("boom"), id="lib-connection-error"),
+        pytest.param(TimeoutError("boom"), id="timeout"),
+        pytest.param(OSError("boom"), id="os-error"),
+    ],
+)
+async def test_light_maps_communication_error_to_home_assistant_error(
+    hass: HomeAssistant,
+    mock_config_entry_light: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    write_error: Exception,
+) -> None:
+    """Communication errors on write are surfaced as translated HomeAssistantError."""
+    await setup_integration(hass, mock_config_entry_light)
+    entity_id = _light_entity_id(hass, mock_config_entry_light)
+
+    mock_neopool_client.async_set_relay_state = AsyncMock(side_effect=write_error)
+    with pytest.raises(HomeAssistantError):
         await _turn_on(hass, entity_id)
     mock_neopool_client.async_set_relay_state.assert_awaited_once_with(
         RelayKind.LIGHT, True
@@ -238,13 +260,9 @@ async def test_all_entities(
     """Snapshot every light entity registered by the platform."""
     with patch("homeassistant.components.neopool.PLATFORMS", [Platform.LIGHT]):
         await setup_integration(hass, mock_config_entry_light)
-    entries = sorted(
-        er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry_light.entry_id
-        ),
-        key=lambda e: e.entity_id,
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_config_entry_light.entry_id
     )
-    assert entries == snapshot
 
 
 async def test_light_write_schedules_follow_up_refresh(
@@ -275,7 +293,7 @@ async def test_light_timer_data_merged_into_coordinator(
     mock_config_entry_light: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
-    """Timer block fields are merged into coordinator data as relay_light_* keys."""
+    """The timer enable field is merged into coordinator data as relay_light_enable."""
     mock_neopool_client.read_all_timers = AsyncMock(
         return_value={
             "relay_light": {
@@ -292,8 +310,3 @@ async def test_light_timer_data_merged_into_coordinator(
 
     coordinator = mock_config_entry_light.runtime_data
     assert coordinator.data["relay_light_enable"] == TimerRelayMode.ALWAYS_OFF
-    assert coordinator.data["relay_light_start"] == 3600
-    assert coordinator.data["relay_light_interval"] == 7200
-    assert coordinator.data["relay_light_period"] == 86400
-    assert coordinator.data["relay_light_countdown"] == 120
-    assert coordinator.data["relay_light_stop"] == 5400

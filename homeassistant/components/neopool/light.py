@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from neopool_modbus import NeoPoolInvalidStateError
+from neopool_modbus.exceptions import NeoPoolError
 from neopool_modbus.registers import RelayKind, TimerRelayMode, is_valid_relay_gpio
 
 from homeassistant.components.light import (
@@ -13,7 +14,7 @@ from homeassistant.components.light import (
     LightEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_USE_LIGHT, DOMAIN
@@ -93,7 +94,13 @@ class NeoPoolLight(NeoPoolEntity, LightEntity):
         await self._async_set_state(False)
 
     async def _async_set_state(self, state: bool) -> None:
-        """Drive the light relay via its timer block."""
+        """Write the light relay state.
+
+        Refuses the write when the light timer is not in a manual mode
+        (checked against ``relay_light_enable`` in coordinator data as a
+        fast pre-check, and by re-raising ``NeoPoolInvalidStateError`` from
+        the library for the race where device state changed since the poll).
+        """
         if self.coordinator.data.get(_LIGHT_TIMER_ENABLE_KEY) not in (
             TimerRelayMode.ALWAYS_ON,
             TimerRelayMode.ALWAYS_OFF,
@@ -111,6 +118,12 @@ class NeoPoolLight(NeoPoolEntity, LightEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="relay_in_auto_mode",
+            ) from err
+        except (NeoPoolError, OSError, TimeoutError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="modbus_communication_error",
+                translation_placeholders={"error": str(err)},
             ) from err
 
         self.coordinator.async_set_updated_data({**self.coordinator.data, **overrides})
