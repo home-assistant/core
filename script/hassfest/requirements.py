@@ -217,7 +217,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "surepetcare": {"surepy": {"async-timeout"}},
     "tailwind": {"gotailwind": {"backoff"}},
     "technove": {"python-technove": {"backoff"}},
-    "tesla_wall_connector": {"tesla-wall-connector": {"backoff"}},
     "tibber": {"gql": {"backoff"}},
     "toon": {"toonapi": {"backoff"}},
     "travisci": {

@@ -1,6 +1,7 @@
 """Test the MELCloud Home climate platform."""
 
-from typing import Any, cast
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from aiomelcloudhome import (
@@ -42,7 +43,7 @@ from . import setup_integration
 from tests.common import (
     MockConfigEntry,
     SnapshotAssertion,
-    load_json_value_fixture,
+    async_load_json_object_fixture,
     snapshot_platform,
 )
 
@@ -67,6 +68,68 @@ async def test_climate_platform(
         await snapshot_platform(
             hass, entity_registry, snapshot, mock_config_entry.entry_id
         )
+
+
+@pytest.mark.parametrize(
+    ("apply_capabilities", "expected_hvac_modes"),
+    [
+        pytest.param(
+            lambda _: None,
+            [
+                HVACMode.OFF,
+                HVACMode.HEAT,
+                HVACMode.COOL,
+                HVACMode.AUTO,
+                HVACMode.DRY,
+                HVACMode.FAN_ONLY,
+            ],
+            id="no_capabilities",
+        ),
+        pytest.param(
+            lambda caps: caps,
+            [
+                HVACMode.OFF,
+                HVACMode.HEAT,
+                HVACMode.COOL,
+                HVACMode.AUTO,
+                HVACMode.DRY,
+                HVACMode.FAN_ONLY,
+            ],
+            id="all_modes",
+        ),
+        pytest.param(
+            lambda caps: {
+                **caps,
+                "hasCoolOperationMode": False,
+                "hasAutoOperationMode": False,
+                "hasDryOperationMode": False,
+                "hasFanOperationMode": False,
+            },
+            [HVACMode.OFF, HVACMode.HEAT],
+            id="heat_only",
+        ),
+    ],
+)
+async def test_ata_hvac_modes(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    apply_capabilities: Callable[[dict[str, Any]], dict[str, Any] | None],
+    expected_hvac_modes: list[HVACMode],
+) -> None:
+    """Test ATA hvac_modes for varying unit capabilities."""
+    context: dict[str, Any] = await async_load_json_object_fixture(
+        hass, "context.json", DOMAIN
+    )
+    ata_unit = context["buildings"][0]["airToAirUnits"][0]
+    ata_unit["capabilities"] = apply_capabilities(ata_unit["capabilities"])
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ATA_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["hvac_modes"] == expected_hvac_modes
 
 
 @pytest.mark.parametrize(
@@ -394,7 +457,9 @@ async def test_ata_temperature_range_by_mode(
     expected_max: float,
 ) -> None:
     """Test ATA min/max temperature for cool, auto, and fallback HVAC modes."""
-    context = cast(dict[str, Any], load_json_value_fixture("context.json", DOMAIN))
+    context: dict[str, Any] = await async_load_json_object_fixture(
+        hass, "context.json", DOMAIN
+    )
     next(
         setting
         for setting in context["buildings"][0]["airToAirUnits"][0]["settings"]
@@ -416,7 +481,9 @@ async def test_ata_no_capabilities_temperature_range(
     mock_melcloud_client: AsyncMock,
 ) -> None:
     """Test fallback temperature range and hvac_modes when ATA unit has no capabilities."""
-    context = cast(dict[str, Any], load_json_value_fixture("context.json", DOMAIN))
+    context: dict[str, Any] = await async_load_json_object_fixture(
+        hass, "context.json", DOMAIN
+    )
     context["buildings"][0]["airToAirUnits"][0]["capabilities"] = None
     mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
 
@@ -435,7 +502,9 @@ async def test_atw_zone_temperature_range(
     mock_melcloud_client: AsyncMock,
 ) -> None:
     """Test ATW zone min/max temperature read from unit capabilities."""
-    context = cast(dict[str, Any], load_json_value_fixture("context.json", DOMAIN))
+    context: dict[str, Any] = await async_load_json_object_fixture(
+        hass, "context.json", DOMAIN
+    )
     context["buildings"][0]["airToWaterUnits"][0]["capabilities"].update(
         {
             "minSetTemperatureZone1": 10.0,

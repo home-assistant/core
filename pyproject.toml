@@ -74,10 +74,10 @@ dependencies = [
   "typing-extensions>=4.15.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.11.21",
+  "uv==0.11.26",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
-  "voluptuous-openapi==0.3.0",
+  "voluptuous-openapi==0.4.1",
   "yarl==1.24.2",
   "webrtc-models==0.3.0",
   "zeroconf==0.150.0",
@@ -648,7 +648,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.15.17"
+required-version = ">=0.15.20"
 
 [tool.ruff.lint]
 select = [

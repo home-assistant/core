@@ -934,6 +934,54 @@ async def test_entity_limit_per_config_entry_frees_slot_when_disabled(
     assert hass.states.get("test_domain.ent3") is not None
 
 
+@pytest.mark.parametrize(
+    "filler_ids",
+    [
+        pytest.param([], id="below_limit"),
+        pytest.param(["2"], id="at_limit"),
+    ],
+)
+async def test_entity_limit_per_config_entry_allows_enabling_disabled_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    filler_ids: list[str],
+) -> None:
+    """Test a user can enable a disabled entity regardless of the limit."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    platform = MockEntityPlatform(hass)
+    platform.config_entry = config_entry
+
+    with patch.object(entity_platform, "MAX_ENABLED_ENTITIES_PER_CONFIG_ENTRY", 1):
+        # Register a disabled-by-default entity; fillers optionally reach the limit
+        await platform.async_add_entities(
+            [
+                MockEntity(
+                    unique_id="1",
+                    name="ent1",
+                    entity_registry_enabled_default=False,
+                ),
+                *(MockEntity(unique_id=uid, name=f"ent{uid}") for uid in filler_ids),
+            ]
+        )
+
+    entity_id = entity_registry.async_get_entity_id("test_domain", "test_platform", "1")
+    assert entity_id is not None
+    assert hass.states.get("test_domain.ent1") is None
+
+    # The user enables the disabled entity
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+
+    # Re-adding the now-enabled entity, e.g. after a reload, adds it because it is
+    # already registered, even when this pushes the count over the limit
+    with patch.object(entity_platform, "MAX_ENABLED_ENTITIES_PER_CONFIG_ENTRY", 1):
+        await platform.async_add_entities([MockEntity(unique_id="1", name="ent1")])
+
+    assert hass.states.get("test_domain.ent1") is not None
+    assert "Reached the maximum" not in caplog.text
+
+
 async def test_entity_limit_per_config_entry_allows_existing_entities(
     hass: HomeAssistant,
 ) -> None:
@@ -2789,56 +2837,3 @@ async def test_add_entity_unknown_subentry(
         "Can't add entities to unknown subentry unknown-subentry "
         "of config entry super-mock-id"
     ) in caplog.text
-
-
-@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
-@pytest.mark.usefixtures("mock_integration_frame")
-@pytest.mark.parametrize(
-    "deprecated_attribute",
-    [
-        "component_translations",
-        "platform_translations",
-        "object_id_component_translations",
-        "object_id_platform_translations",
-        "default_language_platform_translations",
-    ],
-)
-async def test_deprecated_attributes(
-    hass: HomeAssistant,
-    deprecated_attribute: str,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test setting the device name based on input info."""
-
-    platform = MockPlatform()
-    entity_platform = MockEntityPlatform(hass, platform_name="test", platform=platform)
-
-    assert getattr(entity_platform, deprecated_attribute) is getattr(
-        entity_platform.platform_data, deprecated_attribute
-    )
-    assert (
-        f"The deprecated function {deprecated_attribute} was called from "
-        "my_integration. It will be removed in HA Core 2026.8. Use platform_data."
-        f"{deprecated_attribute} instead, please report it to the author of the "
-        "'my_integration' custom integration" in caplog.text
-    )
-
-
-@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_deprecated_async_load_translations(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test setting the device name based on input info."""
-
-    platform = MockPlatform()
-    entity_platform = MockEntityPlatform(hass, platform_name="test", platform=platform)
-
-    await entity_platform.async_load_translations()
-    assert (
-        "The deprecated function async_load_translations was called from "
-        "my_integration. It will be removed in HA Core 2026.8. Use platform_data."
-        "async_load_translations instead, please report it to the author of the "
-        "'my_integration' custom integration" in caplog.text
-    )

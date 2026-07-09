@@ -363,6 +363,24 @@
       }
     },
     "select": {
+      "climate_state_seat_fan_front_left": {
+        "name": "Seat cooler front left",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "climate_state_seat_fan_front_right": {
+        "name": "Seat cooler front right",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "off": "[%key:common::state::off%]"
+        }
+      },
       "climate_state_seat_heater_left": {
         "name": "Seat heater front left",
         "state": {
@@ -1178,6 +1196,9 @@
     },
     "update_failed": {
       "message": "Error fetching data from Teslemetry API: {message}"
+    },
+    "update_failed_insufficient_credits": {
+      "message": "Teslemetry account has insufficient command credits, pausing updates until credits are added"
     },
     "update_failed_invalid_data": {
       "message": "Received invalid data from API"

@@ -32,7 +32,7 @@
             "hasAirDirection": true,
             "hasSwing": true,
             "hasExtendedTemperatureRange": true,
-            "hasEnergyConsumedMeter": false,
+            "hasEnergyConsumedMeter": true,
             "numberOfFanSpeeds": 5,
             "minTempCool": 16,
             "maxTempCool": 31,
@@ -195,7 +195,7 @@
           "rssi": -52,
           "frostProtection": {
             "active": false,
-            "enabled": false,
+            "enabled": true,
             "min": 5,
             "max": 8
           },
