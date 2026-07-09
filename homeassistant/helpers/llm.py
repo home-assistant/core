@@ -45,6 +45,7 @@ from . import (
     selector,
     service,
 )
+from .deprecation import deprecated_function
 from .singleton import singleton
 
 ACTION_PARAMETERS_CACHE: HassKey[
@@ -70,6 +71,7 @@ NO_ENTITIES_PROMPT = (
 )
 
 
+@deprecated_function("an empty string", breaks_in_ha_version="2027.2")
 @callback
 def async_render_no_api_prompt(hass: HomeAssistant) -> str:
     """Return the prompt to be used when no API is configured.
