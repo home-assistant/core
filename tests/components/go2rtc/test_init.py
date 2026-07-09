@@ -1256,9 +1256,17 @@ async def test_get_rtsp_stream_url_unusable_source(
     init_test_integration: MockCamera,
     stream_source: str | None,
 ) -> None:
-    """The helper returns None when the camera source cannot be proxied."""
+    """The helper returns None when the camera source cannot be proxied.
+
+    The query must stay benign: it must not reach the teardown that
+    ``async_update_stream_source`` performs on these failure paths, which
+    would close every active go2rtc session.
+    """
     init_test_integration.set_stream_source(stream_source)
-    assert await async_get_rtsp_stream_url(hass, "camera.test") is None
+    provider = hass.config_entries.async_loaded_entries(DOMAIN)[0].runtime_data
+    with patch.object(provider, "teardown", wraps=provider.teardown) as teardown:
+        assert await async_get_rtsp_stream_url(hass, "camera.test") is None
+    teardown.assert_not_called()
 
 
 @pytest.mark.usefixtures("init_integration", "init_test_integration")
