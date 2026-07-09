@@ -21,7 +21,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.service import (
     async_register_admin_service,
@@ -124,7 +124,11 @@ def _async_get_system_for_service_call(call: ServiceCall) -> SystemType:
     if (
         alarm_control_panel_device_entry := device_registry.async_get(device_id)
     ) is None:
-        raise vol.Invalid("Invalid device ID specified")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_device_id",
+            translation_placeholders={"device_id": device_id},
+        )
 
     if TYPE_CHECKING:
         assert alarm_control_panel_device_entry.via_device_id
@@ -134,7 +138,11 @@ def _async_get_system_for_service_call(call: ServiceCall) -> SystemType:
             alarm_control_panel_device_entry.via_device_id
         )
     ) is None:
-        raise ValueError("No base station registered for alarm control panel")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_base_station",
+            translation_placeholders={"device_id": device_id},
+        )
 
     [system_id_str] = [
         identity[1]
@@ -153,7 +161,11 @@ def _async_get_system_for_service_call(call: ServiceCall) -> SystemType:
             continue
         return entry.runtime_data.systems[system_id]
 
-    raise ValueError(f"No system for device ID: {device_id}")
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="no_system_for_device",
+        translation_placeholders={"device_id": device_id},
+    )
 
 
 @callback
@@ -170,7 +182,9 @@ def extract_system(
             await func(call, system)
         except SimplipyError as err:
             raise HomeAssistantError(
-                f'Error while executing "{call.service}": {err}'
+                translation_domain=DOMAIN,
+                translation_key="error_while_executing",
+                translation_placeholders={"service": call.service, "error": str(err)},
             ) from err
 
     return wrapper
@@ -195,7 +209,10 @@ async def async_set_pin(call: ServiceCall, system: SystemType) -> None:
 async def async_set_system_properties(call: ServiceCall, system: SystemType) -> None:
     """Set one or more system parameters."""
     if not isinstance(system, SystemV3):
-        raise HomeAssistantError("Can only set system properties on V3 systems")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="set_system_properties_not_v3",
+        )
 
     await system.async_set_properties(
         {prop: value for prop, value in call.data.items() if prop != ATTR_DEVICE_ID}
