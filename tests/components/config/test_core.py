@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.components import config
-from homeassistant.components.config import core
+from homeassistant.components.config import DOMAIN, core
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -27,7 +27,7 @@ async def client(
 ) -> MockHAClientWebSocket:
     """Fixture that can interact with the config manager API."""
     with patch.object(config, "SECTIONS", [core]):
-        assert await async_setup_component(hass, "config", {})
+        assert await async_setup_component(hass, DOMAIN, {})
     return await hass_ws_client(hass)
 
 
@@ -36,7 +36,7 @@ async def test_validate_config_ok(
 ) -> None:
     """Test checking config."""
     with patch.object(config, "SECTIONS", [core]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_client()
 
@@ -99,7 +99,7 @@ async def test_validate_config_requires_admin(
 ) -> None:
     """Test checking configuration does not work as a normal user."""
     with patch.object(config, "SECTIONS", [core]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_client(hass_read_only_access_token)
     resp = await client.post("/api/config/core/check_config")
@@ -134,7 +134,7 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
                 "type": "config/core/update",
                 "latitude": 60,
                 "longitude": 50,
-                "elevation": 25,
+                "elevation": 25.6,
                 "location_name": "Huis",
                 "unit_system": "imperial",
                 "time_zone": "America/New_York",
@@ -195,7 +195,7 @@ async def test_websocket_core_update_not_admin(
     """Test core config fails for non admin."""
     hass_admin_user.groups = []
     with patch.object(config, "SECTIONS", [core]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
     await client.send_json({"id": 6, "type": "config/core/update", "latitude": 23})

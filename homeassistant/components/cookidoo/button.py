@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from cookidoo_api import Cookidoo, CookidooException
 
@@ -59,6 +60,7 @@ class CookidooButton(CookidooBaseEntity, ButtonEntity):
         assert coordinator.config_entry.unique_id
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         try:

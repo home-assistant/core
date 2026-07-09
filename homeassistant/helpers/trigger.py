@@ -4,8 +4,9 @@ import abc
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable, Mapping
+from contextvars import copy_context
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
 import functools
 import inspect
 import logging
@@ -25,8 +26,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ALIAS,
+    CONF_AT,
     CONF_DEVICE_ID,
     CONF_ENABLED,
     CONF_ENTITY_ID,
@@ -41,14 +42,17 @@ from homeassistant.const import (
     CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     Context,
     HassJob,
     HassJobType,
     HomeAssistant,
     State,
+    async_get_hass_or_none,
     callback,
     get_hassjob_callable_job_type,
     is_callback,
@@ -75,7 +79,8 @@ from .automation import (
     get_relative_description_key,
     move_options_fields_to_top_level,
 )
-from .event import async_track_same_state
+from .event import async_call_later
+from .frame import report_usage
 from .integration_platform import async_process_integration_platforms
 from .selector import (
     NumericThresholdMode,
@@ -109,7 +114,6 @@ DATA_PLUGGABLE_ACTIONS: HassKey[defaultdict[tuple, PluggableActionsEntry]] = Has
 TRIGGER_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any] | None]] = HassKey(
     "trigger_description_cache"
 )
-TRIGGER_DISABLED_TRIGGERS: HassKey[set[str]] = HassKey("trigger_disabled_triggers")
 TRIGGER_PLATFORM_SUBSCRIPTIONS: HassKey[
     list[Callable[[set[str]], Coroutine[Any, Any, None]]]
 ] = HassKey("trigger_platform_subscriptions")
@@ -151,27 +155,9 @@ _TRIGGERS_DESCRIPTION_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the trigger helper."""
-    from homeassistant.components import automation, labs  # noqa: PLC0415
-
     hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
-    hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
     hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[TRIGGERS] = {}
-
-    async def new_triggers_conditions_listener(
-        _event_data: labs.EventLabsUpdatedData,
-    ) -> None:
-        """Handle new_triggers_conditions flag change."""
-        # Invalidate the cache
-        hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
-        hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
-
-    labs.async_subscribe_preview_feature(
-        hass,
-        automation.DOMAIN,
-        automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        new_triggers_conditions_listener,
-    )
 
     await async_process_integration_platforms(
         hass, "trigger", _register_trigger_platform, wait_for_platforms=True
@@ -198,11 +184,9 @@ async def _register_trigger_platform(
 ) -> None:
     """Register a trigger platform and notify listeners.
 
-    If the trigger platform does not provide any triggers, or it is disabled,
+    If the trigger platform does not provide any triggers,
     listeners will not be notified.
     """
-    from homeassistant.components import automation  # noqa: PLC0415
-
     new_triggers: set[str] = set()
     triggers = hass.data[TRIGGERS]
 
@@ -232,10 +216,6 @@ async def _register_trigger_platform(
             "Integration %s does not provide trigger support, skipping",
             integration_domain,
         )
-        return
-
-    if automation.is_disabled_experimental_trigger(hass, integration_domain):
-        _LOGGER.debug("Triggers for integration %s are disabled", integration_domain)
         return
 
     # We don't use gather here because gather adds additional overhead
@@ -302,8 +282,15 @@ class Trigger(abc.ABC):
         self,
         action: TriggerAction,
         action_payload_builder: TriggerActionPayloadBuilder,
+        *,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
-        """Attach the trigger to an action."""
+        """Attach the trigger to an action.
+
+        The optional ``did_not_trigger`` reporter is the sibling of the action
+        runner: triggers may call it - in certain interesting cases - when they
+        evaluate a relevant change but decide not to fire.
+        """
 
         @callback
         def run_action(
@@ -316,11 +303,13 @@ class Trigger(abc.ABC):
             payload = action_payload_builder(extra_trigger_payload, description)
             return self._hass.async_create_task(action(payload, context))
 
-        return await self.async_attach_runner(run_action)
+        return await self.async_attach_runner(run_action, did_not_trigger)
 
     @abc.abstractmethod
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
 
@@ -331,11 +320,37 @@ BEHAVIOR_ALL: Final = "all"
 BEHAVIOR_EACH: Final = "each"
 
 
+def _create_deprecated_behavior_issue(deprecated: str, replacement: str) -> None:
+    """Inform the user a renamed trigger behavior value is still in use."""
+    # Returns None when called from the wrong thread or before hass is set up
+    # (e.g. a `check_config` run), in which case there's nothing to report to.
+    if (hass := async_get_hass_or_none()) is None:
+        return
+
+    from .issue_registry import IssueSeverity, async_create_issue  # noqa: PLC0415
+
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_trigger_behavior_{deprecated}",
+        breaks_in_ha_version="2027.1",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_trigger_behavior",
+        translation_placeholders={
+            "deprecated_behavior": deprecated,
+            "new_behavior": replacement,
+        },
+    )
+
+
 def _backwards_compatible_behavior(value: Any) -> Any:
     """Convert legacy behavior values to new ones."""
     if value == "any":
+        _create_deprecated_behavior_issue("any", BEHAVIOR_EACH)
         return BEHAVIOR_EACH
     if value == "last":
+        _create_deprecated_behavior_issue("last", BEHAVIOR_ALL)
         return BEHAVIOR_ALL
     return value
 
@@ -358,6 +373,10 @@ ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR = ENTITY_STATE_TRIGGER_SCHEMA.extend(
         },
     }
 )
+
+
+def _report_not_triggered_noop(reason: str, /, **data: Any) -> None:
+    """Swallow a not-triggered report; used when diagnostics are not wanted."""
 
 
 class EntityTriggerBase(Trigger):
@@ -417,7 +436,11 @@ class EntityTriggerBase(Trigger):
         """
         return from_state.state != to_state.state
 
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the state is a target state for the trigger.
 
         Called only after `state.state` has been filtered against
@@ -425,6 +448,12 @@ class EntityTriggerBase(Trigger):
         check. Default: any non-excluded state is a target. Override
         to restrict (specific to_states, value within a threshold,
         etc.).
+
+        When the state cannot fire the trigger, subclasses may use
+        `report_not_triggered` to record an interesting reason - e.g. a
+        non-numeric value or an unsupported unit - in the automation trace.
+        Callers that don't collect diagnostics (e.g. `count_matches`) pass
+        `_report_not_triggered_noop`.
         """
         return True
 
@@ -438,7 +467,11 @@ class EntityTriggerBase(Trigger):
         """
         return state.state not in self._excluded_states
 
-    def count_matches(self, entity_ids: set[str]) -> tuple[int, int]:
+    def count_matches(
+        self,
+        entity_ids: Iterable[str],
+        states: Mapping[str, State | None] | None = None,
+    ) -> tuple[int, int]:
         """Return (matches, included) for the entity set.
 
         `matches` is the number of entities that pass `_should_include` AND
@@ -447,26 +480,115 @@ class EntityTriggerBase(Trigger):
         Callers can use the pair to distinguish vacuous truth
         (`included == 0`) from a genuine all-match
         (`matches == included > 0`).
+
+        Entity states are read from `states` when provided, otherwise from
+        the live state machine. Pass the targeted entity states received
+        with a state change event to evaluate the event against the states
+        as they were when the event fired.
         """
         matches = 0
         included = 0
         for entity_id in entity_ids:
-            state = self._hass.states.get(entity_id)
+            if states is not None:
+                state = states[entity_id]
+            else:
+                state = self._hass.states.get(entity_id)
             if state is None or not self._should_include(state):
                 continue
             included += 1
-            if self.is_valid_state(state):
+            if self.is_valid_state(state, _report_not_triggered_noop):
                 matches += 1
         return matches, included
 
+    @callback
+    def _cancel_invalidated_timers(
+        self,
+        behavior: str,
+        pending_timers: dict[str, CALLBACK_TYPE],
+        target_state_change_data: TargetStateChangedData,
+    ) -> None:
+        """Cancel pending duration timers invalidated by a state change.
+
+        Runs on every delivered state change, before the trigger's own
+        validity checks: an event which cannot fire the trigger, e.g. an
+        entity becoming unavailable, may still invalidate a pending timer.
+        The targeted entity states have already been updated with this
+        event, so the first/all check can simply recount.
+        """
+        event = target_state_change_data.state_change_event
+        if behavior == BEHAVIOR_EACH:
+            entity_id = event.data["entity_id"]
+            if entity_id not in pending_timers:
+                return
+            to_state = event.data["new_state"]
+            if (
+                to_state is None
+                or to_state.state in self._excluded_states
+                or not self.is_valid_state(to_state, _report_not_triggered_noop)
+            ):
+                pending_timers.pop(entity_id)()
+            return
+        if behavior not in pending_timers:
+            return
+        if not self._combined_state_still_valid(
+            behavior,
+            target_state_change_data.targeted_entity_ids,
+            target_state_change_data.targeted_entity_states,
+        ):
+            pending_timers.pop(behavior)()
+
+    def _combined_state_still_valid(
+        self,
+        behavior: str,
+        entity_ids: Iterable[str],
+        states: Mapping[str, State | None],
+    ) -> bool:
+        """Check the combined first/all state for a pending duration timer."""
+        matches, included = self.count_matches(entity_ids, states)
+        if behavior == BEHAVIOR_FIRST:
+            return matches >= 1
+        # Require at least one included entity to avoid keeping the timer
+        # alive when every targeted entity has been filtered out since it
+        # started — a vacuous all-match (`included == 0`) would otherwise
+        # let the action fire after `for:` even though no entity still
+        # matches.
+        return included > 0 and matches == included
+
     @override
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
 
         behavior: str = self._options.get(ATTR_BEHAVIOR, BEHAVIOR_EACH)
-        unsub_track_same: dict[str, Callable[[], None]] = {}
+        # Pending `for:` duration timers, keyed by entity_id for behavior
+        # each and by the behavior for first/all.
+        pending_timers: dict[str, CALLBACK_TYPE] = {}
+
+        @callback
+        def handle_entities_update(
+            added: set[str],
+            removed: set[str],
+            entity_states: Mapping[str, State | None],
+        ) -> None:
+            """Re-validate pending duration timers on target changes.
+
+            Timers of entities no longer targeted are cancelled, and the
+            combined first/all condition is recounted over the updated
+            target: e.g. a non-matching entity added to the target breaks a
+            pending all-match.
+            """
+            for entity_id in removed:
+                if (cancel := pending_timers.pop(entity_id, None)) is not None:
+                    cancel()
+            if behavior not in pending_timers:
+                return
+            if not self._combined_state_still_valid(
+                behavior, entity_states.keys(), entity_states
+            ):
+                pending_timers.pop(behavior)()
 
         @callback
         def state_change_listener(
@@ -478,44 +600,27 @@ class EntityTriggerBase(Trigger):
             from_state = event.data["old_state"]
             to_state = event.data["new_state"]
 
-            def state_still_valid(
-                _: str, from_state: State | None, to_state: State | None
-            ) -> bool:
-                """Check if the state is still valid during the duration wait.
-
-                Called by async_track_same_state on each state change to
-                determine whether to cancel the timer.
-                For behavior each, checks the individual entity's state.
-                For behavior first/all, checks the combined state.
-                """
-                if behavior == BEHAVIOR_ALL:
-                    matches, included = self.count_matches(
-                        target_state_change_data.targeted_entity_ids
-                    )
-                    # Require at least one included entity to avoid keeping
-                    # the timer alive when every targeted entity has been
-                    # filtered out since it started — a vacuous all-match
-                    # (`included == 0`) would otherwise let the action fire
-                    # after `for:` even though no entity still matches.
-                    return included > 0 and matches == included
-                if behavior == BEHAVIOR_FIRST:
-                    matches, _included = self.count_matches(
-                        target_state_change_data.targeted_entity_ids
-                    )
-                    return matches >= 1
-                # Behavior each: check the individual entity's state
-                if not to_state or to_state.state in self._excluded_states:
-                    return False
-                return self.is_valid_state(to_state)
+            if pending_timers:
+                self._cancel_invalidated_timers(
+                    behavior, pending_timers, target_state_change_data
+                )
 
             if not from_state or not to_state:
                 return
 
-            # The trigger should never fire if the new state is excluded
-            # or not a target state.
-            if to_state.state in self._excluded_states or not self.is_valid_state(
-                to_state
-            ):
+            if to_state.state in self._excluded_states:
+                return
+
+            @callback
+            def report_not_triggered(reason: str, /, **data: Any) -> None:
+                """Report why this evaluated change did not fire the trigger."""
+                if did_not_trigger is None:
+                    return
+                did_not_trigger(
+                    NotTriggeredInfo(reason=reason, data=data), event.context
+                )
+
+            if not self.is_valid_state(to_state, report_not_triggered):
                 return
 
             # The trigger should never fire if the origin state is excluded
@@ -526,9 +631,15 @@ class EntityTriggerBase(Trigger):
             ):
                 return
 
+            # Count against the targeted entity states as of this event, not
+            # the live state machine: state change events are dispatched one
+            # event loop iteration after the state machine is updated, so the
+            # state machine may already contain later changes to other
+            # targeted entities.
             if behavior == BEHAVIOR_ALL:
                 matches, included = self.count_matches(
-                    target_state_change_data.targeted_entity_ids
+                    target_state_change_data.targeted_entity_ids,
+                    target_state_change_data.targeted_entity_states,
                 )
                 if matches != included:
                     return
@@ -537,7 +648,8 @@ class EntityTriggerBase(Trigger):
                 # were previously 2 matches the transition would not be valid and we
                 # would have returned already.
                 matches, _ = self.count_matches(
-                    target_state_change_data.targeted_entity_ids
+                    target_state_change_data.targeted_entity_ids,
+                    target_state_change_data.targeted_entity_states,
                 )
                 if matches != 1:
                     return
@@ -565,25 +677,27 @@ class EntityTriggerBase(Trigger):
                 return
 
             subscription_key = entity_id if behavior == BEHAVIOR_EACH else behavior
-            if subscription_key in unsub_track_same:
-                unsub_track_same.pop(subscription_key)()
-            unsub_track_same[subscription_key] = async_track_same_state(
-                self._hass,
-                self._duration,
-                call_action,
-                state_still_valid,
-                entity_ids=(
-                    entity_id
-                    if behavior == BEHAVIOR_EACH
-                    else target_state_change_data.targeted_entity_ids
-                ),
+            if (
+                previous_timer := pending_timers.pop(subscription_key, None)
+            ) is not None:
+                previous_timer()
+
+            @callback
+            def fire_after_duration(_now: datetime) -> None:
+                """Fire the action once the state has held for the duration."""
+                del pending_timers[subscription_key]
+                call_action()
+
+            pending_timers[subscription_key] = async_call_later(
+                self._hass, self._duration, fire_after_duration
             )
 
-        unsub = async_track_target_selector_state_change_event(
+        unsub = await async_track_target_selector_state_change_event(
             self._hass,
             self._target,
             state_change_listener,
             self.entity_filter,
+            handle_entities_update if self._duration else None,
             primary_entities_only=self._primary_entities_only,
         )
 
@@ -591,9 +705,9 @@ class EntityTriggerBase(Trigger):
         def async_remove() -> None:
             """Remove state listeners async."""
             unsub()
-            for async_remove in unsub_track_same.values():
-                async_remove()
-            unsub_track_same.clear()
+            for cancel_timer in pending_timers.values():
+                cancel_timer()
+            pending_timers.clear()
 
         return async_remove
 
@@ -607,6 +721,7 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
 
     _to_states: set[str]
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check the value changed and the origin was not already a target state."""
         from_value = self._get_tracked_value(from_state)
@@ -615,7 +730,12 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
             and from_value not in self._to_states
         )
 
-    def is_valid_state(self, state: State) -> bool:
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state matches the expected state."""
         return self._get_tracked_value(state) in self._to_states
 
@@ -626,6 +746,7 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
     _from_states: set[str | bool]
     _to_states: set[str | bool]
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state matches the expected ones."""
         from_value = self._get_tracked_value(from_state)
@@ -634,7 +755,12 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
             and from_value in self._from_states
         )
 
-    def is_valid_state(self, state: State) -> bool:
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state matches the expected states."""
         return self._get_tracked_value(state) in self._to_states
 
@@ -644,6 +770,7 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
 
     _from_state: str
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if origin state matches expected and that the state changed."""
         return bool(
@@ -651,7 +778,12 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
             and self._get_tracked_value(to_state) != self._from_state
         )
 
-    def is_valid_state(self, state: State) -> bool:
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check that the new state is different from the origin state."""
         return bool(self._get_tracked_value(state) != self._from_state)
 
@@ -707,7 +839,11 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
             return True
         return unit == self._valid_unit
 
-    def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
+    def _get_threshold_value(
+        self,
+        threshold: ThresholdConfig | None,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> float | None:
         """Get threshold value from float or entity state."""
         if threshold is None:
             return None
@@ -716,22 +852,40 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
 
         if not (state := self._hass.states.get(threshold.entity)):  # type: ignore[arg-type]
             # Entity not found
+            report_not_triggered(
+                "threshold_entity_not_found",
+                entity_id=threshold.entity,
+            )
             return None
-        if not self._is_valid_unit(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+        unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        if not self._is_valid_unit(unit):
             # Entity unit does not match the expected unit
+            report_not_triggered(
+                "threshold_unit_not_supported",
+                entity_id=threshold.entity,
+                unit=unit,
+            )
             return None
         try:
             return float(state.state)
         except TypeError, ValueError:
             # Entity state is not a valid number
+            report_not_triggered(
+                "threshold_value_not_numeric",
+                entity_id=threshold.entity,
+                value=state.state,
+            )
             return None
 
+    @override
     def _get_tracked_value(self, state: State) -> float | None:
         """Get the tracked numerical value from a state."""
         domain_spec = self._domain_specs[state.domain]
         raw_value: Any
         if domain_spec.value_source is None:
-            if not self._is_valid_unit(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+            if not self._is_valid_unit(
+                state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+            ):
                 return None
             raw_value = state.state
         else:
@@ -743,10 +897,46 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
             # Entity state is not a valid number
             return None
 
-    def is_valid_state(self, state: State) -> bool:
+    def _report_tracked_value_problem(
+        self, state: State, report_not_triggered: NotTriggeredReasonReporter
+    ) -> None:
+        """Report why `_get_tracked_value` rejected this state.
+
+        Called only when the tracked value is invalid. It mirrors the failure
+        modes of `_get_tracked_value` - which integrations override, so the
+        reason is derived here rather than reported inline: a state-sourced
+        value with an unsupported unit, otherwise a value that is not a number.
+        """
+        domain_spec = self._domain_specs[state.domain]
+        raw_value: Any
+        if domain_spec.value_source is None:
+            unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+            if not self._is_valid_unit(unit):
+                report_not_triggered(
+                    "entity_unit_not_supported",
+                    entity_id=state.entity_id,
+                    unit=unit,
+                )
+                return
+            raw_value = state.state
+        else:
+            raw_value = state.attributes.get(domain_spec.value_source)
+        report_not_triggered(
+            "entity_value_not_numeric",
+            entity_id=state.entity_id,
+            value=raw_value,
+        )
+
+    @override
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state or state attribute matches the expected one."""
         # Handle missing or None value case first to avoid expensive exceptions
         if (current_value := self._get_tracked_value(state)) is None:
+            self._report_tracked_value_problem(state, report_not_triggered)
             return False
 
         if self._threshold_type == NumericThresholdType.ANY:
@@ -755,20 +945,32 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
             return True
 
         if self._threshold_type == NumericThresholdType.ABOVE:
-            if (limit := self._get_threshold_value(self.threshold)) is None:
+            if (
+                limit := self._get_threshold_value(self.threshold, report_not_triggered)
+            ) is None:
                 # Entity not found or invalid number, don't trigger
                 return False
             return current_value > limit
         if self._threshold_type == NumericThresholdType.BELOW:
-            if (limit := self._get_threshold_value(self.threshold)) is None:
+            if (
+                limit := self._get_threshold_value(self.threshold, report_not_triggered)
+            ) is None:
                 # Entity not found or invalid number, don't trigger
                 return False
             return current_value < limit
 
-        # Mode is BETWEEN or OUTSIDE
-        lower_limit = self._get_threshold_value(self.lower_threshold)
-        upper_limit = self._get_threshold_value(self.upper_threshold)
-        if lower_limit is None or upper_limit is None:
+        # Mode is BETWEEN or OUTSIDE. Evaluate the lower limit first so at most
+        # one not-triggered reason is reported per change.
+        lower_limit = self._get_threshold_value(
+            self.lower_threshold, report_not_triggered
+        )
+        if lower_limit is None:
+            # Entity not found or invalid number, don't trigger
+            return False
+        upper_limit = self._get_threshold_value(
+            self.upper_threshold, report_not_triggered
+        )
+        if upper_limit is None:
             # Entity not found or invalid number, don't trigger
             return False
         between = lower_limit <= current_value <= upper_limit
@@ -785,9 +987,44 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
 
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the unit of an entity from its state."""
-        return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        return state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
-    def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
+    @override
+    def _report_tracked_value_problem(
+        self, state: State, report_not_triggered: NotTriggeredReasonReporter
+    ) -> None:
+        """Report why `_get_tracked_value` rejected this state.
+
+        Mirrors the with-unit failure modes: a value that is not a number,
+        otherwise a unit that cannot be converted to the base unit.
+        """
+        domain_spec = self._domain_specs[state.domain]
+        raw_value: Any
+        if domain_spec.value_source is None:
+            raw_value = state.state
+        else:
+            raw_value = state.attributes.get(domain_spec.value_source)
+        try:
+            float(raw_value)
+        except TypeError, ValueError:
+            report_not_triggered(
+                "entity_value_not_numeric",
+                entity_id=state.entity_id,
+                value=raw_value,
+            )
+            return
+        report_not_triggered(
+            "entity_unit_not_supported",
+            entity_id=state.entity_id,
+            unit=self._get_entity_unit(state),
+        )
+
+    @override
+    def _get_threshold_value(
+        self,
+        threshold: ThresholdConfig | None,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> float | None:
         """Get threshold value from float or entity state."""
         if threshold is None:
             return None
@@ -800,21 +1037,35 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
 
         if not (state := self._hass.states.get(threshold.entity)):  # type: ignore[arg-type]
             # Entity not found
+            report_not_triggered(
+                "threshold_entity_not_found",
+                entity_id=threshold.entity,
+            )
             return None
         try:
             value = float(state.state)
         except TypeError, ValueError:
             # Entity state is not a valid number
+            report_not_triggered(
+                "threshold_value_not_numeric",
+                entity_id=threshold.entity,
+                value=state.state,
+            )
             return None
 
+        unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         try:
-            return self._unit_converter.convert(
-                value, state.attributes.get(ATTR_UNIT_OF_MEASUREMENT), self._base_unit
-            )
+            return self._unit_converter.convert(value, unit, self._base_unit)
         except HomeAssistantError:
             # Unit conversion failed (i.e. incompatible units), treat as invalid number
+            report_not_triggered(
+                "threshold_unit_not_supported",
+                entity_id=threshold.entity,
+                unit=unit,
+            )
             return None
 
+    @override
     def _get_tracked_value(self, state: State) -> float | None:
         """Get the tracked numerical value from a state."""
         domain_spec = self._domain_specs[state.domain]
@@ -844,6 +1095,7 @@ class EntityNumericalStateChangedTriggerBase(EntityNumericalStateTriggerBase):
 
     _schema = NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the tracked numeric value has changed."""
         return self._get_tracked_value(from_state) != self._get_tracked_value(to_state)
@@ -875,6 +1127,7 @@ class EntityNumericalStateChangedTriggerWithUnitBase(
 ):
     """Trigger for numerical state and state attribute changes."""
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
         super().__init_subclass__(**kwargs)
@@ -903,9 +1156,10 @@ class EntityNumericalStateCrossedThresholdTriggerBase(EntityNumericalStateTrigge
 
     _schema = NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the tracked value crossed into the threshold range."""
-        return not self.is_valid_state(from_state)
+        return not self.is_valid_state(from_state, _report_not_triggered_noop)
 
 
 def _make_numerical_state_crossed_threshold_with_unit_schema(
@@ -936,6 +1190,7 @@ class EntityNumericalStateCrossedThresholdTriggerWithUnitBase(
 ):
     """Trigger for numerical state and state attribute changes."""
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
         super().__init_subclass__(**kwargs)
@@ -1130,6 +1385,27 @@ class TriggerConfig:
     options: dict[str, Any] | None = None
 
 
+@dataclass(slots=True, frozen=True)
+class NotTriggeredInfo:
+    """Diagnostics describing why a trigger evaluated a change but did not fire.
+
+    Passed by a trigger to its ``did_not_trigger`` reporter, the sibling of the
+    action runner that is called - in certain interesting cases - when the
+    trigger does not fire. ``reason`` is a stable, machine-readable code; the
+    optional ``data`` carries the evaluated context for the trace.
+    """
+
+    reason: str
+    data: Mapping[str, Any] | None = None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable dict for storing in a trace."""
+        result: dict[str, Any] = {"reason": self.reason}
+        if self.data is not None:
+            result["data"] = dict(self.data)
+        return result
+
+
 class TriggerActionRunner(Protocol):
     """Protocol type for the trigger action runner helper callback."""
 
@@ -1145,6 +1421,46 @@ class TriggerActionRunner(Protocol):
         Returns:
             A Task that allows awaiting for the action to finish.
         """
+
+
+class TriggerNotTriggeredReporter(Protocol):
+    """Protocol type for the did_not_trigger reporter passed to a trigger runner.
+
+    A trigger calls this to report that it evaluated a relevant change but
+    decided not to fire, supplying diagnostics for tracing.
+    """
+
+    @callback
+    def __call__(
+        self,
+        info: NotTriggeredInfo,
+        context: Context | None = None,
+    ) -> None:
+        """Report that the trigger did not fire."""
+
+
+class NotTriggeredReasonReporter(Protocol):
+    """Reports why an evaluated change did not fire an entity trigger."""
+
+    def __call__(self, reason: str, /, **data: Any) -> None:
+        """Report, with diagnostic data, why the change did not fire."""
+
+
+class TriggerNotTriggeredAction(Protocol):
+    """Protocol type for the did_not_trigger consumer callback.
+
+    Sibling of the action callback. Invoked - instead of the action - when a
+    trigger evaluated a relevant change but reported it did not fire.
+    """
+
+    @callback
+    def __call__(
+        self,
+        run_variables: dict[str, Any],
+        info: NotTriggeredInfo,
+        context: Context | None = None,
+    ) -> None:
+        """Define did_not_trigger consumer callback type."""
 
 
 class TriggerActionPayloadBuilder(Protocol):
@@ -1192,7 +1508,6 @@ class TriggerInfo(TypedDict):
 
     domain: str
     name: str
-    home_assistant_start: bool
     variables: TemplateVarsType
     trigger_data: TriggerData
 
@@ -1315,21 +1630,12 @@ class PluggableAction:
 async def _async_get_trigger_platform(
     hass: HomeAssistant, trigger_key: str
 ) -> tuple[str, TriggerProtocol]:
-    from homeassistant.components import automation  # noqa: PLC0415
-
     platform_and_sub_type = trigger_key.split(".")
     platform = platform_and_sub_type[0]
     # Only apply aliases for old-style triggers (no sub_type).
     # New-style triggers (e.g. "event.received") use the integration domain directly.
     if len(platform_and_sub_type) == 1:
         platform = _PLATFORM_ALIASES.get(platform, platform)
-
-    if automation.is_disabled_experimental_trigger(hass, platform):
-        raise vol.Invalid(
-            f"Trigger '{trigger_key}' requires the experimental 'New triggers and "
-            "conditions' feature to be enabled in Home Assistant Labs settings "
-            f"(feature flag: '{automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG}')"
-        )
 
     try:
         integration = await async_get_integration(hass, platform)
@@ -1431,6 +1737,7 @@ async def _async_attach_trigger_cls(
     conf: ConfigType,
     action: Callable,
     trigger_info: TriggerInfo,
+    did_not_trigger: TriggerNotTriggeredAction | None = None,
 ) -> CALLBACK_TYPE:
     """Initialize a new Trigger class and attach it."""
 
@@ -1450,6 +1757,26 @@ async def _async_attach_trigger_cls(
             trigger_variables = conf[CONF_VARIABLES]
             payload.update(trigger_variables.async_render(hass, payload))
         return payload
+
+    report_not_triggered: TriggerNotTriggeredReporter | None = None
+    if did_not_trigger is not None:
+        not_triggered_action = did_not_trigger
+
+        @callback
+        def report_not_triggered(
+            info: NotTriggeredInfo, context: Context | None = None
+        ) -> None:
+            """Forward a did-not-fire report to the consumer."""
+            run_variables = {
+                "trigger": {
+                    **trigger_info["trigger_data"],
+                    CONF_PLATFORM: trigger_key,
+                }
+            }
+            # The consumer records a trace using the trace context variables.
+            # Run it in a copied context so it does not disturb the trace of the
+            # run that produced this state change (e.g. a chained automation).
+            copy_context().run(not_triggered_action, run_variables, info, context)
 
     # Wrap sync action so that it is always async.
     # This simplifies the Trigger action runner interface by
@@ -1489,7 +1816,9 @@ async def _async_attach_trigger_cls(
             options=conf.get(CONF_OPTIONS),
         ),
     )
-    return await trigger.async_attach_action(action, action_payload_builder)
+    return await trigger.async_attach_action(
+        action, action_payload_builder, did_not_trigger=report_not_triggered
+    )
 
 
 async def async_initialize_triggers(
@@ -1499,10 +1828,25 @@ async def async_initialize_triggers(
     domain: str,
     name: str,
     log_cb: Callable,
-    home_assistant_start: bool = False,
+    home_assistant_start: bool | UndefinedType = UNDEFINED,
     variables: TemplateVarsType = None,
+    *,
+    did_not_trigger: TriggerNotTriggeredAction | None = None,
 ) -> CALLBACK_TYPE | None:
-    """Initialize triggers."""
+    """Initialize triggers.
+
+    The optional ``did_not_trigger`` consumer is the sibling of ``action``,
+    invoked - for new-style triggers that support it - when a trigger evaluates
+    a relevant change but reports it did not fire. Old-style triggers ignore it.
+    """
+    if home_assistant_start is not UNDEFINED:
+        report_usage(
+            "passes `home_assistant_start` to `async_initialize_triggers`, which is "
+            "deprecated and will be removed in Home Assistant 2027.8; the parameter "
+            "no longer has any effect",
+            breaks_in_ha_version="2027.8.0",
+        )
+
     triggers: list[asyncio.Task[CALLBACK_TYPE]] = []
     for idx, conf in enumerate(trigger_config):
         # Skip triggers that are not enabled
@@ -1526,7 +1870,6 @@ async def async_initialize_triggers(
         info = TriggerInfo(
             domain=domain,
             name=name,
-            home_assistant_start=home_assistant_start,
             variables=variables,
             trigger_data=trigger_data,
         )
@@ -1538,7 +1881,7 @@ async def async_initialize_triggers(
             )
             trigger_cls = trigger_descriptors[relative_trigger_key]
             coro = _async_attach_trigger_cls(
-                hass, trigger_cls, trigger_key, conf, action, info
+                hass, trigger_cls, trigger_key, conf, action, info, did_not_trigger
             )
         else:
             action_wrapper = _trigger_action_wrapper(hass, action, conf)
@@ -1617,8 +1960,6 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any] | None]:
     """Return descriptions (i.e. user documentation) for all triggers."""
-    from homeassistant.components import automation  # noqa: PLC0415
-
     descriptions_cache = hass.data[TRIGGER_DESCRIPTION_CACHE]
 
     triggers = hass.data[TRIGGERS]
@@ -1627,9 +1968,7 @@ async def async_get_all_descriptions(
     all_triggers = set(triggers)
     previous_all_triggers = set(descriptions_cache)
     # If the triggers are the same, we can return the cache
-
-    # mypy complains: Invalid index type "HassKey[set[str]]" for "HassDict"
-    if previous_all_triggers | hass.data[TRIGGER_DISABLED_TRIGGERS] == all_triggers:  # type: ignore[index]
+    if previous_all_triggers == all_triggers:
         return descriptions_cache
 
     # Files we loaded for missing descriptions
@@ -1667,10 +2006,6 @@ async def async_get_all_descriptions(
     new_descriptions_cache = descriptions_cache.copy()
     for missing_trigger in missing_triggers:
         domain = triggers[missing_trigger]
-        if automation.is_disabled_experimental_trigger(hass, domain):
-            hass.data[TRIGGER_DISABLED_TRIGGERS].add(missing_trigger)
-            continue
-
         if (
             yaml_description := new_triggers_descriptions.get(domain, {}).get(
                 missing_trigger
@@ -1720,6 +2055,17 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
     """Extract entities from a trigger config."""
     if trigger_conf[CONF_PLATFORM] in ("state", "numeric_state"):
         return trigger_conf[CONF_ENTITY_ID]  # type: ignore[no-any-return]
+
+    if trigger_conf[CONF_PLATFORM] == "time":
+        # Each at time can be a time, an entity id, an entity id with
+        # an offset, or a template.
+        entity_ids: list[str] = []
+        for at_time in trigger_conf[CONF_AT]:
+            if isinstance(at_time, str) and valid_entity_id(at_time):
+                entity_ids.append(at_time)
+            elif isinstance(at_time, dict) and CONF_ENTITY_ID in at_time:
+                entity_ids.append(at_time[CONF_ENTITY_ID])
+        return entity_ids
 
     if trigger_conf[CONF_PLATFORM] == "calendar":
         return [trigger_conf[CONF_OPTIONS][CONF_ENTITY_ID]]

@@ -1,12 +1,10 @@
 """Support for Hass.io."""
 
 import asyncio
-from dataclasses import replace
 from functools import partial
 import logging
 import os
 import struct
-from typing import Any
 
 from aiohasupervisor import SupervisorBadRequestError, SupervisorError
 from aiohasupervisor.models import (
@@ -20,19 +18,9 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import RefreshToken, User
 from homeassistant.components import frontend
 from homeassistant.components.homeassistant import async_set_stop_handler
-from homeassistant.components.http import (
-    CONF_SERVER_HOST,
-    CONF_SERVER_PORT,
-    CONF_SSL_CERTIFICATE,
-)
 from homeassistant.components.onboarding import async_is_onboarded
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
-from homeassistant.const import (
-    EVENT_CORE_CONFIG_UPDATE,
-    HASSIO_USER_NAME,
-    SERVER_PORT,
-    Platform,
-)
+from homeassistant.const import EVENT_CORE_CONFIG_UPDATE, HASSIO_USER_NAME, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -69,10 +57,10 @@ from .const import (
     DATA_COMPONENT,
     DATA_CONFIG_STORE,
     DATA_HASSIO_HOST,
-    DATA_HASSIO_HTTP_CONFIG,
     DATA_HASSIO_SUPERVISOR_USER,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
+    JOBS_COORDINATOR,
     MAIN_COORDINATOR,
     STATS_COORDINATOR,
 )
@@ -80,6 +68,7 @@ from .coordinator import (
     HassioAddOnDataUpdateCoordinator,
     HassioMainDataUpdateCoordinator,
     HassioStatsDataUpdateCoordinator,
+    SupervisorJobsCoordinator,
     get_addons_info,
     get_addons_list,
     get_addons_stats,
@@ -246,7 +235,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websession = async_get_clientsession(hass)
     hass.data[DATA_COMPONENT] = HassIO(hass.loop, websession, host)
     hass.data[DATA_HASSIO_HOST] = host
-    hass.data[DATA_HASSIO_HTTP_CONFIG] = config.get("http", {})
 
     # Load the store
     config_store = HassioConfig(hass)
@@ -340,9 +328,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     hass.data[MAIN_COORDINATOR] = coordinator
 
-    addon_coordinator = HassioAddOnDataUpdateCoordinator(
-        hass, entry, dev_reg, coordinator.jobs
-    )
+    jobs_coordinator = SupervisorJobsCoordinator(hass, entry)
+    await jobs_coordinator.async_config_entry_first_refresh()
+    hass.data[JOBS_COORDINATOR] = jobs_coordinator
+
+    addon_coordinator = HassioAddOnDataUpdateCoordinator(hass, entry, dev_reg)
     await addon_coordinator.async_config_entry_first_refresh()
     hass.data[ADDONS_COORDINATOR] = addon_coordinator
 
@@ -399,22 +389,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, push_config))
 
-    http_config: dict[str, Any] = hass.data.get(DATA_HASSIO_HTTP_CONFIG, {})
-
     async def update_hass_api(refresh_token: RefreshToken) -> None:
         """Update Home Assistant API data on Hass.io."""
+        # hass.config.api is always set here: hassio depends on http, and the
+        # http integration assigns hass.config.api during its async_setup.
+        assert hass.config.api is not None
         options = HomeAssistantOptions(
-            ssl=CONF_SSL_CERTIFICATE in http_config,
-            port=http_config.get(CONF_SERVER_PORT) or SERVER_PORT,
+            ssl=hass.config.api.use_ssl,
+            port=hass.config.api.port,
             refresh_token=refresh_token.token,
         )
-
-        if http_config.get(CONF_SERVER_HOST) is not None:
-            options = replace(options, watchdog=False)
-            _LOGGER.warning(
-                "Found incompatible HTTP option 'server_host'. Watchdog feature"
-                " disabled"
-            )
 
         try:
             await supervisor_client.homeassistant.set_options(options)
@@ -457,5 +441,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.pop(MAIN_COORDINATOR, None)
     hass.data.pop(ADDONS_COORDINATOR, None)
     hass.data.pop(STATS_COORDINATOR, None)
+    hass.data.pop(JOBS_COORDINATOR, None)
 
     return unload_ok

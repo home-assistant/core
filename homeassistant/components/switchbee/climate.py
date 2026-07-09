@@ -1,6 +1,6 @@
 """Support for SwitchBee climate."""
 
-from typing import Any
+from typing import Any, override
 
 from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
 from switchbee.const import (
@@ -112,6 +112,7 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
         self._update_attrs_from_coordinator()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attrs_from_coordinator()
@@ -129,6 +130,7 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
         self._attr_current_temperature = coordinator_device.temperature
         self._attr_target_temperature = coordinator_device.target_temperature
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
 
@@ -139,10 +141,12 @@ class SwitchBeeClimateEntity(SwitchBeeDeviceEntity[SwitchBeeThermostat], Climate
                 power=ApiStateCommand.ON, mode=HVAC_MODE_HASS_TO_SB[hvac_mode]
             )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self._operate(target_temperature=kwargs[ATTR_TEMPERATURE])
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set AC fan mode."""
         await self._operate(fan=FAN_HASS_TO_SB[fan_mode])

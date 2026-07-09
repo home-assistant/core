@@ -10,8 +10,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
     Forbidden,
+    InsufficientCredits,
     InvalidResponse,
     InvalidToken,
+    LoginRequired,
     RateLimited,
     SubscriptionRequired,
     TeslaFleetError,
@@ -24,6 +26,7 @@ from homeassistant.components.teslemetry.coordinator import (
     ENERGY_HISTORY_INTERVAL,
     ENERGY_INFO_INTERVAL,
     ENERGY_LIVE_INTERVAL,
+    INSUFFICIENT_CREDITS_RETRY_AFTER,
     METADATA_INTERVAL,
     VEHICLE_INTERVAL,
 )
@@ -38,6 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import setup_platform
 from .const import (
@@ -51,14 +55,21 @@ from .const import (
     UNIQUE_ID,
     VEHICLE_DATA,
     VEHICLE_DATA_ALT,
+    VEHICLE_DATA_ASLEEP,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
+    (LoginRequired, ConfigEntryState.SETUP_ERROR),
     (SubscriptionRequired, ConfigEntryState.SETUP_ERROR),
     (TeslaFleetError, ConfigEntryState.SETUP_RETRY),
+]
+
+VEHICLE_ERRORS = [
+    *ERRORS,
+    (InsufficientCredits, ConfigEntryState.SETUP_RETRY),
 ]
 
 
@@ -100,7 +111,7 @@ async def test_devices(
         assert device == snapshot(name=f"{device.identifiers}")
 
 
-@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+@pytest.mark.parametrize(("side_effect", "state"), VEHICLE_ERRORS)
 async def test_vehicle_refresh_error(
     hass: HomeAssistant,
     mock_vehicle_data: AsyncMock,
@@ -187,6 +198,23 @@ async def test_vehicle_stream(
         }
     )
     await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_status")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+async def test_vehicle_asleep_polling(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Polling an offline/asleep vehicle loads and reports disconnected."""
+
+    mock_vehicle_data.return_value = VEHICLE_DATA_ASLEEP
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    assert entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get("binary_sensor.test_status")
     assert state is not None
@@ -978,3 +1006,37 @@ async def test_dynamic_device_discovery_no_reload_without_changes(
 
     # Verify reload was NOT triggered since no subscription changes
     mock_reload.assert_not_called()
+
+
+async def test_insufficient_credits_backs_off_polling(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Running out of command credits should back off, not hammer the API every poll."""
+    call_count = 0
+
+    def vehicle_data_side_effect(**kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            return deepcopy(VEHICLE_DATA)
+        raise InsufficientCredits
+
+    mock_vehicle_data.side_effect = vehicle_data_side_effect
+
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    assert call_count == 1
+
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert call_count == 2
+    assert entry.state is ConfigEntryState.LOADED
+
+    coordinator = entry.runtime_data.vehicles[0].coordinator
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+    assert coordinator.last_exception.retry_after == INSUFFICIENT_CREDITS_RETRY_AFTER

@@ -74,7 +74,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_EMAIL: "test-email",
             CONF_PASSWORD: "test-password",
             CONF_REFRESH_TOKEN: "test-refresh-token",
-            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
         },
         version=1,
         unique_id="test-email",

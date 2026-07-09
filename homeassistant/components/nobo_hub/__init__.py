@@ -1,5 +1,7 @@
 """The Nobø Ecohub integration."""
 
+import logging
+
 from pynobo import nobo
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -24,6 +26,8 @@ from .const import (
     DOMAIN,
     NOBO_MANUFACTURER,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]
 
@@ -80,12 +84,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
     )
+
+    def _log_connection_state(_hub: nobo, connected: bool) -> None:
+        """Log hub connection-state transitions."""
+        if connected:
+            _LOGGER.info("Reconnected to Nobø Ecohub %s", serial)
+        else:
+            _LOGGER.info("Lost connection to Nobø Ecohub %s", serial)
+
+    hub.register_connection_callback(_log_connection_state)
+    entry.async_on_unload(
+        lambda: hub.deregister_connection_callback(_log_connection_state)
+    )
     entry.runtime_data = hub
 
     device_registry = dr.async_get(hass)
     connections: set[tuple[str, str]] = set()
     if mac := entry.data.get(CONF_MAC):
-        connections.add((CONNECTION_NETWORK_MAC, format_mac(mac)))
+        connections.add((CONNECTION_NETWORK_MAC, mac))
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, hub.hub_serial)},

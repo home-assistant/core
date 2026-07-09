@@ -1,7 +1,7 @@
 """The Model Context Protocol integration."""
 
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -101,6 +101,7 @@ class ModelContextProtocolAPI(llm.API):
 
     coordinator: ModelContextProtocolCoordinator
 
+    @override
     async def async_get_api_instance(
         self, llm_context: llm.LLMContext
     ) -> llm.APIInstance:

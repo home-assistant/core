@@ -9,7 +9,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_STATION_ID
 from .coordinator import OpenSenseMapConfigEntry, OpenSenseMapCoordinator
 
-PLATFORMS: list[Platform] = [Platform.AIR_QUALITY]
+PLATFORMS: list[Platform] = [Platform.AIR_QUALITY, Platform.SENSOR]
 
 
 async def async_setup_entry(

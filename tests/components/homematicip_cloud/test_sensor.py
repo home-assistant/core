@@ -1,6 +1,7 @@
 """Tests for HomematicIP Cloud sensor."""
 
-from homematicip.base.enums import ValveState
+from homematicip.base.enums import ValveState, WindowState
+import pytest
 
 from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
@@ -338,6 +339,29 @@ async def test_hmip_illuminance_sensor2(
     assert ha_state.attributes[ATTR_CURRENT_ILLUMINATION] == 785.2
     assert ha_state.attributes[ATTR_HIGHEST_ILLUMINATION] == 837.1
     assert ha_state.attributes[ATTR_LOWEST_ILLUMINATION] == 785.2
+
+
+async def test_hmip_motion_detector_push_button_single_illuminance(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test MotionDetectorPushButton produces exactly one illuminance sensor."""
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Bewegungsmelder für 55er Rahmen – innen"]
+    )
+    illuminance_states = [
+        state
+        for state in hass.states.async_all("sensor")
+        if state.entity_id.endswith("_illuminance")
+    ]
+    assert len(illuminance_states) == 1
+    assert (
+        illuminance_states[0].entity_id
+        == "sensor.bewegungsmelder_fur_55er_rahmen_innen_illuminance"
+    )
+    assert illuminance_states[0].state == "14.2"
+    assert "does not generate unique IDs" not in caplog.text
 
 
 async def test_hmip_windspeed_sensor(
@@ -743,6 +767,38 @@ async def test_hmip_tilt_vibration_sensor_tilt_state(
     assert ha_state.attributes[ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION] == "VERTICAL"
     assert ha_state.attributes[ATTR_ACCELERATION_SENSOR_TRIGGER_ANGLE] == 20
     assert ha_state.attributes[ATTR_ACCELERATION_SENSOR_SECOND_TRIGGER_ANGLE] == 75
+
+
+async def test_hmip_rotary_handle_window_state_sensor(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test HomematicipWindowStateSensor exposes the three-way state of HmIP-SRH."""
+    entity_id = "sensor.fenstergriffsensor_window_state"
+    entity_name = "Fenstergriffsensor Window state"
+    device_model = "HmIP-SRH"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Fenstergriffsensor"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "tilted"
+
+    await async_manipulate_test_data(hass, hmip_device, "windowState", WindowState.OPEN)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "open"
+
+    await async_manipulate_test_data(
+        hass, hmip_device, "windowState", WindowState.CLOSED
+    )
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "closed"
+
+    await async_manipulate_test_data(hass, hmip_device, "windowState", None)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == STATE_UNKNOWN
 
 
 async def test_hmip_tilt_vibration_sensor_tilt_angle(

@@ -1,6 +1,6 @@
 """Support for Adax wifi-enabled home heaters."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from adax import Adax
 from adax_local import Adax as AdaxLocal
@@ -82,6 +82,7 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
         self._apply_data(self.room)
 
     @property
+    @override
     def available(self) -> bool:
         """Whether the entity is available or not."""
         return super().available and self._device_id in self.coordinator.data
@@ -91,6 +92,7 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
         """Gets the data for this particular device."""
         return self.coordinator.data[self._device_id]
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
@@ -108,6 +110,7 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
         # Request data refresh from source to verify that update was successful
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -117,6 +120,7 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if room := self.room:
@@ -161,6 +165,7 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
             manufacturer="Adax",
         )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
@@ -179,6 +184,7 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -211,11 +217,13 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
                 self._attr_target_temperature = target_temp
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_hvac_attributes()
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
