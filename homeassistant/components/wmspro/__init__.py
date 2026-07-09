@@ -10,12 +10,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.typing import UNDEFINED, ConfigType
 
 from .const import DOMAIN, MANUFACTURER
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,
@@ -28,12 +29,20 @@ PLATFORMS: list[Platform] = [
 
 type WebControlProConfigEntry = ConfigEntry[WebControlPro]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 def _build_storage_config_dir(
     hass: HomeAssistant, entry: WebControlProConfigEntry
 ) -> Path:
     """Build the path to the config directory for a given config entry."""
     return Path(hass.config.path(STORAGE_DIR, f"{DOMAIN}-{entry.entry_id}"))
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(

@@ -70,7 +70,7 @@
     'platform': 'tplink',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <VacuumEntityFeature: 12916>,
+    'supported_features': <VacuumEntityFeature: 12852>,
     'translation_key': 'vacuum',
     'unique_id': '123456789ABCDEFGH-vacuum',
     'unit_of_measurement': None,
@@ -79,15 +79,13 @@
 # name: test_states[vacuum.my_vacuum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'battery_icon': 'mdi:battery-charging-100',
-      'battery_level': 100,
       <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'max',
       <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'quiet',
         'max',
       ]),
-      'friendly_name': 'my_vacuum',
-      'supported_features': <VacuumEntityFeature: 12916>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_vacuum',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 12852>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.my_vacuum',

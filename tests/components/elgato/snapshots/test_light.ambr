@@ -5,12 +5,12 @@
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 54,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
       <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 3367,
-      'friendly_name': 'Frenck',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frenck',
       <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         27.316,
         47.743,
       ),
-      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 7000,
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6993,
       <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2900,
       <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
@@ -20,7 +20,7 @@
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
       <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.464,
         0.377,
@@ -41,7 +41,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 7000,
+      <LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN: 'max_color_temp_kelvin'>: 6993,
       <LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN: 'min_color_temp_kelvin'>: 2900,
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -118,7 +118,7 @@
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 54,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
       <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 3367,
-      'friendly_name': 'Frenck',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frenck',
       <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         27.316,
         47.743,
@@ -134,7 +134,7 @@
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
       <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.464,
         0.377,
@@ -233,7 +233,7 @@
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.HS: 'hs'>,
       <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: None,
-      'friendly_name': 'Frenck',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frenck',
       <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         358.0,
         6.0,
@@ -249,7 +249,7 @@
         <ColorMode.COLOR_TEMP: 'color_temp'>,
         <ColorMode.HS: 'hs'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
       <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.339,
         0.328,

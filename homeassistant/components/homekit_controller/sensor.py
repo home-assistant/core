@@ -26,18 +26,17 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     Platform,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfSoundPressure,
     UnitOfTemperature,
 )
@@ -254,7 +253,7 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         name="Current Humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         # This sensor is only for humidity characteristics that are not part
         # of a humidity sensor service.
         probe=(lambda char: char.service.type != ServicesTypes.HUMIDITY_SENSOR),
@@ -270,42 +269,42 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         name="PM2.5 Density",
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CharacteristicsTypes.DENSITY_PM10: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.DENSITY_PM10,
         name="PM10 Density",
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CharacteristicsTypes.DENSITY_OZONE: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.DENSITY_OZONE,
         name="Ozone Density",
         device_class=SensorDeviceClass.OZONE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CharacteristicsTypes.DENSITY_NO2: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.DENSITY_NO2,
         name="Nitrogen Dioxide Density",
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CharacteristicsTypes.DENSITY_SO2: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.DENSITY_SO2,
         name="Sulphur Dioxide Density",
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CharacteristicsTypes.DENSITY_VOC: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.DENSITY_VOC,
         name="Volatile Organic Compound Density",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     CharacteristicsTypes.THREAD_NODE_CAPABILITIES: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.THREAD_NODE_CAPABILITIES,
@@ -363,13 +362,13 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         key=CharacteristicsTypes.FILTER_LIFE_LEVEL,
         name="Filter lifetime",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     CharacteristicsTypes.WATER_LEVEL: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.WATER_LEVEL,
         name="Water level",
         translation_key="water_level",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     CharacteristicsTypes.VENDOR_EVE_THERMO_VALVE_POSITION: (
@@ -379,7 +378,7 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
             translation_key="valve_position",
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         )
     ),
 }
@@ -409,7 +408,7 @@ class HomeKitHumiditySensor(HomeKitSensor):
     """Representation of a Homekit humidity sensor."""
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
-    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
 
     @override
     def get_characteristic_types(self) -> list[str]:
@@ -481,7 +480,7 @@ class HomeKitCarbonDioxideSensor(HomeKitSensor):
     """Representation of a Homekit Carbon Dioxide sensor."""
 
     _attr_device_class = SensorDeviceClass.CO2
-    _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
+    _attr_native_unit_of_measurement = UnitOfRatio.PARTS_PER_MILLION
 
     @override
     def get_characteristic_types(self) -> list[str]:
@@ -505,7 +504,7 @@ class HomeKitBatterySensor(HomeKitSensor):
     """Representation of a Homekit battery sensor."""
 
     _attr_device_class = SensorDeviceClass.BATTERY
-    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @override

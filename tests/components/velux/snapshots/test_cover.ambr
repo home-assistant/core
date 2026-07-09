@@ -41,10 +41,10 @@
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 60,
       <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 75,
-      'device_class': 'blind',
-      'friendly_name': 'Test Blind',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'blind',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Blind',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_blind',
@@ -95,10 +95,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 70,
-      'device_class': 'awning',
-      'friendly_name': 'Test Awning',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'awning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Awning',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_awning',
@@ -149,10 +149,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 70,
-      'device_class': 'shutter',
-      'friendly_name': 'Test DualRollerShutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test DualRollerShutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_dualrollershutter',
@@ -203,10 +203,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 70,
-      'device_class': 'shutter',
-      'friendly_name': 'Test DualRollerShutter Lower shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test DualRollerShutter Lower shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_dualrollershutter_lower_shutter',
@@ -257,10 +257,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 70,
-      'device_class': 'shutter',
-      'friendly_name': 'Test DualRollerShutter Upper shutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test DualRollerShutter Upper shutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_dualrollershutter_upper_shutter',
@@ -311,10 +311,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 70,
-      'device_class': 'garage',
-      'friendly_name': 'Test GarageDoor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test GarageDoor',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_garagedoor',
@@ -365,10 +365,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 70,
-      'device_class': 'gate',
-      'friendly_name': 'Test Gate',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Gate',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_gate',
@@ -419,10 +419,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 70,
-      'device_class': 'shutter',
-      'friendly_name': 'Test RollerShutter',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shutter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test RollerShutter',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_rollershutter',
@@ -473,10 +473,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 70,
-      'device_class': 'window',
-      'friendly_name': 'Test Window',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Window',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_window',

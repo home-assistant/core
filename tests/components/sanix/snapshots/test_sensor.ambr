@@ -41,10 +41,10 @@
 # name: test_all_entities[sensor.sanix_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Sanix Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanix Battery',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sanix_battery',
@@ -94,7 +94,7 @@
 # name: test_all_entities[sensor.sanix_device_number-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sanix Device number',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanix Device number',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sanix_device_number',
@@ -149,10 +149,10 @@
 # name: test_all_entities[sensor.sanix_distance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'distance',
-      'friendly_name': 'Sanix Distance',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'distance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanix Distance',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.CENTIMETERS: 'cm'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfLength.CENTIMETERS: 'cm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sanix_distance',
@@ -204,9 +204,9 @@
 # name: test_all_entities[sensor.sanix_filled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sanix Filled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanix Filled',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sanix_filled',
@@ -256,8 +256,8 @@
 # name: test_all_entities[sensor.sanix_service_date-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'date',
-      'friendly_name': 'Sanix Service date',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'date',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanix Service date',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sanix_service_date',
@@ -307,7 +307,7 @@
 # name: test_all_entities[sensor.sanix_ssid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sanix SSID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanix SSID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sanix_ssid',

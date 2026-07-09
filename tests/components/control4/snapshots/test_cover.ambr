@@ -40,10 +40,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 50,
-      'device_class': 'shade',
-      'friendly_name': 'Test Controller Living Room Shade',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shade',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Controller Living Room Shade',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 15>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_controller_living_room_shade',

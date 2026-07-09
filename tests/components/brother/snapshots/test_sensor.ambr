@@ -41,9 +41,9 @@
 # name: test_sensors[sensor.hl_l2340dw_b_w_pages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW B/W pages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW B/W pages',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'pages',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_b_w_pages',
@@ -95,9 +95,9 @@
 # name: test_sensors[sensor.hl_l2340dw_belt_unit_remaining_lifetime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Belt unit remaining lifetime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Belt unit remaining lifetime',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_belt_unit_remaining_lifetime',
@@ -149,9 +149,9 @@
 # name: test_sensors[sensor.hl_l2340dw_black_drum_page_counter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Black drum page counter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Black drum page counter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'pages',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_black_drum_page_counter',
@@ -203,9 +203,9 @@
 # name: test_sensors[sensor.hl_l2340dw_black_drum_remaining_lifetime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Black drum remaining lifetime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Black drum remaining lifetime',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_black_drum_remaining_lifetime',
@@ -257,9 +257,9 @@
 # name: test_sensors[sensor.hl_l2340dw_black_drum_remaining_pages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Black drum remaining pages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Black drum remaining pages',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'pages',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_black_drum_remaining_pages',
@@ -311,9 +311,9 @@
 # name: test_sensors[sensor.hl_l2340dw_black_toner_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Black toner remaining',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Black toner remaining',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_black_toner_remaining',
@@ -365,9 +365,9 @@
 # name: test_sensors[sensor.hl_l2340dw_color_pages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Color pages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Color pages',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'pages',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_color_pages',
@@ -419,9 +419,9 @@
 # name: test_sensors[sensor.hl_l2340dw_cyan_drum_page_counter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Cyan drum page counter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Cyan drum page counter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'pages',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_cyan_drum_page_counter',
@@ -473,9 +473,9 @@
 # name: test_sensors[sensor.hl_l2340dw_cyan_drum_remaining_lifetime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Cyan drum remaining lifetime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Cyan drum remaining lifetime',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_cyan_drum_remaining_lifetime',
@@ -527,9 +527,9 @@
 # name: test_sensors[sensor.hl_l2340dw_cyan_drum_remaining_pages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Cyan drum remaining pages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Cyan drum remaining pages',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'pages',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_cyan_drum_remaining_pages',
@@ -581,9 +581,9 @@
 # name: test_sensors[sensor.hl_l2340dw_cyan_toner_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Cyan toner remaining',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Cyan toner remaining',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_cyan_toner_remaining',
@@ -635,9 +635,9 @@
 # name: test_sensors[sensor.hl_l2340dw_drum_page_counter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Drum page counter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Drum page counter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'pages',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_drum_page_counter',
@@ -689,9 +689,9 @@
 # name: test_sensors[sensor.hl_l2340dw_drum_remaining_lifetime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Drum remaining lifetime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Drum remaining lifetime',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_drum_remaining_lifetime',
@@ -743,9 +743,9 @@
 # name: test_sensors[sensor.hl_l2340dw_drum_remaining_pages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Drum remaining pages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Drum remaining pages',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'pages',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_drum_remaining_pages',
@@ -797,9 +797,9 @@
 # name: test_sensors[sensor.hl_l2340dw_duplex_unit_page_counter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Duplex unit page counter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Duplex unit page counter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'pages',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_duplex_unit_page_counter',
@@ -851,9 +851,9 @@
 # name: test_sensors[sensor.hl_l2340dw_fuser_remaining_lifetime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Fuser remaining lifetime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Fuser remaining lifetime',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_fuser_remaining_lifetime',
@@ -905,9 +905,9 @@
 # name: test_sensors[sensor.hl_l2340dw_magenta_drum_page_counter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Magenta drum page counter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Magenta drum page counter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'pages',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_magenta_drum_page_counter',
@@ -959,9 +959,9 @@
 # name: test_sensors[sensor.hl_l2340dw_magenta_drum_remaining_lifetime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Magenta drum remaining lifetime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Magenta drum remaining lifetime',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_magenta_drum_remaining_lifetime',
@@ -1013,9 +1013,9 @@
 # name: test_sensors[sensor.hl_l2340dw_magenta_drum_remaining_pages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Magenta drum remaining pages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Magenta drum remaining pages',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'pages',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_magenta_drum_remaining_pages',
@@ -1067,9 +1067,9 @@
 # name: test_sensors[sensor.hl_l2340dw_magenta_toner_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Magenta toner remaining',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Magenta toner remaining',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_magenta_toner_remaining',
@@ -1121,9 +1121,9 @@
 # name: test_sensors[sensor.hl_l2340dw_page_counter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Page counter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Page counter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'pages',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_page_counter',
@@ -1175,9 +1175,9 @@
 # name: test_sensors[sensor.hl_l2340dw_pf_kit_1_remaining_lifetime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW PF Kit 1 remaining lifetime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW PF Kit 1 remaining lifetime',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_pf_kit_1_remaining_lifetime',
@@ -1227,7 +1227,7 @@
 # name: test_sensors[sensor.hl_l2340dw_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Status',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_status',
@@ -1277,8 +1277,8 @@
 # name: test_sensors[sensor.hl_l2340dw_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'uptime',
-      'friendly_name': 'HL-L2340DW Uptime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Uptime',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_uptime',
@@ -1330,9 +1330,9 @@
 # name: test_sensors[sensor.hl_l2340dw_yellow_drum_page_counter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Yellow drum page counter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Yellow drum page counter',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'pages',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_yellow_drum_page_counter',
@@ -1384,9 +1384,9 @@
 # name: test_sensors[sensor.hl_l2340dw_yellow_drum_remaining_lifetime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Yellow drum remaining lifetime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Yellow drum remaining lifetime',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_yellow_drum_remaining_lifetime',
@@ -1438,9 +1438,9 @@
 # name: test_sensors[sensor.hl_l2340dw_yellow_drum_remaining_pages-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Yellow drum remaining pages',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Yellow drum remaining pages',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'pages',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_yellow_drum_remaining_pages',
@@ -1492,9 +1492,9 @@
 # name: test_sensors[sensor.hl_l2340dw_yellow_toner_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HL-L2340DW Yellow toner remaining',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HL-L2340DW Yellow toner remaining',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_yellow_toner_remaining',

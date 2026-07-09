@@ -44,13 +44,13 @@
 # name: test_entities[number][number.peblar_ev_charger_charge_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Peblar EV Charger Charge limit',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peblar EV Charger Charge limit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 16,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 6,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.peblar_ev_charger_charge_limit',

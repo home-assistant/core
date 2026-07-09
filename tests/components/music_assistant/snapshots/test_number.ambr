@@ -44,7 +44,7 @@
 # name: test_number_entities[number.test_player_1_bass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Player 1 Bass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Bass',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -103,7 +103,7 @@
 # name: test_number_entities[number.test_player_1_treble-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Player 1 Treble',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Treble',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,

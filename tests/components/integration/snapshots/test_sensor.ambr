@@ -2,11 +2,11 @@
 # name: test_initial_state[BTU/h-power-h]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'integration',
-      'icon': 'mdi:chart-histogram',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'integration',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:chart-histogram',
       'source': 'sensor.source',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'BTU',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BTU',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.integration',
@@ -19,11 +19,11 @@
 # name: test_initial_state[ft\xb3/min-volume_flow_rate-min]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'integration',
-      'icon': 'mdi:chart-histogram',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'integration',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:chart-histogram',
       'source': 'sensor.source',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'ft³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ft³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.integration',
@@ -36,11 +36,11 @@
 # name: test_initial_state[kW-None-h]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'integration',
-      'icon': 'mdi:chart-histogram',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'integration',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:chart-histogram',
       'source': 'sensor.source',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'kWh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.integration',
@@ -53,11 +53,11 @@
 # name: test_initial_state[kW-power-h]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'integration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'integration',
       'source': 'sensor.source',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'kWh',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.integration',

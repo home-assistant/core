@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import override
 
 from aiomelcloudhome import ATAUnit, ATWUnit
@@ -16,10 +17,12 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfEnergy,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.dt import utcnow
 
 from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity
@@ -31,15 +34,16 @@ PARALLEL_UPDATES = 0
 class ATASensorEntityDescription(SensorEntityDescription):
     """Class to hold MELCloud Home ATA sensor description."""
 
-    value_fn: Callable[[ATAUnit], StateType]
+    value_fn: Callable[[ATAUnit, MelCloudHomeCoordinator], StateType]
+    exists_fn: Callable[[ATAUnit], bool] = lambda _: True
 
 
 @dataclass(frozen=True, kw_only=True)
 class ATWSensorEntityDescription(SensorEntityDescription):
     """Class to hold MELCloud Home ATW sensor description."""
 
-    value_fn: Callable[[ATWUnit], StateType]
-    exists_fn: Callable[[ATWUnit], bool] = lambda unit: True
+    value_fn: Callable[[ATWUnit, MelCloudHomeCoordinator], StateType]
+    exists_fn: Callable[[ATWUnit], bool] = lambda _: True
 
 
 ATA_SENSORS: tuple[ATASensorEntityDescription, ...] = (
@@ -50,7 +54,7 @@ ATA_SENSORS: tuple[ATASensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
-        value_fn=lambda unit: unit.room_temperature,
+        value_fn=lambda unit, _: unit.room_temperature,
     ),
     ATASensorEntityDescription(
         key="rssi",
@@ -59,7 +63,19 @@ ATA_SENSORS: tuple[ATASensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda unit: unit.rssi,
+        value_fn=lambda unit, _: unit.rssi,
+    ),
+    ATASensorEntityDescription(
+        key="energy_consumed",
+        translation_key="energy_consumed",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_fn=lambda unit, coordinator: coordinator.ata_energy.get(unit.id),
+        exists_fn=lambda unit: bool(
+            unit.capabilities and unit.capabilities.has_energy_consumed_meter
+        ),
     ),
 )
 
@@ -71,7 +87,7 @@ ATW_SENSORS: tuple[ATWSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
-        value_fn=lambda unit: unit.room_temperature_zone1,
+        value_fn=lambda unit, _: unit.room_temperature_zone1,
     ),
     ATWSensorEntityDescription(
         key="room_temperature_zone_2",
@@ -80,7 +96,7 @@ ATW_SENSORS: tuple[ATWSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
-        value_fn=lambda unit: unit.room_temperature_zone2,
+        value_fn=lambda unit, _: unit.room_temperature_zone2,
         exists_fn=lambda unit: bool(
             (unit.capabilities and unit.capabilities.has_zone2)
             or (unit.capabilities is None and unit.has_zone2)
@@ -93,7 +109,7 @@ ATW_SENSORS: tuple[ATWSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=1,
-        value_fn=lambda unit: unit.tank_water_temperature,
+        value_fn=lambda unit, _: unit.tank_water_temperature,
     ),
     ATWSensorEntityDescription(
         key="rssi",
@@ -102,7 +118,19 @@ ATW_SENSORS: tuple[ATWSensorEntityDescription, ...] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda unit: unit.rssi,
+        value_fn=lambda unit, _: unit.rssi,
+    ),
+    ATWSensorEntityDescription(
+        key="energy_consumed",
+        translation_key="energy_consumed",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_fn=lambda unit, coordinator: coordinator.atw_energy.get(unit.id),
+        exists_fn=lambda unit: bool(
+            unit.capabilities and unit.capabilities.has_energy_consumed_meter
+        ),
     ),
 )
 
@@ -120,6 +148,7 @@ async def async_setup_entry(
             ATASensor(coordinator, entity_description, unit)
             for entity_description in ATA_SENSORS
             for unit in units
+            if entity_description.exists_fn(unit)
         )
 
     def _async_add_new_atw_units(units: list[ATWUnit]) -> None:
@@ -157,7 +186,15 @@ class ATASensor(MelCloudHomeATAUnitEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.unit)
+        return self.entity_description.value_fn(self.unit, self.coordinator)
+
+    @property
+    @override
+    def last_reset(self) -> datetime | None:
+        """Return start of month for TOTAL energy sensors."""
+        if self.entity_description.state_class == SensorStateClass.TOTAL:
+            return utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        return None
 
 
 class ATWSensor(MelCloudHomeATWUnitEntity, SensorEntity):
@@ -180,4 +217,12 @@ class ATWSensor(MelCloudHomeATWUnitEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.unit)
+        return self.entity_description.value_fn(self.unit, self.coordinator)
+
+    @property
+    @override
+    def last_reset(self) -> datetime | None:
+        """Return start of month for TOTAL energy sensors."""
+        if self.entity_description.state_class == SensorStateClass.TOTAL:
+            return utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        return None

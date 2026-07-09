@@ -47,7 +47,7 @@
 # name: test_all_entities[select.zinvolt_batterij_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Zinvolt Batterij Mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zinvolt Batterij Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dynamic',
         'self_use',

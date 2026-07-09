@@ -45,7 +45,7 @@
 # name: test_switch[load_platforms0][select.device1_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device1 Volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device1 Volume',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
@@ -106,7 +106,7 @@
 # name: test_switch[load_platforms0][select.device2_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device2 Volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device2 Volume',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
@@ -167,7 +167,7 @@
 # name: test_switch[load_platforms0][select.device3_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device3 Volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device3 Volume',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
@@ -228,7 +228,7 @@
 # name: test_switch[load_platforms0][select.device7_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device7 Volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device7 Volume',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
@@ -289,7 +289,7 @@
 # name: test_switch[load_platforms0][select.device8_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device8 Volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device8 Volume',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',
@@ -350,7 +350,7 @@
 # name: test_switch[load_platforms0][select.device9_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Device9 Volume',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device9 Volume',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'high',
         'low',

@@ -39,10 +39,10 @@
 # name: test_cover_entities[cover.test_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Test Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Door',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_door',

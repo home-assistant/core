@@ -48,8 +48,8 @@
 # name: test_entity_basic[media_player.zone_a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speaker',
-      'friendly_name': 'Zone A',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'speaker',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone A',
       <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: list([
         'media_player.zone_a',
       ]),
@@ -65,7 +65,7 @@
         'American Tall Tales',
         'sample playlist',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 8321599>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 8321599>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.19,
     }),
     'context': <ANY>,

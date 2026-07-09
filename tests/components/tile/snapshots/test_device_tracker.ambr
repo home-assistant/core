@@ -42,7 +42,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'altitude': 0,
-      'friendly_name': 'Wallet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wallet',
       <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 13.496111,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),

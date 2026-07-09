@@ -16,7 +16,11 @@ from uiprotect.data import (
     ProtectDeviceModel,
     Sensor,
 )
-from uiprotect.data.public_devices import PublicDeviceModel, PublicLight
+from uiprotect.data.public_devices import (
+    PublicDeviceModel,
+    PublicLight,
+    SensorFeatureCapability,
+)
 from uiprotect.utils import convert_to_datetime
 
 from homeassistant.components.sensor import (
@@ -30,6 +34,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    Platform,
     UnitOfDataRate,
     UnitOfElectricPotential,
     UnitOfInformation,
@@ -50,6 +55,7 @@ from .entity import (
     ProtectNVREntity,
     T,
     async_all_device_entities,
+    async_remove_unsupported_sense_entities,
 )
 from .utils import async_get_light_motion_current_public
 
@@ -317,6 +323,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.light.value",
         ufp_enabled="is_light_sensor_enabled",
+        ufp_capability=SensorFeatureCapability.LIGHT,
     ),
     ProtectSensorEntityDescription(
         key="humidity_level",
@@ -325,6 +332,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.humidity.value",
         ufp_enabled="is_humidity_sensor_enabled",
+        ufp_capability=SensorFeatureCapability.HUMIDITY,
     ),
     ProtectSensorEntityDescription(
         key="temperature_level",
@@ -333,18 +341,21 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="stats.temperature.value",
         ufp_enabled="is_temperature_sensor_enabled",
+        ufp_capability=SensorFeatureCapability.TEMPERATURE,
     ),
     ProtectSensorEntityDescription[Sensor](
         key="alarm_sound",
         translation_key="alarm_sound_detected",
         ufp_value_fn=_get_alarm_sound,
         ufp_enabled="is_alarm_sensor_enabled",
+        ufp_capability=SensorFeatureCapability.SMOKE,
     ),
     ProtectSensorEntityDescription(
         key="door_last_trip_time",
         translation_key="last_open",
         device_class=SensorDeviceClass.TIMESTAMP,
         ufp_value="open_status_changed_at",
+        ufp_capability=SensorFeatureCapability.OPEN,
         entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
@@ -352,11 +363,13 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         translation_key="last_motion_detected",
         device_class=SensorDeviceClass.TIMESTAMP,
         ufp_value="motion_detected_at",
+        ufp_capability=SensorFeatureCapability.MOTION,
         entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
         key="tampering_last_trip_time",
         translation_key="last_tampering_detected",
+        ufp_capability=SensorFeatureCapability.TAMPER,
         device_class=SensorDeviceClass.TIMESTAMP,
         ufp_value="tampering_detected_at",
         entity_registry_enabled_default=False,
@@ -367,6 +380,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="motion_settings.sensitivity",
+        ufp_capability=SensorFeatureCapability.MOTION,
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(
@@ -374,6 +388,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         translation_key="mount_type",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="mount_type",
+        ufp_capability=SensorFeatureCapability.OPEN,
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectSensorEntityDescription(
@@ -583,6 +598,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for UniFi Protect integration."""
     data = entry.runtime_data
+    async_remove_unsupported_sense_entities(hass, Platform.SENSOR, data, SENSE_SENSORS)
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:

@@ -41,7 +41,7 @@
 # name: test_all_entities[device_tracker.2021_honda_accord-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '2021 Honda Accord',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '2021 Honda Accord',
       <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 10,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
