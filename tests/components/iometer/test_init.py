@@ -1,6 +1,7 @@
 """Tests for the IOmeter integration."""
 
 import asyncio
+import contextlib
 import json
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -15,7 +16,6 @@ from iometer import (
 import pytest
 
 from homeassistant.components.iometer.const import DOMAIN
-from homeassistant.components.iometer.coordinator import IOMeterCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -149,17 +149,32 @@ async def test_error_before_first_data_does_not_mark_unavailable(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that stream errors before first data do not mark entities unavailable."""
-    mock_iometer_client.subscribe_readings.side_effect = lambda *_: lambda: None
+    subscribed = asyncio.Event()
+
+    def subscribe_readings_noop(*_):
+        subscribed.set()
+        return lambda: None
+
+    mock_iometer_client.subscribe_readings.side_effect = subscribe_readings_noop
     mock_iometer_client.subscribe_status.side_effect = lambda *_: lambda: None
 
-    coordinator = IOMeterCoordinator(hass, mock_config_entry, mock_iometer_client)
-    await coordinator.async_start()
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.iometer.PLATFORMS", []):
+        setup_task = asyncio.get_running_loop().create_task(
+            hass.config_entries.async_setup(mock_config_entry.entry_id)
+        )
+        await asyncio.wait_for(subscribed.wait(), timeout=5.0)
 
     with caplog.at_level(logging.WARNING, logger="homeassistant.components.iometer"):
         get_reading_error_callback(mock_iometer_client)(IOmeterConnectionError("err"))
 
     assert "stream error" in caplog.text
     assert "Update failed" not in caplog.text
+
+    setup_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await setup_task
 
 
 @pytest.mark.usefixtures("mock_iometer_client")
@@ -170,35 +185,35 @@ async def test_async_unload_entry(
     """Test that unloading an entry succeeds and cleans up the coordinator."""
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_async_stop_awaits_pending_tasks(
+async def test_async_stop_calls_cancel_on_unload(
     hass: HomeAssistant,
     mock_iometer_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test async_stop awaits and cancels SSE tasks that have not yet finished."""
-    loop = asyncio.get_running_loop()
-    readings_task = loop.create_task(asyncio.Event().wait(), name="readings-task")
-    status_task = loop.create_task(asyncio.Event().wait(), name="status-task")
+    """Test that unloading calls the cancel functions returned by the library."""
+    readings_cancel = MagicMock()
+    status_cancel = MagicMock()
 
     original_readings = mock_iometer_client.subscribe_readings.side_effect
     original_status = mock_iometer_client.subscribe_status.side_effect
 
-    def subscribe_readings_with_task(*args):
+    def subscribe_readings_with_cancel(*args):
         original_readings(*args)
-        return readings_task.cancel
+        return readings_cancel
 
-    def subscribe_status_with_task(*args):
+    def subscribe_status_with_cancel(*args):
         original_status(*args)
-        return status_task.cancel
+        return status_cancel
 
-    mock_iometer_client.subscribe_readings.side_effect = subscribe_readings_with_task
-    mock_iometer_client.subscribe_status.side_effect = subscribe_status_with_task
+    mock_iometer_client.subscribe_readings.side_effect = subscribe_readings_with_cancel
+    mock_iometer_client.subscribe_status.side_effect = subscribe_status_with_cancel
 
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
-    assert readings_task.cancelled()
-    assert status_task.cancelled()
+    readings_cancel.assert_called_once()
+    status_cancel.assert_called_once()
