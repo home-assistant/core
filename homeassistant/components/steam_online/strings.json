@@ -111,7 +111,7 @@
       "now_playing": {
         "name": "Now playing",
         "state_attributes": {
-          "game_id": { "name": "Game ID" }
+          "app_id": { "name": "Steam App ID" }
         }
       }
     }

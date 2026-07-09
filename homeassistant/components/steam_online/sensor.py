@@ -95,7 +95,7 @@ SENSOR_DESCRIPTIONS: tuple[SteamSensorEntityDescription, ...] = (
             if x.gameid and (game_icon_url := icons.get(x.gameid))
             else None
         ),
-        extra_state_attributes_fn=lambda x, _: {"game_id": x.gameid},
+        extra_state_attributes_fn=lambda x, _: {"app_id": x.gameid},
     ),
     SteamSensorEntityDescription(
         key=SteamSensor.LEVEL,

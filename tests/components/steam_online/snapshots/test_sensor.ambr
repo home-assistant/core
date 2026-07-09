@@ -199,9 +199,9 @@
 # name: test_sensors[sensor.testaccount1_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'app_id': '20900',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/20900/746d1cd48fb2e57d579b05b6e9eccba95859e549.jpg',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testaccount1 Now playing',
-      'game_id': '20900',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testaccount1_now_playing',
@@ -411,8 +411,8 @@
 # name: test_sensors[sensor.testaccount2_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'app_id': None,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testaccount2 Now playing',
-      'game_id': None,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testaccount2_now_playing',
