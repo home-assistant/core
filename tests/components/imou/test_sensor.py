@@ -70,22 +70,31 @@ async def test_setup_ignores_unknown_sensor_types(
     assert len(battery_entries) == 1
 
 
+@pytest.mark.parametrize(
+    ("unique_id", "expected_state"),
+    [
+        pytest.param("d1$status", "offline", id="status_reports_offline"),
+        pytest.param("d1$battery", STATE_UNAVAILABLE, id="battery_unavailable"),
+    ],
+)
 @pytest.mark.parametrize("imou_mock_devices", [sensor_mock_devices], indirect=True)
 @pytest.mark.usefixtures("init_integration")
-async def test_status_sensor_available_when_device_offline(
+async def test_sensor_availability_when_device_offline(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
+    unique_id: str,
+    expected_state: str,
 ) -> None:
-    """Status sensor stays available and reports offline when device is offline."""
-    status_entry = next(
-        entry
-        for entry in er.async_entries_for_config_entry(
+    """Status stays available offline; other sensors become unavailable."""
+    entry = next(
+        item
+        for item in er.async_entries_for_config_entry(
             entity_registry, mock_config_entry.entry_id
         )
-        if entry.unique_id == "d1$status"
+        if item.unique_id == unique_id
     )
 
     async def set_device_offline(device: ImouHaDevice) -> None:
@@ -101,44 +110,9 @@ async def test_status_sensor_available_when_device_offline(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(status_entry.entity_id)
+    state = hass.states.get(entry.entity_id)
     assert state is not None
-    assert state.state == "offline"
-    assert state.state != STATE_UNAVAILABLE
-
-
-@pytest.mark.parametrize("imou_mock_devices", [sensor_mock_devices], indirect=True)
-@pytest.mark.usefixtures("init_integration")
-async def test_non_status_sensor_unavailable_when_offline(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-    mock_imou_ha_device_manager: MagicMock,
-) -> None:
-    """Non-status sensors are unavailable when the device is offline."""
-    battery_entry = next(
-        entry
-        for entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-        if entry.unique_id == "d1$battery"
-    )
-
-    async def set_device_offline(device: ImouHaDevice) -> None:
-        device._sensors[PARAM_STATUS] = {
-            PARAM_STATE: DeviceStatus.OFFLINE.value,
-            PARAM_STATE_VARIANT: STATE_VARIANT_ENUM,
-        }
-
-    mock_imou_ha_device_manager.async_update_device_status.side_effect = (
-        set_device_offline
-    )
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert hass.states.get(battery_entry.entity_id).state == STATE_UNAVAILABLE
+    assert state.state == expected_state
 
 
 @pytest.mark.parametrize("imou_mock_devices", [sensor_mock_devices], indirect=True)

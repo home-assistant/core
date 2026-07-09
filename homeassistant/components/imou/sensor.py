@@ -2,7 +2,7 @@
 
 from typing import override
 
-from pyimouapi.const import PARAM_STATE, PARAM_STATE_VARIANT, STATE_VARIANT_NUMERIC
+from pyimouapi.const import PARAM_STATE_VARIANT, STATE_VARIANT_NUMERIC
 from pyimouapi.ha_device import ImouHaDevice
 
 from homeassistant.components.sensor import (
@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import PARAM_STATUS, imou_device_identifier
+from .const import PARAM_STATE, PARAM_STATUS, imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
@@ -149,12 +149,21 @@ class ImouSensor(ImouEntity, SensorEntity):
         super().__init__(coordinator, entity_type, device)
         if device_class := SENSOR_DEVICE_CLASS.get(entity_type):
             self._attr_device_class = device_class
-        if state_class := SENSOR_STATE_CLASS.get(entity_type):
-            self._attr_state_class = state_class
         if entity_category := SENSOR_ENTITY_CATEGORY.get(entity_type):
             self._attr_entity_category = entity_category
         if entity_type == PARAM_STATUS:
             self._attr_options = STATUS_OPTIONS
+
+    @property
+    @override
+    def state_class(self) -> SensorStateClass | None:
+        """Return state class for numeric sensor values."""
+        if (
+            self.device.sensors[self._entity_type].get(PARAM_STATE_VARIANT)
+            != STATE_VARIANT_NUMERIC
+        ):
+            return None
+        return SENSOR_STATE_CLASS.get(self._entity_type)
 
     @property
     @override

@@ -147,8 +147,3 @@ def sensor_mock_devices() -> list[ImouHaDevice]:
             sensors=DEFAULT_SENSORS,
         ),
     ]
-
-
-DEFAULT_MOCK_DEVICES = default_mock_devices()
-
-SENSOR_MOCK_DEVICES = sensor_mock_devices()
