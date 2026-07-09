@@ -79,6 +79,14 @@ async def test_form_invalid_url(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
+        {CONF_URL: "http://gatus.example.com:abc"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_url"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
         {CONF_URL: "http://gatus.example.com:8080"},
     )
     await hass.async_block_till_done()
