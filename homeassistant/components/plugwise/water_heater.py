@@ -126,24 +126,21 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def current_temperature(self) -> float:
         """Return the current water temperature."""
-        return self.device[self.entity_description.key].get("current")
+        return self.device[self.entity_description.key]["current"]
 
     @property
     @override
     def operation_list(self) -> list[str] | None:
         """Return the list of available operation modes."""
-        if (key := self.entity_description.options_key) is not None:
-            return self.device.get(key, [])
-
-        return None  # pragma: no cover
+        return self.device.get(self.entity_description.options_key)
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def target_temperature(self) -> float:
         """Return the water temperature we try to reach."""
-        return self.device[self.entity_description.key].get("setpoint")
+        return self.device[self.entity_description.key]["setpoint"]
 
     @plugwise_command
     @override
