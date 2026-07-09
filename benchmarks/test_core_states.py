@@ -70,6 +70,7 @@ def test_state_get(benchmark: BenchmarkFixture, hass: HomeAssistant) -> None:
     state: State | None = benchmark(lambda: hass.states.get("sensor.benchmark"))
 
     assert state is not None
+    assert state.state == "21.5"
 
 
 @pytest.mark.parametrize("count", [10, 100, 1000])

@@ -853,9 +853,7 @@ jobs:
       - name: Run benchmarks
         uses: CodSpeedHQ/action@a4a36bb07c0638b0b4ca52bf1f3dad1b4289e52f # v4.18.1
         with:
-          # v4 makes `mode` required; "simulation" is the instrumented
-          # measurement that gives stable, machine-independent results.
-          mode: simulation
+          mode: simulation,memory
           # No token: auth uses the OIDC id-token minted by the job permissions.
           run: |
             . venv/bin/activate

@@ -49,7 +49,11 @@ def test_event_fire_callbacks(
 
     benchmark(lambda: hass.bus.async_fire("benchmark_event", {"value": 1}))
 
-    assert fired
+    # Each fire increments `fired` once per listener, but the benchmark may
+    # invoke the target multiple times (e.g. in walltime mode), so only the
+    # per-fire multiple is a stable invariant.
+    assert fired > 0
+    assert fired % listeners == 0
 
 
 def test_event_fire_filtered_reject(
@@ -60,14 +64,22 @@ def test_event_fire_filtered_reject(
     The filter runs but the listener does not, so this isolates the filter
     short-circuit cost from the listener body.
     """
+    fired = 0
+
+    @callback
+    def listener(event: Event) -> None:
+        nonlocal fired
+        fired += 1
 
     @callback
     def event_filter(event_data: dict) -> bool:
         return False
 
-    hass.bus.async_listen("benchmark_event", _noop, event_filter=event_filter)
+    hass.bus.async_listen("benchmark_event", listener, event_filter=event_filter)
 
     benchmark(lambda: hass.bus.async_fire("benchmark_event", {"value": 1}))
+
+    assert fired == 0
 
 
 def test_state_change_tracked(benchmark: BenchmarkFixture, hass: HomeAssistant) -> None:
@@ -116,22 +128,40 @@ def test_state_change_untracked(
     benchmark(_set)
 
 
-@pytest.mark.parametrize("receivers", [0, 1, 10])
+def test_dispatcher_send_no_receivers(
+    benchmark: BenchmarkFixture, hass: HomeAssistant
+) -> None:
+    """Send a dispatcher signal with nobody connected (the bare dispatch cost)."""
+    benchmark(lambda: async_dispatcher_send(hass, "benchmark_signal", 1))
+
+
+@pytest.mark.parametrize("receivers", [1, 10])
 def test_dispatcher_send(
     benchmark: BenchmarkFixture, hass: HomeAssistant, receivers: int
 ) -> None:
     """Send a dispatcher signal to N connected receivers."""
     fired = 0
 
-    @callback
-    def receiver(*args: object) -> None:
-        nonlocal fired
-        fired += 1
+    def _make_receiver() -> Callable[..., None]:
+        @callback
+        def receiver(*args: object) -> None:
+            nonlocal fired
+            fired += 1
 
+        return receiver
+
+    # async_dispatcher_connect keys receivers by the callable itself, so each
+    # connection needs its own object to actually register as a receiver.
     for _ in range(receivers):
-        async_dispatcher_connect(hass, "benchmark_signal", receiver)
+        async_dispatcher_connect(hass, "benchmark_signal", _make_receiver())
 
     benchmark(lambda: async_dispatcher_send(hass, "benchmark_signal", 1))
+
+    # Each send increments `fired` once per receiver, but the benchmark may
+    # invoke the target multiple times (e.g. in walltime mode), so only the
+    # per-send multiple is a stable invariant.
+    assert fired > 0
+    assert fired % receivers == 0
 
 
 def test_call_later_schedule(benchmark: BenchmarkFixture, hass: HomeAssistant) -> None:
@@ -140,9 +170,17 @@ def test_call_later_schedule(benchmark: BenchmarkFixture, hass: HomeAssistant) -
     Cancelling inside the measured call keeps timers from piling up on the loop
     across iterations.
     """
+    called = 0
+
+    @callback
+    def listener() -> None:
+        nonlocal called
+        called += 1
 
     def _schedule() -> None:
-        cancel: Callable[[], None] = async_call_later(hass, 60, _noop)
+        cancel: Callable[[], None] = async_call_later(hass, 60, listener)
         cancel()
 
     benchmark(_schedule)
+
+    assert called == 0
