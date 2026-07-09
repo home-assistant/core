@@ -1,0 +1,47 @@
+{
+  "locationId": "2664492",
+  "gateways": [
+    {
+      "gatewayId": "2820628",
+      "temperatureControlSystems": [
+        {
+          "systemId": "3935923",
+          "zones": [
+            {
+              "zoneId": "3935922",
+              "temperatureStatus": {
+                "temperature": 21.5,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 15.0,
+                "setpointMode": "PermanentOverride"
+              },
+              "name": "Name 3935922"
+            },
+            {
+              "zoneId": "4368406",
+              "temperatureStatus": {
+                "temperature": 23.0,
+                "isAvailable": true
+              },
+              "activeFaults": [],
+              "setpointStatus": {
+                "targetHeatTemperature": 15.0,
+                "setpointMode": "PermanentOverride"
+              },
+              "name": "Name 3935922"
+            }
+          ],
+          "activeFaults": [],
+          "systemModeStatus": {
+            "mode": "Auto",
+            "isPermanent": true
+          }
+        }
+      ],
+      "activeFaults": []
+    }
+  ]
+}

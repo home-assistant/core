@@ -207,34 +207,59 @@ async def evohome(
         yield mock_client
 
 
+def _tcs_for_config(evo: EvohomeClient, config: dict[str, str]) -> ControlSystem:
+    """Return the ControlSystem for the location targeted by this config.
+
+    Mirrors the coordinator's own location_idx-based resolution
+    (coordinator.py's `self.loc.gateways[0].systems[0]`), rather than
+    evo.tcs, which only works for single-location accounts.
+    """
+
+    loc_idx: int = config.get("location_idx", 0)  # type: ignore[assignment]
+    return evo.locations[loc_idx].gateways[0].systems[0]
+
+
 @pytest.fixture
-def ctl_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str]) -> str:
+def ctl_id(
+    evohome: MagicMock,
+    config: dict[str, str],
+    entity_id: Callable[[Platform, str], str],
+) -> str:
     """Return the entity_id of evohome's controller (a Climate entity)."""
 
     evo: EvohomeClient = evohome.return_value
-    tcs: ControlSystem = evo.tcs
+    tcs = _tcs_for_config(evo, config)
 
     return entity_id(Platform.CLIMATE, tcs.id)
 
 
 @pytest.fixture
-def zone_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str]) -> str:
+def zone_id(
+    evohome: MagicMock,
+    config: dict[str, str],
+    entity_id: Callable[[Platform, str], str],
+) -> str:
     """Return the entity_id of evohome's first zone (a Climate entity)."""
 
     evo: EvohomeClient = evohome.return_value
-    tcs: ControlSystem = evo.tcs
+    tcs = _tcs_for_config(evo, config)
 
-    zone: Zone = evo.tcs.zones[0]
+    zone: Zone = tcs.zones[0]
 
     return entity_id(Platform.CLIMATE, f"{zone.id}z" if zone.id == tcs.id else zone.id)
 
 
 @pytest.fixture
-def dhw_id(evohome: MagicMock, entity_id: Callable[[Platform, str], str]) -> str:
+def dhw_id(
+    evohome: MagicMock,
+    config: dict[str, str],
+    entity_id: Callable[[Platform, str], str],
+) -> str:
     """Return the entity_id of Evohome's DHW controller (a WaterHeater entity)."""
 
     evo: EvohomeClient = evohome.return_value
-    dhw: HotWater | None = evo.tcs.hotwater
+    tcs = _tcs_for_config(evo, config)
+    dhw: HotWater | None = tcs.hotwater
 
     assert dhw is not None, "Fixture has no DHW zone"
 

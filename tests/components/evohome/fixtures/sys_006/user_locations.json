@@ -1,0 +1,154 @@
+[
+  {
+    "locationInfo": {
+      "locationId": "0001",
+      "name": "Home",
+      "streetAddress": "1 Rue de la Loi",
+      "city": "Auderghem",
+      "country": "Belgium",
+      "postcode": "1160",
+      "locationType": "Residential",
+      "useDaylightSaveSwitching": true,
+      "timeZone": {
+        "timeZoneId": "RomanceStandardTime",
+        "displayName": "(UTC+01:00) Brussels, Copenhagen, Madrid, Paris",
+        "offsetMinutes": 60,
+        "currentOffsetMinutes": 60,
+        "supportsDaylightSaving": true
+      },
+      "locationOwner": {
+        "userId": "4000006",
+        "username": "user_4000006@gmail.com",
+        "firstname": "John",
+        "lastname": "Smith"
+      }
+    },
+    "gateways": [
+      {
+        "gatewayInfo": {
+          "gatewayId": "0002",
+          "mac": "000000000000",
+          "crc": "0000",
+          "isWiFi": false
+        },
+        "temperatureControlSystems": [
+          {
+            "systemId": "0003",
+            "modelType": "EvoTouch",
+            "zones": [
+              {
+                "zoneId": "0004",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Main Room",
+                "zoneType": "ZoneTemperatureControl"
+              }
+            ],
+            "allowedSystemModes": [
+              {
+                "systemMode": "Auto",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "locationInfo": {
+      "locationId": "0002",
+      "name": "Home",
+      "streetAddress": "-REDACTED-",
+      "city": "Auderghem",
+      "country": "Belgium",
+      "postcode": "-REDACTED-",
+      "locationType": "Residential",
+      "useDaylightSaveSwitching": true,
+      "timeZone": {
+        "timeZoneId": "NewYork",
+        "displayName": "(UTC-01:00) Brussels, Copenhagen, Madrid, Paris",
+        "offsetMinutes": -60,
+        "currentOffsetMinutes": -60,
+        "supportsDaylightSaving": true
+      },
+      "locationOwner": {
+        "userId": "-REDACTED-",
+        "username": "noone@nowhere.com",
+        "firstname": "-REDACTED-",
+        "lastname": "-REDACTED-"
+      }
+    },
+    "gateways": [
+      {
+        "gatewayInfo": {
+          "gatewayId": "0002",
+          "mac": "-REDACTED-",
+          "crc": "-REDACTED-",
+          "isWiFi": false
+        },
+        "temperatureControlSystems": [
+          {
+            "systemId": "0003",
+            "modelType": "EvoTouch",
+            "zones": [
+              {
+                "zoneId": "0004",
+                "modelType": "HeatingZone",
+                "setpointCapabilities": {
+                  "maxHeatSetpoint": 35.0,
+                  "minHeatSetpoint": 5.0,
+                  "valueResolution": 0.5,
+                  "canControlHeat": true,
+                  "canControlCool": false,
+                  "allowedSetpointModes": [
+                    "PermanentOverride",
+                    "FollowSchedule",
+                    "TemporaryOverride"
+                  ],
+                  "maxDuration": "1.00:00:00",
+                  "timingResolution": "00:10:00"
+                },
+                "scheduleCapabilities": {
+                  "maxSwitchpointsPerDay": 6,
+                  "minSwitchpointsPerDay": 1,
+                  "timingResolution": "00:10:00",
+                  "setpointValueResolution": 0.5
+                },
+                "name": "Main Room",
+                "zoneType": "ZoneTemperatureControl"
+              }
+            ],
+            "allowedSystemModes": [
+              {
+                "systemMode": "Auto",
+                "canBePermanent": true,
+                "canBeTemporary": false
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

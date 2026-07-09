@@ -1,0 +1,43 @@
+{
+  "locationId": "0001",
+  "gateways": [
+    {
+      "gatewayId": "0002",
+      "temperatureControlSystems": [
+        {
+          "systemId": "0003",
+          "zones": [
+            {
+              "zoneId": "0004",
+              "temperatureStatus": {
+                "temperature": 19.5,
+                "isAvailable": true
+              },
+              "activeFaults": [
+                {
+                  "faultType": "TempZoneActuatorCommunicationLost",
+                  "since": "2024-12-01T01:00:00"
+                },
+                {
+                  "faultType": "TempZoneSensorCommunicationLost",
+                  "since": "2024-05-01T01:00:00"
+                }
+              ],
+              "setpointStatus": {
+                "targetHeatTemperature": 14.0,
+                "setpointMode": "FollowSchedule"
+              },
+              "name": "Main Room"
+            }
+          ],
+          "activeFaults": [],
+          "systemModeStatus": {
+            "mode": "Auto",
+            "isPermanent": true
+          }
+        }
+      ],
+      "activeFaults": []
+    }
+  ]
+}
