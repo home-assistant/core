@@ -220,6 +220,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._adapter_discovered = False
         self._recommended_install = False
         self._rf_region: str | None = None
+        self._entry_unloaded_by_flow = False
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -1064,7 +1065,42 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.hass.config_entries.async_update_entry(
             config_entry, data=config_entry.data | updates
         )
+        self._async_schedule_entry_reload()
+
+    async def _async_unload_entry_for_flow(self) -> None:
+        """Unload the config entry being reconfigured for this flow.
+
+        The entry is reloaded when the flow is removed,
+        unless a flow step schedules a reload itself.
+        """
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        self._entry_unloaded_by_flow = True
+        await self.hass.config_entries.async_unload(config_entry.entry_id)
+
+    @callback
+    def _async_schedule_entry_reload(self) -> None:
+        """Schedule a reload of the config entry being reconfigured."""
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        self._entry_unloaded_by_flow = False
         self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
+
+    @override
+    @callback
+    def async_remove(self) -> None:
+        """Reload the config entry if the flow unloaded it and left it down.
+
+        This recovers the entry when a flow that has unloaded it,
+        e.g. a migration waiting for the adapter to be unplugged,
+        is aborted or abandoned.
+        """
+        if not self._entry_unloaded_by_flow:
+            return
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        if config_entry.state is ConfigEntryState.NOT_LOADED:
+            self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
     async def async_step_intent_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -1181,7 +1217,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         assert config_entry is not None
 
         # Unload the config entry before asking the user to unplug the controller.
-        await self.hass.config_entries.async_unload(config_entry.entry_id)
+        await self._async_unload_entry_for_flow()
 
         return self.async_show_form(
             step_id="instruct_unplug",
@@ -1258,16 +1294,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if not user_input[CONF_USE_ADDON]:
             if config_entry.data.get(CONF_USE_ADDON):
                 # Unload the config entry before stopping the add-on.
-                await self.hass.config_entries.async_unload(config_entry.entry_id)
+                await self._async_unload_entry_for_flow()
                 addon_manager = get_addon_manager(self.hass)
                 _LOGGER.debug("Stopping Z-Wave JS app")
                 try:
                     await addon_manager.async_stop_addon()
                 except AddonError as err:
                     _LOGGER.error(err)
-                    self.hass.config_entries.async_schedule_reload(
-                        config_entry.entry_id
-                    )
+                    self._async_schedule_entry_reload()
                     raise AbortFlow("addon_stop_failed") from err
             return await self.async_step_manual_reconfigure()
 
@@ -1332,7 +1366,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     config_entry := self._reconfigure_config_entry
                 ) and config_entry.data.get(CONF_USE_ADDON):
                     # Disconnect integration before restarting add-on.
-                    await self.hass.config_entries.async_unload(config_entry.entry_id)
+                    await self._async_unload_entry_for_flow()
 
                 return await self.async_step_start_addon()
 
@@ -1683,7 +1717,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.revert_reason or not self.original_addon_config:
             config_entry = self._reconfigure_config_entry
             assert config_entry is not None
-            self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
+            self._async_schedule_entry_reload()
             return self.async_abort(reason=reason)
 
         self.revert_reason = reason
