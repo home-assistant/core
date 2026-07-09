@@ -254,6 +254,9 @@ class EasywaveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _clear_listener_task(self) -> None:
         """Clear the listener task reference after the loop exits."""
+        current_task = asyncio.current_task()
+        if self._listener_task is not None and self._listener_task is not current_task:
+            return
         self._listener_task = None
 
     async def suspend_telegram_listener(self) -> None:

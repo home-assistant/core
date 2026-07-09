@@ -1,6 +1,7 @@
 """Tests for the Easywave coordinator."""
 
 import asyncio
+import contextlib
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -448,5 +449,38 @@ async def test_start_telegram_listener_noops_without_entities(
     await coordinator.async_config_entry_first_refresh()
 
     coordinator._start_telegram_listener()
+
+    assert coordinator._listener_task is None
+
+
+async def test_clear_listener_task_skips_foreign_running_task(
+    hass: HomeAssistant,
+    coordinator: EasywaveCoordinator,
+) -> None:
+    """Listener cleanup does not drop a newer replacement task."""
+    replacement = hass.async_create_task(asyncio.Event().wait(), "replacement_listener")
+    coordinator._listener_task = replacement
+
+    async def old_finally() -> None:
+        await coordinator._clear_listener_task()
+
+    await hass.async_create_task(old_finally(), "old_finally")
+
+    assert coordinator._listener_task is replacement
+    replacement.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await replacement
+
+
+async def test_clear_listener_task_clears_own_task(
+    coordinator: EasywaveCoordinator,
+) -> None:
+    """Listener cleanup clears the task reference for the exiting loop."""
+
+    async def own_loop() -> None:
+        coordinator._listener_task = asyncio.current_task()
+        await coordinator._clear_listener_task()
+
+    await own_loop()
 
     assert coordinator._listener_task is None

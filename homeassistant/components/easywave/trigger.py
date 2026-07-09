@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_OPTIONS, CONF_TARGET
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device import async_entity_id_to_device_id
 from homeassistant.helpers.target import (
     TargetSelection,
     async_extract_referenced_entity_ids,
@@ -64,7 +65,11 @@ class EasywaveEventTrigger(Trigger, ABC):
         referenced = async_extract_referenced_entity_ids(
             self._hass, TargetSelection(self._target), expand_group=False
         )
-        return referenced.referenced_devices
+        device_ids = set(referenced.referenced_devices)
+        for entity_id in referenced.referenced:
+            if device_id := async_entity_id_to_device_id(self._hass, entity_id):
+                device_ids.add(device_id)
+        return device_ids
 
     @override
     async def async_attach_runner(

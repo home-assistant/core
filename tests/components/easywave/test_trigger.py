@@ -9,7 +9,7 @@ from homeassistant.components.easywave.const import (
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -58,6 +58,54 @@ async def test_easywave_button_press_a_trigger_fires(
                 "trigger": {
                     "trigger": "easywave.button_press_a",
                     "target": {"device_id": device.id},
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data": {"subtype": "{{ trigger.event.data.subtype }}"},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(
+        EVENT_EASYWAVE,
+        {
+            "device_id": device.id,
+            "type": EVENT_TYPE_BUTTON_PRESS,
+            "subtype": "a",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+    assert service_calls[0].data["subtype"] == "a"
+
+
+async def test_easywave_button_press_a_trigger_fires_for_entity_target(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Purpose-specific trigger fires when configured via entity target selector."""
+    await _async_setup_entry(hass)
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)}
+    )
+    assert device is not None
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "sensor", DOMAIN, f"{MOCK_TRANSMITTER_DEVICE_ID}_last_button"
+    )
+    assert entity_id is not None
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": {
+                    "trigger": "easywave.button_press_a",
+                    "target": {"entity_id": entity_id},
                 },
                 "action": {
                     "service": "test.automation",
