@@ -14,7 +14,6 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
 )
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -55,7 +54,6 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
     """Firmware/software update status for an Omada controller."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "firmware"
 
     def __init__(self, coordinator: OmadaControllerCoordinator) -> None:
