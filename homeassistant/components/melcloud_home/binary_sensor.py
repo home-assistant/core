@@ -15,6 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .common import async_setup_unit_entities
 from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity
 
@@ -108,27 +109,21 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MELCloud Home binary sensors."""
-    coordinator = entry.runtime_data
 
-    def _async_add_new_ata_units(units: list[ATAUnit]) -> None:
-        async_add_entities(
-            ATABinarySensor(coordinator, entity_description, unit)
+    async_setup_unit_entities(
+        entry.runtime_data,
+        async_add_entities,
+        lambda units: (
+            ATABinarySensor(entry.runtime_data, entity_description, unit)
             for entity_description in ATA_SENSORS
             for unit in units
-        )
-
-    def _async_add_new_atw_units(units: list[ATWUnit]) -> None:
-        async_add_entities(
-            ATWBinarySensor(coordinator, entity_description, unit)
+        ),
+        lambda units: (
+            ATWBinarySensor(entry.runtime_data, entity_description, unit)
             for entity_description in ATW_SENSORS
             for unit in units
-        )
-
-    coordinator.new_ata_callbacks.append(_async_add_new_ata_units)
-    coordinator.new_atw_callbacks.append(_async_add_new_atw_units)
-
-    _async_add_new_ata_units(list(coordinator.ata_units.values()))
-    _async_add_new_atw_units(list(coordinator.atw_units.values()))
+        ),
+    )
 
 
 class ATABinarySensor(MelCloudHomeATAUnitEntity, BinarySensorEntity):
