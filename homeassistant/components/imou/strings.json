@@ -50,6 +50,51 @@
         "name": "Live view SD"
       }
     },
+    "sensor": {
+      "battery": {
+        "name": "Battery"
+      },
+      "current": {
+        "name": "Current"
+      },
+      "humidity_current": {
+        "name": "Humidity"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "offline": "Offline",
+          "online": "Online",
+          "sleep": "Sleep",
+          "upgrading": "Upgrading"
+        }
+      },
+      "storage_used": {
+        "name": "Storage used",
+        "state": {
+          "e1": "No storage medium",
+          "e2": "Abnormal"
+        }
+      },
+      "switch_cnt": {
+        "name": "Cycles today"
+      },
+      "temperature_current": {
+        "name": "Temperature"
+      },
+      "use_electricity": {
+        "name": "Energy consumption"
+      },
+      "use_time": {
+        "name": "Usage duration"
+      },
+      "voltage": {
+        "name": "Voltage"
+      }
+    },
     "switch": {
       "ab_alarm_sound": {
         "name": "Abnormal sound alarm"
@@ -74,51 +119,6 @@
       },
       "white_light": {
         "name": "White light"
-      }
-    },
-    "sensor": {
-      "storage_used": {
-        "name": "Storage used",
-        "state": {
-          "e1": "No storage medium",
-          "e2": "Abnormal"
-        }
-      },
-      "status": {
-        "name": "Status",
-        "state": {
-          "online": "Online",
-          "offline": "Offline",
-          "sleep": "Sleep",
-          "upgrading": "Upgrading"
-        }
-      },
-      "battery": {
-        "name": "Battery"
-      },
-      "temperature_current": {
-        "name": "Temperature"
-      },
-      "humidity_current": {
-        "name": "Humidity"
-      },
-      "power": {
-        "name": "Power"
-      },
-      "voltage": {
-        "name": "Voltage"
-      },
-      "current": {
-        "name": "Current"
-      },
-      "switch_cnt": {
-        "name": "Cycles today"
-      },
-      "use_electricity": {
-        "name": "Energy consumption"
-      },
-      "use_time": {
-        "name": "Usage duration"
       }
     }
   },
