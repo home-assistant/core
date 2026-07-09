@@ -1,21 +1,16 @@
 """Tests to ensure all Easywave entities have valid unique IDs."""
 
-from homeassistant.components.easywave.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
-    MOCK_ENTRY_DATA,
-    MOCK_ENTRY_ID,
     MOCK_NEO_SENSOR_SERIAL,
     MOCK_TRANSMITTER_SERIAL,
-    _devices_options,
+    _entry_with_subentries,
     _neo_sensor_device_record,
     _transmitter_device_record,
     async_setup_easywave_entry,
 )
-
-from tests.common import MockConfigEntry
 
 NEO_SENSOR_CAPABILITIES = (1 << 4) | (1 << 5)
 
@@ -24,15 +19,7 @@ async def test_transmitter_entities_have_unique_ids_from_setup(
     hass: HomeAssistant,
 ) -> None:
     """Transmitter entities registered during setup use device-based unique IDs."""
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(_transmitter_device_record(title="Test Transmitter")),
-    )
+    entry = _entry_with_subentries(_transmitter_device_record(title="Test Transmitter"))
     await async_setup_easywave_entry(hass, entry)
 
     registry = er.async_get(hass)
@@ -54,19 +41,11 @@ async def test_neo_sensor_entities_have_unique_ids_from_setup(
     hass: HomeAssistant,
 ) -> None:
     """Neo sensor entities registered during setup use device-based unique IDs."""
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(
-            _neo_sensor_device_record(
-                title="Neo Sensor",
-                capabilities=NEO_SENSOR_CAPABILITIES,
-            )
-        ),
+    entry = _entry_with_subentries(
+        _neo_sensor_device_record(
+            title="Neo Sensor",
+            capabilities=NEO_SENSOR_CAPABILITIES,
+        )
     )
     await async_setup_easywave_entry(hass, entry)
 

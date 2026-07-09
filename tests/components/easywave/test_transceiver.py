@@ -20,15 +20,12 @@ def mock_gateway() -> MagicMock:
     gateway.usb_serial_number = None
     gateway.hw_version = None
     gateway.fw_version = None
-    gateway.device = None
     gateway.connect = AsyncMock(return_value=True)
     gateway.disconnect = AsyncMock()
     gateway.stop = AsyncMock()
     gateway.reconnect = AsyncMock(return_value=True)
     gateway.cancel_pending_receives = AsyncMock()
     gateway.ew = MagicMock()
-    gateway.ew.get_gateway_serial = AsyncMock(return_value=b"\x01" * 16)
-    gateway.ew.send_command = AsyncMock(return_value=True)
     gateway.ew.receive_ex = AsyncMock(return_value=None)
     return gateway
 
@@ -70,37 +67,15 @@ async def test_reconnect_delegates_to_gateway(
     mock_gateway.reconnect.assert_awaited_once()
 
 
-async def test_gateway_operations_delegate_to_ew_facade(
+async def test_receive_telegram_delegates_to_gateway(
     transceiver: RX11Transceiver, mock_gateway: MagicMock
 ) -> None:
-    """EW operations delegate to the library facade."""
-    mock_gateway.is_connected = True
-    mock_device = MagicMock()
-    mock_device.get_available_functions = AsyncMock(
-        return_value={"ping": "Ping device"}
-    )
-    mock_device.get_device_info = AsyncMock(return_value={"device_type": "RX11"})
-    mock_gateway.device = mock_device
-
-    assert await transceiver.get_gateway_serial(0) == b"\x01" * 16
-    assert await transceiver.send_command(b"\x02" * 16, 0) is True
+    """Receive and cancel operations delegate to the library facade."""
     assert await transceiver.receive_telegram(timeout=5.0) is None
     await transceiver.cancel_pending_receives()
 
-    mock_gateway.ew.get_gateway_serial.assert_awaited_once_with(0)
-    mock_gateway.ew.send_command.assert_awaited_once_with(b"\x02" * 16, 0)
     mock_gateway.ew.receive_ex.assert_awaited_once_with(timeout=5.0)
     mock_gateway.cancel_pending_receives.assert_awaited_once()
-    assert await transceiver.get_available_functions() == {"ping": "Ping device"}
-    assert await transceiver.get_device_info() == {"device_type": "RX11"}
-
-
-async def test_capability_queries_return_empty_when_disconnected(
-    transceiver: RX11Transceiver,
-) -> None:
-    """Capability helpers return empty results when disconnected."""
-    assert await transceiver.get_available_functions() == {}
-    assert await transceiver.get_device_info() == {}
 
 
 async def test_connected_callback_is_forwarded(

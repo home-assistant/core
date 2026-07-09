@@ -127,16 +127,47 @@ EVENT_TYPE_BATTERY_NORMAL: Final = "battery_normal"
 EVENT_TYPE_GATEWAY_CONNECTED: Final = "gateway_connected"
 EVENT_TYPE_GATEWAY_DISCONNECTED: Final = "gateway_disconnected"
 
-CONF_DEVICE_TITLE: Final = "title"
-CONF_DEVICE_DATA: Final = "data"
 CONF_ENTRY_TYPE: Final = "entry_type"
+CONF_DEVICE_TITLE: Final = "title"
 
-SUBENTRY_DEVICE: Final = "device"
-SUBENTRY_TYPE_TRANSMITTER: Final = "transmitter"
-SUBENTRY_TYPE_NEO_SENSOR: Final = "neo_sensor"
+SUBENTRY_TYPE_EASYWAVE_TRANSMITTER: Final = "easywave_transmitter"
+SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR: Final = "easywave_neo_sensor"
+SUBENTRY_TYPE_EASYWAVE_RECEIVER: Final = "easywave_receiver"
+SUBENTRY_TYPE_EASYWAVE_NEO_RECEIVER: Final = "easywave_neo_receiver"
+SUBENTRY_TYPE_SECWAVE_TRANSMITTER: Final = "secwave_transmitter"
+SUBENTRY_TYPE_SECWAVE_RECEIVER: Final = "secwave_receiver"
+
+DEVICE_SUBENTRY_TYPES: Final = (
+    SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
+    SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR,
+    SUBENTRY_TYPE_EASYWAVE_RECEIVER,
+    SUBENTRY_TYPE_EASYWAVE_NEO_RECEIVER,
+    SUBENTRY_TYPE_SECWAVE_TRANSMITTER,
+    SUBENTRY_TYPE_SECWAVE_RECEIVER,
+)
 
 ENTRY_TYPE_TRANSMITTER: Final = "transmitter"
 ENTRY_TYPE_NEO_SENSOR: Final = "neo_sensor"
+
+ENTRY_TYPE_TO_SUBENTRY_TYPE: Final = {
+    ENTRY_TYPE_TRANSMITTER: SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
+    ENTRY_TYPE_NEO_SENSOR: SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR,
+}
+
+BUCKET_SUBENTRY_TITLES: Final = {
+    SUBENTRY_TYPE_EASYWAVE_TRANSMITTER: "Easywave transmitter",
+    SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR: "Easywave neo sensor",
+    SUBENTRY_TYPE_EASYWAVE_RECEIVER: "Easywave receiver",
+    SUBENTRY_TYPE_EASYWAVE_NEO_RECEIVER: "Easywave neo receiver",
+    SUBENTRY_TYPE_SECWAVE_TRANSMITTER: "Secwave transmitter",
+    SUBENTRY_TYPE_SECWAVE_RECEIVER: "Secwave receiver",
+}
+
+
+def bucket_subentry_unique_id(config_entry_id: str, subentry_type: str) -> str:
+    """Return the fixed unique id for a device-type bucket subentry."""
+    return f"{config_entry_id}_{subentry_type}"
+
 
 CONF_TRANSMITTER_SERIAL: Final = "transmitter_serial"
 

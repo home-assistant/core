@@ -89,12 +89,12 @@ async def test_config_flow_translation_keys_exist(hass: HomeAssistant) -> None:
     assert (
         "{sensor_list}"
         in config_subentries_translations[
-            f"component.{DOMAIN}.config_subentries.device.step.sensor_confirm.description"
+            "component.easywave.config_subentries.easywave_neo_sensor.step.sensor_confirm.description"
         ]
     )
     assert (
         config_subentries_translations[
-            f"component.{DOMAIN}.config_subentries.device.step.transmitter_learn_intro.title"
+            "component.easywave.config_subentries.easywave_transmitter.step.transmitter_learn_intro.title"
         ]
         == "Learn Transmitter"
     )

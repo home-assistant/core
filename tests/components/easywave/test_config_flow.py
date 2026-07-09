@@ -6,7 +6,8 @@ import pytest
 
 from homeassistant.components.easywave.config_flow import EasywaveConfigFlow
 from homeassistant.components.easywave.config_flow_subentry import (
-    EasywaveDeviceSubentryFlowHandler,
+    EasywaveNeoSensorSubentryFlowHandler,
+    EasywaveTransmitterSubentryFlowHandler,
 )
 from homeassistant.components.easywave.const import (
     CONF_DEVICE_PATH,
@@ -14,7 +15,8 @@ from homeassistant.components.easywave.const import (
     CONF_USB_SERIAL_NUMBER,
     CONF_USB_VID,
     DOMAIN,
-    SUBENTRY_DEVICE,
+    SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR,
+    SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
 )
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -239,10 +241,13 @@ async def test_user_flow_existing_gateway_aborts(
 
 
 def test_supported_subentry_types() -> None:
-    """Test the hub exposes the device subentry flow handler."""
+    """Test the hub exposes typed device subentry flow handlers."""
     assert EasywaveConfigFlow.async_get_supported_subentry_types(
         MockConfigEntry(domain=DOMAIN)
-    ) == {SUBENTRY_DEVICE: EasywaveDeviceSubentryFlowHandler}
+    ) == {
+        SUBENTRY_TYPE_EASYWAVE_TRANSMITTER: EasywaveTransmitterSubentryFlowHandler,
+        SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR: EasywaveNeoSensorSubentryFlowHandler,
+    }
 
 
 async def test_user_flow_device_disappeared(hass: HomeAssistant) -> None:

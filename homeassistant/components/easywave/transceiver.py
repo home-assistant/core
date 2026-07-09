@@ -7,7 +7,6 @@ Home Assistant callbacks and entity lifecycle.
 
 from collections.abc import Callable
 import logging
-from typing import Any
 
 from easywave_home_control import (
     EasywaveGateway,
@@ -113,14 +112,6 @@ class RX11Transceiver:
         """Reconnect to the RX11 transceiver."""
         return await self._gateway.reconnect()
 
-    async def get_gateway_serial(self, index: int) -> bytes | None:
-        """Return the gateway serial at the given index."""
-        return await self._gateway.ew.get_gateway_serial(index)
-
-    async def send_command(self, gateway: bytes, button: int) -> bool:
-        """Send an Easywave command to a receiver."""
-        return await self._gateway.ew.send_command(gateway, button)
-
     async def receive_telegram(self, timeout: float = 30.0) -> EwbRcvEvent | None:
         """Wait for an EW/EWneo telegram."""
         return await self._gateway.ew.receive_ex(timeout=timeout)
@@ -128,17 +119,3 @@ class RX11Transceiver:
     async def cancel_pending_receives(self) -> None:
         """Cancel pending receive requests on the hardware."""
         await self._gateway.cancel_pending_receives()
-
-    async def get_available_functions(self) -> dict[str, str]:
-        """Return API functions supported by the connected transceiver."""
-        device = self._gateway.device
-        if device is None or not self.is_connected:
-            return {}
-        return await device.get_available_functions()
-
-    async def get_device_info(self) -> dict[str, Any]:
-        """Return metadata for the connected transceiver."""
-        device = self._gateway.device
-        if device is None or not self.is_connected:
-            return {}
-        return await device.get_device_info()

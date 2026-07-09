@@ -26,7 +26,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import (
     MOCK_ENTRY_ID,
-    _devices_options,
     _neo_sensor_device_record,
     _transmitter_device_record,
 )
@@ -330,7 +329,7 @@ def test_is_duplicate_matches_serial_in_subentries(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain="easywave",
         entry_id=MOCK_ENTRY_ID,
-        options=_devices_options(_transmitter_device_record(title="Other")),
+        subentries_data=(_transmitter_device_record(title="Other"),),
     )
     entry.add_to_hass(hass)
     helper = _FlowHelper(hass, entry)
@@ -347,7 +346,7 @@ def test_is_duplicate_matches_sensor_serial_in_subentries(hass: HomeAssistant) -
     entry = MockConfigEntry(
         domain="easywave",
         entry_id=MOCK_ENTRY_ID,
-        options=_devices_options(_neo_sensor_device_record(title="Other")),
+        subentries_data=(_neo_sensor_device_record(title="Other"),),
     )
     entry.add_to_hass(hass)
     helper = _FlowHelper(hass, entry)
@@ -364,7 +363,7 @@ def test_is_duplicate_matches_serial_case_insensitively(hass: HomeAssistant) -> 
     entry = MockConfigEntry(
         domain="easywave",
         entry_id=MOCK_ENTRY_ID,
-        options=_devices_options(_transmitter_device_record(title="Other")),
+        subentries_data=(_transmitter_device_record(title="Other"),),
     )
     entry.add_to_hass(hass)
     helper = _FlowHelper(hass, entry)

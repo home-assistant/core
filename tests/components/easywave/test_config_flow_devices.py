@@ -12,8 +12,8 @@ from easywave_home_control.codec import (
 from easywave_home_control.codec.events import EasywaveButton
 
 from homeassistant.components.easywave.const import (
+    BUCKET_SUBENTRY_TITLES,
     CONF_BUTTON_COUNT,
-    CONF_DEVICE_DATA,
     CONF_DEVICE_TITLE,
     CONF_ENTRY_TYPE,
     CONF_GROUPING_MODE,
@@ -24,14 +24,14 @@ from homeassistant.components.easywave.const import (
     CONF_TRANSMITTER_SERIAL,
     ENTRY_TYPE_NEO_SENSOR,
     ENTRY_TYPE_TRANSMITTER,
-    SUBENTRY_DEVICE,
-    SUBENTRY_TYPE_NEO_SENSOR,
-    SUBENTRY_TYPE_TRANSMITTER,
+    SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR,
+    SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
     TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_IMPULSE,
+    bucket_subentry_unique_id,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
+from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -49,12 +49,8 @@ async def _start_transmitter_flow(
 ) -> dict:
     """Start the subentry flow for adding a transmitter."""
     result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, SUBENTRY_DEVICE),
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_EASYWAVE_TRANSMITTER),
         context={"source": SOURCE_USER},
-    )
-    assert result["step_id"] == "device_select"
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"next_step_id": SUBENTRY_TYPE_TRANSMITTER}
     )
     if result["type"] is FlowResultType.ABORT:
         return result
@@ -69,12 +65,8 @@ async def _start_neo_sensor_flow_until_intro(
 ) -> dict:
     """Start the neo sensor subentry flow up to the learn intro step."""
     result = await hass.config_entries.subentries.async_init(
-        (mock_config_entry.entry_id, SUBENTRY_DEVICE),
+        (mock_config_entry.entry_id, SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR),
         context={"source": SOURCE_USER},
-    )
-    assert result["step_id"] == "device_select"
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"], {"next_step_id": SUBENTRY_TYPE_NEO_SENSOR}
     )
     assert result["step_id"] == "sensor_learn_intro"
     return result
@@ -106,16 +98,12 @@ def _make_connected_runtime(coordinator: MagicMock) -> MagicMock:
 def _make_coordinator(
     *,
     is_connected: bool = True,
-    gateway_serial: bytes | None = b"\x00" * 15 + b"\xab",
-    send_ok: bool = True,
     telegram: dict | None = None,
     defer_receive: bool = False,
 ) -> MagicMock:
     """Return a mock coordinator with transceiver configured."""
     coordinator = MagicMock()
     coordinator.transceiver.is_connected = is_connected
-    coordinator.transceiver.get_gateway_serial = AsyncMock(return_value=gateway_serial)
-    coordinator.transceiver.send_command = AsyncMock(return_value=send_ok)
     if defer_receive and telegram is not None:
 
         async def _receive_telegram(*_args: object, **_kwargs: object) -> object:
@@ -191,22 +179,25 @@ async def test_transmitter_flow_group_impulse(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], user_input={"title": "Hall Remote"}
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "device_added"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == BUCKET_SUBENTRY_TITLES[SUBENTRY_TYPE_EASYWAVE_TRANSMITTER]
+    assert result["unique_id"] == bucket_subentry_unique_id(
+        mock_config_entry.entry_id, SUBENTRY_TYPE_EASYWAVE_TRANSMITTER
+    )
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry is not None
-    devices = entry.options[CONF_DEVICES]
-    assert len(devices) == 1
-    device = devices[0]
-    assert device[CONF_DEVICE_DATA][CONF_ENTRY_TYPE] == ENTRY_TYPE_TRANSMITTER
-    assert device[CONF_DEVICE_DATA][CONF_TRANSMITTER_SERIAL] == MOCK_TRANSMITTER_SERIAL
-    assert device[CONF_DEVICE_DATA][CONF_OPERATING_TYPE] == "1"
-    assert device[CONF_DEVICE_DATA][CONF_BUTTON_COUNT] == 4
-    assert device[CONF_DEVICE_DATA][CONF_GROUPING_MODE] == TRANSMITTER_GROUPING_GROUP
-    assert device[CONF_DEVICE_DATA][CONF_SWITCH_MODE] == TRANSMITTER_SWITCH_IMPULSE
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_EASYWAVE_TRANSMITTER)
+    assert len(subentries) == 1
+    subentry = subentries[0]
+    device = subentry.data[CONF_DEVICES][f"transmitter_{MOCK_TRANSMITTER_SERIAL}"]
     assert device[CONF_DEVICE_TITLE] == "Hall Remote"
-    assert device[CONF_DEVICE_ID] == f"transmitter_{MOCK_TRANSMITTER_SERIAL}"
+    assert device[CONF_ENTRY_TYPE] == ENTRY_TYPE_TRANSMITTER
+    assert device[CONF_TRANSMITTER_SERIAL] == MOCK_TRANSMITTER_SERIAL
+    assert device[CONF_OPERATING_TYPE] == "1"
+    assert device[CONF_BUTTON_COUNT] == 4
+    assert device[CONF_GROUPING_MODE] == TRANSMITTER_GROUPING_GROUP
+    assert device[CONF_SWITCH_MODE] == TRANSMITTER_SWITCH_IMPULSE
 
 
 async def test_transmitter_flow_timeout_then_retry(
@@ -319,18 +310,22 @@ async def test_neo_sensor_flow_full(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], user_input={"title": "Living Room Sensor"}
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "device_added"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == BUCKET_SUBENTRY_TITLES[SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR]
+    assert result["unique_id"] == bucket_subentry_unique_id(
+        mock_config_entry.entry_id, SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR
+    )
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry is not None
-    devices = entry.options[CONF_DEVICES]
-    assert len(devices) == 1
-    device = devices[0]
-    assert device[CONF_DEVICE_DATA][CONF_ENTRY_TYPE] == ENTRY_TYPE_NEO_SENSOR
-    assert device[CONF_DEVICE_DATA][CONF_SENSOR_SERIAL] == MOCK_SENSOR_SERIAL
-    assert device[CONF_DEVICE_DATA][CONF_SENSOR_CAPABILITIES] == NEO_SENSOR_CAPABILITIES
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR)
+    assert len(subentries) == 1
+    subentry = subentries[0]
+    device = subentry.data[CONF_DEVICES][f"neo_sensor_{MOCK_SENSOR_SERIAL}"]
     assert device[CONF_DEVICE_TITLE] == "Living Room Sensor"
+    assert device[CONF_ENTRY_TYPE] == ENTRY_TYPE_NEO_SENSOR
+    assert device[CONF_SENSOR_SERIAL] == MOCK_SENSOR_SERIAL
+    assert device[CONF_SENSOR_CAPABILITIES] == NEO_SENSOR_CAPABILITIES
 
 
 async def test_neo_sensor_flow_duplicate_rejected(
@@ -405,12 +400,17 @@ async def test_transmitter_flow_buttons_1(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], user_input={"title": "Single Button Remote"}
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "device_added"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == BUCKET_SUBENTRY_TITLES[SUBENTRY_TYPE_EASYWAVE_TRANSMITTER]
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry is not None
-    assert entry.options[CONF_DEVICES][0][CONF_DEVICE_DATA][CONF_BUTTON_COUNT] == 1
+    assert (
+        entry.get_subentries_of_type(SUBENTRY_TYPE_EASYWAVE_TRANSMITTER)[0].data[
+            CONF_DEVICES
+        ][f"transmitter_{MOCK_TRANSMITTER_SERIAL}"][CONF_BUTTON_COUNT]
+        == 1
+    )
 
 
 async def test_neo_sensor_flow_abort_learning(

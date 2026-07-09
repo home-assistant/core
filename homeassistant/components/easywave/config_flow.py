@@ -15,7 +15,10 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-from .config_flow_subentry import EasywaveDeviceSubentryFlowHandler
+from .config_flow_subentry import (
+    EasywaveNeoSensorSubentryFlowHandler,
+    EasywaveTransmitterSubentryFlowHandler,
+)
 from .const import (
     CONF_DEVICE_PATH,
     CONF_USB_MANUFACTURER,
@@ -24,7 +27,8 @@ from .const import (
     CONF_USB_SERIAL_NUMBER,
     CONF_USB_VID,
     DOMAIN,
-    SUBENTRY_DEVICE,
+    SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR,
+    SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
     SUPPORTED_USB_IDS,
     USB_DEVICE_NAMES,
     get_frequency_for_pid,
@@ -51,7 +55,10 @@ class EasywaveConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
-        return {SUBENTRY_DEVICE: EasywaveDeviceSubentryFlowHandler}
+        return {
+            SUBENTRY_TYPE_EASYWAVE_TRANSMITTER: EasywaveTransmitterSubentryFlowHandler,
+            SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR: EasywaveNeoSensorSubentryFlowHandler,
+        }
 
     def _abort_if_frequency_not_permitted(
         self, pid: int | None

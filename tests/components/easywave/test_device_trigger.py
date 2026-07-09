@@ -7,8 +7,6 @@ from homeassistant.components import automation, device_automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.easywave import device_trigger
 from homeassistant.components.easywave.const import (
-    CONF_DEVICE_DATA,
-    CONF_DEVICE_TITLE,
     DOMAIN,
     EVENT_EASYWAVE,
     EVENT_TYPE_BATTERY_LOW,
@@ -22,24 +20,15 @@ from homeassistant.components.easywave.const import (
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.config_entries import ConfigSubentryData
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_DEVICES,
-    CONF_DOMAIN,
-    CONF_PLATFORM,
-    CONF_TYPE,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
-    MOCK_ENTRY_DATA,
-    MOCK_ENTRY_ID,
-    MOCK_GATEWAY_TITLE,
     MOCK_NEO_SENSOR_DEVICE_ID,
     MOCK_TRANSMITTER_DEVICE_ID,
-    _devices_options,
+    _entry_with_subentries,
     _neo_sensor_device_record,
     _transmitter_device_record,
     async_setup_easywave_entry,
@@ -55,16 +44,7 @@ CONF_SUBTYPE = "subtype"
 
 def _make_gateway_entry(*device_records: ConfigSubentryData) -> MockConfigEntry:
     """Return a gateway config entry with optional configured devices."""
-    return MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        title=MOCK_GATEWAY_TITLE,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(*device_records) if device_records else {},
-    )
+    return _entry_with_subentries(*device_records)
 
 
 async def _async_setup_entry(
@@ -437,46 +417,6 @@ async def test_get_trigger_capabilities(hass: HomeAssistant) -> None:
     assert await device_trigger.async_get_trigger_capabilities(hass, {}) == {}
 
 
-@pytest.mark.parametrize(
-    "device_data",
-    [
-        pytest.param(None, id="missing"),
-        pytest.param("invalid", id="non_dict"),
-    ],
-)
-async def test_get_triggers_ignores_malformed_stored_device_data(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    device_data: object,
-) -> None:
-    """Malformed stored device data does not produce transmitter triggers."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        title=MOCK_GATEWAY_TITLE,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options={
-            CONF_DEVICES: [
-                {
-                    CONF_DEVICE_ID: MOCK_TRANSMITTER_DEVICE_ID,
-                    CONF_DEVICE_TITLE: "Transmitter",
-                    CONF_DEVICE_DATA: device_data,
-                }
-            ]
-        },
-    )
-    await async_setup_easywave_entry(hass, entry)
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, MOCK_TRANSMITTER_DEVICE_ID)},
-        name="Transmitter",
-    )
-    triggers = await device_trigger.async_get_triggers(hass, device.id)
-    assert triggers == []
-
-
 def test_device_identifier_returns_none_without_domain(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -491,7 +431,7 @@ def test_device_identifier_returns_none_without_domain(
     assert device_trigger._device_identifier(device) is None
 
 
-async def test_stored_device_data_skips_non_matching_records(
+async def test_subentry_data_skips_non_matching_records(
     hass: HomeAssistant,
 ) -> None:
     """Stored device lookup skips records with a different device id."""
@@ -503,13 +443,8 @@ async def test_stored_device_data_skips_non_matching_records(
         _transmitter_device_record(button_count=1, title="Test Transmitter"),
     )
     entry.add_to_hass(hass)
-    assert (
-        device_trigger._stored_device_data(entry, MOCK_TRANSMITTER_DEVICE_ID)
-        is not None
-    )
-    assert (
-        device_trigger._stored_device_data(entry, MOCK_NEO_SENSOR_DEVICE_ID) is not None
-    )
+    assert device_trigger._subentry_data(entry, MOCK_TRANSMITTER_DEVICE_ID) is not None
+    assert device_trigger._subentry_data(entry, MOCK_NEO_SENSOR_DEVICE_ID) is not None
 
 
 async def test_find_easywave_config_entry_without_domain_identifier(

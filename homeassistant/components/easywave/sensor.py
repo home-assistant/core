@@ -79,7 +79,10 @@ async def async_setup_entry(
                 continue
             last_button = EasywaveTransmitterLastButtonSensor(entry, device)
             battery = EasywaveTransmitterBatterySensor(entry, device)
-            async_add_entities([last_button, battery])
+            async_add_entities(
+                [last_button, battery],
+                config_subentry_id=device.subentry_id,
+            )
         elif entry_type == ENTRY_TYPE_NEO_SENSOR:
             capabilities = device.data.get(CONF_SENSOR_CAPABILITIES, 0)
             neo_entities: list[SensorEntity] = []
@@ -88,7 +91,10 @@ async def async_setup_entry(
             if (capabilities >> 5) & 1:
                 neo_entities.append(EasywaveNeoSensorHumiditySensor(entry, device))
             if neo_entities:
-                async_add_entities(neo_entities)
+                async_add_entities(
+                    neo_entities,
+                    config_subentry_id=device.subentry_id,
+                )
 
     coordinator.ensure_telegram_listener()
 
@@ -128,17 +134,10 @@ class EasywaveGatewaySensor(CoordinatorEntity[EasywaveCoordinator], SensorEntity
         self._current_status: str | None = None
 
     def _connection_status(self) -> str:
-        """Get connection status as constant key (translated by HA frontend).
-
-        Returns the current connection status from the coordinator:
-        - "connected": Device is currently connected
-        - "disconnected": Device is not found or offline
-        """
-        # Check if device is offline (not found)
+        """Get connection status as constant key (translated by HA frontend)."""
         if self.coordinator.is_offline:
             return "disconnected"
 
-        # Check transceiver connection status
         transceiver = self.coordinator.transceiver
         if transceiver and transceiver.is_connected:
             return "connected"

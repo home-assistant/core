@@ -21,7 +21,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_BUTTON_COUNT,
-    CONF_DEVICE_DATA,
     CONF_ENTRY_TYPE,
     CONF_SWITCH_MODE,
     DOMAIN,
@@ -35,7 +34,7 @@ from .const import (
     EVENT_TYPE_GATEWAY_DISCONNECTED,
     TRANSMITTER_SWITCH_IMPULSE,
 )
-from .devices import get_stored_devices
+from .devices import get_device_data
 
 CONF_SUBTYPE = "subtype"
 
@@ -76,16 +75,9 @@ class _GatewayMarker:
 _GATEWAY_MARKER = _GatewayMarker()
 
 
-def _stored_device_data(entry: ConfigEntry, easywave_id: str) -> dict[str, Any] | None:
-    """Return stored device data for a child device identifier."""
-    for device in get_stored_devices(entry):
-        if device.get(CONF_DEVICE_ID) != easywave_id:
-            continue
-        device_data = device.get(CONF_DEVICE_DATA)
-        if not isinstance(device_data, dict):
-            return None
-        return dict(device_data)
-    return None
+def _subentry_data(entry: ConfigEntry, easywave_id: str) -> dict[str, Any] | None:
+    """Return subentry data for a child device identifier."""
+    return get_device_data(entry, easywave_id)
 
 
 def _find_easywave_config_entry(
@@ -116,7 +108,7 @@ def _find_easywave_config_entry(
     for entry in hass.config_entries.async_loaded_entries(DOMAIN):
         if easywave_id == entry.entry_id:
             return entry
-        if _stored_device_data(entry, easywave_id) is not None:
+        if _subentry_data(entry, easywave_id) is not None:
             return entry
 
     return None
@@ -125,7 +117,7 @@ def _find_easywave_config_entry(
 def _get_device_data(
     hass: HomeAssistant, ha_device_id: str
 ) -> dict[str, Any] | _GatewayMarker | None:
-    """Return device data from config entry options, or gateway marker."""
+    """Return device data from config subentries, or gateway marker."""
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(ha_device_id)
     if device is None:
@@ -141,7 +133,7 @@ def _get_device_data(
     if easywave_id == entry.entry_id:
         return _GATEWAY_MARKER
 
-    if device_data := _stored_device_data(entry, easywave_id):
+    if device_data := _subentry_data(entry, easywave_id):
         return device_data
     return None
 

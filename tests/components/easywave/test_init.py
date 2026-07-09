@@ -3,19 +3,21 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.easywave import async_remove_config_entry_device
-from homeassistant.components.easywave.const import DOMAIN
+from homeassistant.components.easywave.const import (
+    DOMAIN,
+    SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
+)
 from homeassistant.components.easywave.coordinator import EasywaveCoordinator
 from homeassistant.components.easywave.devices import get_devices
-from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
+from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .conftest import (
     MOCK_ENTRY_DATA,
-    MOCK_ENTRY_ID,
     MOCK_NEO_SENSOR_DEVICE_ID,
     MOCK_TRANSMITTER_DEVICE_ID,
-    _devices_options,
+    _entry_with_subentries,
     _neo_sensor_device_record,
     _transmitter_device_record,
     async_setup_easywave_entry,
@@ -144,16 +146,9 @@ async def test_remove_config_entry_device_removes_child(
     hass: HomeAssistant,
 ) -> None:
     """Removing a child device via the three-dot menu should succeed."""
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        data=MOCK_ENTRY_DATA,
-        unique_id="easywave_gw",
-        options=_devices_options(
-            _neo_sensor_device_record(title="Neo Sensor"),
-            _transmitter_device_record(title="Transmitter"),
-        ),
+    entry = _entry_with_subentries(
+        _neo_sensor_device_record(title="Neo Sensor"),
+        _transmitter_device_record(title="Transmitter"),
     )
     entry.add_to_hass(hass)
 
@@ -168,25 +163,19 @@ async def test_remove_config_entry_device_removes_child(
     assert result is True
     entry = hass.config_entries.async_get_entry(entry.entry_id)
     assert entry is not None
-    devices = entry.options[CONF_DEVICES]
-    assert len(devices) == 1
-    assert devices[0][CONF_DEVICE_ID] == MOCK_TRANSMITTER_DEVICE_ID
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_EASYWAVE_TRANSMITTER)
+    assert len(subentries) == 1
+    assert len(subentries[0].data[CONF_DEVICES]) == 1
+    assert MOCK_TRANSMITTER_DEVICE_ID in subentries[0].data[CONF_DEVICES]
 
 
 async def test_get_devices_returns_configured_devices(
     hass: HomeAssistant,
 ) -> None:
-    """Test get_devices returns configured devices from options."""
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        data=MOCK_ENTRY_DATA,
-        unique_id="easywave_gw",
-        options=_devices_options(
-            _neo_sensor_device_record(title="Neo Sensor"),
-            _transmitter_device_record(title="Transmitter"),
-        ),
+    """Test get_devices returns configured devices from subentries."""
+    entry = _entry_with_subentries(
+        _neo_sensor_device_record(title="Neo Sensor"),
+        _transmitter_device_record(title="Transmitter"),
     )
     entry.add_to_hass(hass)
 
@@ -199,10 +188,10 @@ async def test_get_devices_returns_configured_devices(
     assert {device.title for device in devices} == {"Neo Sensor", "Transmitter"}
 
 
-async def test_options_update_triggers_reload(
+async def test_subentry_update_triggers_reload(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Changing device options reloads the config entry."""
+    """Changing device subentries reloads the config entry."""
     await async_setup_easywave_entry(hass, mock_config_entry)
 
     with patch.object(
@@ -239,15 +228,8 @@ async def test_remove_config_entry_device_rejects_unknown_identifier(
 async def test_remove_config_entry_device_rejects_orphan_device(
     hass: HomeAssistant,
 ) -> None:
-    """Devices not stored in options cannot be removed."""
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        data=MOCK_ENTRY_DATA,
-        unique_id="easywave_gw",
-        options=_devices_options(_transmitter_device_record()),
-    )
+    """Devices without a matching subentry cannot be removed."""
+    entry = _entry_with_subentries(_transmitter_device_record())
     entry.add_to_hass(hass)
 
     device_registry = dr.async_get(hass)

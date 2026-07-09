@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES, Platform
+from homeassistant.const import CONF_DEVICES, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
@@ -18,7 +18,7 @@ from .const import (
     is_country_allowed_for_frequency,
 )
 from .coordinator import EasywaveCoordinator
-from .devices import get_stored_devices
+from .devices import iter_device_buckets
 from .gateway_device import update_gateway_device
 from .transceiver import RX11Transceiver
 
@@ -30,8 +30,6 @@ class EasywaveRuntimeData:
     """Runtime data for the Easywave integration."""
 
     coordinator: EasywaveCoordinator
-    frequency: str | None
-    country: str | None
 
 
 type EasywaveConfigEntry = ConfigEntry[EasywaveRuntimeData]
@@ -74,21 +72,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> 
     coordinator = EasywaveCoordinator(hass, transceiver, entry)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = EasywaveRuntimeData(
-        coordinator=coordinator,
-        frequency=frequency,
-        country=country_code,
-    )
+    entry.runtime_data = EasywaveRuntimeData(coordinator=coordinator)
 
     update_gateway_device(hass, entry, transceiver)
-    # Reload when devices are added or removed via the subentry flow.
     entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True
 
 
 async def _async_reload_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) -> None:
-    """Reload the entry when device options change."""
+    """Reload the entry when device subentries change."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
@@ -100,6 +93,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: EasywaveConfigEntry) ->
     return unload_ok
 
 
+def _device_identifier(device: dr.DeviceEntry) -> str | None:
+    """Return the Easywave identifier stored on a device registry entry."""
+    for domain, identifier in device.identifiers:
+        if domain == DOMAIN:
+            return identifier
+    return None
+
+
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: EasywaveConfigEntry,
@@ -109,31 +110,31 @@ async def async_remove_config_entry_device(
 
     The RX11 gateway device (identifier == entry_id) cannot be removed here;
     the user must remove the whole config entry instead. Child devices are
-    stored in config entry options and can be removed freely.
+    removed from their device-type bucket subentry.
     """
     if (DOMAIN, config_entry.entry_id) in device_entry.identifiers:
         return False
 
-    device_id = next(
-        (
-            identifier[1]
-            for identifier in device_entry.identifiers
-            if identifier[0] == DOMAIN
-        ),
-        None,
-    )
-    if device_id is None:
+    easywave_id = _device_identifier(device_entry)
+    if easywave_id is None:
         return False
 
-    devices = get_stored_devices(config_entry)
-    updated_devices = [
-        device for device in devices if device.get(CONF_DEVICE_ID) != device_id
-    ]
-    if len(updated_devices) == len(devices):
-        return False
+    for subentry in iter_device_buckets(config_entry):
+        devices = subentry.data.get(CONF_DEVICES)
+        if not isinstance(devices, dict) or easywave_id not in devices:
+            continue
+        updated_devices = dict(devices)
+        del updated_devices[easywave_id]
+        if updated_devices:
+            hass.config_entries.async_update_subentry(
+                config_entry,
+                subentry,
+                data={CONF_DEVICES: updated_devices},
+            )
+        else:
+            hass.config_entries.async_remove_subentry(
+                config_entry, subentry.subentry_id
+            )
+        return True
 
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={**dict(config_entry.options), CONF_DEVICES: updated_devices},
-    )
-    return True
+    return False

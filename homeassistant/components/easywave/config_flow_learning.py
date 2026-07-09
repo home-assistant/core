@@ -6,24 +6,26 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.config_entries import ConfigEntry, SubentryFlowResult
-from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
+from homeassistant.const import CONF_DEVICES
 from homeassistant.helpers import translation
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 from .const import (
-    CONF_DEVICE_DATA,
+    BUCKET_SUBENTRY_TITLES,
     CONF_DEVICE_TITLE,
     CONF_ENTRY_TYPE,
     CONF_SENSOR_SERIAL,
     CONF_TRANSMITTER_SERIAL,
     DOMAIN,
     ENTRY_TYPE_NEO_SENSOR,
+    ENTRY_TYPE_TO_SUBENTRY_TYPE,
     ENTRY_TYPE_TRANSMITTER,
     LEARNING_TIMEOUT,
+    bucket_subentry_unique_id,
 )
-from .devices import get_stored_devices
+from .devices import get_device_data, get_devices
 
 
 class EasywaveDeviceFlowMixin:
@@ -57,6 +59,15 @@ class EasywaveDeviceFlowMixin:
         ) -> SubentryFlowResult:
             """Finish a progress step."""
 
+        def async_create_entry(
+            self,
+            *,
+            title: str | None = None,
+            data: Mapping[str, Any],
+            unique_id: str | None = None,
+        ) -> SubentryFlowResult:
+            """Create a config subentry."""
+
     _learn_task: asyncio.Task[dict[str, Any] | None] | None
     _learned_device: dict[str, Any] | None
     _learn_progress_action: str
@@ -84,9 +95,14 @@ class EasywaveDeviceFlowMixin:
             return entry.runtime_data.coordinator
         return None
 
-    def _configured_devices(self) -> list[dict[str, Any]]:
-        """Return device records stored on the config entry."""
-        return get_stored_devices(self._get_entry())
+    def _get_bucket_subentry(self, subentry_type: str) -> Any | None:
+        """Return the bucket subentry for a device type, if it exists."""
+        entry = self._get_entry()
+        bucket_unique_id = bucket_subentry_unique_id(entry.entry_id, subentry_type)
+        for subentry in entry.get_subentries_of_type(subentry_type):
+            if subentry.unique_id == bucket_unique_id:
+                return subentry
+        return None
 
     def _is_duplicate(
         self,
@@ -96,8 +112,8 @@ class EasywaveDeviceFlowMixin:
         serial_hex: str | None = None,
     ) -> bool:
         """Return True if a device with this id or serial is already configured."""
-        devices = self._configured_devices()
-        if any(device[CONF_DEVICE_ID] == unique_id for device in devices):
+        entry = self._get_entry()
+        if get_device_data(entry, unique_id) is not None:
             return True
         if serial_hex is None or entry_type is None:
             return False
@@ -109,39 +125,38 @@ class EasywaveDeviceFlowMixin:
             return False
         serial_hex = serial_hex.lower()
         return any(
-            isinstance(device_data := device.get(CONF_DEVICE_DATA), dict)
-            and device_data.get(CONF_ENTRY_TYPE) == entry_type
-            and isinstance(stored_serial := device_data.get(serial_key), str)
+            device.data.get(CONF_ENTRY_TYPE) == entry_type
+            and isinstance(stored_serial := device.data.get(serial_key), str)
             and stored_serial.lower() == serial_hex
-            for device in devices
+            for device in get_devices(entry)
         )
 
     def _save_device(
         self, *, title: str, unique_id: str, data: dict[str, Any]
     ) -> SubentryFlowResult:
-        """Persist a learned device on the gateway config entry.
-
-        Child devices are stored in entry options rather than native config
-        subentries so the UI shows a flat two-level hierarchy (USB gateway and
-        child devices) without an intermediate subentry layer.
-        """
+        """Persist a learned device in the matching device-type bucket subentry."""
         entry = self._get_entry()
-        devices = get_stored_devices(entry)
-        devices.append(
-            {
-                CONF_DEVICE_ID: unique_id,
-                CONF_DEVICE_TITLE: title,
-                CONF_DEVICE_DATA: data,
-            }
-        )
-        self.hass.config_entries.async_update_entry(
+        entry_type = data[CONF_ENTRY_TYPE]
+        bucket_type = ENTRY_TYPE_TO_SUBENTRY_TYPE[entry_type]
+        bucket_unique_id = bucket_subentry_unique_id(entry.entry_id, bucket_type)
+        device_record = {CONF_DEVICE_TITLE: title, **data}
+        bucket = self._get_bucket_subentry(bucket_type)
+
+        if bucket is None:
+            return self.async_create_entry(
+                title=BUCKET_SUBENTRY_TITLES[bucket_type],
+                data={CONF_DEVICES: {unique_id: device_record}},
+                unique_id=bucket_unique_id,
+            )
+
+        devices = dict(bucket.data[CONF_DEVICES])
+        devices[unique_id] = device_record
+        self.hass.config_entries.async_update_subentry(
             entry,
-            options={**dict(entry.options), CONF_DEVICES: devices},
+            bucket,
+            data={CONF_DEVICES: devices},
         )
-        return self.async_abort(
-            reason="device_added",
-            description_placeholders={"device_name": title},
-        )
+        return self.async_abort(reason="device_added")
 
     async def _async_format_neo_sensor_list(
         self, learned_device: dict[str, Any]
@@ -173,22 +188,14 @@ class EasywaveDeviceFlowMixin:
 
     def _next_default_name(self, entry_type: str) -> str:
         """Return a suggested device name based on the existing device count."""
-        devices = self._configured_devices()
+        count = sum(
+            1
+            for device in get_devices(self._get_entry())
+            if device.data.get(CONF_ENTRY_TYPE) == entry_type
+        )
         if entry_type == ENTRY_TYPE_TRANSMITTER:
-            count = sum(
-                1
-                for device in devices
-                if device[CONF_DEVICE_DATA].get(CONF_ENTRY_TYPE)
-                == ENTRY_TYPE_TRANSMITTER
-            )
             return f"Easywave Transmitter {count + 1}"
         if entry_type == ENTRY_TYPE_NEO_SENSOR:
-            count = sum(
-                1
-                for device in devices
-                if device[CONF_DEVICE_DATA].get(CONF_ENTRY_TYPE)
-                == ENTRY_TYPE_NEO_SENSOR
-            )
             return f"Easywave neo Sensor {count + 1}"
         return ""
 

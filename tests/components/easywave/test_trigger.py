@@ -13,11 +13,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
-    MOCK_ENTRY_DATA,
-    MOCK_ENTRY_ID,
-    MOCK_GATEWAY_TITLE,
     MOCK_TRANSMITTER_DEVICE_ID,
-    _devices_options,
+    _entry_with_subentries,
     _transmitter_device_record,
     async_setup_easywave_entry,
 )
@@ -36,16 +33,7 @@ async def _async_setup_entry(
         button_count=button_count,
         title="Test Transmitter",
     )
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        title=MOCK_GATEWAY_TITLE,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(device),
-    )
+    entry = _entry_with_subentries(device)
     await async_setup_easywave_entry(hass, entry)
     return entry
 

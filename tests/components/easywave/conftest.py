@@ -8,8 +8,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.easywave.const import (
+    BUCKET_SUBENTRY_TITLES,
     CONF_BUTTON_COUNT,
-    CONF_DEVICE_DATA,
     CONF_DEVICE_PATH,
     CONF_DEVICE_TITLE,
     CONF_ENTRY_TYPE,
@@ -27,12 +27,14 @@ from homeassistant.components.easywave.const import (
     DOMAIN,
     ENTRY_TYPE_NEO_SENSOR,
     ENTRY_TYPE_TRANSMITTER,
-    SUBENTRY_DEVICE,
+    SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR,
+    SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
     TRANSMITTER_GROUPING_GROUP,
     TRANSMITTER_SWITCH_IMPULSE,
+    bucket_subentry_unique_id,
 )
 from homeassistant.config_entries import ConfigSubentryData
-from homeassistant.const import CONF_DEVICE_ID, CONF_DEVICES
+from homeassistant.const import CONF_DEVICES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
@@ -55,17 +57,17 @@ MOCK_NEO_SENSOR_SERIAL = "bb" * 16
 MOCK_NEO_SENSOR_DEVICE_ID = f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}"
 
 
-def _device_subentry_data(
-    device_id: str,
-    title: str,
-    data: dict[str, Any],
+def _bucket_subentry_data(
+    *,
+    subentry_type: str,
+    devices: dict[str, dict[str, Any]],
 ) -> ConfigSubentryData:
-    """Return a device record shaped like a config subentry."""
+    """Return a device-type bucket subentry for config entry tests."""
     return ConfigSubentryData(
-        data=data,
-        subentry_type=SUBENTRY_DEVICE,
-        title=title,
-        unique_id=device_id,
+        data={CONF_DEVICES: devices},
+        subentry_type=subentry_type,
+        title=BUCKET_SUBENTRY_TITLES[subentry_type],
+        unique_id=bucket_subentry_unique_id(MOCK_ENTRY_ID, subentry_type),
     )
 
 
@@ -77,17 +79,20 @@ def _transmitter_device_record(
     switch_mode: str | None = None,
     grouping_mode: str | None = None,
 ) -> ConfigSubentryData:
-    """Return a transmitter device record for config entry tests."""
-    return _device_subentry_data(
-        f"transmitter_{serial}",
-        title,
-        {
-            CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
-            CONF_TRANSMITTER_SERIAL: serial,
-            CONF_OPERATING_TYPE: "1",
-            CONF_BUTTON_COUNT: button_count,
-            CONF_GROUPING_MODE: grouping_mode or TRANSMITTER_GROUPING_GROUP,
-            CONF_SWITCH_MODE: switch_mode or TRANSMITTER_SWITCH_IMPULSE,
+    """Return a transmitter bucket subentry for config entry tests."""
+    device_id = f"transmitter_{serial}"
+    return _bucket_subentry_data(
+        subentry_type=SUBENTRY_TYPE_EASYWAVE_TRANSMITTER,
+        devices={
+            device_id: {
+                CONF_DEVICE_TITLE: title,
+                CONF_ENTRY_TYPE: ENTRY_TYPE_TRANSMITTER,
+                CONF_TRANSMITTER_SERIAL: serial,
+                CONF_OPERATING_TYPE: "1",
+                CONF_BUTTON_COUNT: button_count,
+                CONF_GROUPING_MODE: grouping_mode or TRANSMITTER_GROUPING_GROUP,
+                CONF_SWITCH_MODE: switch_mode or TRANSMITTER_SWITCH_IMPULSE,
+            }
         },
     )
 
@@ -98,30 +103,37 @@ def _neo_sensor_device_record(
     serial: str = MOCK_NEO_SENSOR_SERIAL,
     capabilities: int = 0,
 ) -> ConfigSubentryData:
-    """Return a neo sensor device record for config entry tests."""
-    return _device_subentry_data(
-        f"neo_sensor_{serial}",
-        title,
-        {
-            CONF_ENTRY_TYPE: ENTRY_TYPE_NEO_SENSOR,
-            CONF_SENSOR_SERIAL: serial,
-            CONF_SENSOR_CAPABILITIES: capabilities,
+    """Return a neo sensor bucket subentry for config entry tests."""
+    device_id = f"neo_sensor_{serial}"
+    return _bucket_subentry_data(
+        subentry_type=SUBENTRY_TYPE_EASYWAVE_NEO_SENSOR,
+        devices={
+            device_id: {
+                CONF_DEVICE_TITLE: title,
+                CONF_ENTRY_TYPE: ENTRY_TYPE_NEO_SENSOR,
+                CONF_SENSOR_SERIAL: serial,
+                CONF_SENSOR_CAPABILITIES: capabilities,
+            }
         },
     )
 
 
-def _devices_options(*records: ConfigSubentryData) -> dict[str, list[dict[str, Any]]]:
-    """Return config entry options with stored child devices."""
-    devices = [
-        {
-            CONF_DEVICE_ID: record["unique_id"],
-            CONF_DEVICE_TITLE: record["title"],
-            CONF_DEVICE_DATA: dict(record["data"]),
-        }
-        for record in records
-        if record["unique_id"]
-    ]
-    return {CONF_DEVICES: devices}
+def _entry_with_subentries(
+    *records: ConfigSubentryData,
+    **entry_kwargs: Any,
+) -> MockConfigEntry:
+    """Return a gateway config entry with optional device bucket subentries."""
+    return MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        entry_id=MOCK_ENTRY_ID,
+        title=MOCK_GATEWAY_TITLE,
+        data=MOCK_ENTRY_DATA,
+        source="usb",
+        unique_id="easywave_12345",
+        subentries_data=records,
+        **entry_kwargs,
+    )
 
 
 async def async_terminate_listener_receive(timeout: float = 30.0) -> None:
@@ -199,31 +211,13 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_config_entry_with_transmitter() -> MockConfigEntry:
     """Return a gateway ConfigEntry with a transmitter device."""
-    return MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        title=MOCK_GATEWAY_TITLE,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(_transmitter_device_record()),
-    )
+    return _entry_with_subentries(_transmitter_device_record())
 
 
 @pytest.fixture
 def mock_config_entry_with_neo_sensor() -> MockConfigEntry:
     """Return a gateway ConfigEntry with a neo sensor device."""
-    return MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        title=MOCK_GATEWAY_TITLE,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(_neo_sensor_device_record()),
-    )
+    return _entry_with_subentries(_neo_sensor_device_record())
 
 
 @pytest.fixture

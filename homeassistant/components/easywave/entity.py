@@ -26,11 +26,12 @@ if TYPE_CHECKING:
 
 @dataclass
 class EasywaveDeviceEntry:
-    """Device configuration stored on the gateway config entry."""
+    """Device configuration stored as a gateway config subentry."""
 
     device_id: str
     title: str
     data: dict[str, Any]
+    subentry_id: str
 
 
 def _transmitter_model(data: dict[str, Any]) -> str:
@@ -53,7 +54,7 @@ def _transmitter_model(data: dict[str, Any]) -> str:
 def _neo_sensor_model(data: dict[str, Any]) -> str:
     """Return a human-readable model string for an EWneo sensor."""
     capabilities = data.get(CONF_SENSOR_CAPABILITIES, 0)
-    parts = ["Easywave neo Sensor"]
+    parts = ["Easywave neo sensor"]
     if (capabilities >> 4) & 1:
         parts.append("Temperature")
     if (capabilities >> 5) & 1:

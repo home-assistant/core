@@ -22,21 +22,19 @@ from easywave_home_control.codec.sensors import (
 from homeassistant.components.easywave.const import (
     DOMAIN,
     EVENT_EASYWAVE,
+    EVENT_TYPE_BATTERY_NORMAL,
     EVENT_TYPE_BUTTON_PRESS,
     EVENT_TYPE_BUTTON_RELEASE,
 )
 from homeassistant.components.easywave.sensor import EasywaveNeoSensorTemperatureSensor
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import (
-    MOCK_ENTRY_DATA,
-    MOCK_ENTRY_ID,
-    MOCK_GATEWAY_TITLE,
     MOCK_NEO_SENSOR_SERIAL,
     MOCK_TRANSMITTER_SERIAL,
-    _devices_options,
+    _entry_with_subentries,
     _neo_sensor_device_record,
     _transmitter_device_record,
     async_setup_easywave_entry,
@@ -113,16 +111,7 @@ async def test_button_press_telegram_fires_device_event(
 ) -> None:
     """Button push telegrams fire device automation events for known transmitters."""
     transceiver = mock_easywave_transceiver()
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        title=MOCK_GATEWAY_TITLE,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(_transmitter_device_record()),
-    )
+    entry = _entry_with_subentries(_transmitter_device_record())
     events = async_capture_events(hass, EVENT_EASYWAVE)
 
     async def _assert_events() -> None:
@@ -151,16 +140,7 @@ async def test_button_press_low_battery_skips_press_event(
 ) -> None:
     """Low-battery telegrams do not fire button press automation events."""
     transceiver = mock_easywave_transceiver()
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        title=MOCK_GATEWAY_TITLE,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(_transmitter_device_record()),
-    )
+    entry = _entry_with_subentries(_transmitter_device_record())
     events = async_capture_events(hass, EVENT_EASYWAVE)
 
     async def _assert_events() -> None:
@@ -194,16 +174,7 @@ async def test_button_press_unknown_transmitter_is_ignored(
 ) -> None:
     """Button push telegrams from unknown transmitters are ignored."""
     transceiver = mock_easywave_transceiver()
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        title=MOCK_GATEWAY_TITLE,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(_transmitter_device_record()),
-    )
+    entry = _entry_with_subentries(_transmitter_device_record())
     events = async_capture_events(hass, EVENT_EASYWAVE)
 
     async def _assert_events() -> None:
@@ -228,16 +199,7 @@ async def test_button_release_telegram_fires_device_event(
 ) -> None:
     """Button release telegrams fire device automation events."""
     transceiver = mock_easywave_transceiver()
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        title=MOCK_GATEWAY_TITLE,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(_transmitter_device_record()),
-    )
+    entry = _entry_with_subentries(_transmitter_device_record())
     events = async_capture_events(hass, EVENT_EASYWAVE)
 
     async def _assert_events() -> None:
@@ -283,17 +245,8 @@ async def test_neo_sensor_temperature_updates_from_telegram(
 ) -> None:
     """Neo sensor measurement telegrams update the temperature entity state."""
     transceiver = mock_easywave_transceiver()
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        title=MOCK_GATEWAY_TITLE,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(
-            _neo_sensor_device_record(capabilities=NEO_SENSOR_CAPABILITIES)
-        ),
+    entry = _entry_with_subentries(
+        _neo_sensor_device_record(capabilities=NEO_SENSOR_CAPABILITIES)
     )
 
     async def _assert_state() -> None:
@@ -316,20 +269,11 @@ async def test_neo_sensor_temperature_matches_serial_case_insensitively(
     """Configured neo sensor serials match regardless of hex case."""
     transceiver = mock_easywave_transceiver()
     upper_serial = MOCK_NEO_SENSOR_SERIAL.upper()
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        title=MOCK_GATEWAY_TITLE,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(
-            _neo_sensor_device_record(
-                serial=upper_serial,
-                capabilities=NEO_SENSOR_CAPABILITIES,
-            )
-        ),
+    entry = _entry_with_subentries(
+        _neo_sensor_device_record(
+            serial=upper_serial,
+            capabilities=NEO_SENSOR_CAPABILITIES,
+        )
     )
 
     async def _assert_state() -> None:
@@ -375,16 +319,7 @@ async def test_neo_sensor_humidity_updates_from_telegram(
 ) -> None:
     """Neo sensor measurement telegrams update the humidity entity state."""
     transceiver = mock_easywave_transceiver()
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        title=MOCK_GATEWAY_TITLE,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(_neo_sensor_device_record(capabilities=(1 << 5))),
-    )
+    entry = _entry_with_subentries(_neo_sensor_device_record(capabilities=(1 << 5)))
 
     async def _assert_state() -> None:
         entity_id = er.async_get(hass).async_get_entity_id(
@@ -394,11 +329,10 @@ async def test_neo_sensor_humidity_updates_from_telegram(
         )
         assert entity_id is not None
         assert hass.states.get(entity_id).state == "55.0"
-        coordinator = entry.runtime_data.coordinator
-        assert (
-            coordinator._sensor_entities[0].device_id
-            == f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}"
+        device = dr.async_get(hass).async_get_device(
+            identifiers={(DOMAIN, f"neo_sensor_{MOCK_NEO_SENSOR_SERIAL}")}
         )
+        assert device is not None
 
     await _run_dispatch_test(hass, entry, transceiver, _assert_state, _humidity_event())
 
@@ -408,17 +342,8 @@ async def test_neo_sensor_learn_telegram_is_ignored_at_runtime(
 ) -> None:
     """Runtime learn telegrams are ignored by the coordinator listener."""
     transceiver = mock_easywave_transceiver()
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        title=MOCK_GATEWAY_TITLE,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(
-            _neo_sensor_device_record(capabilities=NEO_SENSOR_CAPABILITIES)
-        ),
+    entry = _entry_with_subentries(
+        _neo_sensor_device_record(capabilities=NEO_SENSOR_CAPABILITIES)
     )
 
     async def _assert_state() -> None:
@@ -447,17 +372,8 @@ async def test_neo_sensor_unknown_serial_is_ignored(
 ) -> None:
     """Measurement telegrams from unconfigured sensors do not update entities."""
     transceiver = mock_easywave_transceiver()
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        title=MOCK_GATEWAY_TITLE,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(
-            _neo_sensor_device_record(capabilities=NEO_SENSOR_CAPABILITIES)
-        ),
+    entry = _entry_with_subentries(
+        _neo_sensor_device_record(capabilities=NEO_SENSOR_CAPABILITIES)
     )
 
     async def _assert_state() -> None:
@@ -483,16 +399,7 @@ async def test_neo_sensor_temperature_restores_last_known_state(
 ) -> None:
     """Neo sensor temperature restores the last known measurement."""
     transceiver = mock_easywave_transceiver()
-    entry = MockConfigEntry(
-        version=1,
-        domain=DOMAIN,
-        entry_id=MOCK_ENTRY_ID,
-        title=MOCK_GATEWAY_TITLE,
-        data=MOCK_ENTRY_DATA,
-        source="usb",
-        unique_id="easywave_12345",
-        options=_devices_options(_neo_sensor_device_record(capabilities=(1 << 4))),
-    )
+    entry = _entry_with_subentries(_neo_sensor_device_record(capabilities=(1 << 4)))
     mock_sensor_data = MagicMock()
     mock_sensor_data.native_value = 21.5
 
@@ -512,3 +419,81 @@ async def test_neo_sensor_temperature_restores_last_known_state(
     assert hass.states.get(entity_id).state == "21.5"
 
     await _teardown_entry(hass, entry)
+
+
+def _default_button_push() -> ButtonPushEvent:
+    """Return a default button push telegram for the configured transmitter."""
+    return ButtonPushEvent(
+        transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+        button=EasywaveButton.A,
+        function=ButtonFunction.DEFAULT,
+        should_ignore=False,
+    )
+
+
+async def test_battery_sensor_clears_after_repeated_ok_telegrams(
+    hass: HomeAssistant,
+) -> None:
+    """Battery warning clears after enough non-low-battery telegrams."""
+    transceiver = mock_easywave_transceiver()
+    entry = _entry_with_subentries(_transmitter_device_record())
+    events = async_capture_events(hass, EVENT_EASYWAVE)
+
+    async def _assert_state() -> None:
+        entity_id = er.async_get(hass).async_get_entity_id(
+            "sensor",
+            DOMAIN,
+            f"transmitter_{MOCK_TRANSMITTER_SERIAL}_battery_warning",
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == "ok"
+        assert hass.states.get(entity_id).attributes["icon"] == "mdi:battery"
+        assert any(event.data["type"] == EVENT_TYPE_BATTERY_NORMAL for event in events)
+
+    await _run_dispatch_test(
+        hass,
+        entry,
+        transceiver,
+        _assert_state,
+        ButtonPushEvent(
+            transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+            button=EasywaveButton.A,
+            function=ButtonFunction.LOW_BATTERY,
+            should_ignore=False,
+        ),
+        _default_button_push(),
+        _default_button_push(),
+    )
+
+
+async def test_battery_sensor_ignores_ok_telegram_when_already_ok(
+    hass: HomeAssistant,
+) -> None:
+    """Repeated ok battery telegrams do not change an already-ok sensor."""
+    transceiver = mock_easywave_transceiver()
+    entry = _entry_with_subentries(_transmitter_device_record())
+
+    async def _assert_state() -> None:
+        entity_id = er.async_get(hass).async_get_entity_id(
+            "sensor",
+            DOMAIN,
+            f"transmitter_{MOCK_TRANSMITTER_SERIAL}_battery_warning",
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == "ok"
+
+    await _run_dispatch_test(
+        hass,
+        entry,
+        transceiver,
+        _assert_state,
+        ButtonPushEvent(
+            transmitter_serial=bytes.fromhex(MOCK_TRANSMITTER_SERIAL),
+            button=EasywaveButton.A,
+            function=ButtonFunction.LOW_BATTERY,
+            should_ignore=False,
+        ),
+        _default_button_push(),
+        _default_button_push(),
+        _default_button_push(),
+    )
