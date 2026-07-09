@@ -291,6 +291,47 @@ async def test_setup_serial_encrypted_invalid_key(
     assert result["errors"] == {"base": "invalid_key"}
 
 
+@pytest.mark.parametrize(
+    "encryption_key",
+    [
+        "tooshort",
+        "nothexnothexnothexnothexnothexgg",
+        "aabbccddeeff00112233445566778899ff",
+    ],
+    ids=["too_short", "non_hex", "too_long"],
+)
+async def test_setup_serial_encrypted_malformed_key(
+    hass: HomeAssistant,
+    dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    encryption_key: str,
+) -> None:
+    """Test a malformed encryption key is rejected without a connection attempt."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_send_validate_fixture
+    port = com_port()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"port": port.device, "dsmr_version": "MSn"},
+    )
+
+    assert result["step_id"] == "encryption_key"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"encryption_key": encryption_key},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "encryption_key"
+    assert result["errors"] == {"base": "invalid_key"}
+    # A malformed key must not reach the reader
+    connection_factory.assert_not_called()
+
+
 async def test_setup_serial_encrypted_cannot_communicate(
     hass: HomeAssistant,
     dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],

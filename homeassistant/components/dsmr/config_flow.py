@@ -2,6 +2,7 @@
 
 import asyncio
 from functools import partial
+import re
 from typing import Any, override
 
 from dsmr_parser import obis_references as obis_ref
@@ -36,6 +37,8 @@ from .const import (
     LOGGER,
     RFXTRX_DSMR_PROTOCOL,
 )
+
+ENCRYPTION_KEY_PATTERN = re.compile(r"[0-9a-fA-F]{32}")
 
 
 class DSMRConnection:
@@ -95,8 +98,8 @@ class DSMRConnection:
                 transport.close()
 
         # Only the standard DSMR reader supports encryption. authentication_key=
-        # None decrypts without verifying the GCM tag (the telegram CRC covers
-        # integrity).
+        # None decrypts without verifying the GCM authentication tag; the
+        # telegram CRC still catches transmission errors (but not tampering).
         key_kwargs: dict[str, Any] = {}
         if self._protocol == DSMR_PROTOCOL:
             create_reader = create_dsmr_reader
@@ -230,11 +233,16 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
         """Ask for the encryption key of an encrypted meter."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            data = await self.async_validate_dsmr(
-                {**self._pending_data, **user_input}, errors
-            )
-            if not errors:
-                return self.async_create_entry(title=self._pending_title, data=data)
+            # DLMS uses an AES-128 key: 32 hex characters. Reject malformed keys
+            # here so the user gets immediate feedback instead of a timeout.
+            if ENCRYPTION_KEY_PATTERN.fullmatch(user_input[CONF_ENCRYPTION_KEY]):
+                data = await self.async_validate_dsmr(
+                    {**self._pending_data, **user_input}, errors
+                )
+                if not errors:
+                    return self.async_create_entry(title=self._pending_title, data=data)
+            else:
+                errors["base"] = "invalid_key"
 
         return self.async_show_form(
             step_id="encryption_key",
@@ -304,7 +312,7 @@ class CannotConnect(HomeAssistantError):
 
 
 class CannotCommunicate(HomeAssistantError):
-    """Error to indicate we cannot connect."""
+    """Error to indicate we cannot communicate with the device."""
 
 
 class InvalidKey(HomeAssistantError):
