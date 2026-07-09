@@ -281,6 +281,21 @@
         "subDeviceList": null,
         "extension": null,
         "deviceProp": null
+      },
+      {
+        "deviceRegion": "US",
+        "isOwner": true,
+        "cid": "corebreeze432s",
+        "deviceType": "LPF-R432S-AEU",
+        "deviceName": "CoreBreeze 432S",
+        "deviceImg": "",
+        "type": "",
+        "connectionType": "",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-555555555555",
+        "configModule": "configModule"
       }
     ]
   }

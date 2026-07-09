@@ -2,7 +2,10 @@
 
 from typing import override
 
-from homeassistant.components.device_tracker import TrackerEntity
+from homeassistant.components.device_tracker import (
+    TrackerEntity,
+    TrackerEntityStateAttribute,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -52,8 +55,12 @@ class TeslaFleetDeviceTrackerEntity(
             and self._attr_latitude is None
             and self._attr_longitude is None
         ):
-            self._attr_latitude = state.attributes.get("latitude")
-            self._attr_longitude = state.attributes.get("longitude")
+            self._attr_latitude = state.attributes.get(
+                TrackerEntityStateAttribute.LATITUDE
+            )
+            self._attr_longitude = state.attributes.get(
+                TrackerEntityStateAttribute.LONGITUDE
+            )
 
 
 class TeslaFleetDeviceTrackerLocationEntity(TeslaFleetDeviceTrackerEntity):

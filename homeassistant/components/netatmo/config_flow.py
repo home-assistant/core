@@ -24,7 +24,7 @@ from .const import (
     CONF_WEATHER_AREAS,
     DOMAIN,
 )
-from .data_handler import NetatmoConfigEntry
+from .coordinator import NetatmoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
