@@ -6,7 +6,13 @@ from types import SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from boschshcpy import SHCCamera360, SHCCameraEyes, SHCSmartPlug
+from boschshcpy import (
+    SHCCamera360,
+    SHCCameraEyes,
+    SHCLightSwitch,
+    SHCSmartPlug,
+    SHCSmartPlugCompact,
+)
 import pytest
 
 from homeassistant.components.bosch_shc.const import (
@@ -27,6 +33,8 @@ from tests.common import MockConfigEntry
 
 SMART_PLUG_ON = SHCSmartPlug.PowerSwitchService.State.ON
 SMART_PLUG_OFF = SHCSmartPlug.PowerSwitchService.State.OFF
+LIGHT_SWITCH_OFF = SHCLightSwitch.PowerSwitchService.State.OFF
+SMART_PLUG_COMPACT_OFF = SHCSmartPlugCompact.PowerSwitchService.State.OFF
 CAMERA_EYES_ON = SHCCameraEyes.CameraLightService.State.ON
 CAMERA_EYES_OFF = SHCCameraEyes.CameraLightService.State.OFF
 PRIVACY_ENABLED = SHCCamera360.PrivacyModeService.State.ENABLED
@@ -88,14 +96,14 @@ def _smart_plug_device(
 
 def _light_switch_device(
     device_id: str = "hdm:HomeMaticIP:lightswitch1",
-    switchstate: SHCSmartPlug.PowerSwitchService.State = SMART_PLUG_OFF,
+    switchstate: SHCLightSwitch.PowerSwitchService.State = LIGHT_SWITCH_OFF,
 ) -> SimpleNamespace:
     return _base_device(device_id, switchstate=switchstate)
 
 
 def _smart_plug_compact_device(
     device_id: str = "hdm:HomeMaticIP:plugcompact1",
-    switchstate: SHCSmartPlug.PowerSwitchService.State = SMART_PLUG_OFF,
+    switchstate: SHCSmartPlugCompact.PowerSwitchService.State = SMART_PLUG_COMPACT_OFF,
 ) -> SimpleNamespace:
     return _base_device(device_id, switchstate=switchstate)
 
