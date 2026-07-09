@@ -54,11 +54,6 @@ Answer questions about the world truthfully.
 Answer in plain text. Keep it simple and to the point.
 """
 
-NO_ENTITIES_PROMPT = (
-    "Only if the user wants to control a device, tell them to expose entities "
-    "to their voice assistant in Home Assistant."
-)
-
 
 @deprecated_function("an empty string", breaks_in_ha_version="2027.2")
 @callback
