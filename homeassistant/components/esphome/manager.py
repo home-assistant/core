@@ -845,7 +845,13 @@ class ESPHomeManager:
         device_name = self.entry.data.get(CONF_DEVICE_NAME, self.host)
         try:
             await cli.connect()
-            return await cli.noise_encryption_set_key(new_key)
+            if await cli.noise_encryption_set_key(new_key):
+                return True
+            _LOGGER.warning(
+                "Device %s (%s) rejected the encryption key",
+                device_name,
+                unique_id,
+            )
         except InvalidEncryptionKeyAPIError:
             _LOGGER.warning(
                 "Device %s (%s) rejected the zero PSK handshake; it appears "
