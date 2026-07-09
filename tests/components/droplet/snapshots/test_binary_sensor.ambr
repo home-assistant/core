@@ -39,8 +39,8 @@
 # name: test_binary_sensors[binary_sensor.mock_title_high_flow_alert-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Title High flow alert',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title High flow alert',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_high_flow_alert',
@@ -90,8 +90,8 @@
 # name: test_binary_sensors[binary_sensor.mock_title_unusual_flow_alert-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Mock Title Unusual flow alert',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Unusual flow alert',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.mock_title_unusual_flow_alert',

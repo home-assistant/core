@@ -46,7 +46,7 @@
         Price: 0.20/kWh
       ''',
       <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-01 16:00:00',
-      'friendly_name': 'Energy Site Buy tariff',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Buy tariff',
       <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
       <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Off peak: 0.20/kWh',
       <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2023-12-31 21:00:00',
@@ -106,7 +106,7 @@
         Price: 0.08/kWh
       ''',
       <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-01 16:00:00',
-      'friendly_name': 'Energy Site Sell tariff',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Sell tariff',
       <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
       <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Off peak: 0.08/kWh',
       <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2023-12-31 21:00:00',
@@ -128,7 +128,7 @@
       Price: 0.20/kWh
     ''',
     <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-01 16:00:00',
-    'friendly_name': 'Energy Site Buy tariff',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Buy tariff',
     <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
     <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Off peak: 0.20/kWh',
     <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2023-12-31 21:00:00',
@@ -271,7 +271,7 @@
       Price: 0.08/kWh
     ''',
     <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-01 16:00:00',
-    'friendly_name': 'Energy Site Sell tariff',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Sell tariff',
     <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
     <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Off peak: 0.08/kWh',
     <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2023-12-31 21:00:00',
@@ -414,7 +414,7 @@
       Price: 0.22/kWh
     ''',
     <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-01 21:00:00',
-    'friendly_name': 'Energy Site Buy tariff',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Buy tariff',
     <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
     <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'On peak: 0.22/kWh',
     <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-01 16:00:00',
@@ -557,7 +557,7 @@
       Price: 0.16/kWh
     ''',
     <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-01 21:00:00',
-    'friendly_name': 'Energy Site Sell tariff',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Sell tariff',
     <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
     <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'On peak: 0.16/kWh',
     <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-01 16:00:00',
@@ -700,7 +700,7 @@
       Price: 0.20/kWh
     ''',
     <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-02 16:00:00',
-    'friendly_name': 'Energy Site Buy tariff',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Buy tariff',
     <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
     <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Off peak: 0.20/kWh',
     <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-01 21:00:00',
@@ -843,7 +843,7 @@
       Price: 0.08/kWh
     ''',
     <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-02 16:00:00',
-    'friendly_name': 'Energy Site Sell tariff',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Sell tariff',
     <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
     <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Off peak: 0.08/kWh',
     <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-01 21:00:00',

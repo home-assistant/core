@@ -41,9 +41,9 @@
 # name: test_sensors[sensor.publicuniversalfriend_bronze_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PublicUniversalFriend Bronze trophies',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PublicUniversalFriend Bronze trophies',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'trophies',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'trophies',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.publicuniversalfriend_bronze_trophies',
@@ -95,9 +95,9 @@
 # name: test_sensors[sensor.publicuniversalfriend_gold_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PublicUniversalFriend Gold trophies',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PublicUniversalFriend Gold trophies',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'trophies',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'trophies',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.publicuniversalfriend_gold_trophies',
@@ -147,8 +147,8 @@
 # name: test_sensors[sensor.publicuniversalfriend_last_online-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'PublicUniversalFriend Last online',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PublicUniversalFriend Last online',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.publicuniversalfriend_last_online',
@@ -200,9 +200,9 @@
 # name: test_sensors[sensor.publicuniversalfriend_next_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PublicUniversalFriend Next level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PublicUniversalFriend Next level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.publicuniversalfriend_next_level',
@@ -252,7 +252,7 @@
 # name: test_sensors[sensor.publicuniversalfriend_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PublicUniversalFriend Now playing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PublicUniversalFriend Now playing',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.publicuniversalfriend_now_playing',
@@ -302,7 +302,7 @@
 # name: test_sensors[sensor.publicuniversalfriend_online_id-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PublicUniversalFriend Online ID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PublicUniversalFriend Online ID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.publicuniversalfriend_online_id',
@@ -359,8 +359,8 @@
 # name: test_sensors[sensor.publicuniversalfriend_online_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'PublicUniversalFriend Online status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PublicUniversalFriend Online status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'offline',
         'availabletoplay',
@@ -418,9 +418,9 @@
 # name: test_sensors[sensor.publicuniversalfriend_platinum_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PublicUniversalFriend Platinum trophies',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PublicUniversalFriend Platinum trophies',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'trophies',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'trophies',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.publicuniversalfriend_platinum_trophies',
@@ -472,9 +472,9 @@
 # name: test_sensors[sensor.publicuniversalfriend_silver_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PublicUniversalFriend Silver trophies',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PublicUniversalFriend Silver trophies',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'trophies',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'trophies',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.publicuniversalfriend_silver_trophies',
@@ -526,7 +526,7 @@
 # name: test_sensors[sensor.publicuniversalfriend_trophy_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'PublicUniversalFriend Trophy level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PublicUniversalFriend Trophy level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
@@ -579,9 +579,9 @@
 # name: test_sensors[sensor.testuser_bronze_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testuser Bronze trophies',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testuser Bronze trophies',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'trophies',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'trophies',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testuser_bronze_trophies',
@@ -633,9 +633,9 @@
 # name: test_sensors[sensor.testuser_gold_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testuser Gold trophies',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testuser Gold trophies',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'trophies',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'trophies',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testuser_gold_trophies',
@@ -685,8 +685,8 @@
 # name: test_sensors[sensor.testuser_last_online-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'testuser Last online',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testuser Last online',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testuser_last_online',
@@ -738,9 +738,9 @@
 # name: test_sensors[sensor.testuser_next_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testuser Next level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testuser Next level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testuser_next_level',
@@ -790,7 +790,7 @@
 # name: test_sensors[sensor.testuser_now_playing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testuser Now playing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testuser Now playing',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testuser_now_playing',
@@ -840,8 +840,8 @@
 # name: test_sensors[sensor.testuser_online_id-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_picture': 'http://static-resource.np.community.playstation.net/avatar_xl/WWS_A/UP90001312L24_DD96EB6A4FF5FE883C09_XL.png',
-      'friendly_name': 'testuser Online ID',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'http://static-resource.np.community.playstation.net/avatar_xl/WWS_A/UP90001312L24_DD96EB6A4FF5FE883C09_XL.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testuser Online ID',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testuser_online_id',
@@ -898,8 +898,8 @@
 # name: test_sensors[sensor.testuser_online_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'testuser Online status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testuser Online status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'offline',
         'availabletoplay',
@@ -957,9 +957,9 @@
 # name: test_sensors[sensor.testuser_platinum_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testuser Platinum trophies',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testuser Platinum trophies',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'trophies',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'trophies',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testuser_platinum_trophies',
@@ -1011,9 +1011,9 @@
 # name: test_sensors[sensor.testuser_silver_trophies-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testuser Silver trophies',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testuser Silver trophies',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'trophies',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'trophies',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testuser_silver_trophies',
@@ -1065,7 +1065,7 @@
 # name: test_sensors[sensor.testuser_trophy_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'testuser Trophy level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testuser Trophy level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,

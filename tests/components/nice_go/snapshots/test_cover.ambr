@@ -39,10 +39,10 @@
 # name: test_covers[cover.test_garage_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Test Garage 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Garage 1',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_garage_1',
@@ -92,10 +92,10 @@
 # name: test_covers[cover.test_garage_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Test Garage 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Garage 2',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_garage_2',
@@ -145,10 +145,10 @@
 # name: test_covers[cover.test_garage_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'gate',
-      'friendly_name': 'Test Garage 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'gate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Garage 3',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_garage_3',
@@ -198,10 +198,10 @@
 # name: test_covers[cover.test_garage_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'garage',
-      'friendly_name': 'Test Garage 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'garage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Garage 4',
       <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
-      'supported_features': <CoverEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.test_garage_4',

@@ -9,7 +9,7 @@ from bring_api import (
 )
 import voluptuous as vol
 
-from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.event import EventEntityStateAttribute
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -70,7 +70,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         list_uuid = entity.unique_id.split("_")[1]
 
-        activity = state.attributes[ATTR_EVENT_TYPE]
+        activity = state.attributes[EventEntityStateAttribute.EVENT_TYPE]
 
         reaction: ReactionType = call.data[ATTR_REACTION]
 

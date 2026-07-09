@@ -457,15 +457,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 'apparent_temperature'>: 22.8,
-      'attribution': 'Data provided by AccuWeather',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by AccuWeather',
       <WeatherEntityStateAttribute.CLOUD_COVERAGE: 'cloud_coverage'>: 10,
       <WeatherEntityStateAttribute.DEW_POINT: 'dew_point'>: 16.2,
-      'friendly_name': 'Home',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home',
       <WeatherEntityStateAttribute.HUMIDITY: 'humidity'>: 67,
       <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
       <WeatherEntityStateAttribute.PRESSURE: 'pressure'>: 1012.0,
       <WeatherEntityStateAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
-      'supported_features': <WeatherEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 3>,
       <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.6,
       <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
       <WeatherEntityStateAttribute.UV_INDEX: 'uv_index'>: 6,

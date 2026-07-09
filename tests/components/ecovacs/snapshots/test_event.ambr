@@ -51,7 +51,7 @@
         'finished_with_warnings',
         'manually_stopped',
       ]),
-      'friendly_name': 'Ozmo 950 Last job',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ozmo 950 Last job',
     }),
     'context': <ANY>,
     'entity_id': 'event.ozmo_950_last_job',

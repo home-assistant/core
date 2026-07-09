@@ -40,8 +40,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
-      'entity_picture': '/api/image_proxy/image.erics273_avatar?token=520',
-      'friendly_name': 'erics273 Avatar',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.erics273_avatar?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Avatar',
     }),
     'context': <ANY>,
     'entity_id': 'image.erics273_avatar',
@@ -92,8 +92,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
-      'entity_picture': '/api/image_proxy/image.erics273_gamerpic?token=520',
-      'friendly_name': 'erics273 Gamerpic',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.erics273_gamerpic?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Gamerpic',
     }),
     'context': <ANY>,
     'entity_id': 'image.erics273_gamerpic',
@@ -144,8 +144,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
-      'entity_picture': '/api/image_proxy/image.erics273_now_playing?token=520',
-      'friendly_name': 'erics273 Now playing',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.erics273_now_playing?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Now playing',
     }),
     'context': <ANY>,
     'entity_id': 'image.erics273_now_playing',
@@ -196,8 +196,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
-      'entity_picture': '/api/image_proxy/image.gsr_ae_avatar?token=520',
-      'friendly_name': 'GSR Ae Avatar',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.gsr_ae_avatar?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Avatar',
     }),
     'context': <ANY>,
     'entity_id': 'image.gsr_ae_avatar',
@@ -248,8 +248,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
-      'entity_picture': '/api/image_proxy/image.gsr_ae_gamerpic?token=520',
-      'friendly_name': 'GSR Ae Gamerpic',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.gsr_ae_gamerpic?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Gamerpic',
     }),
     'context': <ANY>,
     'entity_id': 'image.gsr_ae_gamerpic',
@@ -300,8 +300,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
-      'entity_picture': '/api/image_proxy/image.gsr_ae_now_playing?token=520',
-      'friendly_name': 'GSR Ae Now playing',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.gsr_ae_now_playing?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Now playing',
     }),
     'context': <ANY>,
     'entity_id': 'image.gsr_ae_now_playing',
@@ -352,8 +352,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
-      'entity_picture': '/api/image_proxy/image.ikken_hissatsuu_avatar?token=520',
-      'friendly_name': 'Ikken Hissatsuu Avatar',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.ikken_hissatsuu_avatar?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Avatar',
     }),
     'context': <ANY>,
     'entity_id': 'image.ikken_hissatsuu_avatar',
@@ -404,8 +404,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
-      'entity_picture': '/api/image_proxy/image.ikken_hissatsuu_gamerpic?token=520',
-      'friendly_name': 'Ikken Hissatsuu Gamerpic',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.ikken_hissatsuu_gamerpic?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Gamerpic',
     }),
     'context': <ANY>,
     'entity_id': 'image.ikken_hissatsuu_gamerpic',
@@ -456,8 +456,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
-      'entity_picture': '/api/image_proxy/image.ikken_hissatsuu_now_playing?token=520',
-      'friendly_name': 'Ikken Hissatsuu Now playing',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.ikken_hissatsuu_now_playing?token=520',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Now playing',
     }),
     'context': <ANY>,
     'entity_id': 'image.ikken_hissatsuu_now_playing',

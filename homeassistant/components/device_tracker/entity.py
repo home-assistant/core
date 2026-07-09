@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING, Any, final, override
 from propcache.api import cached_property
 
 from homeassistant.components import zone
-from homeassistant.components.zone import ATTR_PASSIVE, ATTR_RADIUS
-from homeassistant.const import (
+from homeassistant.components.zone import ZoneEntityStateAttribute
+from homeassistant.const import (  # noqa: F401
     ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
@@ -42,7 +42,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.hass_dict import HassKey
 
-from .const import (
+from .const import (  # noqa: F401
     ATTR_HOST_NAME,
     ATTR_IN_ZONES,
     ATTR_IP,
@@ -53,7 +53,11 @@ from .const import (
     CONNECTED_DEVICE_REGISTERED,
     DOMAIN,
     LOGGER,
+    DeviceTrackerEntityCapabilityAttribute,
+    DeviceTrackerEntityStateAttribute,
+    ScannerEntityStateAttribute,
     SourceType,
+    TrackerEntityStateAttribute,
     TrackingType,
 )
 
@@ -215,7 +219,9 @@ class BaseTrackerEntity(Entity):
     @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attr: dict[str, Any] = {ATTR_SOURCE_TYPE: self.source_type}
+        attr: dict[str, Any] = {
+            DeviceTrackerEntityStateAttribute.SOURCE_TYPE: self.source_type
+        }
 
         if self.battery_level is not None:
             attr[ATTR_BATTERY_LEVEL] = self.battery_level
@@ -243,7 +249,7 @@ class TrackerEntity(
 
     entity_description: TrackerEntityDescription
     _attr_capability_attributes: dict[str, Any] = {
-        ATTR_TRACKING_TYPE: TrackingType.POSITION
+        DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: TrackingType.POSITION
     }
     _attr_in_zones: list[str] | None = None
     _attr_latitude: float | None = None
@@ -362,10 +368,14 @@ class TrackerEntity(
                     for entity_id in zones
                     if (zone_state := self.hass.states.get(entity_id)) is not None
                 ),
-                key=lambda z: z.attributes[ATTR_RADIUS],
+                key=lambda z: z.attributes[ZoneEntityStateAttribute.RADIUS],
             )
             self.__active_zone = next(
-                (z for z in zone_states if not z.attributes.get(ATTR_PASSIVE)),
+                (
+                    z
+                    for z in zone_states
+                    if not z.attributes.get(ZoneEntityStateAttribute.PASSIVE)
+                ),
                 None,
             )
             self.__in_zones = [z.entity_id for z in zone_states]
@@ -406,13 +416,15 @@ class TrackerEntity(
     @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attr: dict[str, Any] = {ATTR_IN_ZONES: self.__in_zones or []}
+        attr: dict[str, Any] = {
+            DeviceTrackerEntityStateAttribute.IN_ZONES: self.__in_zones or []
+        }
         attr.update(super().state_attributes)
 
         if self.latitude is not None and self.longitude is not None:
-            attr[ATTR_LATITUDE] = self.latitude
-            attr[ATTR_LONGITUDE] = self.longitude
-            attr[ATTR_GPS_ACCURACY] = self.location_accuracy
+            attr[TrackerEntityStateAttribute.LATITUDE] = self.latitude
+            attr[TrackerEntityStateAttribute.LONGITUDE] = self.longitude
+            attr[TrackerEntityStateAttribute.GPS_ACCURACY] = self.location_accuracy
 
         return attr
 
@@ -425,7 +437,7 @@ class BaseScannerEntity(BaseTrackerEntity):
     """
 
     _attr_capability_attributes: dict[str, Any] = {
-        ATTR_TRACKING_TYPE: TrackingType.CONNECTION
+        DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: TrackingType.CONNECTION
     }
     _scanner_option_associated_zone: str = zone.ENTITY_ID_HOME
     _scanner_option_associated_zone_unsub: CALLBACK_TYPE | None = None
@@ -556,7 +568,7 @@ class BaseScannerEntity(BaseTrackerEntity):
     @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
-        attr: dict[str, Any] = {ATTR_IN_ZONES: []}
+        attr: dict[str, Any] = {DeviceTrackerEntityStateAttribute.IN_ZONES: []}
         attr.update(super().state_attributes)
 
         if not self.is_connected:
@@ -571,7 +583,7 @@ class BaseScannerEntity(BaseTrackerEntity):
         ):
             return attr
 
-        attr[ATTR_IN_ZONES] = [
+        attr[DeviceTrackerEntityStateAttribute.IN_ZONES] = [
             associated_zone,
             *zone.async_get_enclosing_zones(self.hass, associated_zone),
         ]
@@ -721,10 +733,10 @@ class ScannerEntity(
         attr = super().state_attributes
 
         if ip_address := self.ip_address:
-            attr[ATTR_IP] = ip_address
+            attr[ScannerEntityStateAttribute.IP] = ip_address
         if (mac_address := self.mac_address) is not None:
-            attr[ATTR_MAC] = mac_address
+            attr[ScannerEntityStateAttribute.MAC] = mac_address
         if (hostname := self.hostname) is not None:
-            attr[ATTR_HOST_NAME] = hostname
+            attr[ScannerEntityStateAttribute.HOST_NAME] = hostname
 
         return attr

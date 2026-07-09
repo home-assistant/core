@@ -69,7 +69,7 @@
         'high',
         'auto',
       ]),
-      'friendly_name': 'testserial123',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testserial123',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -78,7 +78,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 26.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18.0,
-      'supported_features': <ClimateEntityFeature: 425>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 425>,
       <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'both',
       <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',
@@ -167,7 +167,7 @@
         'high',
         'auto',
       ]),
-      'friendly_name': 'testserial345',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testserial345',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -176,7 +176,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 26.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18.0,
-      'supported_features': <ClimateEntityFeature: 425>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 425>,
       <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'both',
       <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'off',

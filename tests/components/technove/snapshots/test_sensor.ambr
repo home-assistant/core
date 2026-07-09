@@ -44,10 +44,10 @@
 # name: test_sensors[sensor.technove_station_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'TechnoVE Station Current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_current',
@@ -102,10 +102,10 @@
 # name: test_sensors[sensor.technove_station_input_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'TechnoVE Station Input voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Input voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_input_voltage',
@@ -160,10 +160,10 @@
 # name: test_sensors[sensor.technove_station_last_session_energy_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'TechnoVE Station Last session energy usage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Last session energy usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_last_session_energy_usage',
@@ -218,10 +218,10 @@
 # name: test_sensors[sensor.technove_station_max_station_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'TechnoVE Station Max station current',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Max station current',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_max_station_current',
@@ -276,10 +276,10 @@
 # name: test_sensors[sensor.technove_station_output_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'TechnoVE Station Output voltage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Output voltage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_output_voltage',
@@ -331,10 +331,10 @@
 # name: test_sensors[sensor.technove_station_signal_strength-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'signal_strength',
-      'friendly_name': 'TechnoVE Station Signal strength',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Signal strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'dBm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_signal_strength',
@@ -396,8 +396,8 @@
 # name: test_sensors[sensor.technove_station_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'TechnoVE Station Status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Status',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'unplugged',
         'plugged_waiting',
@@ -463,10 +463,10 @@
 # name: test_sensors[sensor.technove_station_total_energy_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'TechnoVE Station Total energy usage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Total energy usage',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_total_energy_usage',
@@ -516,7 +516,7 @@
 # name: test_sensors[sensor.technove_station_wi_fi_network_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TechnoVE Station Wi-Fi network name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TechnoVE Station Wi-Fi network name',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_wi_fi_network_name',
