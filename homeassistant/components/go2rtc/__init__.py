@@ -223,24 +223,11 @@ async def async_get_rtsp_stream_url(hass: HomeAssistant, entity_id: str) -> str 
     provider = entries[0].runtime_data
     try:
         camera = get_camera_from_entity_id(hass, entity_id)
-        stream_source = await camera.stream_source()
-    except HomeAssistantError as err:
-        _LOGGER.debug("Not providing RTSP restream URL for %s: %s", entity_id, err)
-        return None
-    # Check support up front: async_update_stream_source tears down every
-    # active go2rtc session when the source is missing or unsupported, which
-    # must not happen on a speculative query.
-    if stream_source and camera.platform.platform_name == "generic":
-        # Mirrors the generic-camera ffmpeg workaround in async_update_stream_source
-        stream_source = _FFMPEG + ":" + stream_source
-    if not stream_source or not provider.async_is_supported(stream_source):
-        _LOGGER.debug(
-            "Not providing RTSP restream URL for %s: missing or unsupported stream source",
-            entity_id,
-        )
-        return None
-    try:
-        await provider.async_update_stream_source(camera)
+        # Resolving separately keeps a failing source out of
+        # async_update_stream_source, whose failure path tears down every
+        # active go2rtc session.
+        stream_source = await provider.async_get_stream_source(camera)
+        await provider.async_update_stream_source(camera, stream_source)
     except HomeAssistantError as err:
         _LOGGER.debug("Not providing RTSP restream URL for %s: %s", entity_id, err)
         return None
@@ -405,21 +392,35 @@ class WebRTCProvider(CameraWebRTCProvider):
             get_camera_identifier(camera), width, height
         )
 
-    async def async_update_stream_source(self, camera: Camera) -> None:
-        """Register or update the camera's stream source in go2rtc if needed."""
+    async def async_get_stream_source(self, camera: Camera) -> str:
+        """Return the camera's stream source as usable by go2rtc.
+
+        Raises HomeAssistantError when the source is missing or unsupported.
+        """
         if not (stream_source := await camera.stream_source()):
-            await self.teardown()
             raise HomeAssistantError("Camera has no stream source")
 
         if camera.platform.platform_name == "generic":
             # This is a workaround to use ffmpeg for generic cameras
             # A proper fix will be added in the future together
             # with supporting multiple streams per camera
-            stream_source = "ffmpeg:" + stream_source
+            stream_source = _FFMPEG + ":" + stream_source
 
         if not self.async_is_supported(stream_source):
-            await self.teardown()
             raise HomeAssistantError("Stream source is not supported by go2rtc")
+
+        return stream_source
+
+    async def async_update_stream_source(
+        self, camera: Camera, stream_source: str | None = None
+    ) -> None:
+        """Register or update the camera's stream source in go2rtc if needed."""
+        if stream_source is None:
+            try:
+                stream_source = await self.async_get_stream_source(camera)
+            except HomeAssistantError:
+                await self.teardown()
+                raise
 
         camera_prefs = await get_dynamic_camera_stream_settings(
             self._hass, camera.entity_id
