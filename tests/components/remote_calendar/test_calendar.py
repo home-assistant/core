@@ -565,13 +565,7 @@ async def test_coordinator_refresh_updates_upcoming_event_state(
         """
     )
     route = respx.get(CALENDER_URL).mock(
-        side_effect=[
-            Response(status_code=200, text=original_calendar),
-            # We currently update the calendar twice on startup, tracked
-            # in issue #148315
-            Response(status_code=200, text=original_calendar),
-            Response(status_code=200, text=updated_calendar),
-        ]
+        return_value=Response(status_code=200, text=original_calendar)
     )
     await setup_integration(hass, config_entry)
 
@@ -579,11 +573,13 @@ async def test_coordinator_refresh_updates_upcoming_event_state(
     assert state
     assert state.attributes.get("start_time") == "2026-05-18 06:40:00"
 
-    # Advance clock to trigger the next update interval
+    # Serve the updated calendar and advance the clock to the next update interval.
+    # The response is switched after setup so the test does not depend on how many
+    # times the calendar is fetched during startup (see issue #148315).
+    route.return_value = Response(status_code=200, text=updated_calendar)
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1))
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.attributes.get("start_time") == "2026-05-19 08:00:00"
-    assert route.call_count == 3
