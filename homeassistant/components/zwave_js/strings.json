@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "addon_already_configured": "A configuration entry using the Z-Wave JS app already exists. Reconfigure or migrate that entry instead.",
       "addon_get_discovery_info_failed": "Failed to get Z-Wave JS app discovery info.",
       "addon_info_failed": "Failed to get Z-Wave JS app info.",
       "addon_install_failed": "Failed to install the Z-Wave JS app.",
