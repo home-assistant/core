@@ -176,11 +176,7 @@ async def test_hvac_mode_cooling(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """hvac_mode maps the ViCare cooling operating mode to HVACMode.COOL.
-
-    Regression test for #174444: an active mode of `cooling` resolved to None
-    (state "unknown") and COOL was never offered, as it was missing from the map.
-    """
+    """hvac_mode maps the ViCare cooling operating mode to HVACMode.COOL."""
     fixtures: list[Fixture] = [
         Fixture(set(), "vicare/Vitocal250A_cooling.json"),
     ]
