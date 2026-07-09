@@ -3,6 +3,8 @@
 import logging
 from typing import Any, override
 
+from modbus_connection import ModbusError
+from modbus_connection.pymodbus import connect_tcp
 from pystiebeleltron import StiebelEltronModbusError, get_controller_model
 import voluptuous as vol
 
@@ -17,7 +19,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_PORT, DEVICE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,8 +39,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def check_controller_model(host: str, port: int) -> str | None:
     """Check if the controller model is valid."""
     try:
-        await get_controller_model(host, port)
-    except StiebelEltronModbusError:
+        connection = await connect_tcp(host, port=port)
+        try:
+            await get_controller_model(connection.for_unit(DEVICE_ID))
+        finally:
+            await connection.close()
+    except StiebelEltronModbusError, ModbusError:
         _LOGGER.debug("Cannot connect to Stiebel Eltron device", exc_info=True)
         return "cannot_connect"
     except Exception:
