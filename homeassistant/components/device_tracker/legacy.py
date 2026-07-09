@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components import zone
-from homeassistant.components.zone import ENTITY_ID_HOME
+from homeassistant.components.zone import ENTITY_ID_HOME, ZoneEntityStateAttribute
 from homeassistant.config import (
     async_log_schema_error,
     config_per_platform,
@@ -24,8 +24,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
     ATTR_ICON,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_NAME,
     CONF_ICON,
     CONF_MAC,
@@ -511,8 +509,8 @@ def async_setup_scanner_platform(
             zone_home = hass.states.get(ENTITY_ID_HOME)
             if zone_home is not None:
                 kwargs["gps"] = [
-                    zone_home.attributes[ATTR_LATITUDE],
-                    zone_home.attributes[ATTR_LONGITUDE],
+                    zone_home.attributes[ZoneEntityStateAttribute.LATITUDE],
+                    zone_home.attributes[ZoneEntityStateAttribute.LONGITUDE],
                 ]
                 kwargs["gps_accuracy"] = 0
 
