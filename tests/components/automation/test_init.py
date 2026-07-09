@@ -2481,6 +2481,7 @@ async def test_extraction_functions(
         "sensor.trigger_state",
         "sensor.trigger_numeric_state",
         "sensor.trigger_event",
+        "light.bla",
         "light.condition_state",
         "light.in_both",
         "light.in_first",
