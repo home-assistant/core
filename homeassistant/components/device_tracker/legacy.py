@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components import zone
-from homeassistant.components.zone import ENTITY_ID_HOME
+from homeassistant.components.zone import ENTITY_ID_HOME, ZoneEntityStateAttribute
 from homeassistant.config import (
     async_log_schema_error,
     config_per_platform,
@@ -24,8 +24,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
     ATTR_ICON,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_NAME,
     CONF_ICON,
     CONF_MAC,
@@ -77,7 +75,9 @@ from .const import (
     LOGGER,
     PLATFORM_TYPE_LEGACY,
     SCAN_INTERVAL,
+    DeviceTrackerEntityStateAttribute,
     SourceType,
+    TrackerEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -509,8 +509,8 @@ def async_setup_scanner_platform(
             zone_home = hass.states.get(ENTITY_ID_HOME)
             if zone_home is not None:
                 kwargs["gps"] = [
-                    zone_home.attributes[ATTR_LATITUDE],
-                    zone_home.attributes[ATTR_LONGITUDE],
+                    zone_home.attributes[ZoneEntityStateAttribute.LATITUDE],
+                    zone_home.attributes[ZoneEntityStateAttribute.LONGITUDE],
                 ]
                 kwargs["gps_accuracy"] = 0
 
@@ -840,12 +840,14 @@ class Device(RestoreEntity):
     @override
     def state_attributes(self) -> dict[str, StateType]:
         """Return the device state attributes."""
-        attributes: dict[str, StateType] = {ATTR_SOURCE_TYPE: self.source_type}
+        attributes: dict[str, StateType] = {
+            DeviceTrackerEntityStateAttribute.SOURCE_TYPE: self.source_type
+        }
 
         if self.gps is not None:
-            attributes[ATTR_LATITUDE] = self.gps[0]
-            attributes[ATTR_LONGITUDE] = self.gps[1]
-            attributes[ATTR_GPS_ACCURACY] = self.gps_accuracy
+            attributes[TrackerEntityStateAttribute.LATITUDE] = self.gps[0]
+            attributes[TrackerEntityStateAttribute.LONGITUDE] = self.gps[1]
+            attributes[TrackerEntityStateAttribute.GPS_ACCURACY] = self.gps_accuracy
 
         if self.battery is not None:
             attributes[ATTR_BATTERY] = self.battery
@@ -952,17 +954,17 @@ class Device(RestoreEntity):
         self.last_seen = dt_util.utcnow()
 
         for attribute, var in (
-            (ATTR_SOURCE_TYPE, "source_type"),
-            (ATTR_GPS_ACCURACY, "gps_accuracy"),
+            (DeviceTrackerEntityStateAttribute.SOURCE_TYPE, "source_type"),
+            (TrackerEntityStateAttribute.GPS_ACCURACY, "gps_accuracy"),
             (ATTR_BATTERY, "battery"),
         ):
             if attribute in state.attributes:
                 setattr(self, var, state.attributes[attribute])
 
-        if ATTR_LONGITUDE in state.attributes:
+        if TrackerEntityStateAttribute.LONGITUDE in state.attributes:
             self.gps = (
-                state.attributes[ATTR_LATITUDE],
-                state.attributes[ATTR_LONGITUDE],
+                state.attributes[TrackerEntityStateAttribute.LATITUDE],
+                state.attributes[TrackerEntityStateAttribute.LONGITUDE],
             )
 
 
