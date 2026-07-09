@@ -8,7 +8,7 @@ from pystiebeleltron import StiebelEltronModbusError, get_controller_model
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DEFAULT_PORT, DEVICE_ID
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
@@ -34,7 +34,7 @@ async def async_setup_entry(
     try:
         model = await get_controller_model(connection.for_unit(DEVICE_ID))
     except StiebelEltronModbusError as exception:
-        raise ConfigEntryError(exception) from exception
+        raise ConfigEntryNotReady("Could not read controller model") from exception
 
     coordinator = StiebelEltronDataCoordinator(hass, entry, model, connection, host)
 

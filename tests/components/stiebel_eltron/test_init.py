@@ -82,14 +82,14 @@ async def test_async_setup_entry_modbus_error(
     mock_config_entry: MockConfigEntry,
     mock_get_controller_model: MagicMock,
 ) -> None:
-    """Test setup fails when get_controller_model raises an error."""
+    """Test setup retries when reading the controller model fails."""
     mock_config_entry.add_to_hass(hass)
     mock_get_controller_model.side_effect = StiebelEltronModbusError()
 
     result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert result is False
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_async_setup_entry_coordinator_update_fails(
