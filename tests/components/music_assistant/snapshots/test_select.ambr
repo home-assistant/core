@@ -38,12 +38,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Boost Badge Color',
+    'object_id_base': 'Boost badge color',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Boost Badge Color',
+    'original_name': 'Boost badge color',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -56,7 +56,7 @@
 # name: test_select_entities[select.party_mode_plugin_boost_badge_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Boost Badge Color',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Boost badge color',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '2d6a4f',
         'b55522',
@@ -111,12 +111,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Party Player',
+    'object_id_base': 'Party player',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Party Player',
+    'original_name': 'Party player',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -129,7 +129,7 @@
 # name: test_select_entities[select.party_mode_plugin_party_player-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Party Player',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Party player',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Auto',
         'My Super Test Player 2',
@@ -184,12 +184,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Request Badge Color',
+    'object_id_base': 'Request badge color',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Request Badge Color',
+    'original_name': 'Request badge color',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -202,7 +202,7 @@
 # name: test_select_entities[select.party_mode_plugin_request_badge_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Request Badge Color',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Request badge color',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '2d6a4f',
         'b55522',

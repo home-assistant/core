@@ -26,12 +26,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Party Name',
+    'object_id_base': 'Party name',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Party Name',
+    'original_name': 'Party name',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -44,7 +44,7 @@
 # name: test_text_entities[text.party_mode_plugin_party_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Party Name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Party name',
       <TextEntityCapabilityAttribute.MAX: 'max'>: 255,
       <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
       <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,
@@ -85,12 +85,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'QR Text',
+    'object_id_base': 'QR text',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'QR Text',
+    'original_name': 'QR text',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -103,7 +103,7 @@
 # name: test_text_entities[text.party_mode_plugin_qr_text-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin QR Text',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin QR text',
       <TextEntityCapabilityAttribute.MAX: 'max'>: 255,
       <TextEntityCapabilityAttribute.MIN: 'min'>: 0,
       <TextEntityCapabilityAttribute.MODE: 'mode'>: <TextMode.TEXT: 'text'>,

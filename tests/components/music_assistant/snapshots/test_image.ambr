@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Guest qr code',
+    'object_id_base': 'Guest QR code',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Guest qr code',
+    'original_name': 'Guest QR code',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -41,7 +41,7 @@
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.party_mode_plugin_guest_qr_code?token=1',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Guest qr code',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Guest QR code',
     }),
     'context': <ANY>,
     'entity_id': 'image.party_mode_plugin_guest_qr_code',

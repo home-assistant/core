@@ -271,12 +271,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Enable Skip Song',
+    'object_id_base': 'Enable skip song',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Enable Skip Song',
+    'original_name': 'Enable skip song',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -289,7 +289,7 @@
 # name: test_switch_entities[switch.party_mode_plugin_enable_skip_song-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Enable Skip Song',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Enable skip song',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_enable_skip_song',
@@ -321,12 +321,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Hide Back Button',
+    'object_id_base': 'Hide back button',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Hide Back Button',
+    'original_name': 'Hide back button',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -339,7 +339,7 @@
 # name: test_switch_entities[switch.party_mode_plugin_hide_back_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Hide Back Button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Hide back button',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_hide_back_button',
@@ -371,12 +371,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Highlight Ahead',
+    'object_id_base': 'Highlight ahead',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Highlight Ahead',
+    'original_name': 'Highlight ahead',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -389,7 +389,7 @@
 # name: test_switch_entities[switch.party_mode_plugin_highlight_ahead-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Highlight Ahead',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Highlight ahead',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_highlight_ahead',
@@ -471,12 +471,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Prevent Duplicate Tracks',
+    'object_id_base': 'Prevent duplicate tracks',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Prevent Duplicate Tracks',
+    'original_name': 'Prevent duplicate tracks',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -489,7 +489,7 @@
 # name: test_switch_entities[switch.party_mode_plugin_prevent_duplicate_tracks-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Prevent Duplicate Tracks',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Prevent duplicate tracks',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_prevent_duplicate_tracks',
@@ -521,12 +521,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Show Progress Bar',
+    'object_id_base': 'Show progress bar',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Show Progress Bar',
+    'original_name': 'Show progress bar',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -539,7 +539,7 @@
 # name: test_switch_entities[switch.party_mode_plugin_show_progress_bar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Show Progress Bar',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Show progress bar',
     }),
     'context': <ANY>,
     'entity_id': 'switch.party_mode_plugin_show_progress_bar',

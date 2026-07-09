@@ -26,12 +26,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Add to Queue Limit',
+    'object_id_base': 'Add to queue limit',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Add to Queue Limit',
+    'original_name': 'Add to queue limit',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -44,7 +44,7 @@
 # name: test_number_entities[number.party_mode_plugin_add_to_queue_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Add to Queue Limit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Add to queue limit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 50,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -85,12 +85,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Add to Queue Refill (Minutes)',
+    'object_id_base': 'Add to queue refill (minutes)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Add to Queue Refill (Minutes)',
+    'original_name': 'Add to queue refill (minutes)',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -103,7 +103,7 @@
 # name: test_number_entities[number.party_mode_plugin_add_to_queue_refill_minutes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Add to Queue Refill (Minutes)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Add to queue refill (minutes)',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -144,12 +144,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Boost Limit',
+    'object_id_base': 'Boost limit',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Boost Limit',
+    'original_name': 'Boost limit',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -162,7 +162,7 @@
 # name: test_number_entities[number.party_mode_plugin_boost_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Boost Limit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Boost limit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -203,12 +203,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Boost Refill (Minutes)',
+    'object_id_base': 'Boost refill (minutes)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Boost Refill (Minutes)',
+    'original_name': 'Boost refill (minutes)',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -221,7 +221,7 @@
 # name: test_number_entities[number.party_mode_plugin_boost_refill_minutes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Boost Refill (Minutes)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Boost refill (minutes)',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 120,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -262,12 +262,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Skip Song Limit',
+    'object_id_base': 'Skip song limit',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Skip Song Limit',
+    'original_name': 'Skip song limit',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -280,7 +280,7 @@
 # name: test_number_entities[number.party_mode_plugin_skip_song_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Skip Song Limit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Skip song limit',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
@@ -321,12 +321,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Skip Song Refill (Minutes)',
+    'object_id_base': 'Skip song refill (minutes)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Skip Song Refill (Minutes)',
+    'original_name': 'Skip song refill (minutes)',
     'platform': 'music_assistant',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -339,7 +339,7 @@
 # name: test_number_entities[number.party_mode_plugin_skip_song_refill_minutes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Skip Song Refill (Minutes)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Party Mode Plugin Skip song refill (minutes)',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 180,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 15,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,

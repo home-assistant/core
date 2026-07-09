@@ -328,22 +328,22 @@
         "name": "Enable rate limiting"
       },
       "party_mode_enable_skip_song": {
-        "name": "Enable Skip Song"
+        "name": "Enable skip song"
       },
       "party_mode_hide_back_button": {
-        "name": "Hide Back Button"
+        "name": "Hide back button"
       },
       "party_mode_highlight_ahead": {
-        "name": "Highlight Ahead"
+        "name": "Highlight ahead"
       },
       "party_mode_karaoke_mode": {
         "name": "Karaoke mode"
       },
       "party_mode_prevent_duplicate_tracks": {
-        "name": "Prevent Duplicate Tracks"
+        "name": "Prevent duplicate tracks"
       },
       "party_mode_show_progress_bar": {
-        "name": "Show Progress Bar"
+        "name": "Show progress bar"
       },
       "pure_direct": {
         "name": "Pure direct"
