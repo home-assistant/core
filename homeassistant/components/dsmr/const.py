@@ -29,6 +29,8 @@ DEVICE_NAME_HEAT = "Heat Meter"
 
 # Maps each dsmr_version token to the label shown in the config-flow picker; the
 # label disambiguates the Luxembourg Smarty (MSn) from the Austrian Sagemcom.
+# Labels are hardcoded rather than translated because the tokens (e.g. "2.2",
+# "MSn") are not valid translation keys.
 DSMR_VERSIONS = {
     "5": "DSMR 5",
     "MSn": "Luxembourg Smarty / Sagemcom T210-D, encrypted (Creos)",
