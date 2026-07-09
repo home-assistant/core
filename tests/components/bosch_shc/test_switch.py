@@ -35,10 +35,8 @@ SMART_PLUG_ON = SHCSmartPlug.PowerSwitchService.State.ON
 SMART_PLUG_OFF = SHCSmartPlug.PowerSwitchService.State.OFF
 LIGHT_SWITCH_OFF = SHCLightSwitch.PowerSwitchService.State.OFF
 SMART_PLUG_COMPACT_OFF = SHCSmartPlugCompact.PowerSwitchService.State.OFF
-CAMERA_EYES_ON = SHCCameraEyes.CameraLightService.State.ON
 CAMERA_EYES_OFF = SHCCameraEyes.CameraLightService.State.OFF
 PRIVACY_ENABLED = SHCCamera360.PrivacyModeService.State.ENABLED
-PRIVACY_DISABLED = SHCCamera360.PrivacyModeService.State.DISABLED
 
 # Every device_helper bucket the switch platform itself iterates over
 # (smart_plugs, light_switches_bsm, smart_plugs_compact, camera_eyes,
