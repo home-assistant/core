@@ -4123,6 +4123,80 @@ async def test_reconfigure_addon_not_installed(
     assert client.disconnect.call_count == 1
 
 
+@pytest.mark.parametrize(
+    "properties",
+    [
+        pytest.param({}, id="missing"),
+        pytest.param({"homeId": "not-a-number"}, id="malformed"),
+    ],
+)
+async def test_zeroconf_invalid_discovery_info(
+    hass: HomeAssistant, properties: dict[str, str]
+) -> None:
+    """Test zeroconf discovery with invalid home ID properties."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties=properties,
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
+
+
+async def test_zeroconf_confirm_already_configured(hass: HomeAssistant) -> None:
+    """Test zeroconf confirm aborts if the entry appeared while pending."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties={"homeId": "1234"},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    # An entry with the same home ID is configured while the discovery
+    # is pending, e.g. via the add-on discovery.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "url": "ws://localhost:3000",
+            "use_addon": True,
+            "integration_created_addon": True,
+        },
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # The existing add-on based entry is left untouched.
+    assert entry.data == {
+        "url": "ws://localhost:3000",
+        "use_addon": True,
+        "integration_created_addon": True,
+    }
+
+
 async def test_zeroconf(hass: HomeAssistant) -> None:
     """Test zeroconf discovery."""
 
