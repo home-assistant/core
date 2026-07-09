@@ -84,7 +84,7 @@ def mock_c4_director() -> Generator[MagicMock]:
     ):
         mock_director = mock_director_class.return_value
         all_items = json.loads(load_fixture("director_all_items.json", DOMAIN))
-        mock_director.get_all_items_by_category = AsyncMock(return_value=all_items)
+        mock_director.get_all_item_info = AsyncMock(return_value=all_items)
         mock_director.get_ui_configuration = AsyncMock(
             return_value=json.loads(load_fixture("ui_configuration.json", DOMAIN))
         )

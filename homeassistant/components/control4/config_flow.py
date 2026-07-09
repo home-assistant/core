@@ -91,7 +91,7 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         director = C4Director(host, director_bearer_token, director_session)
         try:
-            await director.get_all_items_by_category()
+            await director.get_all_item_info()
         except Unauthorized:
             errors["base"] = "director_auth_failed"
             return errors, data, description_placeholders
