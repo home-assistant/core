@@ -9,7 +9,7 @@ from typing import Any, Self, cast, override
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_NAME,
     CONF_RADIUS,
+    DEFAULT_RADIUS,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
@@ -44,12 +45,18 @@ from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.location import distance
 
-from .const import ATTR_PASSIVE, ATTR_RADIUS, CONF_PASSIVE, DOMAIN, HOME_ZONE
+from .const import (  # noqa: F401
+    ATTR_PASSIVE,
+    ATTR_RADIUS,
+    CONF_PASSIVE,
+    DOMAIN,
+    HOME_ZONE,
+    ZoneEntityStateAttribute,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PASSIVE = False
-DEFAULT_RADIUS = 100
 
 ENTITY_ID_FORMAT = "zone.{}"
 ENTITY_ID_HOME = ENTITY_ID_FORMAT.format(HOME_ZONE)
@@ -142,21 +149,24 @@ def async_in_zones(
                 zone_dist := distance(
                     latitude,
                     longitude,
-                    zone_attrs[ATTR_LATITUDE],
-                    zone_attrs[ATTR_LONGITUDE],
+                    zone_attrs[ZoneEntityStateAttribute.LATITUDE],
+                    zone_attrs[ZoneEntityStateAttribute.LONGITUDE],
                 )
             )
             is None
             # Skip zone that are outside the radius aka the
             # lat/long is outside the zone
-            or not (zone_dist - (zone_radius := zone_attrs[ATTR_RADIUS]) < radius)
+            or not (
+                zone_dist - (zone_radius := zone_attrs[ZoneEntityStateAttribute.RADIUS])
+                < radius
+            )
         ):
             continue
 
         zones.append((zone.entity_id, zone_dist, zone_radius))
 
         # Skip passive zones
-        if zone_attrs.get(ATTR_PASSIVE):
+        if zone_attrs.get(ZoneEntityStateAttribute.PASSIVE):
             continue
 
         # Prefer the smallest zone, using distance to its center as a tie
@@ -198,9 +208,9 @@ def async_get_enclosing_zones(hass: HomeAssistant, zone_entity_id: str) -> list[
     ):
         return []
     input_attrs = input_zone.attributes
-    input_latitude: float = input_attrs[ATTR_LATITUDE]
-    input_longitude: float = input_attrs[ATTR_LONGITUDE]
-    input_radius: float = input_attrs[ATTR_RADIUS]
+    input_latitude: float = input_attrs[ZoneEntityStateAttribute.LATITUDE]
+    input_longitude: float = input_attrs[ZoneEntityStateAttribute.LONGITUDE]
+    input_radius: float = input_attrs[ZoneEntityStateAttribute.RADIUS]
 
     zones: list[tuple[str, float, float]] = []
 
@@ -221,12 +231,12 @@ def async_get_enclosing_zones(hass: HomeAssistant, zone_entity_id: str) -> list[
             zone_dist := distance(
                 input_latitude,
                 input_longitude,
-                zone_attrs[ATTR_LATITUDE],
-                zone_attrs[ATTR_LONGITUDE],
+                zone_attrs[ZoneEntityStateAttribute.LATITUDE],
+                zone_attrs[ZoneEntityStateAttribute.LONGITUDE],
             )
         ) is None:
             continue
-        zone_radius = zone_attrs[ATTR_RADIUS]
+        zone_radius = zone_attrs[ZoneEntityStateAttribute.RADIUS]
         if not zone_dist + input_radius <= zone_radius:
             continue
         zones.append((zone.entity_id, zone_dist, zone_radius))
@@ -281,13 +291,15 @@ def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -
     zone_dist = distance(
         latitude,
         longitude,
-        zone.attributes[ATTR_LATITUDE],
-        zone.attributes[ATTR_LONGITUDE],
+        zone.attributes[ZoneEntityStateAttribute.LATITUDE],
+        zone.attributes[ZoneEntityStateAttribute.LONGITUDE],
     )
 
-    if zone_dist is None or zone.attributes[ATTR_RADIUS] is None:
+    if zone_dist is None or zone.attributes[ZoneEntityStateAttribute.RADIUS] is None:
         return False
-    return zone_dist - radius < cast(float, zone.attributes[ATTR_RADIUS])
+    return zone_dist - radius < cast(
+        float, zone.attributes[ZoneEntityStateAttribute.RADIUS]
+    )
 
 
 class ZoneStorageCollection(collection.DictStorageCollection):
@@ -508,12 +520,12 @@ class Zone(collection.CollectionEntity):
     def _generate_attrs(self) -> None:
         """Generate new attrs based on config."""
         self._attr_extra_state_attributes = {
-            ATTR_LATITUDE: self._config[CONF_LATITUDE],
-            ATTR_LONGITUDE: self._config[CONF_LONGITUDE],
-            ATTR_RADIUS: self._config[CONF_RADIUS],
-            ATTR_PASSIVE: self._config[CONF_PASSIVE],
-            ATTR_PERSONS: sorted(self._persons_in_zone),
-            ATTR_EDITABLE: self.editable,
+            ZoneEntityStateAttribute.LATITUDE: self._config[CONF_LATITUDE],
+            ZoneEntityStateAttribute.LONGITUDE: self._config[CONF_LONGITUDE],
+            ZoneEntityStateAttribute.RADIUS: self._config[CONF_RADIUS],
+            ZoneEntityStateAttribute.PASSIVE: self._config[CONF_PASSIVE],
+            ZoneEntityStateAttribute.PERSONS: sorted(self._persons_in_zone),
+            ZoneEntityStateAttribute.EDITABLE: self.editable,
         }
 
     @callback

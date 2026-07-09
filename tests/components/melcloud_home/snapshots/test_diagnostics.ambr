@@ -33,7 +33,7 @@
                 'has_auto_operation_mode': True,
                 'has_cool_operation_mode': True,
                 'has_dry_operation_mode': True,
-                'has_energy_consumed_meter': False,
+                'has_energy_consumed_meter': True,
                 'has_fan_operation_mode': None,
                 'has_half_degree_increments': True,
                 'has_outdoor_temperature_sensor': False,
@@ -151,7 +151,12 @@
                 'min_set_temperature_zone2': None,
               }),
               'forced_hot_water_mode': False,
-              'frost_protection': None,
+              'frost_protection': dict({
+                'active': False,
+                'enabled': True,
+                'max': 8.0,
+                'min': 5.0,
+              }),
               'has_zone2': False,
               'holiday_mode': None,
               'id': '**REDACTED**',
@@ -161,7 +166,12 @@
               'operation_mode': 'HeatZones',
               'operation_mode_zone1': 'HeatRoomTemperature',
               'operation_mode_zone2': 'HeatRoomTemperature',
-              'overheat_protection': None,
+              'overheat_protection': dict({
+                'active': False,
+                'enabled': True,
+                'max': 42.0,
+                'min': 40.0,
+              }),
               'power': True,
               'raw_settings': list([
                 dict({

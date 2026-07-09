@@ -6,11 +6,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 30.0,
-      'min_temp': 5.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -45,21 +45,21 @@
 # name: test_setup_platform[legacy-override][climate.thermostat_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 21.4,
-      'friendly_name': 'Thermostat 1',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.4,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat 1',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 30.0,
-      'min_temp': 5.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
       'status': dict({
         'override': 19.0,
         'room_temp': 21.42,
         'setpoint': 18.0,
       }),
-      'supported_features': <ClimateEntityFeature: 1>,
-      'temperature': 18.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 18.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat_1',
@@ -76,11 +76,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 30.0,
-      'min_temp': 5.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -115,21 +115,21 @@
 # name: test_setup_platform[legacy-zero_override][climate.thermostat_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 21.4,
-      'friendly_name': 'Thermostat 1',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.4,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat 1',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 30.0,
-      'min_temp': 5.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
       'status': dict({
         'override': 0.0,
         'room_temp': 21.42,
         'setpoint': 18.0,
       }),
-      'supported_features': <ClimateEntityFeature: 1>,
-      'temperature': 18.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 18.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat_1',
@@ -146,11 +146,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 30.0,
-      'min_temp': 5.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -185,21 +185,21 @@
 # name: test_setup_platform[modern-override][climate.thermostat_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 21.4,
-      'friendly_name': 'Thermostat 1',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.4,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat 1',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 30.0,
-      'min_temp': 5.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
       'status': dict({
         'override': 19.0,
         'room_temp': 21.42,
         'setpoint': 18.0,
       }),
-      'supported_features': <ClimateEntityFeature: 1>,
-      'temperature': 19.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 19.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat_1',
@@ -216,11 +216,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 30.0,
-      'min_temp': 5.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -255,21 +255,21 @@
 # name: test_setup_platform[modern-zero_override][climate.thermostat_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 21.4,
-      'friendly_name': 'Thermostat 1',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.4,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat 1',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
       ]),
-      'max_temp': 30.0,
-      'min_temp': 5.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5.0,
       'status': dict({
         'override': 0.0,
         'room_temp': 21.42,
         'setpoint': 18.0,
       }),
-      'supported_features': <ClimateEntityFeature: 1>,
-      'temperature': 18.0,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 1>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 18.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.thermostat_1',

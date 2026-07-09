@@ -88,6 +88,17 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         invert_position=False,
         is_closed_state=OverkizState.CORE_OPEN_CLOSED,
     ),
+    # Needs override to omit is_closed_state, since OpenClosedState is unreliable
+    # uiClass is RollerShutter
+    OverkizCoverDescription(
+        key=UIWidget.POSITIONABLE_ROLLER_SHUTTER_UNO,
+        device_class=CoverDeviceClass.SHUTTER,
+        current_position_state=OverkizState.CORE_CLOSURE,
+        set_position_command=OverkizCommand.SET_CLOSURE,
+        open_command=OverkizCommand.OPEN,
+        close_command=OverkizCommand.CLOSE,
+        stop_command=OverkizCommand.STOP,
+    ),
     # Needs override to support lower/upper position control
     # uiClass is RollerShutter
     OverkizCoverDescription(
@@ -118,9 +129,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         stop_command=OverkizCommand.STOP,
         # position (1-127), execution duration (0-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(_TILT_STEP_SIZE, 0),
+        open_tilt_command_args=(_TILT_STEP_SIZE,),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(_TILT_STEP_SIZE, 0),
+        close_tilt_command_args=(_TILT_STEP_SIZE,),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override to support very specific tilt commands
@@ -134,9 +145,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         stop_command=OverkizCommand.STOP,
         # position (1-127), execution duration (0-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(_TILT_STEP_SIZE, 0),
+        open_tilt_command_args=(_TILT_STEP_SIZE,),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(_TILT_STEP_SIZE, 0),
+        close_tilt_command_args=(_TILT_STEP_SIZE,),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override to support very specific tilt commands
@@ -150,9 +161,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         stop_command=OverkizCommand.STOP,
         # position (1-127), execution duration (0-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(_TILT_STEP_SIZE, 0),
+        open_tilt_command_args=(_TILT_STEP_SIZE,),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(_TILT_STEP_SIZE, 0),
+        close_tilt_command_args=(_TILT_STEP_SIZE,),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override to support very specific tilt commands (rts:SheerBlindRTSComponent)
@@ -165,9 +176,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         stop_command=OverkizCommand.STOP,
         # position (1-127), execution duration (0-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(_TILT_STEP_SIZE, 0),
+        open_tilt_command_args=(_TILT_STEP_SIZE,),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(_TILT_STEP_SIZE, 0),
+        close_tilt_command_args=(_TILT_STEP_SIZE,),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override since BioclimaticPergola uses core:SlatsOpenClosedState
@@ -857,7 +868,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         return any(
             execution.get("device_url") == self.device.device_url
             and execution.get("command_name") == command
-            for execution in self.coordinator.executions.values()
+            for executions in self.coordinator.executions.values()
+            for execution in executions
         )
 
     @property

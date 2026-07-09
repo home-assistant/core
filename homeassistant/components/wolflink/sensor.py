@@ -45,8 +45,9 @@ from .const import DOMAIN, MANUFACTURER, STATES
 from .coordinator import WolflinkConfigEntry, WolfLinkCoordinator
 
 
-def get_listitem_resolve_state(wolf_object, state):
+def get_listitem_resolve_state(wolf_object: Parameter, state: str) -> str:
     """Resolve list item state."""
+    assert isinstance(wolf_object, ListItemParameter)
     resolved_state = [item for item in wolf_object.items if item.value == int(state)]
     if resolved_state:
         resolved_name = resolved_state[0].name
@@ -144,16 +145,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all entries for Wolf Platform."""
-    coordinator = config_entry.runtime_data
-
-    entities: list[WolfLinkSensor] = [
-        WolfLinkSensor(coordinator, parameter, coordinator.device_id, description)
+    async_add_entities(
+        WolfLinkSensor(coordinator, parameter, description)
+        for coordinator in config_entry.runtime_data.values()
         for parameter in coordinator.parameters
         for description in SENSOR_DESCRIPTIONS
         if description.supported_fn(parameter)
-    ]
-
-    async_add_entities(entities, True)
+    )
 
 
 class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):
@@ -165,7 +163,6 @@ class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):
         self,
         coordinator: WolfLinkCoordinator,
         wolf_object: Parameter,
-        device_id: int,
         description: WolflinkSensorEntityDescription,
     ) -> None:
         """Initialize."""
@@ -173,12 +170,13 @@ class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):
         self.entity_description = description
         self.wolf_object = wolf_object
         self._attr_name = wolf_object.name
-        self._attr_unique_id = f"{device_id}:{wolf_object.parameter_id}"
+        self._attr_unique_id = f"{coordinator.device_id}:{wolf_object.parameter_id}"
         self._state: str | None = None
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(device_id))},
+            identifiers={(DOMAIN, str(coordinator.device_id))},
             configuration_url="https://www.wolf-smartset.com/",
             manufacturer=MANUFACTURER,
+            name=coordinator.device_name,
         )
 
     @property

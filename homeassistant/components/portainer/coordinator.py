@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+import time
 from typing import override
 
 from pyportainer import (
@@ -22,10 +23,13 @@ from pyportainer.models.docker import (
     DockerSystemDF,
     DockerVolume,
     DockerVolumeUsageData,
+    LocalImageInformation,
+    PortainerImageUpdateStatus,
 )
-from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
+from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
 from pyportainer.models.portainer import Endpoint
 from pyportainer.models.stacks import Stack
+from pyportainer.watcher import PortainerImageWatcher
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -34,6 +38,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
+from .util import sanitize_container_name
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -62,9 +67,12 @@ class PortainerContainerData:
     """Container data held by the Portainer coordinator."""
 
     container: DockerContainer
+    container_inspect: DockerInspect
+    local_image: LocalImageInformation
+    stack: Stack | None
     stats: DockerContainerStats | None
     stats_pre: DockerContainerStats | None
-    stack: Stack | None
+    image_status: PortainerImageUpdateStatus | None = None
 
 
 @dataclass(slots=True)
@@ -128,7 +136,7 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     async def _async_setup(self) -> None:
         """Set up the Portainer Data Update Coordinator."""
         try:
-            await self.portainer.get_endpoints()
+            await self.portainer.portainer_system_status()
         except PortainerAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -184,7 +192,20 @@ class PortainerCoordinator(
 
     config_entry: PortainerConfigEntry
     docker_disk_space: PortainerDockerDiskSpaceCoordinator | None = None
+    watcher: PortainerImageWatcher | None = None
     _update_interval = DEFAULT_SCAN_INTERVAL
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: PortainerConfigEntry,
+        portainer: Portainer,
+    ) -> None:
+        """Initialize."""
+        super().__init__(hass, config_entry, portainer)
+        self._image_cache: dict[
+            tuple[int, str], tuple[float, DockerInspect, LocalImageInformation]
+        ] = {}
 
     @override
     async def update_data(self) -> dict[int, PortainerCoordinatorData]:
@@ -263,10 +284,29 @@ class PortainerCoordinator(
 
             # Map containers, started and stopped
             for container in containers:
-                container_name = self._get_container_name(container.names[0])
+                container_name = sanitize_container_name(container.names[0])
                 prev_container = (
                     prev_endpoint.containers.get(container_name)
                     if prev_endpoint
+                    else None
+                )
+
+                (
+                    container_inspect,
+                    local_image,
+                ) = await self._get_inspect_local_image(endpoint.id, container.id)
+
+                image_status = (
+                    (
+                        result.status
+                        if (
+                            result := self.watcher.results.get(
+                                (endpoint.id, container.id)
+                            )
+                        )
+                        else None
+                    )
+                    if self.watcher
                     else None
                 )
 
@@ -282,8 +322,11 @@ class PortainerCoordinator(
 
                 container_map[container_name] = PortainerContainerData(
                     container=container,
+                    container_inspect=container_inspect,
+                    local_image=local_image,
                     stats=None,
                     stats_pre=prev_container.stats if prev_container else None,
+                    image_status=image_status,
                     stack=stack_map[stack_name].stack
                     if stack_name and stack_name in stack_map
                     else None,
@@ -313,7 +356,7 @@ class PortainerCoordinator(
                 container_stats = dict(
                     zip(
                         (
-                            self._get_container_name(container.names[0])
+                            sanitize_container_name(container.names[0])
                             for container in active_containers
                         ),
                         await asyncio.gather(
@@ -431,9 +474,36 @@ class PortainerCoordinator(
             for stack_callback in self.new_stacks_callbacks:
                 stack_callback(new_stack_data)
 
-    def _get_container_name(self, container_name: str) -> str:
-        """Sanitize to get a proper container name."""
-        return container_name.replace("/", " ").strip()
+    async def _get_inspect_local_image(
+        self, endpoint_id: int, container_id: str
+    ) -> tuple[DockerInspect, LocalImageInformation]:
+        """Fetch or retrieve cached container inspect and local image data."""
+        if cached := self._image_cache.get((endpoint_id, container_id)):
+            cached_at, container_inspect, local_image = cached
+            if (
+                self.watcher is None
+                or self.watcher.last_check is None
+                or cached_at >= self.watcher.last_check
+            ):
+                _LOGGER.debug(
+                    "Using cached inspect and local image for endpoint %d, container %s",
+                    endpoint_id,
+                    container_id,
+                )
+                return container_inspect, local_image
+
+        container_inspect = await self.portainer.inspect_container(
+            endpoint_id, container_id
+        )
+        local_image = await self.portainer.get_image(
+            endpoint_id, str(container_inspect.image)
+        )
+        self._image_cache[(endpoint_id, container_id)] = (
+            time.monotonic(),
+            container_inspect,
+            local_image,
+        )
+        return container_inspect, local_image
 
 
 class PortainerDockerDiskSpaceCoordinator(

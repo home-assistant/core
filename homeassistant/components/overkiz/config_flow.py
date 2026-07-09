@@ -11,9 +11,14 @@ from pyoverkiz.auth.credentials import (
     UsernamePasswordCredentials,
 )
 from pyoverkiz.client import GatewayCandidate, OverkizClient
-from pyoverkiz.const import SERVERS_WITH_LOCAL_API, SUPPORTED_SERVERS
+from pyoverkiz.const import (
+    REXEL_OAUTH_CLIENT_ID,
+    SERVERS_WITH_LOCAL_API,
+    SUPPORTED_SERVERS,
+)
 from pyoverkiz.enums import APIType, Server
 from pyoverkiz.exceptions import (
+    ApplicationNotAllowedError,
     BadCredentialsError,
     CozyTouchBadCredentialsError,
     MaintenanceError,
@@ -27,6 +32,10 @@ from pyoverkiz.obfuscate import obfuscate_id
 from pyoverkiz.utils import create_local_server_config, is_overkiz_gateway
 import voluptuous as vol
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -178,6 +187,18 @@ class OverkizConfigFlow(
             description_placeholders={"local_api_docs": LOCAL_API_DOCS_URL},
         )
 
+    @override
+    async def async_step_pick_implementation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Start the Rexel OAuth2 flow, re-importing the credential if removed."""
+        await async_import_client_credential(
+            self.hass,
+            DOMAIN,
+            ClientCredential(REXEL_OAUTH_CLIENT_ID, "", name="Rexel"),
+        )
+        return await super().async_step_pick_implementation(user_input)
+
     async def async_step_cloud(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -193,6 +214,8 @@ class OverkizConfigFlow(
                 await self.async_validate_input(user_input)
             except TooManyRequestsError:
                 errors["base"] = "too_many_requests"
+            except ApplicationNotAllowedError:
+                errors["base"] = "application_not_allowed"
             except (BadCredentialsError, NotAuthenticatedError) as exception:
                 # If authentication with CozyTouch auth server is
                 # valid, but token is invalid for Overkiz API

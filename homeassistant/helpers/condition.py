@@ -3,8 +3,7 @@
 import abc
 import asyncio
 from collections import deque
-from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
-from contextlib import contextmanager
+from collections.abc import Callable, Container, Coroutine, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
@@ -31,8 +30,6 @@ from typing import (
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ABOVE,
     CONF_AFTER,
     CONF_ATTRIBUTE,
@@ -56,8 +53,15 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     WEEKDAYS,
+    EntityStateAttribute,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import (
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+    valid_entity_id,
+)
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -364,6 +368,7 @@ class LegacyConditionChecker(ConditionChecker):
         super().__init__(hass)
         self._checker = checker
 
+    @override
     def _async_check(self, variables: TemplateVarsType = None, **kwargs: Any) -> bool:
         return self._checker(self._hass, variables)
 
@@ -371,6 +376,7 @@ class LegacyConditionChecker(ConditionChecker):
 class DisabledConditionChecker(ConditionChecker):
     """Condition checker for disabled conditions."""
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> None:
         return None
 
@@ -383,6 +389,7 @@ class CompoundConditionChecker(ConditionChecker):
         super().__init__(hass)
         self._conditions = conditions
 
+    @override
     def _async_unload(self) -> None:
         """Clean up child conditions."""
         for condition in self._conditions:
@@ -850,6 +857,7 @@ class EntityConditionBase(Condition):
             for state in states
         )
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test state condition."""
         targeted_entities = async_extract_referenced_entity_ids(
@@ -877,6 +885,7 @@ class EntityStateConditionBase(EntityConditionBase):
     _states: set[str | bool]
 
     @property
+    @override
     def _needs_duration_tracking(self) -> bool:
         """Single-state conditions with no attribute tracking can use last_changed."""
         if len(self._states) != 1:
@@ -892,6 +901,7 @@ class EntityStateConditionBase(EntityConditionBase):
             return entity_state.state
         return entity_state.attributes.get(domain_spec.value_source)
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
         return self._get_tracked_value(entity_state) in self._states
@@ -983,7 +993,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
             # Entity not found
             return None
         if not self._is_valid_unit(
-            entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            entity_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         ):
             # Entity unit does not match the expected unit
             return None
@@ -1001,12 +1011,13 @@ class EntityNumericalConditionBase(EntityConditionBase):
         domain_spec = self._domain_specs[entity_state.domain]
         if domain_spec.value_source is None:
             if not self._is_valid_unit(
-                entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                entity_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
             ):
                 return None
             return entity_state.state
         return entity_state.attributes.get(domain_spec.value_source)
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state is within the specified range."""
         try:
@@ -1080,6 +1091,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
     _base_unit: str | None  # Base unit for the tracked value
     _unit_converter: type[BaseUnitConverter]
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
         super().__init_subclass__(**kwargs)
@@ -1087,8 +1099,9 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
 
     def _get_entity_unit(self, entity_state: State) -> str | None:
         """Get the unit of an entity from its state."""
-        return entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        return entity_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
+    @override
     def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
         """Get threshold value from float or entity state."""
         if threshold is None:
@@ -1112,13 +1125,14 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
         try:
             return self._unit_converter.convert(
                 value,
-                entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+                entity_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT),
                 self._base_unit,
             )
         except HomeAssistantError:
             # Unit conversion failed (i.e. incompatible units), treat as invalid number
             return None
 
+    @override
     def _get_tracked_value(self, entity_state: State) -> Any:
         """Get the tracked numerical value from a state."""
         domain_spec = self._domain_specs[entity_state.domain]
@@ -1218,25 +1232,42 @@ def condition_trace_update_result(**kwargs: Any) -> None:
     node.update_result(**kwargs)
 
 
-@contextmanager
-def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement]:
+class trace_condition:
     """Trace condition evaluation."""
-    should_pop = True
-    trace_element = trace_stack_top(trace_stack_cv)
-    if trace_element and trace_element.reuse_by_child:
-        should_pop = False
-        trace_element.reuse_by_child = False
-    else:
-        trace_element = condition_trace_append(variables, trace_path_get())
-        trace_stack_push(trace_stack_cv, trace_element)
-    try:
-        yield trace_element
-    except Exception as ex:
-        trace_element.set_error(ex)
-        raise
-    finally:
-        if should_pop:
-            trace_stack_pop(trace_stack_cv)
+
+    __slots__ = ("_should_pop", "_trace_element", "_variables")
+
+    _should_pop: bool
+    _trace_element: TraceElement
+
+    def __init__(self, variables: TemplateVarsType) -> None:
+        """Store the variables for the trace element."""
+        self._variables = variables
+
+    def __enter__(self) -> TraceElement:
+        """Start tracing the condition evaluation."""
+        should_pop = True
+        trace_element = trace_stack_top(trace_stack_cv)
+        if trace_element and trace_element.reuse_by_child:
+            should_pop = False
+            trace_element.reuse_by_child = False
+        else:
+            trace_element = condition_trace_append(self._variables, trace_path_get())
+            trace_stack_push(trace_stack_cv, trace_element)
+        self._should_pop = should_pop
+        self._trace_element = trace_element
+        return trace_element
+
+    def __exit__(
+        self, exc_type: object, exc_val: BaseException | None, exc_tb: object
+    ) -> None:
+        """Finish tracing the condition evaluation."""
+        try:
+            if exc_val is not None and isinstance(exc_val, Exception):
+                self._trace_element.set_error(exc_val)
+        finally:
+            if self._should_pop:
+                trace_stack_pop(trace_stack_cv)
 
 
 @overload
@@ -1372,6 +1403,7 @@ class AndConditionChecker(CompoundConditionChecker):
     """Condition checker for 'and' compound conditions."""
 
     @callback
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test and condition."""
         errors = []
@@ -1406,6 +1438,7 @@ class OrConditionChecker(CompoundConditionChecker):
     """Condition checker for 'or' compound conditions."""
 
     @callback
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test or condition."""
         errors = []
@@ -1440,6 +1473,7 @@ class NotConditionChecker(CompoundConditionChecker):
     """Condition checker for 'not' compound conditions."""
 
     @callback
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test not condition."""
         errors = []
@@ -1838,7 +1872,7 @@ def time(
         ):
             after = datetime.strptime(after_entity.state, "%H:%M:%S").time()
         elif (
-            after_entity.attributes.get(ATTR_DEVICE_CLASS)
+            after_entity.attributes.get(EntityStateAttribute.DEVICE_CLASS)
             in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME)
         ) and after_entity.state not in (
             STATE_UNAVAILABLE,
@@ -1868,7 +1902,7 @@ def time(
             except ValueError:
                 return False
         elif (
-            before_entity.attributes.get(ATTR_DEVICE_CLASS)
+            before_entity.attributes.get(EntityStateAttribute.DEVICE_CLASS)
             in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME)
         ) and before_entity.state not in (
             STATE_UNAVAILABLE,
@@ -2105,6 +2139,13 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
 
         if condition in ("and", "not", "or"):
             to_process.extend(config["conditions"])
+            continue
+
+        if condition == "time":
+            # The before and after options can be a time or an entity id.
+            for key in (CONF_AFTER, CONF_BEFORE):
+                if isinstance(value := config.get(key), str) and valid_entity_id(value):
+                    referenced.add(value)
             continue
 
         entity_ids = config.get(CONF_ENTITY_ID)
