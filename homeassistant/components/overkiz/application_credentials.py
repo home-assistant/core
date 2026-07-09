@@ -43,6 +43,6 @@ class OverkizOAuth2Implementation(LocalOAuth2ImplementationWithPkce):
         otherwise drop it.
         """
         return super().extra_authorize_data | {
-            "scope": REXEL_OAUTH_SCOPE,
+            "scope": f"{REXEL_OAUTH_SCOPE} offline_access",
             "p": REXEL_OAUTH_POLICY,
         }
