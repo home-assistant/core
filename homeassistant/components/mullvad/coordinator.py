@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from mullvad_api import MullvadAPI
 
@@ -15,13 +15,15 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type MullvadConfigEntry = ConfigEntry[MullvadCoordinator]
+
 
 class MullvadCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Mullvad VPN data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: MullvadConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: MullvadConfigEntry) -> None:
         """Initialize the Mullvad coordinator."""
         super().__init__(
             hass,
@@ -31,6 +33,7 @@ class MullvadCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(minutes=1),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Mullvad API."""
         async with asyncio.timeout(10):

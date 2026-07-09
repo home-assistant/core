@@ -3,8 +3,6 @@
 To update, run python3 -m script.hassfest
 """
 
-from __future__ import annotations
-
 from typing import Final
 
 BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
@@ -66,6 +64,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "0000fce0-0000-1000-8000-00805f9b34fb",
     },
     {
+        "domain": "avea",
+        "local_name": "Avea*",
+        "service_uuid": "f815e810-456c-6761-746f-4d756e696368",
+    },
+    {
         "connectable": False,
         "domain": "bluemaestro",
         "manufacturer_id": 307,
@@ -89,6 +92,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": True,
         "domain": "casper_glow",
         "local_name": "Jar*",
+    },
+    {
+        "connectable": False,
+        "domain": "chef_iq",
+        "manufacturer_id": 1485,
     },
     {
         "domain": "dormakaba_dkey",
@@ -115,6 +123,14 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "domain": "eufylife_ble",
+        "local_name": "eufy T9120",
+    },
+    {
+        "domain": "eufylife_ble",
+        "local_name": "eufy T9130",
+    },
+    {
+        "domain": "eufylife_ble",
         "local_name": "eufy T9140",
     },
     {
@@ -134,17 +150,18 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "eufy T9149",
     },
     {
+        "domain": "eufylife_ble",
+        "local_name": "eufy T9150",
+    },
+    {
+        "connectable": True,
+        "domain": "eurotronic_cometblue",
+        "service_uuid": "47e9ee00-47e9-11e4-8939-164230d1df67",
+    },
+    {
         "connectable": False,
         "domain": "fjaraskupan",
-        "manufacturer_data_start": [
-            79,
-            68,
-            70,
-            74,
-            65,
-            82,
-        ],
-        "manufacturer_id": 20296,
+        "service_uuid": "77a2bd49-1e5a-4961-bba1-21f34fa4bc7b",
     },
     {
         "connectable": True,

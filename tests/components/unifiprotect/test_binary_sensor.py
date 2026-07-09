@@ -1,7 +1,5 @@
 """Test the UniFi Protect binary_sensor platform."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 
@@ -18,6 +16,8 @@ from uiprotect.data import (
     SmartDetectObjectType,
 )
 from uiprotect.data.nvr import EventMetadata
+from uiprotect.data.public_devices import SensorFeatureCapability
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.unifiprotect.binary_sensor import (
@@ -26,10 +26,12 @@ from homeassistant.components.unifiprotect.binary_sensor import (
     LIGHT_SENSORS,
     MOUNTABLE_SENSE_SENSORS,
     SENSE_SENSORS,
+    ProtectBinaryEntityDescription,
 )
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_SCORE,
     DEFAULT_ATTRIBUTION,
+    DOMAIN,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -49,13 +51,21 @@ from .utils import (
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
+    make_public_sensor,
+    public_device_ws_message,
     remove_entities,
+    setup_public_sensor,
 )
 
 from tests.common import async_capture_events
 
 LIGHT_SENSOR_WRITE = LIGHT_SENSORS[:2]
 SENSE_SENSORS_WRITE = SENSE_SENSORS[:3]
+BATTERY_LOW = next(d for d in SENSE_SENSORS if d.key == "battery_low")
+SENSE_MOTION = next(d for d in SENSE_SENSORS if d.key == "motion")
+SENSE_DOOR = MOUNTABLE_SENSE_SENSORS[0]
+SENSE_LEAK = next(d for d in SENSE_SENSORS if d.key == "leak")
+SENSE_TAMPERING = next(d for d in SENSE_SENSORS if d.key == "tampering")
 
 
 async def test_binary_sensor_camera_remove(
@@ -65,11 +75,11 @@ async def test_binary_sensor_camera_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 6)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 6)
     await remove_entities(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 0, 0)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 6)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 6)
 
 
 async def test_binary_sensor_light_remove(
@@ -137,7 +147,7 @@ async def test_binary_sensor_setup_camera_all(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 6)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 6)
 
     description = EVENT_SENSORS[0]
     unique_id, entity_id = await ids_from_device_description(
@@ -220,6 +230,7 @@ async def test_binary_sensor_setup_sensor(
 ) -> None:
     """Test binary_sensor entity setup for sensor devices."""
 
+    setup_public_sensor(ufp)
     await init_entry(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
@@ -253,6 +264,7 @@ async def test_binary_sensor_setup_sensor_leak(
     """Test binary_sensor entity setup for sensor with most leak mounting type."""
 
     sensor.mount_type = MountType.LEAK
+    setup_public_sensor(ufp)
     await init_entry(hass, ufp, [sensor])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
@@ -277,6 +289,395 @@ async def test_binary_sensor_setup_sensor_leak(
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
+async def test_binary_sensor_battery_low_public_ws_update(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """battery_low refreshes from a public devices WS update."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, BATTERY_LOW
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    public = make_public_sensor(sensor_all, is_low=True)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_binary_sensor_battery_low_unavailable_without_public_api(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """The migrated battery_low entity is unavailable without a public object."""
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, BATTERY_LOW
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_binary_sensor_sense_motion_public_value(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """The sense motion sensor reads is_motion_detected from a public WS update."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, SENSE_MOTION
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    public = make_public_sensor(sensor_all, is_motion_detected=True)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_binary_sensor_sense_motion_disabled_unavailable(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """ufp_public_enabled_fn marks the motion sensor unavailable when disabled."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, SENSE_MOTION
+    )
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    public = make_public_sensor(sensor_all, motion_enabled=False)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_binary_sensor_sense_motion_leak_mount_unavailable(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """A leak-mounted sensor reports motion unavailable (mirrors the private gate)."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, SENSE_MOTION
+    )
+
+    public = make_public_sensor(sensor_all, mount_type=MountType.LEAK)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_binary_sensor_sense_motion_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """The migrated motion sensor is unavailable without a public object."""
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, SENSE_MOTION
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_binary_sensor_sense_door_public_value(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """The contact sensor reads is_opened from a public WS update."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, SENSE_DOOR
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    public = make_public_sensor(sensor_all, is_opened=True)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_binary_sensor_sense_door_unmounted_unavailable(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """A sensor without a contact mount reports the contact sensor unavailable."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, SENSE_DOOR
+    )
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    public = make_public_sensor(sensor_all, mount_type=MountType.NONE)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_binary_sensor_sense_door_device_class_follows_public_mount(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """The contact sensor derives its device class from the public mount type."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, SENSE_DOOR
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.DOOR.value
+
+    public = make_public_sensor(sensor_all, mount_type=MountType.WINDOW)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.WINDOW.value
+
+
+async def test_binary_sensor_sense_leak_public_value(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """The leak sensor reads is_leak_detected from a public WS update."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, SENSE_LEAK
+    )
+
+    public = make_public_sensor(
+        sensor_all, mount_type=MountType.LEAK, is_leak_detected=True
+    )
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("mount_type", "capabilities", "internal", "external", "expected"),
+    [
+        pytest.param(
+            MountType.LEAK, None, False, False, STATE_OFF, id="leak-mount-parity"
+        ),
+        pytest.param(
+            MountType.NONE,
+            {SensorFeatureCapability.WATER_LEAK},
+            True,
+            False,
+            STATE_OFF,
+            id="capability-internal",
+        ),
+        pytest.param(
+            MountType.NONE,
+            {SensorFeatureCapability.WATER_LEAK},
+            False,
+            True,
+            STATE_OFF,
+            id="capability-external",
+        ),
+        pytest.param(
+            MountType.NONE,
+            None,
+            True,
+            True,
+            STATE_UNAVAILABLE,
+            id="settings-without-capability-map",
+        ),
+        pytest.param(
+            MountType.NONE,
+            set(),
+            True,
+            True,
+            STATE_UNAVAILABLE,
+            id="settings-without-capability",
+        ),
+        pytest.param(
+            MountType.NONE,
+            {SensorFeatureCapability.WATER_LEAK},
+            False,
+            False,
+            STATE_UNAVAILABLE,
+            id="capability-without-channel",
+        ),
+    ],
+)
+async def test_binary_sensor_sense_leak_enablement_gate(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+    mount_type: MountType,
+    capabilities: set[SensorFeatureCapability] | None,
+    internal: bool,
+    external: bool,
+    expected: str,
+) -> None:
+    """The leak gate honors leak mount, water_leak capability and channel settings."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, SENSE_LEAK
+    )
+
+    public = make_public_sensor(
+        sensor_all,
+        mount_type=mount_type,
+        capabilities=capabilities,
+        leak_internal_enabled=internal,
+        leak_external_enabled=external,
+    )
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == expected
+
+
+async def test_binary_sensor_sense_capability_creation_filter(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A capability map limits entity creation to the advertised capabilities."""
+    setup_public_sensor(
+        ufp,
+        capabilities={SensorFeatureCapability.OPEN, SensorFeatureCapability.TAMPER},
+    )
+    await init_entry(hass, ufp, [sensor_all])
+
+    for description in (SENSE_DOOR, SENSE_TAMPERING, BATTERY_LOW):
+        _, entity_id = await ids_from_device_description(
+            hass, Platform.BINARY_SENSOR, sensor_all, description
+        )
+        assert entity_registry.async_get(entity_id) is not None
+
+    for description in (SENSE_MOTION, SENSE_LEAK):
+        _, entity_id = await ids_from_device_description(
+            hass, Platform.BINARY_SENSOR, sensor_all, description
+        )
+        assert entity_registry.async_get(entity_id) is None
+
+
+async def test_binary_sensor_sense_capability_registry_cleanup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A console upgrade removes registry entries for unsupported capabilities."""
+    stale = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{sensor_all.mac}_{SENSE_LEAK.key}",
+        config_entry=ufp.entry,
+    )
+    setup_public_sensor(
+        ufp,
+        capabilities={SensorFeatureCapability.OPEN, SensorFeatureCapability.TAMPER},
+    )
+    await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
+
+    assert entity_registry.async_get(stale.entity_id) is None
+
+
+async def test_binary_sensor_sense_no_capability_map_creates_all(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """Without a capability map (older firmware) every sense entity is created."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    for description in (SENSE_DOOR, SENSE_TAMPERING, SENSE_MOTION, SENSE_LEAK):
+        _, entity_id = await ids_from_device_description(
+            hass, Platform.BINARY_SENSOR, sensor_all, description
+        )
+        assert entity_registry.async_get(entity_id) is not None
+
+
+async def test_binary_sensor_sense_tampering_public_value(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+) -> None:
+    """The tampering sensor reads is_tampering_detected from a public WS update."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, SENSE_TAMPERING
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    public = make_public_sensor(sensor_all, is_tampering_detected=True)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        pytest.param(SENSE_DOOR, id="door"),
+        pytest.param(SENSE_LEAK, id="leak"),
+        pytest.param(SENSE_TAMPERING, id="tampering"),
+    ],
+)
+async def test_binary_sensor_sense_unavailable_without_public(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+    description: ProtectBinaryEntityDescription,
+) -> None:
+    """The migrated sense sensors are unavailable without a public object."""
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, description
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_binary_sensor_battery_low_unavailable_on_public_ws_disconnect(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """battery_low follows the public websocket health, not the private one."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, BATTERY_LOW
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    assert ufp.devices_ws_state_subscription is not None
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
 async def test_binary_sensor_update_motion(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
@@ -287,7 +688,7 @@ async def test_binary_sensor_update_motion(
     """Test binary_sensor motion entity."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 15, 12)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 14, 12)
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[1]
@@ -438,147 +839,6 @@ async def test_binary_sensor_update_mount_type_garage(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_binary_sensor_package_detected(
-    hass: HomeAssistant,
-    ufp: MockUFPFixture,
-    doorbell: Camera,
-    unadopted_camera: Camera,
-    fixed_now: datetime,
-) -> None:
-    """Test binary_sensor package detection entity."""
-
-    await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 15, 15)
-
-    doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.PACKAGE)
-
-    _, entity_id = await ids_from_device_description(
-        hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[6]
-    )
-
-    event = Event(
-        model=ModelType.EVENT,
-        id="test_event_id",
-        type=EventType.SMART_DETECT,
-        start=fixed_now - timedelta(seconds=1),
-        end=None,
-        score=100,
-        smart_detect_types=[SmartDetectObjectType.PACKAGE],
-        smart_detect_event_ids=[],
-        camera_id=doorbell.id,
-        api=ufp.api,
-    )
-
-    new_camera = doorbell.model_copy()
-    new_camera.is_smart_detected = True
-    new_camera.last_smart_detect_event_ids[SmartDetectObjectType.PACKAGE] = event.id
-
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.api.bootstrap.events = {event.id: event}
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = event
-    ufp.ws_msg(mock_msg)
-
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_ON
-    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-    assert state.attributes[ATTR_EVENT_SCORE] == 100
-
-    event = Event(
-        model=ModelType.EVENT,
-        id="test_event_id",
-        type=EventType.SMART_DETECT,
-        start=fixed_now - timedelta(seconds=1),
-        end=fixed_now + timedelta(seconds=1),
-        score=50,
-        smart_detect_types=[SmartDetectObjectType.PACKAGE],
-        smart_detect_event_ids=[],
-        camera_id=doorbell.id,
-        api=ufp.api,
-    )
-
-    new_camera = doorbell.model_copy()
-    new_camera.is_smart_detected = True
-    new_camera.last_smart_detect_event_ids[SmartDetectObjectType.PACKAGE] = event.id
-
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.api.bootstrap.events = {event.id: event}
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = event
-    ufp.ws_msg(mock_msg)
-
-    await hass.async_block_till_done()
-
-    # Event is already seen and has end, should now be off
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
-
-    # Now send an event that has an end right away
-    event = Event(
-        model=ModelType.EVENT,
-        id="new_event_id",
-        type=EventType.SMART_DETECT,
-        start=fixed_now - timedelta(seconds=1),
-        end=fixed_now + timedelta(seconds=1),
-        score=80,
-        smart_detect_types=[SmartDetectObjectType.PACKAGE],
-        smart_detect_event_ids=[],
-        camera_id=doorbell.id,
-        api=ufp.api,
-    )
-
-    new_camera = doorbell.model_copy()
-    new_camera.is_smart_detected = True
-    new_camera.last_smart_detect_event_ids[SmartDetectObjectType.PACKAGE] = event.id
-
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.api.bootstrap.events = {event.id: event}
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = event
-
-    state_changes: list[HAEvent[EventStateChangedData]] = async_capture_events(
-        hass, EVENT_STATE_CHANGED
-    )
-    ufp.ws_msg(mock_msg)
-
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
-
-    assert len(state_changes) == 2
-
-    on_event = state_changes[0]
-    state = on_event.data["new_state"]
-    assert state
-    assert state.state == STATE_ON
-    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-    assert state.attributes[ATTR_EVENT_SCORE] == 80
-
-    off_event = state_changes[1]
-    state = off_event.data["new_state"]
-    assert state
-    assert state.state == STATE_OFF
-    assert ATTR_EVENT_SCORE not in state.attributes
-
-    # replay and ensure ignored
-    ufp.ws_msg(mock_msg)
-    await hass.async_block_till_done()
-    assert len(state_changes) == 2
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor_person_detected(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
@@ -589,7 +849,7 @@ async def test_binary_sensor_person_detected(
     """Test binary_sensor person detected detection entity."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 15, 15)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 14, 14)
 
     doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.PERSON)
 
@@ -729,10 +989,11 @@ async def test_aiport_no_binary_sensor_entities(
     ufp: MockUFPFixture,
     aiport: AiPort,
 ) -> None:
-    """Test that AI Port devices do not create camera-specific binary sensor entities."""
+    """Test AI Port devices do not create camera-specific binary sensors."""
     await init_entry(hass, ufp, [aiport])
 
-    # AI Port should not create any camera-specific binary sensors (motion, smart detection, etc.)
+    # AI Port should not create any camera-specific binary sensors
+    # (motion, smart detection, etc.)
     # NVR HDD sensors will still be created, but no AI Port-specific entities
     entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
@@ -760,7 +1021,7 @@ async def test_binary_sensor_simultaneous_person_and_vehicle_detection(
     """
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 15, 15)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 14, 14)
 
     doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.PERSON)
     doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.VEHICLE)

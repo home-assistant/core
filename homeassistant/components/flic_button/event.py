@@ -1,8 +1,6 @@
 """Event platform for Flic Button integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pyflic_ble import PushTwistMode
 from pyflic_ble.const import (
@@ -171,6 +169,7 @@ class FlicButtonEventEntity(FlicButtonEntity, EventEntity):
         self._is_twist = is_twist
         self._attr_unique_id = f"{self._client.address}-{description.key}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register event callbacks when entity is added."""
         await super().async_added_to_hass()

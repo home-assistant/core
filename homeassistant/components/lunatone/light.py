@@ -1,14 +1,15 @@
 """Platform for Lunatone light integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from lunatone_rest_api_client import DALIBroadcast
 from lunatone_rest_api_client.models import LineStatus
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
     ColorMode,
     LightEntity,
     brightness_supported,
@@ -72,6 +73,8 @@ class LunatoneLight(
     _attr_has_entity_name = True
     _attr_name = None
     _attr_should_poll = False
+    _attr_min_color_temp_kelvin = 1000
+    _attr_max_color_temp_kelvin = 10000
 
     def __init__(
         self,
@@ -87,6 +90,7 @@ class LunatoneLight(
         self._attr_unique_id = f"{config_entry_unique_id}-device{device_id}"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         assert self.unique_id
@@ -100,16 +104,19 @@ class LunatoneLight(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._device is not None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if light is on."""
         return self._device is not None and self._device.is_on
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         return (
@@ -119,36 +126,88 @@ class LunatoneLight(
         )
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
-        if self._device is not None and self._device.brightness is not None:
+        if self._device.rgbw_color is not None:
+            return ColorMode.RGBW
+        if self._device.rgb_color is not None:
+            return ColorMode.RGB
+        if self._device.color_temperature is not None:
+            return ColorMode.COLOR_TEMP
+        if self._device.brightness is not None:
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 
     @property
+    @override
     def supported_color_modes(self) -> set[ColorMode]:
         """Return the supported color modes."""
         return {self.color_mode}
 
+    @property
+    @override
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temp of this light in kelvin."""
+        return self._device.color_temperature
+
+    @property
+    @override
+    def rgb_color(self) -> tuple[int, int, int] | None:
+        """Return the RGB color of this light."""
+        rgb_color = self._device.rgb_color
+        return rgb_color and (
+            round(rgb_color[0] * 255),
+            round(rgb_color[1] * 255),
+            round(rgb_color[2] * 255),
+        )
+
+    @property
+    @override
+    def rgbw_color(self) -> tuple[int, int, int, int] | None:
+        """Return the RGBW color of this light."""
+        rgbw_color = self._device.rgbw_color
+        return rgbw_color and (
+            round(rgbw_color[0] * 255),
+            round(rgbw_color[1] * 255),
+            round(rgbw_color[2] * 255),
+            round(rgbw_color[3] * 255),
+        )
+
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._device = self.coordinator.data[self._device_id]
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if brightness_supported(self.supported_color_modes):
-            await self._device.fade_to_brightness(
-                brightness_to_value(
-                    self.BRIGHTNESS_SCALE,
-                    kwargs.get(ATTR_BRIGHTNESS, self._last_brightness),
+            if ATTR_COLOR_TEMP_KELVIN in kwargs:
+                await self._device.fade_to_color_temperature(
+                    kwargs[ATTR_COLOR_TEMP_KELVIN]
                 )
-            )
+            if ATTR_RGB_COLOR in kwargs:
+                await self._device.fade_to_rgbw_color(
+                    tuple(color / 255 for color in kwargs[ATTR_RGB_COLOR])
+                )
+            if ATTR_RGBW_COLOR in kwargs:
+                rgbw_color = tuple(color / 255 for color in kwargs[ATTR_RGBW_COLOR])
+                await self._device.fade_to_rgbw_color(rgbw_color[:-1], rgbw_color[-1])
+            if ATTR_BRIGHTNESS in kwargs or not self.is_on:
+                await self._device.fade_to_brightness(
+                    brightness_to_value(
+                        self.BRIGHTNESS_SCALE,
+                        kwargs.get(ATTR_BRIGHTNESS, self._last_brightness),
+                    )
+                )
         else:
             await self._device.switch_on()
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         if brightness_supported(self.supported_color_modes):
@@ -169,6 +228,8 @@ class LunatoneLineBroadcastLight(
 
     _attr_assumed_state = True
     _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(
@@ -205,11 +266,13 @@ class LunatoneLineBroadcastLight(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         line_status = self.coordinator.data.lines[str(self._broadcast.line)].line_status
         return super().available and line_status == LineStatus.OK
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the line to turn on."""
         await self._broadcast.fade_to_brightness(
@@ -217,6 +280,7 @@ class LunatoneLineBroadcastLight(
         )
         await self._coordinator_devices.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the line to turn off."""
         await self._broadcast.fade_to_brightness(0)

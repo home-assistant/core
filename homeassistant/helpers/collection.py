@@ -1,7 +1,5 @@
 """Helper to deal with YAML + storage."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
@@ -11,7 +9,7 @@ from hashlib import md5
 from itertools import groupby
 import logging
 from operator import attrgetter
-from typing import Any, TypedDict
+from typing import Any, TypedDict, override
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -393,19 +391,23 @@ class StorageCollection[_ItemT, _StoreT: SerializedStorageCollection](
 class DictStorageCollection(StorageCollection[dict, SerializedStorageCollection]):
     """A specialized StorageCollection where the items are untyped dicts."""
 
+    @override
     def _create_item(self, item_id: str, data: dict) -> dict:
         """Create an item from its validated, serialized representation."""
         return {CONF_ID: item_id} | data
 
+    @override
     def _deserialize_item(self, data: dict) -> dict:
         """Create an item from its validated, serialized representation."""
         return data
 
+    @override
     def _serialize_item(self, item_id: str, item: dict) -> dict:
         """Return the serialized representation of an item for storing."""
         return item
 
     @callback
+    @override
     def _data_to_save(self) -> SerializedStorageCollection:
         """Return JSON-compatible date for storing to file."""
         return self._base_data_to_save()
@@ -416,6 +418,7 @@ class IDLessCollection(YamlCollection):
 
     counter = 0
 
+    @override
     async def async_load(self, data: list[dict]) -> None:
         """Load the collection. Overrides existing data."""
         await self.notify_changes(
@@ -545,13 +548,21 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         model_name: str,
         create_schema: VolDictType,
         update_schema: VolDictType,
+        *,
+        admin_only: bool = False,
     ) -> None:
-        """Initialize a websocket CRUD."""
+        """Initialize a websocket CRUD.
+
+        When ``admin_only`` is set, the ``/list`` and ``/subscribe`` commands
+        are also restricted to admin users (the mutating commands are always
+        admin-only). Use this for collections whose items contain secrets.
+        """
         self.storage_collection = storage_collection
         self.api_prefix = api_prefix
         self.model_name = model_name
         self.create_schema = create_schema
         self.update_schema = update_schema
+        self.admin_only = admin_only
 
         self._remove_subscription: CALLBACK_TYPE | None = None
         self._subscribers: set[tuple[websocket_api.ActiveConnection, int]] = set()
@@ -566,10 +577,18 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
     @callback
     def async_setup(self, hass: HomeAssistant) -> None:
         """Set up the websocket commands."""
+        list_handler: websocket_api.const.WebSocketCommandHandler = self.ws_list_item
+        subscribe_handler: websocket_api.const.WebSocketCommandHandler = (
+            self._ws_subscribe
+        )
+        if self.admin_only:
+            list_handler = websocket_api.require_admin(list_handler)
+            subscribe_handler = websocket_api.require_admin(subscribe_handler)
+
         websocket_api.async_register_command(
             hass,
             f"{self.api_prefix}/list",
-            self.ws_list_item,
+            list_handler,
             websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
                 {vol.Required("type"): f"{self.api_prefix}/list"}
             ),
@@ -592,7 +611,7 @@ class StorageCollectionWebsocket[_StorageCollectionT: StorageCollection]:
         websocket_api.async_register_command(
             hass,
             f"{self.api_prefix}/subscribe",
-            self._ws_subscribe,
+            subscribe_handler,
             websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
                 {vol.Required("type"): f"{self.api_prefix}/subscribe"}
             ),

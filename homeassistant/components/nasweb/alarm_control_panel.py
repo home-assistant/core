@@ -1,9 +1,8 @@
 """Platform for NASweb alarms."""
 
-from __future__ import annotations
-
 import logging
 import time
+from typing import override
 
 from webio_api import Zone as NASwebZone
 from webio_api.const import STATE_ZONE_ALARM, STATE_ZONE_ARMED, STATE_ZONE_DISARMED
@@ -96,12 +95,13 @@ class ZoneEntity(AlarmControlPanelEntity, BaseCoordinatorEntity):
         self._attr_name = nasweb_zone.name
         self._attr_translation_placeholders = {"index": f"{nasweb_zone.index:2d}"}
         self._attr_unique_id = (
-            f"{DOMAIN}.{self._zone.webio_serial}.zone.{self._zone.index}"
+            f"{DOMAIN}.{self._zone.webio_serial}.zone.{self._zone.index}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._zone.webio_serial)},
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -119,6 +119,7 @@ class ZoneEntity(AlarmControlPanelEntity, BaseCoordinatorEntity):
             self._attr_available = available if available is not None else False
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_alarm_state = NASWEB_STATE_TO_HA_STATE[self._zone.state]
@@ -133,22 +134,27 @@ class ZoneEntity(AlarmControlPanelEntity, BaseCoordinatorEntity):
         self._set_attr_available(self._zone.last_update, self._zone.available)
         self.async_write_ha_state()
 
+    @override
     async def async_update(self) -> None:
         """Update the entity.
 
         Only used by the generic entity update service.
-        Scheduling updates is not necessary, the coordinator takes care of updates via push notifications.
+        Scheduling updates is not necessary, the coordinator
+        takes care of updates via push notifications.
         """
 
     @property
+    @override
     def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
         return AlarmControlPanelEntityFeature.ARM_AWAY
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Arm away ZoneEntity."""
         await self._zone.arm(code)
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm ZoneEntity."""
         await self._zone.disarm(code)

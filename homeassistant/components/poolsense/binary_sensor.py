@@ -1,6 +1,6 @@
 """Support for PoolSense binary sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -45,6 +45,7 @@ class PoolSenseBinarySensor(PoolSenseEntity, BinarySensorEntity):
     """Representation of PoolSense binary sensors."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.coordinator.data[self.entity_description.key] == "red"

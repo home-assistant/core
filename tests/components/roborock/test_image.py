@@ -6,6 +6,7 @@ from http import HTTPStatus
 import logging
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from roborock import MultiMapsList, RoborockException
 from roborock.data import RoborockStateCode
@@ -45,7 +46,7 @@ async def test_floorplan_image(
     fake_devices: list[FakeDevice],
 ) -> None:
     """Test floor plan map image is correctly set up."""
-    assert len(hass.states.async_all("image")) == 4
+    assert len(hass.states.async_all("image")) == 5
 
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
     # Load the image on demand
@@ -100,7 +101,8 @@ async def test_fail_updating_image(
 
     previous_state = hass.states.get("image.roborock_s7_maxv_upstairs").state
 
-    # Refreshing the map should fail, but we should still be able to get the existing image.
+    # Refreshing the map should fail, but we should still be able
+    # to get the existing image.
     assert fake_vacuum.v1_properties
     fake_vacuum.v1_properties.home.refresh.side_effect = RoborockException
     fake_vacuum.v1_properties.status.in_cleaning = 1
@@ -130,7 +132,7 @@ async def test_map_status_change(
     fake_vacuum: FakeDevice,
 ) -> None:
     """Test floor plan map image is correctly updated on status change."""
-    assert len(hass.states.async_all("image")) == 4
+    assert len(hass.states.async_all("image")) == 5
 
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
     client = await hass_client()
@@ -180,6 +182,7 @@ async def test_map_status_change(
                 "image.roborock_s7_2_upstairs",
                 "image.roborock_s7_maxv_downstairs",
                 "image.roborock_s7_maxv_upstairs",
+                "image.roborock_q10_s5_map",
             },
         ),
         (
@@ -190,6 +193,7 @@ async def test_map_status_change(
                 # Expect default names based on map flags
                 "image.roborock_s7_maxv_map_0",
                 "image.roborock_s7_maxv_map_1",
+                "image.roborock_q10_s5_map",
             },
         ),
     ],
@@ -221,3 +225,52 @@ async def test_image_entity_naming(
     assert {
         state.entity_id for state in hass.states.async_all("image")
     } == expected_entity_ids
+
+
+async def test_q10_map_image(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_q10_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the push-driven Q10 map image."""
+    entity_id = "image.roborock_q10_s5_map"
+    assert hass.states.get(entity_id) is not None
+
+    # The map pushed before startup is served
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"\x89PNG-q10"
+
+    assert fake_q10_vacuum.b01_q10_properties is not None
+    map_trait = fake_q10_vacuum.b01_q10_properties.map
+
+    def push_update() -> None:
+        for call in map_trait.add_update_listener.call_args_list:
+            call.args[0]()
+
+    # A push that does not change the map content must not update the entity
+    state = hass.states.get(entity_id)
+    assert state is not None
+    last_updated = state.state
+    freezer.tick(timedelta(seconds=30))
+    push_update()
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == last_updated
+
+    # The device pushes an updated map
+    freezer.tick(timedelta(seconds=30))
+    map_trait.image_content = b"\x89PNG-q10-new"
+    push_update()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != last_updated
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"\x89PNG-q10-new"

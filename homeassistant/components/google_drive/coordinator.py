@@ -1,9 +1,8 @@
 """DataUpdateCoordinator for Google Drive."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from google_drive_api.exceptions import GoogleDriveApiError
 
@@ -55,10 +54,12 @@ class GoogleDriveDataUpdateCoordinator(DataUpdateCoordinator[SensorData]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Do initialization logic."""
         self.email_address = await self.client.async_get_email_address()
 
+    @override
     async def _async_update_data(self) -> SensorData:
         """Fetch data from Google Drive."""
         try:

@@ -353,7 +353,7 @@ async def test_doorbell_missing_ring_event_type(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test warning when a doorbell entity does not include the standard ring event type."""
+    """Test warning when doorbell entity lacks the ring event type."""
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
@@ -405,9 +405,12 @@ async def test_doorbell_missing_ring_event_type(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        "Entity event.doorbell_without_ring is a doorbell event entity "
-        "but does not support the 'ring' event type"
-    ) in caplog.text
-    assert "event.doorbell_with_ring" not in caplog.text
-    assert "event.button" not in caplog.text
+    def get_error_message(entity_id: str) -> str:
+        return (
+            f"Entity {entity_id} is a doorbell event entity but does not support "
+            "the 'ring' event type"
+        )
+
+    assert get_error_message("event.doorbell_without_ring") in caplog.text
+    assert get_error_message("event.doorbell_with_ring") not in caplog.text
+    assert get_error_message("event.button") not in caplog.text

@@ -1,16 +1,17 @@
 """Image platform for the UniFi Access integration."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
+from typing import override
 
-from unifi_access_api import Door
+from unifi_access_api import Door, UnifiAccessError
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import UnifiAccessConfigEntry, UnifiAccessCoordinator
 from .entity import UnifiAccessEntity
 
@@ -28,7 +29,7 @@ async def async_setup_entry(
 
     @callback
     def _async_add_new_doors() -> None:
-        new_door_ids = sorted(set(coordinator.data.doors) - added_doors)
+        new_door_ids = sorted(set(coordinator.data.door_thumbnails) - added_doors)
         if not new_door_ids:
             return
         async_add_entities(
@@ -69,12 +70,21 @@ class UnifiAccessDoorImageEntity(UnifiAccessEntity, ImageEntity):
                 thumbnail.door_thumbnail_last_update, tz=UTC
             )
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return the door thumbnail image bytes."""
         if thumbnail := self.coordinator.data.door_thumbnails.get(self._door_id):
-            return await self.coordinator.client.get_thumbnail(thumbnail.url)
+            try:
+                return await self.coordinator.client.get_thumbnail(thumbnail.url)
+            # pylint: disable-next=home-assistant-action-swallowed-exception
+            except UnifiAccessError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="fetch_thumbnail_failed",
+                ) from err
         return None
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if thumbnail := self.coordinator.data.door_thumbnails.get(self._door_id):

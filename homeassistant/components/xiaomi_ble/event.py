@@ -1,8 +1,7 @@
 """Support for Xiaomi event entities."""
 
-from __future__ import annotations
-
 from dataclasses import replace
+from typing import override
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -163,6 +162,7 @@ class XiaomiEventEntity(EventEntity):
         if event:
             self._trigger_event(event[EVENT_TYPE], event[EVENT_PROPERTIES])
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Entity added to hass."""
         await super().async_added_to_hass()

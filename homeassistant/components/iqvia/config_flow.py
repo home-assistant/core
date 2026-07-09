@@ -1,8 +1,6 @@
-"""Config flow to configure the IQVIA component."""
+"""Config flow to configure the IQVIA integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pyiqvia import Client
 from pyiqvia.errors import InvalidZipError
@@ -23,6 +21,7 @@ class IqviaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.data_schema = vol.Schema({vol.Required(CONF_ZIP_CODE): str})
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

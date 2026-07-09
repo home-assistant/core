@@ -1,10 +1,8 @@
 """Config flow for Flic Button integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from bleak import BleakError
 from pyflic_ble import (
@@ -65,6 +63,7 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
         self._pairing_started: bool = False
 
     @callback
+    @override
     def async_remove(self) -> None:
         """Clean up BLE client and discovery task when the flow is removed."""
         if self._discovery_task and not self._discovery_task.done():
@@ -88,12 +87,14 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_supports_options_flow(cls, config_entry: FlicButtonConfigEntry) -> bool:
         """Only show options for Twist devices."""
         return config_entry.data.get(CONF_DEVICE_TYPE) == DeviceType.TWIST.value
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: FlicButtonConfigEntry,
     ) -> OptionsFlow:
@@ -112,6 +113,7 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
             return False
         return service_info.address not in self._async_current_ids(include_ignore=False)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -195,6 +197,7 @@ class FlicButtonConfigFlow(ConfigFlow, domain=DOMAIN):
         # When start_pairing is True, skip showing the form and pair immediately
         return await self.async_step_pair({} if start_pairing else None)
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:

@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'up',
         'down',
         'click',
@@ -53,9 +53,9 @@
 # name: test_event_entity_setup[duo][event.flic_duo_d12345_big_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'up',
         'down',
         'click',
@@ -68,7 +68,7 @@
         'rotate_clockwise',
         'rotate_counter_clockwise',
       ]),
-      'friendly_name': 'Flic Duo (D12345) Big button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flic Duo (D12345) Big button',
     }),
     'context': <ANY>,
     'entity_id': 'event.flic_duo_d12345_big_button',
@@ -85,7 +85,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'up',
         'down',
         'click',
@@ -132,9 +132,9 @@
 # name: test_event_entity_setup[duo][event.flic_duo_d12345_small_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'up',
         'down',
         'click',
@@ -147,7 +147,7 @@
         'rotate_clockwise',
         'rotate_counter_clockwise',
       ]),
-      'friendly_name': 'Flic Duo (D12345) Small button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flic Duo (D12345) Small button',
     }),
     'context': <ANY>,
     'entity_id': 'event.flic_duo_d12345_small_button',
@@ -164,7 +164,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'up',
         'down',
         'click',
@@ -205,16 +205,16 @@
 # name: test_event_entity_setup[flic2][event.flic_2_b12345_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'up',
         'down',
         'click',
         'double_click',
         'hold',
       ]),
-      'friendly_name': 'Flic 2 (B12345) Button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flic 2 (B12345) Button',
     }),
     'context': <ANY>,
     'entity_id': 'event.flic_2_b12345_button',
@@ -231,7 +231,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'up',
         'down',
         'click',
@@ -276,9 +276,9 @@
 # name: test_event_entity_setup[twist][event.flic_twist_t12345_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'up',
         'down',
         'click',
@@ -289,7 +289,7 @@
         'push_twist_increment',
         'push_twist_decrement',
       ]),
-      'friendly_name': 'Flic Twist (T12345) Button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flic Twist (T12345) Button',
     }),
     'context': <ANY>,
     'entity_id': 'event.flic_twist_t12345_button',
@@ -306,7 +306,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'up',
         'down',
         'click',
@@ -350,9 +350,9 @@
 # name: test_twist_event_entity_selector_mode[twist][event.flic_twist_t12345_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'up',
         'down',
         'click',
@@ -362,7 +362,7 @@
         'rotate_counter_clockwise',
         'selector_changed',
       ]),
-      'friendly_name': 'Flic Twist (T12345) Button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flic Twist (T12345) Button',
     }),
     'context': <ANY>,
     'entity_id': 'event.flic_twist_t12345_button',

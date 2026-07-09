@@ -9,7 +9,12 @@ from aiontfy import Account, AccountTokenResponse, Event, Notification, Version
 from aiontfy.update import LatestRelease
 import pytest
 
-from homeassistant.components.ntfy.const import CONF_TOPIC, DEFAULT_URL, DOMAIN
+from homeassistant.components.ntfy.const import (
+    CONF_TOPIC,
+    DEFAULT_URL,
+    DOMAIN,
+    SUBENTRY_TYPE_TOPIC,
+)
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 
@@ -40,7 +45,8 @@ def mock_aiontfy() -> Generator[AsyncMock]:
             load_fixture("account.json", DOMAIN)
         )
         client.generate_token.return_value = AccountTokenResponse(
-            token="token", last_access=datetime.now()
+            token="token",
+            last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
         )
         client.version.return_value = Version.from_json(
             load_fixture("version.json", DOMAIN)
@@ -140,7 +146,7 @@ def mock_config_entry() -> MockConfigEntry:
             ConfigSubentryData(
                 data={CONF_TOPIC: "mytopic"},
                 subentry_id="ABCDEF",
-                subentry_type="topic",
+                subentry_type=SUBENTRY_TYPE_TOPIC,
                 title="mytopic",
                 unique_id="mytopic",
             )

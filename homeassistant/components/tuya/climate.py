@@ -1,12 +1,10 @@
 """Support for Tuya Climate."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from tuya_device_handlers.definition.climate import (
-    TuyaClimateDefinition,
+    ClimateDefinition,
     get_default_definition,
 )
 from tuya_device_handlers.helpers.homeassistant import (
@@ -31,10 +29,12 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
+from .util import get_temperature_unit
 
 _TUYA_TO_HA_HVACMODE_MAPPINGS = {
     TuyaClimateHVACMode.OFF: HVACMode.OFF,
@@ -139,12 +139,15 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     _attr_name = None
     _attr_target_temperature_step = 1.0
 
+    _current_temp_unit: UnitOfTemperature | None = None
+    _set_temp_unit: UnitOfTemperature | None = None
+
     def __init__(
         self,
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaClimateEntityDescription,
-        definition: TuyaClimateDefinition,
+        definition: ClimateDefinition,
     ) -> None:
         """Determine which values to use."""
         super().__init__(device, device_manager, description)
@@ -158,6 +161,15 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._switch_wrapper = definition.switch_wrapper
         self._target_humidity_wrapper = definition.target_humidity_wrapper
         self._attr_temperature_unit = definition.temperature_unit
+
+        if self._current_temperature:
+            self._current_temp_unit = get_temperature_unit(
+                device, self._current_temperature.native_unit
+            )
+        if self._set_temperature:
+            self._set_temp_unit = get_temperature_unit(
+                device, self._set_temperature.native_unit
+            )
 
         # Get integer type data for the dpcode to set temperature, use
         # it to define min, max & step temperatures
@@ -190,9 +202,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # Determine preset modes (ignore if empty options)
         if definition.preset_wrapper and definition.preset_wrapper.options:
-            self._attr_hvac_modes.append(description.switch_only_hvac_mode)
             self._attr_preset_modes = definition.preset_wrapper.options
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+            if description.switch_only_hvac_mode not in self._attr_hvac_modes:
+                self._attr_hvac_modes.append(description.switch_only_hvac_mode)
 
         # Determine dpcode to use for setting the humidity
         if definition.target_humidity_wrapper:
@@ -225,6 +238,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         commands = []
@@ -244,50 +258,81 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             )
         await self._async_send_commands(commands)
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         await self._async_send_wrapper_updates(self._preset_wrapper, preset_mode)
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         await self._async_send_wrapper_updates(self._fan_mode_wrapper, fan_mode)
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         await self._async_send_wrapper_updates(self._target_humidity_wrapper, humidity)
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         if tuya_mode := _HA_TO_TUYA_SWING_MAPPINGS.get(swing_mode):
             await self._async_send_wrapper_updates(self._swing_wrapper, tuya_mode)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self._async_send_wrapper_updates(
-            self._set_temperature, kwargs[ATTR_TEMPERATURE]
-        )
+        value = kwargs[ATTR_TEMPERATURE]
+        if self._set_temp_unit and self._set_temp_unit != self.temperature_unit:
+            value = TemperatureConverter.convert(
+                value, self.temperature_unit, self._set_temp_unit
+            )
+        await self._async_send_wrapper_updates(self._set_temperature, value)
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self._read_wrapper(self._current_temperature)
+        value = self._read_wrapper(self._current_temperature)
+        if (
+            value is not None
+            and self._current_temp_unit
+            and self._current_temp_unit != self.temperature_unit
+        ):
+            return TemperatureConverter.convert(
+                value, self._current_temp_unit, self.temperature_unit
+            )
+        return value
 
     @property
+    @override
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._read_wrapper(self._current_humidity_wrapper)
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
-        return self._read_wrapper(self._set_temperature)
+        value = self._read_wrapper(self._set_temperature)
+        if (
+            value is not None
+            and self._set_temp_unit
+            and self._set_temp_unit != self.temperature_unit
+        ):
+            return TemperatureConverter.convert(
+                value, self._set_temp_unit, self.temperature_unit
+            )
+        return value
 
     @property
+    @override
     def target_humidity(self) -> int | None:
         """Return the humidity currently set to be reached."""
         return self._read_wrapper(self._target_humidity_wrapper)
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
         # If the switch is off, hvac mode is off.
@@ -306,25 +351,30 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         return _TUYA_TO_HA_HVACMODE_MAPPINGS.get(tuya_mode) if tuya_mode else None
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return preset mode."""
         return self._read_wrapper(self._preset_wrapper)
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return fan mode."""
         return self._read_wrapper(self._fan_mode_wrapper)
 
     @property
+    @override
     def swing_mode(self) -> str | None:
         """Return swing mode."""
         tuya_value = self._read_wrapper(self._swing_wrapper)
         return _TUYA_TO_HA_SWING_MAPPINGS.get(tuya_value) if tuya_value else None
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
         await self._async_send_wrapper_updates(self._switch_wrapper, True)
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the device on, retaining current HVAC (if supported)."""
         await self._async_send_wrapper_updates(self._switch_wrapper, False)

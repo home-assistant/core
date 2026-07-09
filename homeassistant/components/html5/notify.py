@@ -1,20 +1,20 @@
 """HTML5 Push Messaging notification service."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import json
 import logging
 import time
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 from urllib.parse import urlparse
 import uuid
+import warnings
 
 from aiohttp import ClientError, ClientResponse, ClientSession, web
 from aiohttp.hdrs import AUTHORIZATION
 import jwt
+from jwt.warnings import InsecureKeyLengthWarning
 from py_vapid import Vapid
 from pywebpush import WebPusher, WebPushException, webpush_async
 import voluptuous as vol
@@ -60,7 +60,11 @@ from .const import (
     SERVICE_DISMISS,
 )
 from .entity import HTML5Entity, Registration
-from .issue import deprecated_dismiss_action_call, deprecated_notify_action_call
+from .issue import (
+    deprecated_dismiss_action_call,
+    deprecated_event_bus,
+    deprecated_notify_action_call,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -327,7 +331,8 @@ class HTML5PushCallbackView(HomeAssistantView):
         if target_check.get(ATTR_TARGET) in self.registrations:
             possible_target = self.registrations[target_check[ATTR_TARGET]]
             key = possible_target["subscription"]["keys"]["auth"]
-            with suppress(jwt.exceptions.DecodeError):
+            with suppress(jwt.exceptions.DecodeError), warnings.catch_warnings():
+                warnings.simplefilter("ignore", InsecureKeyLengthWarning)
                 return jwt.decode(token, key, algorithms=["ES256", "HS256"])
 
         return self.json_message(
@@ -408,6 +413,9 @@ class HTML5PushCallbackView(HomeAssistantView):
             event_payload[ATTR_TYPE],
             event_payload,
         )
+
+        deprecated_event_bus(hass, event_name)
+
         return self.json({"status": "ok", "event": event_payload[ATTR_TYPE]})
 
 
@@ -451,6 +459,7 @@ class HTML5NotificationService(BaseNotificationService):
         )
 
     @property
+    @override
     def targets(self) -> dict[str, str]:
         """Return a dictionary of registered targets."""
         return {registration: registration for registration in self.registrations}
@@ -469,6 +478,7 @@ class HTML5NotificationService(BaseNotificationService):
 
         await self._push_message(payload, **kwargs)
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 
@@ -587,7 +597,9 @@ def add_jwt(timestamp: int, target: str, tag: str, jwt_secret: str) -> str:
         ATTR_TARGET: target,
         ATTR_TAG: tag,
     }
-    return jwt.encode(jwt_claims, jwt_secret)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", InsecureKeyLengthWarning)
+        return jwt.encode(jwt_claims, jwt_secret)
 
 
 async def async_setup_entry(
@@ -613,6 +625,7 @@ class HTML5NotifyEntity(HTML5Entity, NotifyEntity):
     _attr_supported_features = NotifyEntityFeature.TITLE
     _key = "device"
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to a device via notify.send_message action."""
         await self._webpush(

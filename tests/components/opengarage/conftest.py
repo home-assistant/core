@@ -1,7 +1,5 @@
 """Fixtures for the OpenGarage integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
@@ -42,7 +40,7 @@ def mock_opengarage() -> Generator[MagicMock]:
         client.update_state.return_value = {
             "name": "abcdef",
             "mac": "aa:bb:cc:dd:ee:ff",
-            "fwv": "1.2.0",
+            "fwv": 120,
         }
         yield client
 

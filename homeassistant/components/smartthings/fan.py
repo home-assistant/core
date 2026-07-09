@@ -1,9 +1,7 @@
 """Support for fans through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 import math
-from typing import Any
+from typing import Any, override
 
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
@@ -92,6 +90,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
 
         return flags
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage == 0:
@@ -104,6 +103,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
                 argument=value,
             )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset_mode of the fan."""
         await self.execute_device_command(
@@ -112,6 +112,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
             argument=preset_mode,
         )
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -127,16 +128,19 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         else:
             await self.execute_device_command(Capability.SWITCH, Command.ON)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self.execute_device_command(Capability.SWITCH, Command.OFF)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if fan is on."""
         return self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on"
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         return ranged_value_to_percentage(
@@ -145,6 +149,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         )
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., auto, smart, interval, favorite.
 
@@ -157,6 +162,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         )
 
     @property
+    @override
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes.
 
@@ -204,6 +210,7 @@ class SmartThingsHood(SmartThingsEntity, FanEntity):
             if speed != SMART
         ]
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset_mode of the fan."""
         await self.execute_device_command(
@@ -212,6 +219,7 @@ class SmartThingsHood(SmartThingsEntity, FanEntity):
             argument=SMART,
         )
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage == 0:
@@ -223,6 +231,7 @@ class SmartThingsHood(SmartThingsEntity, FanEntity):
                 argument=percentage_to_ordered_list_item(self.fan_speeds, percentage),
             )
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -232,16 +241,19 @@ class SmartThingsHood(SmartThingsEntity, FanEntity):
         """Turn the fan on."""
         await self.execute_device_command(Capability.SWITCH, Command.ON)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self.execute_device_command(Capability.SWITCH, Command.OFF)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if fan is on."""
         return self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on"
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         if (
@@ -254,6 +266,7 @@ class SmartThingsHood(SmartThingsEntity, FanEntity):
         return None
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         fan_speed = self.get_attribute_value(
@@ -264,6 +277,7 @@ class SmartThingsHood(SmartThingsEntity, FanEntity):
         return ordered_list_item_to_percentage(self.fan_speeds, fan_speed)
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of available speeds."""
         return len(self.fan_speeds)

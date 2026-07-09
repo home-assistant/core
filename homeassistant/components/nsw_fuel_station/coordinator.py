@@ -1,10 +1,9 @@
 """Coordinator for the NSW Fuel Station integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import datetime
 import logging
+from typing import override
 
 from nsw_fuel import FuelCheckClient, FuelCheckError, Station
 
@@ -40,6 +39,7 @@ class NSWFuelStationCoordinator(DataUpdateCoordinator[StationPriceData]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> StationPriceData:
         """Fetch data from API."""
         return await self.hass.async_add_executor_job(

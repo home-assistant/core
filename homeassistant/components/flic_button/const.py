@@ -1,7 +1,5 @@
 """Constants for the Flic Button integration."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from pyflic_ble import DeviceType

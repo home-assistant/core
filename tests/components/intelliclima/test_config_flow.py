@@ -23,9 +23,8 @@ DATA_CONFIG = {
 }
 
 
-async def test_user_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_cloud_interface
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow(hass: HomeAssistant, mock_cloud_interface) -> None:
     """Test the full config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -53,9 +52,9 @@ async def test_user_flow(
         (RuntimeError("Unexpected error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_auth_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_cloud_interface: AsyncMock,
     side_effect: Exception,
     error: str,
@@ -86,9 +85,9 @@ async def test_form_auth_errors(
     assert result["data"] == DATA_CONFIG
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_no_devices(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_cloud_interface: AsyncMock,
     single_eco_device: IntelliClimaDevices,
 ) -> None:
@@ -121,9 +120,9 @@ async def test_form_no_devices(
     assert result["data"] == DATA_CONFIG
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_already_configured(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_cloud_interface: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:

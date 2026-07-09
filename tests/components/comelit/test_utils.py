@@ -4,7 +4,12 @@ from unittest.mock import AsyncMock
 
 from aiocomelit.api import ComelitSerialBridgeObject
 from aiocomelit.const import CLIMATE, WATT
-from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
+from aiocomelit.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+    DeviceStorageFailureError,
+)
 import pytest
 
 from homeassistant.components.climate import HVACMode
@@ -77,17 +82,18 @@ async def test_device_remove_stale(
 @pytest.mark.parametrize(
     ("side_effect", "key", "error"),
     [
-        (CannotConnect, "cannot_connect", "CannotConnect()"),
-        (CannotRetrieveData, "cannot_retrieve_data", "CannotRetrieveData()"),
+        (CannotConnect, "cannot_connect", {"error": "CannotConnect()"}),
+        (CannotRetrieveData, "cannot_retrieve_data", {"error": "CannotRetrieveData()"}),
+        (DeviceStorageFailureError, "device_storage_failure", None),
     ],
 )
 async def test_bridge_api_call_exceptions(
     hass: HomeAssistant,
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
-    side_effect: Exception,
+    side_effect: type[Exception],
     key: str,
-    error: str,
+    error: dict[str, str] | None,
 ) -> None:
     """Test bridge_api_call decorator for exceptions."""
 
@@ -109,7 +115,7 @@ async def test_bridge_api_call_exceptions(
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == key
-    assert exc_info.value.translation_placeholders == {"error": error}
+    assert exc_info.value.translation_placeholders == error
 
 
 async def test_bridge_api_call_reauth(

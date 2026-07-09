@@ -1,8 +1,7 @@
 """Base entity for Flic Button integration."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from pyflic_ble import FlicState
 
@@ -41,10 +40,12 @@ class FlicButtonEntity(Entity):
         self._client = client
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self._client.state.connected
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state callback when entity is added."""
         await super().async_added_to_hass()

@@ -27,6 +27,9 @@ async def test_light_setup_with_device(
         "some_device": {},
     }
     pydeako_deako_mock.return_value.get_name.return_value = "some device"
+    pydeako_deako_mock.return_value.get_state.return_value = {
+        "power": False,
+    }
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
