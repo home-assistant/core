@@ -39,8 +39,8 @@
 # name: test_binary_sensor[binary_sensor.ayran_connection_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Ayran Connection state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ayran Connection state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ayran_connection_state',
@@ -90,8 +90,8 @@
 # name: test_binary_sensor[binary_sensor.ayran_freezer_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Ayran Freezer door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ayran Freezer door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ayran_freezer_door',
@@ -141,8 +141,8 @@
 # name: test_binary_sensor[binary_sensor.ayran_fridge_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Ayran Fridge door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ayran Fridge door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ayran_fridge_door',
@@ -192,7 +192,7 @@
 # name: test_binary_sensor[binary_sensor.ayran_ui_lock_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ayran UI lock mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ayran UI lock mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ayran_ui_lock_mode',
@@ -242,7 +242,7 @@
 # name: test_binary_sensor[binary_sensor.ceiling_hood_auto_switch_off_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ceiling Hood Auto switch off event',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ceiling Hood Auto switch off event',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ceiling_hood_auto_switch_off_event',
@@ -292,7 +292,7 @@
 # name: test_binary_sensor[binary_sensor.ceiling_hood_charcoal_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ceiling Hood Charcoal filter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ceiling Hood Charcoal filter',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ceiling_hood_charcoal_filter',
@@ -342,8 +342,8 @@
 # name: test_binary_sensor[binary_sensor.ceiling_hood_connection_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Ceiling Hood Connection state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ceiling Hood Connection state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ceiling_hood_connection_state',
@@ -393,8 +393,8 @@
 # name: test_binary_sensor[binary_sensor.dryer_connection_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Dryer Connection state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Connection state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dryer_connection_state',
@@ -444,8 +444,8 @@
 # name: test_binary_sensor[binary_sensor.dryer_door_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Dryer Door state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer Door state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dryer_door_state',
@@ -495,7 +495,7 @@
 # name: test_binary_sensor[binary_sensor.dryer_ui_lock_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dryer UI lock mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dryer UI lock mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dryer_ui_lock_mode',
@@ -545,8 +545,8 @@
 # name: test_binary_sensor[binary_sensor.fenix_connection_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Fenix Connection state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fenix Connection state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.fenix_connection_state',
@@ -596,8 +596,8 @@
 # name: test_binary_sensor[binary_sensor.fenix_door_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Fenix Door state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fenix Door state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.fenix_door_state',
@@ -647,8 +647,8 @@
 # name: test_binary_sensor[binary_sensor.peacock_hob_connection_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Peacock hob Connection state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peacock hob Connection state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.peacock_hob_connection_state',
@@ -698,7 +698,7 @@
 # name: test_binary_sensor[binary_sensor.peacock_hob_ui_lock_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Peacock hob UI lock mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peacock hob UI lock mode',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.peacock_hob_ui_lock_mode',
@@ -748,7 +748,7 @@
 # name: test_binary_sensor[binary_sensor.peacock_hob_zone_1_pot_detected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Peacock hob Zone 1 pot detected',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peacock hob Zone 1 pot detected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.peacock_hob_zone_1_pot_detected',
@@ -798,7 +798,7 @@
 # name: test_binary_sensor[binary_sensor.peacock_hob_zone_2_pot_detected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Peacock hob Zone 2 pot detected',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peacock hob Zone 2 pot detected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.peacock_hob_zone_2_pot_detected',
@@ -848,7 +848,7 @@
 # name: test_binary_sensor[binary_sensor.peacock_hob_zone_3_pot_detected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Peacock hob Zone 3 pot detected',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peacock hob Zone 3 pot detected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.peacock_hob_zone_3_pot_detected',
@@ -898,7 +898,7 @@
 # name: test_binary_sensor[binary_sensor.peacock_hob_zone_4_pot_detected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Peacock hob Zone 4 pot detected',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peacock hob Zone 4 pot detected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.peacock_hob_zone_4_pot_detected',
@@ -948,8 +948,8 @@
 # name: test_binary_sensor[binary_sensor.pux_pizza_oven_connection_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'PUX pizza oven Connection state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PUX pizza oven Connection state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.pux_pizza_oven_connection_state',
@@ -999,8 +999,8 @@
 # name: test_binary_sensor[binary_sensor.pux_pizza_oven_door_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'PUX pizza oven Door state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'PUX pizza oven Door state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.pux_pizza_oven_door_state',
@@ -1050,8 +1050,8 @@
 # name: test_binary_sensor[binary_sensor.supex_oven_connection_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Supex oven Connection state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Supex oven Connection state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.supex_oven_connection_state',
@@ -1101,8 +1101,8 @@
 # name: test_binary_sensor[binary_sensor.supex_oven_upper_door_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Supex oven Upper door state',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Supex oven Upper door state',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.supex_oven_upper_door_state',
