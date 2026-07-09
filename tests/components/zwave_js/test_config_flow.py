@@ -3569,6 +3569,7 @@ async def different_device_server_version(*args):
         "old_addon_options",
         "form_data",
         "new_addon_options",
+        "revert_addon_options",
         "disconnect_calls",
         "server_version_side_effect",
     ),
@@ -3603,6 +3604,15 @@ async def different_device_server_version(*args):
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             },
+            {
+                "device": "/test",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
             0,
             different_device_server_version,
         ),
@@ -3636,8 +3646,58 @@ async def different_device_server_version(*args):
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             },
+            {
+                "device": "/test",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
             0,
             different_device_server_version,
+        ),
+        pytest.param(
+            {},
+            {
+                "device": "/test",
+                "network_key": "old123",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+            },
+            {
+                "usb_path": "/new",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/new",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/test",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "",
+                "lr_s2_authenticated_key": "",
+            },
+            0,
+            different_device_server_version,
+            id="old_config_without_lr_keys",
         ),
     ],
 )
@@ -3652,6 +3712,7 @@ async def test_reconfigure_different_device(
     old_addon_options: dict[str, Any],
     form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
+    revert_addon_options: dict[str, Any],
     disconnect_calls: int,
 ) -> None:
     """Test reconfigure flow and configuring a different device."""
@@ -3705,13 +3766,9 @@ async def test_reconfigure_different_device(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    addon_options = {} | old_addon_options
-    # Legacy network key is not reset.
-    addon_options.pop("network_key")
-
     assert set_addon_options.call_count == 2
     assert set_addon_options.call_args == call(
-        "core_zwave_js", AddonsOptions(config=addon_options)
+        "core_zwave_js", AddonsOptions(config=revert_addon_options)
     )
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"

@@ -1255,12 +1255,21 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         addon_config = addon_info.options
 
         if user_input is not None:
-            self.s0_legacy_key = user_input[CONF_S0_LEGACY_KEY]
-            self.s2_access_control_key = user_input[CONF_S2_ACCESS_CONTROL_KEY]
-            self.s2_authenticated_key = user_input[CONF_S2_AUTHENTICATED_KEY]
-            self.s2_unauthenticated_key = user_input[CONF_S2_UNAUTHENTICATED_KEY]
-            self.lr_s2_access_control_key = user_input[CONF_LR_S2_ACCESS_CONTROL_KEY]
-            self.lr_s2_authenticated_key = user_input[CONF_LR_S2_AUTHENTICATED_KEY]
+            # The revert helper only passes keys present in the original
+            # add-on config, which may lack some of the security keys,
+            # so don't index the keys directly.
+            self.s0_legacy_key = user_input.get(CONF_S0_LEGACY_KEY, "")
+            self.s2_access_control_key = user_input.get(CONF_S2_ACCESS_CONTROL_KEY, "")
+            self.s2_authenticated_key = user_input.get(CONF_S2_AUTHENTICATED_KEY, "")
+            self.s2_unauthenticated_key = user_input.get(
+                CONF_S2_UNAUTHENTICATED_KEY, ""
+            )
+            self.lr_s2_access_control_key = user_input.get(
+                CONF_LR_S2_ACCESS_CONTROL_KEY, ""
+            )
+            self.lr_s2_authenticated_key = user_input.get(
+                CONF_LR_S2_AUTHENTICATED_KEY, ""
+            )
             self.usb_path = user_input.get(CONF_USB_PATH)
             self.socket_path = user_input.get(CONF_SOCKET_PATH)
 
