@@ -859,9 +859,8 @@ async def async_setup_entry(
         # create_dsmr_reader opens both local devices and any URL (socket://,
         # esphome://, ...); the only difference is the keep-alive watchdog.
         keep_alive = {} if port.startswith("/") else {"keep_alive_interval": 60}
-        # authentication_key=None opts into decrypt-without-verification (the GCM
-        # tag is not checked; integrity comes from the telegram CRC). An empty
-        # encryption key leaves plain telegrams untouched.
+        # authentication_key=None decrypts without verifying the GCM tag; an
+        # empty encryption key leaves plain telegrams untouched.
         reader_factory = partial(
             create_dsmr_reader,
             port,

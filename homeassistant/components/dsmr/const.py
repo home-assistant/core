@@ -27,10 +27,8 @@ DEVICE_NAME_GAS = "Gas Meter"
 DEVICE_NAME_WATER = "Water Meter"
 DEVICE_NAME_HEAT = "Heat Meter"
 
-# Maps the stored dsmr_version token to the label shown in the config-flow
-# version picker. The label is where the meter/grid is disambiguated: notably
-# the Luxembourg Smarty IS a Sagemcom T210-D, so a Luxembourg user should pick
-# MSn, not the Austrian SAGEMCOM_T210_D_R option.
+# Maps each dsmr_version token to the label shown in the config-flow picker; the
+# label disambiguates the Luxembourg Smarty (MSn) from the Austrian Sagemcom.
 DSMR_VERSIONS = {
     "5": "DSMR 5",
     "MSn": "Luxembourg Smarty / Sagemcom T210-D, encrypted (Creos)",
@@ -44,14 +42,10 @@ DSMR_VERSIONS = {
     "2.2": "DSMR 2.2",
 }
 
-# Versions that use AES-128-GCM encrypted (DLMS general-global-cipher) telegrams
-# and therefore require an encryption key. The GCM authentication tag is not
-# verified (integrity comes from the telegram CRC), so only the encryption key
-# is ever needed, no authentication key.
+# Versions with AES-128-GCM encrypted telegrams that require an encryption key.
 ENCRYPTED_DSMR_VERSIONS = {"MSn", "SAGEMCOM_T210_D_R"}
 
-# Versions whose telegrams carry no equipment identifier; validation falls back
-# to the telegram timestamp to confirm communication.
+# Versions whose telegrams carry no equipment identifier.
 DSMR_VERSIONS_WITHOUT_EQUIPMENT_ID = {"5S", "SAGEMCOM_T210_D_R"}
 
 DSMR_PROTOCOL = "dsmr_protocol"

@@ -86,8 +86,7 @@ class DSMRConnection:
             if self._equipment_identifier in telegram:
                 self._telegram = telegram
                 transport.close()
-            # Some meters (e.g. Swedish, Austrian Sagemcom) have no equipment
-            # identifier, so fall back to the telegram timestamp.
+            # Meters without an equipment identifier fall back to the timestamp
             if (
                 self._dsmr_version in DSMR_VERSIONS_WITHOUT_EQUIPMENT_ID
                 and obis_ref.P1_MESSAGE_TIMESTAMP in telegram
@@ -95,10 +94,9 @@ class DSMRConnection:
                 self._telegram = telegram
                 transport.close()
 
-        # The encryption key is only supported by the standard DSMR reader, not
-        # by the RFXtrx reader; encrypted meters always use DSMR_PROTOCOL.
-        # authentication_key=None opts into decrypt-without-verification (the GCM
-        # tag is not checked; integrity comes from the telegram CRC).
+        # Only the standard DSMR reader supports encryption. authentication_key=
+        # None decrypts without verifying the GCM tag (the telegram CRC covers
+        # integrity).
         key_kwargs: dict[str, Any] = {}
         if self._protocol == DSMR_PROTOCOL:
             create_reader = create_dsmr_reader
@@ -133,9 +131,7 @@ class DSMRConnection:
                 # result in CannotCommunicate error)
                 transport.close()
                 await protocol.wait_closed()
-            # A wrong key tears the connection down immediately (the protocol
-            # closes the transport on a DecryptionError), so wait_closed()
-            # returns before the timeout. Surface it as a key error.
+            # A wrong key closes the transport with a DecryptionError
             if getattr(protocol, "decryption_error", None) is not None:
                 self._decryption_failed = True
         return True
@@ -231,12 +227,7 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_encryption_key(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Ask for the decryption key of an encrypted meter.
-
-        Only the encryption key is needed: decryption does not verify the GCM
-        authentication tag (integrity comes from the telegram CRC), so no
-        authentication key is required.
-        """
+        """Ask for the encryption key of an encrypted meter."""
         errors: dict[str, str] = {}
         if user_input is not None:
             data = await self.async_validate_dsmr(
@@ -262,8 +253,7 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
                 protocol = DSMR_PROTOCOL
                 info = await _validate_dsmr_connection(self.hass, data, protocol)
             except CannotCommunicate:
-                # Encrypted meters are only supported over the standard DSMR
-                # protocol, so don't fall back to RFXtrx for them.
+                # Encrypted meters don't support the RFXtrx fallback
                 if data[CONF_DSMR_VERSION] in ENCRYPTED_DSMR_VERSIONS:
                     raise
                 protocol = RFXTRX_DSMR_PROTOCOL
