@@ -37,8 +37,6 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     """Check flow abort when an entry already exist."""
     MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN).add_to_hass(hass)
 
-    flow = config_flow.NetatmoFlowHandler()
-    flow.hass = hass
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
