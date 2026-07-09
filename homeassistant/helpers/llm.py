@@ -51,6 +51,8 @@ ACTION_PARAMETERS_CACHE: HassKey[
     dict[str, dict[str, tuple[str | None, vol.Schema]]]
 ] = HassKey("llm_action_parameters_cache")
 
+APIS_CACHE: HassKey[dict[str, API]] = HassKey("llm_apis")
+
 
 LLM_API_ASSIST = "assist"
 
@@ -79,7 +81,7 @@ def async_render_no_api_prompt(hass: HomeAssistant) -> str:
     return ""
 
 
-@singleton("llm")
+@singleton(APIS_CACHE)
 @callback
 def _async_get_apis(hass: HomeAssistant) -> dict[str, API]:
     """Return the registry of LLM APIs.
