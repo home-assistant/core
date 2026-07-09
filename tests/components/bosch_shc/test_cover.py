@@ -19,6 +19,7 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -180,16 +181,16 @@ async def test_current_cover_position_partially_open(hass: HomeAssistant) -> Non
 
 
 @pytest.mark.parametrize(
-    ("operation_state", "expected_state_key"),
+    ("operation_state", "expected_cover_state"),
     [
-        pytest.param(OPENING, "opening", id="opening"),
-        pytest.param(CLOSING, "closing", id="closing"),
+        pytest.param(OPENING, CoverState.OPENING, id="opening"),
+        pytest.param(CLOSING, CoverState.CLOSING, id="closing"),
     ],
 )
 async def test_is_opening_and_is_closing(
     hass: HomeAssistant,
     operation_state: SHCShutterControl.ShutterControlService.State,
-    expected_state_key: str,
+    expected_cover_state: CoverState,
 ) -> None:
     """The entity state reflects the device's ShutterControlService.State."""
     await _setup_cover_integration(
@@ -198,7 +199,7 @@ async def test_is_opening_and_is_closing(
 
     state = hass.states.get("cover.test_cover")
     assert state is not None
-    assert state.state == expected_state_key
+    assert state.state == expected_cover_state
 
 
 async def test_stop_cover_calls_device_stop(hass: HomeAssistant) -> None:
