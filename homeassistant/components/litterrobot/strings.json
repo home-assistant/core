@@ -119,18 +119,6 @@
       },
       "meal_insert_size": {
         "name": "Meal insert size"
-      },
-      "night_light_preset": {
-        "name": "Night light preset",
-        "state": {
-          "blue": "Blue",
-          "cyan": "Cyan",
-          "green": "Green",
-          "magenta": "Magenta",
-          "red": "Red",
-          "white": "White",
-          "yellow": "Yellow"
-        }
       }
     },
     "sensor": {

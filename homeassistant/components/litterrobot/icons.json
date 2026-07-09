@@ -68,9 +68,6 @@
       },
       "meal_insert_size": {
         "default": "mdi:scale"
-      },
-      "night_light_preset": {
-        "default": "mdi:palette"
       }
     },
     "sensor": {

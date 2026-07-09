@@ -168,59 +168,6 @@ async def test_litterrobot_5_globe_light(
     robot.set_night_light_mode.assert_any_call(NightLightMode.AUTO)
 
 
-async def test_litterrobot_5_night_light_preset(
-    hass: HomeAssistant,
-    mock_account_with_litterrobot_5: MagicMock,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Tests the Litter-Robot 5 night light preset select entity."""
-    entity_id = "select.test_night_light_preset"
-    await setup_integration(hass, mock_account_with_litterrobot_5, SELECT_DOMAIN)
-
-    select = hass.states.get(entity_id)
-    assert select
-    assert len(select.attributes[ATTR_OPTIONS]) == 7
-    # The fixture color #FFFFFF matches the white preset.
-    assert select.state == "white"
-
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry
-    assert entity_entry.entity_category is EntityCategory.CONFIG
-
-    robot: LitterRobot5 = mock_account_with_litterrobot_5.robots[0]
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "cyan"},
-        blocking=True,
-    )
-    # Selecting a preset writes the color while preserving mode and brightness.
-    robot.set_night_light_settings.assert_awaited_once_with(
-        mode=NightLightMode.AUTO, brightness=50, color=(0, 255, 255)
-    )
-
-
-async def test_litterrobot_5_night_light_preset_custom_color(
-    hass: HomeAssistant,
-) -> None:
-    """A color outside the preset list leaves the preset select unknown."""
-    mock_account = create_mock_account(
-        robot_data={
-            "nightLightSettings": {
-                "brightness": 50,
-                "color": "#123456",
-                "mode": "Auto",
-            }
-        },
-        v5=True,
-    )
-    await setup_integration(hass, mock_account, SELECT_DOMAIN)
-
-    select = hass.states.get("select.test_night_light_preset")
-    assert select
-    assert select.state == STATE_UNKNOWN
-
-
 async def test_litterrobot_5_panel_brightness(
     hass: HomeAssistant,
     mock_account_with_litterrobot_5: MagicMock,
