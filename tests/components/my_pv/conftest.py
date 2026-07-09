@@ -43,7 +43,6 @@ def mock_my_pv_client() -> Generator[AsyncMock]:
     with (
         patch(
             "my_pv.MyPVLocalDevice",
-            # side_effect=MyPVLocalDevice,
             autospec=True,
         ) as mock_client,
         patch(
@@ -66,7 +65,6 @@ def mock_my_pv_client() -> Generator[AsyncMock]:
         client.model = "AC ELWA 2"
         client.mac_address = "98:6d:35:c0:00:00"
         client.setup_uri = "http://127.0.0.1/"
-        client.setup_uri = None
         client.hardware_version = "v1.5A"
         client.firmware_version = "e0002200"
         client.current_temperature = 54.3
