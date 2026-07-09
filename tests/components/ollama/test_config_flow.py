@@ -517,6 +517,7 @@ async def test_form_invalid_url(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     "side_effect",
     [
+        TimeoutError(),
         ConnectError("Connection failed"),
         ConnectionError("Failed to connect to Ollama"),
     ],
