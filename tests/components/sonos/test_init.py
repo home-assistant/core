@@ -252,6 +252,15 @@ class _MockSoCoVisibleZones(MockSoCo):
         return self.vz_return
 
 
+class _MockSoCoUidError(MockSoCo):
+    """Mock SoCo used for uid property error tests."""
+
+    @property
+    def visible_zones(self):
+        """Return no additional zones without touching uid lookup."""
+        return set()
+
+
 async def _setup_hass(hass: HomeAssistant):
     await async_setup_component(
         hass,
@@ -290,6 +299,88 @@ async def test_async_poll_manual_hosts_1(
             f"Could not get visible Sonos devices from {soco_2.ip_address}"
             not in caplog.text
         )
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_async_poll_manual_hosts_uid_oserror(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test uid lookup OSError skips host and logs warning."""
+    soco_1 = soco_factory.cache_mock(_MockSoCoUidError(), "10.10.10.1", "Living Room")
+    soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    uid = soco_1.uid
+    uid_call_count = 0
+
+    def _uid_side_effect() -> str:
+        nonlocal uid_call_count
+        uid_call_count += 1
+        if uid_call_count == 1:
+            return uid
+        raise OSError("uid unavailable")
+
+    with (
+        caplog.at_level(logging.WARNING),
+        patch.object(
+            type(soco_1),
+            "uid",
+            new_callable=PropertyMock,
+            create=True,
+            side_effect=_uid_side_effect,
+        ),
+    ):
+        await _setup_hass(hass)
+
+    assert "media_player.bedroom" in entity_registry.entities
+    assert "media_player.living_room" not in entity_registry.entities
+    assert f"Could not get Sonos uid from {soco_1.ip_address}" in caplog.text
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_async_poll_manual_hosts_uid_http_error(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test uid lookup HTTPError skips host and creates UPnP issue."""
+    resp = Response()
+    resp.status_code = HTTPStatus.FORBIDDEN
+    http_error = HTTPError(response=resp)
+
+    soco_1 = soco_factory.cache_mock(_MockSoCoUidError(), "10.10.10.1", "Living Room")
+    soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    uid = soco_1.uid
+    uid_call_count = 0
+
+    def _uid_side_effect() -> str:
+        nonlocal uid_call_count
+        uid_call_count += 1
+        if uid_call_count == 1:
+            return uid
+        raise http_error
+
+    with patch.object(
+        type(soco_1),
+        "uid",
+        new_callable=PropertyMock,
+        create=True,
+        side_effect=_uid_side_effect,
+    ):
+        await _setup_hass(hass)
+
+    assert "media_player.bedroom" in entity_registry.entities
+    assert "media_player.living_room" not in entity_registry.entities
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        sonos.DOMAIN, f"{UPNP_ISSUE_ID}_{soco_1.ip_address}"
+    )
+    assert issue is not None
+    assert issue.translation_placeholders.get("device_ip") == soco_1.ip_address
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
