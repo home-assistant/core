@@ -7,7 +7,6 @@ from pyatmo.const import ALL_SCOPES
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.netatmo import config_flow
 from homeassistant.components.netatmo.const import (
     CONF_NEW_AREA,
     CONF_WEATHER_AREAS,
@@ -36,7 +35,6 @@ VALID_CONFIG = {}
 async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     """Check flow abort when an entry already exist."""
     MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN).add_to_hass(hass)
-
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
