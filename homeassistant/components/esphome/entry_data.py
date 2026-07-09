@@ -59,7 +59,7 @@ from homeassistant.helpers import discovery_flow, entity_registry as er
 from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN
+from .const import CONF_NOISE_PSK, DOMAIN
 from .dashboard import async_get_dashboard
 
 type ESPHomeConfigEntry = ConfigEntry[RuntimeEntryData]
@@ -517,6 +517,8 @@ class RuntimeEntryData:
     ) -> None:
         """Create a zwave_js config flow for a Z-Wave JS Proxy device."""
         assert self.client.connected_address is not None
+        entry = hass.config_entries.async_get_entry(self.entry_id)
+        noise_psk = entry.data.get(CONF_NOISE_PSK) if entry else None
         discovery_flow.async_create_flow(
             hass,
             "zwave_js",
@@ -526,7 +528,7 @@ class RuntimeEntryData:
                 zwave_home_id=zwave_home_id,
                 ip_address=self.client.connected_address,
                 port=self.client.port,
-                noise_psk=self.client.noise_psk,
+                noise_psk=noise_psk or None,
             ),
             discovery_key=discovery_flow.DiscoveryKey(
                 domain=DOMAIN,
