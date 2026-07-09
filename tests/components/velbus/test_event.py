@@ -17,7 +17,6 @@ from homeassistant.components.velbus.event import (
     EVENT_LONG_PRESS,
     EVENT_SHORT_PRESS,
     EVENT_TYPES,
-    VelbusButtonEvent,
 )
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
@@ -44,12 +43,8 @@ def _event_state(hass: HomeAssistant) -> State:
 
 def _get_event_callback(mock_button: AsyncMock) -> StatusUpdateCallback:
     """Return the status update callback registered by the event entity."""
-    for call in mock_button.on_status_update.call_args_list:
-        callback = call.args[0]
-        owner = getattr(callback, "__self__", None)
-        if isinstance(owner, VelbusButtonEvent):
-            return cast(StatusUpdateCallback, callback)
-    raise AssertionError("Velbus event entity callback was not registered")
+    mock_button.on_status_update.assert_called_once()
+    return cast(StatusUpdateCallback, mock_button.on_status_update.call_args.args[0])
 
 
 async def _setup_event_entity(
