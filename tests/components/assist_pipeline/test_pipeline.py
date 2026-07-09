@@ -40,6 +40,7 @@ from homeassistant.components.assist_pipeline.pipeline import (
     async_get_pipelines,
     async_update_pipeline,
 )
+from homeassistant.components.llm import LLMTools
 from homeassistant.const import ATTR_FRIENDLY_NAME, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
@@ -1822,8 +1823,9 @@ async def test_chat_log_tts_streaming(
 
     with (
         patch(
-            "homeassistant.helpers.llm.AssistAPI._async_get_tools",
-            return_value=[mock_tool],
+            "homeassistant.components.llm.async_get_tools",
+            new_callable=AsyncMock,
+            return_value=LLMTools(tools=[mock_tool]),
         ),
         patch(
             "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse",
