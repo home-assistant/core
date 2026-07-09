@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.izone import config_flow, discovery as izone_discovery
-from homeassistant.components.izone.const import DATA_DISCOVERY_SERVICE, DOMAIN
+from homeassistant.components.izone.const import DATA_DISCOVERY_SERVICE, IZONE
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -23,6 +23,8 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
+
+DOMAIN = IZONE
 
 
 def _make_homekit_info(md: str, host: str | None = None) -> SimpleNamespace:
@@ -316,31 +318,6 @@ async def test_reuses_existing_discovery_service(
     hass: HomeAssistant, mock_entry_setup: None
 ) -> None:
     """Test config flow reuses the running discovery service without starting a new one."""
-    controller = create_mock_controller("000000002", "192.0.2.2")
-    await async_install_discovery_service(hass, controller)
-
-    with patch(
-        "homeassistant.components.izone.config_flow.pizone.discovery",
-    ) as mock_pizone_discovery:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "confirm"
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "iZone 000000002"
-    assert result["data"] == {}
-    assert result["result"].unique_id == "000000002"
-    mock_pizone_discovery.assert_not_called()
-
-
-async def test_user_discovery_uses_shared_discovery_service(
-    hass: HomeAssistant, mock_entry_setup: None
-) -> None:
-    """Test user flow reuses the shared discovery snapshot (no temporary pizone)."""
     controller = create_mock_controller("000000002", "192.0.2.2")
     await async_install_discovery_service(hass, controller)
 
@@ -1143,8 +1120,6 @@ async def test_async_discover_controllers_starts_shared_service_when_missing(
     """Starting discovery without refresh does not trigger extra wait/rescan work."""
     controller = create_mock_controller(device_ip="192.0.2.3")
     service = create_mock_discovery_service(controller)
-    hass.data[DATA_DISCOVERY_SERVICE] = service
-    del hass.data[DATA_DISCOVERY_SERVICE]
 
     with patch(
         "homeassistant.components.izone.discovery.async_start_discovery_service",
@@ -1164,8 +1139,6 @@ async def test_async_discover_controllers_refresh_after_start_calls_fetch_contro
     """Refresh after starting discovery delegates to fetch_controllers with timeout."""
     controller = create_mock_controller(device_ip="192.0.2.3")
     service = create_mock_discovery_service(controller)
-    hass.data[DATA_DISCOVERY_SERVICE] = service
-    del hass.data[DATA_DISCOVERY_SERVICE]
 
     with patch(
         "homeassistant.components.izone.discovery.async_start_discovery_service",
