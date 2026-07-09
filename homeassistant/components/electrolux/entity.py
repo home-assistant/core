@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from electrolux_group_developer_sdk.client.appliances.appliance_data import (
     ApplianceData,
@@ -55,6 +55,7 @@ class ElectroluxBaseEntity[T: ApplianceData](
             serial_number=appliance_info.serialNumber,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to HA."""
         await super().async_added_to_hass()
@@ -65,6 +66,7 @@ class ElectroluxBaseEntity[T: ApplianceData](
         """Update entity-specific attributes. Returns True if any attributes were changed, otherwise False."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """When the coordinator updates."""
         appliance_state = self.coordinator.data

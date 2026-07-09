@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import cast
+from typing import cast, override
 
 from electrolux_group_developer_sdk.client.appliances.appliance_data import (
     ApplianceData,
@@ -203,6 +203,7 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
 
         self.entity_description = description
 
+    @override
     def _update_attr_state(self) -> bool:
         new_value = self._get_value()
         if isinstance(new_value, str):
@@ -239,6 +240,7 @@ class ElectroluxTemperatureSensor(ElectroluxSensor):
         self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
         super().__init__(appliance_data, coordinator, description)
 
+    @override
     def _get_value(self) -> StateType:
         temp_unit = self._get_temperature_unit()
         temp_value: float | None = cast(
