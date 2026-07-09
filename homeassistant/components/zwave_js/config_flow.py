@@ -305,8 +305,13 @@ class AddonFlowManager:
 
         if addon_info.state is AddonState.RUNNING:
             self.restart_addon = True
-        # Copy the add-on config to keep the objects separate.
-        self.original_config = dict(addon_config)
+        if self.original_config is None:
+            # Only capture the config before the first change,
+            # so a revert restores the config from before the flow,
+            # also if the flow changes the config multiple times,
+            # e.g. when the RF region step sets the region.
+            # Copy the add-on config to keep the objects separate.
+            self.original_config = dict(addon_config)
         # Remove legacy network_key
         new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
         try:
@@ -1481,6 +1486,16 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             self.socket_path = user_input.get(CONF_SOCKET_PATH) or None
 
             if error := self._validate_usb_or_socket_path():
+                if reason := self.revert_reason:
+                    # The original add-on config has no valid adapter
+                    # connection to revert to, so abort instead of showing
+                    # the form with an error in the middle of a revert.
+                    _LOGGER.error(
+                        "Cannot revert add-on config without an adapter: %s", error
+                    )
+                    self.revert_reason = None
+                    self._async_schedule_entry_reload()
+                    return self.async_abort(reason=reason)
                 errors["base"] = error
             else:
                 addon_config_updates = {
