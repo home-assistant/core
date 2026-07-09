@@ -1661,6 +1661,64 @@ async def test_esphome_discovery_not_hassio(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed")
+async def test_configure_addon_usb_socket_validation(
+    hass: HomeAssistant,
+    addon_options: dict[str, Any],
+) -> None:
+    """Test USB path and socket path validation in the add-on config step."""
+    addon_options["device"] = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+            uuid="1234",
+        ),
+    )
+
+    assert result["step_id"] == "hassio_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_user"
+
+    # Neither USB path nor socket path provided.
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_user"
+    assert result["errors"] == {"base": "missing_usb_or_socket_path"}
+
+    # Both USB path and socket path provided.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "usb_path": "/test",
+            "socket_path": "esphome://192.168.1.100:6053",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_user"
+    assert result["errors"] == {"base": "usb_and_socket_path"}
+
+    # Exactly one provided.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "usb_path": "/test",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "network_type"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_installed")
 async def test_discovery_addon_not_running(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
@@ -3295,6 +3353,39 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
                 "lr_s2_authenticated_key": "new321",
             },
             0,
+        ),
+        pytest.param(
+            {},
+            {
+                "device": "/test",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
+            {
+                "usb_path": "",
+                "socket_path": "esphome://192.168.1.100:6053",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
+            {
+                "socket": "esphome://192.168.1.100:6053",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
+            0,
+            id="use_socket_option_removes_device",
         ),
         (
             {"use_addon": True},

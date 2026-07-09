@@ -194,6 +194,9 @@ def mock_set_addon_options_side_effect(addon_options: dict[str, Any]) -> Any | N
 
     async def set_addon_options(slug: str, options: AddonsOptions) -> None:
         """Mock set add-on options."""
+        # The Supervisor replaces the add-on options with the new config,
+        # so mirror that instead of merging.
+        addon_options.clear()
         addon_options.update(options.config)
 
     return set_addon_options
