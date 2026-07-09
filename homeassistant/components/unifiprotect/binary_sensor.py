@@ -1,7 +1,8 @@
 """Component providing binary sensors for UniFi Protect."""
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 import dataclasses
+import operator
 from typing import cast, override
 
 from uiprotect.data import (
@@ -10,11 +11,9 @@ from uiprotect.data import (
     MountType,
     ProtectAdoptableDeviceModel,
     Sensor,
-    SmartDetectObjectType,
 )
 from uiprotect.data.nvr import UOSDisk
 from uiprotect.data.public_devices import (
-    PublicCamera,
     PublicDeviceModel,
     PublicSensor,
     SensorFeatureCapability,
@@ -51,29 +50,6 @@ def _async_motion_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
     # Mirrors Sensor.is_motion_sensor_enabled over the public API.
     sensor = cast(PublicSensor, obj)
     return sensor.mount_type is not MountType.LEAK and sensor.motion_settings.is_enabled
-
-
-def _smart_object_enabled_public(
-    object_type: SmartDetectObjectType,
-) -> Callable[[PublicDeviceModel], bool]:
-    """Mirror is_<type>_detection_on over the public camera smart-detect settings."""
-
-    def _enabled(obj: PublicDeviceModel) -> bool:
-        return object_type in cast(PublicCamera, obj).smart_detect_settings.object_types
-
-    return _enabled
-
-
-def _smart_audio_enabled_public(
-    object_type: SmartDetectObjectType,
-) -> Callable[[PublicDeviceModel], bool]:
-    """Mirror is_<type>_detection_on for audio types (object enum -> audio enum)."""
-    audio_type = object_type.audio_type
-
-    def _enabled(obj: PublicDeviceModel) -> bool:
-        return audio_type in cast(PublicCamera, obj).smart_detect_settings.audio_types
-
-    return _enabled
 
 
 def _async_contact_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
@@ -337,27 +313,21 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="person_detected",
         ufp_required_field="can_detect_person",
         ufp_public_value="is_person_currently_detected",
-        ufp_public_enabled_fn=_smart_object_enabled_public(
-            SmartDetectObjectType.PERSON
-        ),
+        ufp_public_enabled_fn=operator.attrgetter("is_person_detection_on"),
     ),
     ProtectBinaryEntityDescription(
         key="smart_obj_vehicle",
         translation_key="vehicle_detected",
         ufp_required_field="can_detect_vehicle",
         ufp_public_value="is_vehicle_currently_detected",
-        ufp_public_enabled_fn=_smart_object_enabled_public(
-            SmartDetectObjectType.VEHICLE
-        ),
+        ufp_public_enabled_fn=operator.attrgetter("is_vehicle_detection_on"),
     ),
     ProtectBinaryEntityDescription(
         key="smart_obj_animal",
         translation_key="animal_detected",
         ufp_required_field="can_detect_animal",
         ufp_public_value="is_animal_currently_detected",
-        ufp_public_enabled_fn=_smart_object_enabled_public(
-            SmartDetectObjectType.ANIMAL
-        ),
+        ufp_public_enabled_fn=operator.attrgetter("is_animal_detection_on"),
     ),
     ProtectBinaryEntityDescription(
         key="smart_audio_any",
@@ -371,7 +341,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="smoke_alarm_detected",
         ufp_required_field="can_detect_smoke",
         ufp_public_value="is_smoke_currently_detected",
-        ufp_public_enabled_fn=_smart_audio_enabled_public(SmartDetectObjectType.SMOKE),
+        ufp_public_enabled_fn=operator.attrgetter("is_smoke_detection_on"),
     ),
     ProtectBinaryEntityDescription(
         key="smart_audio_cmonx",
@@ -379,64 +349,56 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.CO,
         ufp_required_field="can_detect_co",
         ufp_public_value="is_cmonx_currently_detected",
-        ufp_public_enabled_fn=_smart_audio_enabled_public(SmartDetectObjectType.CMONX),
+        ufp_public_enabled_fn=operator.attrgetter("is_co_detection_on"),
     ),
     ProtectBinaryEntityDescription(
         key="smart_audio_siren",
         translation_key="siren_detected",
         ufp_required_field="can_detect_siren",
         ufp_public_value="is_siren_currently_detected",
-        ufp_public_enabled_fn=_smart_audio_enabled_public(SmartDetectObjectType.SIREN),
+        ufp_public_enabled_fn=operator.attrgetter("is_siren_detection_on"),
     ),
     ProtectBinaryEntityDescription(
         key="smart_audio_baby_cry",
         translation_key="baby_cry_detected",
         ufp_required_field="can_detect_baby_cry",
         ufp_public_value="is_baby_cry_currently_detected",
-        ufp_public_enabled_fn=_smart_audio_enabled_public(
-            SmartDetectObjectType.BABY_CRY
-        ),
+        ufp_public_enabled_fn=operator.attrgetter("is_baby_cry_detection_on"),
     ),
     ProtectBinaryEntityDescription(
         key="smart_audio_speak",
         translation_key="speaking_detected",
         ufp_required_field="can_detect_speaking",
         ufp_public_value="is_speaking_currently_detected",
-        ufp_public_enabled_fn=_smart_audio_enabled_public(SmartDetectObjectType.SPEAK),
+        ufp_public_enabled_fn=operator.attrgetter("is_speaking_detection_on"),
     ),
     ProtectBinaryEntityDescription(
         key="smart_audio_bark",
         translation_key="barking_detected",
         ufp_required_field="can_detect_bark",
         ufp_public_value="is_bark_currently_detected",
-        ufp_public_enabled_fn=_smart_audio_enabled_public(SmartDetectObjectType.BARK),
+        ufp_public_enabled_fn=operator.attrgetter("is_bark_detection_on"),
     ),
     ProtectBinaryEntityDescription(
         key="smart_audio_car_alarm",
         translation_key="car_alarm_detected",
         ufp_required_field="can_detect_car_alarm",
         ufp_public_value="is_car_alarm_currently_detected",
-        ufp_public_enabled_fn=_smart_audio_enabled_public(
-            SmartDetectObjectType.BURGLAR
-        ),
+        ufp_public_enabled_fn=operator.attrgetter("is_car_alarm_detection_on"),
     ),
     ProtectBinaryEntityDescription(
         key="smart_audio_car_horn",
         translation_key="car_horn_detected",
         ufp_required_field="can_detect_car_horn",
         ufp_public_value="is_car_horn_currently_detected",
-        ufp_public_enabled_fn=_smart_audio_enabled_public(
-            SmartDetectObjectType.CAR_HORN
-        ),
+        ufp_public_enabled_fn=operator.attrgetter("is_car_horn_detection_on"),
     ),
     ProtectBinaryEntityDescription(
         key="smart_audio_glass_break",
         translation_key="glass_break_detected",
         ufp_required_field="can_detect_glass_break",
         ufp_public_value="is_glass_break_currently_detected",
-        ufp_public_enabled_fn=_smart_audio_enabled_public(
-            SmartDetectObjectType.GLASS_BREAK
-        ),
+        ufp_public_enabled_fn=operator.attrgetter("is_glass_break_detection_on"),
     ),
 )
 

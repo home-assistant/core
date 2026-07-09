@@ -470,6 +470,24 @@ def make_public_camera(
         object_types=_ALL_OBJECT_TYPES if object_types is None else object_types,
         audio_types=_ALL_AUDIO_TYPES if audio_types is None else audio_types,
     )
+    # A Mock(spec) does not evaluate properties, so mirror the PublicCamera
+    # parity properties the migrated detection sensors gate on using the
+    # library's own logic.
+    for name in (
+        "is_person_detection_on",
+        "is_vehicle_detection_on",
+        "is_animal_detection_on",
+        "is_smoke_detection_on",
+        "is_co_detection_on",
+        "is_siren_detection_on",
+        "is_baby_cry_detection_on",
+        "is_speaking_detection_on",
+        "is_bark_detection_on",
+        "is_car_alarm_detection_on",
+        "is_car_horn_detection_on",
+        "is_glass_break_detection_on",
+    ):
+        setattr(public, name, getattr(PublicCamera, name).fget(public))
     public.hdr_type = (
         _HDR_DISPLAY_TO_PUBLIC[camera.hdr_mode_display]
         if hdr_type is None
