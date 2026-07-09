@@ -19,7 +19,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DEFAULT_PORT, DEVICE_ID, DOMAIN
+from .const import DEFAULT_PORT, DOMAIN, UNIT_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ async def check_controller_model(host: str, port: int) -> str | None:
     try:
         connection = await connect_tcp(host, port=port)
         try:
-            await get_controller_model(connection.for_unit(DEVICE_ID))
+            await get_controller_model(connection.for_unit(UNIT_ID))
         finally:
             await connection.close()
     except StiebelEltronModbusError, ModbusError:

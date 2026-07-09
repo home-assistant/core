@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ATTR_MANUFACTURER, DEFAULT_SCAN_INTERVAL, DEVICE_ID, DOMAIN
+from .const import ATTR_MANUFACTURER, DEFAULT_SCAN_INTERVAL, DOMAIN, UNIT_ID
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -42,7 +42,7 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
             # the register values), so there is nothing to diff against.
             always_update=True,
         )
-        self.api_client = LwzStiebelEltronAPI(connection.for_unit(DEVICE_ID))
+        self.api_client = LwzStiebelEltronAPI(connection.for_unit(UNIT_ID))
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             configuration_url=f"http://{host}",
