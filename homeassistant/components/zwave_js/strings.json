@@ -83,8 +83,8 @@
         "description": "Enter the security keys for your existing Z-Wave network",
         "title": "Security keys"
       },
-      "confirm_usb_migration": {
-        "description": "You are about to migrate your Z-Wave network from the old adapter to the new adapter {usb_title}. This will take a backup of the network from the old adapter and restore the network to the new adapter.\n\nPress Submit to continue with the migration.",
+      "confirm_migration": {
+        "description": "You are about to migrate your Z-Wave network from the old adapter to the new adapter {adapter_name}. This will take a backup of the network from the old adapter and restore the network to the new adapter.\n\nPress Submit to continue with the migration.",
         "title": "Migrate to a new adapter"
       },
       "hassio_confirm": {

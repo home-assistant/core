@@ -986,7 +986,7 @@ async def test_usb_discovery_migration(
     assert mock_usb_serial_by_id.call_count == 2
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm_usb_migration"
+    assert result["step_id"] == "confirm_migration"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -1119,7 +1119,7 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     assert mock_usb_serial_by_id.call_count == 2
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm_usb_migration"
+    assert result["step_id"] == "confirm_migration"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -1572,7 +1572,7 @@ async def test_esphome_discovery_migration(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm_usb_migration"
+    assert result["step_id"] == "confirm_migration"
     # The add-on config is not touched before the user confirms.
     set_addon_options.assert_not_called()
 

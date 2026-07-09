@@ -81,17 +81,6 @@ TITLE = "Z-Wave JS"
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
 
-ADDON_USER_INPUT_MAP = {
-    CONF_ADDON_DEVICE: CONF_USB_PATH,
-    CONF_ADDON_SOCKET: CONF_SOCKET_PATH,
-    CONF_ADDON_S0_LEGACY_KEY: CONF_S0_LEGACY_KEY,
-    CONF_ADDON_S2_ACCESS_CONTROL_KEY: CONF_S2_ACCESS_CONTROL_KEY,
-    CONF_ADDON_S2_AUTHENTICATED_KEY: CONF_S2_AUTHENTICATED_KEY,
-    CONF_ADDON_S2_UNAUTHENTICATED_KEY: CONF_S2_UNAUTHENTICATED_KEY,
-    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: CONF_LR_S2_ACCESS_CONTROL_KEY,
-    CONF_ADDON_LR_S2_AUTHENTICATED_KEY: CONF_LR_S2_AUTHENTICATED_KEY,
-}
-
 CONF_ADDON_RF_REGION = "rf_region"
 
 # Security key fields as (field name, add-on config key, config entry key).
@@ -115,6 +104,13 @@ KEY_FIELDS: tuple[tuple[str, str, str], ...] = (
         CONF_LR_S2_AUTHENTICATED_KEY,
     ),
 )
+
+
+ADDON_USER_INPUT_MAP = {
+    CONF_ADDON_DEVICE: CONF_USB_PATH,
+    CONF_ADDON_SOCKET: CONF_SOCKET_PATH,
+    **{addon_key: entry_key for _, addon_key, entry_key in KEY_FIELDS},
+}
 
 
 @dataclass
@@ -161,14 +157,13 @@ class SecurityKeys:
         return {entry_key: getattr(self, field) for field, _, entry_key in KEY_FIELDS}
 
 
-EXAMPLE_SERVER_URL = "ws://localhost:3000"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
 # Steps at which another flow is only showing a discovery prompt and can be
 # aborted safely when a config entry is created by a different flow.
 DISCOVERY_PROMPT_STEPS = {
-    "confirm_usb_migration",
+    "confirm_migration",
     "hassio_confirm",
     "installation_type",
     "zeroconf_confirm",
@@ -804,20 +799,20 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._adapter_discovered = True
         if current_config_entries:
-            return await self.async_step_confirm_usb_migration()
+            return await self.async_step_confirm_migration()
 
         return await self.async_step_installation_type()
 
-    async def async_step_confirm_usb_migration(
+    async def async_step_confirm_migration(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm USB migration."""
         if user_input is not None:
             return await self.async_step_intent_migrate()
         return self.async_show_form(
-            step_id="confirm_usb_migration",
+            step_id="confirm_migration",
             description_placeholders={
-                "usb_title": self.context["title_placeholders"][CONF_NAME],
+                "adapter_name": self.context["title_placeholders"][CONF_NAME],
             },
         )
 
@@ -830,7 +825,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="manual",
                 data_schema=get_manual_schema({}),
                 description_placeholders={
-                    "example_server_url": EXAMPLE_SERVER_URL,
+                    "example_server_url": DEFAULT_URL,
                     "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
                 },
             )
@@ -864,7 +859,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="manual",
             data_schema=get_manual_schema(user_input),
             description_placeholders={
-                "example_server_url": EXAMPLE_SERVER_URL,
+                "example_server_url": DEFAULT_URL,
                 "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
             },
             errors=errors,
@@ -1377,7 +1372,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="manual_reconfigure",
                 data_schema=get_manual_schema({CONF_URL: config_entry.data[CONF_URL]}),
                 description_placeholders={
-                    "example_server_url": EXAMPLE_SERVER_URL,
+                    "example_server_url": DEFAULT_URL,
                     "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
                 },
             )
@@ -1411,7 +1406,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="manual_reconfigure",
             data_schema=get_manual_schema(user_input),
             description_placeholders={
-                "example_server_url": EXAMPLE_SERVER_URL,
+                "example_server_url": DEFAULT_URL,
                 "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
             },
             errors=errors,
@@ -1782,7 +1777,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             None,
         ):
             self._reconfigure_config_entry = addon_entry
-            return await self.async_step_confirm_usb_migration()
+            return await self.async_step_confirm_migration()
 
         return await self.async_step_installation_type()
 
