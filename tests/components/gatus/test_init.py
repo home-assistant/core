@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from gatus_api.client import GatusClientError
+import pytest
 
 from homeassistant.components.gatus.const import DOMAIN
 from homeassistant.components.gatus.coordinator import GatusDataUpdateCoordinator
@@ -15,9 +16,8 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
-async def test_setup_and_unload_entry(
-    hass: HomeAssistant, mock_gatus_client: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_gatus_client")
+async def test_setup_and_unload_entry(hass: HomeAssistant) -> None:
     """Test standard successful setup and unload cycle of the integration."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_URL: "http://gatus.example.com:8080"}
