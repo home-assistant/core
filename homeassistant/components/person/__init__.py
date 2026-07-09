@@ -16,7 +16,7 @@ from homeassistant.components.device_tracker import (
     TrackerEntityStateAttribute,
     TrackingType,
 )
-from homeassistant.components.zone import ENTITY_ID_HOME, ZoneEntityStateAttribute
+from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
     ATTR_GPS_ACCURACY,
@@ -477,8 +477,8 @@ class Person(
         if state := await self.async_get_last_state():
             self._parse_source_state(
                 state,
-                latitude=state.attributes.get(PersonEntityStateAttribute.LATITUDE),
-                longitude=state.attributes.get(PersonEntityStateAttribute.LONGITUDE),
+                latitude=state.attributes.get(EntityStateAttribute.LATITUDE),
+                longitude=state.attributes.get(EntityStateAttribute.LONGITUDE),
                 gps_accuracy=state.attributes.get(
                     PersonEntityStateAttribute.GPS_ACCURACY
                 ),
@@ -566,8 +566,8 @@ class Person(
         if latest:
             self._parse_source_state(
                 latest,
-                latitude=latest.attributes.get(TrackerEntityStateAttribute.LATITUDE),
-                longitude=latest.attributes.get(TrackerEntityStateAttribute.LONGITUDE),
+                latitude=latest.attributes.get(EntityStateAttribute.LATITUDE),
+                longitude=latest.attributes.get(EntityStateAttribute.LONGITUDE),
                 gps_accuracy=latest.attributes.get(
                     TrackerEntityStateAttribute.GPS_ACCURACY
                 ),
@@ -622,10 +622,8 @@ class Person(
             and self._longitude is None
             and (home_zone := self.hass.states.get(ENTITY_ID_HOME)) is not None
         ):
-            self._latitude = home_zone.attributes.get(ZoneEntityStateAttribute.LATITUDE)
-            self._longitude = home_zone.attributes.get(
-                ZoneEntityStateAttribute.LONGITUDE
-            )
+            self._latitude = home_zone.attributes.get(EntityStateAttribute.LATITUDE)
+            self._longitude = home_zone.attributes.get(EntityStateAttribute.LONGITUDE)
 
     @callback
     def _update_extra_state_attributes(self) -> None:
