@@ -505,7 +505,9 @@ async def test_per_device_failure_isolation(
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """A transient failure on one device must not affect the other device's sensors."""
+    """A transient failure on one gateway must not affect another gateway's sensors."""
+    # Each fixture sits behind its own gateway (gateway0, gateway1), so the two
+    # devices get separate coordinators and fail independently.
     fixtures: list[Fixture] = [
         Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json"),
         Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json"),
@@ -544,13 +546,63 @@ async def test_per_device_failure_isolation(
         }
     )
 
-    # Coordinator interval scales by device count (60 * 2 = 120s); tick past it.
+    # Coordinator interval scales by gateway count (60 * 2 = 120s); tick past it.
     freezer.tick(timedelta(seconds=300))
     async_fire_time_changed(hass, fire_all=True)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(sensor_device0).state == STATE_UNAVAILABLE
     assert hass.states.get(sensor_device1).state != STATE_UNAVAILABLE
+
+
+async def test_devices_on_same_gateway_share_coordinator(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Two devices behind one gateway share one coordinator and one fetch."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json", gateway="gwA"),
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json", gateway="gwA"),
+    ]
+    mock_vicare = MockPyViCare(fixtures)
+    service0 = mock_vicare.devices[0].service
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=mock_vicare.as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        sensor_device0 = "sensor.model0_temperature"
+        sensor_device1 = "sensor.model1_temperature"
+        assert hass.states.get(sensor_device0).state != STATE_UNAVAILABLE
+        assert hass.states.get(sensor_device1).state != STATE_UNAVAILABLE
+
+        # The gateway's single fetch failing takes every device on it offline.
+        service0.fetch_all_features.side_effect = PyViCareInternalServerError(
+            {
+                "statusCode": 500,
+                "errorType": "INTERNAL_SERVER_ERROR",
+                "message": "Internal Server Error",
+                "viErrorId": "0",
+            }
+        )
+        # One gateway -> interval 60s; tick past it.
+        freezer.tick(timedelta(seconds=120))
+        async_fire_time_changed(hass, fire_all=True)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert hass.states.get(sensor_device0).state == STATE_UNAVAILABLE
+        assert hass.states.get(sensor_device1).state == STATE_UNAVAILABLE
 
 
 async def test_coordinator_auth_failure_triggers_reauth(

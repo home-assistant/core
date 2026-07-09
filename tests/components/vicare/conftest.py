@@ -29,6 +29,7 @@ class Fixture:
 
     roles: set[str]
     data_file: str
+    gateway: str | None = None
 
 
 class MockPyViCare:
@@ -38,10 +39,11 @@ class MockPyViCare:
         """Init a single device from json dump."""
         self.devices = []
         for idx, fixture in enumerate(fixtures):
+            gateway = fixture.gateway or f"gateway{idx}"
             self.devices.append(
                 PyViCareDeviceConfig(
                     MockViCareService(
-                        f"installation{idx}", f"gateway{idx}", f"device{idx}", fixture
+                        f"installation{idx}", gateway, f"device{idx}", fixture
                     ),
                     f"deviceId{idx}",
                     "Vitovalor"

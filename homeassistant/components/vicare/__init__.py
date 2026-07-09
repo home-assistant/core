@@ -1,5 +1,6 @@
 """The ViCare integration."""
 
+from collections import defaultdict
 from contextlib import suppress
 import logging
 import os
@@ -170,11 +171,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
     ) as err:
         raise ConfigEntryAuthFailed("Authentication failed") from err
 
-    device_count = len(entry.runtime_data.devices)
-    coordinators: list[ViCareCoordinator] = []
+    # Group devices by gateway: in viaGateway mode one bulk fetch refreshes
+    # every device behind a gateway, so one coordinator serves the gateway.
+    devices_by_gateway: dict[str, list[ViCareDevice]] = defaultdict(list)
     for device in entry.runtime_data.devices:
-        coordinator = ViCareCoordinator(hass, entry, device.api, device_count)
-        device.coordinator = coordinator
+        devices_by_gateway[device.config.getConfig().serial].append(device)
+
+    gateway_count = len(devices_by_gateway)
+    coordinators: list[ViCareCoordinator] = []
+    for gateway_devices in devices_by_gateway.values():
+        representative = gateway_devices[0]
+        coordinator = ViCareCoordinator(
+            hass,
+            entry,
+            representative.api,
+            representative.config.getConfig(),
+            gateway_count,
+        )
+        for device in gateway_devices:
+            device.coordinator = coordinator
         coordinators.append(coordinator)
 
     for device in entry.runtime_data.devices:
@@ -201,20 +216,24 @@ def _setup_vicare_api(
 ) -> ViCareData:
     """Set up PyVicare API."""
     client = PyViCare()
+    client.loadViaGateway(True)
     client.setCacheDuration(cache_duration)
     client.initWithExternalOAuth(auth)
 
     device_config_list = get_supported_devices(client.devices)
 
-    # increase cache duration to fit rate limit to number of devices
-    if (number_of_devices := len(device_config_list)) > 1:
-        cache_duration = DEFAULT_CACHE_DURATION * number_of_devices
+    # In viaGateway mode each gateway is one bulk fetch per cycle, so the rate
+    # limit scales with the number of gateways, not devices.
+    gateway_count = len({config.getConfig().serial for config in device_config_list})
+    if gateway_count > 1:
+        cache_duration = DEFAULT_CACHE_DURATION * gateway_count
         _LOGGER.debug(
-            "Found %s devices, adjusting cache duration to %s",
-            number_of_devices,
+            "Found %s gateways, adjusting cache duration to %s",
+            gateway_count,
             cache_duration,
         )
         client = PyViCare()
+        client.loadViaGateway(True)
         client.setCacheDuration(cache_duration)
         client.initWithExternalOAuth(auth)
         device_config_list = get_supported_devices(client.devices)
