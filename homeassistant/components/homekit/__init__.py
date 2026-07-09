@@ -968,13 +968,32 @@ class HomeKit:
             return cast(HomeAccessory, acc)
         return None
 
+    @callback
+    def _should_include_entity(
+        self,
+        state: State,
+        label_included_entity_ids: set[str],
+        label_excluded_entity_ids: set[str],
+        use_base_filter: bool,
+    ) -> bool:
+        """Apply explicit, label, then base-filter precedence."""
+        entity_id = state.entity_id
+        if self._filter.explicitly_included(entity_id):
+            return True
+        if self._filter.explicitly_excluded(entity_id):
+            return False
+        if entity_id in label_excluded_entity_ids:
+            return False
+        if entity_id in label_included_entity_ids:
+            return state.domain not in self._filter.config[CONF_EXCLUDE_DOMAINS]
+        return use_base_filter and self._filter(entity_id)
+
     async def async_configure_accessories(self) -> list[State]:
         """Configure accessories for the included states."""
         dev_reg = dr.async_get(self.hass)
         ent_reg = er.async_get(self.hass)
         device_lookup: dict[str, dict[tuple[str, str | None], str]] = {}
         entity_states: list[State] = []
-        entity_filter = self._filter.get_filter()
         label_included_entity_ids = self._async_label_filtered_entity_ids(
             self._include_labels
         )
@@ -987,19 +1006,11 @@ class HomeKit:
         entries = ent_reg.entities
         for state in self.hass.states.async_all():
             entity_id = state.entity_id
-            if self._filter.explicitly_included(entity_id):
-                pass
-            elif (
-                self._filter.explicitly_excluded(entity_id)
-                or (
-                    entity_id in label_included_entity_ids
-                    and state.domain in self._filter.config[CONF_EXCLUDE_DOMAINS]
-                )
-                or entity_id in label_excluded_entity_ids
-                or (
-                    entity_id not in label_included_entity_ids
-                    and not (use_base_filter and entity_filter(entity_id))
-                )
+            if not self._should_include_entity(
+                state,
+                label_included_entity_ids,
+                label_excluded_entity_ids,
+                use_base_filter,
             ):
                 continue
 
