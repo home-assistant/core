@@ -20,9 +20,11 @@ from uiprotect.data import (
     SmartDetectObjectType,
     StateType,
 )
+from uiprotect.data.public_devices import PublicSensor, SensorFeatureCapability
 
-from homeassistant.core import callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
@@ -47,6 +49,46 @@ class PermRequired(int, Enum):
     NO_WRITE = 1
     WRITE = 2
     DELETE = 3
+
+
+@callback
+def _async_capability_supported(
+    data: ProtectData,
+    device: ProtectAdoptableDeviceModel,
+    description: ProtectEntityDescription,
+) -> bool:
+    """Whether the device advertises the description's required sensor capability."""
+    if (capability := description.ufp_capability) is None:
+        return True
+    public = data.async_get_public_device(device)
+    if not isinstance(public, PublicSensor) or not public.has_feature_flags:
+        return True
+    return public.supports(capability)
+
+
+@callback
+def async_remove_unsupported_sense_entities(
+    hass: HomeAssistant,
+    platform: Platform,
+    data: ProtectData,
+    descs: Sequence[ProtectEntityDescription],
+) -> None:
+    """Remove registry entries for sense entities the device cannot support.
+
+    Only acts when a public capability map is present (newer firmware); a console
+    upgrade then drops the never-functional entities created before the map existed.
+    """
+    entity_registry = er.async_get(hass)
+    for device in data.get_by_types({ModelType.SENSOR}):
+        for description in descs:
+            if description.ufp_capability is None or _async_capability_supported(
+                data, device, description
+            ):
+                continue
+            if entity_id := entity_registry.async_get_entity_id(
+                platform, DOMAIN, f"{device.mac}_{description.key}"
+            ):
+                entity_registry.async_remove(entity_id)
 
 
 @callback
@@ -100,6 +142,9 @@ def _async_device_entities(
                     continue
 
             if not description.has_required(device):
+                continue
+
+            if not _async_capability_supported(data, device, description):
                 continue
 
             entities.append(
@@ -287,10 +332,12 @@ class BaseProtectEntity(Entity):
     def _async_public_updated(self, obj: PublicDeviceModel | None) -> None:
         """Handle a public devices WS update for a migrated value.
 
-        ``obj`` is the refreshed public object from a WS message; ``None`` on a
-        public websocket state change (e.g. reconnect), where the cached object
-        is re-read from the bootstrap so a value that changed during the outage
-        is picked up — mirroring the relay/siren re-signal.
+        ``obj`` is the refreshed public object from a WS message; ``None`` when
+        there is no object to pass (a websocket state change, a delete event,
+        or a frame the library could not merge). The object is then re-read
+        from the bootstrap: a deleted device reads as missing (the entity goes
+        unavailable), and after a reconnect a value that changed during the
+        outage is picked up.
         """
         self._ufp_public_obj = (
             obj if obj is not None else self.data.async_get_public_device(self.device)
@@ -441,6 +488,10 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):  # noqa: UP046
     # Public counterpart of ``ufp_enabled``; a callable because public enablement
     # is often compound (e.g. mount type plus a settings flag).
     ufp_public_enabled_fn: Callable[[PublicDeviceModel], bool] | None = None
+    # Sensor capability required to create the entity, checked against the public
+    # capability map. Without a capability map (older firmware) every description
+    # is created, matching the pre-capability behavior.
+    ufp_capability: SensorFeatureCapability | None = None
     ufp_perm: PermRequired | None = None
 
     # The below are set in __post_init__

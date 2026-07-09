@@ -39,8 +39,8 @@
 # name: test_binary_sensors[binary_sensor.community_door_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Community door Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Community door Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.community_door_battery',
@@ -90,7 +90,7 @@
 # name: test_binary_sensors[binary_sensor.community_door_ring_action-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Community door Ring Action',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Community door Ring Action',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.community_door_ring_action',
@@ -140,8 +140,8 @@
 # name: test_binary_sensors[binary_sensor.home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Home',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home',
@@ -191,8 +191,8 @@
 # name: test_binary_sensors[binary_sensor.home_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Home Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_battery',
@@ -242,8 +242,8 @@
 # name: test_binary_sensors[binary_sensor.home_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'Home Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_charging',

@@ -41,7 +41,7 @@
 # name: test_all_entities[sensor.overseerr_audio_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Overseerr Audio issues',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Overseerr Audio issues',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -94,9 +94,9 @@
 # name: test_all_entities[sensor.overseerr_available_requests-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Overseerr Available requests',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Overseerr Available requests',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'requests',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'requests',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.overseerr_available_requests',
@@ -148,7 +148,7 @@
 # name: test_all_entities[sensor.overseerr_closed_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Overseerr Closed issues',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Overseerr Closed issues',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -201,9 +201,9 @@
 # name: test_all_entities[sensor.overseerr_declined_requests-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Overseerr Declined requests',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Overseerr Declined requests',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'requests',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'requests',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.overseerr_declined_requests',
@@ -255,9 +255,9 @@
 # name: test_all_entities[sensor.overseerr_movie_requests-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Overseerr Movie requests',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Overseerr Movie requests',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'requests',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'requests',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.overseerr_movie_requests',
@@ -309,7 +309,7 @@
 # name: test_all_entities[sensor.overseerr_open_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Overseerr Open issues',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Overseerr Open issues',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -362,9 +362,9 @@
 # name: test_all_entities[sensor.overseerr_pending_requests-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Overseerr Pending requests',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Overseerr Pending requests',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'requests',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'requests',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.overseerr_pending_requests',
@@ -416,9 +416,9 @@
 # name: test_all_entities[sensor.overseerr_processing_requests-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Overseerr Processing requests',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Overseerr Processing requests',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'requests',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'requests',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.overseerr_processing_requests',
@@ -470,7 +470,7 @@
 # name: test_all_entities[sensor.overseerr_subtitle_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Overseerr Subtitle issues',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Overseerr Subtitle issues',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -523,7 +523,7 @@
 # name: test_all_entities[sensor.overseerr_total_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Overseerr Total issues',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Overseerr Total issues',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
@@ -576,9 +576,9 @@
 # name: test_all_entities[sensor.overseerr_total_requests-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Overseerr Total requests',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Overseerr Total requests',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'requests',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'requests',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.overseerr_total_requests',
@@ -630,9 +630,9 @@
 # name: test_all_entities[sensor.overseerr_tv_requests-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Overseerr TV requests',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Overseerr TV requests',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'requests',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'requests',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.overseerr_tv_requests',
@@ -684,7 +684,7 @@
 # name: test_all_entities[sensor.overseerr_video_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Overseerr Video issues',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Overseerr Video issues',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,

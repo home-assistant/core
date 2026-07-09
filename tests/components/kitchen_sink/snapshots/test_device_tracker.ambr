@@ -3,26 +3,7 @@
   set({
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'editable': True,
-        'friendly_name': 'test home',
-        'icon': 'mdi:home',
-        'latitude': 32.87336,
-        'longitude': -117.22743,
-        'passive': False,
-        'persons': list([
-        ]),
-        'radius': 100,
-      }),
-      'context': <ANY>,
-      'entity_id': 'zone.home',
-      'last_changed': <ANY>,
-      'last_reported': <ANY>,
-      'last_updated': <ANY>,
-      'state': '0',
-    }),
-    StateSnapshot({
-      'attributes': ReadOnlyDict({
-        'friendly_name': 'Demo scanner',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Demo scanner',
         <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
           'zone.home',
         ]),
@@ -38,7 +19,7 @@
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({
-        'friendly_name': 'Demo tracker',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Demo tracker',
         <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 10,
         <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
           'zone.home',
@@ -54,6 +35,25 @@
       'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'home',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <ZoneEntityStateAttribute.EDITABLE: 'editable'>: True,
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test home',
+        <EntityStateAttribute.ICON: 'icon'>: 'mdi:home',
+        <ZoneEntityStateAttribute.LATITUDE: 'latitude'>: 32.87336,
+        <ZoneEntityStateAttribute.LONGITUDE: 'longitude'>: -117.22743,
+        <ZoneEntityStateAttribute.PASSIVE: 'passive'>: False,
+        <ZoneEntityStateAttribute.PERSONS: 'persons'>: list([
+        ]),
+        <ZoneEntityStateAttribute.RADIUS: 'radius'>: 100,
+      }),
+      'context': <ANY>,
+      'entity_id': 'zone.home',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '0',
     }),
   })
 # ---

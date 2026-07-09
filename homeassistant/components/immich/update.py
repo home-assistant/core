@@ -36,7 +36,7 @@ class ImmichUpdateEntity(ImmichEntity, UpdateEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_update"
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_update"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
     @override

@@ -8,6 +8,7 @@
 - Do not comment on code style, formatting or linting issues.
 - Flag comments that over-explain straightforward code, narrate the obvious, or read like AI commentary (multi-sentence justifications for a single line).
 - A Pull Request with a dependency version bump should only contain changes required for the version bump. If the PR includes other changes, request that they are removed from the PR.
+- Check that the PR description is complete and filled in according to the template at `.github/PULL_REQUEST_TEMPLATE.md`. Every section and checklist item from the template must be present, except the `## Breaking change` section which is optional. Nothing from the template should be missing. Even unchecked checkboxes or empty sections must be present. This is an hard requirement.
 
 # GitHub Copilot & Claude Code Instructions
 
@@ -54,3 +55,4 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 - Keep comments concise. Prefer one short line stating the non-obvious constraint, or no comment at all.
 - Do not add comments that just restate the code on the following line(s) (e.g. `# Check if initialized` above `if self.initialized:`). Comments should only explain why (non-obvious constraints, surprising behavior, or workarounds), never what. Never add comments that justify a change by referencing what the code looked like before.
 - Do not add section or divider comments (e.g. `# --- XYZ Triggers ---`) inside or outside of functions, since those can easily become stale and be misleading.
+- When catching exceptions, try-clauses should be as small as possible, i.e. avoid wrapping large blocks of code in a try-clause, and avoid catching exceptions from functions that are not expected to raise them.

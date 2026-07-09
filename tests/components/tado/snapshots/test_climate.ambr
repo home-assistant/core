@@ -168,7 +168,7 @@
         'medium',
         'low',
       ]),
-      'friendly_name': 'Air Conditioning',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioning',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.COOLING: 'cooling'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -189,7 +189,7 @@
         'home',
         'auto',
       ]),
-      'supported_features': <ClimateEntityFeature: 409>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 409>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 17.8,
     }),
@@ -282,7 +282,7 @@
         'auto',
         'low',
       ]),
-      'friendly_name': 'Air Conditioning with fanlevel',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioning with fanlevel',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -301,7 +301,7 @@
         'home',
         'auto',
       ]),
-      'supported_features': <ClimateEntityFeature: 441>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 441>,
       <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'both',
       <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'vertical',
@@ -399,7 +399,7 @@
         'medium',
         'low',
       ]),
-      'friendly_name': 'Air Conditioning with swing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioning with swing',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -420,7 +420,7 @@
         'home',
         'auto',
       ]),
-      'supported_features': <ClimateEntityFeature: 441>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 441>,
       <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'off',
       <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'on',
@@ -495,7 +495,7 @@
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.6,
       'default_overlay_seconds': None,
       'default_overlay_type': 'MANUAL',
-      'friendly_name': 'Baseboard Heater',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baseboard Heater',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
@@ -512,7 +512,7 @@
         'home',
         'auto',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.5,
     }),

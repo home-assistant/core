@@ -43,10 +43,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      'friendly_name': 'model0 Domestic hot water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Domestic hot water',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
-      'supported_features': <WaterHeaterEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 1>,
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: None,
@@ -103,10 +103,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
-      'friendly_name': 'model0 Domestic hot water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 Domestic hot water',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10,
-      'supported_features': <WaterHeaterEntityFeature: 1>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 1>,
       <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
       <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: None,

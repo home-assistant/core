@@ -39,10 +39,10 @@
 # name: test_all_entities[virtual_valve][valve.theater_volvo-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'volvo',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'water',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'volvo',
       <ValveEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
-      'supported_features': <ValveEntityFeature: 3>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
     'entity_id': 'valve.theater_volvo',

@@ -2,7 +2,7 @@
 # name: test_attributes_set
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'player-name1111',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'player-name1111',
       <MediaPlayerEntityStateAttribute.GROUP_MEMBERS: 'group_members'>: None,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
       'master': False,
@@ -20,7 +20,7 @@
         'input3',
         '4',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 720445>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 720445>,
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.1,
     }),
     'context': <ANY>,
