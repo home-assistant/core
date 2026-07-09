@@ -69,7 +69,7 @@ async def test_adam_water_heater_setpoint_change(
         },
         blocking=True,
     )
-    assert mock_smile_adam_jip.set_number.call_count == 1
+    assert mock_smile_adam_jip.set_number.call_count == 2
     mock_smile_adam_jip.set_number.assert_called_with(
         "e4684553153b44afbef2200885f379dc",
         "boiler_temperature",
