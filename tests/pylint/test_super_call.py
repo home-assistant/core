@@ -264,7 +264,7 @@ def test_enforce_super_call(
             x = 3
     """,
             1,
-            id="added_to_no_super_call",
+            id="async_added_to_no_super_call",
         ),
         pytest.param(
             """
@@ -277,7 +277,7 @@ def test_enforce_super_call(
             x = 3
     """,
             1,
-            id="will_remove_from_no_super_call",
+            id="async_will_remove_from_no_super_call",
         ),
         pytest.param(
             """
