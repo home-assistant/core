@@ -1,4 +1,4 @@
-"""DVLA sensor platform."""
+"""DVLA calendar platform."""
 
 from datetime import date, datetime
 import hashlib
@@ -10,13 +10,26 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_CALENDARS, CONF_REG_NUMBER, DOMAIN
 from .coordinator import DVLACoordinator
+
+CALENDAR_DATE_KEYS: tuple[str, ...] = (
+    "taxDueDate",
+    "artEndDate",
+    "motExpiryDate",
+    "dateOfLastV5CIssued",
+)
+
+CALENDAR_EVENT_NAMES: dict[str, str] = {
+    "taxDueDate": "Tax due date",
+    "artEndDate": "Additional rate of tax end date",
+    "motExpiryDate": "M.O.T expiry date",
+    "dateOfLastV5CIssued": "Date of last V5C issued",
+}
 
 
 async def async_setup_entry(
@@ -34,26 +47,9 @@ async def async_setup_entry(
 
     calendars = entry.data.get(CONF_CALENDARS, {})
 
-    session = async_get_clientsession(hass)
-    coordinator = DVLACoordinator(
-        hass,
-        entry,
-        session,
-        entry.data[CONF_REG_NUMBER],
-    )
+    coordinator: DVLACoordinator = config["coordinator"]
 
-    await coordinator.async_refresh()
-
-    schema = config.get("schema", {})
-    vehicle_properties = cast(
-        dict[str, dict[str, Any]],
-        schema.get("components", {})
-        .get("schemas", {})
-        .get("Vehicle", {})
-        .get("properties", {}),
-    )
-
-    sensors = [DVLACalendarSensor(coordinator, reg_number, vehicle_properties)]
+    sensors = [DVLACalendarSensor(coordinator, reg_number)]
 
     for calendar in calendars:
         if calendar != "None":
@@ -194,7 +190,7 @@ async def add_to_calendar(
 
 
 class DVLACalendarSensor(CoordinatorEntity[DVLACoordinator], CalendarEntity):
-    """Define an DVLA sensor."""
+    """Define a DVLA calendar entity."""
 
     _attr_has_entity_name = True
 
@@ -202,7 +198,6 @@ class DVLACalendarSensor(CoordinatorEntity[DVLACoordinator], CalendarEntity):
         self,
         coordinator: DVLACoordinator,
         reg_number: str,
-        vehicle_properties: dict[str, Any],
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -216,7 +211,6 @@ class DVLACalendarSensor(CoordinatorEntity[DVLACoordinator], CalendarEntity):
         self._attr_unique_id = reg_number.lower()
         self._attr_name = f"{DOMAIN} - {reg_number}".upper()
         self.reg_number = reg_number
-        self.vehicle_properties = vehicle_properties
 
     @property
     @override
@@ -236,10 +230,7 @@ class DVLACalendarSensor(CoordinatorEntity[DVLACoordinator], CalendarEntity):
     def get_events(self, start_date: datetime, reg_number: str) -> list[CalendarEvent]:
         """Return calendar events."""
         events = []
-        for key, prop in self.vehicle_properties.items():
-            if prop.get("format") != "date" and key != "motExpiryDate":
-                continue
-
+        for key in CALENDAR_DATE_KEYS:
             raw_value = self.coordinator.data.get(key)
             if not raw_value:
                 continue
@@ -250,8 +241,7 @@ class DVLACalendarSensor(CoordinatorEntity[DVLACoordinator], CalendarEntity):
                 continue
 
             if value >= start_date.date():
-                name = key.replace("_", " ").title()
-                event_name = f"{name} - {reg_number}"
+                event_name = f"{CALENDAR_EVENT_NAMES[key]} - {reg_number}"
                 events.append(CalendarEvent(value, value, event_name))
         return events
 

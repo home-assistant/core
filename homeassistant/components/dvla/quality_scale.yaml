@@ -2,9 +2,7 @@ rules:
   # Bronze
   action-setup: done
   appropriate-polling: done
-  brands:
-    status: exempt
-    comment: DVLA is a government service and no redistributable brand asset is included.
+  brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
@@ -32,10 +30,8 @@ rules:
   # Silver
   action-exceptions:
     status: todo
-    comment: Service exception handling should be reviewed before claiming Silver.
-  config-entry-unloading:
-    status: todo
-    comment: Config entry unload support should be added before claiming Silver.
+    comment: Action exception handling should be reviewed before claiming Silver.
+  config-entry-unloading: done
   docs-configuration-parameters:
     status: todo
     comment: Documentation needs to describe configuration parameters before claiming Silver.
@@ -84,8 +80,8 @@ rules:
     status: todo
     comment: Documentation should describe DVLA API rate limits and availability.
   docs-supported-devices:
-    status: done
-    comment: Documentation still needs to describe supported vehicles.
+    status: todo
+    comment: Documentation should describe supported vehicles before claiming Gold.
   docs-supported-functions:
     status: todo
     comment: Documentation should list supported entities and service actions.

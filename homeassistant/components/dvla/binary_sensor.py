@@ -1,7 +1,7 @@
 """DVLA binary sensor platform."""
 
 from dataclasses import dataclass
-from typing import Any, cast, override
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -43,6 +42,19 @@ ENTITY_METADATA = {
     "markedForExport": {"icon": "mdi:shipping-pallet", "title": "Marked for Export"},
     "automatedVehicle": {"icon": "mdi:car-connected"},
 }
+BINARY_SENSOR_KEYS: tuple[str, ...] = (
+    "taxStatus",
+    "motStatus",
+    "markedForExport",
+    "automatedVehicle",
+)
+
+ENTITY_DESCRIPTIONS: dict[str, str] = {
+    "taxStatus": "Taxed",
+    "motStatus": "M.O.T valid",
+    "markedForExport": "Marked for export",
+    "automatedVehicle": "Automated vehicle",
+}
 
 
 async def async_setup_entry(
@@ -52,65 +64,34 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors from a config entry created in the integrations UI."""
     config = entry.runtime_data
-    schema = config.get("schema", {})
-    vehicle_properties = cast(
-        dict[str, dict[str, Any]],
-        schema.get("components", {})
-        .get("schemas", {})
-        .get("Vehicle", {})
-        .get("properties", {}),
-    )
 
-    session = async_get_clientsession(hass)
-    coordinator = DVLACoordinator(
-        hass,
-        entry,
-        session,
-        entry.data[CONF_REG_NUMBER],
-    )
-
-    await coordinator.async_refresh()
+    coordinator: DVLACoordinator = config["coordinator"]
 
     name = entry.data[CONF_REG_NUMBER]
 
     sensors = []
 
-    for key, prop in vehicle_properties.items():
-        metadata: dict[str, Any] = ENTITY_METADATA.get(key, {})
-
-        # Only create binary sensors for booleans OR if we have explicit metadata (like taxStatus)
-        if prop.get("type") != "boolean" and not metadata:
+    for key in BINARY_SENSOR_KEYS:
+        if key not in coordinator.data:
             continue
 
-        # Special case: if it's not a boolean in the schema but we want it as a binary sensor
-        # (e.g. taxStatus/motStatus which are strings in schema but binary here)
-        # we need to make sure we don't duplicate if the sensor platform also picks it up.
-        # Actually, in the current design, taxStatus is both a sensor (string) and binary_sensor (bool).
-
-        on_value: str | bool = True
-        off_value: str | bool = False
-        if metadata:
-            on_value = metadata.get("on_value", True)
-            off_value = metadata.get("off_value", False)
+        metadata: dict[str, Any] = ENTITY_METADATA.get(key, {})
 
         description = DVLABinarySensorEntityDescription(
             key=key,
-            name=metadata.get(
-                "title", prop.get("title", key.replace("_", " ").title())
-            ),
+            name=metadata.get("title", ENTITY_DESCRIPTIONS[key]),
             icon=metadata.get("icon", "mdi:car"),
-            on_value=on_value,
-            off_value=off_value,
+            on_value=metadata.get("on_value", True),
+            off_value=metadata.get("off_value", False),
         )
 
-        if key in coordinator.data:
-            sensors.append(DVLABinarySensor(coordinator, name, description))
+        sensors.append(DVLABinarySensor(coordinator, name, description))
 
     async_add_entities(sensors, update_before_add=True)
 
 
 class DVLABinarySensor(CoordinatorEntity[DVLACoordinator], BinarySensorEntity):
-    """Define an DVLA sensor."""
+    """Define a DVLA binary sensor."""
 
     _attr_has_entity_name = True
 

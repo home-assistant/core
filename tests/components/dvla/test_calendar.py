@@ -150,8 +150,8 @@ async def test_calendar_returns_date_events(hass: HomeAssistant) -> None:
         "2026-05-10",
     }
     assert {event["summary"] for event in events} == {
-        "Taxduedate - AB12CDE",
-        "Motexpirydate - AB12CDE",
+        "Tax due date - AB12CDE",
+        "M.O.T expiry date - AB12CDE",
     }
 
 
@@ -176,7 +176,7 @@ async def test_calendar_filters_events_by_date_range(hass: HomeAssistant) -> Non
 
     assert len(events) == 1
     assert events[0]["start"] == "2026-03-01"
-    assert events[0]["summary"] == "Taxduedate - AB12CDE"
+    assert events[0]["summary"] == "Tax due date - AB12CDE"
 
 
 async def test_calendar_ignores_past_invalid_and_non_date_values(
@@ -204,4 +204,4 @@ async def test_calendar_ignores_past_invalid_and_non_date_values(
 
     assert len(events) == 1
     assert events[0]["start"] == "2026-06-01"
-    assert events[0]["summary"] == "Dateoflastv5Cissued - AB12CDE"
+    assert events[0]["summary"] == "Date of last V5C issued - AB12CDE"

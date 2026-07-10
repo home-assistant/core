@@ -14,7 +14,16 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import API_KEY, ATTR_REG_NUMBER, DOMAIN, HOST, SCHEMA_URL, SERVICE_LOOKUP
+from .const import (
+    API_KEY,
+    ATTR_REG_NUMBER,
+    CONF_REG_NUMBER,
+    DOMAIN,
+    HOST,
+    SCHEMA_URL,
+    SERVICE_LOOKUP,
+)
+from .coordinator import DVLACoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -104,9 +113,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
 
     schema = await async_get_schema(hass)
+    session = async_get_clientsession(hass)
+
+    coordinator = DVLACoordinator(
+        hass,
+        entry,
+        session,
+        entry.data[CONF_REG_NUMBER],
+    )
+    await coordinator.async_config_entry_first_refresh()
 
     hass_data = dict(entry.data)
     hass_data["schema"] = schema
+    hass_data["coordinator"] = coordinator
 
     # Registers update listener to update config entry when options are updated.
     unsub_options_update_listener = entry.add_update_listener(options_update_listener)

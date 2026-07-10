@@ -2,7 +2,7 @@
 
 from contextlib import suppress
 from datetime import date
-from typing import Any, cast, override
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfMass
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -74,6 +73,50 @@ ENTITY_METADATA: dict[str, dict[str, Any]] = {
     },
     "euroStatus": {"icon": "mdi:currency-eur", "title": "Euro Status"},
 }
+SENSOR_KEYS: tuple[str, ...] = (
+    "registrationNumber",
+    "taxStatus",
+    "taxDueDate",
+    "artEndDate",
+    "motStatus",
+    "make",
+    "yearOfManufacture",
+    "engineCapacity",
+    "co2Emissions",
+    "fuelType",
+    "colour",
+    "typeApproval",
+    "revenueWeight",
+    "dateOfLastV5CIssued",
+    "motExpiryDate",
+    "wheelplan",
+    "monthOfFirstRegistration",
+    "monthOfFirstDvlaRegistration",
+    "realDrivingEmissions",
+    "euroStatus",
+)
+ENTITY_DESCRIPTIONS: dict[str, str] = {
+    "registrationNumber": "Registration number",
+    "taxStatus": "Tax status",
+    "taxDueDate": "Tax due date",
+    "artEndDate": "Additional rate of tax end date",
+    "motStatus": "M.O.T status",
+    "make": "Make",
+    "yearOfManufacture": "Year of manufacture",
+    "engineCapacity": "Engine capacity",
+    "co2Emissions": "CO2 emissions",
+    "fuelType": "Fuel type",
+    "colour": "Colour",
+    "typeApproval": "Type approval",
+    "revenueWeight": "Revenue weight",
+    "dateOfLastV5CIssued": "Date of last V5C issued",
+    "motExpiryDate": "M.O.T expiry date",
+    "wheelplan": "Wheelplan",
+    "monthOfFirstRegistration": "Month of first registration",
+    "monthOfFirstDvlaRegistration": "Month of first DVLA registration",
+    "realDrivingEmissions": "Real driving emissions",
+    "euroStatus": "Euro status",
+}
 
 
 async def async_setup_entry(
@@ -83,72 +126,32 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors from a config entry created in the integrations UI."""
     config = entry.runtime_data
-    schema = config.get("schema", {})
-    vehicle_properties = cast(
-        dict[str, dict[str, Any]],
-        schema.get("components", {})
-        .get("schemas", {})
-        .get("Vehicle", {})
-        .get("properties", {}),
-    )
 
-    session = async_get_clientsession(hass)
-    coordinator = DVLACoordinator(
-        hass,
-        entry,
-        session,
-        entry.data[CONF_REG_NUMBER],
-    )
-
-    await coordinator.async_refresh()
-
+    coordinator: DVLACoordinator = config["coordinator"]
     name = entry.data[CONF_REG_NUMBER]
 
     sensors: list[DVLASensor] = []
 
-    for key, prop in vehicle_properties.items():
-        if prop.get("type") == "boolean":
+    for key in SENSOR_KEYS:
+        if key not in coordinator.data and key != "motExpiryDate":
             continue
-
-        # Skip keys that are handled by binary sensors or specifically excluded
-        # (Though most strings/integers go here)
 
         metadata = ENTITY_METADATA.get(key, {})
 
-        # Use metadata device_class if it exists (even if it is None)
-        if "device_class" in metadata:
-            device_class = metadata["device_class"]
-        elif prop.get("format") == "date":
-            device_class = SensorDeviceClass.DATE
-        else:
-            device_class = None
-
-        unit = metadata.get("native_unit_of_measurement")
-        # Try to extract unit from description if not in metadata
-        description_text = prop.get("description", "")
-        if not unit:
-            if "cubic centimetres" in description_text:
-                unit = "cc"
-            elif "grams per kilometre" in description_text:
-                unit = "g/km"
-            elif "kilograms" in description_text:
-                unit = UnitOfMass.KILOGRAMS
-
         description = SensorEntityDescription(
             key=key,
-            name=metadata.get("title", prop.get("description", "")),
+            name=metadata.get("title", ENTITY_DESCRIPTIONS[key]),
             icon=metadata.get("icon", "mdi:car"),
-            device_class=device_class,
-            native_unit_of_measurement=unit,
+            device_class=metadata.get("device_class"),
+            native_unit_of_measurement=metadata.get("native_unit_of_measurement"),
         )
 
-        if key in coordinator.data or key == "motExpiryDate":
-            sensors.append(DVLASensor(coordinator, name, description))
+        sensors.append(DVLASensor(coordinator, name, description))
     async_add_entities(sensors, update_before_add=True)
 
 
 class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
-    """Define an DVLA sensor."""
+    """Define a DVLA sensor."""
 
     _attr_has_entity_name = True
 

@@ -93,6 +93,14 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             "homeassistant.components.dvla.async_get_schema",
             return_value=MOCK_SCHEMA,
         ),
+        patch(
+            "homeassistant.components.dvla.coordinator.DVLACoordinator._async_update_data",
+            return_value={
+                "registrationNumber": "AB12CDE",
+                "make": "FORD",
+                "taxStatus": "Taxed",
+            },
+        ),
         patch.object(
             hass.config_entries,
             "async_forward_entry_setups",
@@ -104,6 +112,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.runtime_data["schema"] == MOCK_SCHEMA
+    assert entry.runtime_data["coordinator"] is not None
     mock_forward_entry_setups.assert_called_once()
 
 
@@ -123,6 +132,14 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.dvla.async_get_schema",
             return_value=MOCK_SCHEMA,
+        ),
+        patch(
+            "homeassistant.components.dvla.coordinator.DVLACoordinator._async_update_data",
+            return_value={
+                "registrationNumber": "AB12CDE",
+                "make": "FORD",
+                "taxStatus": "Taxed",
+            },
         ),
         patch.object(
             hass.config_entries,

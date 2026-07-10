@@ -160,14 +160,6 @@ class ConfigFlow(ConfigFlowBase, domain=DOMAIN):
         user_input[CONF_REG_NUMBER] = reg_number
 
         if user_input:
-            entries = self.hass.config_entries.async_entries(DOMAIN)
-
-            if any(
-                entry.data.get(CONF_REG_NUMBER) == user_input.get(CONF_REG_NUMBER)
-                for entry in entries
-            ):
-                errors["base"] = "vehicle_exists"
-
             if not user_input.get(CONF_CALENDARS):
                 errors["base"] = "no_calendar_selected"
 
