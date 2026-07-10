@@ -170,7 +170,11 @@ def _month_aware_reset_scheduler(
                 microsecond=0,
             )
         )
-        if candidate > current:
+        if (
+            candidate > current
+            if candidate.tzinfo is None
+            else candidate.astimezone(UTC) > current.astimezone(UTC)
+        ):
             yield candidate
             current = candidate
 
