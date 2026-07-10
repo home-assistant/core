@@ -603,7 +603,6 @@ class OptionsFlowHandler(OptionsFlow):
         """Choose entities to include from the domain on the bridge."""
         hk_options = self.hk_options
         domains = hk_options[CONF_DOMAINS]
-        entity_filter: EntityFilterDict
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
             entity_filter = _async_build_entities_filter(domains, entities)

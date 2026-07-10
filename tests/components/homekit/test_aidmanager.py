@@ -692,7 +692,7 @@ async def test_entity_is_allocated(
     assert aid_storage.entity_is_allocated(light_ent.entity_id)
 
 
-async def test_record_heater_cooler_round_trip(hass: HomeAssistant) -> None:
+async def test_set_heater_cooler_round_trip(hass: HomeAssistant) -> None:
     """Test the heater cooler routing choice persists through storage."""
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -700,9 +700,21 @@ async def test_record_heater_cooler_round_trip(hass: HomeAssistant) -> None:
     await aid_storage.async_initialize()
     assert "climate.demo" not in aid_storage.heater_cooler_entities
 
-    aid_storage.record_heater_cooler("climate.demo")
+    # Setting the current value again is a no-op
+    aid_storage.async_set_heater_cooler("climate.demo", False)
+    assert "climate.demo" not in aid_storage.heater_cooler_entities
+
+    aid_storage.async_set_heater_cooler("climate.demo", True)
+    aid_storage.async_set_heater_cooler("climate.demo", True)
     await aid_storage.async_save()
 
     fresh_storage = AccessoryAidStorage(hass, config_entry.entry_id)
     await fresh_storage.async_initialize()
     assert "climate.demo" in fresh_storage.heater_cooler_entities
+
+    fresh_storage.async_set_heater_cooler("climate.demo", False)
+    await fresh_storage.async_save()
+
+    final_storage = AccessoryAidStorage(hass, config_entry.entry_id)
+    await final_storage.async_initialize()
+    assert "climate.demo" not in final_storage.heater_cooler_entities

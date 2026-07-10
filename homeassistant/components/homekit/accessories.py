@@ -176,13 +176,8 @@ def get_accessory(  # noqa: C901
         a_type = "BinarySensor"
 
     elif state.domain == "climate":
-        # The type is resolved by the bridge before the accessory is created:
-        # explicit entity config wins, entities never bridged before get the
-        # HeaterCooler when capable, and everything else is a Thermostat.
-        if climate_type := config.get(CONF_TYPE):
-            a_type = CLIMATE_TYPES[climate_type]
-        else:
-            a_type = "Thermostat"
+        # The type is resolved by the bridge before the accessory is created.
+        a_type = CLIMATE_TYPES[config.get(CONF_TYPE, TYPE_THERMOSTAT)]
 
     elif state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)

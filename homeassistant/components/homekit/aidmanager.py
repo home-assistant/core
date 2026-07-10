@@ -88,13 +88,20 @@ class AccessoryAidStorage:
         self.allocated_aids = set(self.allocations.values())
         self.heater_cooler_entities = set(raw_storage.get(HEATER_COOLER_KEY, []))
 
-    def record_heater_cooler(self, entity_id: str) -> None:
-        """Persist that an entity was routed to the HeaterCooler accessory.
+    @callback
+    def async_set_heater_cooler(self, entity_id: str, heater_cooler: bool) -> None:
+        """Persist whether an entity is routed to the HeaterCooler accessory.
 
-        The automatic choice only applies the first time an entity is bridged,
-        so it is written down to survive restarts.
+        The routing choice must survive restarts, since the automatic pick
+        only applies the first time an entity is bridged.
         """
-        self.heater_cooler_entities.add(entity_id)
+        entities = self.heater_cooler_entities
+        if heater_cooler == (entity_id in entities):
+            return
+        if heater_cooler:
+            entities.add(entity_id)
+        else:
+            entities.discard(entity_id)
         self.async_schedule_save()
 
     def get_or_allocate_aid_for_entity_id(self, entity_id: str) -> int:

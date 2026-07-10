@@ -59,6 +59,7 @@ from homeassistant.core import (
     ServiceCall,
     State,
     callback,
+    split_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import (
@@ -696,6 +697,8 @@ class HomeKit:
             self.driver.accessory = new_acc
             new_acc.run()
             self._async_update_accessories_hash()
+            if state.domain == CLIMATE_DOMAIN:
+                self._async_update_heater_cooler_issues()
 
     def _async_remove_accessories_by_entity_id(
         self, entity_ids: Iterable[str]
@@ -741,9 +744,10 @@ class HomeKit:
     ) -> None:
         """Recreate removed accessories in bridge mode."""
         for entity_id in removed:
-            # Eligibility is re-evaluated when the accessory is recreated.
-            self._heater_cooler_candidates.pop(entity_id, None)
             if not (state := self.hass.states.get(entity_id)):
+                # A gone entity never reaches the resolver, so drop its
+                # candidacy here.
+                self._heater_cooler_candidates.pop(entity_id, None)
                 _LOGGER.warning(
                     "The underlying entity %s disappeared during reload", entity_id
                 )
@@ -751,7 +755,10 @@ class HomeKit:
             if acc := self.add_bridge_accessory(state):
                 acc.run()
         self._async_update_accessories_hash()
-        self._async_update_heater_cooler_issues()
+        if any(
+            split_entity_id(entity_id)[0] == CLIMATE_DOMAIN for entity_id in removed
+        ):
+            self._async_update_heater_cooler_issues()
 
     @callback
     def _async_update_accessories_hash(self) -> bool:
@@ -794,10 +801,9 @@ class HomeKit:
         assert self.aid_storage is not None
         assert self.bridge is not None
         conf = self._config.get(state.entity_id, {}).copy()
-        if state.domain == CLIMATE_DOMAIN:
-            # Must run before the aid is allocated below so a never bridged
-            # entity is still recognizable as new.
-            self._async_resolve_climate_type(state, conf, allow_auto=True)
+        # Must run before the aid is allocated below so a never bridged
+        # entity is still recognizable as new.
+        self._async_resolve_climate_type(state, conf, allow_auto=True)
         aid = self.aid_storage.get_or_allocate_aid_for_entity_id(state.entity_id)
         # If an accessory cannot be created or added due to an exception
         # of any kind (usually in pyhap) it should not prevent
@@ -819,23 +825,32 @@ class HomeKit:
     ) -> None:
         """Resolve which accessory a climate entity uses.
 
-        An explicit type in the entity config always wins. In bridge mode an
-        entity that has never been bridged gets the HeaterCooler when capable,
-        and the choice is written down so it survives restarts. Anything else
-        keeps the Thermostat and is tracked as a repair candidate.
+        An explicit type in the entity config always wins and updates the
+        stored routing, so switching back to automatic keeps the accessory
+        the entity already uses. In bridge mode an entity that has never been
+        bridged gets the HeaterCooler when capable, and the choice is written
+        down so it survives restarts. Anything else keeps the Thermostat and
+        is tracked as a repair candidate.
         """
-        if CONF_TYPE in conf:
+        if state.domain != CLIMATE_DOMAIN:
             return
         aid_storage = self.aid_storage
         assert aid_storage is not None
         entity_id = state.entity_id
+        # Candidacy is re-evaluated on every resolve
+        self._heater_cooler_candidates.pop(entity_id, None)
+        if climate_type := conf.get(CONF_TYPE):
+            aid_storage.async_set_heater_cooler(
+                entity_id, climate_type == TYPE_HEATER_COOLER
+            )
+            return
         if entity_id in aid_storage.heater_cooler_entities:
             conf[CONF_TYPE] = TYPE_HEATER_COOLER
             return
         if not climate_supports_heater_cooler(state):
             return
         if allow_auto and not aid_storage.entity_is_allocated(entity_id):
-            aid_storage.record_heater_cooler(entity_id)
+            aid_storage.async_set_heater_cooler(entity_id, True)
             conf[CONF_TYPE] = TYPE_HEATER_COOLER
             return
         self._heater_cooler_candidates[entity_id] = state.name
@@ -1071,10 +1086,9 @@ class HomeKit:
             return None
         state = entity_states[0]
         conf = self._config.get(state.entity_id, {}).copy()
-        if state.domain == CLIMATE_DOMAIN:
-            # Accessory mode has no aid allocation to tell new from existing,
-            # so the entity keeps the Thermostat and is offered the repair.
-            self._async_resolve_climate_type(state, conf, allow_auto=False)
+        # Accessory mode has no aid allocation to tell new from existing,
+        # so the entity keeps the Thermostat and is offered the repair.
+        self._async_resolve_climate_type(state, conf, allow_auto=False)
         acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
         if acc is None:
             _LOGGER.error(
@@ -1169,18 +1183,17 @@ class HomeKit:
         if entry is None or entry.source == SOURCE_IMPORT:
             _async_delete_heater_cooler_issues(self.hass, self._entry_id)
             return
-        issues = {
-            _heater_cooler_issue_id(self._entry_id, entity_id): (entity_id, name)
-            for entity_id, name in self._heater_cooler_candidates.items()
+        candidates = self._heater_cooler_candidates
+        keep = {
+            _heater_cooler_issue_id(self._entry_id, entity_id)
+            for entity_id in candidates
         }
-        _async_delete_heater_cooler_issues(
-            self.hass, self._entry_id, keep=issues.keys()
-        )
-        for issue_id, (entity_id, name) in issues.items():
+        _async_delete_heater_cooler_issues(self.hass, self._entry_id, keep=keep)
+        for entity_id, name in candidates.items():
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
-                issue_id,
+                _heater_cooler_issue_id(self._entry_id, entity_id),
                 is_fixable=True,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key=ISSUE_HEATER_COOLER_CANDIDATE,
