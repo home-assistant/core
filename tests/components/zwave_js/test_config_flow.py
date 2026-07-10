@@ -1694,6 +1694,45 @@ async def test_esphome_discovery_migration(
     assert not hass.config_entries.flow.async_progress()
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
+async def test_esphome_discovery_repairs_addon_socket_drift(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+    addon_options: dict[str, Any],
+) -> None:
+    """Test rediscovery repairs an externally repointed add-on socket."""
+    addon_options[CONF_ADDON_SOCKET] = "esphome://other-device:6053"
+
+    entry = MockConfigEntry(
+        entry_id="mock-entry-id",
+        domain=DOMAIN,
+        data={
+            CONF_SOCKET_PATH: "esphome://192.168.1.100:6053",
+            "use_addon": True,
+            "integration_created_addon": True,
+        },
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ESPHOME},
+            data=ESPHOME_DISCOVERY_INFO,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # The add-on config is repaired and the entry reloaded.
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(config={CONF_ADDON_SOCKET: "esphome://192.168.1.100:6053"}),
+    )
+    mock_reload.assert_called_once_with(entry.entry_id)
+
+
 @pytest.mark.usefixtures("supervisor", "addon_running")
 @pytest.mark.parametrize(
     ("esphome_discovery_info", "ignored_unique_id"),
@@ -2648,16 +2687,12 @@ async def test_addon_already_configured_during_flow(
         result["flow_id"], {"network_type": "new"}
     )
 
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "start_addon"
-
-    await hass.async_block_till_done()
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    await hass.async_block_till_done()
-
+    # The flow aborts before the add-on config of the new entry is touched.
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_already_configured"
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    set_addon_options.assert_not_called()
+    start_addon.assert_not_called()
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
@@ -6030,6 +6065,59 @@ async def test_create_entry_spares_migration_flow(
         for flow in hass.config_entries.flow.async_progress()
     )
     hass.config_entries.flow.async_abort(migration_flow_id)
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+async def test_reconfigure_abandoned_restores_addon_config(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test an abandoned flow restores the add-on config it changed."""
+    addon_options.update({"device": "/test", "s0_legacy_key": "old123"})
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="1234", data={**entry.data, "use_addon": True}
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "usb_path": "/new",
+            "s0_legacy_key": "old123",
+        },
+    )
+
+    assert set_addon_options.call_count == 1
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+    # The user closes the dialog instead of waiting for the restart.
+    with patch(
+        "homeassistant.components.zwave_js.async_setup_entry", return_value=True
+    ):
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        await hass.async_block_till_done()
+
+    # The add-on config the flow changed is restored before the reload.
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(config={"device": "/test", "s0_legacy_key": "old123"}),
+    )
+    assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed")
