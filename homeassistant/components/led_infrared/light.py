@@ -16,13 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_DEVICE_TYPE,
-    CONF_INFRARED_ENTITY_ID,
-    SUPPORTED_COLORS,
-    SUPPORTED_EFFECTS,
-    LEDIrDeviceType,
-)
+from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, LEDIrDeviceType
 from .entity import LEDIrEntity
 
 PARALLEL_UPDATES = 1
@@ -30,6 +24,43 @@ PARALLEL_UPDATES = 1
 CODES = {
     LEDIrDeviceType.GENERIC_24_KEY: TweenLightLEDStripCode,
     LEDIrDeviceType.GENERIC_13_KEY: Generic13KeyCode,
+}
+
+
+SUPPORTED_EFFECTS = {
+    LEDIrDeviceType.GENERIC_24_KEY: ["flash", "strobe", "fade", "smooth"],
+    LEDIrDeviceType.GENERIC_13_KEY: [
+        "mode_1",
+        "mode_2",
+        "mode_3",
+        "mode_4",
+        "mode_5",
+        "mode_6",
+        "mode_7",
+        "mode_8",
+    ],
+}
+
+
+SUPPORTED_COLORS = {
+    LEDIrDeviceType.GENERIC_24_KEY: [
+        "red",
+        "green",
+        "blue",
+        "white",
+        "tomato",
+        "light_green",
+        "sky_blue",
+        "orange_red",
+        "cyan",
+        "rebecca_purple",
+        "orange",
+        "turquoise",
+        "purple",
+        "yellow",
+        "dark_cyan",
+        "plum",
+    ],
 }
 
 

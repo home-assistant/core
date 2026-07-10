@@ -5,21 +5,19 @@
       "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
     },
     "error": {
-      "missing_infrared_entity": "Select an infrared emitter or receiver."
+      "missing_infrared_entity": "Select an infrared emitter."
     },
     "step": {
       "user": {
         "data": {
           "device_type": "[%key:common::generic::device_type%]",
-          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
-          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
         },
         "data_description": {
           "device_type": "The type of remote control used for the LED light bulb, lamp, or controller.",
-          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
-          "infrared_receiver_entity_id": "The infrared receiver entity to use for receiving signals."
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
         },
-        "description": "Select the device type and at least one infrared emitter or receiver. You can identify the correct device based on the remote control used. Please refer to the [documentation]({docs_url}).",
+        "description": "Select the device type and an infrared emitter. You can identify the correct device based on the remote control used. Please refer to the [documentation]({docs_url}).",
         "title": "Set up LED Infrared device"
       }
     }

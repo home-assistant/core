@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant.components.infrared import (
     DOMAIN as INFRARED_DOMAIN,
     async_get_emitters,
-    async_get_receivers,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import entity_registry as er
@@ -19,13 +18,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import (
-    CONF_DEVICE_TYPE,
-    CONF_INFRARED_ENTITY_ID,
-    CONF_INFRARED_RECEIVER_ENTITY_ID,
-    DOMAIN,
-    LEDIrDeviceType,
-)
+from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DOMAIN, LEDIrDeviceType
 
 
 class LEDIrConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -38,29 +31,20 @@ class LEDIrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         emitter_entity_ids = async_get_emitters(self.hass)
-        receiver_entity_ids = async_get_receivers(self.hass)
-        if not emitter_entity_ids and not receiver_entity_ids:
+        if not emitter_entity_ids:
             return self.async_abort(reason="no_infrared_entities")
 
         if user_input is not None:
             emitter_id = user_input.get(CONF_INFRARED_ENTITY_ID)
-            receiver_id = user_input.get(CONF_INFRARED_RECEIVER_ENTITY_ID)
-            if emitter_id or receiver_id:
-                if emitter_id:
-                    self._async_abort_entries_match(
-                        {
-                            CONF_DEVICE_TYPE: user_input[CONF_DEVICE_TYPE],
-                            CONF_INFRARED_ENTITY_ID: emitter_id,
-                        }
-                    )
-                if receiver_id:
-                    self._async_abort_entries_match(
-                        {
-                            CONF_DEVICE_TYPE: user_input[CONF_DEVICE_TYPE],
-                            CONF_INFRARED_RECEIVER_ENTITY_ID: receiver_id,
-                        }
-                    )
-                title_entity_id = emitter_id or receiver_id
+            if emitter_id:
+                self._async_abort_entries_match(
+                    {
+                        CONF_DEVICE_TYPE: user_input[CONF_DEVICE_TYPE],
+                        CONF_INFRARED_ENTITY_ID: emitter_id,
+                    }
+                )
+
+                title_entity_id = emitter_id
                 if TYPE_CHECKING:
                     assert title_entity_id is not None
                 ent_reg = er.async_get(self.hass)
@@ -94,12 +78,6 @@ class LEDIrConfigFlow(ConfigFlow, domain=DOMAIN):
                         EntitySelectorConfig(
                             domain=INFRARED_DOMAIN,
                             include_entities=emitter_entity_ids,
-                        )
-                    ),
-                    vol.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
-                        EntitySelectorConfig(
-                            domain=INFRARED_DOMAIN,
-                            include_entities=receiver_entity_ids,
                         )
                     ),
                 }

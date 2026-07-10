@@ -8,13 +8,12 @@ import pytest
 from homeassistant.components.led_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
-    CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
     LEDIrDeviceType,
 )
 
 from tests.common import MockConfigEntry
-from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
+from tests.components.infrared import EMITTER_ENTITY_ID
 
 
 @pytest.fixture
@@ -36,13 +35,12 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_DEVICE_TYPE: LEDIrDeviceType.GENERIC_24_KEY,
             CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
-            CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
         },
     )
 
 
-@pytest.fixture(name="led_strip_codes")
-def mock_tween_light_led_strip_code_to_command() -> Generator[None]:
+@pytest.fixture(name="infrared_codes")
+def mock_infrared_code_to_command() -> Generator[None]:
     """Patch to_command to return the code directly.
 
     This allows tests to assert on the high-level code enum value

@@ -11,7 +11,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.led_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
-    CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
     LEDIrDeviceType,
 )
@@ -27,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
+from tests.components.infrared import EMITTER_ENTITY_ID
 from tests.components.infrared.common import MockInfraredEmitterEntity
 
 
@@ -41,9 +40,7 @@ def light_only() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures(
-    "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
-)
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_setup(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -248,7 +245,7 @@ async def test_setup(
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_infrared_receiver_entity", "led_strip_codes")
+@pytest.mark.usefixtures("infrared_codes")
 async def test_light_actions(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
@@ -265,7 +262,6 @@ async def test_light_actions(
         data={
             CONF_DEVICE_TYPE: device_type,
             CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
-            CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
         },
     )
     config_entry.add_to_hass(hass)
