@@ -332,7 +332,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_audio_any",
         translation_key="audio_object_detected",
-        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_required_field="feature_flags.smart_detect_audio_types",
         ufp_public_value="is_audio_currently_detected",
         entity_registry_enabled_default=False,
     ),

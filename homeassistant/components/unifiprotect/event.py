@@ -586,7 +586,7 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectDetectionEventEntityDescription(
         key="sound_detection",
         translation_key="sound_detection",
-        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_required_field="feature_flags.smart_detect_audio_types",
         event_types=_SMART_AUDIO_EVENT_TYPES,
         ufp_public_event_type=EventType.SMART_AUDIO_DETECT,
         entity_class=ProtectDeviceDetectionEventEntity,

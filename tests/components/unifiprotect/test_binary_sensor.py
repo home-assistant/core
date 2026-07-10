@@ -74,11 +74,11 @@ async def test_binary_sensor_camera_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 6)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 7, 6)
     await remove_entities(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 0, 0)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 6)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 7, 6)
 
 
 async def test_binary_sensor_light_remove(
@@ -147,7 +147,7 @@ async def test_binary_sensor_setup_camera_all(
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 6)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 7, 6)
 
     description = EVENT_SENSORS[0]
     unique_id, entity_id = await ids_from_device_description(
@@ -688,7 +688,7 @@ async def test_binary_sensor_update_motion(
 
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 14, 12)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 13, 12)
 
     motion = next(d for d in CAMERA_SENSORS if d.key == "motion")
     _, entity_id = await ids_from_device_description(
@@ -835,7 +835,7 @@ async def test_binary_sensor_person_detected(
 
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 14, 14)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 13, 13)
 
     person = next(d for d in CAMERA_SENSORS if d.key == "smart_obj_person")
     _, entity_id = await ids_from_device_description(
@@ -984,7 +984,7 @@ async def test_binary_sensor_simultaneous_person_and_vehicle_detection(
 
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 14, 14)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 13, 13)
 
     person = next(d for d in CAMERA_SENSORS if d.key == "smart_obj_person")
     vehicle = next(d for d in CAMERA_SENSORS if d.key == "smart_obj_vehicle")
