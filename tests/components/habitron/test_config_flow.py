@@ -9,6 +9,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.habitron.config_flow import (
     KEY_HOST,
+    CannotConnect,
     ConfigFlow,
     HostNotFound,
     InvalidHost,
@@ -409,7 +410,7 @@ async def test_ssdp_discovery_confirm_handles_validate_error(
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
 ) -> None:
-    """A confirm step that fails validation aborts with ``unknown``."""
+    """A confirm step that fails validation with an unexpected error aborts."""
     discovery = SsdpServiceInfo(
         ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
         ssdp_st="urn:habitron-com:device:SmartHub:1",
@@ -424,12 +425,47 @@ async def test_ssdp_discovery_confirm_handles_validate_error(
     )
     assert result["type"] is FlowResultType.FORM
 
-    mock_habitron_client.side_effect = RuntimeError("validate fail")
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
+    with patch(
+        "homeassistant.components.habitron.config_flow.validate_input",
+        side_effect=ValueError("totally unexpected"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"
+
+
+async def test_ssdp_discovery_confirm_cannot_connect_retries(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """A briefly-offline discovered hub re-shows the confirm form to retry."""
+    discovery = SsdpServiceInfo(
+        ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
+        ssdp_st="urn:habitron-com:device:SmartHub:1",
+        ssdp_location=f"http://{MOCK_HOST}:80/desc.xml",
+        upnp={ATTR_UPNP_UDN: MOCK_UDN},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.habitron.config_flow.validate_input",
+        side_effect=CannotConnect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 # ---------- user flow exception mapping ----------

@@ -1,10 +1,12 @@
 """Tests for the Habitron sensor platform."""
 
+from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from habitron_client import Area, SmartController
 import pytest
 
+from homeassistant.components.habitron.const import DOMAIN
 from homeassistant.components.habitron.sensor import (
     AIRQUALITY_DESCRIPTION,
     ANALOG_DESCRIPTION,
@@ -37,7 +39,10 @@ from homeassistant.components.habitron.sensor import (
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from tests.common import MockConfigEntry
 
 
 def _make_module(uid: str = "MOD-1") -> MagicMock:
@@ -182,6 +187,17 @@ def test_finger_name_description_enum_options() -> None:
     assert EKEY_FINGER_NAME_DESCRIPTION.options is not None
     assert "left_pinky" in EKEY_FINGER_NAME_DESCRIPTION.options
     assert EKEY_FINGER_NAME_DESCRIPTION.state_class is None
+
+
+@pytest.mark.parametrize(
+    "description",
+    [STATUS_DESCRIPTION, EKEY_ID_DESCRIPTION, EKEY_FINGER_DESCRIPTION],
+)
+def test_categorical_descriptions_have_no_state_class(
+    description: HbtnSensorEntityDescription,
+) -> None:
+    """Categorical/identifier sensors carry no MEASUREMENT state class."""
+    assert description.state_class is None
 
 
 # ---------------------------------------------------------------------------
@@ -677,3 +693,113 @@ async def test_async_setup_entry_emits_all_sensor_types(hass: HomeAssistant) -> 
         "current",
         "voltage",
     }
+
+
+# ---------------------------------------------------------------------------
+# Per-entity area assignment for analog inputs
+# ---------------------------------------------------------------------------
+
+_ANALOG_UNIQUE_ID = "Mod_MOD-1_snsr0_analog"
+
+
+def _analog_coordinator(ain_area: int, module_area: int = 1) -> MagicMock:
+    """Build a coordinator exposing one module with a single analog input."""
+    ain = MagicMock()
+    ain.name = "AIn 1"
+    ain.nmbr = 0
+    ain.type = 3
+    ain.area = ain_area
+    mod = MagicMock(spec=SmartController)
+    mod.uid = "MOD-1"
+    mod.typ = b"\x01\x03"
+    mod.area = module_area
+    mod.sensors = []
+    mod.analogins = [ain]
+    mod.logic = []
+    mod.diags = []
+    router = MagicMock()
+    router.modules = [mod]
+    router.chan_timeouts = []
+    router.chan_currents = []
+    router.voltages = []
+    router.areas = [Area(nmbr=1, name="Living"), Area(nmbr=2, name="Kitchen")]
+    smhub = MagicMock()
+    smhub.sensors = []
+    smhub.diags = []
+    smhub.router = router
+    coordinator = MagicMock()
+    coordinator.smart_hub = smhub
+    return coordinator
+
+
+def _registering_add(
+    registry: er.EntityRegistry, entry: MockConfigEntry
+) -> Callable[[list], None]:
+    """Return an add_entities callback that registers each entity (like HA)."""
+
+    def _add(entities: list) -> None:
+        for ent in entities:
+            registry.async_get_or_create(
+                "sensor", DOMAIN, ent.unique_id, config_entry=entry
+            )
+
+    return _add
+
+
+async def test_analog_deviating_area_applied_on_first_create(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """A newly-created analog input adopts the hub's deviating area."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    entry.runtime_data = _analog_coordinator(ain_area=2, module_area=1)
+
+    await async_setup_entry(hass, entry, _registering_add(entity_registry, entry))  # pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
+
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, _ANALOG_UNIQUE_ID)
+    assert entity_id is not None
+    kitchen = area_registry.async_get_area_by_name("Kitchen")
+    assert kitchen is not None
+    assert entity_registry.async_get(entity_id).area_id == kitchen.id
+
+
+async def test_analog_deviating_area_not_overwritten_on_reload(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """On reload the user's area is preserved, not reset to the hub area."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    entry.runtime_data = _analog_coordinator(ain_area=2, module_area=1)
+
+    # Pre-seed as if from a prior run, with a user-chosen area.
+    bedroom = area_registry.async_get_or_create("Bedroom")
+    existing = entity_registry.async_get_or_create(
+        "sensor", DOMAIN, _ANALOG_UNIQUE_ID, config_entry=entry
+    )
+    entity_registry.async_update_entity(existing.entity_id, area_id=bedroom.id)
+
+    await async_setup_entry(hass, entry, _registering_add(entity_registry, entry))  # pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
+
+    assert entity_registry.async_get(existing.entity_id).area_id == bedroom.id
+
+
+@pytest.mark.parametrize("ain_area", [0, 1])
+async def test_analog_non_deviating_area_not_applied(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ain_area: int,
+) -> None:
+    """No area override for an analog input that matches its module's area."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    entry.runtime_data = _analog_coordinator(ain_area=ain_area, module_area=1)
+
+    await async_setup_entry(hass, entry, _registering_add(entity_registry, entry))  # pylint: disable=home-assistant-tests-direct-platform-async-setup-entry
+
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, _ANALOG_UNIQUE_ID)
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).area_id is None
