@@ -4,36 +4,18 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bosch_shc.const import (
-    CONF_SSL_CERTIFICATE,
-    CONF_SSL_KEY,
-    DOMAIN,
-)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from .conftest import setup_integration
 
-# Every device_helper bucket the sensor platform itself iterates over
-# (thermostats, wallthermostats, twinguards, smart_plugs, light_switches_bsm,
-# smart_plugs_compact), defaulted to empty so a test only creates entities
-# for the bucket(s) it explicitly passes.
-_EMPTY_DEVICE_BUCKETS: dict[str, list[Any]] = {
-    bucket: []
-    for bucket in (
-        "thermostats",
-        "wallthermostats",
-        "twinguards",
-        "smart_plugs",
-        "light_switches_bsm",
-        "smart_plugs_compact",
-    )
-}
+from tests.common import snapshot_platform
 
 
 def _named(name: str) -> SimpleNamespace:
@@ -41,9 +23,9 @@ def _named(name: str) -> SimpleNamespace:
     return SimpleNamespace(name=name)
 
 
-def _base_device(device_id: str, **extra: Any) -> SimpleNamespace:
+def _base_device(device_id: str, name: str, **extra: Any) -> SimpleNamespace:
     return SimpleNamespace(
-        name="Test Device",
+        name=name,
         id=device_id,
         root_device_id="test-mac",
         serial=f"serial-{device_id}",
@@ -66,6 +48,7 @@ def _thermostat_device(
 ) -> SimpleNamespace:
     return _base_device(
         device_id,
+        "Thermostat",
         temperature=temperature,
         position=position,
         valvestate=_named(valvestate),
@@ -77,7 +60,9 @@ def _wallthermostat_device(
     temperature: float = 20.0,
     humidity: float = 45.0,
 ) -> SimpleNamespace:
-    return _base_device(device_id, temperature=temperature, humidity=humidity)
+    return _base_device(
+        device_id, "Wall Thermostat", temperature=temperature, humidity=humidity
+    )
 
 
 def _twinguard_device(
@@ -93,6 +78,7 @@ def _twinguard_device(
 ) -> SimpleNamespace:
     return _base_device(
         device_id,
+        "Twinguard",
         temperature=temperature,
         humidity=humidity,
         purity=purity,
@@ -111,6 +97,20 @@ def _smart_plug_device(
 ) -> SimpleNamespace:
     return _base_device(
         device_id,
+        "Smart Plug",
+        powerconsumption=powerconsumption,
+        energyconsumption=energyconsumption,
+    )
+
+
+def _light_switch_device(
+    device_id: str = "hdm:HomeMaticIP:lightswitch1",
+    powerconsumption: float = 6.0,
+    energyconsumption: float = 900.0,
+) -> SimpleNamespace:
+    return _base_device(
+        device_id,
+        "Light Switch",
         powerconsumption=powerconsumption,
         energyconsumption=energyconsumption,
     )
@@ -124,178 +124,35 @@ def _smart_plug_compact_device(
 ) -> SimpleNamespace:
     return _base_device(
         device_id,
+        "Smart Plug Compact",
         powerconsumption=powerconsumption,
         energyconsumption=energyconsumption,
         communicationquality=_named(communicationquality),
     )
 
 
-async def _setup_sensor_integration(
-    hass: HomeAssistant, **device_buckets: list[SimpleNamespace]
-) -> MockConfigEntry:
-    """Set up bosch_shc with the given device_helper buckets, via a mocked session."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "1.1.1.1",
-            CONF_SSL_CERTIFICATE: "cert",
-            CONF_SSL_KEY: "key",
-        },
-        unique_id="test-mac",
-    )
-    entry.add_to_hass(hass)
-
-    mock_session = MagicMock()
-    mock_session.information.unique_id = "test-mac"
-    mock_session.information.updateState.name = "UP_TO_DATE"
-    mock_session.information.version = "2.0"
-    mock_session.device_helper = SimpleNamespace(
-        **{**_EMPTY_DEVICE_BUCKETS, **device_buckets}
-    )
-
-    with (
-        patch(
-            "homeassistant.components.bosch_shc.SHCSession", return_value=mock_session
-        ),
-        patch("homeassistant.components.bosch_shc.PLATFORMS", [Platform.SENSOR]),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    return entry
-
-
-async def test_thermostat_creates_temperature_and_valve_sensors(
+async def test_entities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """A thermostats device yields a temperature sensor and a valve-tappet sensor."""
-    device = _thermostat_device(temperature=21.5, position=42, valvestate="OK")
-    await _setup_sensor_integration(hass, thermostats=[device])
-
-    states = hass.states.async_all(SENSOR_DOMAIN)
-    assert len(states) == 2
-
-    temperature_state = next(
-        s for s in states if s.attributes.get("device_class") == "temperature"
+    """Snapshot every sensor entity the platform can create, across all 6 buckets."""
+    entry = await setup_integration(
+        hass,
+        [Platform.SENSOR],
+        thermostats=[_thermostat_device()],
+        wallthermostats=[_wallthermostat_device()],
+        twinguards=[_twinguard_device()],
+        smart_plugs=[_smart_plug_device()],
+        light_switches_bsm=[_light_switch_device()],
+        smart_plugs_compact=[_smart_plug_compact_device()],
     )
-    assert float(temperature_state.state) == 21.5
 
-    valve_state = next(s for s in states if s != temperature_state)
-    assert float(valve_state.state) == 42
-    assert valve_state.attributes["valve_tappet_state"] == "OK"
-
-
-async def test_wallthermostat_creates_temperature_and_humidity_sensors(
-    hass: HomeAssistant,
-) -> None:
-    """A wallthermostats device yields a temperature sensor and a humidity sensor."""
-    device = _wallthermostat_device(temperature=20.0, humidity=45.0)
-    await _setup_sensor_integration(hass, wallthermostats=[device])
-
-    states = hass.states.async_all(SENSOR_DOMAIN)
-    assert len(states) == 2
-
-    temperature_state = next(
-        s for s in states if s.attributes.get("device_class") == "temperature"
-    )
-    assert float(temperature_state.state) == 20.0
-
-    humidity_state = next(
-        s for s in states if s.attributes.get("device_class") == "humidity"
-    )
-    assert float(humidity_state.state) == 45.0
-
-
-async def test_twinguard_creates_seven_sensors(hass: HomeAssistant) -> None:
-    """A twinguards device yields all 7 twinguard sensor types."""
-    device = _twinguard_device(
-        temperature=22.0,
-        humidity=50.0,
-        purity=500.0,
-        combined_rating="GOOD",
-        description="Air quality is good",
-        temperature_rating="GOOD",
-        humidity_rating="GOOD",
-        purity_rating="GOOD",
-    )
-    await _setup_sensor_integration(hass, twinguards=[device])
-
-    states = hass.states.async_all(SENSOR_DOMAIN)
-    assert len(states) == 7
-
-    temperature_state = next(
-        s for s in states if s.attributes.get("device_class") == "temperature"
-    )
-    assert float(temperature_state.state) == 22.0
-
-    humidity_state = next(
-        s for s in states if s.attributes.get("device_class") == "humidity"
-    )
-    assert float(humidity_state.state) == 50.0
-
-    purity_state = hass.states.get("sensor.test_device_purity")
-    assert purity_state is not None
-    assert float(purity_state.state) == 500.0
-
-    air_quality_state = hass.states.get("sensor.test_device_air_quality")
-    assert air_quality_state is not None
-    assert air_quality_state.state == "GOOD"
-    assert air_quality_state.attributes["rating_description"] == "Air quality is good"
-
-    temperature_rating_state = hass.states.get("sensor.test_device_temperature_rating")
-    assert temperature_rating_state is not None
-    assert temperature_rating_state.state == "GOOD"
-
-    humidity_rating_state = hass.states.get("sensor.test_device_humidity_rating")
-    assert humidity_rating_state is not None
-    assert humidity_rating_state.state == "GOOD"
-
-    purity_rating_state = hass.states.get("sensor.test_device_purity_rating")
-    assert purity_rating_state is not None
-    assert purity_rating_state.state == "GOOD"
-
-
-@pytest.mark.parametrize(
-    "bucket",
-    [
-        pytest.param("smart_plugs", id="smart_plugs"),
-        pytest.param("light_switches_bsm", id="light_switches_bsm"),
-    ],
-)
-async def test_smart_plug_creates_power_and_energy_sensors(
-    hass: HomeAssistant, bucket: str
-) -> None:
-    """A smart_plugs or light_switches_bsm device yields a power + energy sensor (kWh)."""
-    device = _smart_plug_device(powerconsumption=12.5, energyconsumption=3000.0)
-    await _setup_sensor_integration(hass, **{bucket: [device]})
-
-    states = hass.states.async_all(SENSOR_DOMAIN)
-    assert len(states) == 2
-
-    power_state = next(s for s in states if s.attributes.get("device_class") == "power")
-    assert float(power_state.state) == 12.5
-
-    energy_state = next(
-        s for s in states if s.attributes.get("device_class") == "energy"
-    )
-    assert float(energy_state.state) == 3.0
-
-
-async def test_smart_plug_compact_creates_three_sensors(hass: HomeAssistant) -> None:
-    """A smart_plugs_compact device yields power, energy, and communication-quality sensors."""
-    device = _smart_plug_compact_device(communicationquality="GOOD")
-    await _setup_sensor_integration(hass, smart_plugs_compact=[device])
-
-    states = hass.states.async_all(SENSOR_DOMAIN)
-    assert len(states) == 3
-
-    quality_state = hass.states.get("sensor.test_device_communication_quality")
-    assert quality_state is not None
-    assert quality_state.state == "GOOD"
+    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
 async def test_setup_no_devices_adds_nothing(hass: HomeAssistant) -> None:
     """No devices in any bucket means no sensor entities are created."""
-    await _setup_sensor_integration(hass)
+    await setup_integration(hass, [Platform.SENSOR])
 
     assert hass.states.async_all(SENSOR_DOMAIN) == []
