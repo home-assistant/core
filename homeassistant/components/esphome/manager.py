@@ -857,13 +857,13 @@ class ESPHomeManager:
             await cli.connect()
             if await cli.noise_encryption_set_key(new_key):
                 return True
-            _LOGGER.warning(
+            _LOGGER.error(
                 "Device %s (%s) rejected the encryption key",
                 device_name,
                 unique_id,
             )
         except InvalidEncryptionKeyAPIError:
-            _LOGGER.warning(
+            _LOGGER.error(
                 "Device %s (%s) rejected the zero PSK handshake; it appears "
                 "to already have an encryption key set",
                 device_name,
@@ -872,7 +872,7 @@ class ESPHomeManager:
         except APIConnectionError as ex:
             # Whatever went wrong, we never downgrade to a plaintext push;
             # provisioning simply runs again on the next connect cycle
-            _LOGGER.warning(
+            _LOGGER.error(
                 "Error provisioning encryption key for device %s (%s): %s",
                 device_name,
                 unique_id,
