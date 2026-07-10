@@ -112,11 +112,15 @@ class ProtectDevicePublicEventEntity(
         fired = self._fired
         if fired is None:
             fired = self._fired = {}
-        if event_type in (types := fired.get(event.id, frozenset())):
+        # Pop-and-reinsert so any dispatch refreshes this event id's recency; a
+        # long-running event that keeps updating is then not evicted below.
+        types = fired.pop(event.id, frozenset())
+        if event_type in types:
+            fired[event.id] = types
             return
         fired[event.id] = types | {event_type}
         if len(fired) > _MAX_TRACKED_EVENTS:
-            del fired[next(iter(fired))]
+            del fired[next(iter(fired))]  # evict the least-recently-seen event id
         self._trigger_event(event_type, event_data)
         self.async_write_ha_state()
 
