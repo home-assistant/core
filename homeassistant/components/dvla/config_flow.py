@@ -184,6 +184,16 @@ class ConfigFlow(ConfigFlowBase, domain=DOMAIN):
                 else:
                     return self.async_create_entry(title=info["title"], data=user_input)
 
+        step_user_data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_REG_NUMBER, default=user_input.get(CONF_REG_NUMBER, "")
+                ): cv.string,
+                vol.Required(
+                    CONF_CALENDARS, default=user_input.get(CONF_CALENDARS, ["None"])
+                ): cv.multi_select(calendar_entities),
+            }
+        )
         return self.async_show_form(
             step_id="user", data_schema=step_user_data_schema, errors=errors
         )
