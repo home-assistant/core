@@ -282,6 +282,91 @@ def _ensure_subentry(
     return subentry.subentry_id
 
 
+async def _create_energy_site(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    teslemetry: Teslemetry,
+    product: dict[str, Any],
+) -> TeslemetryEnergyData | None:
+    """Build the energy site data for one product, or None if it has no relevant components."""
+    site_id = product["energy_site_id"]
+    powerwall = product["components"]["battery"] or product["components"]["solar"]
+    wall_connector = "wall_connectors" in product["components"]
+    if not powerwall and not wall_connector:
+        LOGGER.debug(
+            "Skipping Energy Site %s as it has no components",
+            site_id,
+        )
+        return None
+
+    energy_site = teslemetry.energySites.create(site_id)
+    device = DeviceInfo(
+        identifiers={(DOMAIN, str(site_id))},
+        manufacturer="Tesla",
+        configuration_url=f"https://teslemetry.com/console/energy/{site_id}",
+        name=product.get("site_name", "Energy Site"),
+        serial_number=str(site_id),
+    )
+
+    # For initial setup, raise auth errors properly
+    try:
+        live_status = (await energy_site.live_status())["response"]
+    except InvalidToken as e:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed_invalid_token",
+        ) from e
+    except LoginRequired as e:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed_login_required",
+        ) from e
+    except SubscriptionRequired as e:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed_subscription_required",
+        ) from e
+    except Forbidden as e:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed_invalid_token",
+        ) from e
+    except TeslaFleetError as e:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="not_ready_api_error",
+        ) from e
+
+    subentry_id = _ensure_subentry(
+        hass,
+        entry,
+        SUBENTRY_TYPE_ENERGY_SITE,
+        str(site_id),
+        product.get("site_name", "Energy Site"),
+        {"site_id": site_id},
+    )
+
+    return TeslemetryEnergyData(
+        api=energy_site,
+        live_coordinator=(
+            TeslemetryEnergySiteLiveCoordinator(hass, entry, energy_site, live_status)
+            if isinstance(live_status, dict)
+            else None
+        ),
+        info_coordinator=TeslemetryEnergySiteInfoCoordinator(
+            hass, entry, energy_site, product
+        ),
+        history_coordinator=(
+            TeslemetryEnergyHistoryCoordinator(hass, entry, energy_site)
+            if powerwall
+            else None
+        ),
+        id=site_id,
+        device=device,
+        subentry_id=subentry_id,
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
@@ -439,93 +524,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         ):
             site_id = product["energy_site_id"]
 
-            powerwall = (
-                product["components"]["battery"] or product["components"]["solar"]
-            )
-            wall_connector = "wall_connectors" in product["components"]
-            if not powerwall and not wall_connector:
-                LOGGER.debug(
-                    "Skipping Energy Site %s as it has no components",
-                    site_id,
-                )
+            energysite = await _create_energy_site(hass, entry, teslemetry, product)
+            if energysite is None:
                 continue
 
             current_devices.add((DOMAIN, str(site_id)))
-            if wall_connector:
+            if "wall_connectors" in product["components"]:
                 current_devices |= {
                     (DOMAIN, c["din"]) for c in product["components"]["wall_connectors"]
                 }
 
-            energy_site = teslemetry.energySites.create(site_id)
-            device = DeviceInfo(
-                identifiers={(DOMAIN, str(site_id))},
-                manufacturer="Tesla",
-                configuration_url=f"https://teslemetry.com/console/energy/{site_id}",
-                name=product.get("site_name", "Energy Site"),
-                serial_number=str(site_id),
-            )
-
-            # For initial setup, raise auth errors properly
-            try:
-                live_status = (await energy_site.live_status())["response"]
-            except InvalidToken as e:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="auth_failed_invalid_token",
-                ) from e
-            except LoginRequired as e:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="auth_failed_login_required",
-                ) from e
-            except SubscriptionRequired as e:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="auth_failed_subscription_required",
-                ) from e
-            except Forbidden as e:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="auth_failed_invalid_token",
-                ) from e
-            except TeslaFleetError as e:
-                raise ConfigEntryNotReady(
-                    translation_domain=DOMAIN,
-                    translation_key="not_ready_api_error",
-                ) from e
-
-            subentry_id = _ensure_subentry(
-                hass,
-                entry,
-                SUBENTRY_TYPE_ENERGY_SITE,
-                str(site_id),
-                product.get("site_name", "Energy Site"),
-                {"site_id": site_id},
-            )
-
-            energysites.append(
-                TeslemetryEnergyData(
-                    api=energy_site,
-                    live_coordinator=(
-                        TeslemetryEnergySiteLiveCoordinator(
-                            hass, entry, energy_site, live_status
-                        )
-                        if isinstance(live_status, dict)
-                        else None
-                    ),
-                    info_coordinator=TeslemetryEnergySiteInfoCoordinator(
-                        hass, entry, energy_site, product
-                    ),
-                    history_coordinator=(
-                        TeslemetryEnergyHistoryCoordinator(hass, entry, energy_site)
-                        if powerwall
-                        else None
-                    ),
-                    id=site_id,
-                    device=device,
-                    subentry_id=subentry_id,
-                )
-            )
+            energysites.append(energysite)
 
     # Run all first refreshes
     await asyncio.gather(
