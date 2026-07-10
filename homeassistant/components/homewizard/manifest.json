@@ -1,7 +1,7 @@
 {
   "domain": "homewizard",
   "name": "HomeWizard",
-  "codeowners": ["@DCSBL"],
+  "codeowners": ["@DCSBL", "@lexpostma"],
   "config_flow": true,
   "dhcp": [
     {

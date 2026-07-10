@@ -23,6 +23,8 @@ from uiprotect.data import (
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
 from uiprotect.data.public_devices import (
+    PublicCamera,
+    PublicHdrMode,
     PublicLight,
     PublicLightDeviceSettings,
     PublicSensor,
@@ -235,6 +237,7 @@ def make_public_sensor(
     state: DeviceState | None = None,
     is_motion_detected: bool | None = None,
     motion_enabled: bool | None = None,
+    motion_sensitivity: int | None = None,
     mount_type: MountType | None = None,
     is_opened: bool | None = None,
     is_leak_detected: bool | None = None,
@@ -293,7 +296,12 @@ def make_public_sensor(
             sensor.motion_settings.is_enabled
             if motion_enabled is None
             else motion_enabled
-        )
+        ),
+        sensitivity=(
+            sensor.motion_settings.sensitivity
+            if motion_sensitivity is None
+            else motion_sensitivity
+        ),
     )
     public.wireless_connection_state = PublicWirelessConnectionState(
         battery_status=PublicWirelessBatteryStatus(
@@ -333,6 +341,40 @@ def make_public_light(
             else pir_duration_ms
         ),
         pir_sensitivity=lds.pir_sensitivity,
+    )
+    return public
+
+
+_HDR_DISPLAY_TO_PUBLIC = {
+    "auto": PublicHdrMode.AUTO,
+    "always": PublicHdrMode.ON,
+    "off": PublicHdrMode.OFF,
+}
+
+
+def make_public_camera(
+    camera: Camera,
+    *,
+    state: DeviceState | None = None,
+    mic_volume: int | None = None,
+    hdr_type: PublicHdrMode | None = None,
+) -> Mock:
+    """Build a public-API camera mirroring a private camera's migrated fields.
+
+    ``mic_volume`` and ``hdr_type`` default to values derived from the private
+    fixture so the public mirror matches it; pass an override to assert a value
+    the private object would not produce.
+    """
+    public = Mock(spec=PublicCamera)
+    public.id = camera.id
+    public.mac = camera.mac
+    public.model = ModelType.CAMERA
+    public.state = DeviceState[camera.state.name] if state is None else state
+    public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
+    public.hdr_type = (
+        _HDR_DISPLAY_TO_PUBLIC[camera.hdr_mode_display]
+        if hdr_type is None
+        else hdr_type
     )
     return public
 
@@ -391,6 +433,33 @@ def setup_public_light(ufp: MockUFPFixture) -> None:
             and (private := ufp.api.bootstrap.lights.get(obj_id)) is not None
         ):
             public_bootstrap.lights[obj_id] = make_public_light(private)
+        return public_bootstrap.get(model, obj_id)
+
+    pb.get = _get
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+
+def setup_public_camera(ufp: MockUFPFixture) -> None:
+    """Expose private cameras over the public API via a real ``PublicBootstrap``.
+
+    Mirrors ``setup_public_sensor`` for ``ModelType.CAMERA`` so the migrated
+    camera config entities read from the public object.
+    """
+    public_bootstrap = PublicBootstrap()
+    pb = Mock(spec=PublicBootstrap)
+    pb.cameras = public_bootstrap.cameras
+    pb.relays = {}
+    pb.sirens = {}
+    pb.arm_mode = None
+    pb.arm_profiles = {}
+
+    def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
+        if (
+            model is ModelType.CAMERA
+            and (private := ufp.api.bootstrap.cameras.get(obj_id)) is not None
+        ):
+            public_bootstrap.cameras[obj_id] = make_public_camera(private)
         return public_bootstrap.get(model, obj_id)
 
     pb.get = _get
