@@ -3,7 +3,7 @@
 import struct
 from typing import Any, override
 
-from homeassistant.components.number import NumberEntity, RestoreNumber
+from homeassistant.components.number import RestoreNumber
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
@@ -18,11 +18,13 @@ from . import get_hub
 from .const import (
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
+    CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_MAX_VALUE,
     CONF_MIN_VALUE,
     CONF_NUMBER_STEP,
     CONF_NUMBERS,
     CONF_SCALE,
+    CONF_WRITE_TYPE,
     DEFAULT_OFFSET,
     DEFAULT_SCALE,
 )
@@ -48,7 +50,7 @@ async def async_setup_platform(
     )
 
 
-class ModbusNumber(ModbusStructEntity, RestoreNumber, NumberEntity):
+class ModbusNumber(ModbusStructEntity, RestoreNumber):
     """Modbus number entity, reads and writes a numeric value stored in one or more holding registers."""
 
     def __init__(
@@ -58,6 +60,7 @@ class ModbusNumber(ModbusStructEntity, RestoreNumber, NumberEntity):
         super().__init__(hass, hub, entry)
         self._scale = entry.get(CONF_SCALE, DEFAULT_SCALE)
         self._offset = entry.get(CONF_OFFSET, DEFAULT_OFFSET)
+        self._write_type = entry[CONF_WRITE_TYPE]
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
         self._attr_native_min_value = entry[CONF_MIN_VALUE]
@@ -114,7 +117,9 @@ class ModbusNumber(ModbusStructEntity, RestoreNumber, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the value via Modbus."""
         registers = self._convert_to_registers(value, self._scale, self._offset)
-        if len(registers) == 1:
+        # write_type: holdings forces write_registers even for a single register,
+        # for devices that don't support the write_register function code.
+        if len(registers) == 1 and self._write_type != CALL_TYPE_X_REGISTER_HOLDINGS:
             result = await self._hub.async_pb_call(
                 self._device_address,
                 self._address,
