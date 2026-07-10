@@ -83,7 +83,6 @@ DOMAINS_NEED_ACCESSORY_MODE = {
 NEVER_BRIDGED_DOMAINS = {CAMERA_DOMAIN}
 
 CAMERA_ENTITY_PREFIX = f"{CAMERA_DOMAIN}."
-CLIMATE_ENTITY_PREFIX = f"{CLIMATE_DOMAIN}."
 
 SUPPORTED_DOMAINS = [
     "alarm_control_panel",
@@ -186,19 +185,9 @@ def _async_build_entities_filter(
     )
 
 
-def _async_cameras_from_entities(entities: list[str]) -> list[str]:
+def _async_entities_in_domain(entities: list[str], domain: str) -> list[str]:
     return [
-        entity_id
-        for entity_id in entities
-        if entity_id.startswith(CAMERA_ENTITY_PREFIX)
-    ]
-
-
-def _async_climates_from_entities(entities: list[str]) -> list[str]:
-    return [
-        entity_id
-        for entity_id in entities
-        if entity_id.startswith(CLIMATE_ENTITY_PREFIX)
+        entity_id for entity_id in entities if split_entity_id(entity_id)[0] == domain
     ]
 
 
@@ -393,14 +382,6 @@ class OptionsFlowHandler(OptionsFlow):
         # Maps the displayed climate field label back to its entity id.
         self._climate_choices: dict[str, str] = {}
 
-    async def async_step_entity_configs(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Continue with the per-entity configuration steps."""
-        if self.included_cameras:
-            return await self.async_step_cameras()
-        return await self.async_step_climate()
-
     async def async_step_climate(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -425,7 +406,7 @@ class OptionsFlowHandler(OptionsFlow):
                     all_entity_config.pop(entity_id)
 
             if not all_entity_config:
-                hk_options.pop(CONF_ENTITY_CONFIG, None)
+                del hk_options[CONF_ENTITY_CONFIG]
 
             return await self.async_step_bridged_device_triggers()
 
@@ -512,6 +493,9 @@ class OptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose camera config."""
+        if not self.included_cameras:
+            return await self.async_step_climate()
+
         hk_options = self.hk_options
         all_entity_config: dict[str, dict[str, Any]]
 
@@ -578,10 +562,10 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
             entity_filter = _async_build_entities_filter(domains, entities)
-            self.included_cameras = _async_cameras_from_entities(entities)
-            self.included_climates = _async_climates_from_entities(entities)
+            self.included_cameras = _async_entities_in_domain(entities, CAMERA_DOMAIN)
+            self.included_climates = _async_entities_in_domain(entities, CLIMATE_DOMAIN)
             hk_options[CONF_FILTER] = entity_filter
-            return await self.async_step_entity_configs()
+            return await self.async_step_cameras()
 
         entity_filter = hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
@@ -621,10 +605,10 @@ class OptionsFlowHandler(OptionsFlow):
         domains = hk_options[CONF_DOMAINS]
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
-            self.included_cameras = _async_cameras_from_entities(entities)
-            self.included_climates = _async_climates_from_entities(entities)
+            self.included_cameras = _async_entities_in_domain(entities, CAMERA_DOMAIN)
+            self.included_climates = _async_entities_in_domain(entities, CLIMATE_DOMAIN)
             hk_options[CONF_FILTER] = _async_build_entities_filter(domains, entities)
-            return await self.async_step_entity_configs()
+            return await self.async_step_cameras()
 
         entity_filter: EntityFilterDict = hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
@@ -663,31 +647,23 @@ class OptionsFlowHandler(OptionsFlow):
         domains = hk_options[CONF_DOMAINS]
 
         if user_input is not None:
-            self.included_cameras = []
-            self.included_climates = []
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
-            if CAMERA_DOMAIN in domains:
-                camera_entities = _async_get_matching_entities(
-                    self.hass, [CAMERA_DOMAIN]
-                )
-                self.included_cameras = [
+
+            def _remaining_in_domain(domain: str) -> list[str]:
+                if domain not in domains:
+                    return []
+                return [
                     entity_id
-                    for entity_id in camera_entities
+                    for entity_id in _async_get_matching_entities(self.hass, [domain])
                     if entity_id not in entities
                 ]
-            if CLIMATE_DOMAIN in domains:
-                climate_entities = _async_get_matching_entities(
-                    self.hass, [CLIMATE_DOMAIN]
-                )
-                self.included_climates = [
-                    entity_id
-                    for entity_id in climate_entities
-                    if entity_id not in entities
-                ]
+
+            self.included_cameras = _remaining_in_domain(CAMERA_DOMAIN)
+            self.included_climates = _remaining_in_domain(CLIMATE_DOMAIN)
             hk_options[CONF_FILTER] = _make_entity_filter(
                 include_domains=domains, exclude_entities=entities
             )
-            return await self.async_step_entity_configs()
+            return await self.async_step_cameras()
 
         entity_filter = self.hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
