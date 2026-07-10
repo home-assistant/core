@@ -195,3 +195,88 @@ async def test_async_update_data_raises_update_failed_on_invalid_json(
 
     with pytest.raises(UpdateFailed, match="Invalid response"):
         await coordinator._async_update_data()
+
+
+async def test_async_update_data_raises_update_failed_on_timeout(
+    hass: HomeAssistant,
+) -> None:
+    """Test coordinator raises UpdateFailed on request timeout."""
+    session = MagicMock()
+    session.post = AsyncMock(side_effect=TimeoutError)
+
+    coordinator = create_coordinator(hass, session)
+
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+
+async def test_async_update_data_raises_update_failed_on_message(
+    hass: HomeAssistant,
+) -> None:
+    """Test coordinator raises UpdateFailed on message response."""
+    session = MagicMock()
+    session.post = AsyncMock(
+        return_value=MockResponse(
+            {"message": "Vehicle not found"},
+            status=400,
+        )
+    )
+
+    coordinator = create_coordinator(hass, session)
+
+    with pytest.raises(UpdateFailed, match="Vehicle not found"):
+        await coordinator._async_update_data()
+
+
+async def test_async_update_data_raises_update_failed_on_http_error_without_message(
+    hass: HomeAssistant,
+) -> None:
+    """Test coordinator raises UpdateFailed on HTTP error without message."""
+    session = MagicMock()
+    session.post = AsyncMock(
+        return_value=MockResponse(
+            {"unexpected": "response"},
+            status=500,
+        )
+    )
+
+    coordinator = create_coordinator(hass, session)
+
+    with pytest.raises(UpdateFailed, match="status 500"):
+        await coordinator._async_update_data()
+
+
+async def test_async_update_data_raises_update_failed_on_auth_message(
+    hass: HomeAssistant,
+) -> None:
+    """Test coordinator raises UpdateFailed on auth message response."""
+    session = MagicMock()
+    session.post = AsyncMock(
+        return_value=MockResponse(
+            {"message": "Invalid authentication credentials"},
+            status=200,
+        )
+    )
+
+    coordinator = create_coordinator(hass, session)
+
+    with pytest.raises(UpdateFailed, match="Invalid authentication credentials"):
+        await coordinator._async_update_data()
+
+
+async def test_async_update_data_raises_update_failed_on_rate_limit_message(
+    hass: HomeAssistant,
+) -> None:
+    """Test coordinator raises UpdateFailed on rate limit message response."""
+    session = MagicMock()
+    session.post = AsyncMock(
+        return_value=MockResponse(
+            {"message": "API rate limit exceeded."},
+            status=200,
+        )
+    )
+
+    coordinator = create_coordinator(hass, session)
+
+    with pytest.raises(UpdateFailed, match="API rate limit exceeded"):
+        await coordinator._async_update_data()

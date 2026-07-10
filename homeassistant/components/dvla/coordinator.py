@@ -50,8 +50,8 @@ class DVLACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 },
                 json={"registrationNumber": self.reg_number},
             )
-            resp.raise_for_status()
             body = await resp.json()
+            resp.raise_for_status()
         except (ClientError, TimeoutError) as err:
             raise UpdateFailed(str(err)) from err
         except ValueError as err:

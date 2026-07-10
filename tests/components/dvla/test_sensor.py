@@ -1,10 +1,12 @@
 """Tests for the DVLA sensor platform."""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.dvla.coordinator import DVLACoordinator
+from homeassistant.components.dvla.sensor import DVLASensor
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 
@@ -114,3 +116,143 @@ async def test_revenue_weight_sensor_is_numeric(hass: HomeAssistant) -> None:
     assert state.state == "3500"
     assert state.attributes["unit_of_measurement"] == "kg"
     assert state.attributes["device_class"] == SensorDeviceClass.WEIGHT
+
+
+async def test_revenue_weight_sensor_is_unknown_for_invalid_value(
+    hass: HomeAssistant,
+) -> None:
+    """Test revenue weight is unknown when DVLA returns a non-numeric value."""
+    await setup_dvla_entry(
+        hass,
+        {
+            "registrationNumber": "AB12CDE",
+            "make": "FORD",
+            "revenueWeight": "not-a-number",
+        },
+    )
+
+    state = hass.states.get("sensor.dvla_ab12cde_revenueweight")
+
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_month_of_first_registration_is_string_sensor(
+    hass: HomeAssistant,
+) -> None:
+    """Test month-only registration value is exposed as a string sensor."""
+    await setup_dvla_entry(
+        hass,
+        {
+            "registrationNumber": "AB12CDE",
+            "make": "FORD",
+            "monthOfFirstRegistration": "2024-05",
+        },
+    )
+
+    state = hass.states.get("sensor.dvla_ab12cde_monthoffirstregistration")
+
+    assert state is not None
+    assert state.state == "2024-05"
+
+
+async def test_sensor_native_value_property(hass: HomeAssistant) -> None:
+    """Test sensor native value property."""
+    await setup_dvla_entry(hass)
+
+    state = hass.states.get("sensor.dvla_ab12cde_registrationnumber")
+
+    assert state is not None
+    assert state.state == "AB12CDE"
+
+
+async def test_sensor_native_value_and_coordinator_update(
+    hass: HomeAssistant,
+) -> None:
+    """Test direct sensor native value and coordinator update handling."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="AB12CDE",
+        data={CONF_REG_NUMBER: "AB12CDE"},
+    )
+    entry.add_to_hass(hass)
+
+    coordinator = DVLACoordinator(
+        hass,
+        entry,
+        None,
+        "AB12CDE",
+    )
+    coordinator.data = {"registrationNumber": "AB12CDE"}
+
+    sensor = DVLASensor(
+        coordinator,
+        "AB12CDE",
+        SensorEntityDescription(
+            key="registrationNumber",
+            name="Registration number",
+        ),
+    )
+
+    assert sensor.native_value == "AB12CDE"
+
+    with patch.object(sensor, "async_write_ha_state") as mock_write_state:
+        coordinator.data = {"registrationNumber": "XY99ZZZ"}
+        sensor._handle_coordinator_update()
+
+    assert sensor.native_value == "XY99ZZZ"
+    mock_write_state.assert_called_once()
+
+
+async def test_sensor_handle_coordinator_update(hass: HomeAssistant) -> None:
+    """Test sensor handles coordinator updates."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="AB12CDE",
+        data={CONF_REG_NUMBER: "AB12CDE"},
+    )
+    entry.add_to_hass(hass)
+
+    coordinator = DVLACoordinator(
+        hass,
+        entry,
+        MagicMock(),
+        "AB12CDE",
+    )
+    coordinator.data = {"registrationNumber": "AB12CDE"}
+
+    sensor = DVLASensor(
+        coordinator,
+        "AB12CDE",
+        SensorEntityDescription(
+            key="registrationNumber",
+            name="Registration number",
+        ),
+    )
+
+    assert sensor.native_value == "AB12CDE"
+
+    coordinator.data = {"registrationNumber": "XY99ZZZ"}
+
+    with patch.object(sensor, "async_write_ha_state") as mock_write_state:
+        sensor._handle_coordinator_update()
+
+    assert sensor.native_value == "XY99ZZZ"
+    mock_write_state.assert_called_once()
+
+
+async def test_invalid_date_sensor_value_is_unknown(hass: HomeAssistant) -> None:
+    """Test invalid date sensor values are exposed as unknown."""
+    await setup_dvla_entry(
+        hass,
+        {
+            "registrationNumber": "AB12CDE",
+            "make": "FORD",
+            "taxDueDate": "not-a-date",
+        },
+    )
+
+    state = hass.states.get("sensor.dvla_ab12cde_taxduedate")
+
+    assert state is not None
+    assert state.state == "unknown"

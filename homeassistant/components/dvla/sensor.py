@@ -171,7 +171,6 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
         )
         self._attr_unique_id = f"{name}-{description.key}".lower()
         self.entity_id = f"sensor.{DOMAIN}_{name}_{description.key}".lower()
-        self.attrs: dict[str, Any] = {}
         self.entity_description = description
         self._state: StateType | date = None
         self.update_from_coordinator()
@@ -208,8 +207,6 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
             except ValueError:
                 self._state = None
 
-        self.attrs = self.coordinator.data.copy() if self._state is not None else {}
-
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
@@ -219,19 +216,6 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
 
     @property
     @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        # Ensure entity is available even if specific key is missing but we have coordinator data
-        return self.coordinator.last_update_success
-
-    @property
-    @override
     def native_value(self) -> StateType | date:
         """Native value."""
         return self._state
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Define entity attributes."""
-        return self.attrs
