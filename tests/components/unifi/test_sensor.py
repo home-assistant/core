@@ -1750,7 +1750,7 @@ async def test_wan_monitor_latency_without_monitors_key(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Verify setup succeeds when a WAN reports uptime stats without a monitors key."""
+    """Verify setup succeeds when a WAN's uptime stats omit the 'monitors' key."""
 
     assert len(hass.states.async_all()) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
