@@ -61,7 +61,11 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.decorator import Registry
 
 from .aidmanager import AccessoryAidStorage
-from .climate_util import get_fan_modes_and_speeds, get_swing_on_mode
+from .climate_util import (
+    get_fan_modes_and_speeds,
+    get_swing_on_mode,
+    has_swing_off_mode,
+)
 from .const import (
     ATTR_DISPLAY_NAME,
     ATTR_INTEGRATION,
@@ -156,8 +160,10 @@ def climate_supports_heater_cooler(state: State) -> bool:
     has_fan = bool(features & ClimateEntityFeature.FAN_MODE) and (
         len(get_fan_modes_and_speeds(attributes)[1]) >= 2
     )
+    # The binary swing control writes the off mode back, so automatic
+    # routing requires the entity to advertise one.
     has_swing = bool(features & ClimateEntityFeature.SWING_MODE) and (
-        get_swing_on_mode(attributes) is not None
+        get_swing_on_mode(attributes) is not None and has_swing_off_mode(attributes)
     )
     return (has_fan or has_swing) and not (
         features & ClimateEntityFeature.TARGET_HUMIDITY
@@ -762,9 +768,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         }
         context = Context()
 
-        self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data, context=context)
-
         try:
+            self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data, context=context)
             await self.hass.services.async_call(
                 domain, service, service_data, blocking=True, context=context
             )
@@ -785,8 +790,13 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             )
         else:
             return True
-        if (state := self.hass.states.get(self.entity_id)) is not None:
-            self.async_update_state(state)
+        # This coroutine often runs fire-and-forget, so failures must be
+        # logged here instead of by the loop's default task handler.
+        try:
+            if (state := self.hass.states.get(self.entity_id)) is not None:
+                self.async_update_state(state)
+        except Exception:
+            _LOGGER.exception("%s: re-syncing HomeKit state failed", self.entity_id)
         return False
 
     @ha_callback

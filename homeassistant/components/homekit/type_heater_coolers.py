@@ -1,5 +1,6 @@
 """Class to hold all heater cooler accessories."""
 
+import asyncio
 import logging
 from typing import Any, override
 
@@ -291,6 +292,10 @@ class HeaterCooler(HomeKitClimateAccessory):
         else:
             self._last_known_mode = self._hk_to_ha_target[default_target]
 
+        # Batches are applied whole and in order through this lock, so a
+        # later batch cannot interleave with one still being written.
+        self._write_lock = asyncio.Lock()
+
         self.async_update_state(state)
 
         # A single service-level callback batches every characteristic write.
@@ -345,15 +350,16 @@ class HeaterCooler(HomeKitClimateAccessory):
         already re-synced and later writes would target a mode the entity
         refused to enter.
         """
-        for service_name, service_data in service_calls:
-            if not await self.async_call_service_and_wait(
-                CLIMATE_DOMAIN,
-                service_name,
-                {ATTR_ENTITY_ID: self.entity_id, **service_data},
-            ):
-                return
-        if fan_swing_char_values:
-            self._handle_fan_swing_changes(fan_swing_char_values)
+        async with self._write_lock:
+            for service_name, service_data in service_calls:
+                if not await self.async_call_service_and_wait(
+                    CLIMATE_DOMAIN,
+                    service_name,
+                    {ATTR_ENTITY_ID: self.entity_id, **service_data},
+                ):
+                    return
+            if fan_swing_char_values:
+                self._handle_fan_swing_changes(fan_swing_char_values)
 
     def _handle_active_mode_changes(
         self,

@@ -85,6 +85,12 @@ def get_swing_off_mode(attributes: dict[str, Any]) -> str:
     return _lower_to_original(swing_modes).get(SWING_OFF, SWING_OFF)
 
 
+def has_swing_off_mode(attributes: dict[str, Any]) -> bool:
+    """Return whether the entity advertises a swing off mode."""
+    swing_modes = attributes.get(ATTR_SWING_MODES) or []
+    return SWING_OFF in _lower_to_original(swing_modes)
+
+
 def fan_speed_to_mode(
     ordered_fan_speeds: list[str], fan_modes: dict[str, str], speed: int
 ) -> str:

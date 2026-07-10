@@ -593,6 +593,17 @@ def test_type_camera(type_name, entity_id, state, attrs) -> None:
                 "swing_modes": ["off", "custom"],
             },
         ),
+        # Swing without an advertised off mode -> Thermostat (off writes
+        # would be rejected by the entity)
+        (
+            "Thermostat",
+            "climate.swing_without_off",
+            "heat",
+            {
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.SWING_MODE,
+                "swing_modes": ["vertical"],
+            },
+        ),
         # Climate with other features but no fan/swing -> Thermostat
         (
             "Thermostat",

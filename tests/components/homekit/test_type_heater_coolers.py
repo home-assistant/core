@@ -1,5 +1,6 @@
 """Test different accessory types: HeaterCooler."""
 
+import asyncio
 from typing import Any
 from unittest.mock import patch
 
@@ -914,6 +915,57 @@ async def test_heatercooler_failed_write_aborts_batch(
     # The rejected mode change stops the temperature and fan writes
     assert len(call_set_temperature) == 0
     assert len(call_set_fan_mode) == 0
+
+
+async def test_heatercooler_write_batches_are_serialized(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a second batch waits for the first to finish."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        ATTR_TEMPERATURE: 20.0,
+    }
+
+    hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    order: list[str] = []
+    gate = asyncio.Event()
+
+    async def _slow_hvac(call: ServiceCall) -> None:
+        order.append(f"hvac:{call.data[ATTR_HVAC_MODE]}")
+        if len(order) == 1:
+            await gate.wait()
+
+    async def _temp(call: ServiceCall) -> None:
+        order.append("temp")
+
+    hass.services.async_register(CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, _slow_hvac)
+    hass.services.async_register(CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE, _temp)
+
+    # The first batch blocks in its mode write while the second arrives
+    _write_chars(
+        hk_driver,
+        acc,
+        {
+            CHAR_TARGET_HEATER_COOLER_STATE: HC_TARGET_COOL,
+            CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0,
+        },
+    )
+    _write_chars(hk_driver, acc, {CHAR_TARGET_HEATER_COOLER_STATE: HC_TARGET_HEAT})
+    gate.set()
+    await hass.async_block_till_done()
+
+    # The first batch finishes its temperature write before the second
+    # batch's mode write starts
+    assert order == ["hvac:cool", "temp", "hvac:heat"]
 
 
 async def test_heatercooler_set_chars_dispatch_order(
