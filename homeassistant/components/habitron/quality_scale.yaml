@@ -83,11 +83,11 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
-    status: exempt
+    status: todo
     comment: |
-      Host, token and scan-interval changes are applied through the
-      options-update listener, which reloads the entry; a dedicated
-      reconfigure flow is not provided.
+      A reconfigure flow is not part of this initial PR; host/token changes
+      currently require removing and re-adding the entry. Planned for a
+      follow-up.
   repair-issues: done
   stale-devices: done
 
