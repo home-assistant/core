@@ -297,19 +297,19 @@
   },
   "exceptions": {
     "api_error_details": {
-      "message": "An error occurred while communicating with the Proxmox VE instance: {error}"
+      "message": "An error occurred while communicating with the Proxmox VE instance."
     },
     "api_error_no_details": {
       "message": "An error occurred while communicating with the Proxmox VE instance."
     },
     "cannot_connect": {
-      "message": "An error occurred while trying to connect to the Proxmox VE instance: {error}"
+      "message": "An error occurred while trying to connect to the Proxmox VE instance."
     },
     "cannot_connect_no_details": {
       "message": "Could not connect to the Proxmox VE instance."
     },
     "invalid_auth": {
-      "message": "An error occurred while trying to authenticate: {error}"
+      "message": "An error occurred while trying to authenticate."
     },
     "invalid_auth_no_details": {
       "message": "Authentication failed for the Proxmox VE instance."
@@ -333,10 +333,10 @@
       "message": "Failed to retrieve Proxmox VE permissions. Please check your credentials and try again."
     },
     "ssl_error": {
-      "message": "An SSL error occurred: {error}"
+      "message": "An SSL error occurred."
     },
     "timeout_connect": {
-      "message": "A timeout occurred while trying to connect to the Proxmox VE instance: {error}"
+      "message": "A timeout occurred while trying to connect to the Proxmox VE instance."
     },
     "timeout_connect_no_details": {
       "message": "A timeout occurred while trying to connect to the Proxmox VE instance."
