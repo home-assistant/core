@@ -240,7 +240,6 @@ class HeaterCooler(HomeKitClimateAccessory):
             chars.append(CHAR_SWING_MODE)
 
         serv = self.add_preload_service(SERV_HEATER_COOLER, chars)
-        self.set_primary_service(serv)
 
         self.char_active = serv.configure_char(CHAR_ACTIVE, value=0)
         self.char_current_state = serv.configure_char(
@@ -309,9 +308,16 @@ class HeaterCooler(HomeKitClimateAccessory):
         if self._has_humidity:
             humidity_serv = self.add_preload_service(SERV_HUMIDITY_SENSOR, CHAR_NAME)
             serv.add_linked_service(humidity_serv)
+            humidity_serv.configure_char(
+                CHAR_NAME, value=f"{self.display_name} Humidity"
+            )
             self.char_current_humidity = humidity_serv.configure_char(
                 CHAR_CURRENT_HUMIDITY, value=50
             )
+
+        # Every service exists now, so they all get an explicit primary
+        # flag; without one the Home app can pick its own tile service.
+        self.set_primary_service(serv)
 
         # Fall back to the displayed target mode so turning Active on for a device
         # that was off at startup activates the mode HomeKit is showing rather than

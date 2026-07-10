@@ -52,6 +52,7 @@ from homeassistant.components.homekit.const import (
     CHAR_COOLING_THRESHOLD_TEMPERATURE,
     CHAR_CURRENT_FAN_STATE,
     CHAR_HEATING_THRESHOLD_TEMPERATURE,
+    CHAR_NAME,
     CHAR_ROTATION_SPEED,
     CHAR_SWING_MODE,
     CHAR_TARGET_FAN_STATE,
@@ -60,6 +61,7 @@ from homeassistant.components.homekit.const import (
     PROP_MIN_STEP,
     PROP_MIN_VALUE,
     SERV_HEATER_COOLER,
+    SERV_HUMIDITY_SENSOR,
 )
 from homeassistant.components.homekit.type_heater_coolers import (
     HC_COOLING,
@@ -2660,6 +2662,14 @@ async def test_heatercooler_reports_humidity_via_linked_sensor(
     await hass.async_block_till_done()
 
     assert acc.char_current_humidity.value == 55
+
+    # Every service carries an explicit primary flag so the Home app shows
+    # the HeaterCooler tile, not the linked humidity sensor
+    serv = acc.get_service(SERV_HEATER_COOLER)
+    assert serv.is_primary_service is True
+    humidity_serv = acc.get_service(SERV_HUMIDITY_SENSOR)
+    assert humidity_serv.is_primary_service is False
+    assert humidity_serv.get_characteristic(CHAR_NAME).value == "Climate Humidity"
 
     hass.states.async_set(
         entity_id, HVACMode.COOL, {**base_attrs, ATTR_CURRENT_HUMIDITY: 60}
