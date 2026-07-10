@@ -257,6 +257,7 @@ FLOWS = {
         "fritzbox_callmonitor",
         "fronius",
         "frontier_silicon",
+        "fuelprices_dk",
         "fujitsu_fglair",
         "fully_kiosk",
         "fumis",
