@@ -111,14 +111,14 @@ class LEDIrLightEntity(LEDIrEntity, InfraredEmitterConsumerEntity, LightEntity):
         self._attr_is_on = True
         effect: str | None = kwargs.get(ATTR_EFFECT)
         if effect and effect in self._attr_effect_list:
-            self._attr_effect = effect
             await self._send_command(self._codes[effect.upper()].to_command())
+            self._attr_effect = effect
 
         self.async_write_ha_state()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        self._attr_is_on = False
         await self._send_command(self._codes.OFF.to_command())
+        self._attr_is_on = False
         self.async_write_ha_state()
