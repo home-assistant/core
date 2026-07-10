@@ -95,14 +95,40 @@ class AccessoryAidStorage:
         The routing choice must survive restarts, since the automatic pick
         only applies the first time an entity is bridged.
         """
-        entities = self.heater_cooler_entities
-        if heater_cooler == (entity_id in entities):
+        if heater_cooler == self.entity_uses_heater_cooler(entity_id):
             return
+        entities = self.heater_cooler_entities
+        entry = self._entity_registry.async_get(entity_id)
         if heater_cooler:
-            entities.add(entity_id)
+            if entry:
+                entities.add(get_system_unique_id(entry, entry.unique_id))
+            else:
+                entities.add(entity_id)
         else:
             entities.discard(entity_id)
+            if entry:
+                entities.discard(get_system_unique_id(entry, entry.unique_id))
+                if previous_unique_id := entry.previous_unique_id:
+                    entities.discard(get_system_unique_id(entry, previous_unique_id))
         self.async_schedule_save()
+
+    def entity_uses_heater_cooler(self, entity_id: str) -> bool:
+        """Return True when the entity is routed to the HeaterCooler.
+
+        The choice is stored by the same stable identity as the aid
+        allocation, so it survives entity id renames and unique id changes.
+        """
+        entities = self.heater_cooler_entities
+        if entity_id in entities:
+            return True
+        if not (entry := self._entity_registry.async_get(entity_id)):
+            return False
+        if get_system_unique_id(entry, entry.unique_id) in entities:
+            return True
+        return bool(
+            (previous_unique_id := entry.previous_unique_id)
+            and get_system_unique_id(entry, previous_unique_id) in entities
+        )
 
     def get_or_allocate_aid_for_entity_id(self, entity_id: str) -> int:
         """Generate a stable aid for an entity id."""
@@ -142,6 +168,10 @@ class AccessoryAidStorage:
         old_sys_unique_id = get_system_unique_id(entry, previous_unique_id)
         if aid := self.allocations.pop(old_sys_unique_id, None):
             self.allocations[sys_unique_id] = aid
+            self.async_schedule_save()
+        if old_sys_unique_id in self.heater_cooler_entities:
+            self.heater_cooler_entities.discard(old_sys_unique_id)
+            self.heater_cooler_entities.add(sys_unique_id)
             self.async_schedule_save()
 
     def get_or_allocate_aid(self, unique_id: str | None, entity_id: str) -> int:

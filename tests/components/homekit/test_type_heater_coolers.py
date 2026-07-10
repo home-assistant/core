@@ -1310,6 +1310,27 @@ async def test_heatercooler_single_temp_no_entity_state(
             18.0,  # |18-24| > |25-24|
             id="heat_cool_picks_further_heating",
         ),
+        # AUTO behaves like HEAT_COOL for a single set point.
+        pytest.param(
+            HVACMode.AUTO,
+            24.0,
+            {
+                CHAR_COOLING_THRESHOLD_TEMPERATURE: 25.0,
+                CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0,
+            },
+            18.0,  # |18-24| > |25-24|
+            id="auto_picks_further_heating",
+        ),
+        pytest.param(
+            HVACMode.AUTO,
+            19.0,
+            {
+                CHAR_COOLING_THRESHOLD_TEMPERATURE: 25.0,
+                CHAR_HEATING_THRESHOLD_TEMPERATURE: 18.0,
+            },
+            25.0,  # |25-19| > |18-19|
+            id="auto_picks_further_cooling",
+        ),
         # HEAT_COOL with a single threshold falls back to it.
         pytest.param(
             HVACMode.HEAT_COOL,
@@ -1358,6 +1379,7 @@ async def test_heatercooler_complex_temperature_selection(
             HVACMode.HEAT,
             HVACMode.COOL,
             HVACMode.HEAT_COOL,
+            HVACMode.AUTO,
             HVACMode.OFF,
         ],
         ATTR_TEMPERATURE: current_temp,
@@ -1597,6 +1619,74 @@ async def test_heatercooler_off_at_startup_activates_displayed_mode(
     _write_chars(hk_driver, acc, {CHAR_ACTIVE: 1})
     await hass.async_block_till_done()
     assert call_set_hvac_mode[-1].data[ATTR_HVAC_MODE] == HVACMode.AUTO
+
+
+async def test_heatercooler_unrepresentable_mode_not_restored(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a mode without a HomeKit target is not restored by Active."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [
+            HVACMode.COOL,
+            HVACMode.DRY,
+            HVACMode.OFF,
+        ],
+    }
+
+    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Dry has no HomeKit target, so the tile keeps showing Cool and
+    # turning Active on must restore Cool, not Dry.
+    hass.states.async_set(entity_id, HVACMode.DRY, base_attrs)
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
+    await hass.async_block_till_done()
+
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
+    _write_chars(hk_driver, acc, {CHAR_ACTIVE: 1})
+    await hass.async_block_till_done()
+    assert call_set_hvac_mode[-1].data[ATTR_HVAC_MODE] == HVACMode.COOL
+
+
+async def test_heatercooler_unrepresentable_mode_at_startup(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test an entity starting in an unrepresentable mode restores the tile mode."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [
+            HVACMode.COOL,
+            HVACMode.DRY,
+            HVACMode.OFF,
+        ],
+    }
+
+    hass.states.async_set(entity_id, HVACMode.DRY, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
+    await hass.async_block_till_done()
+
+    # The tile falls back to the default target, so Active must activate
+    # that mode instead of Dry.
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
+    _write_chars(hk_driver, acc, {CHAR_ACTIVE: 1})
+    await hass.async_block_till_done()
+    assert call_set_hvac_mode[-1].data[ATTR_HVAC_MODE] == HVACMode.COOL
 
 
 async def test_heatercooler_power_on_restores_last_active_mode(

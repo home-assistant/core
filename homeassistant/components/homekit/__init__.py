@@ -106,6 +106,7 @@ from .accessories import (
     HomeAccessory,
     HomeBridge,
     HomeDriver,
+    climate_controls_target_humidity,
     climate_supports_heater_cooler,
     get_accessory,
 )
@@ -844,9 +845,13 @@ class HomeKit:
                 entity_id, climate_type == TYPE_HEATER_COOLER
             )
             return
-        if entity_id in aid_storage.heater_cooler_entities:
-            conf[CONF_TYPE] = TYPE_HEATER_COOLER
-            return
+        if aid_storage.entity_uses_heater_cooler(entity_id):
+            if not climate_controls_target_humidity(state):
+                conf[CONF_TYPE] = TYPE_HEATER_COOLER
+                return
+            # A humidity setpoint gained since the choice was stored cannot
+            # be represented by the HeaterCooler, so the routing is dropped.
+            aid_storage.async_set_heater_cooler(entity_id, False)
         if not climate_supports_heater_cooler(state):
             return
         if allow_auto and not aid_storage.entity_is_allocated(entity_id):

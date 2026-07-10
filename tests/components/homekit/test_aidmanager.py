@@ -670,7 +670,7 @@ async def test_entity_is_allocated(
     with patch(
         "homeassistant.components.homekit.aidmanager.AccessoryAidStorage.async_schedule_save"
     ):
-        aid_storage = AccessoryAidStorage(hass, config_entry)
+        aid_storage = AccessoryAidStorage(hass, config_entry.entry_id)
     await aid_storage.async_initialize()
 
     # Nothing allocated yet
@@ -718,3 +718,55 @@ async def test_set_heater_cooler_round_trip(hass: HomeAssistant) -> None:
     final_storage = AccessoryAidStorage(hass, config_entry.entry_id)
     await final_storage.async_initialize()
     assert "climate.demo" not in final_storage.heater_cooler_entities
+
+
+async def test_heater_cooler_choice_survives_entity_renames(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the heater cooler choice follows the entity through renames."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    climate_ent = entity_registry.async_get_or_create(
+        "climate", "device", "unique_id", device_id=device_entry.id
+    )
+
+    with patch(
+        "homeassistant.components.homekit.aidmanager.AccessoryAidStorage.async_schedule_save"
+    ):
+        aid_storage = AccessoryAidStorage(hass, config_entry.entry_id)
+    await aid_storage.async_initialize()
+
+    aid_storage.async_set_heater_cooler(climate_ent.entity_id, True)
+    assert aid_storage.entity_uses_heater_cooler(climate_ent.entity_id)
+    # Registered entities are stored by the system unique id
+    assert aid_storage.heater_cooler_entities == {"device.climate.unique_id"}
+
+    # An entity id rename keeps the choice through the stable identity
+    entity_registry.async_update_entity(
+        climate_ent.entity_id, new_entity_id="climate.renamed"
+    )
+    await hass.async_block_till_done()
+    assert aid_storage.entity_uses_heater_cooler("climate.renamed")
+
+    # A unique id change is still recognized through previous_unique_id
+    entity_registry.async_update_entity(
+        "climate.renamed", new_unique_id="new_unique_id"
+    )
+    await hass.async_block_till_done()
+    assert aid_storage.entity_uses_heater_cooler("climate.renamed")
+
+    # Allocating migrates the stored choice to the new unique id
+    aid_storage.get_or_allocate_aid_for_entity_id("climate.renamed")
+    assert aid_storage.heater_cooler_entities == {"device.climate.new_unique_id"}
+    assert aid_storage.entity_uses_heater_cooler("climate.renamed")
+
+    # Clearing the choice removes the stored identity
+    aid_storage.async_set_heater_cooler("climate.renamed", False)
+    assert not aid_storage.entity_uses_heater_cooler("climate.renamed")
+    assert not aid_storage.heater_cooler_entities

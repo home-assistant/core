@@ -219,6 +219,49 @@ async def test_heater_cooler_choice_survives_restart(
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
+async def test_gained_humidity_setpoint_drops_stored_choice(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a stored HeaterCooler choice is dropped for a humidity setpoint."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entry.add_to_hass(hass)
+    hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
+
+    homekit = await _async_start_bridge(hass, entry)
+    accessories = list(homekit.bridge.accessories.values())
+    assert type(accessories[0]).__name__ == "HeaterCooler"
+    await _async_stop_bridge(homekit)
+    assert homekit.aid_storage is not None
+    await homekit.aid_storage.async_save()
+
+    # The entity gains a humidity setpoint, which the HeaterCooler cannot
+    # control, so the stored routing is dropped
+    hass.states.async_set(
+        ENTITY_ID,
+        HVACMode.COOL,
+        {
+            **CAPABLE_ATTRS,
+            ATTR_SUPPORTED_FEATURES: (
+                CAPABLE_ATTRS[ATTR_SUPPORTED_FEATURES]
+                | ClimateEntityFeature.TARGET_HUMIDITY
+            ),
+        },
+    )
+    homekit = await _async_start_bridge(hass, entry)
+    accessories = list(homekit.bridge.accessories.values())
+    assert type(accessories[0]).__name__ == "Thermostat"
+    assert not issue_registry.async_get_issue(
+        DOMAIN, _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
+    )
+    assert homekit.aid_storage is not None
+    assert not homekit.aid_storage.heater_cooler_entities
+    await _async_stop_bridge(homekit)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
 async def test_reload_accessory_resyncs_issue(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],

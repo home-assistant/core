@@ -134,6 +134,16 @@ RELOAD_ON_CHANGE_ATTRS = (
 )
 
 
+def climate_controls_target_humidity(state: State) -> bool:
+    """Return True when a climate entity exposes a humidity setpoint.
+
+    HeaterCooler cannot control a humidity setpoint; entities that
+    expose one (e.g. econet) stay on the Thermostat, which can.
+    """
+    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    return bool(features & ClimateEntityFeature.TARGET_HUMIDITY)
+
+
 def climate_supports_heater_cooler(state: State) -> bool:
     """Return True when a climate entity fits the HeaterCooler accessory."""
     attributes = state.attributes
@@ -145,10 +155,7 @@ def climate_supports_heater_cooler(state: State) -> bool:
     has_swing = bool(features & ClimateEntityFeature.SWING_MODE) and (
         get_swing_on_mode(attributes) is not None
     )
-    # HeaterCooler cannot control a humidity setpoint; entities that
-    # expose one (e.g. econet) stay on the Thermostat, which can.
-    has_target_humidity = bool(features & ClimateEntityFeature.TARGET_HUMIDITY)
-    return (has_fan or has_swing) and not has_target_humidity
+    return (has_fan or has_swing) and not climate_controls_target_humidity(state)
 
 
 def get_accessory(  # noqa: C901

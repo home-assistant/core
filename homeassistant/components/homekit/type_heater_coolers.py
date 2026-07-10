@@ -1,7 +1,7 @@
 """Class to hold all heater cooler accessories."""
 
 import logging
-from typing import Any, override
+from typing import Any, TypeGuard, override
 
 from pyhap.characteristic import Characteristic
 
@@ -270,7 +270,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         # that was off at startup activates the mode HomeKit is showing rather than
         # an arbitrary one.
         self._last_known_mode: HVACMode
-        if current_mode and current_mode != HVACMode.OFF:
+        if self._mode_is_restorable(current_mode):
             self._last_known_mode = current_mode
         else:
             self._last_known_mode = self._hk_to_ha_target[default_target]
@@ -409,7 +409,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         elif current_mode == HVACMode.HEAT:
             selected_temp = heating_temp
         elif (
-            current_mode == HVACMode.HEAT_COOL
+            current_mode in (HVACMode.HEAT_COOL, HVACMode.AUTO)
             and cooling_temp is not None
             and heating_temp is not None
         ):
@@ -443,6 +443,19 @@ class HeaterCooler(HomeKitClimateAccessory):
         if CHAR_SWING_MODE in char_values:
             self._set_swing_mode(char_values[CHAR_SWING_MODE])
 
+    def _mode_is_restorable(self, mode: HVACMode | None) -> TypeGuard[HVACMode]:
+        """Return True when an Active write may restore the mode later.
+
+        Modes without a HomeKit target representation, like dry or fan
+        only, are not remembered so turning Active on brings back the mode
+        the tile is showing instead of one it cannot display.
+        """
+        return (
+            mode is not None
+            and mode != HVACMode.OFF
+            and self._hk_target_mode(mode) is not None
+        )
+
     def _hk_target_mode(self, mode: HVACMode | None) -> int | None:
         """Map HA hvac_mode to a HomeKit target heater-cooler state."""
         if mode is None:
@@ -463,7 +476,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         """Update state without rechecking the device features."""
         attributes = new_state.attributes
         current_mode = try_parse_enum(HVACMode, new_state.state)
-        if current_mode and current_mode != HVACMode.OFF:
+        if self._mode_is_restorable(current_mode):
             self._last_known_mode = current_mode
 
         if (tgt := self._hk_target_mode(current_mode)) is not None:
