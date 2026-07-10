@@ -546,7 +546,8 @@
           "autoadaptive": "Auto adaptive",
           "off": "[%key:common::state::off%]",
           "onatnight": "On at night",
-          "schedule": "Schedule"
+          "schedule": "Schedule",
+          "scheduleplus": "Schedule plus"
         }
       },
       "hdr": {
