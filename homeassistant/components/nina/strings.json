@@ -129,5 +129,11 @@
         "title": "Options"
       }
     }
+  },
+  "services": {
+    "get_details": {
+      "description": "Get the details of a warning.",
+      "name": "Get warning details"
+    }
   }
 }
