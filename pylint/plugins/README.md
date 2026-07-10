@@ -133,6 +133,7 @@ Every check has a code following the
 | `W7416` | [`home-assistant-missing-has-entity-name`](#w7416-home-assistant-missing-has-entity-name) | Entity class should set `_attr_has_entity_name = True` |
 | `W7429` | [`home-assistant-unnecessary-format-mac`](#w7429-home-assistant-unnecessary-format-mac) | `format_mac()` is unnecessary with `CONNECTION_NETWORK_MAC` |
 | `W7430` | [`home-assistant-serial-port-selector-usb-dependency`](#w7430-home-assistant-serial-port-selector-usb-dependency) | Config flow using `SerialPortSelector` must declare `usb` in `dependencies` |
+| `W7431` | [`home-assistant-step_id-match-method`](#w7431-home-assistant-serial-port-selector-usb-dependency) | Config flow should use `step_id` parameter value same as the method it's in |
 
 
 ## `home_assistant_logger` checker
@@ -864,3 +865,15 @@ websocket command, which is only registered when the `usb` integration is set
 up. The selector therefore requires `usb` as a hard dependency
 (`"dependencies": ["usb"]`); `after_dependencies` is not sufficient because it
 does not force `usb` to be set up.
+
+## `home-assistant-step_id-match-method` checker
+
+Detects config flows using a `step_id` parameter different than the method it's
+currently in.
+
+### `W7431`: `home-assistant-serial-port-selector-usb-dependency`
+
+Check the `step_id` parameter for all calls to `async_show_form`,
+`async_external_step`, `async_show_progress` and `async_show_menu`.
+The `step_id` parameter should be same as the method it's in
+As example: `step_id="user` should be used in `async_step_user`
