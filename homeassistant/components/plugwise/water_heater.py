@@ -106,8 +106,9 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
             self._attr_supported_features |= WaterHeaterEntityFeature.OPERATION_MODE
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_unique_id = f"{device_id}-{description.key}"
-        self._dhw_modes_count = len(self.device.get(DHW_MODES))
-        if self._dhw_modes_count == 5:
+        dhw_modes = self.device.get(DHW_MODES, [])
+        self._dhw_modes_count = len(dhw_modes)
+        if description.options_key is not None and STATE_OFF in dhw_modes:
             self._attr_supported_features |= WaterHeaterEntityFeature.ON_OFF
 
     @property
