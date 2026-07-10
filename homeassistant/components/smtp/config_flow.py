@@ -371,6 +371,11 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 entry,
                 subentry=subentry,
+                title=(
+                    user_input[CONF_RECIPIENT]
+                    if subentry.title == subentry.unique_id
+                    else subentry.title
+                ),
                 data_updates={},
                 unique_id=user_input[CONF_RECIPIENT],
             )
@@ -382,7 +387,7 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
                     {
                         vol.Required(CONF_RECIPIENT): TextSelector(
                             TextSelectorConfig(
-                                type=TextSelectorType.TEXT,
+                                type=TextSelectorType.EMAIL,
                                 autocomplete="email",
                             ),
                         )
