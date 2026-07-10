@@ -1,5 +1,4 @@
 """Ask tankerkoenig.de for petrol price information."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant

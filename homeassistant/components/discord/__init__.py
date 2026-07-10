@@ -1,5 +1,4 @@
 """The discord integration."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from aiohttp.client_exceptions import ClientConnectorError
 import nextcord
