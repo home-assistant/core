@@ -1742,13 +1742,20 @@ async def test_options_flow_cameras_step_with_whole_domain_included(
 
 
 @pytest.mark.parametrize(
-    ("mode_options", "init_input", "entities_step", "entities_input"),
+    (
+        "mode_options",
+        "init_input",
+        "entities_step",
+        "entities_input",
+        "extra_submits",
+    ),
     [
         pytest.param(
             {},
             {"domains": ["climate"], "include_exclude_mode": "include"},
             "include",
             {"entities": ["climate.new"]},
+            [{}],
             id="bridge",
         ),
         pytest.param(
@@ -1760,6 +1767,7 @@ async def test_options_flow_cameras_step_with_whole_domain_included(
             },
             "accessory",
             {"entities": "climate.new"},
+            [],
             id="accessory",
         ),
     ],
@@ -1774,6 +1782,7 @@ async def test_options_flow_climate_step_shows_current_accessory(
     init_input: dict[str, Any],
     entities_step: str,
     entities_input: dict[str, Any],
+    extra_submits: list[dict[str, Any]],
 ) -> None:
     """Test the climate labels show the accessory the entity uses now."""
     config_entry = MockConfigEntry(
@@ -1816,7 +1825,21 @@ async def test_options_flow_climate_step_shows_current_accessory(
         assert [str(key) for key in result2["data_schema"].schema] == [
             "new (climate.new) [Thermostat]"
         ]
-        hass.config_entries.options.async_abort(result2["flow_id"])
+
+        # The annotated label still round trips to the entity id
+        result3 = await hass.config_entries.options.async_configure(
+            result2["flow_id"],
+            user_input={"new (climate.new) [Thermostat]": "heater_cooler"},
+        )
+        for submit_input in extra_submits:
+            result3 = await hass.config_entries.options.async_configure(
+                result3["flow_id"], user_input=submit_input
+            )
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
+        await hass.async_block_till_done()
+        assert config_entry.options["entity_config"]["climate.new"]["type"] == (
+            "heater_cooler"
+        )
         await hass.config_entries.async_unload(config_entry.entry_id)
 
 
