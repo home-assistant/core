@@ -1,7 +1,7 @@
 """Conftest for SNMP tests."""
 
 import socket
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -31,3 +31,13 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     )
     entry.add_to_hass(hass)
     return entry
+
+
+@pytest.fixture
+def mock_udp_transport():
+    """Patch UdpTransportTarget.create to avoid real network calls."""
+    with patch(
+        "homeassistant.components.snmp.util.UdpTransportTarget.create",
+        return_value=Mock(),
+    ) as mock_create:
+        yield mock_create

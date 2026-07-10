@@ -4,6 +4,7 @@ import binascii
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pysnmp.error import PySnmpError
 from pysnmp.proto.rfc1902 import OctetString
 from pysnmp.smi.error import WrongValueError
@@ -14,7 +15,6 @@ from homeassistant.components.snmp.const import DOMAIN
 from homeassistant.const import STATE_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -47,6 +47,7 @@ def mock_coordinator_entry(hass: HomeAssistant) -> MockConfigEntry:
         pytest.param(b"ABCDEFABCDEF", "ab:cd:ef:ab:cd:ef", id="raw_hex_string"),
     ],
 )
+@pytest.mark.usefixtures("mock_udp_transport")
 async def test_mac_normalization(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -66,10 +67,6 @@ async def test_mac_normalization(
     hass.states.async_set(f"device_tracker.{entity_slug}", STATE_HOME)
 
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
@@ -108,6 +105,7 @@ async def test_mac_normalization(
         pytest.param((1, 1, 1, 1, 10, 20, 30, 40), "10.20.30.40", id="short_oid"),
     ],
 )
+@pytest.mark.usefixtures("mock_udp_transport")
 async def test_ip_extraction(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -129,10 +127,6 @@ async def test_ip_extraction(
     hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
 
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
@@ -160,6 +154,7 @@ async def test_ip_extraction(
     assert state.attributes["ip"] == expected_ip
 
 
+@pytest.mark.usefixtures("mock_udp_transport")
 async def test_ip_extraction_oid_too_short(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -178,10 +173,6 @@ async def test_ip_extraction_oid_too_short(
     hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
 
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
@@ -209,6 +200,7 @@ async def test_ip_extraction_oid_too_short(
     assert state.attributes.get("ip") is None
 
 
+@pytest.mark.usefixtures("mock_udp_transport")
 async def test_walk_error_makes_entry_unavailable(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
@@ -220,10 +212,6 @@ async def test_walk_error_makes_entry_unavailable(
         yield  # pylint: disable=unreachable
 
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk_error,
@@ -251,11 +239,13 @@ async def test_walk_error_makes_entry_unavailable(
         pytest.param(PySnmpError("Some error"), id="exception_errindication"),
     ],
 )
+@pytest.mark.usefixtures("mock_udp_transport")
 async def test_walk_errindication(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_coordinator_entry: MockConfigEntry,
     errindication: str | PySnmpError,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that an errindication during walk causes entity to become unavailable."""
     mac_bytes = binascii.unhexlify("001122334455")
@@ -284,10 +274,6 @@ async def test_walk_errindication(
 
     with (
         patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
-        patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk_side_effect,
         ),
@@ -315,7 +301,8 @@ async def test_walk_errindication(
         assert state.state == STATE_HOME
 
         # Trigger second poll with errindication
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
+        freezer.tick(timedelta(seconds=20))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     # Entity should become unavailable due to UpdateFailed
@@ -324,6 +311,7 @@ async def test_walk_errindication(
     assert state.state == "unavailable"
 
 
+@pytest.mark.usefixtures("mock_udp_transport")
 async def test_walk_errstatus(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
@@ -336,10 +324,6 @@ async def test_walk_errstatus(
         yield None, mock_err_status, 1, [("oid", "val")]
 
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
@@ -360,6 +344,7 @@ async def test_walk_errstatus(
         await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("mock_udp_transport")
 async def test_invalid_mac_length_ignored(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -373,10 +358,6 @@ async def test_invalid_mac_length_ignored(
         yield None, None, None, [(oid, OctetString(b"too_short"))]
 
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
@@ -402,6 +383,7 @@ async def test_invalid_mac_length_ignored(
     assert len(entries) == 0
 
 
+@pytest.mark.usefixtures("mock_udp_transport")
 async def test_mac_processing_exception_ignored(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -417,10 +399,6 @@ async def test_mac_processing_exception_ignored(
         yield None, None, None, [(oid, val)]
 
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
@@ -444,6 +422,7 @@ async def test_mac_processing_exception_ignored(
     assert len(entries) == 0
 
 
+@pytest.mark.usefixtures("mock_udp_transport")
 async def test_host_info_populates_device_registry(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
@@ -455,10 +434,6 @@ async def test_host_info_populates_device_registry(
         yield
 
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
@@ -486,6 +461,7 @@ async def test_host_info_populates_device_registry(
     assert device.name == "router01"
 
 
+@pytest.mark.usefixtures("mock_udp_transport")
 async def test_host_info_no_space_in_descr(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
@@ -497,10 +473,6 @@ async def test_host_info_no_space_in_descr(
         yield
 
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
@@ -527,6 +499,7 @@ async def test_host_info_no_space_in_descr(
     assert device.model == "SingleWordDescr"
 
 
+@pytest.mark.usefixtures("mock_udp_transport")
 async def test_host_info_pysnmp_error_sets_empty_model(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
@@ -538,10 +511,6 @@ async def test_host_info_pysnmp_error_sets_empty_model(
         yield
 
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
@@ -562,6 +531,7 @@ async def test_host_info_pysnmp_error_sets_empty_model(
     assert device.model == ""
 
 
+@pytest.mark.usefixtures("mock_udp_transport")
 async def test_host_info_errstatus_sets_generic_name(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
@@ -573,10 +543,6 @@ async def test_host_info_errstatus_sets_generic_name(
         yield
 
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
@@ -597,6 +563,7 @@ async def test_host_info_errstatus_sets_generic_name(
     assert device.model == "SNMP Server"
 
 
+@pytest.mark.usefixtures("mock_udp_transport")
 async def test_host_info_auth_error(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
@@ -608,10 +575,6 @@ async def test_host_info_auth_error(
         yield
 
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
@@ -633,10 +596,6 @@ async def test_host_info_request_args_wrong_value_error(
 ) -> None:
     """Test WrongValueError raised by _async_ensure_request_args during host info."""
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
         patch(
             "homeassistant.components.snmp.coordinator.async_create_request_cmd_args",
             side_effect=WrongValueError,
@@ -669,10 +628,6 @@ async def test_update_data_request_args_wrong_value_error(
 
     with (
         patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
-        patch(
             "homeassistant.components.snmp.coordinator.create_auth_data",
             return_value=Mock(),
         ),
@@ -703,10 +658,6 @@ async def test_update_data_request_args_pysnmp_error(
 
     with (
         patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
-        patch(
             "homeassistant.components.snmp.coordinator.create_auth_data",
             return_value=Mock(),
         ),
@@ -721,16 +672,13 @@ async def test_update_data_request_args_pysnmp_error(
         await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("mock_udp_transport")
 async def test_walk_auth_error(
     hass: HomeAssistant,
     mock_coordinator_entry: MockConfigEntry,
 ) -> None:
     """Test that WrongValueError during walk triggers reauth."""
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=WrongValueError,
@@ -751,6 +699,7 @@ async def test_walk_auth_error(
         await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("mock_udp_transport")
 async def test_walk_end_of_mib(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -772,10 +721,6 @@ async def test_walk_end_of_mib(
     hass.states.async_set("device_tracker.aa_bb_cc_dd_ee_ff", STATE_HOME)
 
     with (
-        patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,

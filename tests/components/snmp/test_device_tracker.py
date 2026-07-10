@@ -4,6 +4,7 @@ import binascii
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pysnmp.proto.rfc1902 import OctetString
 import pytest
 
@@ -16,7 +17,6 @@ from homeassistant.components.snmp.device_tracker import (
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -61,7 +61,7 @@ def mock_get_cmd():
         yield mock
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
 async def test_device_tracker_setup_with_legacy_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -84,12 +84,8 @@ async def test_device_tracker_setup_with_legacy_state(
     # Simulate a legacy tracked device with existing state
     hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
 
-    with patch(
-        "homeassistant.components.snmp.util.UdpTransportTarget.create",
-        return_value=Mock(),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
@@ -109,7 +105,7 @@ async def test_device_tracker_setup_with_legacy_state(
     assert state.attributes["ip"] == "192.168.1.1"
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
 async def test_device_tracker_new_entity_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -129,12 +125,8 @@ async def test_device_tracker_new_entity_disabled_by_default(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.snmp.util.UdpTransportTarget.create",
-        return_value=Mock(),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
@@ -151,9 +143,12 @@ async def test_device_tracker_new_entity_disabled_by_default(
     assert hass.states.get(entity_id) is None
 
 
-@pytest.mark.usefixtures("mock_get_cmd")
+@pytest.mark.usefixtures("mock_udp_transport", "mock_get_cmd")
 async def test_device_tracker_update(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_walk: Mock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_walk: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update of SNMP device tracker."""
     entry = MockConfigEntry(
@@ -187,24 +182,21 @@ async def test_device_tracker_update(
 
     mock_walk.side_effect = mock_walk_1
 
-    with patch(
-        "homeassistant.components.snmp.util.UdpTransportTarget.create",
-        return_value=Mock(),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-        entity_id_1 = entity_registry.async_get_entity_id(
-            DEVICE_TRACKER_DOMAIN, DOMAIN, mac1_str
-        )
-        assert entity_id_1 is not None
-        assert hass.states.get(entity_id_1).state == STATE_HOME
-        assert hass.states.get(entity_id_1).attributes["ip"] == "192.168.1.1"
+    entity_id_1 = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, mac1_str
+    )
+    assert entity_id_1 is not None
+    assert hass.states.get(entity_id_1).state == STATE_HOME
+    assert hass.states.get(entity_id_1).attributes["ip"] == "192.168.1.1"
 
-        mock_walk.side_effect = mock_walk_2
+    mock_walk.side_effect = mock_walk_2
 
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
-        await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=20))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     # mac2 is a newly discovered device (no legacy state) → disabled
     entity_id_2 = entity_registry.async_get_entity_id(
@@ -222,7 +214,7 @@ async def test_device_tracker_update(
     assert hass.states.get(entity_id_2) is None
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
 async def test_device_tracker_device_registry_linking(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -242,12 +234,8 @@ async def test_device_tracker_device_registry_linking(
 
     mac = "00:11:22:33:44:55"
 
-    with patch(
-        "homeassistant.components.snmp.util.UdpTransportTarget.create",
-        return_value=Mock(),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify Host Device
     host_device = dr_reg.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
@@ -267,7 +255,7 @@ async def test_device_tracker_device_registry_linking(
     assert reg_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
 async def test_device_tracker_name_resolves_to_mac_address(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -286,12 +274,8 @@ async def test_device_tracker_name_resolves_to_mac_address(
     # Enable entity by setting legacy state
     hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
 
-    with patch(
-        "homeassistant.components.snmp.util.UdpTransportTarget.create",
-        return_value=Mock(),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
@@ -303,7 +287,7 @@ async def test_device_tracker_name_resolves_to_mac_address(
     assert state.name == "00_11_22_33_44_55"
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
 async def test_device_tracker_enabled_if_device_exists(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -331,12 +315,8 @@ async def test_device_tracker_enabled_if_device_exists(
         connections={(dr.CONNECTION_NETWORK_MAC, "00:11:22:33:44:55")},
     )
 
-    with patch(
-        "homeassistant.components.snmp.util.UdpTransportTarget.create",
-        return_value=Mock(),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
@@ -360,7 +340,7 @@ async def test_async_setup_scanner_import(hass: HomeAssistant) -> None:
         assert kwargs["context"]["source"] == "import"
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
 async def test_device_tracker_initial_macs(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -381,19 +361,15 @@ async def test_device_tracker_initial_macs(
         DEVICE_TRACKER_DOMAIN, DOMAIN, mac, config_entry=entry
     )
 
-    with patch(
-        "homeassistant.components.snmp.util.UdpTransportTarget.create",
-        return_value=Mock(),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac)
     assert entity_id is not None
     assert hass.states.get(entity_id) is not None
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
 async def test_device_tracker_properties_empty_coordinator(
     hass: HomeAssistant,
 ) -> None:
@@ -409,7 +385,7 @@ async def test_device_tracker_properties_empty_coordinator(
     assert entity.ip_address is None
 
 
-@pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
+@pytest.mark.usefixtures("mock_udp_transport", "mock_walk", "mock_get_cmd")
 async def test_device_tracker_state_cleanup(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -440,10 +416,6 @@ async def test_device_tracker_state_cleanup(
 
     with (
         patch(
-            "homeassistant.components.snmp.util.UdpTransportTarget.create",
-            return_value=Mock(),
-        ),
-        patch(
             "homeassistant.core.StateMachine.async_remove",
             side_effect=mock_remove_side_effect,
             autospec=True,
@@ -455,9 +427,12 @@ async def test_device_tracker_state_cleanup(
     mock_remove.assert_called_with(hass.states, reg_entry.entity_id)
 
 
-@pytest.mark.usefixtures("mock_get_cmd")
+@pytest.mark.usefixtures("mock_udp_transport", "mock_get_cmd")
 async def test_device_tracker_update_empty_data(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_walk: Mock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_walk: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test coordinator update with empty data."""
     entry = MockConfigEntry(
@@ -470,17 +445,14 @@ async def test_device_tracker_update_empty_data(
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.snmp.util.UdpTransportTarget.create",
-        return_value=Mock(),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Trigger update with empty data
     mock_walk.side_effect = lambda *args, **kwargs: (yield from [])
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
+    freezer.tick(timedelta(seconds=20))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Entity should still exist in the registry but no new entities created
