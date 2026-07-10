@@ -1,5 +1,6 @@
 """Extend the basic Accessory and Bridge functions."""
 
+from collections.abc import Collection
 import logging
 from typing import Any, cast
 from uuid import UUID
@@ -12,13 +13,17 @@ from pyhap.iid_manager import IIDManager
 from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
-from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntityFeature,
+)
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.lawn_mower import LawnMowerEntityFeature
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.remote import RemoteEntityFeature
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -53,10 +58,12 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.decorator import Registry
 
+from .aidmanager import AccessoryAidStorage
 from .climate_util import get_fan_modes_and_speeds, get_swing_on_mode
 from .const import (
     ATTR_DISPLAY_NAME,
@@ -73,11 +80,13 @@ from .const import (
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LOW_BATTERY_THRESHOLD,
     DEFAULT_LOW_BATTERY_THRESHOLD,
+    DOMAIN,
     EMPTY_MAC,
     EVENT_HOMEKIT_CHANGED,
     HK_CHARGING,
     HK_NOT_CHARGABLE,
     HK_NOT_CHARGING,
+    ISSUE_HEATER_COOLER_CANDIDATE,
     MANUFACTURER,
     MAX_MANUFACTURER_LENGTH,
     MAX_MODEL_LENGTH,
@@ -158,6 +167,150 @@ def climate_supports_heater_cooler(state: State) -> bool:
     return (has_fan or has_swing) and not (
         features & ClimateEntityFeature.TARGET_HUMIDITY
     )
+
+
+def async_accessory_type_issue_id(entry_id: str, entity_id: str) -> str:
+    """Return the repair issue id for a HeaterCooler candidate."""
+    return f"{ISSUE_HEATER_COOLER_CANDIDATE}_{entry_id}_{entity_id}"
+
+
+@ha_callback
+def async_delete_accessory_type_issues(
+    hass: HomeAssistant, entry_id: str, keep: Collection[str] = ()
+) -> None:
+    """Delete an entry's HeaterCooler candidate issues except the kept ids."""
+    issue_prefix = f"{ISSUE_HEATER_COOLER_CANDIDATE}_{entry_id}_"
+    issue_reg = ir.async_get(hass)
+    for domain, issue_id in list(issue_reg.issues):
+        if (
+            domain == DOMAIN
+            and issue_id.startswith(issue_prefix)
+            and issue_id not in keep
+        ):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+class AccessoryTypeResolver:
+    """Decide the accessory type for entities with several representations.
+
+    Owns the repair candidacy bookkeeping so the bridge only has to ask
+    for a type and sync the issues after accessories change.
+    """
+
+    def __init__(self, hass: HomeAssistant, entry_id: str, bridge_name: str) -> None:
+        """Initialize the resolver for one config entry."""
+        self._hass = hass
+        self._entry_id = entry_id
+        self._bridge_name = bridge_name
+        # Existing climate entities that would route to the HeaterCooler but
+        # stay on the Thermostat until the user opts in through a repair,
+        # mapped to their friendly name for the issue text.
+        self._candidates: dict[str, str] = {}
+
+    @ha_callback
+    def async_resolve(
+        self,
+        aid_storage: AccessoryAidStorage,
+        state: State,
+        conf: dict[str, Any],
+        *,
+        allow_auto: bool,
+    ) -> str | None:
+        """Resolve which accessory an entity uses into conf.
+
+        Returns the accessory type the caller must record with
+        async_set_accessory_type once the accessory is successfully
+        created, so a failed creation is not sticky across restarts.
+        """
+        if state.domain != CLIMATE_DOMAIN:
+            return None
+        return self._async_resolve_climate(
+            aid_storage, state, conf, allow_auto=allow_auto
+        )
+
+    @ha_callback
+    def _async_resolve_climate(
+        self,
+        aid_storage: AccessoryAidStorage,
+        state: State,
+        conf: dict[str, Any],
+        *,
+        allow_auto: bool,
+    ) -> str | None:
+        """Resolve which accessory a climate entity uses into conf.
+
+        An explicit type in the entity config always wins, even for
+        entities with a humidity setpoint, and updates the stored routing,
+        so switching back to automatic keeps the accessory the entity
+        already uses. In bridge mode an entity that has never been
+        bridged gets the HeaterCooler when capable. Anything else keeps
+        the Thermostat and is tracked as a repair candidate.
+        """
+        entity_id = state.entity_id
+        # Candidacy is re-evaluated on every resolve
+        self._candidates.pop(entity_id, None)
+        if climate_type := conf.get(CONF_TYPE):
+            aid_storage.async_set_accessory_type(entity_id, climate_type)
+            return None
+        if aid_storage.get_accessory_type(entity_id) == TYPE_HEATER_COOLER:
+            if not climate_controls_target_humidity(state):
+                conf[CONF_TYPE] = TYPE_HEATER_COOLER
+                return None
+            # A humidity setpoint gained since the choice was stored cannot
+            # be represented by the HeaterCooler, so the routing is dropped.
+            aid_storage.async_set_accessory_type(entity_id, None)
+        if not climate_supports_heater_cooler(state):
+            return None
+        if allow_auto and not aid_storage.entity_is_allocated(entity_id):
+            conf[CONF_TYPE] = TYPE_HEATER_COOLER
+            return TYPE_HEATER_COOLER
+        self._candidates[entity_id] = state.name
+        return None
+
+    @ha_callback
+    def async_entity_removed(self, entity_id: str) -> None:
+        """End the repair candidacy of a removed accessory.
+
+        The resolver re-establishes it when the entity is recreated.
+        """
+        self._candidates.pop(entity_id, None)
+
+    @ha_callback
+    def async_reset_candidates(self) -> None:
+        """Forget all candidates before the accessories are rebuilt."""
+        self._candidates.clear()
+
+    @ha_callback
+    def async_update_issues(self) -> None:
+        """Sync the HeaterCooler migration repairs with the current candidates.
+
+        YAML configured bridges never get issues; their documented path is the
+        ``type`` option in ``entity_config``.
+        """
+        entry = self._hass.config_entries.async_get_entry(self._entry_id)
+        if entry is None or entry.source == SOURCE_IMPORT:
+            async_delete_accessory_type_issues(self._hass, self._entry_id)
+            return
+        keep = {
+            async_accessory_type_issue_id(self._entry_id, entity_id)
+            for entity_id in self._candidates
+        }
+        async_delete_accessory_type_issues(self._hass, self._entry_id, keep=keep)
+        for entity_id, name in self._candidates.items():
+            ir.async_create_issue(
+                self._hass,
+                DOMAIN,
+                async_accessory_type_issue_id(self._entry_id, entity_id),
+                is_fixable=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key=ISSUE_HEATER_COOLER_CANDIDATE,
+                translation_placeholders={
+                    "entity": name,
+                    "entity_id": entity_id,
+                    "bridge": self._bridge_name,
+                },
+                data={"entry_id": self._entry_id, "entity_id": entity_id},
+            )
 
 
 def get_accessory(  # noqa: C901

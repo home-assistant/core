@@ -99,9 +99,15 @@ from . import (  # noqa: F401
     type_switches,
     type_thermostats,
 )
-from .accessories import HomeAccessory, HomeBridge, HomeDriver, get_accessory
+from .accessories import (
+    AccessoryTypeResolver,
+    HomeAccessory,
+    HomeBridge,
+    HomeDriver,
+    async_delete_accessory_type_issues,
+    get_accessory,
+)
 from .aidmanager import AccessoryAidStorage
-from .climate_type import ClimateTypeResolver, async_delete_climate_type_issues
 from .const import (
     ATTR_INTEGRATION,
     BRIDGE_NAME,
@@ -433,7 +439,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> 
 
 async def async_remove_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> None:
     """Remove a config entry."""
-    async_delete_climate_type_issues(hass, entry.entry_id)
+    async_delete_accessory_type_issues(hass, entry.entry_id)
     await hass.async_add_executor_job(
         remove_state_files_for_entry_id, hass, entry.entry_id
     )
@@ -579,7 +585,7 @@ class HomeKit:
         # persisted pairing state yet); accessory mode uses it to tell a
         # brand new entry from one that predates the HeaterCooler.
         self._first_ever_start = False
-        self._climate_type_resolver = ClimateTypeResolver(hass, entry_id, name)
+        self._type_resolver = AccessoryTypeResolver(hass, entry_id, name)
 
     def setup(self, async_zeroconf_instance: AsyncZeroconf, uuid: str) -> bool:
         """Set up bridge and accessory driver.
@@ -667,7 +673,7 @@ class HomeKit:
             self.driver.accessory = new_acc
             new_acc.run()
             self._async_update_accessories_hash()
-        self._climate_type_resolver.async_update_issues()
+        self._type_resolver.async_update_issues()
 
     def _async_remove_accessories_by_entity_id(
         self, entity_ids: Iterable[str]
@@ -682,7 +688,7 @@ class HomeKit:
             if aid not in self.bridge.accessories:
                 continue
             if acc := self.async_remove_bridge_accessory(aid):
-                self._climate_type_resolver.async_entity_removed(entity_id)
+                self._type_resolver.async_entity_removed(entity_id)
                 self._async_shutdown_accessory(acc)
                 removed.append(entity_id)
         return removed
@@ -722,7 +728,7 @@ class HomeKit:
             if acc := self.add_bridge_accessory(state):
                 acc.run()
         self._async_update_accessories_hash()
-        self._climate_type_resolver.async_update_issues()
+        self._type_resolver.async_update_issues()
 
     @callback
     def _async_update_accessories_hash(self) -> bool:
@@ -767,7 +773,7 @@ class HomeKit:
         conf = self._config.get(state.entity_id, {}).copy()
         # Must run before the aid is allocated below so a never bridged
         # entity is still recognizable as new.
-        pending_type = self._climate_type_resolver.async_resolve(
+        pending_type = self._type_resolver.async_resolve(
             self.aid_storage, state, conf, allow_auto=True
         )
         aid = self.aid_storage.get_or_allocate_aid_for_entity_id(state.entity_id)
@@ -1025,10 +1031,10 @@ class HomeKit:
         state = entity_states[0]
         conf = self._config.get(state.entity_id, {}).copy()
         # Accessory mode has no aid allocation to tell new from existing,
-        # so only a brand new pairing routes automatically; anything else
-        # keeps the Thermostat and is offered the repair.
+        # so only a brand new pairing picks its type automatically; anything
+        # else keeps its current accessory and is offered the repair.
         assert self.aid_storage is not None
-        pending_type = self._climate_type_resolver.async_resolve(
+        pending_type = self._type_resolver.async_resolve(
             self.aid_storage, state, conf, allow_auto=self._first_ever_start
         )
         acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
@@ -1104,7 +1110,7 @@ class HomeKit:
         """Create the accessories."""
         assert self.driver is not None
 
-        self._climate_type_resolver.async_reset_candidates()
+        self._type_resolver.async_reset_candidates()
         entity_states = await self.async_configure_accessories()
         if self._homekit_mode == HOMEKIT_MODE_ACCESSORY:
             acc = self._async_create_single_accessory(entity_states)
@@ -1115,7 +1121,7 @@ class HomeKit:
             return False
         # No need to load/persist as we do it in setup
         self.driver.accessory = acc
-        self._climate_type_resolver.async_update_issues()
+        self._type_resolver.async_update_issues()
         return True
 
     async def async_stop(self, *args: Any) -> None:
