@@ -589,3 +589,85 @@ async def test_reload(recorder_mock: Recorder, hass: HomeAssistant) -> None:
 
     assert hass.states.get("sensor.test") is None
     assert hass.states.get("sensor.filtered_realistic_humidity")
+
+
+async def test_seed_current_zero_state_on_start(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Filter should adopt a source value of 0 already present at startup.
+
+    Without seeding the current source state, the filter stays unknown until the
+    source changes again. A steady zero is a valid reading and must not be skipped.
+    """
+    hass.states.async_set("sensor.test_monitored", "0")
+    await hass.async_block_till_done()
+
+    config = {
+        "sensor": {
+            "platform": "filter",
+            "name": "test",
+            "entity_id": "sensor.test_monitored",
+            "filters": [
+                {"filter": "lowpass", "time_constant": 10, "precision": 2},
+            ],
+        }
+    }
+
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.recorder.history.get_last_state_changes",
+            return_value={},
+        ),
+        assert_setup_component(1, "sensor"),
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == "0.0"
+
+
+async def test_seed_current_nonzero_state_on_start(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Filter should also seed non-zero current source values at startup."""
+    hass.states.async_set("sensor.test_monitored", "12.5")
+    await hass.async_block_till_done()
+
+    config = {
+        "sensor": {
+            "platform": "filter",
+            "name": "test",
+            "entity_id": "sensor.test_monitored",
+            "filters": [
+                {"filter": "lowpass", "time_constant": 10, "precision": 1},
+            ],
+        }
+    }
+
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.recorder.history.get_last_state_changes",
+            return_value={},
+        ),
+        assert_setup_component(1, "sensor"),
+    ):
+        assert await async_setup_component(hass, "sensor", config)
+        await hass.async_block_till_done()
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    assert state.state == "12.5"
