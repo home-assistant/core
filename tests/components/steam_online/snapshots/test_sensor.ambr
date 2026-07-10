@@ -39,7 +39,7 @@
 # name: test_sensors[sensor.testaccount1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'created': datetime.datetime(2010, 5, 15, 19, 58, 31, tzinfo=datetime.timezone.utc),
+      'created': datetime.datetime(2010, 5, 15, 12, 58, 31, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testaccount1',
       'game': 'The Witcher: Enhanced Edition',
@@ -255,7 +255,7 @@
 # name: test_sensors[sensor.testaccount2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'created': datetime.datetime(2011, 4, 19, 19, 57, 21, tzinfo=datetime.timezone.utc),
+      'created': datetime.datetime(2011, 4, 19, 12, 57, 21, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'testaccount2',
       'game': None,

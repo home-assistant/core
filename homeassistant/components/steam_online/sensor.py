@@ -61,7 +61,7 @@ SENSOR_DESCRIPTIONS: tuple[SteamSensorEntityDescription, ...] = (
         extra_state_attributes_fn=lambda x, icons: {
             "real_name": x.realname,
             "created": (
-                dt_util.utc_from_timestamp(x.timecreated)
+                dt_util.as_local(dt_util.utc_from_timestamp(x.timecreated))
                 if x.timecreated is not None
                 else None
             ),
