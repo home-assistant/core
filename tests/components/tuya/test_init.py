@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 from syrupy.assertion import SnapshotAssertion
 from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
 from tuya_sharing import CustomerDevice, Manager
@@ -15,6 +16,7 @@ from homeassistant.components.tuya.const import (
     DOMAIN,
 )
 from homeassistant.components.tuya.diagnostics import _REDACTED_DPCODES
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -369,3 +371,18 @@ async def test_fixtures_valid(hass: HomeAssistant) -> None:
                         f"Please mark `data['status']['{key}']` as `**REDACTED**`"
                         f" in {device_code}.json"
                     )
+
+
+async def test_network_error_retries_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a network error during setup results in a setup retry."""
+    manager = create_manager()
+    manager.update_device_cache.side_effect = requests.exceptions.ConnectionError(
+        "Failed to resolve 'apigw.tuyaeu.com'"
+    )
+
+    await initialize_entry(hass, manager, mock_config_entry, [])
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
