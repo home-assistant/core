@@ -65,6 +65,8 @@ SENSOR_DESCRIPTIONS: tuple[SteamSensorEntityDescription, ...] = (
                 if x.timecreated is not None
                 else None
             ),
+            "game": x.gameextrainfo,
+            "game_id": x.gameid,
             "game_image_header": (
                 f"{STEAM_API_URL}{x.gameid}/{STEAM_HEADER_IMAGE_FILE}"
                 if x.gameid is not None
@@ -75,9 +77,13 @@ SENSOR_DESCRIPTIONS: tuple[SteamSensorEntityDescription, ...] = (
                 if x.gameid is not None
                 else None
             ),
-            "game_icon": f"{STEAM_ICON_URL}{x.gameid}/{info}.jpg"
-            if x.gameid is not None and (info := icons.get(x.gameid)) is not None
-            else None,
+            "game_icon": (
+                f"{STEAM_ICON_URL}{x.gameid}/{info}.jpg"
+                if x.gameid is not None and (info := icons.get(x.gameid)) is not None
+                else None
+            ),
+            "last_online": dt_util.utc_from_timestamp(x.lastlogoff),
+            "level": x.level,
         },
     ),
     SteamSensorEntityDescription(
