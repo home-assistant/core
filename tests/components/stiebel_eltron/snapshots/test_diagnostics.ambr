@@ -14,9 +14,6 @@
       'host': '**REDACTED**',
       'port': 502,
     }),
-    'modbus': dict({
-      'is_connected': True,
-    }),
     'model': 'LWZ',
   })
 # ---
