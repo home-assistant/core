@@ -6,7 +6,7 @@ from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.script import llm as script_llm
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import llm
+from homeassistant.helpers import entity_registry as er, llm
 from homeassistant.setup import async_setup_component
 
 ENTITY_ID = "script.test_script"
@@ -92,3 +92,15 @@ async def test_script_tool_name_not_started_with_digit(hass: HomeAssistant) -> N
     async_expose_entity(hass, "conversation", "script.123456", True)
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
     assert "_123456" in [tool.name for tool in result.tools]
+
+
+async def test_script_tool_description_includes_aliases(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the script tool description is extended with the entity aliases."""
+    entity_registry.async_update_entity(ENTITY_ID, aliases=["barkeep", "pour a drink"])
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    tool = next(tool for tool in result.tools if tool.name == "test_script")
+    assert tool.description == (
+        "This is a test script. Aliases: ['barkeep', 'pour a drink']"
+    )
