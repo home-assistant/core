@@ -834,7 +834,13 @@ class NewZWaveNumericSensor(ZWaveBaseEntity, SensorEntity):
             self.entity_description = get_entity_description(data)
             self._attr_native_unit_of_measurement = data.unit_of_measurement
         else:
-            self.__dict__.pop("_attr_native_unit_of_measurement", None)
+            if isinstance(self.info, NewZwaveDiscoveryInfo):
+                self.entity_description = cast(
+                    SensorEntityDescription, self.info.entity_description
+                )
+            self.__dict__.pop("__attr_native_unit_of_measurement", None)
+        self.__dict__.pop("device_class", None)
+        self.__dict__.pop("state_class", None)
         self.__dict__.pop("native_unit_of_measurement", None)
         self.__dict__.pop("suggested_unit_of_measurement", None)
 
