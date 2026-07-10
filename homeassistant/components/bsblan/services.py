@@ -49,8 +49,13 @@ _SLOT_SCHEMA = vol.Schema(
 )
 
 
+_MAX_TIME_SLOTS_PER_DAY = 3
+
+
 _WEEKLY_SCHEDULE_FIELDS: Final[dict[vol.Marker, Any]] = {
-    vol.Optional(slot_attr): vol.All(cv.ensure_list, [_SLOT_SCHEMA])
+    vol.Optional(slot_attr): vol.All(
+        cv.ensure_list, [_SLOT_SCHEMA], vol.Length(max=_MAX_TIME_SLOTS_PER_DAY)
+    )
     for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS
 }
 

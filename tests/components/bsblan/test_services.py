@@ -435,6 +435,30 @@ async def test_non_standard_time_types(
         )
 
 
+@pytest.mark.usefixtures("setup_integration")
+async def test_too_many_slots_per_day(
+    hass: HomeAssistant,
+    water_heater_device_entry: dr.DeviceEntry,
+) -> None:
+    """Test that more than three slots for a day is rejected by the schema."""
+    # BSB-LAN supports a maximum of three time slots per day
+    with pytest.raises(vol.MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_hot_water_schedule",
+            {
+                "device_id": water_heater_device_entry.id,
+                "monday_slots": [
+                    {"start_time": time(6, 0), "end_time": time(8, 0)},
+                    {"start_time": time(9, 0), "end_time": time(11, 0)},
+                    {"start_time": time(12, 0), "end_time": time(14, 0)},
+                    {"start_time": time(15, 0), "end_time": time(17, 0)},
+                ],
+            },
+            blocking=True,
+        )
+
+
 async def test_async_setup_services(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
