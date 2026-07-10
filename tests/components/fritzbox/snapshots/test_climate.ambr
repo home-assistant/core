@@ -66,7 +66,7 @@
         'boost',
       ]),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
-      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 19.5,
+      <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 19.5,
     }),
     'context': <ANY>,
     'entity_id': 'climate.fake_name',
