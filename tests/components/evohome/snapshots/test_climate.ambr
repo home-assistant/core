@@ -2612,11 +2612,24 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       'status': dict({
         'activeSystemFaults': tuple(
+          dict({
+            'fault_type': 'BoilerCommunicationLost',
+            'since': '2024-10-01T01:00:00+02:00',
+          }),
+          dict({
+            'fault_type': 'ChValveCommunicationLost',
+            'since': '2024-09-01T01:00:00+02:00',
+          }),
+          dict({
+            'fault_type': 'GatewayCommunicationLost',
+            'since': '2024-06-01T01:00:00+02:00',
+          }),
         ),
-        'system_id': '0003',
+        'system_id': '0001003',
         'system_mode_status': dict({
-          'is_permanent': True,
-          'mode': 'Auto',
+          'is_permanent': False,
+          'mode': 'AutoWithEco',
+          'time_until': '2024-07-11T02:00:00+02:00',
         }),
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 384>,
@@ -2649,8 +2662,8 @@
       'status': dict({
         'activeFaults': tuple(
           dict({
-            'fault_type': 'TempZoneActuatorCommunicationLost',
-            'since': '2024-12-01T01:00:00+01:00',
+            'fault_type': 'TempZoneActuatorLowBattery',
+            'since': '2024-11-01T01:00:00+01:00',
           }),
           dict({
             'fault_type': 'TempZoneSensorCommunicationLost',
@@ -2671,7 +2684,7 @@
           'is_available': True,
           'temperature': 19.5,
         }),
-        'zone_id': '0004',
+        'zone_id': '0001004',
       }),
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 14.0,

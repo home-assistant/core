@@ -480,6 +480,19 @@
     'state': 'unknown',
   })
 # ---
+# name: test_setup_platform[sys_006][button.reset_domestic_hot_water-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Reset Domestic Hot Water',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.reset_domestic_hot_water',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_setup_platform[sys_006][button.reset_home-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({

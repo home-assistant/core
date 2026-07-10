@@ -1,7 +1,7 @@
 [
   {
     "locationInfo": {
-      "locationId": "0001",
+      "locationId": "0001001",
       "name": "Home",
       "streetAddress": "1 Rue de la Loi",
       "city": "Auderghem",
@@ -26,18 +26,18 @@
     "gateways": [
       {
         "gatewayInfo": {
-          "gatewayId": "0002",
+          "gatewayId": "0001002",
           "mac": "000000000000",
           "crc": "0000",
           "isWiFi": false
         },
         "temperatureControlSystems": [
           {
-            "systemId": "0003",
+            "systemId": "0001003",
             "modelType": "EvoTouch",
             "zones": [
               {
-                "zoneId": "0004",
+                "zoneId": "0001004",
                 "modelType": "HeatingZone",
                 "setpointCapabilities": {
                   "maxHeatSetpoint": 35.0,
@@ -63,6 +63,24 @@
                 "zoneType": "ZoneTemperatureControl"
               }
             ],
+            "dhw": {
+              "dhwId": "0001005",
+              "dhwStateCapabilitiesResponse": {
+                "allowedStates": ["On", "Off"],
+                "allowedModes": [
+                  "FollowSchedule",
+                  "PermanentOverride",
+                  "TemporaryOverride"
+                ],
+                "maxDuration": "1.00:00:00",
+                "timingResolution": "00:10:00"
+              },
+              "scheduleCapabilitiesResponse": {
+                "maxSwitchpointsPerDay": 6,
+                "minSwitchpointsPerDay": 1,
+                "timingResolution": "00:10:00"
+              }
+            },
             "allowedSystemModes": [
               {
                 "systemMode": "Auto",
@@ -77,7 +95,7 @@
   },
   {
     "locationInfo": {
-      "locationId": "0002",
+      "locationId": "0002001",
       "name": "Home",
       "streetAddress": "-REDACTED-",
       "city": "Auderghem",
@@ -102,18 +120,18 @@
     "gateways": [
       {
         "gatewayInfo": {
-          "gatewayId": "0002",
-          "mac": "-REDACTED-",
-          "crc": "-REDACTED-",
+          "gatewayId": "0002002",
+          "mac": "000000000000",
+          "crc": "0000",
           "isWiFi": false
         },
         "temperatureControlSystems": [
           {
-            "systemId": "0003",
+            "systemId": "0002003",
             "modelType": "EvoTouch",
             "zones": [
               {
-                "zoneId": "0004",
+                "zoneId": "0002004",
                 "modelType": "HeatingZone",
                 "setpointCapabilities": {
                   "maxHeatSetpoint": 35.0,
@@ -139,6 +157,24 @@
                 "zoneType": "ZoneTemperatureControl"
               }
             ],
+            "dhw": {
+              "dhwId": "0002005",
+              "dhwStateCapabilitiesResponse": {
+                "allowedStates": ["On", "Off"],
+                "allowedModes": [
+                  "FollowSchedule",
+                  "PermanentOverride",
+                  "TemporaryOverride"
+                ],
+                "maxDuration": "1.00:00:00",
+                "timingResolution": "00:10:00"
+              },
+              "scheduleCapabilitiesResponse": {
+                "maxSwitchpointsPerDay": 6,
+                "minSwitchpointsPerDay": 1,
+                "timingResolution": "00:10:00"
+              }
+            },
             "allowedSystemModes": [
               {
                 "systemMode": "Auto",
