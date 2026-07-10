@@ -13,6 +13,7 @@ from tesla_fleet_api.exceptions import (
     InsufficientCredits,
     InvalidResponse,
     InvalidToken,
+    LoginRequired,
     RateLimited,
     SubscriptionRequired,
     TeslaFleetError,
@@ -61,6 +62,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
+    (LoginRequired, ConfigEntryState.SETUP_ERROR),
     (SubscriptionRequired, ConfigEntryState.SETUP_ERROR),
     (TeslaFleetError, ConfigEntryState.SETUP_RETRY),
 ]

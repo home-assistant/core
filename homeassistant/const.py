@@ -474,6 +474,8 @@ class EntityStateAttribute(StrEnum):
     ENTITY_PICTURE = "entity_picture"
     FRIENDLY_NAME = "friendly_name"
     ICON = "icon"
+    LATITUDE = "latitude"
+    LONGITUDE = "longitude"
     RESTORED = "restored"
     SUPPORTED_FEATURES = "supported_features"
     UNIT_OF_MEASUREMENT = "unit_of_measurement"
