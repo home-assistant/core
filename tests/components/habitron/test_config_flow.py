@@ -267,9 +267,8 @@ async def test_validate_input_invalid_host_too_short(hass: HomeAssistant) -> Non
 
     with (
         patch(
-            "homeassistant.components.habitron.config_flow."
-            "network.async_get_enabled_source_ips",
-            new=AsyncMock(return_value=["10.0.0.5"]),
+            "homeassistant.components.habitron.config_flow.network.async_get_source_ip",
+            new=AsyncMock(return_value="10.0.0.5"),
         ),
         pytest.raises(InvalidHost),
     ):
@@ -286,9 +285,8 @@ async def test_validate_input_host_not_found_for_dns_failure(
 
     with (
         patch(
-            "homeassistant.components.habitron.config_flow."
-            "network.async_get_enabled_source_ips",
-            new=AsyncMock(return_value=["10.0.0.5"]),
+            "homeassistant.components.habitron.config_flow.network.async_get_source_ip",
+            new=AsyncMock(return_value="10.0.0.5"),
         ),
         patch(
             "homeassistant.components.habitron.config_flow.test_connection",

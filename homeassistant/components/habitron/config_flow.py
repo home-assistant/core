@@ -34,18 +34,18 @@ KEY_TOKEN = "websock_token"
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    own_ips = {str(ip) for ip in await network.async_get_enabled_source_ips(hass)}
+    own_ip = await network.async_get_source_ip(hass)
     host_input = data[KEY_HOST]
 
-    # If the entered IP matches one of our own IPs, store the 'local' sentinel.
-    if host_input in own_ips:
+    # If the entered IP matches our own IP, store the 'local' sentinel.
+    if host_input == own_ip:
         host_input = "local"
         data[KEY_HOST] = "local"
 
     host_to_test = host_input
     if host_to_test == "local":
-        # Resolve the sentinel to a concrete own IP for the probe.
-        host_to_test = next(iter(own_ips), "")
+        # Resolve the sentinel to our own IP for the probe.
+        host_to_test = own_ip
 
     # Basic validation
     if len(host_to_test) < 4:
@@ -164,9 +164,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # as Home Assistant, so its LAN address is one of HA's own source IPs.
         # Ask HA directly — this matches even when the hub is briefly unreachable
         # (e.g. rebooting during startup) and the entry is not yet loaded.
-        local_is_candidate = any(
-            str(ip) in candidate_hosts
-            for ip in await network.async_get_enabled_source_ips(self.hass)
+        local_is_candidate = (
+            await network.async_get_source_ip(self.hass) in candidate_hosts
         )
         for entry in self._async_current_entries(include_ignore=False):
             host_conf = entry.data.get(KEY_HOST)
@@ -240,10 +239,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # fallback unique_id matches the host that ``validate_input`` will
             # actually store (it rewrites an own IP to ``local`` only later).
             host_input = user_input[KEY_HOST]
-            own_ips = {
-                str(ip) for ip in await network.async_get_enabled_source_ips(self.hass)
-            }
-            if host_input in own_ips:
+            if host_input == await network.async_get_source_ip(self.hass):
                 host_input = "local"
             unique_id: str | None = None
             devices = await self._cached_discover()

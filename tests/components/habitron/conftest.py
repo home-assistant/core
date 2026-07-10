@@ -58,8 +58,8 @@ def mock_habitron_client() -> Generator[MagicMock]:
             new=AsyncMock(return_value=(True, MOCK_NAME)),
         ) as mock_test,
         patch(
-            "homeassistant.components.habitron.config_flow.network.async_get_enabled_source_ips",
-            new=AsyncMock(return_value=["192.168.1.10"]),
+            "homeassistant.components.habitron.config_flow.network.async_get_source_ip",
+            new=AsyncMock(return_value="192.168.1.10"),
         ),
         patch(
             "homeassistant.components.habitron.config_flow.discover_smarthubs",
