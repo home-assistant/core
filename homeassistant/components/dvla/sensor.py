@@ -198,8 +198,7 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
             except ValueError:
                 self._state = None
 
-        if self._state is not None:
-            self.attrs.update(self.coordinator.data)
+        self.attrs = dict(self.coordinator.data) if self._state is not None else {}
 
     @callback
     @override
