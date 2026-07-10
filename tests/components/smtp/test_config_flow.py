@@ -30,6 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import USER_INPUT
 
@@ -454,12 +455,20 @@ async def test_form_reauth_errors(
 async def test_form_subentry_reconfigure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test subentry reconfigure flow."""
 
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        == 1
+    )
+    assert (entity := entity_registry.async_get("notify.home_assistant_recipient"))
+    assert entity.unique_id == "123456789_recipient@example.com"
 
     result = await config_entry.start_subentry_reconfigure_flow(hass, "ABCDEF")
     assert result["type"] is FlowResultType.FORM
@@ -469,11 +478,18 @@ async def test_form_subentry_reconfigure(
         result["flow_id"],
         user_input={CONF_RECIPIENT: "changed@example.com"},
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
     assert config_entry.subentries["ABCDEF"].unique_id == "changed@example.com"
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        == 1
+    )
+    assert (entity := entity_registry.async_get("notify.home_assistant_recipient"))
+    assert entity.unique_id == "123456789_changed@example.com"
 
 
 @pytest.mark.usefixtures("smtp")
