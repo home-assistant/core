@@ -1573,7 +1573,6 @@ class MqttEntity(
         self.async_write_ha_state()
 
     @override
-    # pylint: disable-next=home-assistant-missing-super-call
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
         self._sub_state = subscription.async_unsubscribe_topics(

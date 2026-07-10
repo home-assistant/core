@@ -239,7 +239,6 @@ class MqttSensor(MqttEntity, RestoreSensor):
             )
 
     @override
-    # pylint: disable-next=home-assistant-missing-super-call
     async def async_will_remove_from_hass(self) -> None:
         """Remove expire triggers."""
         if self._expiration_trigger:
