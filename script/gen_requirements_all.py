@@ -17,10 +17,9 @@ from script.hassfest.model import Config, Integration
 # Requirements which can't be installed on all systems because they
 # rely on additional system packages. Requirements listed in
 # EXCLUDED_REQUIREMENTS_ALL will be commented-out in
-# requirements_all.txt and requirements_test_all.txt.
+# requirements_all.txt.
 EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
-    "avion",
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
     "evdev",
@@ -207,7 +206,7 @@ num2words==0.5.14
 # pymodbus does not follow SemVer, and it keeps getting
 # downgraded or upgraded by custom components
 # This ensures all use the same version
-pymodbus==3.11.2
+pymodbus==3.13.1
 
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
@@ -240,6 +239,10 @@ azure-kusto-data==4.5.1
 azure-kusto-ingest==4.5.1
 coloredlogs==15.0.1
 setuptools==81.0.0
+
+# Pin cffi to 2.0.0 to avoid version mismatch with the pre-baked _cffi_backend in the base image.
+# https://github.com/home-assistant/core/issues/175832
+cffi==2.0.0
 """
 
 GENERATED_MESSAGE = (

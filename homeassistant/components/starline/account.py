@@ -47,7 +47,7 @@ class StarlineAccount:
 
     def _check_slnet_token(self, interval: int) -> None:
         """Check SLNet token expiration and update if needed."""
-        now = datetime.now().timestamp()
+        now = datetime.now().timestamp()  # pylint: disable=home-assistant-enforce-naive-now
         slnet_token_expires = self._config_entry.data[DATA_EXPIRES]
 
         if now + interval > slnet_token_expires:

@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Final, override
 
 import aioptdevices
 from aioptdevices.interface import Interface, PTDevicesResponseData
@@ -54,18 +54,17 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
 
         self.interface = ptdevices_interface
 
+    @override
     async def _async_update_data(self) -> PTDevicesResponseData:
         try:
             data = await self.interface.get_data()
         except aioptdevices.PTDevicesRequestError as err:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except aioptdevices.PTDevicesUnauthorizedError as err:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_access_token",

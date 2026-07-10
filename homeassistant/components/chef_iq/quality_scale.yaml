@@ -1,0 +1,120 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: No custom actions are defined.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      Passive integration; data is pushed via Bluetooth advertisements.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: No custom actions are defined.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup:
+    status: done
+    comment: |
+      Subscriptions are handled by the PassiveBluetoothProcessorEntity base class.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: |
+      Passive device; presence is confirmed by the discovered advertisement, no
+      connection is made.
+  test-before-setup:
+    status: exempt
+    comment: |
+      Sleepy passive device that may not be advertising at setup time; no
+      connection is made.
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: No custom actions are defined.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration has no configuration parameters.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: done
+    comment: |
+      Availability is provided by the passive bluetooth coordinator. These are
+      sleepy devices, so once seen the entities use assumed_state rather than
+      becoming unavailable.
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: Handled by the passive bluetooth coordinator.
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: No authentication is required.
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      The device is identified by its static Bluetooth address; there is no
+      network information to update.
+  discovery:
+    status: done
+    comment: The integration is discovered via Bluetooth.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Each probe is set up as its own config entry.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: exempt
+    comment: No custom exceptions are defined.
+  icon-translations:
+    status: exempt
+    comment: Entities derive their icons from their device classes.
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      There is nothing to reconfigure; the device is identified by its fixed
+      Bluetooth address.
+  repair-issues:
+    status: exempt
+    comment: No repair issues are raised.
+  stale-devices:
+    status: exempt
+    comment: A single device per config entry; removing the entry removes it.
+  # Platinum
+  async-dependency:
+    status: done
+    comment: |
+      The chefiq-ble dependency is a pure advertisement parser and performs no
+      blocking I/O.
+  inject-websession:
+    status: exempt
+    comment: The integration does not make HTTP requests.
+  strict-typing: done

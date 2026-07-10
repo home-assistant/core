@@ -6,7 +6,7 @@ from contextlib import suppress
 from datetime import datetime
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
@@ -411,6 +411,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return discovery_info_config
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -445,6 +446,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             ],
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -454,13 +456,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         self.ws_address = f"ws://{discovery_info.host}:{discovery_info.port}"
         home_id_display = format_home_id_for_display(int(home_id))
-        # Show home ID and network location in discovery notification
         self.context.update(
             {
                 "title_placeholders": {
-                    "host": discovery_info.host,
-                    "port": str(discovery_info.port),
-                    "home_id": home_id_display,
+                    CONF_NAME: (
+                        f"Network {home_id_display} at "
+                        f"{discovery_info.host}:{discovery_info.port}"
+                    )
                 }
             }
         )
@@ -484,6 +486,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
@@ -630,6 +633,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -1570,8 +1574,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         self.socket_path = discovery_info.socket_path
+        home_id_display = format_home_id_for_display(discovery_info.zwave_home_id)
         self.context["title_placeholders"] = {
-            CONF_NAME: f"{discovery_info.name} via ESPHome"
+            CONF_NAME: f"Network {home_id_display} via {discovery_info.name} (ESPHome)"
         }
         self._adapter_discovered = True
 
@@ -1624,7 +1629,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # save the backup to a file just in case
         self.backup_filepath = Path(
             self.hass.config.path(
-                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
+                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"  # pylint: disable=home-assistant-enforce-naive-now
             )
         )
         try:

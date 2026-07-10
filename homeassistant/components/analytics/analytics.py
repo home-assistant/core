@@ -28,9 +28,9 @@ from homeassistant.components.recorder import (
 )
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
     ATTR_DOMAIN,
     BASE_PLATFORMS,
+    EntityStateAttribute,
     __version__ as HA_VERSION,
 )
 from homeassistant.core import (
@@ -299,12 +299,8 @@ class Analytics:
             self._data = AnalyticsData.from_dict(stored)
 
         if self.supervisor and not self.onboarded:
-            # This may raise HassioNotReadyError if Supervisor was unreachable
-            # during setup of the Supervisor integration. That will fail setup
-            # of this integration. However there is no better option at this time
-            # since we need to get the diagnostic setting from Supervisor to correctly
-            # setup this integration and we can't raise ConfigEntryNotReady to
-            # trigger a retry from async_setup.
+            # This may raise HassioNotReadyError if Supervisor was unreachable.
+            # The caller is responsible for handling this and triggering a retry.
             supervisor_info = hassio.get_supervisor_info(self._hass)
 
             # User have not configured analytics, get this setting from the supervisor
@@ -349,10 +345,10 @@ class Analytics:
             await self._save()
 
         if self.supervisor:
-            # get_supervisor_info was called during setup so we can't get here
-            # if it raised. The others may raise HassioNotReadyError if only some
-            # data was successfully fetched from Supervisor
-            supervisor_info = hassio.get_supervisor_info(hass)
+            # Try to pull Supervisor information, but don't fail if some or all
+            # of it is unavailable due to setup failures in the hassio integration.
+            with contextlib.suppress(hassio.HassioNotReadyError):
+                supervisor_info = hassio.get_supervisor_info(hass)
             with contextlib.suppress(hassio.HassioNotReadyError):
                 operating_system_info = hassio.get_os_info(hass)
             with contextlib.suppress(hassio.HassioNotReadyError):
@@ -919,7 +915,9 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
                 # It is also not present, if entity is not in the state machine,
                 # which can happen for disabled entities.
                 "assumed_state": (
-                    entity_state.attributes.get(ATTR_ASSUMED_STATE, False)
+                    entity_state.attributes.get(
+                        EntityStateAttribute.ASSUMED_STATE, False
+                    )
                     if entity_state is not None
                     else None
                 ),

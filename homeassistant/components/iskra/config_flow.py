@@ -1,7 +1,7 @@
 """Config flow for iskra integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyiskra.adapters import Modbus, RestAPI
 from pyiskra.exceptions import (
@@ -117,6 +117,7 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
     host: str
     protocol: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

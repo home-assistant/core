@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import hashlib
 import logging
 from types import ModuleType
-from typing import Any, Final, Protocol, final
+from typing import Any, Final, Protocol, final, override
 
 import attr
 from propcache.api import cached_property
@@ -24,8 +24,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
     ATTR_ICON,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_NAME,
     CONF_ICON,
     CONF_MAC,
@@ -34,10 +32,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_HOME,
     STATE_NOT_HOME,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.entity_platform import (
+    async_create_platform_config_not_supported_issue,
+)
 from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
@@ -74,7 +76,9 @@ from .const import (
     LOGGER,
     PLATFORM_TYPE_LEGACY,
     SCAN_INTERVAL,
+    DeviceTrackerEntityStateAttribute,
     SourceType,
+    TrackerEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -379,8 +383,8 @@ async def async_extract_config(
         if platform.type == PLATFORM_TYPE_LEGACY:
             legacy.append(platform)
         else:
-            raise ValueError(
-                f"Unable to determine type for {platform.name}: {platform.type}"
+            async_create_platform_config_not_supported_issue(
+                hass, platform.name, DOMAIN
             )
 
     return legacy
@@ -506,8 +510,8 @@ def async_setup_scanner_platform(
             zone_home = hass.states.get(ENTITY_ID_HOME)
             if zone_home is not None:
                 kwargs["gps"] = [
-                    zone_home.attributes[ATTR_LATITUDE],
-                    zone_home.attributes[ATTR_LONGITUDE],
+                    zone_home.attributes[EntityStateAttribute.LATITUDE],
+                    zone_home.attributes[EntityStateAttribute.LONGITUDE],
                 ]
                 kwargs["gps_accuracy"] = 0
 
@@ -815,30 +819,36 @@ class Device(RestoreEntity):
         self._attributes: dict[str, Any] = {}
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the entity."""
         return self.config_name or self.host_name or self.dev_id or DEVICE_DEFAULT_NAME
 
     @property
+    @override
     def state(self) -> str:
         """Return the state of the device."""
         return self._state
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the picture of the device."""
         return self.config_picture
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, StateType]:
         """Return the device state attributes."""
-        attributes: dict[str, StateType] = {ATTR_SOURCE_TYPE: self.source_type}
+        attributes: dict[str, StateType] = {
+            DeviceTrackerEntityStateAttribute.SOURCE_TYPE: self.source_type
+        }
 
         if self.gps is not None:
-            attributes[ATTR_LATITUDE] = self.gps[0]
-            attributes[ATTR_LONGITUDE] = self.gps[1]
-            attributes[ATTR_GPS_ACCURACY] = self.gps_accuracy
+            attributes[TrackerEntityStateAttribute.LATITUDE] = self.gps[0]
+            attributes[TrackerEntityStateAttribute.LONGITUDE] = self.gps[1]
+            attributes[TrackerEntityStateAttribute.GPS_ACCURACY] = self.gps_accuracy
 
         if self.battery is not None:
             attributes[ATTR_BATTERY] = self.battery
@@ -846,11 +856,13 @@ class Device(RestoreEntity):
         return attributes
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device state attributes."""
         return self._attributes
 
     @property
+    @override
     def icon(self) -> str | None:
         """Return device icon."""
         return self._icon
@@ -932,6 +944,7 @@ class Device(RestoreEntity):
             self._state = STATE_HOME
             self.last_update_home = True
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add an entity."""
         await super().async_added_to_hass()
@@ -942,17 +955,17 @@ class Device(RestoreEntity):
         self.last_seen = dt_util.utcnow()
 
         for attribute, var in (
-            (ATTR_SOURCE_TYPE, "source_type"),
-            (ATTR_GPS_ACCURACY, "gps_accuracy"),
+            (DeviceTrackerEntityStateAttribute.SOURCE_TYPE, "source_type"),
+            (TrackerEntityStateAttribute.GPS_ACCURACY, "gps_accuracy"),
             (ATTR_BATTERY, "battery"),
         ):
             if attribute in state.attributes:
                 setattr(self, var, state.attributes[attribute])
 
-        if ATTR_LONGITUDE in state.attributes:
+        if TrackerEntityStateAttribute.LONGITUDE in state.attributes:
             self.gps = (
-                state.attributes[ATTR_LATITUDE],
-                state.attributes[ATTR_LONGITUDE],
+                state.attributes[TrackerEntityStateAttribute.LATITUDE],
+                state.attributes[TrackerEntityStateAttribute.LONGITUDE],
             )
 
 

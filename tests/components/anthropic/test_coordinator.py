@@ -1,6 +1,5 @@
 """Tests for the Anthropic integration."""
 
-import datetime
 from unittest.mock import AsyncMock, patch
 
 from anthropic import APITimeoutError, AuthenticationError, RateLimitError
@@ -16,6 +15,7 @@ from homeassistant.components.anthropic.coordinator import (
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -121,7 +121,7 @@ async def test_connection_error_handling(
     assert state.state == "2026-02-27T12:00:00+00:00"
 
     # Verify the background check period
-    test_time = datetime.datetime.now(datetime.UTC) + UPDATE_INTERVAL_DISCONNECTED
+    test_time = dt_util.utcnow() + UPDATE_INTERVAL_DISCONNECTED
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     mock_model_list.assert_not_awaited()
@@ -151,7 +151,7 @@ async def test_connection_check_reauth(
 
     # Get timeout
     assert mock_model_list.await_count == 0
-    test_time = datetime.datetime.now(datetime.UTC) + UPDATE_INTERVAL_CONNECTED
+    test_time = dt_util.utcnow() + UPDATE_INTERVAL_CONNECTED
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert mock_model_list.await_count == 1
@@ -230,7 +230,7 @@ async def test_connection_restore(
 
     # Wait for background check to run and fail
     assert mock_model_list.await_count == 0
-    test_time = datetime.datetime.now(datetime.UTC) + UPDATE_INTERVAL_DISCONNECTED
+    test_time = dt_util.utcnow() + UPDATE_INTERVAL_DISCONNECTED
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert mock_model_list.await_count == 1

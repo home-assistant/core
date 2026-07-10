@@ -135,6 +135,9 @@
     "pressure": {
       "name": "[%key:component::sensor::entity_component::pressure::name%]"
     },
+    "radon": {
+      "name": "[%key:component::sensor::entity_component::radon::name%]"
+    },
     "reactive_energy": {
       "name": "[%key:component::sensor::entity_component::reactive_energy::name%]"
     },

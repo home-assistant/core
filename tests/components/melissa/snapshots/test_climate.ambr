@@ -2,28 +2,28 @@
 # name: test_setup_platform
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_humidity': 18.7,
-      'current_temperature': 27.4,
-      'fan_mode': 'low',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 18.7,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 27.4,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'low',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         'auto',
         'high',
         'medium',
         'low',
       ]),
-      'friendly_name': 'Melissa 12345678',
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Melissa 12345678',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 30,
-      'min_temp': 16,
-      'supported_features': <ClimateEntityFeature: 393>,
-      'target_temp_step': 1,
-      'temperature': 16,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 16,
     }),
     'context': <ANY>,
     'entity_id': 'climate.melissa_12345678',

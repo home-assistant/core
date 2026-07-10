@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pybotvac.exceptions import NeatoRobotException
 from pybotvac.robot import Robot
@@ -89,12 +89,14 @@ class NeatoConnectedSwitch(NeatoEntity, SwitchEntity):
             )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return bool(
             self.type == SWITCH_TYPE_SCHEDULE and self._schedule_state == STATE_ON
         )
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if self.type == SWITCH_TYPE_SCHEDULE:
@@ -106,6 +108,7 @@ class NeatoConnectedSwitch(NeatoEntity, SwitchEntity):
                     "Neato switch connection error '%s': %s", self.entity_id, ex
                 )
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if self.type == SWITCH_TYPE_SCHEDULE:

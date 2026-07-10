@@ -10,10 +10,13 @@ from pyportainer import (
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.service import async_extract_config_entry_ids
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    service,
+)
 
 from .const import DOMAIN
 from .coordinator import PortainerConfigEntry
@@ -47,80 +50,69 @@ SERVICE_RECREATE_CONTAINER_SCHEMA = vol.Schema(
 )
 
 
-async def _extract_config_entry(service_call: ServiceCall) -> PortainerConfigEntry:
-    """Extract config entry from the service call."""
-    target_entry_ids = await async_extract_config_entry_ids(service_call)
-    target_entries: list[PortainerConfigEntry] = [
-        loaded_entry
-        for loaded_entry in service_call.hass.config_entries.async_loaded_entries(
-            DOMAIN
-        )
-        if loaded_entry.entry_id in target_entry_ids
-    ]
-    if not target_entries:
+@callback
+def _async_get_device(call: ServiceCall, device_id: str) -> dr.DeviceEntry:
+    """Get a device entry from a device ID."""
+    device_reg = dr.async_get(call.hass)
+    if (device := device_reg.async_get(device_id)) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_target",
         )
-    return target_entries[0]
+    return device
 
 
-async def _get_endpoint_id(
-    call: ServiceCall,
+@callback
+def _async_get_entry_from_device(
+    call: ServiceCall, device: dr.DeviceEntry
+) -> PortainerConfigEntry:
+    """Resolve and validate the Portainer config entry for a device."""
+    for entry in call.hass.config_entries.async_entries(DOMAIN):
+        if entry.entry_id in device.config_entries:
+            return service.async_get_config_entry(call.hass, DOMAIN, entry.entry_id)
+
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_target",
+    )
+
+
+@callback
+def _async_get_endpoint_id(
+    device: dr.DeviceEntry,
     config_entry: PortainerConfigEntry,
 ) -> int:
-    """Get endpoint data from device ID."""
-    device_reg = dr.async_get(call.hass)
-    device_id = call.data[ATTR_DEVICE_ID]
-    device = device_reg.async_get(device_id)
-    assert device
+    """Get the endpoint ID from a device entry."""
     coordinator = config_entry.runtime_data
 
-    endpoint_data = None
     for data in coordinator.data.values():
         if (
             DOMAIN,
             f"{config_entry.entry_id}_{data.endpoint.id}",
         ) in device.identifiers:
-            endpoint_data = data
-            break
+            return data.endpoint.id
 
-    assert endpoint_data
-    return endpoint_data.endpoint.id
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_target",
+    )
 
 
-async def _get_container_and_endpoint_ids(
-    call: ServiceCall,
-) -> tuple[PortainerConfigEntry, int, str]:
-    """Get config entry, endpoint ID and container ID from the container device ID."""
-    device_reg = dr.async_get(call.hass)
-    device = device_reg.async_get(call.data[ATTR_CONTAINER_DEVICE_ID])
-    if device is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_target",
-        )
-
-    config_entry: PortainerConfigEntry | None = None
-    for loaded_entry in call.hass.config_entries.async_loaded_entries(DOMAIN):
-        if loaded_entry.entry_id in device.config_entries:
-            config_entry = loaded_entry
-            break
-
-    if config_entry is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_target",
-        )
-
+@callback
+def _async_get_container_and_endpoint_ids(
+    device: dr.DeviceEntry,
+    config_entry: PortainerConfigEntry,
+) -> tuple[int, str]:
+    """Get the endpoint ID and container ID from a container device entry."""
     coordinator = config_entry.runtime_data
+
     for data in coordinator.data.values():
         for container_name, container_data in data.containers.items():
             if (
                 DOMAIN,
                 f"{config_entry.entry_id}_{data.endpoint.id}_{container_name}",
             ) in device.identifiers:
-                return config_entry, data.endpoint.id, container_data.container.id
+                return data.endpoint.id, container_data.container.id
 
     raise ServiceValidationError(
         translation_domain=DOMAIN,
@@ -130,9 +122,10 @@ async def _get_container_and_endpoint_ids(
 
 async def prune_images(call: ServiceCall) -> None:
     """Prune unused images in Portainer, with more controls."""
-    config_entry = await _extract_config_entry(call)
+    device = _async_get_device(call, call.data[ATTR_DEVICE_ID])
+    config_entry = _async_get_entry_from_device(call, device)
     coordinator = config_entry.runtime_data
-    endpoint_id = await _get_endpoint_id(call, config_entry)
+    endpoint_id = _async_get_endpoint_id(device, config_entry)
 
     try:
         await coordinator.portainer.images_prune(
@@ -159,10 +152,12 @@ async def prune_images(call: ServiceCall) -> None:
 
 async def recreate_container(call: ServiceCall) -> None:
     """Recreate a container in Portainer, with more controls."""
-    config_entry, endpoint_id, container_id = await _get_container_and_endpoint_ids(
-        call
-    )
+    device = _async_get_device(call, call.data[ATTR_CONTAINER_DEVICE_ID])
+    config_entry = _async_get_entry_from_device(call, device)
     coordinator = config_entry.runtime_data
+    endpoint_id, container_id = _async_get_container_and_endpoint_ids(
+        device, config_entry
+    )
     timeout: timedelta | None = call.data.get(ATTR_TIMEOUT)
 
     try:
