@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.helpers import selector
 
-from .const import CONF_CERT_PEM, CONF_DISPLAY_NAME, CONF_KEY_PEM, CONF_SERIAL, DOMAIN
+from .const import CONF_CERT_PEM, CONF_KEY_PEM, CONF_SERIAL, DOMAIN
 from .coordinator import async_probe_camera
 
 SERIAL_LENGTH = 10
@@ -121,8 +121,6 @@ class HarborConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_KEY_PEM: normalized[CONF_KEY_PEM],
             CONF_IP_ADDRESS: normalized[CONF_IP_ADDRESS],
         }
-        if display_name:
-            entry_data[CONF_DISPLAY_NAME] = display_name
 
         return self.async_create_entry(
             title=display_name or f"Camera {serial}",

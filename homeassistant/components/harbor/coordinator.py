@@ -12,7 +12,7 @@ from harbor.state import HarborDeviceState
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, instance_id
+from homeassistant.helpers import instance_id
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -22,8 +22,9 @@ LOGGER = logging.getLogger(__name__)
 
 type HarborConfigEntry = ConfigEntry[HarborCoordinator]
 
-# How long to wait for the first successful MQTT connection before treating the
-# camera as unreachable, both when validating the config flow and during setup.
+# How long to wait for the first successful MQTT connection and the first
+# device data to arrive before treating the camera as unreachable, both when
+# validating the config flow and during setup.
 CONNECT_TIMEOUT = 30.0
 
 
@@ -81,7 +82,6 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
         hass: HomeAssistant,
         entry: HarborConfigEntry,
         config: HarborCameraConfig,
-        initial_display_name: str | None = None,
     ) -> None:
         """Initialize the Harbor coordinator."""
         super().__init__(
@@ -92,14 +92,12 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
         )
         self._config = config
         self.device = HarborCamera(config)
-        if initial_display_name is not None:
-            self.device.state.display_name = initial_display_name
         self.data = self.device.state
         self.connected = False
         self._ssl_context_cache: dict[str, Any] = {}
         self._mqtt_client: HarborMQTTClient | None = None
-        self._registered_device: tuple[str | None, str | None] | None = None
         self._connected_event = asyncio.Event()
+        self._data_event = asyncio.Event()
         self._unsubscribe_updates = self.device.subscribe_updates(
             self._handle_device_update
         )
@@ -125,13 +123,20 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
         )
         await self._mqtt_client.start()
 
-    async def async_wait_until_connected(self) -> None:
-        """Wait for the first successful MQTT connection.
+    async def async_wait_until_ready(self) -> None:
+        """Wait for the first MQTT connection and the first device data.
 
-        Raises ``TimeoutError`` if the camera does not connect in time.
+        Registering entities only once the camera's first message has
+        arrived means the device registry sees the real name and firmware
+        from the start, instead of a placeholder that would otherwise
+        persist until the next reload.
+
+        Raises ``TimeoutError`` if the camera does not connect and report
+        data in time.
         """
         async with asyncio.timeout(CONNECT_TIMEOUT):
             await self._connected_event.wait()
+            await self._data_event.wait()
 
     @override
     async def async_shutdown(self) -> None:
@@ -158,7 +163,7 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
 
     def _handle_device_update(self, state: HarborDeviceState) -> None:
         """Mirror a library device update into Home Assistant."""
-        self._sync_device_registry()
+        self._data_event.set()
         self.async_set_updated_data(state)
 
     async def _async_set_connected(self, connected: bool) -> None:
@@ -169,27 +174,3 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
             return
         self.connected = connected
         self.async_update_listeners()
-
-    def _sync_device_registry(self) -> None:
-        """Refresh the device entry when its name or firmware changes.
-
-        The device is first registered with a placeholder name when entities
-        are added, before the camera's real name and firmware are known; this
-        adopts them once they arrive. Further changes are rare, so the
-        fingerprint check avoids re-registering on every message.
-        """
-        state = self.data
-        name = state.display_name or f"{MODEL} {state.serial}"
-        fingerprint = (name, state.os_version)
-        if fingerprint == self._registered_device:
-            return
-        self._registered_device = fingerprint
-        dr.async_get(self.hass).async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, state.serial)},
-            manufacturer=MANUFACTURER,
-            model=MODEL,
-            name=name,
-            serial_number=state.serial,
-            sw_version=state.os_version,
-        )

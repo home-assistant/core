@@ -19,8 +19,8 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 
-# The device is registered with its default name before any message sets a
-# display name, so the entity id derives from that default name.
+# The default test fixture reports no device data on connect, so the device
+# keeps its placeholder name and the entity id derives from that.
 _SENSOR = "sensor.harbor_camera_1234567890_temperature"
 
 
@@ -73,20 +73,34 @@ async def test_setup_retry_when_unreachable(
     assert mock_mqtt_client.return_value.stop.called
 
 
+async def test_setup_retry_when_no_data_arrives(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mqtt_client: AsyncMock,
+) -> None:
+    """Test setup is retried when the camera connects but never sends data."""
+
+    async def _start() -> None:
+        await set_connected(mock_mqtt_client, True)
+
+    mock_mqtt_client.return_value.start.side_effect = _start
+
+    with patch("homeassistant.components.harbor.coordinator.CONNECT_TIMEOUT", 0):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_mqtt_client.return_value.stop.called
+
+
 async def test_availability_follows_connection(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_mqtt_client: AsyncMock,
 ) -> None:
-    """Test entity availability tracks the MQTT connection and device data."""
+    """Test entity availability tracks the MQTT connection."""
     await setup_integration(hass, mock_config_entry)
 
-    # Connected after setup but no device data yet: unavailable.
-    assert hass.states.get(_SENSOR).state == STATE_UNAVAILABLE
-
-    # Device data arrives: entities become available.
-    await emit_message(mock_mqtt_client, HEARTBEAT_TOPIC, HEARTBEAT_PAYLOAD)
-    await hass.async_block_till_done()
+    # Setup waits for the first device message, so entities start available.
     assert hass.states.get(_SENSOR).state != STATE_UNAVAILABLE
 
     # A repeated connected signal is a no-op and keeps entities available.
@@ -111,11 +125,19 @@ async def test_device_registry(
     mock_config_entry: MockConfigEntry,
     mock_mqtt_client: AsyncMock,
 ) -> None:
-    """Test the device entry adopts the name and firmware from a heartbeat."""
-    await setup_integration(hass, mock_config_entry)
+    """Test the device adopts the name and firmware from the first message.
 
-    await emit_message(mock_mqtt_client, HEARTBEAT_TOPIC, HEARTBEAT_PAYLOAD)
-    await hass.async_block_till_done()
+    Setup waits for that first message before registering entities, so the
+    device is correct from the start instead of needing a later reload.
+    """
+
+    async def _start() -> None:
+        await set_connected(mock_mqtt_client, True)
+        await emit_message(mock_mqtt_client, HEARTBEAT_TOPIC, HEARTBEAT_PAYLOAD)
+
+    mock_mqtt_client.return_value.start.side_effect = _start
+
+    await setup_integration(hass, mock_config_entry)
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, SERIAL)})
     assert device is not None

@@ -80,6 +80,11 @@ def mock_mqtt_client() -> Generator[AsyncMock]:
 
         async def _start() -> None:
             await set_connected(mock_client, True)
+            # Setup waits for the first device message too; simulate the
+            # initial-commands response landing right after connect, the
+            # same way a real camera answers before any explicit test
+            # message. Empty so it doesn't set values tests don't expect.
+            await mock_client.call_args.kwargs["message_handler"](HEARTBEAT_TOPIC, {})
 
         mock_client.return_value.start.side_effect = _start
         # The config flow probes get-settings for the camera's friendly name;
