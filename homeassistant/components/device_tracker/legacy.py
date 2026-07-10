@@ -24,8 +24,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
     ATTR_ICON,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     ATTR_NAME,
     CONF_ICON,
     CONF_MAC,
@@ -34,6 +32,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_HOME,
     STATE_NOT_HOME,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -511,8 +510,8 @@ def async_setup_scanner_platform(
             zone_home = hass.states.get(ENTITY_ID_HOME)
             if zone_home is not None:
                 kwargs["gps"] = [
-                    zone_home.attributes[ATTR_LATITUDE],
-                    zone_home.attributes[ATTR_LONGITUDE],
+                    zone_home.attributes[EntityStateAttribute.LATITUDE],
+                    zone_home.attributes[EntityStateAttribute.LONGITUDE],
                 ]
                 kwargs["gps_accuracy"] = 0
 
@@ -847,8 +846,8 @@ class Device(RestoreEntity):
         }
 
         if self.gps is not None:
-            attributes[TrackerEntityStateAttribute.LATITUDE] = self.gps[0]
-            attributes[TrackerEntityStateAttribute.LONGITUDE] = self.gps[1]
+            attributes[EntityStateAttribute.LATITUDE] = self.gps[0]
+            attributes[EntityStateAttribute.LONGITUDE] = self.gps[1]
             attributes[TrackerEntityStateAttribute.GPS_ACCURACY] = self.gps_accuracy
 
         if self.battery is not None:
@@ -963,10 +962,10 @@ class Device(RestoreEntity):
             if attribute in state.attributes:
                 setattr(self, var, state.attributes[attribute])
 
-        if TrackerEntityStateAttribute.LONGITUDE in state.attributes:
+        if EntityStateAttribute.LONGITUDE in state.attributes:
             self.gps = (
-                state.attributes[TrackerEntityStateAttribute.LATITUDE],
-                state.attributes[TrackerEntityStateAttribute.LONGITUDE],
+                state.attributes[EntityStateAttribute.LATITUDE],
+                state.attributes[EntityStateAttribute.LONGITUDE],
             )
 
 
