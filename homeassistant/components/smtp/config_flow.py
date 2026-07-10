@@ -10,6 +10,7 @@ from typing import Any, override
 
 import voluptuous as vol
 
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigFlow,
@@ -33,7 +34,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -356,6 +357,55 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
                         ),
                     ),
                 }
+            ),
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure flow to update a recipient."""
+
+        entry = self._get_entry()
+        subentry = self._get_reconfigure_subentry()
+
+        if user_input is not None:
+            old_unique_id = subentry.unique_id
+            result = self.async_update_and_abort(
+                entry,
+                subentry=subentry,
+                title=(
+                    user_input[CONF_RECIPIENT]
+                    if subentry.title == old_unique_id
+                    else subentry.title
+                ),
+                data_updates={},
+                unique_id=user_input[CONF_RECIPIENT],
+            )
+            if result.get("reason") == "reconfigure_successful" and (
+                entity := er.async_get(self.hass).async_get_entity_id(
+                    NOTIFY_DOMAIN, DOMAIN, f"{entry.entry_id}_{old_unique_id}"
+                )
+            ):
+                er.async_get(self.hass).async_update_entity(
+                    entity,
+                    new_unique_id=f"{entry.entry_id}_{user_input[CONF_RECIPIENT]}",
+                )
+            return result
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_RECIPIENT): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.EMAIL,
+                                autocomplete="email",
+                            ),
+                        )
+                    }
+                ),
+                suggested_values={CONF_RECIPIENT: subentry.unique_id},
             ),
         )
 
