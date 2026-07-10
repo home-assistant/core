@@ -130,6 +130,27 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "Smart Lock Ultra": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
     ),
+    "Smart Lock Vision": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
+    ),
+    "Smart Lock Vision Pro": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
+    ),
+    "Lock Vision": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
+    ),
+    "Lock Vision Pro": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
+    ),
+    "Smart Lock Lite": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
+    ),
+    "Smart Lock Pro": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
+    ),
+    "Smart Lock Pro Wifi": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
+    ),
     "MeterPro(CO2)": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
     "AI Art Frame": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BUTTON, Platform.IMAGE)
