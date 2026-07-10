@@ -846,8 +846,8 @@ class Device(RestoreEntity):
         }
 
         if self.gps is not None:
-            attributes[TrackerEntityStateAttribute.LATITUDE] = self.gps[0]
-            attributes[TrackerEntityStateAttribute.LONGITUDE] = self.gps[1]
+            attributes[EntityStateAttribute.LATITUDE] = self.gps[0]
+            attributes[EntityStateAttribute.LONGITUDE] = self.gps[1]
             attributes[TrackerEntityStateAttribute.GPS_ACCURACY] = self.gps_accuracy
 
         if self.battery is not None:
@@ -962,10 +962,10 @@ class Device(RestoreEntity):
             if attribute in state.attributes:
                 setattr(self, var, state.attributes[attribute])
 
-        if TrackerEntityStateAttribute.LONGITUDE in state.attributes:
+        if EntityStateAttribute.LONGITUDE in state.attributes:
             self.gps = (
-                state.attributes[TrackerEntityStateAttribute.LATITUDE],
-                state.attributes[TrackerEntityStateAttribute.LONGITUDE],
+                state.attributes[EntityStateAttribute.LATITUDE],
+                state.attributes[EntityStateAttribute.LONGITUDE],
             )
 
 
