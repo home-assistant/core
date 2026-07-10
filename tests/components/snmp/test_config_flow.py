@@ -211,17 +211,10 @@ async def test_import_flow_success(hass: HomeAssistant) -> None:
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_import_flow_already_configured(hass: HomeAssistant) -> None:
+async def test_import_flow_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test YAML import flow aborts if already configured."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="192.168.1.1_161_1.3.6.1.4.1.2021.10.1.3.1",
-        data={
-            "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
-        },
-    ).add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
@@ -235,17 +228,10 @@ async def test_import_flow_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_user_flow_already_configured(hass: HomeAssistant) -> None:
+async def test_user_flow_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test user flow aborts if already configured."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="192.168.1.1_161_1.3.6.1.4.1.2021.10.1.3.1",
-        data={
-            "host": "192.168.1.1",
-            "baseoid": "1.3.6.1.4.1.2021.10.1.3.1",
-        },
-    ).add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
