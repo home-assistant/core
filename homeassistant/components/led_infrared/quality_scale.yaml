@@ -9,7 +9,9 @@ rules:
     comment: |
       This integration does not poll.
   brands: done
-  common-modules: done
+  common-modules:
+    status: exempt
+    comment: This integration has only one platform
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done

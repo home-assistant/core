@@ -14,10 +14,10 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, LEDIrDeviceType
-from .entity import LEDIrEntity
+from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DOMAIN, LEDIrDeviceType
 
 PARALLEL_UPDATES = 1
 
@@ -78,12 +78,13 @@ async def async_setup_entry(
     )
 
 
-class LEDIrLightEntity(LEDIrEntity, InfraredEmitterConsumerEntity, LightEntity):
+class LEDIrLightEntity(InfraredEmitterConsumerEntity, LightEntity):
     """Represents a LED Infrared light entity."""
 
     _attr_assumed_state = True
     _attr_color_mode = ColorMode.ONOFF
     _attr_effect_list: list[str]
+    _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_supported_features = LightEntityFeature.EFFECT
@@ -96,7 +97,12 @@ class LEDIrLightEntity(LEDIrEntity, InfraredEmitterConsumerEntity, LightEntity):
         infrared_entity_id: str,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(entry)
+        self._attr_unique_id = entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=entry.title,
+        )
+
         self._infrared_emitter_entity_id = infrared_entity_id
 
         self._codes = CODES[device_type]
