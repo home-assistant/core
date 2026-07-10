@@ -16,6 +16,9 @@ PLATFORMS = [
 
 INVALID_AUTH_ERRORS = (EnvoyAuthenticationError, EnvoyAuthenticationRequired)
 
+ACCESS_TOKEN_LOGIN_URL = "https://entrez.enphaseenergy.com"
+CONF_MANUAL_TOKEN = "use_manual_token"
+
 SETUP_RETRY_TIMEOUT = 50
 OPERATIONAL_RETRY_TIMEOUT = 200
 
