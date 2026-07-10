@@ -1,5 +1,6 @@
 """Test Home Assistant exposed entities helper."""
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -7,6 +8,7 @@ from homeassistant.components.homeassistant import DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     LEGACY_ENTITY_PURGE_INTERVAL,
+    LEGACY_ENTITY_SWEEP_INTERVAL,
     ExposedEntities,
     ExposedEntity,
     async_expose_entity,
@@ -596,15 +598,16 @@ async def test_legacy_entity_survives_transient_removal(hass: HomeAssistant) -> 
     }
 
 
-async def test_purge_stale_legacy_entities_periodic_sweep(hass: HomeAssistant) -> None:
+async def test_purge_stale_legacy_entities_periodic_sweep(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Stale legacy entries with no live state are purged by the periodic sweep.
 
-    This covers entries left behind by an integration that created and
-    later removed many entities across restarts. The sweep is
-    intentionally not tied to startup: it only fires after
-    LEGACY_ENTITY_PURGE_INTERVAL has elapsed, so a slow-starting
-    integration has time to re-register its entities before being treated
-    as gone.
+    A record is only purged once it's been continuously missing for the
+    full LEGACY_ENTITY_PURGE_INTERVAL, confirmed across repeated sweeps --
+    not on the first sweep that happens to observe it missing (see
+    test_purge_stale_legacy_entities_clears_tracking_on_reappearance for
+    why that distinction matters).
     """
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -615,10 +618,86 @@ async def test_purge_stale_legacy_entities_periodic_sweep(hass: HomeAssistant) -
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     assert set(exposed_entities.entities) == {"sensor.still_around", "sensor.long_gone"}
 
-    async_fire_time_changed(hass, dt_util.utcnow() + LEGACY_ENTITY_PURGE_INTERVAL)
+    # First sweep observes sensor.long_gone missing and starts tracking it,
+    # but does not purge it yet.
+    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert set(exposed_entities.entities) == {"sensor.still_around", "sensor.long_gone"}
+    assert "sensor.long_gone" in exposed_entities._legacy_orphaned_since
+
+    # Once it's stayed missing for the full retention window, a later sweep purges it.
+    freezer.tick(LEGACY_ENTITY_PURGE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert set(exposed_entities.entities) == {"sensor.still_around"}
+    assert exposed_entities._legacy_orphaned_since == {}
+
+
+async def test_purge_stale_legacy_entities_clears_tracking_on_reappearance(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """An entity that reappears between sweeps is not purged later.
+
+    Guards the bug flagged in review: purging must confirm an entity has
+    been missing for the *whole* retention window, not just that it was
+    missing once, or a transient absence (e.g. a platform reload) would
+    eventually wipe the user's exposure preference after it comes back.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "sensor.flaky", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+
+    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert "sensor.flaky" in exposed_entities._legacy_orphaned_since
+
+    # The entity comes back before the retention window elapses.
+    hass.states.async_set("sensor.flaky", "on", {})
+
+    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert "sensor.flaky" not in exposed_entities._legacy_orphaned_since
+    assert "sensor.flaky" in exposed_entities.entities
+
+    # Even after the full retention window, it's kept since it's live again.
+    freezer.tick(LEGACY_ENTITY_PURGE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert "sensor.flaky" in exposed_entities.entities
+
+
+async def test_legacy_orphaned_since_persists_across_restart(
+    hass: HomeAssistant,
+) -> None:
+    """Orphaned-since tracking survives a reload.
+
+    Otherwise a routine restart would reset the retention clock to zero
+    every time, and a chronically-missing-but-frequently-restarted entity
+    would never actually reach the full retention window.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "sensor.long_gone", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+
+    exposed_entities._async_purge_stale_legacy_entities(dt_util.utcnow())
+    assert "sensor.long_gone" in exposed_entities._legacy_orphaned_since
+
+    await flush_store(exposed_entities._store)
+
+    exposed_entities2 = ExposedEntities(hass)
+    await exposed_entities2.async_initialize()
+
+    assert (
+        exposed_entities2._legacy_orphaned_since
+        == exposed_entities._legacy_orphaned_since
+    )
 
 
 async def test_purge_sweep_cancelled_on_stop(hass: HomeAssistant) -> None:
@@ -632,8 +711,9 @@ async def test_purge_sweep_cancelled_on_stop(hass: HomeAssistant) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, dt_util.utcnow() + LEGACY_ENTITY_PURGE_INTERVAL)
+    async_fire_time_changed(hass, dt_util.utcnow() + LEGACY_ENTITY_SWEEP_INTERVAL)
     await hass.async_block_till_done()
 
-    # The sweep must not have run after stop, so the entry is untouched
+    # The sweep must not have run after stop, so nothing was tracked or purged
     assert "sensor.long_gone" in exposed_entities.entities
+    assert exposed_entities._legacy_orphaned_since == {}

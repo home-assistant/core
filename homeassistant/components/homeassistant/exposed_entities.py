@@ -4,6 +4,7 @@ from collections.abc import Callable, Mapping
 import dataclasses
 from datetime import datetime, timedelta
 from itertools import chain
+import time
 from typing import Any, TypedDict
 
 import voluptuous as vol
@@ -30,21 +31,19 @@ from .const import DATA_EXPOSED_ENTITIES, DOMAIN
 
 KNOWN_ASSISTANTS = ("cloud.alexa", "cloud.google_assistant", "conversation")
 
-# How often to sweep for legacy exposed-entity records whose entity no
-# longer exists. Deliberately the only cleanup mechanism (no real-time
-# state-removal listener): a transient removal, e.g. a platform reload,
-# would otherwise wipe the user's exposure preference for an entity that
-# comes right back. A day-long staleness window is an acceptable trade-off
-# for records that only ever grow, never contain live data, and previously
-# weren't cleaned up at all. async_track_time_interval only fires after the
-# interval elapses, so the first sweep happens well after boot, giving
-# slow-starting integrations time to re-register their entities too.
-LEGACY_ENTITY_PURGE_INTERVAL = timedelta(hours=24)
-
 STORAGE_KEY = f"{DOMAIN}.exposed_entities"
 STORAGE_VERSION = 1
 
 SAVE_DELAY = 10
+
+# How often to check for legacy exposed-entity records whose entity no
+# longer exists.
+LEGACY_ENTITY_SWEEP_INTERVAL = timedelta(hours=24)
+# How long a record must be continuously missing across sweeps before it's
+# actually purged. Mirrors entity_registry's ORPHANED_ENTITY_KEEP_SECONDS: a
+# single missing observation isn't enough, since the entity could reappear
+# moments later (e.g. a platform reload).
+LEGACY_ENTITY_PURGE_INTERVAL = timedelta(days=30)
 
 DEFAULT_EXPOSED_DOMAINS = {
     "climate",
@@ -115,6 +114,7 @@ class SerializedExposedEntities(TypedDict):
 
     assistants: dict[str, dict[str, Any]]
     exposed_entities: dict[str, dict[str, Any]]
+    legacy_orphaned_since: dict[str, float]
 
 
 class ExposedEntities:
@@ -126,6 +126,9 @@ class ExposedEntities:
 
     _assistants: dict[str, AssistantPreferences]
     entities: dict[str, ExposedEntity]
+    # entity_id -> time.time() when a legacy entity was first observed
+    # missing. Persisted so the retention window survives a restart.
+    _legacy_orphaned_since: dict[str, float]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize."""
@@ -143,12 +146,11 @@ class ExposedEntities:
         websocket_api.async_register_command(self._hass, ws_list_exposed_entities)
         await self._async_load_data()
         # Entities without a unique_id are never in the entity registry, so
-        # registry removal events can't be used to prune them. See
-        # LEGACY_ENTITY_PURGE_INTERVAL for why this is the only cleanup.
+        # registry removal events can't be used to prune them.
         cancel_purge = async_track_time_interval(
             self._hass,
             self._async_purge_stale_legacy_entities,
-            LEGACY_ENTITY_PURGE_INTERVAL,
+            LEGACY_ENTITY_SWEEP_INTERVAL,
         )
 
         @callback
@@ -229,18 +231,37 @@ class ExposedEntities:
     def _async_purge_stale_legacy_entities(self, _now: datetime) -> None:
         """Periodic sweep to drop legacy entries with no entity behind them.
 
-        See LEGACY_ENTITY_PURGE_INTERVAL for why this is the only cleanup.
+        A record is only purged once it's been continuously missing across
+        repeated sweeps for the full LEGACY_ENTITY_PURGE_INTERVAL, not on a
+        single observation -- the entity could reappear moments later (e.g.
+        a platform reload).
         """
-        stale_entity_ids = [
+        now = time.time()
+        missing_now = {
             entity_id
             for entity_id in self.entities
             if self._hass.states.get(entity_id) is None
-        ]
-        if not stale_entity_ids:
-            return
-        for entity_id in stale_entity_ids:
-            del self.entities[entity_id]
-        self._async_schedule_save()
+        }
+
+        changed = False
+        for entity_id in list(self._legacy_orphaned_since):
+            if entity_id not in missing_now:
+                del self._legacy_orphaned_since[entity_id]
+                changed = True
+
+        purge_after = LEGACY_ENTITY_PURGE_INTERVAL.total_seconds()
+        for entity_id in missing_now:
+            orphaned_since = self._legacy_orphaned_since.get(entity_id)
+            if orphaned_since is None:
+                self._legacy_orphaned_since[entity_id] = now
+                changed = True
+            elif now - orphaned_since >= purge_after:
+                del self.entities[entity_id]
+                del self._legacy_orphaned_since[entity_id]
+                changed = True
+
+        if changed:
+            self._async_schedule_save()
 
     @callback
     def async_get_expose_new_entities(self, assistant: str) -> bool:
@@ -417,6 +438,11 @@ class ExposedEntities:
 
         self._assistants = assistants
         self.entities = exposed_entities
+        self._legacy_orphaned_since = (
+            dict(data["legacy_orphaned_since"])
+            if data and "legacy_orphaned_since" in data
+            else {}
+        )
 
         return data
 
@@ -437,6 +463,7 @@ class ExposedEntities:
                 entity_id: entity.to_json()
                 for entity_id, entity in self.entities.items()
             },
+            "legacy_orphaned_since": self._legacy_orphaned_since,
         }
 
 
