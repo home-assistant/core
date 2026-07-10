@@ -203,7 +203,7 @@ async def set_hot_water_schedule(service_call: ServiceCall) -> None:
         ) from err
 
     # Refresh the slow coordinator to get the updated schedule
-    await entry.runtime_data.slow_coordinator.async_request_refresh()
+    await entry.runtime_data.slow_coordinator.async_refresh_slow_data()
 
 
 async def async_sync_time(service_call: ServiceCall) -> None:
