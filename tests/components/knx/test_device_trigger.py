@@ -2,7 +2,7 @@
 
 import logging
 
-from probatio import serialize
+from probatio import to_field_list as serialize
 import pytest
 
 from homeassistant.components import automation
@@ -402,8 +402,7 @@ async def test_invalid_device_trigger(
         )
         assert (
             "Unnamed automation failed to setup triggers and has been disabled: "
-            "not a valid option @ data['invalid']. Got None"
-            in caplog.records[0].message
+            "not a valid option at 'invalid'. Got None" in caplog.records[0].message
         )
 
 

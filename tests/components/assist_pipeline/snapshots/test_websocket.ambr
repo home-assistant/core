@@ -456,7 +456,7 @@
       'format': 'wav',
       'sample_rate': 16000,
     }),
-    'timeout': 1,
+    'timeout': 1.0,
   })
 # ---
 # name: test_audio_pipeline_with_wake_word_timeout.2

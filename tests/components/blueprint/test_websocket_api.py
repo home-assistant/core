@@ -422,7 +422,7 @@ async def test_save_invalid_blueprint(
     assert not msg["success"]
     assert msg["error"] == {
         "code": "invalid_format",
-        "message": "Invalid blueprint: expected a dictionary. Got 'wrong_blueprint'",
+        "message": "Invalid blueprint: expected a mapping. Got 'wrong_blueprint'",
     }
 
 

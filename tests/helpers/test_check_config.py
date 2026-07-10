@@ -454,7 +454,7 @@ async def test_package_definition_invalid_dict(hass: HomeAssistant) -> None:
             (
                 "Setup of package 'not_a_dict' failed: Invalid"
                 " package definition 'not_a_dict': expected a"
-                " dictionary. Package will not be initialized"
+                " mapping. Package will not be initialized"
             ),
             "homeassistant.packages.not_a_dict",
             [{"group": ["a"]}],
@@ -478,7 +478,7 @@ async def test_package_schema_invalid(hass: HomeAssistant) -> None:
         error = CheckConfigError(
             (
                 f"Invalid config for 'homeassistant' at {YAML_CONFIG_FILE}, line 2:"
-                " expected a dictionary for dictionary value"
+                " expected a mapping for dictionary value"
                 " 'packages', got"
                 " ['must', 'not', 'be', 'a', 'list']"
             ),

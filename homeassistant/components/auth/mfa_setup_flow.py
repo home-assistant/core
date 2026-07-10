@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from probatio import serialize
+from probatio import to_field_list as serialize
 import voluptuous as vol
 
 from homeassistant import data_entry_flow

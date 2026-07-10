@@ -500,7 +500,7 @@ async def test_themes_reload_themes(
             {
                 "invalid0": "blue",
             },
-            "expected a dictionary",
+            "expected a mapping",
             None,
         ),
         (
@@ -511,13 +511,13 @@ async def test_themes_reload_themes(
                 }
             },
             None,
-            "expected a dictionary",
+            "expected a mapping",
         ),
         (
             {
                 "invalid2": None,
             },
-            "expected a dictionary",
+            "expected a mapping",
             None,
         ),
         (
@@ -537,7 +537,7 @@ async def test_themes_reload_themes(
                     "modes": None,
                 }
             },
-            "string value is None for dictionary value",
+            "string value is None",
             None,
         ),
         (

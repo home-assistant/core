@@ -298,7 +298,7 @@ async def test_llm_get_api_tools(
     assert tool.name == "search_memory"
     assert tool.description == "Search memory for relevant context based on a query."
     with pytest.raises(
-        vol.Invalid, match=re.escape("required key not provided @ data['query']")
+        vol.Invalid, match=re.escape("required key not provided at 'query'")
     ):
         tool.parameters({})
     assert tool.parameters({"query": "frogs"}) == {"query": "frogs"}
@@ -307,7 +307,7 @@ async def test_llm_get_api_tools(
     assert tool.name == "save_memory"
     assert tool.description == "Save a memory context."
     with pytest.raises(
-        vol.Invalid, match=re.escape("required key not provided @ data['context']")
+        vol.Invalid, match=re.escape("required key not provided at 'context'")
     ):
         tool.parameters({})
     assert tool.parameters({"context": {"fact": "User was born in February"}}) == {

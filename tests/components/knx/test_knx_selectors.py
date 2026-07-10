@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from probatio import serialize as convert
+from probatio import to_field_list as convert
 import pytest
 import voluptuous as vol
 

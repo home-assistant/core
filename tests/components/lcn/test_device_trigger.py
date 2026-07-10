@@ -1,6 +1,6 @@
 """Tests for LCN device triggers."""
 
-from probatio import serialize
+from probatio import to_field_list as serialize
 from pypck.inputs import ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand

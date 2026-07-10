@@ -88,7 +88,7 @@ def config_entry_data(
             {"config_entry": True},
             {"incl_vat": "incorrect vat"},
             vol.error.Error,
-            "expected bool for dictionary value .+",
+            "expected bool at .+",
         ),
         (
             {"config_entry": "incorrect entry"},

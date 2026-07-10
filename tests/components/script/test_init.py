@@ -271,7 +271,7 @@ async def test_bad_config_validation_critical(
             "bad_script",
             {},
             "could not be validated",
-            "required key not provided @ data['sequence']. Got None",
+            "required key not provided at 'sequence'. Got None",
             "validation_failed_schema",
         ),
         (
@@ -1689,8 +1689,7 @@ async def test_blueprint_script(hass: HomeAssistant, calls: list[ServiceCall]) -
                 "a_number": 5,
             },
             "Blueprint 'Call service' generated invalid script",
-            "value should be a string for dictionary value"
-            " @ data['sequence'][0]['action']",
+            "value should be a string at 'sequence[0].action'",
         ),
     ],
 )

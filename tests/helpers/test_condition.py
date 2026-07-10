@@ -3085,7 +3085,7 @@ async def test_async_get_all_descriptions_with_bad_description(
 
     assert (
         "Unable to parse conditions.yaml for the sun integration: "
-        "expected a dictionary for dictionary value @ data['_']['fields']"
+        "expected a mapping at '_.fields'"
     ) in caplog.text
 
     await hass.data["entity_components"][SUN_DOMAIN]._async_reset()

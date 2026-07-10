@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from probatio import serialize
+from probatio import to_field_list as serialize
 import pytest
 from zwave_js_server.client import Client
 from zwave_js_server.const import CommandClass

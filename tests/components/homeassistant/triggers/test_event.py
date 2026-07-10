@@ -594,8 +594,8 @@ async def test_state_reported_event(
     assert len(service_calls) == 0
     assert (
         "Unnamed automation failed to setup triggers and has been disabled: Can't "
-        "listen to state_reported in event trigger for dictionary value @ "
-        "data['event_type']. Got None" in caplog.text
+        "listen to state_reported in event trigger at 'event_type'. Got None"
+        in caplog.text
     )
 
 

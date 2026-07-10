@@ -10,7 +10,7 @@ from typing import Any
 
 import attr
 import attrs
-from probatio import serialize
+from probatio import to_field_list as serialize
 import pytest
 from syrupy.constants import EXIT_STATUS_FAIL_UNUSED
 from syrupy.data import Snapshot, SnapshotCollection, SnapshotCollections

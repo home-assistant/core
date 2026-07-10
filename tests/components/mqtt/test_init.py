@@ -321,10 +321,7 @@ async def test_service_call_with_template_topic_renders_invalid_topic(
             },
             blocking=True,
         )
-    assert (
-        str(exc.value) == "Wildcards cannot be used in topic names "
-        "for dictionary value @ data['topic']"
-    )
+    assert str(exc.value) == "Wildcards cannot be used in topic names at 'topic'"
     assert not mqtt_mock.async_publish.called
 
 
@@ -906,7 +903,7 @@ async def test_setup_manual_mqtt_with_platform_key(
     """Test set up a manual MQTT item with a platform key."""
     assert await mqtt_mock_entry()
     assert (
-        "not a valid option @ data['platform']"
+        "not a valid option at 'platform'"
         " for manually configured MQTT light item" in caplog.text
     )
 

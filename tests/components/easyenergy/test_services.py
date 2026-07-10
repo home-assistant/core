@@ -295,7 +295,7 @@ async def test_service_schema_validation(
     ("service_data", "error_message"),
     [
         ({}, "required key not provided .+"),
-        ({"incl_vat": "incorrect vat"}, "expected bool for dictionary value .+"),
+        ({"incl_vat": "incorrect vat"}, "expected bool at .+"),
     ],
 )
 async def test_service_schema_validation_vat(

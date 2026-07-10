@@ -51,7 +51,7 @@ orjson==3.11.9
 packaging>=23.1
 paho-mqtt==2.1.0
 Pillow==12.2.0
-probatio==0.5.4
+probatio==0.11.0
 propcache==0.5.2
 psutil-home-assistant==0.0.1
 PyJWT==2.12.1

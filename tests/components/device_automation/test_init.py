@@ -1262,7 +1262,7 @@ async def test_automation_with_integration_without_device_trigger(
 BAD_AUTOMATIONS = [
     (
         {"device_id": "very_unique", "domain": "light"},
-        "required key not provided @ data['entity_id']",
+        "required key not provided at 'entity_id'",
     ),
     (
         {"device_id": "wrong", "domain": "light"},
@@ -1270,7 +1270,7 @@ BAD_AUTOMATIONS = [
     ),
     (
         {"device_id": "wrong"},
-        "required key not provided @ data{path}['domain']",
+        "required key not provided at '{path}domain'",
     ),
     (
         {"device_id": "wrong", "domain": "light"},
@@ -1278,7 +1278,7 @@ BAD_AUTOMATIONS = [
     ),
     (
         {"device_id": "very_unique", "domain": "light"},
-        "required key not provided @ data['entity_id']",
+        "required key not provided at 'entity_id'",
     ),
     (
         {"device_id": "very_unique", "domain": "light", "entity_id": "wrong"},
@@ -1288,7 +1288,7 @@ BAD_AUTOMATIONS = [
 
 BAD_TRIGGERS = BAD_CONDITIONS = [
     *BAD_AUTOMATIONS,
-    ({"domain": "light"}, "required key not provided @ data{path}['device_id']"),
+    ({"domain": "light"}, "required key not provided at '{path}device_id'"),
 ]
 
 
@@ -1323,7 +1323,7 @@ async def test_automation_with_bad_action(
         },
     )
 
-    assert expected_error.format(path="['actions'][0]") in caplog.text
+    assert expected_error.format(path="actions[0].") in caplog.text
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1357,7 +1357,7 @@ async def test_automation_with_bad_condition_action(
         },
     )
 
-    assert expected_error.format(path="['actions'][0]") in caplog.text
+    assert expected_error.format(path="actions[0].") in caplog.text
 
 
 @patch("homeassistant.helpers.device_registry.DeviceEntry", MockDeviceEntry)
@@ -1391,7 +1391,7 @@ async def test_automation_with_bad_condition(
         },
     )
 
-    assert expected_error.format(path="['conditions'][0]") in caplog.text
+    assert expected_error.format(path="conditions[0].") in caplog.text
 
 
 async def test_automation_with_sub_condition(
@@ -1557,7 +1557,7 @@ async def test_automation_with_bad_sub_condition(
         },
     )
 
-    path = "['conditions'][0]['conditions'][0]"
+    path = "conditions[0].conditions[0]."
     assert expected_error.format(path=path) in caplog.text
 
 

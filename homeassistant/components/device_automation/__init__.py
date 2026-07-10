@@ -9,7 +9,7 @@ import logging
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Literal, overload
 
-from probatio import serialize
+from probatio import to_field_list as serialize
 import voluptuous as vol
 
 from homeassistant.components import websocket_api

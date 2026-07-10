@@ -4,7 +4,7 @@ from collections.abc import Callable
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from probatio import serialize as convert
+from probatio import to_field_list as convert
 import pytest
 
 from homeassistant import config_entries

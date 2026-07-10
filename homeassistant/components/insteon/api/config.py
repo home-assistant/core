@@ -2,7 +2,7 @@
 
 from typing import Any, TypedDict
 
-from probatio import serialize
+from probatio import to_field_list as serialize
 from pyinsteon import async_close, async_connect, devices
 from pyinsteon.address import Address
 from pyinsteon.aldb.aldb_record import ALDBRecord

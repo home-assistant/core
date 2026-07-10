@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from probatio import serialize
+from probatio import to_field_list as serialize
 from pyinsteon import devices
 from pyinsteon.config import (
     LOAD_BUTTON,

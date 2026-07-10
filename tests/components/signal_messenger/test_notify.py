@@ -162,10 +162,7 @@ def test_send_message_styled_with_bad_data_throws_vol_error(
         signal_notification_service.send_message(MESSAGE, data={"text_mode": "test"})
 
     assert "Sending signal message" in caplog.text
-    assert (
-        "value must be one of ['normal', 'styled'] for dictionary"
-        " value @ data['text_mode']" in str(exc.value)
-    )
+    assert "value must be one of ['normal', 'styled'] at 'text_mode'" in str(exc.value)
 
 
 def test_send_message_with_attachment(

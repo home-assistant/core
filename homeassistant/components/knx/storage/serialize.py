@@ -2,7 +2,7 @@
 
 from typing import Any, cast
 
-from probatio import UNSUPPORTED, serialize as convert
+from probatio import UNSUPPORTED, to_field_list as convert
 
 from homeassistant.const import Platform
 from homeassistant.helpers import selector
@@ -40,8 +40,5 @@ def get_serialized_schema(
 ) -> dict[str, Any] | list[dict[str, Any]] | None:
     """Get the schema for a specific platform."""
     if knx_schema := KNX_SCHEMA_FOR_PLATFORM.get(platform):
-        return cast(
-            "dict[str, Any] | list[dict[str, Any]]",
-            convert(knx_schema, custom_serializer=knx_serializer),
-        )
+        return convert(knx_schema, custom_serializer=knx_serializer)
     return None

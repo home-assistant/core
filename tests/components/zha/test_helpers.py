@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from probatio import serialize
+from probatio import to_field_list as serialize
 import pytest
 from zigpy.application import ControllerApplication
 from zigpy.types.basic import uint16_t

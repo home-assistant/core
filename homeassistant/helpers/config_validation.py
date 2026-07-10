@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Any, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
-from probatio import UNSUPPORTED, serialize
+from probatio import UNSUPPORTED, to_field_list as serialize
 import voluptuous as vol
 
 from homeassistant.const import (

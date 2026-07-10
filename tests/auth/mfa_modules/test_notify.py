@@ -3,7 +3,7 @@
 import asyncio
 from unittest.mock import patch
 
-from probatio import serialize
+from probatio import to_field_list as serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config, models as auth_models

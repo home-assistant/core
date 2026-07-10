@@ -127,7 +127,7 @@ async def test_invalid_object_id(
 @pytest.mark.parametrize(
     ("updated_config", "validation_error"),
     [
-        ({}, "required key not provided @ data['sequence']"),
+        ({}, "required key not provided at 'sequence'"),
         (
             {
                 "sequence": {

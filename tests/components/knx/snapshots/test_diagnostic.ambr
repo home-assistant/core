@@ -30,7 +30,7 @@
       'current_address': '0.0.0',
       'version': '0.0.0',
     }),
-    'yaml_configuration_error': "not a valid option @ data['knx']['wrong_key']",
+    'yaml_configuration_error': "not a valid option at 'knx.wrong_key'",
   })
 # ---
 # name: test_diagnostic_redact[hass_config0]

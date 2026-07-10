@@ -75,7 +75,7 @@ dependencies = [
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
   "uv==0.11.26",
-  "probatio==0.5.4",
+  "probatio==0.11.0",
   "yarl==1.24.2",
   "webrtc-models==0.3.0",
   "zeroconf==0.150.0",

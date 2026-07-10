@@ -4,7 +4,7 @@ from http import HTTPStatus
 from typing import Any, Generic, TypeVar
 
 from aiohttp import web
-from probatio import serialize
+from probatio import to_field_list as serialize
 import voluptuous as vol
 
 from homeassistant import data_entry_flow

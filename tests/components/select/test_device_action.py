@@ -1,6 +1,6 @@
 """The tests for Select device actions."""
 
-from probatio import serialize
+from probatio import to_field_list as serialize
 import pytest
 from pytest_unordered import unordered
 
