@@ -1,10 +1,9 @@
 """Platform for Control4 Rooms Media Players."""
 
 import base64
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import timedelta
 import enum
-import json
 import logging
 from typing import Any, override
 
@@ -13,14 +12,13 @@ from pyControl4.error_handling import C4Exception
 from pyControl4.room import C4Room
 
 from homeassistant.components.media_player import (
-    BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -29,7 +27,6 @@ from .const import (
     CONF_DIRECTOR_ALL_ITEMS,
     CONF_UI_CONFIGURATION,
     DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
     Control4ConfigEntry,
 )
 from .director_utils import (
@@ -64,12 +61,6 @@ VARIABLES_OF_INTEREST = {
     CONTROL4_SOURCE_STATE,
 }
 
-CONTROL4_MEDIA_JOIN_EVENT = "control4_media_join"
-CONTROL4_MEDIA_JOIN_EVENT_ENTITIES = "joining_entities"
-CONTROL4_MEDIA_JOIN_EVENT_SOURCE_IDX = "source_idx"
-CONTROL4_BROWSE_ROOT = f"{DOMAIN}_browse_root"
-CONTROL4_BROWSE_MODE = f"{DOMAIN}_browse_mode"
-
 
 class _SourceType(enum.Enum):
     AUDIO = 1
@@ -83,7 +74,6 @@ class _RoomSource:
     source_type: set[_SourceType]
     idx: int
     name: str
-    group_members: set[str] = field(default_factory=set)
 
 
 async def get_rooms(hass: HomeAssistant, entry: Control4ConfigEntry):
@@ -107,6 +97,12 @@ async def async_setup_entry(
         return
 
     entry_data = entry.runtime_data
+    if entry_data[CONF_UI_CONFIGURATION] is None:
+        _LOGGER.debug(
+            "No UI configuration available (Control4 OS 2 controller); "
+            "skipping media player setup"
+        )
+        return
 
     async def async_update_data() -> dict[int, dict[str, Any]]:
         """Fetch data from Control4 director."""
@@ -139,20 +135,17 @@ async def async_setup_entry(
     }
 
     ui_config = entry_data[CONF_UI_CONFIGURATION]
-    sources: dict[int, _RoomSource] = {}
 
     entity_list = []
     for room in all_rooms:
         room_id = room["id"]
-        room_has_valid_experience = False
 
-        room_sources: dict[int, _RoomSource] = {}
+        sources: dict[int, _RoomSource] = {}
         for exp in ui_config["experiences"]:
             if room_id == exp["room_id"]:
                 exp_type = exp["type"]
                 if exp_type not in ("listen", "watch"):
                     continue
-                room_has_valid_experience = True
 
                 dev_type = (
                     _SourceType.AUDIO if exp_type == "listen" else _SourceType.VIDEO
@@ -168,31 +161,37 @@ async def async_setup_entry(
                         sources[dev_id] = _RoomSource(
                             source_type={dev_type}, idx=dev_id, name=name
                         )
-                    room_sources[dev_id] = sources[dev_id]
 
-        if room_has_valid_experience:
-            item_attributes = await director_get_entry_variables(hass, entry, room_id)
-            try:
-                hidden = room["roomHidden"]
-                entity_list.append(
-                    Control4Room(
-                        hass,
-                        entry_data,
-                        coordinator,
-                        room["name"],
-                        room_id,
-                        item_to_parent_map,
-                        room_sources,
-                        hidden,
-                        item_attributes,
-                    )
+        # Skip rooms with no audio/video sources
+        if not sources:
+            _LOGGER.debug(
+                "Skipping room '%s' (ID: %s) - no audio/video sources found",
+                room.get("name"),
+                room_id,
+            )
+            continue
+
+        item_attributes = await director_get_entry_variables(hass, entry, room_id)
+        try:
+            hidden = room["roomHidden"]
+            entity_list.append(
+                Control4Room(
+                    entry_data,
+                    coordinator,
+                    room["name"],
+                    room_id,
+                    item_to_parent_map,
+                    sources,
+                    hidden,
+                    item_attributes,
                 )
-            except KeyError:
-                _LOGGER.exception(
-                    "Unknown device properties received from Control4: %s",
-                    room,
-                )
-                continue
+            )
+        except KeyError:
+            _LOGGER.exception(
+                "Unknown device properties received from Control4: %s",
+                room,
+            )
+            continue
 
     async_add_entities(entity_list, True)
 
@@ -204,7 +203,6 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         entry_data: dict,
         coordinator: DataUpdateCoordinator[dict[int, dict[str, Any]]],
         name: str,
@@ -227,7 +225,6 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
             device_area=None,
             device_attributes=device_attributes,
         )
-        self.hass = hass
         self._attr_entity_registry_enabled_default = not room_hidden
         self._id_to_parent = id_to_parent
         self._sources = sources
@@ -235,47 +232,12 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
             MediaPlayerEntityFeature.PLAY
             | MediaPlayerEntityFeature.PAUSE
             | MediaPlayerEntityFeature.STOP
-            | MediaPlayerEntityFeature.NEXT_TRACK
-            | MediaPlayerEntityFeature.PREVIOUS_TRACK
             | MediaPlayerEntityFeature.VOLUME_MUTE
             | MediaPlayerEntityFeature.VOLUME_SET
             | MediaPlayerEntityFeature.VOLUME_STEP
             | MediaPlayerEntityFeature.TURN_OFF
             | MediaPlayerEntityFeature.SELECT_SOURCE
-            | MediaPlayerEntityFeature.GROUPING
-            | MediaPlayerEntityFeature.BROWSE_MEDIA
-            | MediaPlayerEntityFeature.PLAY_MEDIA
         )
-        self._current_source: _RoomSource | None = None
-        self.async_on_remove(
-            self.hass.bus.async_listen(CONTROL4_MEDIA_JOIN_EVENT, self._handle_join)
-        )
-
-    async def _handle_join(self, event) -> None:
-        joining_entities = event.data.get(CONTROL4_MEDIA_JOIN_EVENT_ENTITIES)
-        if self.entity_id in joining_entities:
-            source_idx = event.data.get(CONTROL4_MEDIA_JOIN_EVENT_SOURCE_IDX)
-            if source_idx in self._sources:
-                await self.async_select_source(self._sources[source_idx].name)
-
-    @override
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        updated_source_idx = self._get_current_playing_device_id()
-        if (
-            self._current_source is not None
-            and self._current_source.idx != updated_source_idx
-        ):
-            self._current_source.group_members.remove(self.entity_id)
-
-        if updated_source_idx in self._sources:
-            self._current_source = self._sources[updated_source_idx]
-            self._current_source.group_members.add(self.entity_id)
-        else:
-            self._current_source = None
-
-        self.async_write_ha_state()
 
     def _create_api_object(self):
         """Create a pyControl4 device object.
@@ -469,15 +431,6 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
         return bool(self.coordinator.data[self._idx][CONTROL4_MUTED_STATE])
 
     @override
-    @property
-    def group_members(self) -> list[str] | None:
-        """Return the group members sharing the current source."""
-        current_source = self._get_current_playing_device_id()
-        if not current_source or current_source not in self._sources:
-            return None
-        return list(self._sources[current_source].group_members)
-
-    @override
     async def async_select_source(self, source):
         """Select a new source."""
         for avail_source in self._sources.values():
@@ -492,22 +445,6 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
                 break
 
         await self.coordinator.async_request_refresh()
-
-    @override
-    async def async_join_players(self, group_members):
-        """Fire a join event so other rooms can follow this source."""
-        current_source = self._get_current_playing_device_id()
-        if current_source and current_source in self._sources:
-            event_data = {
-                CONTROL4_MEDIA_JOIN_EVENT_SOURCE_IDX: self._sources[current_source].idx,
-                CONTROL4_MEDIA_JOIN_EVENT_ENTITIES: group_members,
-            }
-            self.hass.bus.async_fire(CONTROL4_MEDIA_JOIN_EVENT, event_data)
-
-    @override
-    async def async_unjoin_player(self):
-        """Unjoin by turning the room off."""
-        await self.async_turn_off()
 
     @override
     async def async_turn_off(self):
@@ -558,120 +495,4 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
     async def async_media_stop(self):
         """Issue a stop command."""
         await self._create_api_object().set_stop()
-        await self.coordinator.async_request_refresh()
-
-    @override
-    async def async_media_next_track(self):
-        """Skip to next track."""
-        await self._create_api_object().set_next()
-        await self.coordinator.async_request_refresh()
-
-    @override
-    async def async_media_previous_track(self):
-        """Skip to previous track."""
-        await self._create_api_object().set_previous()
-        await self.coordinator.async_request_refresh()
-
-    async def _browse_mode(self, mode: str) -> BrowseMedia:
-        """Build the Listen/Watch folder from the room's known sources."""
-        audio_only = mode == "listen"
-        source_type_filter = _SourceType.AUDIO if audio_only else _SourceType.VIDEO
-        children = []
-        for source in self._sources.values():
-            if source_type_filter not in source.source_type:
-                continue
-            play_payload = {"source_id": source.idx, "audio_only": audio_only}
-            children.append(
-                BrowseMedia(
-                    title=source.name,
-                    media_class="music" if audio_only else "video",
-                    media_content_type=MediaType.MUSIC
-                    if audio_only
-                    else MediaType.VIDEO,
-                    media_content_id=json.dumps(play_payload),
-                    can_play=True,
-                    can_expand=False,
-                )
-            )
-        title = "Listen" if audio_only else "Watch"
-        return BrowseMedia(
-            title=title,
-            media_class="directory",
-            media_content_type=CONTROL4_BROWSE_MODE,
-            media_content_id=mode,
-            can_play=False,
-            can_expand=True,
-            children=children,
-        )
-
-    @override
-    async def async_browse_media(
-        self,
-        media_content_type: MediaType | str | None = None,
-        media_content_id: str | None = None,
-    ) -> BrowseMedia:
-        """Return the browse root, or drill into a child node."""
-        if media_content_type == CONTROL4_BROWSE_MODE and media_content_id:
-            return await self._browse_mode(media_content_id)
-
-        children = []
-        has_listen = any(
-            _SourceType.AUDIO in source.source_type for source in self._sources.values()
-        )
-        has_watch = any(
-            _SourceType.VIDEO in source.source_type for source in self._sources.values()
-        )
-        if has_listen:
-            children.append(
-                BrowseMedia(
-                    title="Listen",
-                    media_class="directory",
-                    media_content_type=CONTROL4_BROWSE_MODE,
-                    media_content_id="listen",
-                    can_play=False,
-                    can_expand=True,
-                )
-            )
-        if has_watch:
-            children.append(
-                BrowseMedia(
-                    title="Watch",
-                    media_class="directory",
-                    media_content_type=CONTROL4_BROWSE_MODE,
-                    media_content_id="watch",
-                    can_play=False,
-                    can_expand=True,
-                )
-            )
-        return BrowseMedia(
-            title=self._device_name
-            or (self.name if isinstance(self.name, str) else None)
-            or "Control4",
-            media_class="directory",
-            media_content_type=CONTROL4_BROWSE_ROOT,
-            media_content_id="root",
-            can_play=False,
-            can_expand=True,
-            children=children,
-        )
-
-    @override
-    async def async_play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
-    ) -> None:
-        """Select a source chosen from the browse tree."""
-        try:
-            payload = json.loads(media_id)
-        except json.JSONDecodeError, ValueError:
-            return
-        if not isinstance(payload, dict):
-            return
-        source_id = payload.get("source_id")
-        if not isinstance(source_id, int):
-            return
-        room = self._create_api_object()
-        if payload.get("audio_only", True):
-            await room.set_audio_source(source_id)
-        else:
-            await room.set_video_and_audio_source(source_id)
         await self.coordinator.async_request_refresh()

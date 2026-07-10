@@ -1,19 +1,13 @@
 """Platform for Control4 Lights."""
 
-import json
 import logging
 from typing import Any, override
 
-from aiohttp import client_exceptions
-from pyControl4.error_handling import C4Exception
 from pyControl4.light import C4Light
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP_KELVIN,
-    ATTR_EFFECT,
     ATTR_TRANSITION,
-    ATTR_XY_COLOR,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -31,8 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONTROL4_CATEGORY = "lights"
 CONTROL4_BRIGHTNESS_SCALE = (1, 100)
-CONTROL4_COLOR_MODE_CCT = 1
-CONTROL4_COLOR_MODE_XY = 0
 
 
 async def async_setup_entry(
@@ -118,14 +110,6 @@ class Control4Light(Control4Entity, LightEntity):
             device_area,
             device_attributes,
         )
-        self._supports_color: bool = False
-        self._supports_ct: bool = False
-        self._ct_min: int | None = None
-        self._ct_max: int | None = None
-        self._rate_min: int | None = None
-        self._rate_max: int | None = None
-        self._effects_by_name: dict[str, dict[str, Any]] = {}
-        self._current_effect: str | None = None
         self._attr_supported_color_modes = (
             {ColorMode.BRIGHTNESS} if self._is_dimmer else {ColorMode.ONOFF}
         )
@@ -136,57 +120,6 @@ class Control4Light(Control4Entity, LightEntity):
     def create_api_object(self) -> C4Light:
         """Create a pyControl4 device object with the current director token."""
         return C4Light(self.entry_data[CONF_DIRECTOR], self._idx)
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Register websocket callbacks and fetch device setup."""
-        await super().async_added_to_hass()
-        director = self.entry_data.get(CONF_DIRECTOR)
-        if not director:
-            return
-        try:
-            resp = await director.get_item_setup(self._idx)
-            setup = resp.get("setup", resp) if isinstance(resp, dict) else {}
-            if isinstance(setup, str):
-                setup = json.loads(setup)
-            self._supports_color = bool(setup.get("supports_color"))
-            self._supports_ct = bool(setup.get("supports_color_correlated_temperature"))
-            colors = setup.get("colors") or {}
-            if self._supports_ct:
-                self._ct_min = colors.get("color_correlated_temperature_min") or None
-                self._ct_max = colors.get("color_correlated_temperature_max") or None
-            self._rate_min = colors.get("color_rate_min")
-            self._rate_max = colors.get("color_rate_max")
-            for pr in colors.get("color") or []:
-                name = pr.get("name")
-                if name:
-                    self._effects_by_name[name] = pr
-            modes: set[ColorMode] = set()
-            if self._is_dimmer and not self._supports_color:
-                modes.add(ColorMode.BRIGHTNESS)
-            if self._supports_color:
-                modes.add(ColorMode.XY)
-            if self._supports_ct:
-                modes.add(ColorMode.COLOR_TEMP)
-            if not modes:
-                modes = {ColorMode.ONOFF}
-            self._attr_supported_color_modes = modes
-            if ColorMode.XY in modes:
-                self._attr_color_mode = ColorMode.XY
-            elif ColorMode.COLOR_TEMP in modes:
-                self._attr_color_mode = ColorMode.COLOR_TEMP
-            elif ColorMode.BRIGHTNESS in modes:
-                self._attr_color_mode = ColorMode.BRIGHTNESS
-            else:
-                self._attr_color_mode = ColorMode.ONOFF
-        except (
-            C4Exception,
-            client_exceptions.ClientError,
-            TimeoutError,
-            json.JSONDecodeError,
-        ):
-            _LOGGER.debug("get_item_setup failed for %s", self._idx)
-        self.async_write_ha_state()
 
     @override
     @property
@@ -218,158 +151,30 @@ class Control4Light(Control4Entity, LightEntity):
 
     @override
     @property
-    def color_temp_kelvin(self) -> int | None:
-        """Return current color temperature in Kelvin."""
-        attrs = self.extra_state_attributes
-        mode = attrs.get("light_color_current_color_mode")
-        cct = attrs.get("light_color_current_color_correlated_temperature")
-        if (
-            mode is not None
-            and int(mode) == CONTROL4_COLOR_MODE_CCT
-            and cct is not None
-        ):
-            return int(cct)
-        return None
-
-    @override
-    @property
-    def min_color_temp_kelvin(self) -> int:
-        """Return minimum color temperature in Kelvin."""
-        if self._ct_min is not None:
-            return int(self._ct_min)
-        return super().min_color_temp_kelvin
-
-    @override
-    @property
-    def max_color_temp_kelvin(self) -> int:
-        """Return maximum color temperature in Kelvin."""
-        if self._ct_max is not None:
-            return int(self._ct_max)
-        return super().max_color_temp_kelvin
-
-    @override
-    @property
-    def effect(self) -> str | None:
-        """Return current effect."""
-        return self._current_effect
-
-    @override
-    @property
-    def effect_list(self) -> list[str] | None:
-        """Return available effects."""
-        return sorted(self._effects_by_name) or None
-
-    @override
-    @property
     def supported_features(self) -> LightEntityFeature:
         """Return supported features."""
-        features = LightEntityFeature(0)
-        if self._is_dimmer or self._supports_color or self._supports_ct:
-            features |= LightEntityFeature.TRANSITION
-        if self._effects_by_name:
-            features |= LightEntityFeature.EFFECT
-        return features
+        if self._is_dimmer:
+            return LightEntityFeature.TRANSITION
+        return LightEntityFeature(0)
 
     @property
     def _is_dimmer(self) -> bool:
         attrs = self.extra_state_attributes
         return "LIGHT_LEVEL" in attrs or "Brightness Percent" in attrs
 
-    @override
-    @property
-    def color_mode(self) -> ColorMode | None:
-        """Return current color mode."""
-        attrs = self.extra_state_attributes
-        mode = attrs.get("light_color_current_color_mode")
-        try:
-            mode_i = int(mode)  # type: ignore[arg-type]
-            if mode_i == CONTROL4_COLOR_MODE_CCT:
-                return ColorMode.COLOR_TEMP
-            if mode_i == CONTROL4_COLOR_MODE_XY:
-                return ColorMode.XY
-        except ValueError, TypeError:
-            pass
-        if self._attr_color_mode in (self._attr_supported_color_modes or set()):
-            return self._attr_color_mode
-        return ColorMode.UNKNOWN
-
-    @override
-    @property
-    def xy_color(self) -> tuple[float, float] | None:
-        """Return current XY color."""
-        attrs = self.extra_state_attributes
-        x = attrs.get("light_color_current_x")
-        y = attrs.get("light_color_current_y")
-        if x is not None and y is not None:
-            return (float(x), float(y))
-        return None
-
-    def _to_rate_ms(self, transition: float | None) -> int | None:
+    def _to_rate_ms(self, transition: float | None) -> int:
         if transition is None:
-            return None
+            return 0
         try:
-            rate = int(float(transition) * 1000)
-        except Exception:  # noqa: BLE001
-            return None
-        if self._rate_min is not None:
-            rate = max(rate, int(self._rate_min))
-        if self._rate_max is not None:
-            rate = min(rate, int(self._rate_max))
-        return max(0, rate)
+            return max(0, int(float(transition) * 1000))
+        except TypeError, ValueError:
+            return 0
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         c4_light = self.create_api_object()
         transition_length = self._to_rate_ms(kwargs.get(ATTR_TRANSITION))
-        effect = kwargs.get(ATTR_EFFECT)
-        if effect and effect in self._effects_by_name:
-            preset = self._effects_by_name[effect]
-            ct = preset.get("color_correlated_temperature")
-            if isinstance(ct, (int, float)) and ct > 0 and self._supports_ct:
-                ct_i = int(ct)
-                if self._ct_min:
-                    ct_i = max(ct_i, int(self._ct_min))
-                if self._ct_max:
-                    ct_i = min(ct_i, int(self._ct_max))
-                await c4_light.set_color_temperature(ct_i, rate=transition_length)
-                self._attr_color_mode = ColorMode.COLOR_TEMP
-            else:
-                x = preset.get("color_x")
-                y = preset.get("color_y")
-                if (
-                    self._supports_color
-                    and isinstance(x, (int, float))
-                    and isinstance(y, (int, float))
-                ):
-                    await c4_light.set_color_xy(
-                        float(x), float(y), rate=transition_length
-                    )
-                    self._attr_color_mode = ColorMode.XY
-            self._current_effect = effect
-            self.async_write_ha_state()
-            return
-
-        if ATTR_XY_COLOR in kwargs and self._supports_color:
-            x, y = kwargs[ATTR_XY_COLOR]
-            await c4_light.set_color_xy(float(x), float(y), rate=transition_length)
-            self._current_effect = None
-            self._attr_color_mode = ColorMode.XY
-            self.async_write_ha_state()
-            return
-
-        if ATTR_COLOR_TEMP_KELVIN in kwargs and self._supports_ct:
-            ct = int(kwargs[ATTR_COLOR_TEMP_KELVIN])
-            if self._ct_min is not None:
-                ct = max(ct, int(self._ct_min))
-            if self._ct_max is not None:
-                ct = min(ct, int(self._ct_max))
-            await c4_light.set_color_temperature(ct, rate=transition_length)
-            self._attr_color_mode = ColorMode.COLOR_TEMP
-            self._current_effect = None
-            self.async_write_ha_state()
-            return
-
         if self._is_dimmer:
             brightness = (
                 round(
@@ -380,7 +185,7 @@ class Control4Light(Control4Entity, LightEntity):
                 if ATTR_BRIGHTNESS in kwargs
                 else 100
             )
-            await c4_light.ramp_to_level(brightness, transition_length or 0)
+            await c4_light.ramp_to_level(brightness, transition_length)
         else:
             await c4_light.set_level(100)
 
@@ -390,6 +195,6 @@ class Control4Light(Control4Entity, LightEntity):
         c4_light = self.create_api_object()
         transition_length = self._to_rate_ms(kwargs.get(ATTR_TRANSITION))
         if self._is_dimmer:
-            await c4_light.ramp_to_level(0, transition_length or 0)
+            await c4_light.ramp_to_level(0, transition_length)
         else:
             await c4_light.set_level(0)

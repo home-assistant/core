@@ -17,12 +17,7 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     CoverState,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -252,7 +247,13 @@ async def test_set_cover_position(
     mock_c4_blind.set_level_target.assert_called_once_with(level=75)
 
 
-@pytest.mark.parametrize("mock_cover_variables", [{}])
+@pytest.mark.parametrize(
+    "mock_cover_variables",
+    [
+        pytest.param({}, id="item_id_missing_from_response"),
+        pytest.param({234: {}}, id="item_id_present_with_no_variables"),
+    ],
+)
 @pytest.mark.usefixtures(
     "mock_c4_account",
     "mock_c4_director",
@@ -262,7 +263,12 @@ async def test_set_cover_position(
 async def test_cover_not_created_when_no_initial_data(
     hass: HomeAssistant,
 ) -> None:
-    """Test cover entity is not created when coordinator has no initial data."""
+    """Test cover entity is not created when there is no initial variable data.
+
+    Matches the local_polling integration's behavior: an item with no
+    reported variables never appears in the coordinator's data and is
+    skipped rather than created in an unknown state.
+    """
     state = hass.states.get(ENTITY_ID)
     assert state is None
 
@@ -270,12 +276,6 @@ async def test_cover_not_created_when_no_initial_data(
 @pytest.mark.parametrize(
     ("mock_cover_variables", "expected_position", "expected_state"),
     [
-        pytest.param(
-            {234: {}},
-            None,
-            STATE_UNKNOWN,
-            id="all_missing",
-        ),
         pytest.param(
             {234: {"Level": 0}},
             0,

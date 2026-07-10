@@ -88,9 +88,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     except (TimeoutError, client_exceptions.ClientError) as err:
         raise ConfigEntryNotReady(err) from err
 
-    entry_data[CONF_UI_CONFIGURATION] = await entry_data[
-        CONF_DIRECTOR
-    ].get_ui_configuration()
+    # Control4 OS 2 controllers do not support the UI configuration endpoint.
+    entry_data[CONF_UI_CONFIGURATION] = None
+    if int(entry_data[CONF_DIRECTOR_SW_VERSION].split(".")[0]) >= 3:
+        try:
+            entry_data[CONF_UI_CONFIGURATION] = await entry_data[
+                CONF_DIRECTOR
+            ].get_ui_configuration()
+        except (TimeoutError, client_exceptions.ClientError) as err:
+            raise ConfigEntryNotReady(err) from err
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

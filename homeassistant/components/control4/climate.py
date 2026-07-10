@@ -8,9 +8,6 @@ from pyControl4.climate import C4Climate
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    FAN_AUTO,
-    FAN_DIFFUSE,
-    FAN_ON,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -36,9 +33,6 @@ CONTROL4_HVAC_MODE_COOL = "Cool"
 CONTROL4_HVAC_MODE_HEAT_COOL = "Auto"
 CONTROL4_HVAC_MODE_AUX_HEAT = "Emergency Heat"
 
-CONTROL4_FAN_MODE_ON = "On"
-CONTROL4_FAN_MODE_AUTO = "Auto"
-CONTROL4_FAN_MODE_DIFFUSE = "Circulate"
 MIN_TEMP_RANGE = 2
 
 CONTROL4_HVAC_MODES = {
@@ -54,18 +48,6 @@ HVAC_MODES = {
     CONTROL4_HVAC_MODE_AUX_HEAT: HVACMode.HEAT,
     CONTROL4_HVAC_MODE_COOL: HVACMode.COOL,
     CONTROL4_HVAC_MODE_HEAT_COOL: HVACMode.HEAT_COOL,
-}
-
-CONTROL4_FAN_MODES = {
-    FAN_ON: CONTROL4_FAN_MODE_ON,
-    FAN_AUTO: CONTROL4_FAN_MODE_AUTO,
-    FAN_DIFFUSE: CONTROL4_FAN_MODE_DIFFUSE,
-}
-
-FAN_MODES = {
-    CONTROL4_FAN_MODE_ON: FAN_ON,
-    CONTROL4_FAN_MODE_AUTO: FAN_AUTO,
-    CONTROL4_FAN_MODE_DIFFUSE: FAN_DIFFUSE,
 }
 
 # Attribute name constants
@@ -129,9 +111,9 @@ async def async_setup_entry(
 
                 for parent_item in items_of_category:
                     if parent_item["id"] == item_parent_id:
-                        item_manufacturer = parent_item["manufacturer"]
-                        item_device_name = parent_item["name"]
-                        item_model = parent_item["model"]
+                        item_manufacturer = parent_item.get("manufacturer")
+                        item_device_name = parent_item.get("name")
+                        item_model = parent_item.get("model")
                 item_setup_info = await director.get_item_setup(item_id)
                 _LOGGER.debug("Climate Setup: %s", str(item_setup_info))
             else:
@@ -144,7 +126,7 @@ async def async_setup_entry(
             continue
 
         item_attributes = await director_get_entry_variables(hass, entry, item_id)
-        if item_attributes is None:
+        if not item_attributes:
             _LOGGER.debug("Skipping climate %s: no initial variables", item_name)
             continue
 
@@ -203,7 +185,6 @@ class Control4Climate(Control4Entity, ClimateEntity):
             self._thermostat_setup = {}
         self._aux_heat_active = False
         self._attr_translation_key = "thermostat"
-        self._attr_should_poll = True
 
     def create_api_object(self):
         """Create a pyControl4 device object.
@@ -217,9 +198,13 @@ class Control4Climate(Control4Entity, ClimateEntity):
     @property
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
-        if self._thermostat_setup.get(SETUP_HAS_HUMIDITY, False) is False:
+        if self._thermostat_setup.get(SETUP_HAS_HUMIDITY) is False:
             return None
-        return self._extra_state_attributes.get(ATTR_HUMIDITY)
+        humidity = self._extra_state_attributes.get(ATTR_HUMIDITY)
+        try:
+            return float(humidity) if humidity is not None else None
+        except ValueError, TypeError:
+            return None
 
     @override
     @property
@@ -234,20 +219,18 @@ class Control4Climate(Control4Entity, ClimateEntity):
     def fan_mode(self) -> str | None:
         """Returns the current fan mode."""
         fan_mode = self._extra_state_attributes.get(ATTR_FAN_MODE)
-        if fan_mode in FAN_MODES:
-            return FAN_MODES[fan_mode]
-        return None
+        if fan_mode is None:
+            return None
+        return fan_mode.lower()
 
     @override
     @property
     def fan_modes(self) -> list[str] | None:
         """Returns current fan modes supported."""
         fan_modes = self._extra_state_attributes.get(ATTR_FAN_MODES_LIST)
-        if fan_modes:
-            control4_fan_modes = fan_modes.split(",")
-            # Only include mapped Home Assistant fan modes
-            return [FAN_MODES[x] for x in control4_fan_modes if x in FAN_MODES]
-        return None
+        if not fan_modes:
+            return None
+        return [m.strip().lower() for m in fan_modes.split(",") if m.strip()]
 
     @override
     @property
@@ -268,18 +251,18 @@ class Control4Climate(Control4Entity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Returns current HVAC action."""
-        hvac_state = self._extra_state_attributes.get(ATTR_HVAC_STATE, "")
-        if "Cool" in hvac_state:
+        hvac_state = self._extra_state_attributes.get(ATTR_HVAC_STATE, "").lower()
+        if "cool" in hvac_state:
             return HVACAction.COOLING
-        if "Heat" in hvac_state:
+        if "heat" in hvac_state:
             return HVACAction.HEATING
-        if "Dry" in hvac_state:
+        if "dry" in hvac_state:
             return HVACAction.DRYING
-        if "Fan" in hvac_state:
+        if "fan" in hvac_state:
             return HVACAction.FAN
-        if "Idle" in hvac_state:
+        if "idle" in hvac_state:
             return HVACAction.IDLE
-        if "Off" in hvac_state:
+        if "off" in hvac_state:
             return HVACAction.OFF
         return None
 
@@ -410,10 +393,13 @@ class Control4Climate(Control4Entity, ClimateEntity):
         features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
         )
         if self._extra_state_attributes.get(ATTR_FAN_MODES_LIST):
             features |= ClimateEntityFeature.FAN_MODE
+        if self._extra_state_attributes.get(ATTR_HOLD_MODES_LIST):
+            features |= ClimateEntityFeature.PRESET_MODE
         return features
 
     @override
@@ -453,14 +439,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         c4_climate = self.create_api_object()
-        if fan_mode in CONTROL4_FAN_MODES:
-            self._extra_state_attributes[ATTR_FAN_MODE] = CONTROL4_FAN_MODES[fan_mode]
-            await c4_climate.set_fan_mode(CONTROL4_FAN_MODES[fan_mode])
-        else:
-            _LOGGER.exception(
-                "Request for unsupported fan mode received:: %s",
-                fan_mode,
-            )
+        await c4_climate.set_fan_mode(fan_mode.title())
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -514,7 +493,11 @@ class Control4Climate(Control4Entity, ClimateEntity):
                 if high_temp - low_temp < self._get_setpoint_deadband():
                     # Ensure there is a minimum gap from the new temp. Pick
                     # the temp that is not changing as the one to move.
-                    if abs(high_temp - self.target_temperature_high) < 0.01:
+                    current_high = self.target_temperature_high
+                    if (
+                        current_high is not None
+                        and abs(high_temp - current_high) < 0.01
+                    ):
                         high_temp = low_temp + self._get_setpoint_deadband()
                     else:
                         low_temp = high_temp - self._get_setpoint_deadband()
@@ -536,10 +519,3 @@ class Control4Climate(Control4Entity, ClimateEntity):
         self._aux_heat_active = False
         if self.hvac_mode == HVACMode.HEAT:
             await self.async_set_hvac_mode(HVACMode.HEAT)
-
-    async def async_update(self) -> None:
-        """Poll thermostat state from the director."""
-        director = self.entry_data[CONF_DIRECTOR]
-        data = await director.get_item_variables(self._idx)
-        for item in data:
-            self._extra_state_attributes[item["varName"]] = item["value"]
