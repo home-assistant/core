@@ -22,7 +22,7 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TOGGLE_COVER_TILT,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -367,7 +367,6 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return attrs or None
 
     @final
-    @callback
     def _valid_speed_or_raise(self, speed: str, supported: list[str]) -> None:
         """Raise NotValidSpeedError if speed is not in the supported list."""
         if speed not in supported:
