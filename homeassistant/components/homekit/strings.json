@@ -18,7 +18,7 @@
     }
   },
   "issues": {
-    "heater_cooler_candidate": {
+    "accessory_type_candidate": {
       "fix_flow": {
         "step": {
           "confirm": {

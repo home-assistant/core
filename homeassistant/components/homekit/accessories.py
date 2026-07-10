@@ -86,7 +86,7 @@ from .const import (
     HK_CHARGING,
     HK_NOT_CHARGABLE,
     HK_NOT_CHARGING,
-    ISSUE_HEATER_COOLER_CANDIDATE,
+    ISSUE_ACCESSORY_TYPE_CANDIDATE,
     MANUFACTURER,
     MAX_MANUFACTURER_LENGTH,
     MAX_MODEL_LENGTH,
@@ -171,7 +171,7 @@ def climate_supports_heater_cooler(state: State) -> bool:
 
 def async_accessory_type_issue_id(entry_id: str, entity_id: str) -> str:
     """Return the repair issue id for a HeaterCooler candidate."""
-    return f"{ISSUE_HEATER_COOLER_CANDIDATE}_{entry_id}_{entity_id}"
+    return f"{ISSUE_ACCESSORY_TYPE_CANDIDATE}_{entry_id}_{entity_id}"
 
 
 @ha_callback
@@ -179,7 +179,7 @@ def async_delete_accessory_type_issues(
     hass: HomeAssistant, entry_id: str, keep: Collection[str] = ()
 ) -> None:
     """Delete an entry's HeaterCooler candidate issues except the kept ids."""
-    issue_prefix = f"{ISSUE_HEATER_COOLER_CANDIDATE}_{entry_id}_"
+    issue_prefix = f"{ISSUE_ACCESSORY_TYPE_CANDIDATE}_{entry_id}_"
     issue_reg = ir.async_get(hass)
     for domain, issue_id in list(issue_reg.issues):
         if (
@@ -303,7 +303,7 @@ class AccessoryTypeResolver:
                 async_accessory_type_issue_id(self._entry_id, entity_id),
                 is_fixable=True,
                 severity=ir.IssueSeverity.WARNING,
-                translation_key=ISSUE_HEATER_COOLER_CANDIDATE,
+                translation_key=ISSUE_ACCESSORY_TYPE_CANDIDATE,
                 translation_placeholders={
                     "entity": name,
                     "entity_id": entity_id,

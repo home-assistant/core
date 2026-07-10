@@ -769,6 +769,36 @@ async def test_heatercooler_unsupported_target_mode_write_restored(
     assert acc.char_target_state.value == HC_TARGET_COOL
 
 
+async def test_heatercooler_unsupported_target_write_dry_only_entity(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test the restore falls back to the default target for dry only entities."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.DRY, HVACMode.OFF],
+    }
+
+    hass.states.async_set(entity_id, HVACMode.DRY, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Dry has no target representation, so the last known mode cannot be
+    # restored; the write must fall back to the default target instead of
+    # leaving the unsupported value on the tile
+    assert acc.char_target_state.value == HC_TARGET_AUTO
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
+    _write_chars(hk_driver, acc, {CHAR_TARGET_HEATER_COOLER_STATE: HC_TARGET_HEAT})
+    await hass.async_block_till_done()
+
+    assert len(call_set_hvac_mode) == 0
+    assert acc.char_target_state.value == HC_TARGET_AUTO
+
+
 async def test_heatercooler_set_active_on(
     hass: HomeAssistant, hk_driver: HomeDriver
 ) -> None:

@@ -21,7 +21,7 @@ from homeassistant.components.homekit.const import (
     DOMAIN,
     HOMEKIT_MODE_ACCESSORY,
     HOMEKIT_MODE_BRIDGE,
-    ISSUE_HEATER_COOLER_CANDIDATE,
+    ISSUE_ACCESSORY_TYPE_CANDIDATE,
     PERSIST_LOCK_DATA,
 )
 from homeassistant.components.homekit.util import get_aid_storage_filename_for_entry_id
@@ -88,7 +88,7 @@ def _create_candidate_issue(
         issue_id,
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
-        translation_key=ISSUE_HEATER_COOLER_CANDIDATE,
+        translation_key=ISSUE_ACCESSORY_TYPE_CANDIDATE,
         translation_placeholders={
             "entity": "demo",
             "entity_id": entity_id,

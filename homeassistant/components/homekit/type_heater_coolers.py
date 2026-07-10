@@ -215,6 +215,7 @@ class HeaterCooler(HomeKitClimateAccessory):
             default_target = HC_TARGET_AUTO
         else:
             default_target = next(iter(self._hk_to_ha_target))
+        self._default_target = default_target
         self.char_target_state = self._configure_target_mode_char(
             serv, CHAR_TARGET_HEATER_COOLER_STATE, default_target, target_valid_values
         )
@@ -346,9 +347,13 @@ class HeaterCooler(HomeKitClimateAccessory):
                     (SERVICE_SET_HVAC_MODE, {ATTR_HVAC_MODE: hass_mode})
                 )
                 self._last_known_mode = hass_mode
-            elif (restore := self._hk_target_mode(self._last_known_mode)) is not None:
+            else:
                 # The write already changed the characteristic to a target
-                # the entity cannot enter, so put it back on the last mode.
+                # the entity cannot enter, so put it back on the last mode,
+                # or the default when that mode has no representation.
+                restore = self._hk_target_mode(self._last_known_mode)
+                if restore is None:
+                    restore = self._default_target
                 self._reject_char_write(self.char_target_state, restore)
         elif active == 1:
             currently_active = (
