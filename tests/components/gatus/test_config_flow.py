@@ -140,6 +140,7 @@ async def test_form_already_configured(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that duplicate configurations for the same base URL abort early."""
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

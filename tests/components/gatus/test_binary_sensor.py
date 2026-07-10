@@ -5,11 +5,8 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from gatus_api import EndpointStatus, GatusClientError, Result
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.gatus.const import DOMAIN
-from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -25,11 +22,13 @@ from tests.common import (
 
 async def test_binary_sensor_setup_and_states(
     hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test standard successful setup and entity snapshots using snapshot_platform."""
+    await setup_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
@@ -48,13 +47,14 @@ def _to_endpoint_statuses(raw_data: list[dict[str, Any]]) -> list[EndpointStatus
     ]
 
 
-@pytest.mark.usefixtures("mock_config_entry")
 async def test_binary_sensor_dynamic_update(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that the binary sensor entity updates when the mock client returns new data."""
+    await setup_integration(hass, mock_config_entry)
     state = hass.states.get("binary_sensor.core_backend_service")
     assert state is not None
     assert state.state == "on"
@@ -76,6 +76,7 @@ async def test_binary_sensor_dynamic_update(
 async def test_binary_sensor_no_group(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the binary sensor entity is created correctly when an endpoint has no group."""
     mock_data = await async_load_json_array_fixture(hass, "gatus/no_group.json")
@@ -84,24 +85,21 @@ async def test_binary_sensor_no_group(
         mock_data
     )
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_URL: "http://gatus.example.com:8080"},
-    )
-    await setup_integration(hass, entry)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("binary_sensor.backend_service")
     assert state is not None
     assert state.state == "on"
 
 
-@pytest.mark.usefixtures("mock_config_entry")
 async def test_binary_sensor_client_error(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a client exception cleanly marks entities as unavailable."""
+    await setup_integration(hass, mock_config_entry)
     state = hass.states.get("binary_sensor.core_backend_service")
     assert state is not None
     assert state.state == "on"
@@ -119,6 +117,7 @@ async def test_binary_sensor_client_error(
 async def test_binary_sensor_empty_results(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that an endpoint with empty results is treated as unavailable."""
     mock_gatus_client.get_endpoints_statuses.return_value = [
@@ -130,11 +129,7 @@ async def test_binary_sensor_empty_results(
         )
     ]
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_URL: "http://gatus.example.com:8080"},
-    )
-    await setup_integration(hass, entry)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("binary_sensor.backend_service")
     assert state is not None
@@ -150,6 +145,7 @@ async def test_binary_sensor_empty_results(
 async def test_binary_sensor_missing_status(
     hass: HomeAssistant,
     mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that an endpoint with a result missing a status code is handled correctly."""
     mock_gatus_client.get_endpoints_statuses.return_value = [
@@ -161,11 +157,7 @@ async def test_binary_sensor_missing_status(
         )
     ]
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_URL: "http://gatus.example.com:8080"},
-    )
-    await setup_integration(hass, entry)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("binary_sensor.backend_service")
     assert state is not None

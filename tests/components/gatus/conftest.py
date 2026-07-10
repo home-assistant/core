@@ -8,9 +8,6 @@ import pytest
 
 from homeassistant.components.gatus.const import DOMAIN
 from homeassistant.const import CONF_URL
-from homeassistant.core import HomeAssistant
-
-from . import setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -52,15 +49,10 @@ def mock_gatus_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-async def mock_config_entry(
-    hass: HomeAssistant, mock_gatus_client: AsyncMock
-) -> MockConfigEntry:
-    """Fixture to cleanly set up and initialize a Gatus configuration entry inside Home Assistant."""
-    entry = MockConfigEntry(
+def mock_config_entry() -> MockConfigEntry:
+    """Fixture to cleanly create a Gatus configuration entry."""
+    return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_URL: "http://gatus.example.com:8080"},
         entry_id="1234567890abcdef1234567890abcdef",
     )
-    await setup_integration(hass, entry)
-
-    return entry
