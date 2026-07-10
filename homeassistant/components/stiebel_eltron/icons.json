@@ -1,0 +1,19 @@
+{
+  "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "mdi:refresh-auto",
+              "emergency": "mdi:alert",
+              "manual": "mdi:hand-back-right",
+              "ready": "mdi:power-standby",
+              "water_heating": "mdi:water-boiler"
+            }
+          }
+        }
+      }
+    }
+  }
+}

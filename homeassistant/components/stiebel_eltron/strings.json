@@ -46,13 +46,32 @@
               "auto": "Auto",
               "emergency": "Emergency",
               "manual": "Manual",
-              "program": "Program",
               "ready": "Ready",
               "water_heating": "Water heating"
             }
           }
         }
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to device"
+    },
+    "modbus_data_error": {
+      "message": "Data error on the Modbus connection"
+    },
+    "set_hvac_mode_failed": {
+      "message": "Failed to set HVAC mode"
+    },
+    "set_preset_mode_failed": {
+      "message": "Failed to set preset mode"
+    },
+    "set_temperature_failed": {
+      "message": "Failed to set target temperature"
+    },
+    "update_failed": {
+      "message": "Error updating data from the device"
     }
   }
 }

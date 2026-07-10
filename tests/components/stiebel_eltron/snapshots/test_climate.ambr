@@ -49,7 +49,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 401>,
-    'translation_key': None,
+    'translation_key': 'climate',
     'unique_id': 'stiebel_eltron_001-climate_hk_1',
     'unit_of_measurement': None,
   })
