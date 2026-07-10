@@ -50,6 +50,7 @@ def _make_module(uid: str = "MOD-1") -> MagicMock:
     mod = MagicMock()
     mod.uid = uid
     mod.sensors = {}
+    mod.fingers = {}
     mod.chan_currents = {}
     mod.voltages = {}
     mod.chan_timeouts = {}
@@ -394,9 +395,9 @@ def test_logic_sensor_value_uses_idx_not_nmbr() -> None:
     [
         (ANALOG_DESCRIPTION, "analogins", "AIn 1"),
         (EKEY_ID_DESCRIPTION, "sensors", "Identifier"),
-        (EKEY_FINGER_DESCRIPTION, "sensors", "Finger"),
+        (EKEY_FINGER_DESCRIPTION, "fingers", "Finger"),
         (EKEY_USER_NAME_DESCRIPTION, "sensors", "Identifier"),
-        (EKEY_FINGER_NAME_DESCRIPTION, "sensors", "Finger"),
+        (EKEY_FINGER_NAME_DESCRIPTION, "fingers", "Finger"),
         # Hub host-diagnostic sensors also push via subscribe_fn so they stay
         # fresh even though the coordinator uses always_update=False.
         (MEMORY_DESCRIPTION, "sensors", "Memory free"),
@@ -432,7 +433,7 @@ async def test_described_sensor_add_listener(
     [
         (ANALOG_DESCRIPTION, "analogins", "AIn 1"),
         (EKEY_ID_DESCRIPTION, "sensors", "Identifier"),
-        (EKEY_FINGER_DESCRIPTION, "sensors", "Finger"),
+        (EKEY_FINGER_DESCRIPTION, "fingers", "Finger"),
     ],
 )
 async def test_described_sensor_remove_listener(
@@ -500,6 +501,7 @@ def _ekey_module() -> MagicMock:
     mod = MagicMock()
     mod.uid = "EK-1"
     mod.sensors = {0: MagicMock()}
+    mod.fingers = {0: MagicMock()}
     return mod
 
 
@@ -527,14 +529,14 @@ def test_ekey_user_value_fn_translates(raw: int, expected: str) -> None:
 def test_ekey_finger_value_fn_special_values(raw: int) -> None:
     """Idle (0), error (255) and out-of-range map to no state (None)."""
     mod = _ekey_module()
-    mod.sensors[0].value = raw
+    mod.fingers[0].value = raw
     assert EKEY_FINGER_NAME_DESCRIPTION.value_fn(mod, 0) is None
 
 
 def test_ekey_finger_value_fn_named_finger() -> None:
     """A finger value in 1..10 resolves to a stable enum key (not display text)."""
     mod = _ekey_module()
-    mod.sensors[0].value = 1
+    mod.fingers[0].value = 1
     result = EKEY_FINGER_NAME_DESCRIPTION.value_fn(mod, 0)
     assert result == "left_pinky"
     assert result in EKEY_FINGER_NAME_DESCRIPTION.options

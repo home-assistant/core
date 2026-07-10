@@ -29,37 +29,5 @@
         "default": "mdi:weather-windy-variant"
       }
     }
-  },
-  "services": {
-    "hub_reboot": {
-      "service": "mdi:restart-alert"
-    },
-    "hub_restart": {
-      "service": "mdi:restart"
-    },
-    "mod_restart": {
-      "service": "mdi:reload"
-    },
-    "rtr_restart": {
-      "service": "mdi:router-network"
-    },
-    "save_module_smc": {
-      "service": "mdi:content-save-cog"
-    },
-    "save_module_smg": {
-      "service": "mdi:content-save-settings"
-    },
-    "save_module_status": {
-      "service": "mdi:content-save"
-    },
-    "save_router_smr": {
-      "service": "mdi:content-save-edit"
-    },
-    "save_router_status": {
-      "service": "mdi:content-save-outline"
-    },
-    "update_entity": {
-      "service": "mdi:swap-horizontal-bold"
-    }
   }
 }
