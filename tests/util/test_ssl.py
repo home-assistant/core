@@ -1,5 +1,7 @@
 """Test Home Assistant ssl utility functions."""
 
+import ssl
+
 from homeassistant.util.ssl import (
     SSL_ALPN_HTTP11,
     SSL_ALPN_HTTP11_HTTP2,
@@ -11,6 +13,8 @@ from homeassistant.util.ssl import (
     create_no_verify_ssl_context,
     get_default_context,
     get_default_no_verify_context,
+    server_context_intermediate,
+    server_context_modern,
 )
 
 
@@ -188,3 +192,13 @@ def test_client_context_default_no_alpn() -> None:
 
     assert default_ctx is not http1_ctx
     assert default_ctx is client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_NONE)
+
+
+def test_server_context_modern_requires_tls_1_3() -> None:
+    """Modern server profile should only allow TLS 1.3 per Mozilla guidelines."""
+    modern = server_context_modern()
+    assert modern.minimum_version == ssl.TLSVersion.TLSv1_3
+
+    intermediate = server_context_intermediate()
+    # Intermediate remains compatible with TLS 1.2 clients
+    assert intermediate.minimum_version <= ssl.TLSVersion.TLSv1_2
