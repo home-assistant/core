@@ -50,21 +50,25 @@ class DdWrtRouter:
         status page (for example a login or proxy page returned with a
         200 status).
         """
-        endpoint = "Wireless" if self._wireless_only else "Lan"
-        status = self._get_data(f"Status_{endpoint}.live.asp")
-        field = "active_wireless" if self._wireless_only else "arp_table"
-        if field not in status:
+        lan = self._get_data("Status_Lan.live.asp")
+        if self._wireless_only:
+            active = self._get_data("Status_Wireless.live.asp")
+            field = "active_wireless"
+        else:
+            active = lan
+            field = "arp_table"
+        if field not in active:
             raise DdWrtConnectionError(
                 f"Unexpected response from DD-WRT router at {self._host}, "
                 f"missing '{field}' field"
             )
-        macs = self._extract_macs(status[field])
-        leases = self._get_leases()
+        macs = self._extract_macs(active[field])
+        leases = self._parse_leases(lan)
         return {mac: leases.get(mac, {"hostname": None, "ip": None}) for mac in macs}
 
-    def _get_leases(self) -> DdWrtClients:
-        """Return the DHCP leases keyed by MAC address."""
-        data = self._get_data("Status_Lan.live.asp")
+    @staticmethod
+    def _parse_leases(data: dict[str, str]) -> DdWrtClients:
+        """Parse the DHCP leases from a Status_Lan response."""
         if not (raw := data.get("dhcp_leases")):
             return {}
         cleaned = raw.replace('"', "").replace("'", "").replace(" ", "")

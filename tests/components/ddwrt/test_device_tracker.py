@@ -9,9 +9,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .conftest import MOCK_CONFIG
+from .conftest import MOCK_CLIENTS, MOCK_CONFIG
 
 from tests.common import MockConfigEntry
+
+_MAC_LAPTOP = "11:22:33:44:55:66"
 
 
 async def test_entities_created(
@@ -40,6 +42,70 @@ async def test_entities_created(
     assert any(
         entity_id.startswith("device_tracker.my_laptop") for entity_id in entity_ids
     )
+
+
+async def test_new_client_added_after_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_router: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a client discovered after setup gets a new entity."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    def _ddwrt_entities() -> list[str]:
+        return [
+            entry.entity_id
+            for entry in entity_registry.entities.values()
+            if entry.platform == DOMAIN
+        ]
+
+    assert len(_ddwrt_entities()) == 2
+
+    mock_router.return_value.get_clients.return_value = {
+        **MOCK_CLIENTS,
+        "99:88:77:66:55:44": {"hostname": "my-tablet", "ip": "192.168.1.102"},
+    }
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert len(_ddwrt_entities()) == 3
+
+
+async def test_device_disconnect_and_reconnect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_router: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an entity flips to not_home when a device disappears and back on return."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity("device_tracker.my_phone", disabled_by=None)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.my_phone").state == "home"
+
+    mock_router.return_value.get_clients.return_value = {
+        _MAC_LAPTOP: MOCK_CLIENTS[_MAC_LAPTOP]
+    }
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.my_phone").state == "not_home"
+
+    mock_router.return_value.get_clients.return_value = MOCK_CLIENTS
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.my_phone").state == "home"
 
 
 async def test_setup_entry_update_failed(
