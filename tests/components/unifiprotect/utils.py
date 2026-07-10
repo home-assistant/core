@@ -373,13 +373,15 @@ def make_public_camera(
     mic_volume: int | None = None,
     hdr_type: PublicHdrMode | None = None,
 ) -> Mock:
-    """Build a public-API camera mirroring a private camera's migrated fields.
+    """Build a public-API camera for a private camera's migrated fields.
 
-    ``hdr_type`` defaults to the public mode derived from the private
-    ``hdr_mode_display`` so the migrated HDR select reads the same value the
-    private object would produce; each other ``*`` override lets a test set a
-    value the private object would not produce so a wrong
-    ``ufp_public_value``/``ufp_public_value_fn`` fails the test.
+    Only ``state``, ``video_mode``, ``mic_volume``, and ``hdr_type`` (derived
+    from the private ``hdr_mode_display``) mirror the private camera when not
+    overridden. The other fields deliberately default to off/empty
+    (``status_light``/``osd_*`` disabled, no smart-detect types) instead of
+    mirroring, so a test overriding one sets a value the private object would
+    not produce and a wrong ``ufp_public_value``/``ufp_public_value_fn`` fails
+    the test.
     """
     public = Mock(spec=PublicCamera)
     public.id = camera.id
