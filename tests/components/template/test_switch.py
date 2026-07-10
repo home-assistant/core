@@ -598,8 +598,9 @@ async def test_restore_state(
 
 
 @pytest.mark.parametrize("test_state", [STATE_ON, STATE_OFF])
+@pytest.mark.parametrize("value_template", ["", "   "])
 async def test_config_entry_optimistic_restore_with_empty_value_template(
-    hass: HomeAssistant, test_state: str
+    hass: HomeAssistant, test_state: str, value_template: str
 ) -> None:
     """UI empty value_template should keep optimistic mode and restore state."""
     mock_restore_cache(hass, (State("switch.my_template", test_state),))
@@ -612,7 +613,7 @@ async def test_config_entry_optimistic_restore_with_empty_value_template(
         options={
             "name": "My template",
             "template_type": SWITCH_DOMAIN,
-            "value_template": "",
+            "value_template": value_template,
             "turn_on": [],
             "turn_off": [],
         },
