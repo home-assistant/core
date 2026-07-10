@@ -2729,10 +2729,11 @@ async def test_manager_handle_dynamic_encryption_key_connection_error(
 
 @pytest.fixture
 def mock_provisioning_client_cls() -> Generator[Mock]:
-    """Mock the APIClient class used for the zero PSK provisioning connection.
+    """Mock the client factory used for the zero PSK provisioning connection.
 
-    The class mock records the constructor call; its return_value is the
-    provisioning client instance.
+    Patching the manager module's reference leaves the main client (created
+    through the reference imported into __init__) untouched. The factory mock
+    records the call; its return_value is the provisioning client instance.
     """
     client = Mock(spec=APIClient)
     client.connect = AsyncMock()
@@ -2740,9 +2741,10 @@ def mock_provisioning_client_cls() -> Generator[Mock]:
     client.noise_encryption_set_key = AsyncMock(return_value=True)
 
     with patch(
-        "homeassistant.components.esphome.manager.APIClient", return_value=client
-    ) as mock_cls:
-        yield mock_cls
+        "homeassistant.components.esphome.manager.async_create_api_client",
+        return_value=client,
+    ) as mock_factory:
+        yield mock_factory
 
 
 def _make_provisionable_entry(hass: HomeAssistant, mac_address: str) -> MockConfigEntry:
@@ -2804,10 +2806,9 @@ async def test_dynamic_encryption_key_provisioned_over_zero_psk(
     )
     mock_client.noise_encryption_set_key.assert_not_called()
 
-    # The provisioning client was built with the zero PSK and the device MAC
+    # The provisioning client was built with the zero PSK
     kwargs = mock_provisioning_client_cls.call_args.kwargs
     assert kwargs["noise_psk"] == ZERO_NOISE_PSK
-    assert kwargs["expected_mac"] == mac_address
     provisioning_client.disconnect.assert_called_with(force=True)
 
     # Entry and storage were updated

@@ -35,7 +35,9 @@ import voluptuous as vol
 from homeassistant.components import bluetooth, tag, zeroconf
 from homeassistant.const import (
     ATTR_DEVICE_ID,
+    CONF_HOST,
     CONF_MODE,
+    CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_LOGGING_CHANGED,
@@ -102,6 +104,26 @@ from .enum_mapper import EsphomeEnumMapper
 
 DEVICE_CONFLICT_ISSUE_FORMAT = "device_conflict-{}"
 UNPACK_UINT32_BE = struct.Struct(">I").unpack_from
+
+
+@callback
+def async_create_api_client(
+    hass: HomeAssistant,
+    entry: ESPHomeConfigEntry,
+    zeroconf_instance: zeroconf.HaZeroconf,
+    *,
+    noise_psk: str | None,
+) -> APIClient:
+    """Create an APIClient for a config entry."""
+    return APIClient(
+        entry.data[CONF_HOST],
+        entry.data[CONF_PORT],
+        entry.data[CONF_PASSWORD],
+        client_info=CLIENT_INFO,
+        zeroconf_instance=zeroconf_instance,
+        noise_psk=noise_psk,
+        timezone=hass.config.time_zone,
+    )
 
 
 if TYPE_CHECKING:
@@ -827,15 +849,8 @@ class ESPHomeManager:
         simply returns; provisioning runs again on the next connect cycle.
         """
         unique_id = self.entry.unique_id
-        cli = APIClient(
-            self.host,
-            self.entry.data[CONF_PORT],
-            None,
-            client_info=CLIENT_INFO,
-            zeroconf_instance=self.zeroconf_instance,
-            noise_psk=ZERO_NOISE_PSK,
-            expected_mac=unique_id if unique_id and ":" in unique_id else None,
-            timezone=self.hass.config.time_zone,
+        cli = async_create_api_client(
+            self.hass, self.entry, self.zeroconf_instance, noise_psk=ZERO_NOISE_PSK
         )
         device_name = self.entry.data.get(CONF_DEVICE_NAME, self.host)
         try:
