@@ -537,3 +537,48 @@ async def test_form_subentry_reconfigure_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("smtp")
+async def test_form_subentry_reconfigure_updates_title(
+    hass: HomeAssistant,
+) -> None:
+    """Test subentry reconfigure flow updates subentry title if it matches email."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home Assistant",
+        data=USER_INPUT,
+        options={
+            CONF_TIMEOUT: 5,
+        },
+        entry_id="123456789",
+        subentries_data=[
+            ConfigSubentryData(
+                data={},
+                subentry_id="ABCDEF",
+                subentry_type=SUBENTRY_TYPE_RECIPIENT,
+                title="recipient@example.com",
+                unique_id="recipient@example.com",
+            )
+        ],
+    )
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await config_entry.start_subentry_reconfigure_flow(hass, "ABCDEF")
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == SOURCE_RECONFIGURE
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_RECIPIENT: "changed@example.com"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert config_entry.subentries["ABCDEF"].unique_id == "changed@example.com"
+    assert config_entry.subentries["ABCDEF"].title == "changed@example.com"
