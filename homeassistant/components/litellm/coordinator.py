@@ -1,6 +1,7 @@
 """Coordinator for the LiteLLM integration."""
 
 from datetime import timedelta
+from typing import override
 
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError, PermissionDeniedError
 
@@ -42,6 +43,7 @@ class LiteLLMDataUpdateCoordinator(DataUpdateCoordinator[None]):
             http_client=get_async_client(hass),
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Ping the proxy to confirm it is reachable and authenticated."""
         self.update_interval = UPDATE_INTERVAL_DISCONNECTED
@@ -55,6 +57,7 @@ class LiteLLMDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.update_interval = UPDATE_INTERVAL_CONNECTED
 
     @callback
+    @override
     def async_set_updated_data(self, data: None) -> None:
         """Manually update data and reset to the connected interval."""
         self.update_interval = UPDATE_INTERVAL_CONNECTED

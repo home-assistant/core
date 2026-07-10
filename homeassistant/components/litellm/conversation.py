@@ -1,6 +1,6 @@
 """Conversation support for LiteLLM."""
 
-from typing import Literal
+from typing import Literal, override
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -40,10 +40,12 @@ class LiteLLMConversationEntity(LiteLLMEntity, conversation.ConversationEntity):
             )
 
     @property
+    @override
     def supported_languages(self) -> list[str] | Literal["*"]:
         """Return a list of supported languages."""
         return MATCH_ALL
 
+    @override
     async def _async_handle_message(
         self,
         user_input: conversation.ConversationInput,
