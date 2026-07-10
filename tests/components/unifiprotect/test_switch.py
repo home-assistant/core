@@ -519,6 +519,40 @@ async def test_switch_camera_status_light_public_value(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
+@pytest.mark.parametrize(
+    ("switch_key", "camera_kwarg"),
+    [
+        ("osd_name", "osd_name"),
+        ("osd_date", "osd_date"),
+        ("osd_logo", "osd_logo"),
+        ("osd_bitrate", "osd_debug"),
+    ],
+)
+async def test_switch_camera_osd_public_value(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    switch_key: str,
+    camera_kwarg: str,
+) -> None:
+    """Each OSD switch reads its own public osd_settings flag independently."""
+
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell])
+
+    description = next(d for d in CAMERA_SWITCHES if d.key == switch_key)
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, doorbell, description
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    public = make_public_camera(doorbell, **{camera_kwarg: True})
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
 async def test_switch_camera_detection_public_value(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ) -> None:
