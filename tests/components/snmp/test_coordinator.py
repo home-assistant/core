@@ -49,6 +49,7 @@ def mock_coordinator_entry(hass: HomeAssistant) -> MockConfigEntry:
 )
 async def test_mac_normalization(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_coordinator_entry: MockConfigEntry,
     input_bytes: bytes,
     expected_mac: str,
@@ -86,8 +87,9 @@ async def test_mac_normalization(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-    entity_id = ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, expected_mac)
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, expected_mac
+    )
     assert entity_id is not None
 
     state = hass.states.get(entity_id)
@@ -108,6 +110,7 @@ async def test_mac_normalization(
 )
 async def test_ip_extraction(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_coordinator_entry: MockConfigEntry,
     oid_tuple: tuple,
     expected_ip: str,
@@ -147,8 +150,9 @@ async def test_ip_extraction(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-    entity_id = ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac_str)
+    entity_id = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, mac_str
+    )
     assert entity_id is not None
 
     state = hass.states.get(entity_id)
@@ -158,6 +162,7 @@ async def test_ip_extraction(
 
 async def test_ip_extraction_oid_too_short(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_coordinator_entry: MockConfigEntry,
 ) -> None:
     """Test that IP is None when OID is too short."""
@@ -194,8 +199,7 @@ async def test_ip_extraction_oid_too_short(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-    entity_id = ent_reg.async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
     )
     assert entity_id is not None
@@ -249,6 +253,7 @@ async def test_walk_error_makes_entry_unavailable(
 )
 async def test_walk_errindication(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_coordinator_entry: MockConfigEntry,
     errindication: str | PySnmpError,
 ) -> None:
@@ -300,8 +305,8 @@ async def test_walk_errindication(
         await hass.async_block_till_done()
 
         # First poll succeeded - entity should be home
-        ent_reg = er.async_get(hass)
-        entity_id = ent_reg.async_get_entity_id(
+
+        entity_id = entity_registry.async_get_entity_id(
             DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
         )
         assert entity_id is not None
@@ -357,6 +362,7 @@ async def test_walk_errstatus(
 
 async def test_invalid_mac_length_ignored(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_coordinator_entry: MockConfigEntry,
 ) -> None:
     """Test that MAC addresses with invalid length are ignored."""
@@ -389,15 +395,16 @@ async def test_invalid_mac_length_ignored(
         await hass.async_block_till_done()
 
     # No entity should be created for invalid MAC
-    ent_reg = er.async_get(hass)
+
     entries = er.async_entries_for_config_entry(
-        ent_reg, mock_coordinator_entry.entry_id
+        entity_registry, mock_coordinator_entry.entry_id
     )
     assert len(entries) == 0
 
 
 async def test_mac_processing_exception_ignored(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_coordinator_entry: MockConfigEntry,
 ) -> None:
     """Test that exceptions during MAC processing are silently ignored."""
@@ -431,9 +438,8 @@ async def test_mac_processing_exception_ignored(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
     entries = er.async_entries_for_config_entry(
-        ent_reg, mock_coordinator_entry.entry_id
+        entity_registry, mock_coordinator_entry.entry_id
     )
     assert len(entries) == 0
 
@@ -747,6 +753,7 @@ async def test_walk_auth_error(
 
 async def test_walk_end_of_mib(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_coordinator_entry: MockConfigEntry,
 ) -> None:
     """Test that walk stops when end of MIB is reached."""
@@ -790,10 +797,8 @@ async def test_walk_end_of_mib(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-
     # First MAC should have been processed (is_end_of_mib returned False)
-    entity_id_1 = ent_reg.async_get_entity_id(
+    entity_id_1 = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
     )
     assert entity_id_1 is not None
@@ -802,7 +807,7 @@ async def test_walk_end_of_mib(
     assert state.state == STATE_HOME
 
     # Second MAC should NOT have been processed (is_end_of_mib returned True)
-    entity_id_2 = ent_reg.async_get_entity_id(
+    entity_id_2 = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, "aa:bb:cc:dd:ee:ff"
     )
     assert entity_id_2 is None

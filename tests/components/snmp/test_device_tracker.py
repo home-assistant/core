@@ -64,6 +64,7 @@ def mock_get_cmd():
 @pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_setup_with_legacy_state(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test setup of SNMP device tracker with legacy state (migration).
 
@@ -90,15 +91,14 @@ async def test_device_tracker_setup_with_legacy_state(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-    entity_id = ent_reg.async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
     )
 
     assert entity_id is not None
 
     # Entity should be enabled because it was migrated from a legacy state
-    ent_entry = ent_reg.async_get(entity_id)
+    ent_entry = entity_registry.async_get(entity_id)
     assert ent_entry is not None
     assert ent_entry.disabled_by is None
 
@@ -112,6 +112,7 @@ async def test_device_tracker_setup_with_legacy_state(
 @pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_new_entity_disabled_by_default(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that newly discovered devices are disabled by default.
 
@@ -135,15 +136,14 @@ async def test_device_tracker_new_entity_disabled_by_default(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-    entity_id = ent_reg.async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
     )
 
     assert entity_id is not None
 
     # Entity should be disabled by default (no legacy state, no device)
-    ent_entry = ent_reg.async_get(entity_id)
+    ent_entry = entity_registry.async_get(entity_id)
     assert ent_entry is not None
     assert ent_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
@@ -152,7 +152,9 @@ async def test_device_tracker_new_entity_disabled_by_default(
 
 
 @pytest.mark.usefixtures("mock_get_cmd")
-async def test_device_tracker_update(hass: HomeAssistant, mock_walk: Mock) -> None:
+async def test_device_tracker_update(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_walk: Mock
+) -> None:
     """Test update of SNMP device tracker."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -192,8 +194,7 @@ async def test_device_tracker_update(hass: HomeAssistant, mock_walk: Mock) -> No
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        ent_reg = er.async_get(hass)
-        entity_id_1 = ent_reg.async_get_entity_id(
+        entity_id_1 = entity_registry.async_get_entity_id(
             DEVICE_TRACKER_DOMAIN, DOMAIN, mac1_str
         )
         assert entity_id_1 is not None
@@ -206,10 +207,12 @@ async def test_device_tracker_update(hass: HomeAssistant, mock_walk: Mock) -> No
         await hass.async_block_till_done()
 
     # mac2 is a newly discovered device (no legacy state) → disabled
-    entity_id_2 = ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac2_str)
+    entity_id_2 = entity_registry.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, mac2_str
+    )
     assert entity_id_2 is not None
 
-    entry2 = ent_reg.async_get(entity_id_2)
+    entry2 = entity_registry.async_get(entity_id_2)
     assert entry2 is not None
     assert entry2.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
@@ -222,6 +225,7 @@ async def test_device_tracker_update(hass: HomeAssistant, mock_walk: Mock) -> No
 @pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_device_registry_linking(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that entities and devices are correctly linked in the registry."""
     entry = MockConfigEntry(
@@ -235,7 +239,7 @@ async def test_device_tracker_device_registry_linking(
     entry.add_to_hass(hass)
 
     dr_reg = dr.async_get(hass)
-    ent_reg = er.async_get(hass)
+
     mac = "00:11:22:33:44:55"
 
     with patch(
@@ -256,8 +260,8 @@ async def test_device_tracker_device_registry_linking(
     assert client_device is None
 
     # Verify Entity Linking
-    entity_id = ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac)
-    reg_entry = ent_reg.async_get(entity_id)
+    entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac)
+    reg_entry = entity_registry.async_get(entity_id)
     assert reg_entry is not None
     assert reg_entry.device_id is None
     assert reg_entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
@@ -266,6 +270,7 @@ async def test_device_tracker_device_registry_linking(
 @pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_name_resolves_to_mac_address(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that the entity name resolves to the expected MAC address format."""
     entry = MockConfigEntry(
@@ -288,8 +293,7 @@ async def test_device_tracker_name_resolves_to_mac_address(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-    entity_id = ent_reg.async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
     )
     assert entity_id is not None
@@ -302,6 +306,7 @@ async def test_device_tracker_name_resolves_to_mac_address(
 @pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_enabled_if_device_exists(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that an entity is enabled if its device already exists in the registry.
 
@@ -333,14 +338,13 @@ async def test_device_tracker_enabled_if_device_exists(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    ent_reg = er.async_get(hass)
-    entity_id = ent_reg.async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
     )
     assert entity_id is not None
 
     # Entity should be enabled because the device already existed
-    reg_entry = ent_reg.async_get(entity_id)
+    reg_entry = entity_registry.async_get(entity_id)
     assert reg_entry is not None
     assert reg_entry.disabled_by is None
 
@@ -359,6 +363,7 @@ async def test_async_setup_scanner_import(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_initial_macs(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test setup of SNMP device tracker with initial MACs in the registry."""
     entry = MockConfigEntry(
@@ -371,9 +376,10 @@ async def test_device_tracker_initial_macs(
     )
     entry.add_to_hass(hass)
 
-    ent_reg = er.async_get(hass)
     mac = "00:11:22:33:44:55"
-    ent_reg.async_get_or_create(DEVICE_TRACKER_DOMAIN, DOMAIN, mac, config_entry=entry)
+    entity_registry.async_get_or_create(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, mac, config_entry=entry
+    )
 
     with patch(
         "homeassistant.components.snmp.util.UdpTransportTarget.create",
@@ -382,7 +388,7 @@ async def test_device_tracker_initial_macs(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_id = ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac)
+    entity_id = entity_registry.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac)
     assert entity_id is not None
     assert hass.states.get(entity_id) is not None
 
@@ -406,6 +412,7 @@ async def test_device_tracker_properties_empty_coordinator(
 @pytest.mark.usefixtures("mock_walk", "mock_get_cmd")
 async def test_device_tracker_state_cleanup(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that existing states are cleaned up during setup."""
     entry = MockConfigEntry(
@@ -418,9 +425,8 @@ async def test_device_tracker_state_cleanup(
     )
     entry.add_to_hass(hass)
 
-    ent_reg = er.async_get(hass)
     mac = "00:11:22:33:44:55"
-    reg_entry = ent_reg.async_get_or_create(
+    reg_entry = entity_registry.async_get_or_create(
         DEVICE_TRACKER_DOMAIN, DOMAIN, mac, config_entry=entry
     )
 
@@ -451,7 +457,7 @@ async def test_device_tracker_state_cleanup(
 
 @pytest.mark.usefixtures("mock_get_cmd")
 async def test_device_tracker_update_empty_data(
-    hass: HomeAssistant, mock_walk: Mock
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_walk: Mock
 ) -> None:
     """Test coordinator update with empty data."""
     entry = MockConfigEntry(
@@ -478,8 +484,8 @@ async def test_device_tracker_update_empty_data(
     await hass.async_block_till_done()
 
     # Entity should still exist in the registry but no new entities created
-    ent_reg = er.async_get(hass)
-    entity_id = ent_reg.async_get_entity_id(
+
+    entity_id = entity_registry.async_get_entity_id(
         DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
     )
     assert entity_id is not None
