@@ -1184,6 +1184,43 @@ async def test_heatercooler_range_only_one_sided_entity(
     assert ATTR_TEMPERATURE not in call_set_temperature[0].data
 
 
+async def test_heatercooler_state_callback_during_write_wins(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a state reported during the call beats the queued mode values."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [
+            HVACMode.HEAT,
+            HVACMode.COOL,
+            HVACMode.HEAT_COOL,
+            HVACMode.OFF,
+        ],
+    }
+
+    hass.states.async_set(entity_id, HVACMode.HEAT, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # The entity normalizes the requested mode and reports it before the
+    # blocking service call returns, like a synchronous integration
+    async def _hvac(call: ServiceCall) -> None:
+        hass.states.async_set(entity_id, HVACMode.HEAT_COOL, base_attrs)
+
+    hass.services.async_register(CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, _hvac)
+    _write_chars(hk_driver, acc, {CHAR_TARGET_HEATER_COOLER_STATE: HC_TARGET_COOL})
+    await hass.async_block_till_done()
+
+    # The reported mode is fresher than the queued cool, so it stays
+    assert acc._pending_mode is None
+    assert acc._last_known_mode == HVACMode.HEAT_COOL
+
+
 async def test_heatercooler_pending_mode_bridges_slow_state_updates(
     hass: HomeAssistant, hk_driver: HomeDriver
 ) -> None:

@@ -388,17 +388,21 @@ class HeaterCooler(HomeKitClimateAccessory):
             self._queue_fan_swing_changes(char_values, service_calls)
 
         for call in service_calls:
+            reported_mode = self._last_reported_mode
+            known_mode = self._last_known_mode
             if not await self.async_call_service_and_wait(
                 CLIMATE_DOMAIN,
                 call.service,
                 {ATTR_ENTITY_ID: self.entity_id, **call.data},
             ):
                 return
-            # The remembered mode mirrors the accepted target, so a
-            # rejected mode is not restored later.
-            if call.pending_mode:
+            # A state callback during the blocking call is fresher than the
+            # queued values, so each one only applies when its counterpart
+            # was not updated while awaiting. The remembered mode mirrors
+            # the accepted target, so a rejected mode is not restored later.
+            if call.pending_mode and self._last_reported_mode == reported_mode:
                 self._pending_mode = call.pending_mode
-            if call.commit_mode:
+            if call.commit_mode and self._last_known_mode == known_mode:
                 self._last_known_mode = call.commit_mode
 
     @override

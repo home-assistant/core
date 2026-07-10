@@ -144,11 +144,12 @@ def get_temperature_range_from_state(
     # Handle a reversed temperature range
     min_temp, max_temp = get_min_max(min_temp, max_temp)
 
-    # Round inward so the slider cannot produce a write the entity's own
-    # limit validation rejects; a range too narrow to hold a half degree
-    # step keeps the exact limits rather than expanding beyond them.
-    rounded_min = math.ceil(min_temp * 2) / 2
-    rounded_max = math.floor(max_temp * 2) / 2
+    # Round inward to the characteristic's 0.1 step so the slider cannot
+    # produce a write the entity's own limit validation rejects; a range
+    # too narrow to hold a step keeps the exact limits rather than
+    # expanding beyond them.
+    rounded_min = math.ceil(min_temp * 10) / 10
+    rounded_max = math.floor(max_temp * 10) / 10
     if rounded_min <= rounded_max:
         min_temp, max_temp = rounded_min, rounded_max
 

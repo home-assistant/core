@@ -1000,20 +1000,20 @@ async def test_thermostat_get_temperature_range(hass: HomeAssistant, hk_driver) 
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state
-    # 60F is 15.56C, rounded inward so the slider cannot go below the
-    # entity's own minimum
-    assert acc.get_temperature_range(state) == (16.0, 21.0)
+    # 60F is 15.56C, rounded inward to the 0.1 step so the slider cannot
+    # go below the entity's own minimum
+    assert acc.get_temperature_range(state) == (15.6, 21.1)
 
-    # A range too narrow to hold a half degree step keeps the exact limits
-    # instead of expanding beyond them
+    # A range too narrow to hold a step keeps the exact limits instead
+    # of expanding beyond them
     acc._unit = UnitOfTemperature.CELSIUS
     hass.states.async_set(
-        entity_id, HVACMode.OFF, {ATTR_MIN_TEMP: 20.1, ATTR_MAX_TEMP: 20.2}
+        entity_id, HVACMode.OFF, {ATTR_MIN_TEMP: 20.11, ATTR_MAX_TEMP: 20.14}
     )
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state
-    assert acc.get_temperature_range(state) == (20.1, 20.2)
+    assert acc.get_temperature_range(state) == (20.11, 20.14)
 
 
 async def test_thermostat_temperature_step_whole(
@@ -1986,9 +1986,9 @@ async def test_water_heater_get_temperature_range(
     state = hass.states.get(entity_id)
     assert state
     await hass.async_block_till_done()
-    # 60F is 15.56C, rounded inward so the slider cannot go below the
-    # entity's own minimum
-    assert acc.get_temperature_range(state) == (16.0, 21.0)
+    # 60F is 15.56C, rounded inward to the 0.1 step so the slider cannot
+    # go below the entity's own minimum
+    assert acc.get_temperature_range(state) == (15.6, 21.1)
 
 
 async def test_water_heater_restore(
