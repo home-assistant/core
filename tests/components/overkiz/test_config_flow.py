@@ -8,6 +8,7 @@ from pyoverkiz.client import GatewayCandidate
 from pyoverkiz.const import (
     REXEL_OAUTH_AUTHORIZE_URL,
     REXEL_OAUTH_POLICY,
+    REXEL_OAUTH_SCOPE,
     REXEL_OAUTH_TOKEN_URL,
 )
 from pyoverkiz.exceptions import (
@@ -1116,6 +1117,8 @@ async def test_rexel_full_flow_single_gateway(
     # Azure AD B2C needs the policy on the authorize URL; the helper rebuilds
     # the query string, so it must survive via extra_authorize_data.
     assert f"p={REXEL_OAUTH_POLICY}" in result["url"]
+    # offline_access is required for B2C to return a refresh token.
+    assert f"{REXEL_OAUTH_SCOPE}+offline_access" in result["url"]
 
     await _async_rexel_oauth_external_step(
         hass, hass_client_no_auth, aioclient_mock, result["flow_id"]
@@ -1134,6 +1137,29 @@ async def test_rexel_full_flow_single_gateway(
     assert result["data"]["gateway_id"] == TEST_GATEWAY_ID
     assert "token" in result["data"]
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_rexel_flow_reimports_removed_credential(
+    hass: HomeAssistant,
+) -> None:
+    """The Rexel flow re-imports its client credential if the user removed it."""
+    assert await async_setup_component(hass, "application_credentials", {})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"hub": "rexel"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
+
+    # Reaching the OAuth2 external step proves an implementation was available,
+    # i.e. the credential was re-imported despite not being present beforehand.
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert REXEL_OAUTH_AUTHORIZE_URL in result["url"]
 
 
 @pytest.mark.usefixtures("current_request_with_host", "setup_rexel_credentials")

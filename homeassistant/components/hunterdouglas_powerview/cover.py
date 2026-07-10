@@ -139,7 +139,12 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     @override
     def available(self) -> bool:
         """Return True if shade position data is available."""
-        return super().available and self.positions.primary is not None
+        return super().available and self._is_position_available
+
+    @property
+    def _is_position_available(self) -> bool:
+        """Return if the cover contains positional data."""
+        return self.positions.primary is not None
 
     @property
     @override
@@ -567,9 +572,9 @@ class PowerViewShadeTiltOnly(PowerViewShadeWithTiltBase):
 
     @property
     @override
-    def available(self) -> bool:
-        """Return True if shade position data is available."""
-        return super().available and self.positions.tilt is not None
+    def _is_position_available(self) -> bool:
+        """Return if the cover contains positional data."""
+        return self.positions.tilt is not None
 
 
 class PowerViewShadeTopDown(PowerViewShadeBase):

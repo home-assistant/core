@@ -35,7 +35,7 @@ class ElgatoLight(ElgatoEntity, LightEntity):
 
     _attr_name = None
     _attr_min_color_temp_kelvin = 2900  # 344 Mireds
-    _attr_max_color_temp_kelvin = 7000  # 143 Mireds
+    _attr_max_color_temp_kelvin = 6993  # 143 Mireds
 
     def __init__(self, coordinator: ElgatoDataUpdateCoordinator) -> None:
         """Initialize Elgato Light."""

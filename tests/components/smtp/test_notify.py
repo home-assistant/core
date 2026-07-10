@@ -278,6 +278,7 @@ async def test_notify_send_message(
             "Content-Transfer-Encoding: 7bit\n"
             "Subject: Home Assistant\n"
             "From: Home Assistant <email@example.com>\n"
+            "To: Recipient <recipient@example.com>\n"
             "X-Mailer: Home Assistant\n"
             "Date: Sat, 02 May 2026 20:09:37 -0700\n"
             "Message-Id: <177777777700.12345.12345678901234567890@mock>\n\n"

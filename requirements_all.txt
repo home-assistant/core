@@ -193,7 +193,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==14.1.8
+aioamazondevices==14.1.9
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -401,7 +401,7 @@ aiorecollect==2023.09.0
 aioridwell==2025.09.0
 
 # homeassistant.components.ruckus_unleashed
-aioruckus==0.42
+aioruckus==0.46.3
 
 # homeassistant.components.russound_rio
 # homeassistant.components.russound_rnet
@@ -606,7 +606,7 @@ av==17.0.1
 avea==1.8.0
 
 # homeassistant.components.axis
-axis==72
+axis==74
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -648,7 +648,7 @@ beautifulsoup4==4.13.3
 bizkaibus==0.1.1
 
 # homeassistant.components.esphome
-bleak-esphome==3.9.4
+bleak-esphome==3.9.7
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==4.6.1
@@ -853,7 +853,7 @@ dremel3dpy==2.1.1
 dropmqttapi==1.0.3
 
 # homeassistant.components.dsmr
-dsmr-parser==1.9.0
+dsmr-parser==1.11.1
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.7
@@ -1210,7 +1210,7 @@ ha-xthings-cloud==1.0.5
 habiticalib==0.4.7
 
 # homeassistant.components.bluetooth
-habluetooth==6.26.2
+habluetooth==6.26.5
 
 # homeassistant.components.hanna
 hanna-cloud==0.0.7
@@ -1260,10 +1260,10 @@ hole==0.9.2
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.99
+holidays==0.100
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260624.4
+home-assistant-frontend==20260624.5
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.6.24
@@ -1311,7 +1311,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==13.2.5
+ical==13.3.0
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -1737,7 +1737,7 @@ ondilo==0.5.0
 onedrive-personal-sdk==0.1.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==4.2.0
+onvif-zeep-async==4.2.1
 
 # homeassistant.components.onvif
 onvif_parsers==2.3.0
@@ -1939,7 +1939,7 @@ py-schluter==0.1.7
 py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.10.2
+py-synologydsm-api==2.10.3
 
 # homeassistant.components.unifi_access
 py-unifi-access==1.3.0
@@ -2298,7 +2298,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.4.1
+pylamarzocco==2.4.2
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2429,7 +2429,7 @@ pyotgw==2.2.3
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz[nexity]==2.0.3
+pyoverkiz[nexity]==2.0.4
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
@@ -2612,7 +2612,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==6.1.4
+python-bsblan==6.1.6
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
@@ -2718,7 +2718,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==5.22.0
+python-roborock==5.25.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.47
@@ -2824,7 +2824,7 @@ pywilight==0.0.74
 pywizlight==0.6.3
 
 # homeassistant.components.wmspro
-pywmspro==0.4.0
+pywmspro==0.4.2
 
 # homeassistant.components.ws66i
 pyws66i==1.1
@@ -2887,7 +2887,7 @@ renault-api==0.5.12
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.21.3
+reolink-aio==0.21.4
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.3.0
@@ -3209,7 +3209,7 @@ ttls==1.8.3
 ttn_client==1.3.0
 
 # homeassistant.components.tuya
-tuya-device-handlers==0.0.24
+tuya-device-handlers==0.0.25
 
 # homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.10
@@ -3233,7 +3233,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==15.3.0
+uiprotect==15.4.3
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3277,7 +3277,7 @@ vehicle==3.0.0
 velbus-aio==2026.4.1
 
 # homeassistant.components.venstar
-venstarcolortouch==0.21
+venstarcolortouch==0.22
 
 # homeassistant.components.viaggiatreno
 viaggiatreno_ha==0.2.4
@@ -3441,7 +3441,7 @@ zeroconf==0.150.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha-quirks==2.1.0
+zha-quirks==2.1.1
 
 # homeassistant.components.zha
 zha==2.0.0
