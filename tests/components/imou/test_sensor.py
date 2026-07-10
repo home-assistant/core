@@ -3,7 +3,12 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pyimouapi.const import PARAM_BATTERY, PARAM_STATE_VARIANT, STATE_VARIANT_ENUM
+from pyimouapi.const import (
+    PARAM_BATTERY,
+    PARAM_STATE_VARIANT,
+    PARAM_STORAGE_USED,
+    STATE_VARIANT_ENUM,
+)
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -165,3 +170,44 @@ async def test_storage_used_numeric_has_percentage_unit(
     state = hass.states.get(storage_entry.entity_id)
     assert state is not None
     assert state.attributes.get("unit_of_measurement") == "%"
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                button_keys=(),
+                sensors={
+                    PARAM_STATUS: DEFAULT_SENSORS[PARAM_STATUS],
+                    PARAM_STORAGE_USED: {
+                        PARAM_STATE: "e1",
+                        PARAM_STATE_VARIANT: STATE_VARIANT_ENUM,
+                    },
+                },
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_storage_used_enum_suppresses_numeric_metadata(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Enum storage_used values suppress unit, state class, and precision."""
+    storage_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entry.unique_id == "d1$storage_used"
+    )
+    state = hass.states.get(storage_entry.entity_id)
+    assert state is not None
+    assert state.state == "e1"
+    assert "unit_of_measurement" not in state.attributes
+    assert "state_class" not in state.attributes

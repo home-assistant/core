@@ -155,13 +155,18 @@ class ImouSensor(ImouEntity, SensorEntity):
             self._attr_options = STATUS_OPTIONS
 
     @property
+    def _is_numeric_variant(self) -> bool:
+        """Return True when the sensor value is numeric."""
+        return (
+            self.device.sensors[self._entity_type].get(PARAM_STATE_VARIANT)
+            == STATE_VARIANT_NUMERIC
+        )
+
+    @property
     @override
     def state_class(self) -> SensorStateClass | None:
         """Return state class for numeric sensor values."""
-        if (
-            self.device.sensors[self._entity_type].get(PARAM_STATE_VARIANT)
-            != STATE_VARIANT_NUMERIC
-        ):
+        if not self._is_numeric_variant:
             return None
         return SENSOR_STATE_CLASS.get(self._entity_type)
 
@@ -175,10 +180,7 @@ class ImouSensor(ImouEntity, SensorEntity):
     @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit when the sensor value is numeric."""
-        if (
-            self.device.sensors[self._entity_type].get(PARAM_STATE_VARIANT)
-            != STATE_VARIANT_NUMERIC
-        ):
+        if not self._is_numeric_variant:
             return None
         return SENSOR_UNITS.get(self._entity_type)
 
@@ -186,9 +188,6 @@ class ImouSensor(ImouEntity, SensorEntity):
     @override
     def suggested_display_precision(self) -> int | None:
         """Return display precision for numeric sensor values."""
-        if (
-            self.device.sensors[self._entity_type].get(PARAM_STATE_VARIANT)
-            != STATE_VARIANT_NUMERIC
-        ):
+        if not self._is_numeric_variant:
             return None
         return SENSOR_DISPLAY_PRECISION.get(self._entity_type)
