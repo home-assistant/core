@@ -52,6 +52,7 @@
           "preset_mode": {
             "state": {
               "auto": "[%key:common::state::auto%]",
+              "eco": "Eco",
               "normal": "[%key:common::state::normal%]",
               "pet": "Pet",
               "sleep": "Sleep",
