@@ -77,10 +77,9 @@ class TodoGetItemsTool(Tool):
         entity_id = result.states[0].entity_id
         service_data: dict[str, Any] = {"entity_id": entity_id}
         status = data["status"]
-        if status == "all":
-            service_data["status"] = ["needs_action", "completed"]
-        else:
-            service_data["status"] = [status]
+        # "all" means no status filter, which returns every item.
+        if status != "all":
+            service_data["status"] = status
         service_result = await hass.services.async_call(
             DOMAIN,
             TodoServices.GET_ITEMS,
