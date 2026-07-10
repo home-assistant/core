@@ -26,7 +26,6 @@ from .const import (
     CONF_KNX_STATE_UPDATER,
     CONF_KNX_TELEGRAM_DB_BACKEND,
     CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
-    CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     DATA_HASS_CONFIG,
     DOMAIN,
@@ -199,16 +198,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.info("Migration to version 2 successful")
 
     if entry.version == 2 and entry.minor_version < 2:
-        new_data = {**entry.data}
+        # version 2.2 introduced in 2026.8
         new_options = {**entry.options}
         if CONF_KNX_TELEGRAM_DB_BACKEND not in new_options:
             new_options[CONF_KNX_TELEGRAM_DB_BACKEND] = KNX_TELEGRAM_BACKEND_SQLITE
-        if CONF_KNX_TELEGRAM_DB_POSTGRES_DSN in new_data:
-            new_options[CONF_KNX_TELEGRAM_DB_POSTGRES_DSN] = new_data.pop(
-                CONF_KNX_TELEGRAM_DB_POSTGRES_DSN
-            )
         hass.config_entries.async_update_entry(
-            entry, data=new_data, options=new_options, minor_version=2
+            entry, options=new_options, minor_version=2
         )
         _LOGGER.info("Migration to version 2.2 successful")
 

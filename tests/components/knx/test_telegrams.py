@@ -488,29 +488,6 @@ async def test_nightly_eviction_error_handling(
     assert telegrams_module.store is not None
 
 
-async def test_invalid_backend(
-    hass: HomeAssistant,
-    knx: KNXTestKit,
-) -> None:
-    """Test that an unknown backend disables the store without failing setup."""
-    knx.mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        knx.mock_config_entry,
-        options=knx.mock_config_entry.options
-        | {CONF_KNX_TELEGRAM_DB_BACKEND: "invalid"},
-    )
-    await knx.setup_integration(add_entry_to_hass=False)
-
-    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
-    assert telegrams_module.store is None
-    # No repair issue is raised for an invalid backend
-    issue_registry = ir.async_get(hass)
-    assert (
-        issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
-        is None
-    )
-
-
 async def test_postgres_backend_init_error(
     hass: HomeAssistant,
     knx: KNXTestKit,

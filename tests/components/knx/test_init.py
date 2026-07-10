@@ -40,7 +40,6 @@ from homeassistant.components.knx.const import (
     CONF_KNX_STATE_UPDATER,
     CONF_KNX_TELEGRAM_DB_BACKEND,
     CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
-    CONF_KNX_TELEGRAM_DB_POSTGRES_DSN,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
@@ -451,7 +450,6 @@ async def test_async_migrate_entry_v2_to_v2_2(hass: HomeAssistant) -> None:
         minor_version=1,
         data={
             "other_setting": "some_value",
-            CONF_KNX_TELEGRAM_DB_POSTGRES_DSN: "postgresql://user:pass@host/db",
         },
         options={
             "some_option": "value",
@@ -468,8 +466,3 @@ async def test_async_migrate_entry_v2_to_v2_2(hass: HomeAssistant) -> None:
         config_entry.options[CONF_KNX_TELEGRAM_DB_BACKEND]
         == KNX_TELEGRAM_BACKEND_SQLITE
     )
-    assert (
-        config_entry.options[CONF_KNX_TELEGRAM_DB_POSTGRES_DSN]
-        == "postgresql://user:pass@host/db"
-    )
-    assert CONF_KNX_TELEGRAM_DB_POSTGRES_DSN not in config_entry.data

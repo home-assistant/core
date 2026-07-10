@@ -1213,7 +1213,7 @@
           "host": "Hostname or IP address of the PostgreSQL server.",
           "password": "Password for the PostgreSQL user. Leave blank to keep the current password.",
           "port": "Port the PostgreSQL server is listening on.",
-          "tls": "Enable TLS encryption for the PostgreSQL connection.",
+          "tls": "Encrypt the connection to the PostgreSQL server (`sslmode=require`). Note that the server certificate is not verified.",
           "user": "Username to authenticate with the PostgreSQL server."
         },
         "title": "PostgreSQL connection"

@@ -5,6 +5,8 @@ from collections.abc import AsyncGenerator
 from typing import Any, Final, Literal, override
 from urllib.parse import quote, unquote, urlparse, urlunparse
 
+from knx_telegram_store import ConnectionErrorKind
+from knx_telegram_store.backends.postgres import PostgresStore
 import voluptuous as vol
 from xknx import XKNX
 from xknx.exceptions.exception import (
@@ -1070,6 +1072,7 @@ class KNXOptionsFlow(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Collect and validate the PostgreSQL telegram store connection."""
         current_dsn = self.initial_options.get(CONF_KNX_TELEGRAM_DB_POSTGRES_DSN, "")
+        parsed = _parse_dsn(current_dsn)
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -1078,7 +1081,7 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 **user_input,
                 CONF_KNX_TELEGRAM_DB_PASSWORD: (
                     user_input.get(CONF_KNX_TELEGRAM_DB_PASSWORD)
-                    or _parse_dsn(current_dsn).get(CONF_KNX_TELEGRAM_DB_PASSWORD, "")
+                    or parsed.get(CONF_KNX_TELEGRAM_DB_PASSWORD, "")
                 ),
             }
             dsn = _build_dsn(params)
@@ -1089,7 +1092,6 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 )
                 return self.finish_flow()
 
-        parsed = _parse_dsn(current_dsn)
         data_schema = vol.Schema(
             {
                 vol.Required(
@@ -1140,10 +1142,6 @@ class KNXOptionsFlow(OptionsFlowWithReload):
 
 async def _async_check_postgres_dsn(dsn: str) -> dict[str, str]:
     """Validate a PostgreSQL DSN, returning form errors on failure."""
-    # Imported lazily to avoid loading SQLAlchemy during integration setup.
-    from knx_telegram_store import ConnectionErrorKind  # noqa: PLC0415
-    from knx_telegram_store.backends.postgres import PostgresStore  # noqa: PLC0415
-
     connection_errors = {
         ConnectionErrorKind.AUTH: "invalid_auth",
         ConnectionErrorKind.HOST_UNREACHABLE: "host_unreachable",
