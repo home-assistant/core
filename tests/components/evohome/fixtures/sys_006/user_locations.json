@@ -2,7 +2,7 @@
   {
     "locationInfo": {
       "locationId": "0001001",
-      "name": "Home",
+      "name": "My Home 1",
       "streetAddress": "1 Rue de la Loi",
       "city": "Auderghem",
       "country": "Belgium",
@@ -86,6 +86,22 @@
                 "systemMode": "Auto",
                 "canBePermanent": true,
                 "canBeTemporary": false
+              },
+              {
+                "systemMode": "AutoWithEco",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "1.00:00:00",
+                "timingResolution": "01:00:00",
+                "timingMode": "Duration"
+              },
+              {
+                "systemMode": "Away",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "99.00:00:00",
+                "timingResolution": "1.00:00:00",
+                "timingMode": "Period"
               }
             ]
           }
@@ -96,7 +112,7 @@
   {
     "locationInfo": {
       "locationId": "0002001",
-      "name": "Home",
+      "name": "My Home 2",
       "streetAddress": "-REDACTED-",
       "city": "Auderghem",
       "country": "Belgium",
@@ -180,6 +196,22 @@
                 "systemMode": "Auto",
                 "canBePermanent": true,
                 "canBeTemporary": false
+              },
+              {
+                "systemMode": "AutoWithEco",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "1.00:00:00",
+                "timingResolution": "01:00:00",
+                "timingMode": "Duration"
+              },
+              {
+                "systemMode": "Away",
+                "canBePermanent": true,
+                "canBeTemporary": true,
+                "maxDuration": "99.00:00:00",
+                "timingResolution": "1.00:00:00",
+                "timingMode": "Period"
               }
             ]
           }

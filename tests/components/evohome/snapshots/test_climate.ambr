@@ -2598,50 +2598,6 @@
     'state': 'auto',
   })
 # ---
-# name: test_setup_platform[sys_006][climate.home-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.5,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home',
-      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-        <HVACMode.OFF: 'off'>,
-        <HVACMode.HEAT: 'heat'>,
-      ]),
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
-      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
-      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
-      'status': dict({
-        'activeSystemFaults': tuple(
-          dict({
-            'fault_type': 'BoilerCommunicationLost',
-            'since': '2024-10-01T01:00:00+02:00',
-          }),
-          dict({
-            'fault_type': 'ChValveCommunicationLost',
-            'since': '2024-09-01T01:00:00+02:00',
-          }),
-          dict({
-            'fault_type': 'GatewayCommunicationLost',
-            'since': '2024-06-01T01:00:00+02:00',
-          }),
-        ),
-        'system_id': '0001003',
-        'system_mode_status': dict({
-          'is_permanent': False,
-          'mode': 'AutoWithEco',
-          'time_until': '2024-07-11T02:00:00+02:00',
-        }),
-      }),
-      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 384>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'climate.home',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'heat',
-  })
-# ---
 # name: test_setup_platform[sys_006][climate.main_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -2691,6 +2647,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'climate.main_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[sys_006][climate.my_home_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.5,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Home 1',
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:thermostat-box',
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'eco',
+        'away',
+      ]),
+      'status': dict({
+        'activeSystemFaults': tuple(
+          dict({
+            'fault_type': 'BoilerCommunicationLost',
+            'since': '2024-10-01T01:00:00+02:00',
+          }),
+          dict({
+            'fault_type': 'ChValveCommunicationLost',
+            'since': '2024-09-01T01:00:00+02:00',
+          }),
+          dict({
+            'fault_type': 'GatewayCommunicationLost',
+            'since': '2024-06-01T01:00:00+02:00',
+          }),
+        ),
+        'system_id': '0001003',
+        'system_mode_status': dict({
+          'is_permanent': False,
+          'mode': 'AutoWithEco',
+          'time_until': '2024-07-11T02:00:00+02:00',
+        }),
+      }),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.my_home_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
