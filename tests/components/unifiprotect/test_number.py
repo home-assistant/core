@@ -38,10 +38,12 @@ from .utils import (
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
+    make_public_camera,
     make_public_light,
     make_public_sensor,
     public_device_ws_message,
     remove_entities,
+    setup_public_camera,
     setup_public_light,
     setup_public_sensor,
 )
@@ -117,6 +119,7 @@ async def test_number_setup_camera_all(
     camera.speaker_settings.volume = 1
     camera.feature_flags.is_doorbell = True
     camera.speaker_settings.ring_volume = 1
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.NUMBER, 7, 7)
 
@@ -298,6 +301,7 @@ async def test_number_camera_simple(
     description: ProtectNumberEntityDescription,
 ) -> None:
     """Tests simple numbers for cameras using the all features fixture."""
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [camera_all_features])
     assert_entity_counts(hass, Platform.NUMBER, 7, 7)
 
@@ -318,6 +322,59 @@ async def test_number_camera_simple(
         )
 
         mock_method.assert_called_once_with(1.0)
+
+
+async def test_number_camera_mic_volume_public_value(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
+) -> None:
+    """Mic volume reads from the public object and refreshes on a public WS update."""
+
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [camera])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, camera, CAMERA_NUMBERS[1]
+    )
+
+    # A public value the private fixture (1) would not produce proves the source.
+    public = make_public_camera(camera, mic_volume=42)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "42"
+
+
+async def test_number_camera_mic_volume_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
+) -> None:
+    """The migrated mic volume number is unavailable without a public object."""
+
+    await init_entry(hass, ufp, [camera])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, camera, CAMERA_NUMBERS[1]
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_number_camera_mic_volume_unavailable_on_public_disconnect(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
+) -> None:
+    """Mic volume availability follows the public object's connection state."""
+
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [camera])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, camera, CAMERA_NUMBERS[1]
+    )
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    public = make_public_camera(camera, state=DeviceState.DISCONNECTED)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_number_sense_sensitivity_public_value(
