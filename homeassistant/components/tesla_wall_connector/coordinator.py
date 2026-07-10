@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the Tesla Wall Connector integration."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -20,6 +21,7 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     WALLCONNECTOR_DATA_LIFETIME,
     WALLCONNECTOR_DATA_VITALS,
+    WALLCONNECTOR_DATA_WIFI_STATUS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,8 +68,11 @@ class WallConnectorCoordinator(DataUpdateCoordinator[dict]):
     async def _async_update_data(self) -> dict:
         """Fetch new data from the Wall Connector."""
         try:
-            vitals = await self._wall_connector.async_get_vitals()
-            lifetime = await self._wall_connector.async_get_lifetime()
+            vitals, lifetime, wifi_status = await asyncio.gather(
+                self._wall_connector.async_get_vitals(),
+                self._wall_connector.async_get_lifetime(),
+                self._wall_connector.async_get_wifi_status(),
+            )
         except WallConnectorConnectionTimeoutError as ex:
             raise UpdateFailed(
                 f"Could not fetch data from Tesla WallConnector at {self._hostname}:"
@@ -87,4 +92,5 @@ class WallConnectorCoordinator(DataUpdateCoordinator[dict]):
         return {
             WALLCONNECTOR_DATA_VITALS: vitals,
             WALLCONNECTOR_DATA_LIFETIME: lifetime,
+            WALLCONNECTOR_DATA_WIFI_STATUS: wifi_status,
         }
