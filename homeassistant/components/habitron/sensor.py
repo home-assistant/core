@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -89,6 +90,21 @@ async def async_setup_entry(  # noqa: C901
     smhub = hbtn_cord.smart_hub
     hbtn_rt = smhub.router
 
+    registry = er.async_get(hass)
+    area_reg = ar.async_get(hass)
+    # Map each bus area number to its HA area-registry id (creating the area on
+    # first sight). Used to place analog inputs whose area deviates from their
+    # module's area (see below).
+    area_ids = {a.nmbr: area_reg.async_get_or_create(a.name).id for a in hbtn_rt.areas}
+
+    # Analog inputs may be assigned an area that deviates from their module's
+    # area. HA has no per-entity ``suggested_area``, so the only way to honour
+    # this is the entity registry. We apply the hub's area once, when the entity
+    # is first created, and never on a reload -- overwriting on every reload
+    # would clobber a user's manual area move. Collected here, applied after the
+    # entities are added.
+    pending_areas: list[tuple[str, str]] = []
+
     new_devices: list[SensorEntity] = []
     for smhub_sensor in smhub.sensors:
         if smhub_sensor.name == "Memory free":
@@ -136,15 +152,22 @@ async def async_setup_entry(  # noqa: C901
         if hbt_module.typ in [b"\x01\x03", b"\x0b\x1f"]:
             for ain in hbt_module.analogins:
                 if ain.type == 3:
-                    new_devices.append(
-                        HbtnDescribedSensor(
-                            hbt_module,
-                            ain,
-                            hbtn_cord,
-                            len(new_devices),
-                            ANALOG_DESCRIPTION,
-                        )
+                    analog = HbtnDescribedSensor(
+                        hbt_module,
+                        ain,
+                        hbtn_cord,
+                        len(new_devices),
+                        ANALOG_DESCRIPTION,
                     )
+                    new_devices.append(analog)
+                    # ain.area == 0 means "the module's own area"; only a value
+                    # that differs from the module's area is a real deviation.
+                    if (
+                        ain.area not in (0, hbt_module.area)
+                        and ain.area in area_ids
+                        and (unique_id := analog.unique_id) is not None
+                    ):
+                        pending_areas.append((unique_id, area_ids[ain.area]))
         for mod_sensor in hbt_module.sensors:
             if mod_sensor.name[0:11] == "Temperature":
                 # The external probe is disabled by default; the two descriptions
@@ -287,7 +310,21 @@ async def async_setup_entry(  # noqa: C901
         )
 
     if new_devices:
+        # Snapshot the unique_ids already registered for this entry *before*
+        # adding: entries present here existed on a prior run (a reload), so
+        # their area must be left untouched.
+        existing = {
+            e.unique_id
+            for e in er.async_entries_for_config_entry(registry, entry.entry_id)
+        }
         async_add_entities(new_devices)
+        for unique_id, area_id in pending_areas:
+            if unique_id in existing:
+                # Already existed -> respect the current (possibly user-set) area.
+                continue
+            entity_id = registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+            if entity_id is not None:
+                registry.async_update_entity(entity_id, area_id=area_id)
 
 
 class HbtnSensor(CoordinatorEntity[HbtnCoordinator], SensorEntity):
@@ -531,7 +568,7 @@ TIMEOUT_DESCRIPTION = HbtnSensorEntityDescription(
 EKEY_ID_DESCRIPTION = HbtnSensorEntityDescription(
     key="ekey_id",
     translation_key="ekey_id",
-    state_class=SensorStateClass.MEASUREMENT,
+    state_class=None,
     translated_name=True,
     value_fn=lambda module, idx: module.sensors[idx].value,
     subscribe_fn=lambda module, idx: module.sensors[idx],
@@ -539,7 +576,7 @@ EKEY_ID_DESCRIPTION = HbtnSensorEntityDescription(
 EKEY_FINGER_DESCRIPTION = HbtnSensorEntityDescription(
     key="ekey_finger",
     translation_key="ekey_finger",
-    state_class=SensorStateClass.MEASUREMENT,
+    state_class=None,
     translated_name=True,
     value_fn=lambda module, idx: module.sensors[idx].value,
     subscribe_fn=lambda module, idx: module.sensors[idx],
@@ -564,7 +601,7 @@ EKEY_FINGER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
 STATUS_DESCRIPTION = HbtnSensorEntityDescription(
     key="module_status",
     translation_key="module_status",
-    state_class=SensorStateClass.MEASUREMENT,
+    state_class=None,
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     translated_name=True,

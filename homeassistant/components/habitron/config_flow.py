@@ -12,6 +12,11 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.components import network
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_SERIAL,
     ATTR_UPNP_UDN,
@@ -178,6 +183,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Confirm discovery."""
+        errors: dict[str, str] = {}
         if user_input is not None:
             # Create entry with discovered data
             data = {
@@ -187,6 +193,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, data)
                 return self.async_create_entry(title=info["title"], data=data)
+            except CannotConnect:
+                # A briefly-offline hub should be retryable, not aborted.
+                errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 return self.async_abort(reason="unknown")
 
@@ -196,6 +205,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "name": self._discovered_device.get("ip", "Habitron Hub")
             },
+            errors=errors,
         )
 
     @override
@@ -263,7 +273,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(KEY_HOST, default=default_host): str,
-                    vol.Optional(KEY_TOKEN, default=""): str,
+                    vol.Optional(KEY_TOKEN, default=""): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
                 }
             ),
             errors=errors,
