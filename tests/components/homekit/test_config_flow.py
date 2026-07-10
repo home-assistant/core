@@ -1708,6 +1708,37 @@ async def test_options_flow_climate_accessory_type_round_trip(
     assert "entity_config" not in config_entry.options
 
 
+async def test_options_flow_cameras_step_with_whole_domain_included(
+    hass: HomeAssistant,
+) -> None:
+    """Test the cameras step is offered for a whole camera domain include."""
+    config_entry = _mock_config_entry_with_options_populated()
+    config_entry.add_to_hass(hass)
+
+    hass.states.async_set("camera.native_h264", "off")
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "domains": ["fan", "camera"],
+            "include_exclude_mode": "include",
+        },
+    )
+    assert result["step_id"] == "include"
+
+    # No camera is selected explicitly, so the whole domain is included
+    # and the camera options are still offered
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"entities": []},
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "cameras"
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
+
 async def test_options_flow_climate_step_with_whole_domain_included(
     hass: HomeAssistant,
 ) -> None:

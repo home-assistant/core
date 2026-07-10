@@ -191,6 +191,23 @@ def _async_entities_in_domain(entities: list[str], domain: str) -> list[str]:
     ]
 
 
+@callback
+def _async_included_domain_entities(
+    hass: HomeAssistant,
+    entity_filter: EntityFilterDict,
+    entities: list[str],
+    domain: str,
+) -> list[str]:
+    """Return a domain's included entities, expanding a whole domain include.
+
+    The whole domain is included when none of its entities are selected
+    explicitly.
+    """
+    if domain in entity_filter[CONF_INCLUDE_DOMAINS]:
+        return _async_get_matching_entities(hass, [domain])
+    return _async_entities_in_domain(entities, domain)
+
+
 async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
     """Create a mapping of types of devices/entities HomeKit can support."""
     integrations = await async_get_integrations(hass, SUPPORTED_DOMAINS)
@@ -606,17 +623,12 @@ class OptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
             entity_filter = _async_build_entities_filter(domains, entities)
-            self.included_cameras = _async_entities_in_domain(entities, CAMERA_DOMAIN)
-            if CLIMATE_DOMAIN in entity_filter[CONF_INCLUDE_DOMAINS]:
-                # The whole domain is included when none of its entities
-                # are selected explicitly.
-                self.included_climates = _async_get_matching_entities(
-                    self.hass, [CLIMATE_DOMAIN]
-                )
-            else:
-                self.included_climates = _async_entities_in_domain(
-                    entities, CLIMATE_DOMAIN
-                )
+            self.included_cameras = _async_included_domain_entities(
+                self.hass, entity_filter, entities, CAMERA_DOMAIN
+            )
+            self.included_climates = _async_included_domain_entities(
+                self.hass, entity_filter, entities, CLIMATE_DOMAIN
+            )
             hk_options[CONF_FILTER] = entity_filter
             return await self.async_step_cameras()
 
