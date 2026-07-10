@@ -208,16 +208,20 @@ class HeaterCooler(HomeKitClimateAccessory):
         self.char_current_state = serv.configure_char(
             CHAR_CURRENT_HEATER_COOLER_STATE, value=HC_INACTIVE
         )
-        target_valid_values = {
+        # Also the reverse lookup for modes only selectable through the
+        # Auto fallback, so every selectable mode is representable.
+        self._ha_to_hk_target = {
             ha_mode: hk_state for hk_state, ha_mode in self._hk_to_ha_target.items()
         }
         if HC_TARGET_AUTO in self._hk_to_ha_target:
             default_target = HC_TARGET_AUTO
         else:
             default_target = next(iter(self._hk_to_ha_target))
-        self._default_target = default_target
         self.char_target_state = self._configure_target_mode_char(
-            serv, CHAR_TARGET_HEATER_COOLER_STATE, default_target, target_valid_values
+            serv,
+            CHAR_TARGET_HEATER_COOLER_STATE,
+            default_target,
+            self._ha_to_hk_target,
         )
         self._configure_current_temperature_char(serv)
 
@@ -294,12 +298,24 @@ class HeaterCooler(HomeKitClimateAccessory):
         service_calls: list[tuple[str, dict[str, Any]]] = []
         current_state = self.hass.states.get(self.entity_id)
 
+        # A mode written in the batch wins over the entity state, which
+        # still holds the pre-change mode.
+        requested_mode: HVACMode | None = None
+        if (
+            target_mode := char_values.get(CHAR_TARGET_HEATER_COOLER_STATE)
+        ) is not None:
+            requested_mode = self._hk_to_ha_target.get(target_mode)
+
         # Active/mode changes are handled first as they gate the others.
-        self._handle_active_mode_changes(char_values, service_calls, current_state)
+        self._handle_active_mode_changes(
+            char_values, service_calls, current_state, requested_mode
+        )
         # Temperature and fan/swing writes are meaningless when turning off.
         active_on = char_values.get(CHAR_ACTIVE) != 0
         if active_on:
-            self._handle_temperature_changes(char_values, service_calls, current_state)
+            self._handle_temperature_changes(
+                char_values, service_calls, current_state, requested_mode
+            )
 
         for service_name, service_data in service_calls:
             self.async_call_service(
@@ -318,6 +334,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         char_values: dict[str, Any],
         service_calls: list[tuple[str, dict[str, Any]]],
         current_state: State | None,
+        requested_mode: HVACMode | None,
     ) -> None:
         """Handle active and mode changes."""
         active = char_values.get(CHAR_ACTIVE)
@@ -342,18 +359,14 @@ class HeaterCooler(HomeKitClimateAccessory):
                 # back so HomeKit keeps showing the unit as on.
                 self._reject_char_write(self.char_active, 1)
         elif target_mode is not None:
-            if hass_mode := self._hk_to_ha_target.get(target_mode):
+            if requested_mode:
                 service_calls.append(
-                    (SERVICE_SET_HVAC_MODE, {ATTR_HVAC_MODE: hass_mode})
+                    (SERVICE_SET_HVAC_MODE, {ATTR_HVAC_MODE: requested_mode})
                 )
-                self._last_known_mode = hass_mode
-            else:
+                self._last_known_mode = requested_mode
+            elif (restore := self._hk_target_mode(self._last_known_mode)) is not None:
                 # The write already changed the characteristic to a target
-                # the entity cannot enter, so put it back on the last mode,
-                # or the default when that mode has no representation.
-                restore = self._hk_target_mode(self._last_known_mode)
-                if restore is None:
-                    restore = self._default_target
+                # the entity cannot enter, so put it back on the last mode.
                 self._reject_char_write(self.char_target_state, restore)
         elif active == 1:
             currently_active = (
@@ -370,6 +383,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         char_values: dict[str, Any],
         service_calls: list[tuple[str, dict[str, Any]]],
         current_state: State | None,
+        requested_mode: HVACMode | None,
     ) -> None:
         """Handle temperature changes."""
         cooling_temp = char_values.get(CHAR_COOLING_THRESHOLD_TEMPERATURE)
@@ -378,23 +392,14 @@ class HeaterCooler(HomeKitClimateAccessory):
         if cooling_temp is None and heating_temp is None:
             return
 
-        # A mode written in the same batch decides the write shape, since
-        # the entity state still holds the pre-change mode.
-        requested_mode: HVACMode | None = None
-        if (
-            target_mode := char_values.get(CHAR_TARGET_HEATER_COOLER_STATE)
-        ) is not None:
-            requested_mode = self._hk_to_ha_target.get(target_mode)
-
         # Entities that support both single and range targets publish the
         # range keys even when they are unset, so the effective mode decides
         # between a range and a single setpoint write; entities that only
         # take a range always get one.
         attributes = current_state.attributes if current_state else {}
-        current_mode = (
-            try_parse_enum(HVACMode, current_state.state) if current_state else None
+        effective_mode: HVACMode | str | None = requested_mode or (
+            current_state.state if current_state else None
         )
-        effective_mode = requested_mode or current_mode
         use_range = (
             ATTR_TARGET_TEMP_HIGH in attributes or ATTR_TARGET_TEMP_LOW in attributes
         ) and (effective_mode in RANGE_MODES or ATTR_TEMPERATURE not in attributes)
@@ -410,7 +415,7 @@ class HeaterCooler(HomeKitClimateAccessory):
             )
         else:
             self._handle_single_temp_changes(
-                service_calls, cooling_temp, heating_temp, current_state, requested_mode
+                service_calls, cooling_temp, heating_temp, current_state, effective_mode
             )
 
     def _handle_single_temp_changes(
@@ -419,25 +424,24 @@ class HeaterCooler(HomeKitClimateAccessory):
         cooling_temp: float | None,
         heating_temp: float | None,
         current_state: State | None,
-        requested_mode: HVACMode | None,
+        effective_mode: HVACMode | str | None,
     ) -> None:
         """Handle temperature changes for single-temperature entities."""
         if not current_state:
             return
 
-        # For a single setpoint the active mode decides which threshold is the
-        # setpoint; Cool uses the cooling side and Heat the heating side, so a
-        # write to the other side is ignored. Range and other modes fall back to
-        # whichever threshold moved, and Auto picks the one furthest from the
-        # current setpoint.
-        current_mode = requested_mode or current_state.state
+        # For a single setpoint the effective mode decides which threshold is
+        # the setpoint; Cool uses the cooling side and Heat the heating side,
+        # so a write to the other side is ignored. Range and other modes fall
+        # back to whichever threshold moved, and Auto picks the one furthest
+        # from the current setpoint.
         selected_temp = None
-        if current_mode == HVACMode.COOL:
+        if effective_mode == HVACMode.COOL:
             selected_temp = cooling_temp
-        elif current_mode == HVACMode.HEAT:
+        elif effective_mode == HVACMode.HEAT:
             selected_temp = heating_temp
         elif (
-            current_mode in RANGE_MODES
+            effective_mode in RANGE_MODES
             and cooling_temp is not None
             and heating_temp is not None
         ):
@@ -480,7 +484,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         hk_value = HC_HASS_TO_HOMEKIT_TARGET.get(mode)
         if hk_value is not None and hk_value in self._hk_to_ha_target:
             return hk_value
-        return None
+        return self._ha_to_hk_target.get(mode)
 
     @callback
     @override

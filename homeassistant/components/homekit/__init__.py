@@ -784,16 +784,22 @@ class HomeKit:
             acc = get_accessory(self.hass, self.driver, state, aid, conf)
             if acc is not None:
                 self.bridge.add_accessory(acc)
-                if pending_type:
-                    self.aid_storage.async_set_accessory_type(
-                        state.entity_id, pending_type
-                    )
+                self._async_record_accessory_type(state.entity_id, pending_type)
                 return acc
         except Exception:
             _LOGGER.exception(
                 "Failed to create a HomeKit accessory for %s", state.entity_id
             )
         return None
+
+    @callback
+    def _async_record_accessory_type(
+        self, entity_id: str, accessory_type: str | None
+    ) -> None:
+        """Record a resolved accessory type once its accessory exists."""
+        if accessory_type:
+            assert self.aid_storage is not None
+            self.aid_storage.async_set_accessory_type(entity_id, accessory_type)
 
     def _would_exceed_max_devices(self, name: str | None) -> bool:
         """Check if adding another devices would reach the limit and log."""
@@ -1045,9 +1051,7 @@ class HomeKit:
                 self._filter.config,
             )
             return None
-        if pending_type:
-            assert self.aid_storage is not None
-            self.aid_storage.async_set_accessory_type(state.entity_id, pending_type)
+        self._async_record_accessory_type(state.entity_id, pending_type)
         return acc
 
     async def _async_create_bridge_accessory(

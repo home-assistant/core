@@ -169,8 +169,8 @@ def climate_supports_heater_cooler(state: State) -> bool:
     )
 
 
-def async_accessory_type_issue_id(entry_id: str, entity_id: str) -> str:
-    """Return the repair issue id for a HeaterCooler candidate."""
+def accessory_type_issue_id(entry_id: str, entity_id: str) -> str:
+    """Return the repair issue id for an accessory type candidate."""
     return f"{ISSUE_ACCESSORY_TYPE_CANDIDATE}_{entry_id}_{entity_id}"
 
 
@@ -178,7 +178,7 @@ def async_accessory_type_issue_id(entry_id: str, entity_id: str) -> str:
 def async_delete_accessory_type_issues(
     hass: HomeAssistant, entry_id: str, keep: Collection[str] = ()
 ) -> None:
-    """Delete an entry's HeaterCooler candidate issues except the kept ids."""
+    """Delete an entry's accessory type candidate issues except the kept ids."""
     issue_prefix = f"{ISSUE_ACCESSORY_TYPE_CANDIDATE}_{entry_id}_"
     issue_reg = ir.async_get(hass)
     for domain, issue_id in list(issue_reg.issues):
@@ -251,7 +251,8 @@ class AccessoryTypeResolver:
         self._candidates.pop(entity_id, None)
         if climate_type := conf.get(CONF_TYPE):
             # The explicit type is recorded by the caller like the automatic
-            # one, so every path defers persistence until the accessory exists.
+            # one, so every path that sets a type defers persistence until
+            # the accessory exists.
             return cast(str, climate_type)
         if aid_storage.get_accessory_type(entity_id) == TYPE_HEATER_COOLER:
             if not climate_controls_target_humidity(state):
@@ -293,7 +294,7 @@ class AccessoryTypeResolver:
             async_delete_accessory_type_issues(self._hass, self._entry_id)
             return
         keep = {
-            async_accessory_type_issue_id(self._entry_id, entity_id)
+            accessory_type_issue_id(self._entry_id, entity_id)
             for entity_id in self._candidates
         }
         async_delete_accessory_type_issues(self._hass, self._entry_id, keep=keep)
@@ -301,7 +302,7 @@ class AccessoryTypeResolver:
             ir.async_create_issue(
                 self._hass,
                 DOMAIN,
-                async_accessory_type_issue_id(self._entry_id, entity_id),
+                accessory_type_issue_id(self._entry_id, entity_id),
                 is_fixable=True,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key=ISSUE_ACCESSORY_TYPE_CANDIDATE,
