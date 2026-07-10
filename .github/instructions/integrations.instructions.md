@@ -31,20 +31,20 @@ The following platforms have extra guidelines:
 - Ensure `async_added_to_hass()` and `async_will_remove_from_hass()` have symmetrical behavior. For example, if a subscription is created in `async_added_to_hass()`, it should be unsubscribed in `async_will_remove_from_hass()`. Also, if something is torn down in `async_will_remove_from_hass()`, it should be set up in `async_added_to_hass()`.
 - Register subscriptions and listeners in `async_added_to_hass()` (removed via `async_on_remove()`), not `__init__()`.
 - Entity base class (e.g. `SensorEntity`, `TrackerEntity`) provide a stable API for child classes to inherit from. Do not suggest redeclaring or duplicating attributes, properties, or methods the base class already provides, and do not add guards against the parent's behavior changing — rely on the base class instead.
-- Give every entity a stable `unique_id` from a persistent identifier the device or service provides (serial, account/installation id, or a MAC via `format_mac()`); never from the config entry id, a user-entered value (host, IP, username), an index, or the entity name.
+- Give every entity a stable `unique_id` from a persistent identifier the device or service provides (serial, account/installation id, or a MAC via `format_mac()`); the config entry id is a valid last-resort fallback when no such identifier exists. Never derive it from a user-entered value (host, IP, username), an index, or the entity name.
 - Set `_attr_has_entity_name = True`, and omit `translation_key` when a `device_class` already names the entity.
 - Set `PARALLEL_UPDATES = 0` on read-only, coordinator-based entity platforms.
 - Prefer separate entities (disabled by default if noisy) over `extra_state_attributes`.
 
 ## Setup and coordinators
 
-- Create the client in `async_setup_entry()` and store it on the typed `entry.runtime_data`, not `hass.data`. Use a `DataUpdateCoordinator` in `coordinator.py` with a shared base entity in `entity.py`, and type the coordinator's `config_entry`.
+- Create the client in `async_setup_entry()` and store it on the typed `entry.runtime_data`, not `hass.data`. If the integration has shared polled data, use a `DataUpdateCoordinator` in `coordinator.py` with a shared base entity in `entity.py`, and type the coordinator's `config_entry`; a push-only integration (webhook, subscription) can legitimately have no coordinator or runtime data at all.
 - After an action, request a coordinator refresh instead of writing entity state manually — or set optimistic state only after the command succeeds.
 
 ## Errors
 
 - During setup, raise `ConfigEntryNotReady` for transient failures and `ConfigEntryError` / `ConfigEntryAuthFailed` for permanent ones. In actions, raise `ServiceValidationError` for user errors and `HomeAssistantError` for device errors.
-- Don't put raw or stringified library exceptions into user-facing translated messages; use exception translation keys and log the technical detail.
+- Don't put raw or stringified library exceptions into user-facing translated messages; use exception translation keys and chain the original exception (`raise ... from err`) instead of logging it separately.
 
 ## Config flow
 
@@ -74,5 +74,5 @@ Template scale file: `./script/scaffold/templates/integration/integration/qualit
 ## Testing Requirements
 
 - Tests should avoid interacting or mocking internal integration details. For more info, see https://developers.home-assistant.io/docs/development_testing/#writing-tests-for-integrations
-- Test through the public surface: set the integration up via `hass` and assert entity state and the entity/device registries (`snapshot_platform` preferred). Do not call the coordinator, dispatcher, or `runtime_data` directly, and drive updates with `freezer` + `async_fire_time_changed`.
-- Patch the third-party library, not integration internals, and put shared fixtures in `conftest.py`. Every config-flow test must end in `CREATE_ENTRY` or `ABORT` and assert the `unique_id`.
+- Test through the public surface: set the integration up via `hass` and assert entity state and the entity/device registries (`snapshot_platform` preferred). Do not call the coordinator, dispatcher, or `runtime_data` directly. For polling integrations, drive updates with `freezer` + `async_fire_time_changed`; push integrations (webhook, subscription) must instead exercise their real update path (e.g. posting to the webhook), since time advancement doesn't trigger those.
+- Patch the third-party library, not integration internals, and put shared fixtures in `conftest.py`. Every config-flow test must end in `CREATE_ENTRY` or `ABORT`, and assert the `unique_id` when the flow assigns one (some integrations are legitimately exempt from `unique-config-entry`).
