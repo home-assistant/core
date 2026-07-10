@@ -8,5 +8,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": ["place-integration-api==0.2.3"]
+  "requirements": ["place-integration-api==0.2.4"]
 }
