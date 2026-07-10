@@ -2,9 +2,9 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, override
+from typing import override
 
-from gatus_api.client import GatusClient, GatusClientError
+from gatus_api import EndpointStatus, GatusClient, GatusClientError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 type GatusConfigEntry = ConfigEntry[GatusDataUpdateCoordinator]
 
 
-class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
+class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, EndpointStatus]]):
     """Class to manage fetching Gatus data from the API via third-party library."""
 
     def __init__(self, hass: HomeAssistant, entry: GatusConfigEntry, url: str) -> None:
@@ -35,7 +35,7 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
         )
 
     @override
-    async def _async_update_data(self) -> dict[str, dict[str, Any]]:
+    async def _async_update_data(self) -> dict[str, EndpointStatus]:
         """Fetch endpoint statuses from the Gatus API."""
         try:
             raw_endpoints = await self.client.get_endpoints_statuses()
@@ -45,4 +45,4 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
                 translation_key="update_failed",
             ) from err
 
-        return {ep["key"]: ep for ep in raw_endpoints}
+        return {ep.key: ep for ep in raw_endpoints}

@@ -8,5 +8,5 @@
   "iot_class": "local_polling",
   "loggers": ["gatus_api"],
   "quality_scale": "silver",
-  "requirements": ["gatus-api==1.0.1"]
+  "requirements": ["gatus-api==1.0.3"]
 }

@@ -1,6 +1,8 @@
 """Support for Gatus binary sensors."""
 
-from typing import Any, cast, override
+from typing import override
+
+from gatus_api import EndpointStatus, Result
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -52,9 +54,9 @@ class GatusEndpointBinarySensor(
 
         endpoint_data = self.endpoint_data
 
-        endpoint_name = endpoint_data["name"]
-        if "group" in endpoint_data and endpoint_data["group"] is not None:
-            device_name = f"{endpoint_data['group']} {endpoint_name}"
+        endpoint_name = endpoint_data.name
+        if endpoint_data.group is not None:
+            device_name = f"{endpoint_data.group} {endpoint_name}"
         else:
             device_name = endpoint_name
 
@@ -75,7 +77,7 @@ class GatusEndpointBinarySensor(
         if latest_result is None:
             return None
 
-        return bool(latest_result["success"])
+        return latest_result.success
 
     @property
     @override
@@ -86,18 +88,18 @@ class GatusEndpointBinarySensor(
         return (
             super().available
             and self._endpoint_key in data
-            and bool(data[self._endpoint_key].get("results"))
+            and bool(data[self._endpoint_key].results)
         )
 
     @property
-    def endpoint_data(self) -> dict[str, Any]:
+    def endpoint_data(self) -> EndpointStatus:
         """Return this specific endpoint's data from the coordinator."""
         return self.coordinator.data[self._endpoint_key]
 
     @property
-    def latest_result(self) -> dict[str, Any] | None:
+    def latest_result(self) -> Result | None:
         """Return the most recent monitoring result (Gatus appends newest last)."""
-        data = self.endpoint_data
-        if not data["results"]:
+        results = self.endpoint_data.results
+        if not results:
             return None
-        return cast(dict[str, Any], data["results"][-1])
+        return results[-1]

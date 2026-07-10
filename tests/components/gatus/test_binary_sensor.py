@@ -1,8 +1,10 @@
 """Tests for the Gatus binary sensor platform."""
 
+from typing import Any
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
+from gatus_api import EndpointStatus, Result
 from gatus_api.client import GatusClientError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -32,6 +34,21 @@ async def test_binary_sensor_setup_and_states(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+def _to_endpoint_statuses(raw_data: list[dict[str, Any]]) -> list[EndpointStatus]:
+    return [
+        EndpointStatus(
+            key=ep["key"],
+            name=ep["name"],
+            group=ep.get("group"),
+            results=[
+                Result(success=r["success"], status=r["status"])
+                for r in ep.get("results", [])
+            ],
+        )
+        for ep in raw_data
+    ]
+
+
 @pytest.mark.usefixtures("mock_config_entry")
 async def test_binary_sensor_dynamic_update(
     hass: HomeAssistant,
@@ -45,7 +62,9 @@ async def test_binary_sensor_dynamic_update(
 
     mock_data = await async_load_json_array_fixture(hass, "gatus/group.json")
 
-    mock_gatus_client.get_endpoints_statuses.return_value = mock_data
+    mock_gatus_client.get_endpoints_statuses.return_value = _to_endpoint_statuses(
+        mock_data
+    )
 
     freezer.tick(300)
     async_fire_time_changed(hass)
@@ -62,7 +81,9 @@ async def test_binary_sensor_no_group(
     """Test that the binary sensor entity is created correctly when an endpoint has no group."""
     mock_data = await async_load_json_array_fixture(hass, "gatus/no_group.json")
 
-    mock_gatus_client.get_endpoints_statuses.return_value = mock_data
+    mock_gatus_client.get_endpoints_statuses.return_value = _to_endpoint_statuses(
+        mock_data
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -102,11 +123,12 @@ async def test_binary_sensor_empty_results(
 ) -> None:
     """Test that an endpoint with empty results is treated as unavailable."""
     mock_gatus_client.get_endpoints_statuses.return_value = [
-        {
-            "key": "backend_service",
-            "name": "Backend Service",
-            "results": [],
-        }
+        EndpointStatus(
+            key="backend_service",
+            name="Backend Service",
+            group=None,
+            results=[],
+        )
     ]
 
     entry = MockConfigEntry(
@@ -119,7 +141,33 @@ async def test_binary_sensor_empty_results(
     assert state is not None
     assert state.state == "unavailable"
 
+    # Verify underlying properties return None directly on empty results
     entity = hass.data["binary_sensor"].get_entity("binary_sensor.backend_service")
     assert entity is not None
     assert entity.latest_result is None
     assert entity.is_on is None
+
+
+async def test_binary_sensor_missing_status(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+) -> None:
+    """Test that an endpoint with a result missing a status code is handled correctly."""
+    mock_gatus_client.get_endpoints_statuses.return_value = [
+        EndpointStatus(
+            key="backend_service",
+            name="Backend Service",
+            group=None,
+            results=[Result(success=False, status=None)],
+        )
+    ]
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "http://gatus.example.com:8080"},
+    )
+    await setup_integration(hass, entry)
+
+    state = hass.states.get("binary_sensor.backend_service")
+    assert state is not None
+    assert state.state == "off"
