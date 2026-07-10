@@ -17,7 +17,11 @@ type DdWrtClients = dict[str, dict[str, str | None]]
 
 
 class DdWrtConnectionError(Exception):
-    """Raised when the router is unreachable or rejects the credentials."""
+    """Raised when the router cannot be reached or returns an invalid response."""
+
+
+class DdWrtAuthError(DdWrtConnectionError):
+    """Raised when the router rejects the provided credentials."""
 
 
 class DdWrtRouter:
@@ -107,7 +111,7 @@ class DdWrtRouter:
             ) from err
 
         if response.status_code == HTTPStatus.UNAUTHORIZED:
-            raise DdWrtConnectionError(
+            raise DdWrtAuthError(
                 "Authentication failed, check your username and password"
             )
         if response.status_code != HTTPStatus.OK:

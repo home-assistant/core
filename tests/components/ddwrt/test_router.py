@@ -109,7 +109,7 @@ def test_malformed_200_raises(mock_get: MagicMock) -> None:
 @patch("homeassistant.components.ddwrt.router.requests.get")
 def test_timeout_raises(mock_get: MagicMock) -> None:
     """Test a request timeout is translated to a connection error."""
-    mock_get.side_effect = requests.exceptions.Timeout
+    mock_get.side_effect = requests.exceptions.Timeout()
 
     with pytest.raises(DdWrtConnectionError):
         _make_router().get_clients()

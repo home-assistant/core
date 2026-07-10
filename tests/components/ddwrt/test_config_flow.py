@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.ddwrt.const import DOMAIN
-from homeassistant.components.ddwrt.router import DdWrtConnectionError
+from homeassistant.components.ddwrt.router import DdWrtAuthError, DdWrtConnectionError
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -54,6 +54,22 @@ async def test_user_flow_cannot_connect(
         result["flow_id"], user_input=MOCK_CONFIG
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_flow_invalid_auth(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_router: MagicMock
+) -> None:
+    """Test the user flow reports invalid auth distinctly from cannot connect."""
+    mock_router.return_value.get_clients.side_effect = DdWrtAuthError("bad creds")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_user_flow_already_configured(

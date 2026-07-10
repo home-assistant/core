@@ -22,7 +22,7 @@ from .const import (
     DEFAULT_WIRELESS_ONLY,
     DOMAIN,
 )
-from .router import DdWrtConnectionError, DdWrtRouter
+from .router import DdWrtAuthError, DdWrtConnectionError, DdWrtRouter
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -64,6 +64,8 @@ class DdWrtConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
                 await self.hass.async_add_executor_job(_validate_connection, user_input)
+            except DdWrtAuthError:
+                errors["base"] = "invalid_auth"
             except DdWrtConnectionError:
                 errors["base"] = "cannot_connect"
             else:
