@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -48,6 +49,7 @@ class DdWrtDataUpdateCoordinator(DataUpdateCoordinator[DdWrtClients]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> DdWrtClients:
         """Fetch the connected clients from the DD-WRT router."""
         try:

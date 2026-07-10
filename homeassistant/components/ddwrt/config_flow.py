@@ -1,6 +1,6 @@
 """Config flow for the DD-WRT integration."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -54,6 +54,7 @@ class DdWrtConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
