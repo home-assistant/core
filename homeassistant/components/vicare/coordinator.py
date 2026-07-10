@@ -9,6 +9,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareDeviceCommunicationError,
     PyViCareInternalServerError,
     PyViCareInvalidCredentialsError,
+    PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
 )
 import requests
@@ -63,6 +64,11 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
         try:
             self._device.service.clear_cache()
             self._device.service.fetch_all_features(self._accessor)
+        except PyViCareNotSupportedFeatureError:
+            # PACKAGE_NOT_PAID_FOR: load with no features instead of retrying setup.
+            _LOGGER.debug(
+                "No accessible features for gateway %s", self._accessor.serial
+            )
         except PyViCareInvalidCredentialsError as err:
             raise ConfigEntryAuthFailed from err
         except (
