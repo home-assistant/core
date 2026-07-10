@@ -237,6 +237,7 @@ def make_public_sensor(
     state: DeviceState | None = None,
     is_motion_detected: bool | None = None,
     motion_enabled: bool | None = None,
+    motion_sensitivity: int | None = None,
     mount_type: MountType | None = None,
     is_opened: bool | None = None,
     is_leak_detected: bool | None = None,
@@ -295,7 +296,12 @@ def make_public_sensor(
             sensor.motion_settings.is_enabled
             if motion_enabled is None
             else motion_enabled
-        )
+        ),
+        sensitivity=(
+            sensor.motion_settings.sensitivity
+            if motion_sensitivity is None
+            else motion_sensitivity
+        ),
     )
     public.wireless_connection_state = PublicWirelessConnectionState(
         battery_status=PublicWirelessBatteryStatus(

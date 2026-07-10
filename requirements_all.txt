@@ -2338,7 +2338,7 @@ pylitejet==0.6.3
 pylitterbot==2025.5.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.28.0
+pylutron-caseta==0.29.0
 
 # homeassistant.components.lutron
 pylutron==0.4.2
@@ -2903,7 +2903,7 @@ renault-api==0.5.12
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.21.3
+reolink-aio==0.21.4
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.3.0
@@ -3156,7 +3156,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.5.4
+tesla-fleet-api==1.6.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3246,7 +3246,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==15.4.3
+uiprotect==15.6.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1

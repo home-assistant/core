@@ -6020,6 +6020,54 @@ async def test_async_extract_entities(
     assert trigger.async_extract_entities(trigger_conf) == expected
 
 
+@pytest.mark.parametrize(
+    ("trigger_conf", "expected"),
+    [
+        pytest.param(
+            {
+                "platform": "device",
+                "device_id": "abcdefgh",
+                "domain": "light",
+                "entity_id": "light.kitchen",
+                "type": "turned_on",
+            },
+            ["light.kitchen"],
+            id="resolved-entity-id",
+        ),
+        pytest.param(
+            {
+                "platform": "device",
+                "device_id": "abcdefgh",
+                "domain": "light",
+                "entity_id": "1234567890abcdef1234567890abcdef",
+                "type": "turned_on",
+            },
+            [],
+            id="unresolved-registry-id",
+        ),
+        pytest.param(
+            {
+                "platform": "device",
+                "device_id": "abcdefgh",
+                "domain": "sensor",
+                "type": "battery_level",
+            },
+            [],
+            id="no-entity-id",
+        ),
+    ],
+)
+def test_async_extract_entities_device_trigger(
+    trigger_conf: dict[str, Any], expected: list[str]
+) -> None:
+    """Test extracting entities from device trigger configs.
+
+    Validation resolves the entity registry id to an entity id; extraction
+    ignores unresolved registry ids.
+    """
+    assert trigger.async_extract_entities(trigger_conf) == expected
+
+
 _MOCK_DEVICE_ID = "_mock_device_id_"
 
 
