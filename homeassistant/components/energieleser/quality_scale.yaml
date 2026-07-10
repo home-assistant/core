@@ -49,16 +49,16 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info: done
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: Each device is a separate config entry; the integration does not add devices on the fly to an existing entry.
@@ -66,10 +66,12 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
-  icon-translations: todo
-  reconfiguration-flow: todo
-  repair-issues: todo
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: Entities rely on device-class and default icons; no custom icon translations are needed.
+  reconfiguration-flow: done
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: One device per config entry; the device is removed when the entry is removed.

@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'device_id': 'STROM_ONE_8529546829',
+      'device_type': 'stromleser',
+      'energy_export': dict({
+        'unit': 'Wh',
+        'value': 26561.0,
+      }),
+      'energy_export_tariff_1': None,
+      'energy_export_tariff_2': None,
+      'energy_export_tariff_3': None,
+      'energy_export_tariff_4': None,
+      'energy_import': dict({
+        'unit': 'Wh',
+        'value': 12345.0,
+      }),
+      'energy_import_tariff_1': None,
+      'energy_import_tariff_2': None,
+      'energy_import_tariff_3': None,
+      'energy_import_tariff_4': None,
+      'pin_locked': False,
+      'power_absolute': None,
+      'power_active': dict({
+        'unit': 'W',
+        'value': 8.16,
+      }),
+      'power_export': None,
+      'power_import': None,
+      'power_l1': dict({
+        'unit': 'W',
+        'value': 0.0,
+      }),
+      'power_l2': dict({
+        'unit': 'W',
+        'value': 0.0,
+      }),
+      'power_l3': dict({
+        'unit': 'W',
+        'value': 8.16,
+      }),
+      'signal_strength_dbm': -51.0,
+      'timestamp': 1776178480,
+    }),
+    'info': dict({
+      'device_id': 'STROM_ONE_8529546829',
+      'host': '**REDACTED**',
+    }),
+  })
+# ---

@@ -9,11 +9,13 @@ from energieleser import (
     EnergieleserDevice,
     EnergieleserError,
     EnergieleserUnknownDeviceError,
+    StromleserOneDevice,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
@@ -52,14 +54,49 @@ class EnergieleserCoordinator(DataUpdateCoordinator[EnergieleserDevice]):
             device = await self.client.get_device()
         except EnergieleserUnknownDeviceError as err:
             raise UpdateFailed(
-                f"Unknown or unsupported device type for {self.device_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="unknown_device",
+                translation_placeholders={
+                    "device_id": self.device_id,
+                    "error": str(err),
+                },
             ) from err
         except EnergieleserConnectionError as err:
             raise UpdateFailed(
-                f"Cannot connect to energieleser device {self.device_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+                translation_placeholders={
+                    "device_id": self.device_id,
+                    "error": str(err),
+                },
             ) from err
         except EnergieleserError as err:
             raise UpdateFailed(
-                f"Error communicating with energieleser device {self.device_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={
+                    "device_id": self.device_id,
+                    "error": str(err),
+                },
             ) from err
+
+        if isinstance(device, StromleserOneDevice):
+            issue_id = f"pin_locked_{self.config_entry.entry_id}"
+            if device.pin_locked:
+                ir.async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    issue_id,
+                    is_fixable=False,
+                    is_persistent=False,
+                    learn_more_url="https://docs.energieleser.de/en/docs/stromleser-one/installation/preparation#unlock-meter-in-extended-mode",
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="meter_locked",
+                    translation_placeholders={
+                        "device_name": self.config_entry.title,
+                    },
+                )
+            else:
+                ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+
         return device
