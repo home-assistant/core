@@ -1723,6 +1723,51 @@ async def test_wan_monitor_latency_with_no_uptime(
     [
         [
             {
+                "board_rev": 2,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": "10:00:00:00:01:01",
+                "last_seen": 1562600145,
+                "model": "US16P150",
+                "name": "mock-name",
+                "port_overrides": [],
+                # A cellular/5G WAN reports uptime stats without a "monitors" key.
+                "uptime_stats": {
+                    "WAN": {
+                        "availability": 100.0,
+                        "latency_average": 39,
+                    },
+                },
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_monitor_latency_without_monitors_key(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Verify setup succeeds when a WAN has uptime stats but no monitors key.
+
+    Cellular/5G WANs report an ``uptime_stats`` WAN block without a ``monitors``
+    array, which must not raise ``KeyError: 'monitors'`` during setup.
+    """
+
+    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+
+    latency_entry = entity_registry.async_get("sensor.mock_name_google_wan_latency")
+    assert latency_entry is None
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
                 "board_rev": 3,
                 "device_id": "mock-id",
                 "has_fan": True,
