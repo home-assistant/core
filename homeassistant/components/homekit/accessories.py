@@ -152,13 +152,7 @@ def climate_supports_heater_cooler(state: State) -> bool:
 
 
 def get_accessory(  # noqa: C901
-    hass: HomeAssistant,
-    driver: HomeDriver,
-    state: State,
-    aid: int | None,
-    config: dict,
-    *,
-    is_new_entity: bool = False,
+    hass: HomeAssistant, driver: HomeDriver, state: State, aid: int | None, config: dict
 ) -> HomeAccessory | None:
     """Take state and return an accessory object if supported."""
     if not aid:
@@ -182,14 +176,11 @@ def get_accessory(  # noqa: C901
         a_type = "BinarySensor"
 
     elif state.domain == "climate":
+        # The type is resolved by the bridge before the accessory is created:
+        # explicit entity config wins, entities never bridged before get the
+        # HeaterCooler when capable, and everything else is a Thermostat.
         if climate_type := config.get(CONF_TYPE):
-            # An explicit type in the entity config overrides the routing below.
             a_type = CLIMATE_TYPES[climate_type]
-        elif is_new_entity and climate_supports_heater_cooler(state):
-            # Only entities never bridged before route to the HeaterCooler
-            # automatically; existing ones keep their Thermostat and are offered
-            # the migration through a repair issue instead.
-            a_type = "HeaterCooler"
         else:
             a_type = "Thermostat"
 

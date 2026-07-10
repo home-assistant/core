@@ -690,3 +690,19 @@ async def test_entity_is_allocated(
         light_ent.entity_id, new_unique_id="new_unique_id"
     )
     assert aid_storage.entity_is_allocated(light_ent.entity_id)
+
+
+async def test_record_heater_cooler_round_trip(hass: HomeAssistant) -> None:
+    """Test the heater cooler routing choice persists through storage."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    aid_storage = AccessoryAidStorage(hass, config_entry.entry_id)
+    await aid_storage.async_initialize()
+    assert "climate.demo" not in aid_storage.heater_cooler_entities
+
+    aid_storage.record_heater_cooler("climate.demo")
+    await aid_storage.async_save()
+
+    fresh_storage = AccessoryAidStorage(hass, config_entry.entry_id)
+    await fresh_storage.async_initialize()
+    assert "climate.demo" in fresh_storage.heater_cooler_entities

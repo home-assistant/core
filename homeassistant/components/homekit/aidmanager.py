@@ -25,6 +25,7 @@ AID_MANAGER_SAVE_DELAY = 2
 
 ALLOCATIONS_KEY = "allocations"
 UNIQUE_IDS_KEY = "unique_ids"
+HEATER_COOLER_KEY = "heater_cooler_entities"
 
 INVALID_AIDS = (0, 1)
 
@@ -69,6 +70,7 @@ class AccessoryAidStorage:
         self.hass = hass
         self.allocations: dict[str, int] = {}
         self.allocated_aids: set[int] = set()
+        self.heater_cooler_entities: set[str] = set()
         self._entry_id = entry_id
         self.store: Store | None = None
         self._entity_registry = er.async_get(hass)
@@ -84,6 +86,16 @@ class AccessoryAidStorage:
         assert isinstance(raw_storage, dict)
         self.allocations = raw_storage.get(ALLOCATIONS_KEY, {})
         self.allocated_aids = set(self.allocations.values())
+        self.heater_cooler_entities = set(raw_storage.get(HEATER_COOLER_KEY, []))
+
+    def record_heater_cooler(self, entity_id: str) -> None:
+        """Persist that an entity was routed to the HeaterCooler accessory.
+
+        The automatic choice only applies the first time an entity is bridged,
+        so it is written down to survive restarts.
+        """
+        self.heater_cooler_entities.add(entity_id)
+        self.async_schedule_save()
 
     def get_or_allocate_aid_for_entity_id(self, entity_id: str) -> int:
         """Generate a stable aid for an entity id."""
@@ -168,6 +180,11 @@ class AccessoryAidStorage:
         return await self.store.async_save(self._data_to_save())
 
     @callback
-    def _data_to_save(self) -> dict[str, dict[str, int]]:
+    def _data_to_save(self) -> dict[str, dict[str, int] | list[str]]:
         """Return data of entity map to store in a file."""
-        return {ALLOCATIONS_KEY: self.allocations}
+        data: dict[str, dict[str, int] | list[str]] = {
+            ALLOCATIONS_KEY: self.allocations
+        }
+        if self.heater_cooler_entities:
+            data[HEATER_COOLER_KEY] = sorted(self.heater_cooler_entities)
+        return data

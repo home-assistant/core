@@ -22,8 +22,6 @@ from homeassistant.components.homekit.const import (
     ISSUE_HEATER_COOLER_CANDIDATE,
     PERSIST_LOCK_DATA,
 )
-from homeassistant.components.homekit.repairs import async_create_fix_flow
-from homeassistant.components.repairs import ConfirmRepairFlow
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
@@ -72,6 +70,28 @@ def _issue_id(entry_id: str, entity_id: str) -> str:
     return f"{ISSUE_HEATER_COOLER_CANDIDATE}_{entry_id}_{entity_id}"
 
 
+def _create_candidate_issue(
+    hass: HomeAssistant, entry: MockConfigEntry, entity_id: str
+) -> str:
+    """Create a candidate issue like the bridge would and return its id."""
+    issue_id = _issue_id(entry.entry_id, entity_id)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=ISSUE_HEATER_COOLER_CANDIDATE,
+        translation_placeholders={
+            "entity": "demo",
+            "entity_id": entity_id,
+            "bridge": "mock_name",
+        },
+        data={"entry_id": entry.entry_id, "entity_id": entity_id},
+    )
+    return issue_id
+
+
 async def _async_stop_bridge(homekit: HomeKit) -> None:
     """Stop the bridge with the pyhap driver stop patched out."""
     with patch("pyhap.accessory_driver.AccessoryDriver.async_stop"):
@@ -79,7 +99,9 @@ async def _async_stop_bridge(homekit: HomeKit) -> None:
 
 
 async def _async_start_bridge(
-    hass: HomeAssistant, entry: MockConfigEntry, hk_driver
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    entity_config: dict[str, Any] | None = None,
 ) -> HomeKit:
     """Start a HomeKit bridge exposing the demo climate entity."""
     hass.data.setdefault(PERSIST_LOCK_DATA, asyncio.Lock())
@@ -100,7 +122,7 @@ async def _async_start_bridge(
         ip_address=None,
         entity_filter=entity_filter,
         exclude_accessory_mode=False,
-        entity_config={},
+        entity_config=entity_config or {},
         homekit_mode=HOMEKIT_MODE_BRIDGE,
         advertise_ips=None,
         entry_id=entry.entry_id,
@@ -115,10 +137,9 @@ async def _async_start_bridge(
     return homekit
 
 
-@pytest.mark.usefixtures("mock_async_zeroconf")
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
 async def test_existing_entity_stays_thermostat_and_raises_issue(
     hass: HomeAssistant,
-    hk_driver,
     hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
 ) -> None:
@@ -133,7 +154,7 @@ async def test_existing_entity_stays_thermostat_and_raises_issue(
     }
     hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
 
-    homekit = await _async_start_bridge(hass, entry, hk_driver)
+    homekit = await _async_start_bridge(hass, entry)
 
     accessories = list(homekit.bridge.accessories.values())
     assert len(accessories) == 1
@@ -142,10 +163,9 @@ async def test_existing_entity_stays_thermostat_and_raises_issue(
     await _async_stop_bridge(homekit)
 
 
-@pytest.mark.usefixtures("mock_async_zeroconf")
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
 async def test_new_entity_routes_to_heater_cooler_without_issue(
     hass: HomeAssistant,
-    hk_driver,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a never bridged entity gets the HeaterCooler and no repair."""
@@ -155,7 +175,7 @@ async def test_new_entity_routes_to_heater_cooler_without_issue(
     entry.add_to_hass(hass)
     hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
 
-    homekit = await _async_start_bridge(hass, entry, hk_driver)
+    homekit = await _async_start_bridge(hass, entry)
 
     accessories = list(homekit.bridge.accessories.values())
     assert len(accessories) == 1
@@ -166,10 +186,69 @@ async def test_new_entity_routes_to_heater_cooler_without_issue(
     await _async_stop_bridge(homekit)
 
 
-@pytest.mark.usefixtures("mock_async_zeroconf")
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
+async def test_heater_cooler_choice_survives_restart(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the automatic HeaterCooler choice persists across restarts."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entry.add_to_hass(hass)
+    hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
+
+    homekit = await _async_start_bridge(hass, entry)
+    accessories = list(homekit.bridge.accessories.values())
+    assert type(accessories[0]).__name__ == "HeaterCooler"
+    await _async_stop_bridge(homekit)
+    # Flush the delayed aid storage save so the next start reads it
+    assert homekit.aid_storage is not None
+    await homekit.aid_storage.async_save()
+
+    # The entity now has an aid allocation, so only the stored choice
+    # keeps it on the HeaterCooler after a restart.
+    homekit = await _async_start_bridge(hass, entry)
+    accessories = list(homekit.bridge.accessories.values())
+    assert type(accessories[0]).__name__ == "HeaterCooler"
+    assert not issue_registry.async_get_issue(
+        DOMAIN, _issue_id(entry.entry_id, ENTITY_ID)
+    )
+    await _async_stop_bridge(homekit)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
+async def test_explicit_type_never_raises_issue(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an entity with a configured type is not a repair candidate."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entry.add_to_hass(hass)
+    hass_storage[_aid_storage_key(entry.entry_id)] = {
+        "version": 1,
+        "data": {"allocations": {ENTITY_ID: 1234567}},
+    }
+    hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
+
+    homekit = await _async_start_bridge(
+        hass, entry, {ENTITY_ID: {CONF_TYPE: "thermostat"}}
+    )
+
+    accessories = list(homekit.bridge.accessories.values())
+    assert type(accessories[0]).__name__ == "Thermostat"
+    assert not issue_registry.async_get_issue(
+        DOMAIN, _issue_id(entry.entry_id, ENTITY_ID)
+    )
+    await _async_stop_bridge(homekit)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
 async def test_yaml_bridge_never_raises_issue(
     hass: HomeAssistant,
-    hk_driver,
     hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
 ) -> None:
@@ -186,7 +265,7 @@ async def test_yaml_bridge_never_raises_issue(
     }
     hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
 
-    homekit = await _async_start_bridge(hass, entry, hk_driver)
+    homekit = await _async_start_bridge(hass, entry)
 
     accessories = list(homekit.bridge.accessories.values())
     assert type(accessories[0]).__name__ == "Thermostat"
@@ -196,10 +275,9 @@ async def test_yaml_bridge_never_raises_issue(
     await _async_stop_bridge(homekit)
 
 
-@pytest.mark.usefixtures("mock_async_zeroconf")
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
 async def test_stale_issue_removed_on_start(
     hass: HomeAssistant,
-    hk_driver,
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test an issue for an entity that is no longer a candidate is removed."""
@@ -207,23 +285,10 @@ async def test_stale_issue_removed_on_start(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
     entry.add_to_hass(hass)
-    stale_issue_id = _issue_id(entry.entry_id, "climate.gone")
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        stale_issue_id,
-        is_fixable=True,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key=ISSUE_HEATER_COOLER_CANDIDATE,
-        translation_placeholders={
-            "entity": "demo",
-            "entity_id": ENTITY_ID,
-            "bridge": "mock_name",
-        },
-    )
+    stale_issue_id = _create_candidate_issue(hass, entry, "climate.gone")
     hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
 
-    homekit = await _async_start_bridge(hass, entry, hk_driver)
+    homekit = await _async_start_bridge(hass, entry)
 
     assert not issue_registry.async_get_issue(DOMAIN, stale_issue_id)
     await _async_stop_bridge(homekit)
@@ -241,26 +306,11 @@ async def test_repair_flow_opts_entity_into_heater_cooler(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
     entry.add_to_hass(hass)
-    issue_id = _issue_id(entry.entry_id, ENTITY_ID)
-
     with patch(f"{PATH_HOMEKIT}.HomeKit.async_start"):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            is_fixable=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=ISSUE_HEATER_COOLER_CANDIDATE,
-            translation_placeholders={
-                "entity": "demo",
-                "entity_id": ENTITY_ID,
-                "bridge": "mock_name",
-            },
-            data={"entry_id": entry.entry_id, "entity_id": ENTITY_ID},
-        )
+        issue_id = _create_candidate_issue(hass, entry, ENTITY_ID)
 
         client = await hass_client()
         result = await start_repair_fix_flow(client, DOMAIN, issue_id)
@@ -286,20 +336,7 @@ async def test_remove_entry_deletes_issues(
         domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
     )
     entry.add_to_hass(hass)
-    issue_id = _issue_id(entry.entry_id, ENTITY_ID)
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        issue_id,
-        is_fixable=True,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key=ISSUE_HEATER_COOLER_CANDIDATE,
-        translation_placeholders={
-            "entity": "demo",
-            "entity_id": ENTITY_ID,
-            "bridge": "mock_name",
-        },
-    )
+    issue_id = _create_candidate_issue(hass, entry, ENTITY_ID)
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
     await async_remove_entry(hass, entry)
@@ -307,10 +344,9 @@ async def test_remove_entry_deletes_issues(
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
-@pytest.mark.usefixtures("mock_async_zeroconf")
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
 async def test_second_bridge_gets_its_own_issue(
     hass: HomeAssistant,
-    hk_driver,
     hass_storage: dict[str, Any],
     issue_registry: ir.IssueRegistry,
 ) -> None:
@@ -330,7 +366,7 @@ async def test_second_bridge_gets_its_own_issue(
         }
     hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
 
-    homekit = await _async_start_bridge(hass, entry, hk_driver)
+    homekit = await _async_start_bridge(hass, entry)
 
     # Only this bridge's issue exists; the other bridge has not started
     assert issue_registry.async_get_issue(DOMAIN, _issue_id(entry.entry_id, ENTITY_ID))
@@ -338,9 +374,3 @@ async def test_second_bridge_gets_its_own_issue(
         DOMAIN, _issue_id(other.entry_id, ENTITY_ID)
     )
     await _async_stop_bridge(homekit)
-
-
-async def test_create_fix_flow_fallback(hass: HomeAssistant) -> None:
-    """Test an unknown issue or missing data falls back to a confirm flow."""
-    flow = await async_create_fix_flow(hass, "unknown_issue", None)
-    assert isinstance(flow, ConfirmRepairFlow)

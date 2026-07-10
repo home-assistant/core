@@ -7,7 +7,11 @@ import pytest
 from homeassistant.components.climate import ATTR_CURRENT_HUMIDITY, ClimateEntityFeature
 from homeassistant.components.cover import CoverEntityFeature
 from homeassistant.components.homekit import TYPE_AIR_PURIFIER
-from homeassistant.components.homekit.accessories import TYPES, get_accessory
+from homeassistant.components.homekit.accessories import (
+    TYPES,
+    climate_supports_heater_cooler,
+    get_accessory,
+)
 from homeassistant.components.homekit.const import (
     ATTR_INTEGRATION,
     CONF_FEATURE_LIST,
@@ -625,19 +629,16 @@ def test_type_camera(type_name, entity_id, state, attrs) -> None:
         ),
     ],
 )
-def test_climate_accessory_selection(
+def test_climate_supports_heater_cooler(
     type_name: str, entity_id: str, state: str, attrs: dict[str, object]
 ) -> None:
-    """Test new climate entities map to HeaterCooler or Thermostat by fan/swing."""
-    mock_type = Mock()
-    with patch.dict(TYPES, {type_name: mock_type}):
-        entity_state = State(entity_id, state, attrs)
-        get_accessory(None, None, entity_state, 2, {}, is_new_entity=True)
-    assert mock_type.called
+    """Test the capability predicate behind automatic HeaterCooler routing."""
+    entity_state = State(entity_id, state, attrs)
+    assert climate_supports_heater_cooler(entity_state) is (type_name == "HeaterCooler")
 
 
-def test_climate_existing_entity_stays_thermostat() -> None:
-    """Test an existing HeaterCooler capable entity keeps the Thermostat."""
+def test_climate_without_configured_type_is_thermostat() -> None:
+    """Test a climate entity without a configured type gets the Thermostat."""
     attrs = {
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
         "fan_modes": ["low", "high"],
@@ -645,11 +646,10 @@ def test_climate_existing_entity_stays_thermostat() -> None:
     mock_type = Mock()
     with patch.dict(TYPES, {"Thermostat": mock_type}):
         entity_state = State("climate.test", "heat", attrs)
-        get_accessory(None, None, entity_state, 2, {}, is_new_entity=False)
+        get_accessory(None, None, entity_state, 2, {})
     assert mock_type.called
 
 
-@pytest.mark.parametrize("is_new_entity", [True, False])
 @pytest.mark.parametrize(
     ("config_type", "attrs", "type_name"),
     [
@@ -673,20 +673,13 @@ def test_climate_existing_entity_stays_thermostat() -> None:
     ],
 )
 def test_climate_accessory_type_override(
-    config_type: str, attrs: dict[str, object], type_name: str, is_new_entity: bool
+    config_type: str, attrs: dict[str, object], type_name: str
 ) -> None:
-    """Test an explicit type overrides climate routing regardless of newness."""
+    """Test a configured type overrides the capability based routing."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State("climate.test", "heat", attrs)
-        get_accessory(
-            None,
-            None,
-            entity_state,
-            2,
-            {CONF_TYPE: config_type},
-            is_new_entity=is_new_entity,
-        )
+        get_accessory(None, None, entity_state, 2, {CONF_TYPE: config_type})
     assert mock_type.called
 
 
