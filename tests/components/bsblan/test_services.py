@@ -9,7 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.bsblan.const import DOMAIN, water_heater_identifier
+from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -51,7 +51,7 @@ def water_heater_device_entry(
 ) -> dr.DeviceEntry:
     """Get the water heater sub-device entry for testing."""
     device = device_registry.async_get_device(
-        identifiers={(DOMAIN, water_heater_identifier(TEST_DEVICE_MAC))}
+        identifiers={(DOMAIN, f"{TEST_DEVICE_MAC}-water-heater")}
     )
     assert device is not None
     return device
