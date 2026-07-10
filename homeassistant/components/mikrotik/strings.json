@@ -32,13 +32,13 @@
   },
   "entity": {
     "sensor": {
-      "cpu-load": {
+      "cpu_load": {
         "name": "CPU usage"
       },
-      "disk-usage": {
+      "disk_usage": {
         "name": "Disk usage"
       },
-      "memory-usage": {
+      "memory_usage": {
         "name": "Memory usage"
       }
     }

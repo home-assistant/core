@@ -94,7 +94,7 @@ SENSORS: Final = (
     ),
     MikrotikSensorEntityDescription(
         key="cpu-load",
-        translation_key="cpu-load",
+        translation_key="cpu_load",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
@@ -105,7 +105,7 @@ SENSORS: Final = (
     ),
     MikrotikSensorEntityDescription(
         key="memory-usage",
-        translation_key="memory-usage",
+        translation_key="memory_usage",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
@@ -120,7 +120,7 @@ SENSORS: Final = (
     ),
     MikrotikSensorEntityDescription(
         key="disk-usage",
-        translation_key="disk-usage",
+        translation_key="disk_usage",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
