@@ -17,19 +17,6 @@
       }
     }
   },
-  "issues": {
-    "accessory_type_candidate": {
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "description": "The bridge {bridge} currently exposes {entity_id} as a Thermostat with a separate Fan. Switching to the Heater Cooler accessory puts the mode, temperature, and the fan speed and swing controls the device supports on one tile. The accessory keeps its room and name, but HomeKit scenes or automations that used the old Thermostat or Fan controls may need to be recreated. You can change the accessory type again at any time from the bridge options.",
-            "title": "Switch {entity_id} to the Heater Cooler accessory"
-          }
-        }
-      },
-      "title": "{entity} can use the HomeKit Heater Cooler accessory"
-    }
-  },
   "options": {
     "step": {
       "accessory": {
