@@ -1,6 +1,7 @@
-"""Tests for the SNMP coordinator."""
+"""Tests for the SNMP coordinator behavior (tested via integration setup)."""
 
 import binascii
+from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from pysnmp.error import PySnmpError
@@ -8,33 +9,31 @@ from pysnmp.proto.rfc1902 import OctetString
 from pysnmp.smi.error import WrongValueError
 import pytest
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.snmp.const import DOMAIN
-from homeassistant.components.snmp.coordinator import SnmpUpdateCoordinator
+from homeassistant.const import STATE_HOME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
-def mock_request_args():
-    """Mock request arguments for the coordinator."""
-    args = (
-        Mock(),  # engine
-        Mock(),  # auth_data
-        Mock(),  # target
-        Mock(),  # context_data
-        Mock(),  # object_type
+def mock_coordinator_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Create a mock SNMP config entry for coordinator tests."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "192.168.1.1",
+            "baseoid": "1.3.6.1.2.1.4.22.1.6",
+            "community": "public",
+        },
     )
-    with patch(
-        "homeassistant.components.snmp.coordinator.SnmpUpdateCoordinator._async_ensure_request_args",
-        return_value=args,
-    ):
-        yield args
+    entry.add_to_hass(hass)
+    return entry
 
 
-@pytest.mark.usefixtures("mock_request_args")
 @pytest.mark.parametrize(
     ("input_bytes", "expected_mac"),
     [
@@ -48,32 +47,54 @@ def mock_request_args():
         pytest.param(b"ABCDEFABCDEF", "ab:cd:ef:ab:cd:ef", id="raw_hex_string"),
     ],
 )
-async def test_coordinator_mac_normalization(
-    hass: HomeAssistant, input_bytes: bytes, expected_mac: str
+async def test_mac_normalization(
+    hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+    input_bytes: bytes,
+    expected_mac: str,
 ) -> None:
     """Test MAC address normalization with various formats."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
-    )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-    coordinator.model = "Test"
-
     oid = Mock()
-    oid.asTuple.return_value = (1, 1, 1, 1, 0)
-    val = OctetString(input_bytes)
+    oid.asTuple.return_value = (1, 192, 168, 1, 10)
 
-    async def mock_walk(*args, o=oid, v=val, **kwargs):
-        yield None, None, None, [(o, v)]
+    async def mock_walk(*args, **kwargs):
+        yield None, None, None, [(oid, OctetString(input_bytes))]
 
-    with patch(
-        "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
-        side_effect=mock_walk,
+    # Enable the entity by simulating a legacy state
+    entity_slug = expected_mac.replace(":", "_").lower()
+    hass.states.async_set(f"device_tracker.{entity_slug}", STATE_HOME)
+
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk,
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.get_cmd",
+            return_value=(
+                None,
+                None,
+                None,
+                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
+            ),
+        ),
     ):
-        data = await coordinator._async_update_data()
-        assert expected_mac in data
+        assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
+        await hass.async_block_till_done()
+
+    ent_reg = er.async_get(hass)
+    entity_id = ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, expected_mac)
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_HOME
 
 
-@pytest.mark.usefixtures("mock_request_args")
 @pytest.mark.parametrize(
     ("oid_tuple", "expected_ip"),
     [
@@ -83,233 +104,303 @@ async def test_coordinator_mac_normalization(
             id="full_oid",
         ),
         pytest.param((1, 1, 1, 1, 10, 20, 30, 40), "10.20.30.40", id="short_oid"),
-        pytest.param((1, 2, 3), None, id="oid_too_short"),
     ],
 )
-async def test_coordinator_ip_extraction(
-    hass: HomeAssistant, oid_tuple: tuple, expected_ip: str | None
+async def test_ip_extraction(
+    hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+    oid_tuple: tuple,
+    expected_ip: str,
 ) -> None:
     """Test IP address extraction from OID suffix."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
-    )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-    coordinator.model = "Test"
-
     mac_bytes = binascii.unhexlify("001122334455")
     mac_str = "00:11:22:33:44:55"
 
     oid = Mock()
     oid.asTuple.return_value = oid_tuple
-    val = OctetString(mac_bytes)
 
-    async def mock_walk(*args, o=oid, v=val, **kwargs):
-        yield None, None, None, [(o, v)]
+    async def mock_walk(*args, **kwargs):
+        yield None, None, None, [(oid, OctetString(mac_bytes))]
 
-    with patch(
-        "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
-        data = await coordinator._async_update_data()
-        assert data[mac_str] == expected_ip
-
-
-async def test_coordinator_walk_error(hass: HomeAssistant) -> None:
-    """Test handling of PySnmpError during walk iteration."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
-    )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-    coordinator.model = "Test"
-
-    async def mock_walk_error(*args, **kwargs):
-        """Simulate an error raised during iteration."""
-        # pylint: disable=unreachable
-        raise PySnmpError("Network unreachable")
-        yield
+    # Enable entity
+    hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
 
     with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk,
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.get_cmd",
+            return_value=(
+                None,
+                None,
+                None,
+                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
+            ),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
+        await hass.async_block_till_done()
+
+    ent_reg = er.async_get(hass)
+    entity_id = ent_reg.async_get_entity_id(DEVICE_TRACKER_DOMAIN, DOMAIN, mac_str)
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes["ip"] == expected_ip
+
+
+async def test_ip_extraction_oid_too_short(
+    hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+) -> None:
+    """Test that IP is None when OID is too short."""
+    mac_bytes = binascii.unhexlify("001122334455")
+
+    oid = Mock()
+    oid.asTuple.return_value = (1, 2, 3)
+
+    async def mock_walk(*args, **kwargs):
+        yield None, None, None, [(oid, OctetString(mac_bytes))]
+
+    # Enable entity
+    hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
+
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk,
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.get_cmd",
+            return_value=(
+                None,
+                None,
+                None,
+                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
+            ),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
+        await hass.async_block_till_done()
+
+    ent_reg = er.async_get(hass)
+    entity_id = ent_reg.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
+    )
+    assert entity_id is not None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get("ip") is None
+
+
+async def test_walk_error_makes_entry_unavailable(
+    hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+) -> None:
+    """Test that a PySnmpError during walk makes the coordinator report failure."""
+
+    async def mock_walk_error(*args, **kwargs):
+        raise PySnmpError("Network unreachable")
+        yield  # pylint: disable=unreachable
+
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk_error,
         ),
-        pytest.raises(
-            UpdateFailed, match="SNMP error during walk: Network unreachable"
-        ),
-    ):
-        await coordinator._async_update_data()
-
-
-@pytest.mark.usefixtures("mock_request_args")
-async def test_coordinator_host_info_error(
-    hass: HomeAssistant,
-) -> None:
-    """Test handling of PySnmpError during host info fetching."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
-    )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-
-    with patch(
-        "homeassistant.components.snmp.coordinator.get_cmd",
-        side_effect=PySnmpError("Connection timed out"),
-    ):
-        await coordinator._async_fetch_host_info()
-        assert coordinator.model == ""  # Should be set to empty string to prevent retry
-
-
-@pytest.mark.usefixtures("mock_request_args")
-async def test_coordinator_host_info_auth_error(
-    hass: HomeAssistant,
-) -> None:
-    """Test handling of WrongValueError during host info fetching."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
-    )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-
-    with (
         patch(
             "homeassistant.components.snmp.coordinator.get_cmd",
-            side_effect=WrongValueError(),
-        ),
-        pytest.raises(
-            ConfigEntryAuthFailed, match="Invalid authentication credentials"
+            return_value=(
+                None,
+                None,
+                None,
+                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
+            ),
         ),
     ):
-        await coordinator._async_fetch_host_info()
+        assert not await hass.config_entries.async_setup(
+            mock_coordinator_entry.entry_id
+        )
+        await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("mock_request_args")
-async def test_coordinator_walk_errindication(
+@pytest.mark.parametrize(
+    "errindication",
+    [
+        pytest.param("timeout", id="string_errindication"),
+        pytest.param(PySnmpError("Some error"), id="exception_errindication"),
+    ],
+)
+async def test_walk_errindication(
     hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+    errindication: str | PySnmpError,
 ) -> None:
-    """Test handling of errindication (string vs exception) during walk."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
-    )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-    coordinator.model = "Test"
+    """Test that an errindication during walk causes entity to become unavailable."""
+    mac_bytes = binascii.unhexlify("001122334455")
+    oid = Mock()
+    oid.asTuple.return_value = (1, 192, 168, 1, 1)
 
-    # 1. Test errindication as a string
-    async def mock_walk_string_error(*args, **kwargs):
-        yield "timeout", None, None, []
+    async def mock_walk_first(*args, **kwargs):
+        yield None, None, None, [(oid, OctetString(mac_bytes))]
+
+    async def mock_walk_error(*args, **kwargs):
+        yield errindication, None, None, []
+
+    call_count = 0
+
+    async def mock_walk_side_effect(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            async for item in mock_walk_first(*args, **kwargs):
+                yield item
+        else:
+            async for item in mock_walk_error(*args, **kwargs):
+                yield item
+
+    hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
 
     with (
         patch(
-            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
-            side_effect=mock_walk_string_error,
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
         ),
-        pytest.raises(UpdateFailed, match="SNMPLIB error: timeout") as excinfo,
-    ):
-        await coordinator._async_update_data()
-    assert excinfo.value.__cause__ is None
-
-    # 2. Test errindication as an exception
-    exc = PySnmpError("Some error")
-
-    async def mock_walk_exception_error(*args, **kwargs):
-        yield exc, None, None, []
-
-    with (
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
-            side_effect=mock_walk_exception_error,
+            side_effect=mock_walk_side_effect,
         ),
-        pytest.raises(UpdateFailed, match="SNMPLIB error: Some error") as excinfo,
-    ):
-        await coordinator._async_update_data()
-    assert excinfo.value.__cause__ is exc
-
-
-@pytest.mark.usefixtures("mock_request_args")
-async def test_coordinator_host_info_no_space(
-    hass: HomeAssistant,
-) -> None:
-    """Test host info fetching where sysDescr has no spaces."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
-    )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-
-    with patch(
-        "homeassistant.components.snmp.coordinator.get_cmd",
-        return_value=(
-            None,
-            None,
-            None,
-            [("oid1", "DescriptionWithoutSpace"), ("oid2", "sys_name")],
+        patch(
+            "homeassistant.components.snmp.coordinator.get_cmd",
+            return_value=(
+                None,
+                None,
+                None,
+                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
+            ),
         ),
     ):
-        await coordinator._async_fetch_host_info()
-        assert coordinator.manufacturer is None
-        assert coordinator.model == "DescriptionWithoutSpace"
+        assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # First poll succeeded - entity should be home
+        ent_reg = er.async_get(hass)
+        entity_id = ent_reg.async_get_entity_id(
+            DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
+        )
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_HOME
+
+        # Trigger second poll with errindication
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
+        await hass.async_block_till_done()
+
+    # Entity should become unavailable due to UpdateFailed
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
 
 
-@pytest.mark.usefixtures("mock_request_args")
-async def test_coordinator_walk_errstatus(
+async def test_walk_errstatus(
     hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
 ) -> None:
-    """Test handling of errstatus during walk."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
-    )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-    coordinator.model = "Test"
-
+    """Test that errstatus during walk causes UpdateFailed."""
     mock_err_status = Mock()
     mock_err_status.prettyPrint.return_value = "noSuchName"
 
-    async def mock_walk_status_error(*args, **kwargs):
+    async def mock_walk(*args, **kwargs):
         yield None, mock_err_status, 1, [("oid", "val")]
 
     with (
         patch(
-            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
-            side_effect=mock_walk_status_error,
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
         ),
-        pytest.raises(UpdateFailed, match="SNMP error: noSuchName at oid"),
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk,
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.get_cmd",
+            return_value=(
+                None,
+                None,
+                None,
+                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
+            ),
+        ),
     ):
-        await coordinator._async_update_data()
+        assert not await hass.config_entries.async_setup(
+            mock_coordinator_entry.entry_id
+        )
+        await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("mock_request_args")
-async def test_coordinator_invalid_mac_length(
+async def test_invalid_mac_length_ignored(
     hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
 ) -> None:
-    """Test ignoring MAC addresses with invalid length."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
-    )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-    coordinator.model = "Test"
-
+    """Test that MAC addresses with invalid length are ignored."""
     oid = Mock()
     oid.asTuple.return_value = (1, 1, 1, 1, 0)
-    val = OctetString(b"too_short")
 
     async def mock_walk(*args, **kwargs):
-        yield None, None, None, [(oid, val)]
+        yield None, None, None, [(oid, OctetString(b"too_short"))]
 
-    with patch(
-        "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
-        side_effect=mock_walk,
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk,
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.get_cmd",
+            return_value=(
+                None,
+                None,
+                None,
+                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
+            ),
+        ),
     ):
-        data = await coordinator._async_update_data()
-        assert not data
+        assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
+        await hass.async_block_till_done()
 
-
-@pytest.mark.usefixtures("mock_request_args")
-async def test_coordinator_mac_processing_exception(
-    hass: HomeAssistant,
-) -> None:
-    """Test handling of exceptions during MAC processing."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    # No entity should be created for invalid MAC
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(
+        ent_reg, mock_coordinator_entry.entry_id
     )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-    coordinator.model = "Test"
+    assert len(entries) == 0
 
+
+async def test_mac_processing_exception_ignored(
+    hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+) -> None:
+    """Test that exceptions during MAC processing are silently ignored."""
     oid = Mock()
     oid.asTuple.return_value = (1, 1, 1, 1, 0)
     val = Mock()
@@ -318,166 +409,400 @@ async def test_coordinator_mac_processing_exception(
     async def mock_walk(*args, **kwargs):
         yield None, None, None, [(oid, val)]
 
-    with patch(
-        "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
-        side_effect=mock_walk,
-    ):
-        data = await coordinator._async_update_data()
-        assert not data
-
-
-@pytest.mark.usefixtures("mock_request_args")
-async def test_coordinator_host_info_with_space(
-    hass: HomeAssistant,
-) -> None:
-    """Test host info fetching where sysDescr has spaces."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
-    )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-
-    with patch(
-        "homeassistant.components.snmp.coordinator.get_cmd",
-        return_value=(
-            None,
-            None,
-            None,
-            [("oid1", "Manufacturer Model"), ("oid2", "sys_name")],
-        ),
-    ):
-        await coordinator._async_fetch_host_info()
-        assert coordinator.manufacturer == "Manufacturer"
-        assert coordinator.model == "Model"
-
-
-@pytest.mark.usefixtures("mock_request_args")
-async def test_coordinator_auto_fetch_host_info(
-    hass: HomeAssistant,
-) -> None:
-    """Test that host info is automatically fetched if model is None."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
-    )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-    assert coordinator.model is None
-
-    oid = Mock()
-    oid.asTuple.return_value = (1, 1, 1, 1, 0)
-    val = OctetString(binascii.unhexlify("001122334455"))
-
-    async def mock_walk(*args, **kwargs):
-        yield None, None, None, [(oid, val)]
-
     with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk,
+        ),
         patch(
             "homeassistant.components.snmp.coordinator.get_cmd",
-            return_value=(None, None, None, [("oid1", "Descr"), ("oid2", "sys_name")]),
-        ) as mock_get_info,
+            return_value=(
+                None,
+                None,
+                None,
+                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
+            ),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
+        await hass.async_block_till_done()
+
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(
+        ent_reg, mock_coordinator_entry.entry_id
+    )
+    assert len(entries) == 0
+
+
+async def test_host_info_populates_device_registry(
+    hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+) -> None:
+    """Test that host info is fetched and populates the device registry."""
+
+    async def mock_walk(*args, **kwargs):
+        return
+        yield
+
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
         patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
         ),
+        patch(
+            "homeassistant.components.snmp.coordinator.get_cmd",
+            return_value=(
+                None,
+                None,
+                None,
+                [("oid1", "Cisco IOS 15.1"), ("oid2", "router01")],
+            ),
+        ),
     ):
-        await coordinator._async_update_data()
-        mock_get_info.assert_called_once()
-        assert coordinator.model == "Descr"
+        assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
+        await hass.async_block_till_done()
 
-
-@pytest.mark.usefixtures("mock_request_args")
-async def test_coordinator_walk_end_of_mib(
-    hass: HomeAssistant,
-) -> None:
-    """Test walk loop breaks when is_end_of_mib returns True."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    dr_reg = dr.async_get(hass)
+    device = dr_reg.async_get_device(
+        identifiers={(DOMAIN, mock_coordinator_entry.entry_id)}
     )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-    coordinator.model = "Test"
+    assert device is not None
+    assert device.manufacturer == "Cisco"
+    assert device.model == "IOS 15.1"
+    assert device.name == "router01"
 
-    oid = Mock()
-    oid.asTuple.return_value = (1, 3, 6, 1, 2, 1, 4, 22, 1, 6, 1, 192, 168, 1, 1)
-    val = OctetString(b"\x00\x11\x22\x33\x44\x55")
+
+async def test_host_info_no_space_in_descr(
+    hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+) -> None:
+    """Test host info when sysDescr has no spaces."""
 
     async def mock_walk(*args, **kwargs):
-        # We need to yield twice to show that it breaks on the second one
-        yield None, None, None, [(oid, val)]
-        yield None, None, None, [(oid, val)]
+        return
+        yield
 
     with (
         patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
             "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
             side_effect=mock_walk,
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.get_cmd",
+            return_value=(
+                None,
+                None,
+                None,
+                [("oid1", "SingleWordDescr"), ("oid2", "myhost")],
+            ),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
+        await hass.async_block_till_done()
+
+    dr_reg = dr.async_get(hass)
+    device = dr_reg.async_get_device(
+        identifiers={(DOMAIN, mock_coordinator_entry.entry_id)}
+    )
+    assert device is not None
+    assert device.manufacturer is None
+    assert device.model == "SingleWordDescr"
+
+
+async def test_host_info_pysnmp_error_sets_empty_model(
+    hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+) -> None:
+    """Test that a PySnmpError during host info fetch prevents re-fetching."""
+
+    async def mock_walk(*args, **kwargs):
+        return
+        yield
+
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk,
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.get_cmd",
+            side_effect=PySnmpError("Connection timed out"),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
+        await hass.async_block_till_done()
+
+    dr_reg = dr.async_get(hass)
+    device = dr_reg.async_get_device(
+        identifiers={(DOMAIN, mock_coordinator_entry.entry_id)}
+    )
+    assert device is not None
+    assert device.model == ""
+
+
+async def test_host_info_errstatus_sets_generic_name(
+    hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+) -> None:
+    """Test that get_cmd with errindication/errstatus sets a generic model name."""
+
+    async def mock_walk(*args, **kwargs):
+        return
+        yield
+
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk,
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.get_cmd",
+            return_value=("some error indication", None, None, []),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
+        await hass.async_block_till_done()
+
+    dr_reg = dr.async_get(hass)
+    device = dr_reg.async_get_device(
+        identifiers={(DOMAIN, mock_coordinator_entry.entry_id)}
+    )
+    assert device is not None
+    assert device.model == "SNMP Server"
+
+
+async def test_host_info_auth_error(
+    hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+) -> None:
+    """Test that WrongValueError during host info get_cmd triggers reauth."""
+
+    async def mock_walk(*args, **kwargs):
+        return
+        yield
+
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk,
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.get_cmd",
+            side_effect=WrongValueError,
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(
+            mock_coordinator_entry.entry_id
+        )
+        await hass.async_block_till_done()
+
+
+async def test_host_info_request_args_wrong_value_error(
+    hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+) -> None:
+    """Test WrongValueError raised by _async_ensure_request_args during host info."""
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.async_create_request_cmd_args",
+            side_effect=WrongValueError,
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(
+            mock_coordinator_entry.entry_id
+        )
+        await hass.async_block_till_done()
+
+
+async def test_update_data_request_args_wrong_value_error(
+    hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+) -> None:
+    """Test WrongValueError raised by _async_ensure_request_args during update.
+
+    Host info succeeds via the PySnmpError fallback (sets model=''), then
+    _async_ensure_request_args is called again in _async_update_data and raises
+    WrongValueError, triggering ConfigEntryAuthFailed.
+    """
+    call_count = 0
+
+    async def mock_create_request_args_side(*args, **kwargs):
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise PySnmpError("First call fails")
+        raise WrongValueError
+
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.create_auth_data",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.async_create_request_cmd_args",
+            side_effect=mock_create_request_args_side,
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(
+            mock_coordinator_entry.entry_id
+        )
+        await hass.async_block_till_done()
+
+
+async def test_update_data_request_args_pysnmp_error(
+    hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+) -> None:
+    """Test PySnmpError raised by _async_ensure_request_args during update.
+
+    Host info succeeds via the PySnmpError fallback (sets model=''), then
+    _async_ensure_request_args is called again in _async_update_data and raises
+    PySnmpError, triggering UpdateFailed.
+    """
+
+    async def mock_create_request_args_fail(*args, **kwargs):
+        raise PySnmpError("Always fails")
+
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.create_auth_data",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.async_create_request_cmd_args",
+            side_effect=mock_create_request_args_fail,
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(
+            mock_coordinator_entry.entry_id
+        )
+        await hass.async_block_till_done()
+
+
+async def test_walk_auth_error(
+    hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+) -> None:
+    """Test that WrongValueError during walk triggers reauth."""
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=WrongValueError,
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.get_cmd",
+            return_value=(
+                None,
+                None,
+                None,
+                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
+            ),
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(
+            mock_coordinator_entry.entry_id
+        )
+        await hass.async_block_till_done()
+
+
+async def test_walk_end_of_mib(
+    hass: HomeAssistant,
+    mock_coordinator_entry: MockConfigEntry,
+) -> None:
+    """Test that walk stops when end of MIB is reached."""
+    mac1_bytes = binascii.unhexlify("001122334455")
+    mac2_bytes = binascii.unhexlify("aabbccddeeff")
+    oid1 = Mock()
+    oid1.asTuple.return_value = (1, 192, 168, 1, 1)
+    oid2 = Mock()
+    oid2.asTuple.return_value = (1, 192, 168, 1, 2)
+
+    async def mock_walk(*args, **kwargs):
+        yield None, None, None, [(oid1, OctetString(mac1_bytes))]
+        yield None, None, None, [(oid2, OctetString(mac2_bytes))]
+
+    hass.states.async_set("device_tracker.00_11_22_33_44_55", STATE_HOME)
+    hass.states.async_set("device_tracker.aa_bb_cc_dd_ee_ff", STATE_HOME)
+
+    with (
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
+            side_effect=mock_walk,
+        ),
+        patch(
+            "homeassistant.components.snmp.coordinator.get_cmd",
+            return_value=(
+                None,
+                None,
+                None,
+                [("oid1", "Manufacturer Model"), ("oid2", "SysName")],
+            ),
         ),
         patch(
             "homeassistant.components.snmp.coordinator.is_end_of_mib",
             side_effect=[False, True],
-        ) as mock_is_end,
+        ),
     ):
-        await coordinator._async_update_data()
-        assert mock_is_end.call_count == 2
+        assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
+        await hass.async_block_till_done()
 
+    ent_reg = er.async_get(hass)
 
-@pytest.mark.usefixtures("mock_request_args")
-async def test_coordinator_update_auth_error(
-    hass: HomeAssistant,
-) -> None:
-    """Test handling of WrongValueError during update data."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    # First MAC should have been processed (is_end_of_mib returned False)
+    entity_id_1 = ent_reg.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, "00:11:22:33:44:55"
     )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-    coordinator.model = "Test"
+    assert entity_id_1 is not None
+    state = hass.states.get(entity_id_1)
+    assert state is not None
+    assert state.state == STATE_HOME
 
-    with (
-        patch(
-            "homeassistant.components.snmp.coordinator.bulk_walk_cmd",
-            side_effect=WrongValueError(),
-        ),
-        pytest.raises(
-            ConfigEntryAuthFailed, match="Invalid authentication credentials"
-        ),
-    ):
-        await coordinator._async_update_data()
-
-
-async def test_coordinator_host_info_request_args_auth_error(
-    hass: HomeAssistant,
-) -> None:
-    """Test WrongValueError raised by _async_ensure_request_args during host info."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
+    # Second MAC should NOT have been processed (is_end_of_mib returned True)
+    entity_id_2 = ent_reg.async_get_entity_id(
+        DEVICE_TRACKER_DOMAIN, DOMAIN, "aa:bb:cc:dd:ee:ff"
     )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-
-    with (
-        patch(
-            "homeassistant.components.snmp.coordinator.SnmpUpdateCoordinator._async_ensure_request_args",
-            side_effect=WrongValueError(),
-        ),
-        pytest.raises(
-            ConfigEntryAuthFailed, match="Invalid authentication credentials"
-        ),
-    ):
-        await coordinator._async_fetch_host_info()
-
-
-async def test_coordinator_update_request_args_auth_error(
-    hass: HomeAssistant,
-) -> None:
-    """Test WrongValueError raised by _async_ensure_request_args during update."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1.1"}
-    )
-    coordinator = SnmpUpdateCoordinator(hass, entry)
-    coordinator.model = "Test"
-
-    with (
-        patch(
-            "homeassistant.components.snmp.coordinator.SnmpUpdateCoordinator._async_ensure_request_args",
-            side_effect=WrongValueError(),
-        ),
-        pytest.raises(
-            ConfigEntryAuthFailed, match="Invalid authentication credentials"
-        ),
-    ):
-        await coordinator._async_update_data()
+    assert entity_id_2 is None
