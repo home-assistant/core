@@ -8,7 +8,7 @@ scaffolding.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from http import HTTPStatus
 import json
@@ -17,29 +17,9 @@ from typing import Any
 
 from pyvizio.api._protocol import ENDPOINT, KEY_CODE
 
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
-
-
-# ---------------------------------------------------------------------------
-# Test setup helper.
-# ---------------------------------------------------------------------------
-
-
-async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
-    """Add config entry to hass and set up the integration."""
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-
-# ---------------------------------------------------------------------------
-# URL + fixture-loading utilities.
-# ---------------------------------------------------------------------------
 
 
 def load_fixture(name: str) -> dict[str, Any]:
@@ -62,12 +42,6 @@ def settings_options_url(host: str, device_class: str, suffix: str) -> str:
     return f"{url_for(host, device_class, 'SETTINGS_OPTIONS')}/{suffix}"
 
 
-# ---------------------------------------------------------------------------
-# Override context managers — re-register a single endpoint at the front of
-# the match queue, then remove it on exit so the prior response wins again.
-# ---------------------------------------------------------------------------
-
-
 def _prepend_mock(aioclient_mock: AiohttpClientMocker) -> Any:
     """Move the most-recently-added mock to the front of the match queue.
 
@@ -88,7 +62,7 @@ def override_power(
     host: str,
     device_class: str,
     fixture: str,
-) -> Iterator[None]:
+) -> Generator[None]:
     """Override POWER_MODE with the named fixture."""
     aioclient_mock.get(
         url_for(host, device_class, "POWER_MODE"), json=load_fixture(fixture)
@@ -103,7 +77,7 @@ def override_power(
 @contextmanager
 def override_unavailable(
     aioclient_mock: AiohttpClientMocker, host: str, device_class: str
-) -> Iterator[None]:
+) -> Generator[None]:
     """Make POWER_MODE return 500 (device unreachable)."""
     aioclient_mock.get(
         url_for(host, device_class, "POWER_MODE"),
@@ -122,7 +96,7 @@ def override_audio_settings(
     host: str,
     device_class: str,
     fixture: str,
-) -> Iterator[None]:
+) -> Generator[None]:
     """Override SETTINGS/audio with the named fixture."""
     aioclient_mock.get(
         settings_url(host, device_class, "audio"), json=load_fixture(fixture)
@@ -140,7 +114,7 @@ def override_audio_options(
     host: str,
     device_class: str,
     fixture: str,
-) -> Iterator[None]:
+) -> Generator[None]:
     """Override SETTINGS_OPTIONS/audio with the named fixture."""
     aioclient_mock.get(
         settings_options_url(host, device_class, "audio"),
@@ -156,7 +130,7 @@ def override_audio_options(
 @contextmanager
 def override_current_app(
     aioclient_mock: AiohttpClientMocker, host: str, fixture: str
-) -> Iterator[None]:
+) -> Generator[None]:
     """Override CURRENT_APP (TV only) with the named fixture."""
     aioclient_mock.get(url_for(host, "tv", "CURRENT_APP"), json=load_fixture(fixture))
     new_mock = _prepend_mock(aioclient_mock)
@@ -166,18 +140,25 @@ def override_current_app(
         aioclient_mock._mocks.remove(new_mock)
 
 
-# ---------------------------------------------------------------------------
-# Action assertions — inspect aioclient_mock.mock_calls to verify the
-# integration sent the expected wire request.
-# ---------------------------------------------------------------------------
-
-
 def _put_calls(aioclient_mock: AiohttpClientMocker, *, url_contains: str) -> list:
     return [
         call
         for call in aioclient_mock.mock_calls
         if call[0].lower() == "put" and url_contains in str(call[1])
     ]
+
+
+def _request_body(call: tuple) -> dict[str, Any]:
+    """Return the recorded request body as a dict.
+
+    ``AiohttpClientMocker`` records the raw ``data``/``json`` kwarg, so the
+    body is a dict when the client used ``json=`` and a string when it
+    serialized the payload itself (as pyvizio does).
+    """
+    body = call[2]
+    if isinstance(body, dict):
+        return body
+    return json.loads(body)
 
 
 def assert_key_press(
@@ -196,7 +177,7 @@ def assert_key_press(
     codeset, code = KEY_CODE[device_class][key_name]
     matched = 0
     for call in _put_calls(aioclient_mock, url_contains="/key_command"):
-        body = json.loads(call[2])
+        body = _request_body(call)
         for entry in body.get("KEYLIST") or ():
             if entry.get("CODESET") == codeset and entry.get("CODE") == code:
                 matched += 1
@@ -224,7 +205,7 @@ def assert_set_input(aioclient_mock: AiohttpClientMocker, name: str) -> None:
     matching = [
         call
         for call in _put_calls(aioclient_mock, url_contains="devices/current_input")
-        if json.loads(call[2]).get("VALUE") == name
+        if _request_body(call).get("VALUE") == name
     ]
     assert len(matching) == 1, (
         f"Expected one set_input PUT with VALUE={name!r}, "
@@ -242,7 +223,7 @@ def assert_launch_app(
     """Assert a PUT to /app/launch with the expected app config was sent."""
     matching = []
     for call in _put_calls(aioclient_mock, url_contains="/app/launch"):
-        body = json.loads(call[2])
+        body = _request_body(call)
         value = body.get("VALUE", body)
         if (
             value.get("APP_ID") == app_id
@@ -263,7 +244,7 @@ def assert_set_setting(
     """Assert a PUT to a settings endpoint matching ``name`` with ``VALUE=value``."""
     matching = []
     for call in _put_calls(aioclient_mock, url_contains=f"/{name}"):
-        body = json.loads(call[2])
+        body = _request_body(call)
         if body.get("VALUE") == value:
             matching.append(call)
     assert len(matching) == 1, (

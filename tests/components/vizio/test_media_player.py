@@ -60,6 +60,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
+from . import setup_integration
 from .common import (
     assert_key_press,
     assert_launch_app,
@@ -71,7 +72,6 @@ from .common import (
     override_current_app,
     override_power,
     override_unavailable,
-    setup_integration,
 )
 from .const import (
     ADDITIONAL_APP_CONFIG,
@@ -147,26 +147,12 @@ def _get_attr_and_assert_base_attr(
     return attr
 
 
-@asynccontextmanager
-async def _cm_for_test_setup_without_apps(
-    all_settings: dict[str, Any], vizio_power_state: bool
-) -> AsyncIterator[None]:
-    """Context manager to setup test for Vizio devices without app patches."""
-    with (
-        patch(
-            "homeassistant.components.vizio.VizioAsync.get_all_settings",
-            return_value=all_settings,
-        ),
-        patch(
-            "homeassistant.components.vizio.VizioAsync.get_setting_options",
-            return_value=EQ_LIST,
-        ),
-        patch(
-            "homeassistant.components.vizio.VizioAsync.get_power_state",
-            return_value=vizio_power_state,
-        ),
-    ):
-        yield
+async def _setup_tv_on(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Set up a TV that's powered on and verify base/source/volume/sound-mode."""
+    await setup_integration(hass, config_entry)
+    attr = _get_attr_and_assert_base_attr(hass, MediaPlayerDeviceClass.TV, STATE_ON)
+    _assert_sources_and_volume(attr, VIZIO_DEVICE_CLASS_TV)
+    assert attr[ATTR_SOUND_MODE] == CURRENT_EQ
 
 
 async def _setup_tv_off(
@@ -391,11 +377,14 @@ async def test_services(
         hass,
         MP_DOMAIN,
         SERVICE_SELECT_SOUND_MODE,
-        {ATTR_SOUND_MODE: "Music"},
+        {ATTR_SOUND_MODE: "Movie"},
     )
-    # Test that the update_setting service does config
-    # validation/transformation correctly
-    await _test_service(
+    assert_set_setting(aioclient_mock, name="eq", value="Movie")
+
+    # The update_setting service must transform "AV Delay"/"0" into the
+    # av_delay setting name and integer value on the wire.
+    await _call_service(
+        aioclient_mock,
         hass,
         DOMAIN,
         SERVICE_UPDATE_SETTING,

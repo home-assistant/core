@@ -25,12 +25,8 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 
-from .common import (
-    assert_key_press,
-    assert_no_key_press,
-    override_power,
-    setup_integration,
-)
+from . import setup_integration
+from .common import assert_key_press, assert_no_key_press, override_power
 from .const import HOST, NAME
 
 from tests.common import MockConfigEntry, snapshot_platform

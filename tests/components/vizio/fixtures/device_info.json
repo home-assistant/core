@@ -64,7 +64,7 @@
           "CREDIT_CAPABLE": true,
           "CS_TROUBLESHOOT_ENABLED": true,
           "EA_SENTRY": {
-            "DSN": "https://9f9c2c06e3664e07f82dea78a33ba8e9@o401343.ingest.us.sentry.io/4505404362063872",
+            "DSN": "https://00000000000000000000000000000000@o000000.ingest.us.sentry.io/0000000000000000",
             "EA_SENTRY_ISSUES": true,
             "TracesSampleRate": 1
           },
