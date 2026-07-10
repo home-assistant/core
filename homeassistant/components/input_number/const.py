@@ -8,7 +8,3 @@ class InputNumberEntityStateAttribute(StrEnum):
 
     INITIAL = "initial"
     EDITABLE = "editable"
-    MIN = "min"
-    MAX = "max"
-    STEP = "step"
-    MODE = "mode"
