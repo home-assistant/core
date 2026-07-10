@@ -34,6 +34,14 @@ class ScriptTool(ActionTool):
         if self.name[0].isdigit():
             self.name = "_" + self.name
 
+        if entity_entry and (
+            aliases := er.async_get_entity_aliases(hass, entity_entry)
+        ):
+            alias_text = "Aliases: " + str(sorted(aliases))
+            self.description = (
+                f"{self.description}. {alias_text}" if self.description else alias_text
+            )
+
 
 @callback
 def async_get_tools(
