@@ -6,7 +6,6 @@ from aiokarakeep import (
     KarakeepApiError,
     KarakeepAuthError,
     KarakeepConnectionError,
-    KarakeepError,
     KarakeepInvalidResponseError,
 )
 import pytest
@@ -68,7 +67,7 @@ async def test_setup_entry_version_unavailable(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test setup succeeds without a version when the endpoint is unavailable."""
-    mock_karakeep_client.async_get_version.side_effect = KarakeepError("boom")
+    mock_karakeep_client.async_get_version.return_value = None
 
     await setup_integration(hass, mock_config_entry)
 

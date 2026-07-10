@@ -7,7 +7,6 @@ from aiokarakeep import (
     KarakeepAuthError,
     KarakeepClient,
     KarakeepConnectionError,
-    KarakeepError,
     KarakeepInvalidResponseError,
     KarakeepStats,
 )
@@ -48,11 +47,7 @@ class KarakeepDataUpdateCoordinator(DataUpdateCoordinator[KarakeepStats]):
 
     async def _async_setup(self) -> None:
         """Fetch the server version once during setup."""
-        # The version is optional and must never fail setup.
-        try:
-            self.version = await self.client.async_get_version()
-        except KarakeepError as err:
-            _LOGGER.debug("Could not fetch Karakeep version: %s", err)
+        self.version = await self.client.async_get_version()
 
     async def _async_update_data(self) -> KarakeepStats:
         """Fetch data from Karakeep API."""
