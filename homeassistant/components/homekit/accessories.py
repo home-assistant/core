@@ -768,8 +768,9 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         }
         context = Context()
 
+        self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data, context=context)
+
         try:
-            self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data, context=context)
             await self.hass.services.async_call(
                 domain, service, service_data, blocking=True, context=context
             )
