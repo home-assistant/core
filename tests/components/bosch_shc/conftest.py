@@ -22,9 +22,8 @@ def bosch_shc_mock_async_zeroconf(mock_async_zeroconf: MagicMock) -> None:
     """Auto mock zeroconf."""
 
 
-# Every device_helper bucket any bosch_shc platform reads, defaulted to
-# empty so a test only creates entities for the bucket(s) it explicitly
-# passes to setup_integration().
+# Keep in sync with every platform's device_helper buckets — a bucket
+# missing here breaks setup_integration() for whichever test needs it.
 _EMPTY_DEVICE_BUCKETS: dict[str, list[Any]] = {
     bucket: []
     for bucket in (
