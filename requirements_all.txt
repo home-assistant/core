@@ -38,7 +38,7 @@ PSNAWP==3.0.3
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
-Pillow==12.2.0
+Pillow==12.3.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.16
@@ -856,7 +856,7 @@ dremel3dpy==2.1.1
 dropmqttapi==1.0.3
 
 # homeassistant.components.dsmr
-dsmr-parser==1.11.0
+dsmr-parser==1.11.1
 
 # homeassistant.components.dwd_weather_warnings
 dwdwfsapi==1.0.7
@@ -919,7 +919,7 @@ emoji==2.8.0
 emulated-roku==0.3.0
 
 # homeassistant.components.energieleser
-energieleser==0.1.4
+energieleser==0.1.5
 
 # homeassistant.components.huisbaasje
 energyflip-client==0.2.2
@@ -3369,7 +3369,7 @@ whois==0.9.27
 wiffi==1.1.2
 
 # homeassistant.components.wiim
-wiim==0.1.4
+wiim==0.1.5
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1
@@ -3454,7 +3454,7 @@ zeroconf==0.150.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha-quirks==2.1.0
+zha-quirks==2.1.1
 
 # homeassistant.components.zha
 zha==2.0.0
