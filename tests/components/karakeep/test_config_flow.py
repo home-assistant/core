@@ -35,7 +35,6 @@ async def test_full_flow(hass: HomeAssistant, mock_karakeep_client: AsyncMock) -
             CONF_VERIFY_SSL: False,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Karakeep"
@@ -48,7 +47,7 @@ async def test_full_flow(hass: HomeAssistant, mock_karakeep_client: AsyncMock) -
     mock_karakeep_client.async_get_stats.assert_awaited_once()
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry", "mock_karakeep_client")
 async def test_invalid_url(hass: HomeAssistant) -> None:
     """Test invalid URL errors."""
     result = await hass.config_entries.flow.async_init(
@@ -66,6 +65,21 @@ async def test_invalid_url(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_url_format"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: TEST_URL,
+            CONF_TOKEN: TEST_TOKEN,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_URL: TEST_URL,
+        CONF_TOKEN: TEST_TOKEN,
+        CONF_VERIFY_SSL: False,
+    }
 
 
 @pytest.mark.parametrize(
@@ -112,7 +126,6 @@ async def test_flow_errors(
             CONF_TOKEN: TEST_TOKEN,
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
