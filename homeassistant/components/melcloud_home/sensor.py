@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
+from .common import async_setup_unit_entities
 from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity
 
@@ -128,29 +129,23 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MELCloud Home sensors."""
-    coordinator = entry.runtime_data
 
-    def _async_add_new_ata_units(units: list[ATAUnit]) -> None:
-        async_add_entities(
-            ATASensor(coordinator, entity_description, unit)
+    async_setup_unit_entities(
+        entry.runtime_data,
+        async_add_entities,
+        lambda units: (
+            ATASensor(entry.runtime_data, entity_description, unit)
             for entity_description in ATA_SENSORS
             for unit in units
             if entity_description.exists_fn(unit)
-        )
-
-    def _async_add_new_atw_units(units: list[ATWUnit]) -> None:
-        async_add_entities(
-            ATWSensor(coordinator, entity_description, unit)
+        ),
+        lambda units: (
+            ATWSensor(entry.runtime_data, entity_description, unit)
             for entity_description in ATW_SENSORS
             for unit in units
             if entity_description.exists_fn(unit)
-        )
-
-    coordinator.new_ata_callbacks.append(_async_add_new_ata_units)
-    coordinator.new_atw_callbacks.append(_async_add_new_atw_units)
-
-    _async_add_new_ata_units(list(coordinator.ata_units.values()))
-    _async_add_new_atw_units(list(coordinator.atw_units.values()))
+        ),
+    )
 
 
 class ATASensor(MelCloudHomeATAUnitEntity, SensorEntity):

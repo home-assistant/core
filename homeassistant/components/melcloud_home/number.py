@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .common import async_setup_unit_entities
 from .const import DOMAIN
 from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity, unit_ids
@@ -213,27 +214,21 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MELCloud Home numbers."""
-    coordinator = entry.runtime_data
 
-    def _async_add_new_ata_units(units: list[ATAUnit]) -> None:
-        async_add_entities(
-            ATANumber(coordinator, entity_description, unit)
+    async_setup_unit_entities(
+        entry.runtime_data,
+        async_add_entities,
+        lambda units: (
+            ATANumber(entry.runtime_data, entity_description, unit)
             for entity_description in ATA_NUMBERS
             for unit in units
-        )
-
-    def _async_add_new_atw_units(units: list[ATWUnit]) -> None:
-        async_add_entities(
-            ATWNumber(coordinator, entity_description, unit)
+        ),
+        lambda units: (
+            ATWNumber(entry.runtime_data, entity_description, unit)
             for entity_description in ATW_NUMBERS
             for unit in units
-        )
-
-    coordinator.new_ata_callbacks.append(_async_add_new_ata_units)
-    coordinator.new_atw_callbacks.append(_async_add_new_atw_units)
-
-    _async_add_new_ata_units(list(coordinator.ata_units.values()))
-    _async_add_new_atw_units(list(coordinator.atw_units.values()))
+        ),
+    )
 
 
 class ATANumber(MelCloudHomeATAUnitEntity, NumberEntity):
