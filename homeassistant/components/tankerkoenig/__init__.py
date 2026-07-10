@@ -4,7 +4,7 @@
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL
 from .coordinator import TankerkoenigConfigEntry, TankerkoenigDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -14,8 +14,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: TankerkoenigConfigEntry
 ) -> bool:
     """Set a tankerkoenig configuration entry up."""
-    hass.data.setdefault(DOMAIN, {})
-
     coordinator = TankerkoenigDataUpdateCoordinator(hass, entry, DEFAULT_SCAN_INTERVAL)
     await coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
