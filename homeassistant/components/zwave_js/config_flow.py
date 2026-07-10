@@ -1560,14 +1560,18 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Ask for config for Z-Wave JS add-on."""
         addon_info = await self._addon_setup.async_get_addon_info()
         addon_config = addon_info.options
+        default_keys = SecurityKeys.from_addon_config(addon_config, self.security_keys)
 
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # The revert helper only passes keys present in the original
-            # add-on config, which may lack some of the security keys,
-            # so treat missing keys as empty.
-            self.security_keys = SecurityKeys().updated_from_user_input(user_input)
+            # The security key fields are optional, so a normal submission may
+            # omit an unchanged key. Fall back to the current add-on config so
+            # existing keys are preserved. While reverting, the helper only
+            # passes the keys present in the original config, so missing keys
+            # must be treated as empty to actually revert them.
+            key_defaults = SecurityKeys() if self.revert_reason else default_keys
+            self.security_keys = key_defaults.updated_from_user_input(user_input)
             self.usb_path = user_input.get(CONF_USB_PATH) or None
             self.socket_path = user_input.get(CONF_SOCKET_PATH) or None
 
@@ -1611,8 +1615,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         usb_path = addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
         socket_path = addon_config.get(CONF_ADDON_SOCKET, self.socket_path or "")
-        default_keys = SecurityKeys.from_addon_config(addon_config, self.security_keys)
-
         try:
             ports = await async_get_usb_ports(self.hass)
         except OSError as err:
@@ -1953,13 +1955,21 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         discovered_home_id = (
             str(discovery_info.zwave_home_id) if discovery_info.zwave_home_id else None
         )
+        addon_entries = [
+            entry
+            for entry in self._async_current_entries(include_ignore=False)
+            if entry.data.get(CONF_USE_ADDON)
+        ]
+        if discovered_home_id is None and any(
+            entry.data.get(CONF_SOCKET_PATH) == discovery_info.socket_path
+            for entry in addon_entries
+        ):
+            # A reconnect of the configured adapter without a home ID is the
+            # same adapter, not a new one to migrate to.
+            return self.async_abort(reason="already_configured")
+
         if addon_entry := next(
-            (
-                entry
-                for entry in self._async_current_entries(include_ignore=False)
-                if entry.data.get(CONF_USE_ADDON)
-                and entry.unique_id != discovered_home_id
-            ),
+            (entry for entry in addon_entries if entry.unique_id != discovered_home_id),
             None,
         ):
             self._reconfigure_config_entry = addon_entry
