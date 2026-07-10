@@ -13,8 +13,7 @@ from aiokarakeep import (
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -31,7 +30,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class KarakeepConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class KarakeepConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Karakeep."""
 
     VERSION = 1
