@@ -1038,6 +1038,50 @@ async def test_heatercooler_power_on_with_thresholds_uses_activated_mode(
     )
 
 
+async def test_heatercooler_pending_mode_bridges_slow_state_updates(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test an accepted mode stays effective until the entity reports it."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        ATTR_TEMPERATURE: 20.0,
+    }
+
+    hass.states.async_set(entity_id, HVACMode.HEAT, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # The mode service is accepted but the entity state is not updated,
+    # like a push integration that reports later
+    async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
+    call_set_temperature = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
+    )
+    _write_chars(hk_driver, acc, {CHAR_TARGET_HEATER_COOLER_STATE: HC_TARGET_COOL})
+    await hass.async_block_till_done()
+
+    # A threshold batch resolves against the accepted cool mode, not the
+    # stale heat state, so the cooling side is not dropped
+    _write_chars(hk_driver, acc, {CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0})
+    await hass.async_block_till_done()
+
+    assert len(call_set_temperature) == 1
+    assert call_set_temperature[0].data[ATTR_TEMPERATURE] == pytest.approx(
+        22.0, abs=0.1
+    )
+
+    # Once the entity reports a mode, its state is authoritative again
+    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    await hass.async_block_till_done()
+    assert acc._pending_mode is None
+
+
 async def test_heatercooler_batch_resolves_after_prior_batch(
     hass: HomeAssistant, hk_driver: HomeDriver
 ) -> None:

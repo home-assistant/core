@@ -300,6 +300,10 @@ class HeaterCooler(HomeKitClimateAccessory):
             self._last_known_mode = self._hk_to_ha_target[default_target]
 
         self._write_lock = asyncio.Lock()
+        # A mode the entity accepted but does not report yet; push
+        # integrations can return from the service before their state
+        # callback arrives.
+        self._pending_mode: HVACMode | None = None
 
         self.async_update_state(state)
 
@@ -339,6 +343,11 @@ class HeaterCooler(HomeKitClimateAccessory):
                 # Turning on activates the last known mode, so setpoints in
                 # the same batch resolve against it instead of the off state.
                 requested_mode = self._last_known_mode
+            if requested_mode is None:
+                # A just accepted mode stays effective until the entity
+                # reports it, so a following batch does not resolve against
+                # the pre-switch state.
+                requested_mode = self._pending_mode
 
             # Active/mode changes are handled first as they gate the others.
             self._handle_active_mode_changes(
@@ -359,6 +368,8 @@ class HeaterCooler(HomeKitClimateAccessory):
                     {ATTR_ENTITY_ID: self.entity_id, **service_data},
                 ):
                     return
+                if service_name == SERVICE_SET_HVAC_MODE:
+                    self._pending_mode = service_data[ATTR_HVAC_MODE]
                 # The remembered mode mirrors the accepted target, so a
                 # rejected mode is not restored later.
                 if commit_mode:
@@ -572,6 +583,9 @@ class HeaterCooler(HomeKitClimateAccessory):
         """Update state without rechecking the device features."""
         attributes = new_state.attributes
         current_mode = try_parse_enum(HVACMode, new_state.state)
+        if current_mode is not None:
+            # The entity reported a mode, so its state is authoritative again
+            self._pending_mode = None
         if current_mode and (tgt := self._hk_target_mode(current_mode)) is not None:
             self._last_known_mode = current_mode
             self.char_target_state.set_value(tgt)
