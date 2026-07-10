@@ -291,6 +291,46 @@ async def test_coordinator_dhw_config_update_error(
     assert mock_bsblan.hot_water_schedule.called
 
 
+async def test_slow_interval_poll_preserves_cached_schedule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test interval polls keep the cached schedule without re-fetching it.
+
+    The schedule is fetched only off the interval (on startup and after a
+    write). An interval poll must refresh the config while carrying the cached
+    schedule over, without issuing a schedule request.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    slow_coordinator = mock_config_entry.runtime_data.slow_coordinator
+    cached_schedule = slow_coordinator.data.dhw_schedule
+    assert cached_schedule is not None
+
+    # Reset call counts recorded during the startup refresh so we only observe
+    # what the interval poll does.
+    mock_bsblan.hot_water_config.reset_mock()
+    mock_bsblan.hot_water_schedule.reset_mock()
+
+    # Advance time to trigger a slow interval poll.
+    freezer.tick(delta=timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The interval poll refreshes the config but never fetches the schedule.
+    assert mock_bsblan.hot_water_config.called
+    assert not mock_bsblan.hot_water_schedule.called
+
+    # The cached schedule is preserved across the interval poll.
+    assert slow_coordinator.data.dhw_schedule == cached_schedule
+
+
 async def test_coordinator_slow_first_fetch_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
