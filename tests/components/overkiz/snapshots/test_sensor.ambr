@@ -1544,7 +1544,7 @@
     'state': '44962',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.birch_residence_yutaki_domestic_hot_water_energy_electric_energy_consumption-entry]
+# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.my_house_yutaki_domestic_hot_water_energy_electric_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1560,7 +1560,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.birch_residence_yutaki_domestic_hot_water_energy_electric_energy_consumption',
+    'entity_id': 'sensor.my_house_yutaki_domestic_hot_water_energy_electric_energy_consumption',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1586,7 +1586,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.birch_residence_yutaki_domestic_hot_water_energy_electric_energy_consumption-state]
+# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.my_house_yutaki_domestic_hot_water_energy_electric_energy_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
@@ -1595,14 +1595,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.birch_residence_yutaki_domestic_hot_water_energy_electric_energy_consumption',
+    'entity_id': 'sensor.my_house_yutaki_domestic_hot_water_energy_electric_energy_consumption',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '27857',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.birch_residence_yutaki_domestic_hot_water_energy_electric_power_consumption-entry]
+# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.my_house_yutaki_domestic_hot_water_energy_electric_power_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1618,7 +1618,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.birch_residence_yutaki_domestic_hot_water_energy_electric_power_consumption',
+    'entity_id': 'sensor.my_house_yutaki_domestic_hot_water_energy_electric_power_consumption',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1644,7 +1644,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.birch_residence_yutaki_domestic_hot_water_energy_electric_power_consumption-state]
+# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.my_house_yutaki_domestic_hot_water_energy_electric_power_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
@@ -1653,14 +1653,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.birch_residence_yutaki_domestic_hot_water_energy_electric_power_consumption',
+    'entity_id': 'sensor.my_house_yutaki_domestic_hot_water_energy_electric_power_consumption',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5885',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.birch_residence_yutaki_outdoor_ambient_temperature-entry]
+# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.my_house_yutaki_outdoor_ambient_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1676,7 +1676,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.birch_residence_yutaki_outdoor_ambient_temperature',
+    'entity_id': 'sensor.my_house_yutaki_outdoor_ambient_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1702,7 +1702,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.birch_residence_yutaki_outdoor_ambient_temperature-state]
+# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.my_house_yutaki_outdoor_ambient_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1711,14 +1711,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.birch_residence_yutaki_outdoor_ambient_temperature',
+    'entity_id': 'sensor.my_house_yutaki_outdoor_ambient_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-1',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.birch_residence_yutaki_space_heating_energy_electric_energy_consumption-entry]
+# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.my_house_yutaki_space_heating_energy_electric_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1734,7 +1734,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.birch_residence_yutaki_space_heating_energy_electric_energy_consumption',
+    'entity_id': 'sensor.my_house_yutaki_space_heating_energy_electric_energy_consumption',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1760,7 +1760,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.birch_residence_yutaki_space_heating_energy_electric_energy_consumption-state]
+# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.my_house_yutaki_space_heating_energy_electric_energy_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
@@ -1769,14 +1769,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.birch_residence_yutaki_space_heating_energy_electric_energy_consumption',
+    'entity_id': 'sensor.my_house_yutaki_space_heating_energy_electric_energy_consumption',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '41668',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.birch_residence_yutaki_space_heating_energy_electric_power_consumption-entry]
+# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.my_house_yutaki_space_heating_energy_electric_power_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1792,7 +1792,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.birch_residence_yutaki_space_heating_energy_electric_power_consumption',
+    'entity_id': 'sensor.my_house_yutaki_space_heating_energy_electric_power_consumption',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1818,7 +1818,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.birch_residence_yutaki_space_heating_energy_electric_power_consumption-state]
+# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.my_house_yutaki_space_heating_energy_electric_power_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
@@ -1827,14 +1827,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.birch_residence_yutaki_space_heating_energy_electric_power_consumption',
+    'entity_id': 'sensor.my_house_yutaki_space_heating_energy_electric_power_consumption',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5554',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.birch_residence_yutaki_yutaki_zone_1_room_ambient_temperature-entry]
+# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.my_house_yutaki_yutaki_zone_1_room_ambient_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1850,7 +1850,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.birch_residence_yutaki_yutaki_zone_1_room_ambient_temperature',
+    'entity_id': 'sensor.my_house_yutaki_yutaki_zone_1_room_ambient_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1876,7 +1876,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.birch_residence_yutaki_yutaki_zone_1_room_ambient_temperature-state]
+# name: test_sensor_entities_snapshot[cloud_hi_kumo_europe.json][sensor.my_house_yutaki_yutaki_zone_1_room_ambient_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -1885,7 +1885,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.birch_residence_yutaki_yutaki_zone_1_room_ambient_temperature',
+    'entity_id': 'sensor.my_house_yutaki_yutaki_zone_1_room_ambient_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

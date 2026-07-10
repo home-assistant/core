@@ -52,7 +52,7 @@ COZYTOUCH_DHW = FixtureDevice(
 YUTAKI = FixtureDevice(
     "setup/cloud_hi_kumo_europe.json",
     "modbus://1234-5678-2284/5416194/1#1",
-    "sensor.birch_residence_yutaki_outdoor_ambient_temperature",
+    "sensor.my_house_yutaki_outdoor_ambient_temperature",
 )
 
 SNAPSHOT_FIXTURES = [
