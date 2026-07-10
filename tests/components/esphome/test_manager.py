@@ -1933,8 +1933,8 @@ async def test_assist_in_progress_issue_deleted(
     Remove this cleanup after 2026.4
     """
     entry = entity_registry.async_get_or_create(
-        domain=DOMAIN,
-        platform="binary_sensor",
+        domain="binary_sensor",
+        platform=DOMAIN,
         unique_id="11:22:33:44:55:AA-assist_in_progress",
     )
     ir.async_create_issue(
@@ -1956,7 +1956,7 @@ async def test_assist_in_progress_issue_deleted(
     )
     assert (
         entity_registry.async_get_entity_id(
-            DOMAIN, "binary_sensor", "11:22:33:44:55:AA-assist_in_progress"
+            "binary_sensor", DOMAIN, "11:22:33:44:55:AA-assist_in_progress"
         )
         is None
     )
@@ -2730,6 +2730,19 @@ async def test_zwave_proxy_request_home_id_change(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test Z-Wave proxy request handler with HOME_ID_CHANGE request."""
+    noise_psk = "cD3vRGhSJTMgc2VjdXJlIG5vaXNlIHBzayBoZXJlIQ=="
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test-zwave-proxy",
+            CONF_NOISE_PSK: noise_psk,
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
 
     device_info = {
         "name": "test-zwave-proxy",
@@ -2739,6 +2752,7 @@ async def test_zwave_proxy_request_home_id_change(
 
     await mock_esphome_device(
         mock_client=mock_client,
+        entry=entry,
         device_info=device_info,
     )
     await hass.async_block_till_done()
@@ -2771,6 +2785,10 @@ async def test_zwave_proxy_request_home_id_change(
         # Verify no flow was created for non-HOME_ID_CHANGE requests
         mock_create_flow.assert_not_called()
 
+    # A dynamically provisioned key is written to the config entry but cannot
+    # be applied to the already connected client, so the client reports no PSK.
+    mock_client.noise_psk = None
+
     # Create a mock request with HOME_ID_CHANGE type and zwave_home_id as bytes
     zwave_home_id = 1234567890
     request = ZWaveProxyRequest(
@@ -2792,6 +2810,8 @@ async def test_zwave_proxy_request_home_id_change(
         call_args = mock_create_flow.call_args
         assert call_args[0][0] == hass
         assert call_args[0][1] == "zwave_js"
+        # The noise PSK is taken from the config entry, not the live client
+        assert call_args[0][3].noise_psk == noise_psk
 
 
 async def test_no_zwave_proxy_subscribe_without_feature_flags(

@@ -74,6 +74,8 @@ class SupportedModels(StrEnum):
     WEATHER_STATION = "weather_station"
     STANDING_FAN = "standing_fan"
     CANDLE_WARMER_LAMP = "candle_warmer_lamp"
+    RGBIC_NEON_ROPE_LIGHT = "rgbic_neon_rope_light"
+    RGBIC_NEON_WIRE_ROPE_LIGHT = "rgbic_neon_wire_rope_light"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -126,6 +128,10 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.LOCK_PRO_WIFI: SupportedModels.LOCK_PRO_WIFI,
     SwitchbotModel.STANDING_FAN: SupportedModels.STANDING_FAN,
     SwitchbotModel.CANDLE_WARMER_LAMP: SupportedModels.CANDLE_WARMER_LAMP,
+    SwitchbotModel.RGBIC_NEON_ROPE_LIGHT: SupportedModels.RGBIC_NEON_ROPE_LIGHT,
+    SwitchbotModel.RGBIC_NEON_WIRE_ROPE_LIGHT: (
+        SupportedModels.RGBIC_NEON_WIRE_ROPE_LIGHT
+    ),
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -177,6 +183,8 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.LOCK_PRO_WIFI,
     SwitchbotModel.CANDLE_WARMER_LAMP,
     SwitchbotModel.CIRCULATOR_FAN_PRO,
+    SwitchbotModel.RGBIC_NEON_ROPE_LIGHT,
+    SwitchbotModel.RGBIC_NEON_WIRE_ROPE_LIGHT,
 }
 
 ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
@@ -212,6 +220,8 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.LOCK_PRO_WIFI: switchbot.SwitchbotLock,
     SwitchbotModel.CANDLE_WARMER_LAMP: switchbot.SwitchbotCandleWarmerLamp,
     SwitchbotModel.CIRCULATOR_FAN_PRO: switchbot.SwitchbotCirculatorFanPro,
+    SwitchbotModel.RGBIC_NEON_ROPE_LIGHT: switchbot.SwitchbotRgbicNeonLight,
+    SwitchbotModel.RGBIC_NEON_WIRE_ROPE_LIGHT: switchbot.SwitchbotRgbicNeonLight,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
