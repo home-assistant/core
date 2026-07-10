@@ -92,5 +92,16 @@
         "name": "Water today"
       }
     }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the device {device_id}: {error}"
+    },
+    "connection_error": {
+      "message": "An error occurred while connecting to the device {device_id}: {error}"
+    },
+    "unknown_device": {
+      "message": "The device type for {device_id} is unknown or unsupported: {error}"
+    }
   }
 }
