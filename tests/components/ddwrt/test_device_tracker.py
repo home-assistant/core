@@ -155,7 +155,9 @@ async def test_legacy_platform_creates_issue_on_cannot_connect(
     )
     await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(DOMAIN, "yaml_import_cannot_connect")
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"yaml_import_cannot_connect_{MOCK_CONFIG['host']}"
+    )
     assert issue is not None
     assert issue.translation_key == "yaml_import_cannot_connect"
     assert issue.translation_placeholders == {"host": MOCK_CONFIG["host"]}

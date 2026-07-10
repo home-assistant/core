@@ -67,11 +67,13 @@ async def async_setup_scanner(
         data=import_data,
     )
 
+    issue_id = f"yaml_import_cannot_connect_{config[CONF_HOST]}"
+
     if result["type"] is FlowResultType.ABORT and result["reason"] == "cannot_connect":
         ir.async_create_issue(
             hass,
             DOMAIN,
-            "yaml_import_cannot_connect",
+            issue_id,
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.ERROR,
@@ -80,7 +82,7 @@ async def async_setup_scanner(
         )
         return False
 
-    ir.async_delete_issue(hass, DOMAIN, "yaml_import_cannot_connect")
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
 
     ir.async_create_issue(
         hass,
