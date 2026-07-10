@@ -1525,7 +1525,7 @@ async def test_heatercooler_heat_cool_no_current_temp_diff(
 async def test_heatercooler_derive_action_auto_without_thresholds(
     hass: HomeAssistant, hk_driver: HomeDriver
 ) -> None:
-    """Test auto mode without thresholds derives to idle regardless of temp."""
+    """Test auto mode action derivation without a target temperature range."""
     entity_id = "climate.test"
     base_attrs = {
         ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
@@ -1540,10 +1540,34 @@ async def test_heatercooler_derive_action_auto_without_thresholds(
     acc.run()
     await hass.async_block_till_done()
 
-    # Auto mode only inspects the high/low thresholds; with none present the
-    # derived state is idle regardless of the current temperature.
+    # Without any setpoint the derived state is idle
     hass.states.async_set(
         entity_id, HVACMode.AUTO, {**base_attrs, ATTR_CURRENT_TEMPERATURE: 21.1}
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == HC_IDLE
+
+    # A single setpoint drives both sides of the hysteresis band
+    hass.states.async_set(
+        entity_id,
+        HVACMode.AUTO,
+        {**base_attrs, ATTR_TEMPERATURE: 21.0, ATTR_CURRENT_TEMPERATURE: 23.0},
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == HC_COOLING
+
+    hass.states.async_set(
+        entity_id,
+        HVACMode.AUTO,
+        {**base_attrs, ATTR_TEMPERATURE: 21.0, ATTR_CURRENT_TEMPERATURE: 19.0},
+    )
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == HC_HEATING
+
+    hass.states.async_set(
+        entity_id,
+        HVACMode.AUTO,
+        {**base_attrs, ATTR_TEMPERATURE: 21.0, ATTR_CURRENT_TEMPERATURE: 21.1},
     )
     await hass.async_block_till_done()
     assert acc.char_current_state.value == HC_IDLE

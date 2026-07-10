@@ -741,6 +741,8 @@ class HomeKit:
     ) -> None:
         """Recreate removed accessories in bridge mode."""
         for entity_id in removed:
+            # Eligibility is re-evaluated when the accessory is recreated.
+            self._heater_cooler_candidates.pop(entity_id, None)
             if not (state := self.hass.states.get(entity_id)):
                 _LOGGER.warning(
                     "The underlying entity %s disappeared during reload", entity_id
@@ -749,7 +751,6 @@ class HomeKit:
             if acc := self.add_bridge_accessory(state):
                 acc.run()
         self._async_update_accessories_hash()
-        # Recreated accessories can add new repair candidates.
         self._async_update_heater_cooler_issues()
 
     @callback

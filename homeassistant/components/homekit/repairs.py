@@ -45,6 +45,7 @@ async def async_create_fix_flow(
     """Create flow."""
     # The only issue this integration creates always carries these keys.
     assert data is not None
-    entry = hass.config_entries.async_get_entry(cast(str, data["entry_id"]))
+    issue_data = cast(dict[str, str], data)
+    entry = hass.config_entries.async_get_entry(issue_data["entry_id"])
     assert entry is not None
-    return HeaterCoolerCandidateRepairFlow(entry, cast(str, data["entity_id"]))
+    return HeaterCoolerCandidateRepairFlow(entry, issue_data["entity_id"])

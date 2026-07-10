@@ -218,6 +218,49 @@ async def test_heater_cooler_choice_survives_restart(
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
+async def test_reload_accessory_resyncs_issue(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test reloading an accessory keeps its repair issue in sync."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entry.add_to_hass(hass)
+    hass_storage[_aid_storage_key(entry.entry_id)] = {
+        "version": 1,
+        "data": {"allocations": {ENTITY_ID: 1234567}},
+    }
+    hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
+
+    homekit = await _async_start_bridge(hass, entry)
+    issue_id = _issue_id(entry.entry_id, ENTITY_ID)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    # Losing the fan speeds makes the entity ineligible, so a reload
+    # removes the stale issue
+    hass.states.async_set(
+        ENTITY_ID,
+        HVACMode.COOL,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    await homekit.async_reload_accessories([ENTITY_ID])
+    await hass.async_block_till_done()
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    # Regaining the capability recreates the issue on reload
+    hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
+    await homekit.async_reload_accessories([ENTITY_ID])
+    await hass.async_block_till_done()
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    await _async_stop_bridge(homekit)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
 async def test_explicit_type_never_raises_issue(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],

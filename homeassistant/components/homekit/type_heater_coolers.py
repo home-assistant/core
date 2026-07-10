@@ -536,6 +536,9 @@ class HeaterCooler(HomeKitClimateAccessory):
         if mode in (HVACMode.HEAT_COOL, HVACMode.AUTO):
             cool_above = attributes.get(ATTR_TARGET_TEMP_HIGH)
             heat_below = attributes.get(ATTR_TARGET_TEMP_LOW)
+            if cool_above is None and heat_below is None:
+                # Some integrations run auto from a single setpoint.
+                cool_above = heat_below = attributes.get(ATTR_TEMPERATURE)
         elif mode == HVACMode.COOL:
             cool_above = attributes.get(ATTR_TEMPERATURE)
             heat_below = None

@@ -603,14 +603,25 @@ class OptionsFlowHandler(OptionsFlow):
         """Choose entities to include from the domain on the bridge."""
         hk_options = self.hk_options
         domains = hk_options[CONF_DOMAINS]
+        entity_filter: EntityFilterDict
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
+            entity_filter = _async_build_entities_filter(domains, entities)
             self.included_cameras = _async_entities_in_domain(entities, CAMERA_DOMAIN)
-            self.included_climates = _async_entities_in_domain(entities, CLIMATE_DOMAIN)
-            hk_options[CONF_FILTER] = _async_build_entities_filter(domains, entities)
+            if CLIMATE_DOMAIN in entity_filter[CONF_INCLUDE_DOMAINS]:
+                # The whole domain is included when none of its entities
+                # are selected explicitly.
+                self.included_climates = _async_get_matching_entities(
+                    self.hass, [CLIMATE_DOMAIN]
+                )
+            else:
+                self.included_climates = _async_entities_in_domain(
+                    entities, CLIMATE_DOMAIN
+                )
+            hk_options[CONF_FILTER] = entity_filter
             return await self.async_step_cameras()
 
-        entity_filter: EntityFilterDict = hk_options.get(CONF_FILTER, {})
+        entity_filter = hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
         all_supported_entities = _async_get_matching_entities(
             self.hass, domains, include_entity_category=True, include_hidden=True

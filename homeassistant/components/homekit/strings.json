@@ -54,7 +54,7 @@
         "title": "Camera configuration"
       },
       "climate": {
-        "description": "Choose which accessory each climate entity uses in HomeKit. Heater Cooler puts the mode, temperature, fan speed, and swing on one air conditioner style tile; Thermostat is the classic temperature dial with a separate fan. Automatic picks based on what the entity supports. Changing the accessory type keeps the room and name, but HomeKit scenes or automations that used the old controls may need to be recreated.",
+        "description": "Choose which accessory each climate entity uses in HomeKit. Heater Cooler puts the mode, temperature, fan speed, and swing on one air conditioner style tile; Thermostat is the classic temperature dial with a separate fan. Automatic keeps the accessory the entity already uses and picks the best fit when it is bridged for the first time. Changing the accessory type keeps the room and name, but HomeKit scenes or automations that used the old controls may need to be recreated.",
         "title": "Climate accessory configuration"
       },
       "exclude": {
