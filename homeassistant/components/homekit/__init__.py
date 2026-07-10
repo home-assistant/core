@@ -606,6 +606,10 @@ class HomeKit:
         self.bridge: HomeBridge | None = None
         self._reset_lock = asyncio.Lock()
         self._cancel_reload_dispatcher: CALLBACK_TYPE | None = None
+        # True while running the first ever start of this entry (no
+        # persisted pairing state yet); accessory mode uses it to tell a
+        # brand new entry from one that predates the HeaterCooler.
+        self._first_ever_start = False
         # Existing climate entities that would route to the HeaterCooler but
         # stay on the Thermostat until the user opts in through a repair,
         # mapped to their friendly name for the issue text.
@@ -821,9 +825,10 @@ class HomeKit:
     ) -> None:
         """Resolve which accessory a climate entity uses.
 
-        An explicit type in the entity config always wins and updates the
-        stored routing, so switching back to automatic keeps the accessory
-        the entity already uses. In bridge mode an entity that has never been
+        An explicit type in the entity config always wins, even for
+        entities with a humidity setpoint, and updates the stored routing,
+        so switching back to automatic keeps the accessory the entity
+        already uses. In bridge mode an entity that has never been
         bridged gets the HeaterCooler when capable, and the choice is written
         down so it survives restarts. Anything else keeps the Thermostat and
         is tracked as a repair candidate.
@@ -968,6 +973,7 @@ class HomeKit:
             self.setup, async_zc_instance, uuid
         )
         assert self.driver is not None
+        self._first_ever_start = not loaded_from_disk
 
         if not await self._async_create_accessories():
             return
@@ -1087,8 +1093,9 @@ class HomeKit:
         state = entity_states[0]
         conf = self._config.get(state.entity_id, {}).copy()
         # Accessory mode has no aid allocation to tell new from existing,
-        # so the entity keeps the Thermostat and is offered the repair.
-        self._async_resolve_climate_type(state, conf, allow_auto=False)
+        # so only a brand new pairing routes automatically; anything else
+        # keeps the Thermostat and is offered the repair.
+        self._async_resolve_climate_type(state, conf, allow_auto=self._first_ever_start)
         acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
         if acc is None:
             _LOGGER.error(

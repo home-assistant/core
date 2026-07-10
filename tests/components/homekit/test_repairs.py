@@ -107,11 +107,23 @@ async def _async_stop_bridge(homekit: HomeKit) -> None:
     await homekit.aid_storage.async_save()
 
 
+_ORIGINAL_SETUP = HomeKit.setup
+
+
+def _setup_with_existing_pairing(
+    homekit: HomeKit, async_zeroconf_instance: Any, uuid: str
+) -> bool:
+    """Run the real driver setup but report persisted pairing state."""
+    _ORIGINAL_SETUP(homekit, async_zeroconf_instance, uuid)
+    return True
+
+
 async def _async_start_bridge(
     hass: HomeAssistant,
     entry: MockConfigEntry,
     entity_config: dict[str, Any] | None = None,
     homekit_mode: str = HOMEKIT_MODE_BRIDGE,
+    existing_pairing: bool = False,
 ) -> HomeKit:
     """Start a HomeKit instance exposing the demo climate entity."""
     hass.data.setdefault(PERSIST_LOCK_DATA, asyncio.Lock())
@@ -138,9 +150,11 @@ async def _async_start_bridge(
         entry_id=entry.entry_id,
         entry_title=entry.title,
     )
+    setup_target = _setup_with_existing_pairing if existing_pairing else _ORIGINAL_SETUP
     with (
         patch(f"{PATH_HOMEKIT}.async_show_setup_message"),
         patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
+        patch(f"{PATH_HOMEKIT}.HomeKit.setup", setup_target),
     ):
         await homekit.async_start()
     await hass.async_block_till_done()
@@ -357,7 +371,7 @@ async def test_accessory_mode_reload_resyncs_issue(
     hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
 
     homekit = await _async_start_bridge(
-        hass, entry, homekit_mode=HOMEKIT_MODE_ACCESSORY
+        hass, entry, homekit_mode=HOMEKIT_MODE_ACCESSORY, existing_pairing=True
     )
     issue_id = _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
@@ -372,6 +386,68 @@ async def test_accessory_mode_reload_resyncs_issue(
     await homekit.async_reload_accessories([ENTITY_ID])
     await hass.async_block_till_done()
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    await _async_stop_bridge(homekit)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
+async def test_accessory_mode_new_pairing_routes_heater_cooler(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a brand new accessory mode pairing picks the HeaterCooler."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entry.add_to_hass(hass)
+    hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
+
+    homekit = await _async_start_bridge(
+        hass, entry, homekit_mode=HOMEKIT_MODE_ACCESSORY
+    )
+
+    assert type(homekit.driver.accessory).__name__ == "HeaterCooler"
+    assert not issue_registry.async_get_issue(
+        DOMAIN, _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
+    )
+    await _async_stop_bridge(homekit)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
+async def test_explicit_heater_cooler_wins_over_humidity_safeguard(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an explicit heater_cooler type wins for a humidity entity."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entry.add_to_hass(hass)
+    hass_storage[get_aid_storage_filename_for_entry_id(entry.entry_id)] = {
+        "version": 1,
+        "data": {"allocations": {ENTITY_ID: 1234567}},
+    }
+    hass.states.async_set(
+        ENTITY_ID,
+        HVACMode.COOL,
+        {
+            **CAPABLE_ATTRS,
+            ATTR_SUPPORTED_FEATURES: (
+                CAPABLE_ATTRS[ATTR_SUPPORTED_FEATURES]
+                | ClimateEntityFeature.TARGET_HUMIDITY
+            ),
+        },
+    )
+
+    homekit = await _async_start_bridge(
+        hass, entry, {ENTITY_ID: {CONF_TYPE: "heater_cooler"}}
+    )
+
+    accessories = list(homekit.bridge.accessories.values())
+    assert type(accessories[0]).__name__ == "HeaterCooler"
+    assert not issue_registry.async_get_issue(
+        DOMAIN, _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
+    )
     await _async_stop_bridge(homekit)
 
 

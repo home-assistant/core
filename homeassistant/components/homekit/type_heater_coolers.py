@@ -336,12 +336,21 @@ class HeaterCooler(HomeKitClimateAccessory):
                     "%s: Ignoring off request; entity has no off mode",
                     self.entity_id,
                 )
+                # The write already flipped the characteristic; flip it
+                # back so HomeKit keeps showing the unit as on.
+                self.char_active.value = 1
+                self.char_active.notify()
         elif target_mode is not None:
             if hass_mode := self._hk_to_ha_target.get(target_mode):
                 service_calls.append(
                     (SERVICE_SET_HVAC_MODE, {ATTR_HVAC_MODE: hass_mode})
                 )
                 self._last_known_mode = hass_mode
+            elif (restore := self._hk_target_mode(self._last_known_mode)) is not None:
+                # The write already changed the characteristic to a target
+                # the entity cannot enter, so put it back on the last mode.
+                self.char_target_state.value = restore
+                self.char_target_state.notify()
         elif active == 1:
             currently_active = current_state is not None and (
                 current_state.state

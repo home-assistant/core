@@ -728,6 +728,38 @@ async def test_heatercooler_set_active_off_no_off_mode(
     await hass.async_block_till_done()
 
     assert len(call_set_hvac_mode) == 0
+    # The rejected write must not leave HomeKit showing the unit as off
+    assert acc.char_active.value == 1
+
+
+async def test_heatercooler_unsupported_target_mode_write_restored(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test an unsupported target mode write restores the characteristic."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
+    }
+
+    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.char_target_state.value == HC_TARGET_COOL
+
+    # Heat is not supported; the write must not reach Home Assistant and
+    # the characteristic must return to the cool target
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
+    _write_chars(hk_driver, acc, {CHAR_TARGET_HEATER_COOLER_STATE: HC_TARGET_HEAT})
+    await hass.async_block_till_done()
+
+    assert len(call_set_hvac_mode) == 0
+    assert acc.char_target_state.value == HC_TARGET_COOL
 
 
 async def test_heatercooler_set_active_on(
