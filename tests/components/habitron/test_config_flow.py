@@ -3,7 +3,7 @@
 import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from habitron_client import HabitronTimeoutError
+from habitron_client import HabitronError, HabitronTimeoutError
 import pytest
 
 from homeassistant import config_entries
@@ -535,6 +535,49 @@ async def test_user_step_prefills_host_from_discovery(
             default = key.default()
             break
     assert default == "10.0.0.99"
+
+
+async def test_user_step_survives_discovery_failure(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """A discovery error is swallowed so the manual host form is still shown."""
+    with patch(
+        "homeassistant.components.habitron.config_flow.discover_smarthubs",
+        new=AsyncMock(side_effect=HabitronError("scan blew up")),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_user_flow_own_ip_canonicalizes_unique_id(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh,
+) -> None:
+    """An own-IP host is canonicalized to ``local`` before deriving the id.
+
+    ``validate_input`` rewrites an own IP to the ``local`` sentinel, so the
+    fallback unique_id must be built from the canonical host to stay consistent.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    # 192.168.1.10 is the (mocked) own source IP.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"habitron_host": "192.168.1.10", "websock_token": ""},
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["habitron_host"] == "local"
+    assert result["result"].unique_id == "habitron_local"
 
 
 async def test_user_flow_picks_up_serial_from_discovery_probe(

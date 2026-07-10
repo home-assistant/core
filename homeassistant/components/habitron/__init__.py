@@ -76,12 +76,18 @@ async def async_remove_config_entry_device(
     config_entry: HabitronConfigEntry,
     device_entry: DeviceEntry,
 ) -> bool:
-    """Remove a config entry from a device."""
+    """Allow removing only devices whose Habitron member is gone from the bus.
+
+    The hub, the router and every module still present in the current model are
+    live devices and must not be deleted by hand; only a device whose uid no
+    longer exists on the bus (a leftover of a removed module) may be removed.
+    """
     smhub = config_entry.runtime_data.smart_hub
+    present_uids = {smhub.uid, smhub.router.uid}
+    present_uids.update(module.uid for module in smhub.router.modules)
     return not any(
-        identifier
+        identifier[0] == DOMAIN and identifier[1] in present_uids
         for identifier in device_entry.identifiers
-        if identifier[0] == DOMAIN and identifier[1] == smhub.uid
     )
 
 

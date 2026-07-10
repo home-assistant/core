@@ -228,14 +228,30 @@ async def test_get_smhub_info_populates_fields() -> None:
         },
     }
     comm._client.get_smhub_info = AsyncMock(return_value=info)
-    with patch(
-        "homeassistant.components.habitron.communicate.os.getenv", return_value=None
-    ):
-        out = await comm.get_smhub_info()
+    out = await comm.get_smhub_info()
     assert out["software"]["version"] == "1.0"
     assert comm.com_version == "1.0"
     assert comm.com_mac == "AA:BB"
     assert comm.com_ip == "10.0.0.5"
+    # A reported slug means the target hub runs as the HA add-on.
+    assert comm.slugname == "habitron"
+    assert comm.is_addon is True
+
+
+async def test_get_smhub_info_external_hub_has_none_slug() -> None:
+    """A standalone hub reports the literal "none" slug, so is_addon is False."""
+    comm = _make_comm()
+    info = {
+        "software": {"version": "1.0", "slug": "none"},
+        "hardware": {
+            "platform": {"type": "Raspberry Pi 4"},
+            "network": {"ip": "10.0.0.5", "host": "smarthub", "lan mac": "AA:BB"},
+        },
+    }
+    comm._client.get_smhub_info = AsyncMock(return_value=info)
+    await comm.get_smhub_info()
+    assert comm.slugname == ""
+    assert comm.is_addon is False
 
 
 # ---------------------------------------------------------------------------

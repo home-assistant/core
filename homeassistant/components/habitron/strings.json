@@ -111,7 +111,7 @@
   },
   "issues": {
     "router_system_error": {
-      "description": "The Habitron router detected an error, e.g. a module communication error.",
+      "description": "Please check the module.",
       "title": "Router system error"
     }
   }

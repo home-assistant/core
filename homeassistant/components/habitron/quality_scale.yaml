@@ -55,7 +55,11 @@ rules:
   test-coverage: done
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics:
+    status: exempt
+    comment: |
+      The integration exposes only local, non-sensitive bus state through its
+      entities; it does not provide a separate diagnostics platform.
   discovery: done
   discovery-update-info: done
   docs-data-update: done
@@ -78,7 +82,12 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      Host, token and scan-interval changes are applied through the
+      options-update listener, which reloads the entry; a dedicated
+      reconfigure flow is not provided.
   repair-issues: done
   stale-devices: done
 

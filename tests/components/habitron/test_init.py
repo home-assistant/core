@@ -2,7 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from habitron_client import HabitronError
+from habitron_client import HabitronError, HabitronTimeoutError
+import pytest
 
 from homeassistant.components.habitron import async_remove_config_entry_device
 from homeassistant.components.habitron.const import DOMAIN
@@ -73,21 +74,29 @@ async def test_async_remove_config_entry_device(
     hass: HomeAssistant,
     setup_integration: MockConfigEntry,
 ) -> None:
-    """A device matching the hub UID cannot be removed standalone."""
+    """Only devices whose Habitron member is gone from the bus may be removed."""
 
     entry = setup_integration
     smhub = entry.runtime_data.smart_hub
+    # Populate the model with a router uid and a live module so their devices
+    # are treated as present.
+    smhub.router.uid = "router-uid"
+    smhub.router.modules = [MagicMock(uid="module-uid")]
     dev_reg = dr.async_get(hass)
-    hub_device = dev_reg.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, smhub.uid)},
-        name="Hub",
-    )
-    # Hub device identifies the smhub itself → must NOT be removable.
-    assert await async_remove_config_entry_device(hass, entry, hub_device) is False, (
-        f"Expected False; smhub.uid={smhub.uid!r}, identifiers={hub_device.identifiers!r}"
-    )
 
+    # Hub, router and a still-present module all identify live devices → NOT
+    # removable.
+    for present_uid in (smhub.uid, "router-uid", "module-uid"):
+        device = dev_reg.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, present_uid)},
+            name=f"Device {present_uid}",
+        )
+        assert await async_remove_config_entry_device(hass, entry, device) is False, (
+            f"Expected {present_uid!r} to be non-removable"
+        )
+
+    # A uid no longer on the bus (a removed module) → removable.
     other_device = dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "some-other-uid")},
@@ -165,6 +174,41 @@ async def test_unload_entry_returns_false_when_platform_unload_fails(
     ):
         ok = await hass.config_entries.async_unload(setup_integration.entry_id)
     assert ok is False
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        TimeoutError("silent"),
+        HabitronTimeoutError("silent"),
+        ConnectionRefusedError("refused"),
+        OSError("network down"),
+        HabitronError("protocol glitch"),
+    ],
+)
+async def test_setup_entry_post_refresh_errors_mark_retry(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_config_entry: MockConfigEntry,
+    mock_habitron_client: MagicMock,
+    mock_smart_hub_setup: None,
+    mock_coordinator_refresh: AsyncMock,
+    side_effect: Exception,
+) -> None:
+    """Connection errors raised after the first refresh surface as SETUP_RETRY.
+
+    The first refresh succeeds (stubbed); an error raised by the stale-device
+    cleanup that follows exercises ``async_setup_entry``'s own except handlers,
+    which translate each error class into ``ConfigEntryNotReady``.
+    """
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.habitron._async_cleanup_stale_devices",
+        side_effect=side_effect,
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_removes_stale_device(

@@ -381,6 +381,13 @@ def test_logic_sensor_value_uses_idx_not_nmbr() -> None:
         (EKEY_FINGER_DESCRIPTION, "sensors", "Finger"),
         (EKEY_USER_NAME_DESCRIPTION, "sensors", "Identifier"),
         (EKEY_FINGER_NAME_DESCRIPTION, "sensors", "Finger"),
+        # Hub host-diagnostic sensors also push via subscribe_fn so they stay
+        # fresh even though the coordinator uses always_update=False.
+        (MEMORY_DESCRIPTION, "sensors", "Memory free"),
+        (DISK_DESCRIPTION, "sensors", "Disk free"),
+        (CPU_LOAD_DESCRIPTION, "diags", "CPU load"),
+        (CPU_FREQUENCY_DESCRIPTION, "diags", "CPU Frequency"),
+        (CPU_TEMPERATURE_DESCRIPTION, "diags", "CPU Temperature"),
     ],
 )
 async def test_described_sensor_add_listener(
@@ -394,6 +401,7 @@ async def test_described_sensor_add_listener(
     sensor_desc = _make_sensor_descriptor(name=name)
     coord = MagicMock(spec=DataUpdateCoordinator)
     entity = HbtnDescribedSensor(mod, sensor_desc, coord, 0, description)
+    entity.async_write_ha_state = MagicMock()
     with patch(
         "homeassistant.helpers.update_coordinator."
         "CoordinatorEntity.async_added_to_hass",
@@ -433,6 +441,7 @@ async def test_polled_sensor_does_not_subscribe() -> None:
     sensor_desc = _make_sensor_descriptor(name="Humidity")
     coord = MagicMock(spec=DataUpdateCoordinator)
     entity = HbtnDescribedSensor(mod, sensor_desc, coord, 0, HUMIDITY_DESCRIPTION)
+    entity.async_write_ha_state = MagicMock()
     with patch(
         "homeassistant.helpers.update_coordinator."
         "CoordinatorEntity.async_added_to_hass",
@@ -453,6 +462,7 @@ async def test_logic_sensor_push_add_and_remove_listener() -> None:
     logic.type = 5
     coord = MagicMock(spec=DataUpdateCoordinator)
     entity = LogicSensor(mod, logic, coord, 0)
+    entity.async_write_ha_state = MagicMock()
     with patch(
         "homeassistant.helpers.update_coordinator."
         "CoordinatorEntity.async_added_to_hass",
