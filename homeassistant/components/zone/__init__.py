@@ -24,6 +24,7 @@ from homeassistant.const import (  # noqa: F401
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Event,
@@ -149,8 +150,8 @@ def async_in_zones(
                 zone_dist := distance(
                     latitude,
                     longitude,
-                    zone_attrs[ZoneEntityStateAttribute.LATITUDE],
-                    zone_attrs[ZoneEntityStateAttribute.LONGITUDE],
+                    zone_attrs[EntityStateAttribute.LATITUDE],
+                    zone_attrs[EntityStateAttribute.LONGITUDE],
                 )
             )
             is None
@@ -208,8 +209,8 @@ def async_get_enclosing_zones(hass: HomeAssistant, zone_entity_id: str) -> list[
     ):
         return []
     input_attrs = input_zone.attributes
-    input_latitude: float = input_attrs[ZoneEntityStateAttribute.LATITUDE]
-    input_longitude: float = input_attrs[ZoneEntityStateAttribute.LONGITUDE]
+    input_latitude: float = input_attrs[EntityStateAttribute.LATITUDE]
+    input_longitude: float = input_attrs[EntityStateAttribute.LONGITUDE]
     input_radius: float = input_attrs[ZoneEntityStateAttribute.RADIUS]
 
     zones: list[tuple[str, float, float]] = []
@@ -231,8 +232,8 @@ def async_get_enclosing_zones(hass: HomeAssistant, zone_entity_id: str) -> list[
             zone_dist := distance(
                 input_latitude,
                 input_longitude,
-                zone_attrs[ZoneEntityStateAttribute.LATITUDE],
-                zone_attrs[ZoneEntityStateAttribute.LONGITUDE],
+                zone_attrs[EntityStateAttribute.LATITUDE],
+                zone_attrs[EntityStateAttribute.LONGITUDE],
             )
         ) is None:
             continue
@@ -291,8 +292,8 @@ def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -
     zone_dist = distance(
         latitude,
         longitude,
-        zone.attributes[ZoneEntityStateAttribute.LATITUDE],
-        zone.attributes[ZoneEntityStateAttribute.LONGITUDE],
+        zone.attributes[EntityStateAttribute.LATITUDE],
+        zone.attributes[EntityStateAttribute.LONGITUDE],
     )
 
     if zone_dist is None or zone.attributes[ZoneEntityStateAttribute.RADIUS] is None:
@@ -520,8 +521,8 @@ class Zone(collection.CollectionEntity):
     def _generate_attrs(self) -> None:
         """Generate new attrs based on config."""
         self._attr_extra_state_attributes = {
-            ZoneEntityStateAttribute.LATITUDE: self._config[CONF_LATITUDE],
-            ZoneEntityStateAttribute.LONGITUDE: self._config[CONF_LONGITUDE],
+            EntityStateAttribute.LATITUDE: self._config[CONF_LATITUDE],
+            EntityStateAttribute.LONGITUDE: self._config[CONF_LONGITUDE],
             ZoneEntityStateAttribute.RADIUS: self._config[CONF_RADIUS],
             ZoneEntityStateAttribute.PASSIVE: self._config[CONF_PASSIVE],
             ZoneEntityStateAttribute.PERSONS: sorted(self._persons_in_zone),
