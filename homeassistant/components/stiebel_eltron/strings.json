@@ -71,7 +71,7 @@
       "message": "Failed to set target temperature"
     },
     "update_failed": {
-      "message": "Error updating data from the device: {error}"
+      "message": "Error updating data from the device"
     }
   }
 }

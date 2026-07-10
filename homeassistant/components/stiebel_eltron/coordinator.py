@@ -73,5 +73,4 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
-                translation_placeholders={"error": str(exception)},
             ) from exception
