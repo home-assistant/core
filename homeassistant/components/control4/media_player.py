@@ -4,11 +4,11 @@ import base64
 from dataclasses import dataclass, field
 from datetime import timedelta
 import enum
-from functools import cached_property
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
+from propcache.api import cached_property
 from pyControl4.error_handling import C4Exception
 from pyControl4.room import C4Room
 
@@ -16,14 +16,12 @@ from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
-)
-from homeassistant.components.media_player.const import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4CoordinatorEntity
@@ -101,7 +99,7 @@ async def get_rooms(hass: HomeAssistant, entry: Control4ConfigEntry):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: Control4ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Control4 rooms from a config entry."""
     all_rooms = await get_rooms(hass, entry)
@@ -579,8 +577,11 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
             children=children,
         )
 
+    @override
     async def async_browse_media(
-        self, media_content_type: str | None = None, media_content_id: str | None = None
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Return the browse root, or drill into a child node."""
         if media_content_type == CONTROL4_BROWSE_MODE and media_content_id:
@@ -625,8 +626,9 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
             children=children,
         )
 
+    @override
     async def async_play_media(
-        self, media_type: str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Select a source chosen from the browse tree."""
         try:

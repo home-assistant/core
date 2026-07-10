@@ -1,11 +1,11 @@
 """The Control4 integration."""
 
-from functools import cached_property
 import logging
 import random
-from typing import Any
+from typing import Any, override
 
 from aiohttp import client_exceptions
+from propcache.api import cached_property
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
 from pyControl4.error_handling import BadCredentials, InvalidCategory
@@ -123,7 +123,7 @@ async def get_items_of_category(
     except InvalidCategory:
         _LOGGER.warning(
             "Category %s does not exist on this Control4 system, "
-            "entities from this domain will not be set up.",
+            "entities from this domain will not be set up",
             category,
         )
         return []
@@ -289,20 +289,19 @@ class Control4Entity(Entity):
         self._extra_state_attributes["parent item id"] = device_id
         self._attr_should_poll = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to WebSocket push events for this item."""
         await super().async_added_to_hass()
-        await self.hass.async_add_executor_job(
-            self.entry_data[CONF_WEBSOCKET].add_item_callback,
-            self._idx,
-            self._update_callback,
-        )
-        await self.hass.async_add_executor_job(
-            self.entry_data[CONF_WEBSOCKET].add_item_callback,
-            self._device_id,
-            self._update_callback,
-        )
+        websocket = self.entry_data[CONF_WEBSOCKET]
 
+        def _register() -> None:
+            websocket.add_item_callback(self._idx, self._update_callback)
+            websocket.add_item_callback(self._device_id, self._update_callback)
+
+        await self.hass.async_add_executor_job(_register)
+
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe WebSocket callbacks."""
         try:
@@ -319,7 +318,7 @@ class Control4Entity(Entity):
         self, device: int, message: dict[str, Any] | bool
     ) -> None:
         """Handle a WebSocket push event."""
-        if message is False:
+        if not isinstance(message, dict):
             if self._attr_available:
                 _LOGGER.warning(
                     "Control4 entity %s (%s) is unavailable", self.name, self._idx
@@ -344,6 +343,7 @@ class Control4Entity(Entity):
                 else:
                     self._extra_state_attributes[key.upper()] = value
 
+    @override
     @cached_property
     def device_info(self) -> DeviceInfo:
         """Return info of parent Control4 device."""
@@ -356,6 +356,7 @@ class Control4Entity(Entity):
             suggested_area=self._device_area,
         )
 
+    @override
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
@@ -394,6 +395,7 @@ class Control4CoordinatorEntity(CoordinatorEntity[Any]):
         self._extra_state_attributes["item id"] = idx
         self._extra_state_attributes["parent item id"] = device_id
 
+    @override
     @cached_property
     def device_info(self) -> DeviceInfo:
         """Return info of parent Control4 device."""
@@ -406,6 +408,7 @@ class Control4CoordinatorEntity(CoordinatorEntity[Any]):
             suggested_area=self._device_area,
         )
 
+    @override
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""

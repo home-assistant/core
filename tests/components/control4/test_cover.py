@@ -70,7 +70,7 @@ def mock_cover_update_variables(
 ) -> Generator[AsyncMock]:
     """Mock update_variables for cover platform."""
 
-    async def _mock_get_entry_variables(hass, entry, item_id):
+    async def _mock_get_entry_variables(hass: HomeAssistant | None, entry, item_id):
         return mock_cover_variables.get(item_id)
 
     with patch(

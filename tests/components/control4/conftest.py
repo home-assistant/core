@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.control4.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -160,7 +161,7 @@ def mock_climate_update_variables(
 ) -> Generator[AsyncMock]:
     """Mock director_get_entry_variables for climate platform."""
 
-    async def _mock_get_entry_variables(hass, entry, item_id):
+    async def _mock_get_entry_variables(hass: HomeAssistant | None, entry, item_id):
         return mock_climate_variables.get(item_id)
 
     with patch(

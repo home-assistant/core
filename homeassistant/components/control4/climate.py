@@ -1,23 +1,24 @@
 """Platform for Control4 Climate."""
 
 import logging
+from typing import Any, override
 
 from pyControl4.climate import C4Climate
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     FAN_AUTO,
     FAN_DIFFUSE,
     FAN_ON,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import Control4Entity, get_items_of_category
 from .const import CONF_DIRECTOR, CONTROL4_ENTITY_TYPE, Control4ConfigEntry
@@ -101,7 +102,7 @@ SETUP_SETPOINT_DEADBAND_C = "setpoint_heatcool_deadband_c"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: Control4ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Control4 climate thermostats from a config entry."""
     entry_data = entry.runtime_data
@@ -165,7 +166,7 @@ async def async_setup_entry(
     async_add_entities(entity_list, True)
 
 
-class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
+class Control4Climate(Control4Entity, ClimateEntity):
     """Control4 climate entity."""
 
     def __init__(
@@ -211,8 +212,9 @@ class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
         """
         return C4Climate(self.entry_data[CONF_DIRECTOR], self._idx)
 
+    @override
     @property
-    def current_humidity(self) -> float | None:  # type: ignore[override]
+    def current_humidity(self) -> float | None:
         """Return the current humidity."""
         if self._thermostat_setup.get(SETUP_HAS_HUMIDITY, False) is False:
             return None
@@ -398,7 +400,7 @@ class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
             features |= ClimateEntityFeature.FAN_MODE
         return features
 
-    async def async_set_hvac_mode(self, hvac_mode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
         c4_climate = self.create_api_object()
 
@@ -430,7 +432,7 @@ class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
                 hvac_mode,
             )
 
-    async def async_set_fan_mode(self, fan_mode) -> None:
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         c4_climate = self.create_api_object()
         if fan_mode in CONTROL4_FAN_MODES:
@@ -442,7 +444,7 @@ class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
                 fan_mode,
             )
 
-    async def async_set_preset_mode(self, preset_mode) -> None:
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         c4_climate = self.create_api_object()
         self._extra_state_attributes[ATTR_HOLD_MODE] = preset_mode
@@ -482,7 +484,7 @@ class Control4Climate(Control4Entity, ClimateEntity):  # type: ignore[misc]
                     return res
         return MIN_TEMP_RANGE
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         low_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)

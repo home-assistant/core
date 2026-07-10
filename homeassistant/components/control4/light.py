@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyControl4.light import C4Light
 
@@ -129,13 +129,12 @@ class Control4Light(Control4Entity, LightEntity):
         self._attr_color_mode = (
             ColorMode.BRIGHTNESS if self._is_dimmer else ColorMode.ONOFF
         )
-        self._attr_min_color_temp_kelvin = None
-        self._attr_max_color_temp_kelvin = None
 
     def create_api_object(self) -> C4Light:
         """Create a pyControl4 device object with the current director token."""
         return C4Light(self.entry_data[CONF_DIRECTOR], self._idx)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register websocket callbacks and fetch device setup."""
         await super().async_added_to_hass()
@@ -153,10 +152,6 @@ class Control4Light(Control4Entity, LightEntity):
             if self._supports_ct:
                 self._ct_min = colors.get("color_correlated_temperature_min") or None
                 self._ct_max = colors.get("color_correlated_temperature_max") or None
-                if self._ct_min is not None:
-                    self._attr_min_color_temp_kelvin = int(self._ct_min)
-                if self._ct_max is not None:
-                    self._attr_max_color_temp_kelvin = int(self._ct_max)
             self._rate_min = colors.get("color_rate_min")
             self._rate_max = colors.get("color_rate_max")
             for pr in colors.get("color") or []:
@@ -185,6 +180,7 @@ class Control4Light(Control4Entity, LightEntity):
             _LOGGER.debug("get_item_setup failed for %s", self._idx)
         self.async_write_ha_state()
 
+    @override
     @property
     def is_on(self) -> bool:
         """Return whether this light is on."""
@@ -199,6 +195,7 @@ class Control4Light(Control4Entity, LightEntity):
             return attrs["CURRENT_POWER"] > 0
         return False
 
+    @override
     @property
     def brightness(self) -> int | None:
         """Return brightness (0-255)."""
@@ -211,6 +208,7 @@ class Control4Light(Control4Entity, LightEntity):
             )
         return None
 
+    @override
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return current color temperature in Kelvin."""
@@ -225,34 +223,35 @@ class Control4Light(Control4Entity, LightEntity):
             return int(cct)
         return None
 
+    @override
     @property
-    def min_color_temp_kelvin(self) -> int | None:
-        """Return minimum color temperature."""
-        return (
-            int(self._ct_min)
-            if self._ct_min is not None
-            else self._attr_min_color_temp_kelvin
-        )
+    def min_color_temp_kelvin(self) -> int:
+        """Return minimum color temperature in Kelvin."""
+        if self._ct_min is not None:
+            return int(self._ct_min)
+        return super().min_color_temp_kelvin
 
+    @override
     @property
-    def max_color_temp_kelvin(self) -> int | None:
-        """Return maximum color temperature."""
-        return (
-            int(self._ct_max)
-            if self._ct_max is not None
-            else self._attr_max_color_temp_kelvin
-        )
+    def max_color_temp_kelvin(self) -> int:
+        """Return maximum color temperature in Kelvin."""
+        if self._ct_max is not None:
+            return int(self._ct_max)
+        return super().max_color_temp_kelvin
 
+    @override
     @property
     def effect(self) -> str | None:
         """Return current effect."""
         return self._current_effect
 
+    @override
     @property
     def effect_list(self) -> list[str] | None:
         """Return available effects."""
         return sorted(self._effects_by_name) or None
 
+    @override
     @property
     def supported_features(self) -> LightEntityFeature:
         """Return supported features."""
@@ -268,6 +267,7 @@ class Control4Light(Control4Entity, LightEntity):
         attrs = self.extra_state_attributes
         return "LIGHT_LEVEL" in attrs or "Brightness Percent" in attrs
 
+    @override
     @property
     def color_mode(self) -> ColorMode | None:
         """Return current color mode."""
@@ -285,6 +285,7 @@ class Control4Light(Control4Entity, LightEntity):
             return self._attr_color_mode
         return ColorMode.UNKNOWN
 
+    @override
     @property
     def xy_color(self) -> tuple[float, float] | None:
         """Return current XY color."""
@@ -308,6 +309,7 @@ class Control4Light(Control4Entity, LightEntity):
             rate = min(rate, int(self._rate_max))
         return max(0, rate)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         c4_light = self.create_api_object()
@@ -374,6 +376,7 @@ class Control4Light(Control4Entity, LightEntity):
         else:
             await c4_light.set_level(100)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
         c4_light = self.create_api_object()
