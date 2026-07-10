@@ -19,7 +19,12 @@ from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.usb import SerialDevice, USBDevice
-from homeassistant.components.zwave_js.config_flow import TITLE, async_get_usb_ports
+from homeassistant.components.zwave_js.config_flow import (
+    TITLE,
+    SecurityKeys,
+    async_get_usb_ports,
+    migrate_network_key,
+)
 from homeassistant.components.zwave_js.const import (
     ADDON_SLUG,
     CONF_ADDON_DEVICE,
@@ -1772,6 +1777,66 @@ async def test_esphome_discovery_ignored(
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_placeholder_then_home_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test a home ID discovery dedups against a pending placeholder prompt."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO_CLEAN,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    # The same adapter now reports a home ID while its prompt is open.
+    home_id_info = ESPHomeServiceInfo(
+        name=ESPHOME_DISCOVERY_INFO_CLEAN.name,
+        zwave_home_id=1234,
+        ip_address=ESPHOME_DISCOVERY_INFO_CLEAN.ip_address,
+        port=ESPHOME_DISCOVERY_INFO_CLEAN.port,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=home_id_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_placeholder_ignored_then_home_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test a home ID discovery honors a placeholder-based ignore."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        unique_id="esphome_mock-name",
+    )
+    entry.add_to_hass(hass)
+
+    # The adapter that was ignored without a home ID now reports one.
+    home_id_info = ESPHomeServiceInfo(
+        name="mock-name",
+        zwave_home_id=1234,
+        ip_address="192.168.1.100",
+        port=6053,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=home_id_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_esphome_discovery_without_home_id_can_be_ignored(
     hass: HomeAssistant,
 ) -> None:
@@ -1853,6 +1918,31 @@ async def test_esphome_discovery_blocked_during_migration(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_in_progress"
     set_addon_options.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("addon_config", "expected_s0"),
+    [
+        pytest.param({"network_key": "legacy"}, "legacy", id="legacy_only"),
+        pytest.param(
+            {"network_key": "legacy", "s0_legacy_key": "s0"}, "s0", id="s0_wins"
+        ),
+        pytest.param({"s0_legacy_key": "s0"}, "s0", id="s0_only"),
+        pytest.param({}, "", id="neither"),
+    ],
+)
+def test_migrate_legacy_network_key(
+    addon_config: dict[str, str], expected_s0: str
+) -> None:
+    """Test the legacy network key is migrated to the S0 legacy key."""
+    migrated = migrate_network_key(addon_config)
+    assert "network_key" not in migrated
+    assert migrated.get("s0_legacy_key", "") == expected_s0
+
+    keys = SecurityKeys.from_addon_config(addon_config)
+    assert keys.s0_legacy == expected_s0
+    # The migration doesn't touch the caller's dict.
+    assert ("network_key" in addon_config) == ("network_key" in addon_config)
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
