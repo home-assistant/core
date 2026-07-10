@@ -393,7 +393,7 @@ def make_public_camera(
         is_logo_enabled=osd_logo,
         is_debug_enabled=osd_debug,
     )
-    public.video_mode = video_mode
+    public.video_mode = camera.video_mode if video_mode is None else video_mode
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
     public.smart_detect_settings = PublicSmartDetectSettings(
         object_types=object_types or [],
