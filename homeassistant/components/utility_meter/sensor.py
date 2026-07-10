@@ -3,7 +3,7 @@
 import calendar
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
 import math
@@ -108,6 +108,22 @@ _MONTH_PERIOD_STEPS = {
 }
 
 
+def _normalize_like_cronsim(candidate: datetime) -> datetime:
+    """Match CronSim DST handling for month-based reset times.
+
+    Reset fold so ambiguous fall-back times use the first occurrence, and
+    advance minute-by-minute through spring-forward gaps so imaginary wall
+    times (for example 03:30 in Europe/Riga) become the first valid minute.
+    """
+    if candidate.tzinfo is None:
+        return candidate
+
+    result = candidate.replace(fold=0)
+    while result != result.astimezone(UTC).astimezone(result.tzinfo):
+        result += timedelta(minutes=1)
+    return result
+
+
 def _month_aware_reset_scheduler(
     start: datetime,
     *,
@@ -143,14 +159,16 @@ def _month_aware_reset_scheduler(
     while True:
         last_day = calendar.monthrange(year, month)[1]
         target_day = min(day, last_day)
-        candidate = current.replace(
-            year=year,
-            month=month,
-            day=target_day,
-            hour=hour,
-            minute=minute,
-            second=0,
-            microsecond=0,
+        candidate = _normalize_like_cronsim(
+            current.replace(
+                year=year,
+                month=month,
+                day=target_day,
+                hour=hour,
+                minute=minute,
+                second=0,
+                microsecond=0,
+            )
         )
         if candidate > current:
             yield candidate

@@ -1,6 +1,7 @@
 """The tests for the utility_meter sensor platform."""
 
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from freezegun import freeze_time
 import pytest
@@ -2217,6 +2218,38 @@ def test_month_aware_reset_scheduler_period_alignment(
     )
     for expected_reset in expected:
         assert next(scheduler) == datetime.fromisoformat(expected_reset)
+
+
+def test_month_aware_reset_scheduler_dst_gap() -> None:
+    """Spring-forward gaps should advance like CronSim instead of shifting by an hour."""
+    tz = ZoneInfo("Europe/Riga")
+    # 2021-03-28 jumps 03:00 -> 04:00; 03:30 is imaginary.
+    # CronSim yields 04:00, not the 04:30 that naive replace would become.
+    scheduler = _month_aware_reset_scheduler(
+        datetime(2021, 3, 1, 0, 0, tzinfo=tz),
+        day=28,
+        hour=3,
+        minute=30,
+        period=MONTHLY,
+    )
+    assert next(scheduler) == datetime(2021, 3, 28, 4, 0, tzinfo=tz)
+    assert next(scheduler) == datetime(2021, 4, 28, 3, 30, tzinfo=tz)
+
+
+def test_month_aware_reset_scheduler_dst_fold() -> None:
+    """Ambiguous fall-back times should use fold 0 like CronSim."""
+    tz = ZoneInfo("Europe/Riga")
+    # Start in fold 1 must not select the second 03:30 occurrence.
+    scheduler = _month_aware_reset_scheduler(
+        datetime(2021, 10, 30, 12, 0, tzinfo=tz, fold=1),
+        day=31,
+        hour=3,
+        minute=30,
+        period=MONTHLY,
+    )
+    reset = next(scheduler)
+    assert reset == datetime(2021, 10, 31, 3, 30, tzinfo=tz, fold=0)
+    assert reset.fold == 0
 
 
 async def test_monthly_offset_resets_in_february(hass: HomeAssistant) -> None:
