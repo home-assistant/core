@@ -1,8 +1,17 @@
 """The tests for Cover."""
 
+import pytest
+
 from homeassistant.components import cover
-from homeassistant.components.cover import CoverState
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, SERVICE_TOGGLE
+from homeassistant.components.cover import ATTR_SPEED, CoverState, NotValidSpeedError
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_PLATFORM,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_TOGGLE,
+)
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers.entity import Entity
 from homeassistant.setup import async_setup_component
@@ -30,7 +39,7 @@ async def test_services(
     # ent4 = cover with all tilt functions but no position
     # ent5 = cover with all functions
     # ent6 = cover with only open/close, but also reports opening/closing
-    ent1, ent2, ent3, ent4, ent5, ent6 = mock_cover_entities
+    ent1, ent2, ent3, ent4, ent5, ent6, _ = mock_cover_entities
 
     # Test init all covers should be open
     assert is_open(hass, ent1)
@@ -190,4 +199,109 @@ def is_closing(hass: HomeAssistant, ent: Entity, position: int | None = None) ->
         expected_state=CoverState.CLOSING,
         expected_position=position,
         expected_is_closed=False,
+    )
+
+
+async def test_services_with_speed(
+    hass: HomeAssistant,
+    mock_cover_entities: list[MockCover],
+) -> None:
+    """Test speed validation in cover services."""
+    setup_test_component_platform(hass, cover.DOMAIN, mock_cover_entities)
+
+    assert await async_setup_component(
+        hass, cover.DOMAIN, {cover.DOMAIN: {CONF_PLATFORM: "test"}}
+    )
+    await hass.async_block_till_done()
+
+    # ent1 = cover without tilt and position and no speed support
+    # ent2 = cover with position but no speed support
+    # ent3 .. ent6 not needed in this test
+    # speed_cover = cover with speed support
+    ent1, ent2, _, _, _, _, speed_cover = mock_cover_entities
+
+    # Test capability attributes include supported_speeds
+    state = hass.states.get(speed_cover.entity_id)
+    assert state.attributes["supported_speeds"] == ["slow", "fast", "default"]
+
+    # Test open_cover with valid speed passes speed through and changes state
+    speed_cover.last_kwargs = None
+    await call_service_with_data(
+        hass, SERVICE_OPEN_COVER, speed_cover, {ATTR_SPEED: "fast"}
+    )
+    assert speed_cover.last_kwargs == {"speed": "fast"}
+    assert is_opening(hass, speed_cover, 50)
+
+    # Test close_cover with valid speed passes speed through and changes state
+    speed_cover.last_kwargs = None
+    await call_service_with_data(
+        hass, SERVICE_CLOSE_COVER, speed_cover, {ATTR_SPEED: "slow"}
+    )
+    assert speed_cover.last_kwargs == {"speed": "slow"}
+    assert is_closing(hass, speed_cover, 50)
+
+    # Test set_cover_position with valid speed passes speed through
+    speed_cover.last_kwargs = None
+    await call_service_with_data(
+        hass,
+        SERVICE_SET_COVER_POSITION,
+        speed_cover,
+        {"position": 75, ATTR_SPEED: "default"},
+    )
+    assert speed_cover.last_kwargs == {"position": 75, "speed": "default"}
+
+    # Test invalid speed raises NotValidSpeedError and does not call entity method
+    speed_cover.last_kwargs = None
+    with pytest.raises(NotValidSpeedError) as exc:
+        await call_service_with_data(
+            hass, SERVICE_OPEN_COVER, speed_cover, {ATTR_SPEED: "invalid"}
+        )
+    assert speed_cover.last_kwargs is None
+    assert exc.value.translation_key == "not_valid_speed"
+
+    with pytest.raises(NotValidSpeedError) as exc:
+        await call_service_with_data(
+            hass, SERVICE_CLOSE_COVER, speed_cover, {ATTR_SPEED: "invalid"}
+        )
+    assert speed_cover.last_kwargs is None
+    assert exc.value.translation_key == "not_valid_speed"
+
+    with pytest.raises(NotValidSpeedError) as exc:
+        await call_service_with_data(
+            hass,
+            SERVICE_SET_COVER_POSITION,
+            speed_cover,
+            {"position": 50, ATTR_SPEED: "invalid"},
+        )
+    assert speed_cover.last_kwargs is None
+    assert exc.value.translation_key == "not_valid_speed"
+
+    # Test cover without supported_speeds ignores speed and executes normally
+    await call_service_with_data(hass, SERVICE_OPEN_COVER, ent1, {ATTR_SPEED: "ignore"})
+    assert is_open(hass, ent1)
+    assert ent1.last_kwargs == {"speed": "ignore"}
+
+    ent1.last_kwargs = None
+    await call_service_with_data(
+        hass, SERVICE_CLOSE_COVER, ent1, {ATTR_SPEED: "ignore"}
+    )
+    assert is_closed(hass, ent1)
+    assert ent1.last_kwargs == {"speed": "ignore"}
+
+    ent2.last_kwargs = None
+    await call_service_with_data(
+        hass, SERVICE_SET_COVER_POSITION, ent2, {"position": 49, ATTR_SPEED: "ignore"}
+    )
+    assert ent2.last_kwargs == {"position": 49, "speed": "ignore"}
+
+
+def call_service_with_data(
+    hass: HomeAssistant, service: str, ent: Entity, data: dict[str, object]
+) -> ServiceResponse:
+    """Call any service on entity with data."""
+    return hass.services.async_call(
+        cover.DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: ent.entity_id, **data},
+        blocking=True,
     )

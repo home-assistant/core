@@ -6,6 +6,11 @@ open_cover:
       domain: cover
       supported_features:
         - cover.CoverEntityFeature.OPEN
+  fields:
+    speed:
+      advanced: true
+      selector:
+        text:
 
 close_cover:
   target:
@@ -13,6 +18,11 @@ close_cover:
       domain: cover
       supported_features:
         - cover.CoverEntityFeature.CLOSE
+  fields:
+    speed:
+      advanced: true
+      selector:
+        text:
 
 toggle:
   target:
@@ -36,6 +46,10 @@ set_cover_position:
           min: 0
           max: 100
           unit_of_measurement: "%"
+    speed:
+      advanced: true
+      selector:
+        text:
 
 stop_cover:
   target:

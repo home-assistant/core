@@ -22,7 +22,8 @@ from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TOGGLE_COVER_TILT,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -35,11 +36,13 @@ from .const import (
     ATTR_CURRENT_TILT_POSITION,
     ATTR_IS_CLOSED,
     ATTR_POSITION,
+    ATTR_SPEED,
     ATTR_TILT_POSITION,
     DOMAIN,
     INTENT_CLOSE_COVER,
     INTENT_OPEN_COVER,
     CoverDeviceClass,
+    CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverEntityStateAttribute,
     CoverState,
@@ -65,6 +68,7 @@ __all__ = [
     "ATTR_CURRENT_TILT_POSITION",
     "ATTR_IS_CLOSED",
     "ATTR_POSITION",
+    "ATTR_SPEED",
     "ATTR_TILT_POSITION",
     "DEVICE_CLASSES",
     "DEVICE_CLASSES_SCHEMA",
@@ -75,15 +79,32 @@ __all__ = [
     "PLATFORM_SCHEMA_BASE",
     "CoverDeviceClass",
     "CoverEntity",
+    "CoverEntityCapabilityAttribute",
     "CoverEntityDescription",
     "CoverEntityFeature",
     "CoverEntityStateAttribute",
     "CoverState",
+    "NotValidSpeedError",
     "make_cover_closed_trigger",
     "make_cover_is_closed_condition",
     "make_cover_is_open_condition",
     "make_cover_opened_trigger",
 ]
+
+
+class NotValidSpeedError(ServiceValidationError):
+    """Raised when a speed is not in the supported_speeds list."""
+
+    def __init__(
+        self, *args: object, translation_placeholders: dict[str, str] | None = None
+    ) -> None:
+        """Initialize the exception."""
+        super().__init__(
+            *args,
+            translation_domain=DOMAIN,
+            translation_key="not_valid_speed",
+            translation_placeholders=translation_placeholders,
+        )
 
 
 def is_closed(hass: HomeAssistant, entity_id: str) -> bool:
@@ -100,11 +121,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_OPEN_COVER, None, "async_open_cover", [CoverEntityFeature.OPEN]
+        SERVICE_OPEN_COVER,
+        {vol.Optional(ATTR_SPEED): cv.string},
+        "async_handle_open_cover",
+        [CoverEntityFeature.OPEN],
     )
 
     component.async_register_entity_service(
-        SERVICE_CLOSE_COVER, None, "async_close_cover", [CoverEntityFeature.CLOSE]
+        SERVICE_CLOSE_COVER,
+        {vol.Optional(ATTR_SPEED): cv.string},
+        "async_handle_close_cover",
+        [CoverEntityFeature.CLOSE],
     )
 
     component.async_register_entity_service(
@@ -112,9 +139,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {
             vol.Required(ATTR_POSITION): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=100)
-            )
+            ),
+            vol.Optional(ATTR_SPEED): cv.string,
         },
-        "async_set_cover_position",
+        "async_handle_set_cover_position",
         [CoverEntityFeature.SET_POSITION],
     )
 
@@ -194,6 +222,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "is_opening",
     "is_closing",
     "is_closed",
+    "supported_speeds",
 }
 
 
@@ -209,8 +238,15 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_is_opening: bool | None = None
     _attr_state: None = None
     _attr_supported_features: CoverEntityFeature | None
+    _attr_supported_speeds: list[str] | None = None
 
     _cover_is_last_toggle_direction_open = True
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {
+            CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS,
+        }
+    )
 
     @cached_property
     def current_cover_position(self) -> int | None:
@@ -310,6 +346,59 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         return self._attr_is_closed
+
+    @cached_property
+    def supported_speeds(self) -> list[str] | None:
+        """Return the list of speeds supported for open/close/set_position operations.
+
+        None or an empty list means speed selection is not supported.
+        """
+        return self._attr_supported_speeds
+
+    @property
+    @override
+    def capability_attributes(self) -> dict[str, list[str]] | None:
+        """Return capability attributes."""
+        attrs: dict[str, list[str]] = {}
+
+        if speeds := self.supported_speeds:
+            attrs[CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS] = speeds
+
+        return attrs or None
+
+    @final
+    @callback
+    def _valid_speed_or_raise(self, speed: str, supported: list[str]) -> None:
+        """Raise NotValidSpeedError if speed is not in the supported list."""
+        if speed not in supported:
+            supported_str = ", ".join(supported)
+            raise NotValidSpeedError(
+                translation_placeholders={
+                    "speed": speed,
+                    "supported_speeds": supported_str,
+                },
+            )
+
+    @final
+    async def async_handle_open_cover(self, **kwargs: Any) -> None:
+        """Validate speed and open the cover."""
+        if (speed := kwargs.get(ATTR_SPEED)) and (speeds := self.supported_speeds):
+            self._valid_speed_or_raise(speed, speeds)
+        await self.async_open_cover(**kwargs)
+
+    @final
+    async def async_handle_close_cover(self, **kwargs: Any) -> None:
+        """Validate speed and close the cover."""
+        if (speed := kwargs.get(ATTR_SPEED)) and (speeds := self.supported_speeds):
+            self._valid_speed_or_raise(speed, speeds)
+        await self.async_close_cover(**kwargs)
+
+    @final
+    async def async_handle_set_cover_position(self, **kwargs: Any) -> None:
+        """Validate speed and move the cover to a specific position."""
+        if (speed := kwargs.get(ATTR_SPEED)) and (speeds := self.supported_speeds):
+            self._valid_speed_or_raise(speed, speeds)
+        await self.async_set_cover_position(**kwargs)
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""

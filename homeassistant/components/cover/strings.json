@@ -210,9 +210,20 @@
       "name": "Window"
     }
   },
+  "exceptions": {
+    "not_valid_speed": {
+      "message": "Speed {speed} is not valid, valid speeds are: {supported_speeds}."
+    }
+  },
   "services": {
     "close_cover": {
       "description": "Closes a cover.",
+      "fields": {
+        "speed": {
+          "description": "Speed at which to close the cover.",
+          "name": "Speed"
+        }
+      },
       "name": "Close cover"
     },
     "close_cover_tilt": {
@@ -221,6 +232,12 @@
     },
     "open_cover": {
       "description": "Opens a cover.",
+      "fields": {
+        "speed": {
+          "description": "Speed at which to open the cover.",
+          "name": "Speed"
+        }
+      },
       "name": "Open cover"
     },
     "open_cover_tilt": {
@@ -233,6 +250,10 @@
         "position": {
           "description": "Target position.",
           "name": "Position"
+        },
+        "speed": {
+          "description": "Speed at which to move the cover.",
+          "name": "Speed"
         }
       },
       "name": "Set cover position"
