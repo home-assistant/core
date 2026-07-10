@@ -1293,7 +1293,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         addon_manager = self._addon_setup.addon_manager
         try:
             await addon_manager.async_set_addon_options(original_config)
-            if self._addon_setup.restart_addon:
+            addon_info = await addon_manager.async_get_addon_info()
+            if addon_info.state is AddonState.RUNNING:
+                # The add-on is running with the unconfirmed options this flow
+                # set, either because it was already running or because this
+                # flow started it. Restart it to apply the restored options,
+                # so the entry doesn't reconnect to the unconfirmed adapter.
                 await addon_manager.async_schedule_restart_addon()
         except AddonError as err:
             _LOGGER.error(err)
@@ -1345,6 +1350,19 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     "ok_sdk_version": str(MIN_MIGRATION_SDK_VERSION)
                 },
             )
+
+        if any(
+            flow
+            for flow in self._async_in_progress()
+            if flow.get("step_id") not in ABORT_SAFE_STEPS
+        ):
+            # Another flow, e.g. a competing migration confirmed earlier,
+            # has progressed beyond a prompt. Don't start a second migration.
+            return self.async_abort(reason="already_in_progress")
+
+        # Remaining prompts, e.g. for other discovered adapters,
+        # are superseded by this migration.
+        self._async_abort_other_prompt_flows()
 
         self._migrating = True
         self._addon_finish_step = "finish_addon_setup_migrate"

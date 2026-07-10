@@ -1856,6 +1856,64 @@ async def test_esphome_discovery_blocked_during_migration(
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_competing_migration_prompts(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+) -> None:
+    """Test starting a migration supersedes competing prompts."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="4321", data={**entry.data, "use_addon": True}
+    )
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+
+    result_a = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO,
+    )
+    result_b = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO_CLEAN,
+    )
+
+    assert result_a["step_id"] == "confirm_migration"
+    assert result_b["step_id"] == "confirm_migration"
+
+    # Confirming the first migration removes the competing prompt.
+    with patch("pathlib.Path.write_bytes"):
+        result_a = await hass.config_entries.flow.async_configure(
+            result_a["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result_a["type"] is FlowResultType.SHOW_PROGRESS
+    assert result_a["step_id"] == "backup_nvm"
+    assert not any(
+        flow["flow_id"] == result_b["flow_id"]
+        for flow in hass.config_entries.flow.async_progress()
+    )
+
+    # A migration confirmed while another is in flight is rejected.
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_esphome_discovery_deduplicated(
     hass: HomeAssistant,
     integration: MockConfigEntry,
@@ -6164,7 +6222,8 @@ async def test_reconfigure_abandoned_restores_addon_config(
         hass.config_entries.flow.async_abort(result["flow_id"])
         await hass.async_block_till_done()
 
-    # The add-on config the flow changed is restored before the reload.
+    # The add-on config the flow changed is restored, and the running
+    # add-on is restarted to apply it, before the reload recovers the entry.
     assert set_addon_options.call_args == call(
         "core_zwave_js",
         AddonsOptions(config={"device": "/test", "s0_legacy_key": "old123"}),
