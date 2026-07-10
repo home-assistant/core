@@ -296,12 +296,8 @@ class OwnTracksContext:
             acc = device_tracker_state.attributes.get(
                 TrackerEntityStateAttribute.GPS_ACCURACY
             )
-            lat = device_tracker_state.attributes.get(
-                TrackerEntityStateAttribute.LATITUDE
-            )
-            lon = device_tracker_state.attributes.get(
-                TrackerEntityStateAttribute.LONGITUDE
-            )
+            lat = device_tracker_state.attributes.get(EntityStateAttribute.LATITUDE)
+            lon = device_tracker_state.attributes.get(EntityStateAttribute.LONGITUDE)
 
             if lat is not None and lon is not None:
                 kwargs["gps"] = (lat, lon)

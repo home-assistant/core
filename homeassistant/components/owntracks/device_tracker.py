@@ -11,7 +11,7 @@ from homeassistant.components.device_tracker import (
     TrackerEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.const import ATTR_BATTERY_LEVEL, EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -174,8 +174,8 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
         self._data = {
             "host_name": state.name,
             "gps": (
-                attr.get(TrackerEntityStateAttribute.LATITUDE),
-                attr.get(TrackerEntityStateAttribute.LONGITUDE),
+                attr.get(EntityStateAttribute.LATITUDE),
+                attr.get(EntityStateAttribute.LONGITUDE),
             ),
             "gps_accuracy": attr.get(TrackerEntityStateAttribute.GPS_ACCURACY),
             "battery": attr.get(ATTR_BATTERY_LEVEL),
