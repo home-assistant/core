@@ -202,13 +202,7 @@ async def test_out_of_range_fan_level(
     config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test a device reporting an out-of-range fan level loads without crashing.
-
-    The CoreBreeze 432S (LPF-R432S) reports fan level -1 when the speed is not
-    applicable, which previously raised ValueError during setup and every
-    coordinator update. The entity should stay available with an unknown
-    percentage instead of crashing.
-    """
+    """Test that an out-of-range fan level produces an unknown percentage."""
 
     mock_devices_response(
         aioclient_mock, "CoreBreeze 432S", details_override={"fanSpeedLevel": -1}
