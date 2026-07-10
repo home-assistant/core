@@ -39,8 +39,8 @@ def boolean(value: Any) -> bool:
 
 VALUE_SCHEMA = vol.Any(
     boolean,
-    float,
     int,
+    float,
     vol.Coerce(int),
     vol.Coerce(float),
     BITMASK_SCHEMA,
