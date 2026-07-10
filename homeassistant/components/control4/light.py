@@ -20,9 +20,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
-from . import Control4Entity, get_items_of_category
+from . import get_items_of_category
 from .const import CONF_DIRECTOR, CONTROL4_ENTITY_TYPE, Control4ConfigEntry
 from .director_utils import director_get_entry_variables
+from .entity import Control4Entity
 
 _LOGGER = logging.getLogger(__name__)
 

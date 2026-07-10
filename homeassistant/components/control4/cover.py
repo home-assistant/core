@@ -15,7 +15,6 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import Control4Entity
 from .const import (
     CONF_DIRECTOR,
     CONF_DIRECTOR_ALL_ITEMS,
@@ -23,6 +22,7 @@ from .const import (
     Control4ConfigEntry,
 )
 from .director_utils import director_get_entry_variables
+from .entity import Control4Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -274,7 +274,7 @@ async def async_setup_entry(
     async_add_entities(entity_list, True)
 
 
-class Control4Cover(Control4Entity, CoverEntity):  # type: ignore[misc]
+class Control4Cover(Control4Entity, CoverEntity):
     """Control4 cover (blinds/shades) entity."""
 
     _attr_translation_key = "blind"
@@ -384,7 +384,7 @@ class Control4Cover(Control4Entity, CoverEntity):  # type: ignore[misc]
         await self._create_blind_api_object().set_level_target(level=p)
 
 
-class Control4GarageCover(Control4Entity, CoverEntity):  # type: ignore[misc]
+class Control4GarageCover(Control4Entity, CoverEntity):
     """Control4 garage door cover entity."""
 
     _attr_device_class = CoverDeviceClass.GARAGE

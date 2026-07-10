@@ -24,7 +24,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import Control4CoordinatorEntity
 from .const import (
     CONF_DIRECTOR,
     CONF_DIRECTOR_ALL_ITEMS,
@@ -37,6 +36,7 @@ from .director_utils import (
     director_get_entry_variables,
     update_variables_for_config_entry,
 )
+from .entity import Control4CoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -197,7 +197,7 @@ async def async_setup_entry(
     async_add_entities(entity_list, True)
 
 
-class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignore[misc]
+class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
     """Control4 Room entity."""
 
     _attr_has_entity_name = True
@@ -256,6 +256,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
             if source_idx in self._sources:
                 await self.async_select_source(self._sources[source_idx].name)
 
+    @override
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -330,6 +331,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
             current_source = self._id_to_parent.get(current_source, None)
         return None
 
+    @override
     @cached_property
     def device_class(self) -> MediaPlayerDeviceClass | None:
         """Return the class of this entity."""
@@ -338,8 +340,9 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
                 return MediaPlayerDeviceClass.TV
         return MediaPlayerDeviceClass.SPEAKER
 
+    @override
     @property
-    def state(self):  # type: ignore[override]
+    def state(self):
         """Return whether this room is on or idle."""
 
         if source_state := self._get_current_source_state():
@@ -350,16 +353,18 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
 
         return MediaPlayerState.IDLE
 
+    @override
     @property
-    def source(self):  # type: ignore[override]
+    def source(self):
         """Get the current source."""
         current_source = self._get_current_playing_device_id()
         if not current_source or current_source not in self._sources:
             return None
         return self._sources[current_source].name
 
+    @override
     @property
-    def media_title(self) -> str | None:  # type: ignore[override]
+    def media_title(self) -> str | None:
         """Get the Media Title."""
         media_info = self._get_media_info()
         if not media_info:
@@ -371,16 +376,18 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
             return None
         return self._sources[current_source].name
 
+    @override
     @property
-    def media_playlist(self) -> str | None:  # type: ignore[override]
+    def media_playlist(self) -> str | None:
         """Return the genre of the current media as a playlist label."""
         media_info = self._get_media_info()
         if not media_info or "genre" not in media_info:
             return None
         return base64.b64decode(media_info["genre"]).decode("ascii")
 
+    @override
     @property
-    def media_image_url(self) -> str | None:  # type: ignore[override]
+    def media_image_url(self) -> str | None:
         """Return the image URL for the current media."""
         media_info = self._get_media_info()
         if not media_info or "img" not in media_info:
@@ -392,32 +399,36 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
         )  # avoid self-signed cert issue
         return url.replace("controller:/", base_url_http)
 
+    @override
     @property
-    def media_artist(self) -> str | None:  # type: ignore[override]
+    def media_artist(self) -> str | None:
         """Return the artist of the current media."""
         media_info = self._get_media_info()
         if not media_info or "artist" not in media_info:
             return None
         return media_info["artist"]
 
+    @override
     @property
-    def media_album_name(self) -> str | None:  # type: ignore[override]
+    def media_album_name(self) -> str | None:
         """Return the album name of the current media."""
         media_info = self._get_media_info()
         if not media_info or "album" not in media_info:
             return None
         return media_info["album"]
 
+    @override
     @property
-    def media_channel(self) -> str | None:  # type: ignore[override]
+    def media_channel(self) -> str | None:
         """Return the channel of the current media."""
         media_info = self._get_media_info()
         if not media_info or "channel" not in media_info:
             return None
         return media_info["channel"]
 
+    @override
     @property
-    def media_content_type(self):  # type: ignore[override]
+    def media_content_type(self):
         """Get current content type if available."""
         current_source = self._get_current_playing_device_id()
         if not current_source:
@@ -426,6 +437,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
             return MediaType.VIDEO
         return MediaType.MUSIC
 
+    @override
     async def async_media_play_pause(self):
         """If possible, toggle the current play/pause state.
 
@@ -436,29 +448,34 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
         if self._get_current_source_state():
             await super().async_media_play_pause()
 
+    @override
     @property
-    def source_list(self) -> list[str]:  # type: ignore[override]
+    def source_list(self) -> list[str]:
         """Get the available source."""
         return [x.name for x in self._sources.values()]
 
+    @override
     @property
-    def volume_level(self):  # type: ignore[override]
+    def volume_level(self):
         """Get the volume level."""
         return self.coordinator.data[self._idx][CONTROL4_VOLUME_STATE] / 100
 
+    @override
     @property
-    def is_volume_muted(self):  # type: ignore[override]
+    def is_volume_muted(self):
         """Check if the volume is muted."""
         return bool(self.coordinator.data[self._idx][CONTROL4_MUTED_STATE])
 
+    @override
     @property
-    def group_members(self) -> list[str] | None:  # type: ignore[override]
+    def group_members(self) -> list[str] | None:
         """Return the group members sharing the current source."""
         current_source = self._get_current_playing_device_id()
         if not current_source or current_source not in self._sources:
             return None
         return list(self._sources[current_source].group_members)
 
+    @override
     async def async_select_source(self, source):
         """Select a new source."""
         current_source = self._get_current_playing_device_id()
@@ -478,6 +495,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
 
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_join_players(self, group_members):
         """Fire a join event so other rooms can follow this source."""
         current_source = self._get_current_playing_device_id()
@@ -488,15 +506,18 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
             }
             self.hass.bus.async_fire(CONTROL4_MEDIA_JOIN_EVENT, event_data)
 
+    @override
     async def async_unjoin_player(self):
         """Unjoin by turning the room off."""
         await self.async_turn_off()
 
+    @override
     async def async_turn_off(self):
         """Turn off the room."""
         await self._create_api_object().set_room_off()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_mute_volume(self, mute):
         """Mute the room."""
         if mute:
@@ -505,41 +526,49 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):  # type: ignor
             await self._create_api_object().set_mute_off()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_volume_level(self, volume):
         """Set room volume, 0-1 scale."""
         await self._create_api_object().set_volume(int(volume * 100))
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_volume_up(self):
         """Increase the volume by 1."""
         await self._create_api_object().set_increment_volume()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_volume_down(self):
         """Decrease the volume by 1."""
         await self._create_api_object().set_decrement_volume()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_media_pause(self):
         """Issue a pause command."""
         await self._create_api_object().set_pause()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_media_play(self):
         """Issue a play command."""
         await self._create_api_object().set_play()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_media_stop(self):
         """Issue a stop command."""
         await self._create_api_object().set_stop()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_media_next_track(self):
         """Skip to next track."""
         await self._create_api_object().set_next()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_media_previous_track(self):
         """Skip to previous track."""
         await self._create_api_object().set_previous()
