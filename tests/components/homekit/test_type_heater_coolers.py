@@ -978,6 +978,52 @@ async def test_heatercooler_set_active_on_heat_only(
     assert call_set_hvac_mode[0].data[ATTR_HVAC_MODE] == HVACMode.HEAT
 
 
+async def test_heatercooler_batch_resolves_after_prior_batch(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a batch sees the mode applied by the batch before it."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        ATTR_TEMPERATURE: 20.0,
+    }
+
+    hass.states.async_set(entity_id, HVACMode.HEAT, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    gate = asyncio.Event()
+
+    async def _slow_hvac(call: ServiceCall) -> None:
+        await gate.wait()
+        hass.states.async_set(entity_id, call.data[ATTR_HVAC_MODE], base_attrs)
+
+    async def _temp(call: ServiceCall) -> None:
+        pass
+
+    hass.services.async_register(CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, _slow_hvac)
+    call_set_temperature = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
+    )
+
+    # The threshold batch arrives while the mode switch is still pending;
+    # it must resolve against COOL, not the stale HEAT state
+    _write_chars(hk_driver, acc, {CHAR_TARGET_HEATER_COOLER_STATE: HC_TARGET_COOL})
+    _write_chars(hk_driver, acc, {CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0})
+    gate.set()
+    await hass.async_block_till_done()
+
+    assert len(call_set_temperature) == 1
+    assert call_set_temperature[0].data[ATTR_TEMPERATURE] == pytest.approx(
+        22.0, abs=0.1
+    )
+
+
 async def test_heatercooler_failed_write_aborts_batch(
     hass: HomeAssistant, hk_driver: HomeDriver
 ) -> None:

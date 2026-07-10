@@ -307,36 +307,58 @@ class HeaterCooler(HomeKitClimateAccessory):
     def _set_chars(self, char_values: dict[str, Any]) -> None:
         """Handle writes to multiple HeaterCooler characteristics at once."""
         _LOGGER.debug("HeaterCooler _set_chars: %s", char_values)
-        service_calls: list[tuple[str, dict[str, Any]]] = []
-        current_state = self.hass.states.get(self.entity_id)
-
-        # A mode written in the batch wins over the entity state, which
-        # still holds the pre-change mode.
-        requested_mode: HVACMode | None = None
-        if (
-            target_mode := char_values.get(CHAR_TARGET_HEATER_COOLER_STATE)
-        ) is not None:
-            requested_mode = self._hk_to_ha_target.get(target_mode)
-
-        # Active/mode changes are handled first as they gate the others.
-        self._handle_active_mode_changes(
-            char_values, service_calls, current_state, requested_mode
+        # Batches are resolved and applied under the accessory lock so a
+        # batch sees the outcome of the one before it and cannot overtake
+        # or interleave with it.
+        self.hass.async_create_task(
+            self._async_apply_batch(char_values), eager_start=True
         )
-        # Temperature and fan/swing writes are meaningless when turning off.
-        active_on = char_values.get(CHAR_ACTIVE) != 0
-        if active_on:
-            self._handle_temperature_changes(
+
+    async def _async_apply_batch(self, char_values: dict[str, Any]) -> None:
+        """Resolve one characteristic batch and apply its writes in order.
+
+        A failed write aborts the rest of the batch, since the tile was
+        already re-synced and later writes would target a mode the entity
+        refused to enter.
+        """
+        async with self._write_lock:
+            service_calls: list[tuple[str, dict[str, Any]]] = []
+            current_state = self.hass.states.get(self.entity_id)
+
+            # A mode written in the batch wins over the entity state, which
+            # still holds the pre-change mode.
+            requested_mode: HVACMode | None = None
+            if (
+                target_mode := char_values.get(CHAR_TARGET_HEATER_COOLER_STATE)
+            ) is not None:
+                requested_mode = self._hk_to_ha_target.get(target_mode)
+
+            # Active/mode changes are handled first as they gate the others.
+            self._handle_active_mode_changes(
                 char_values, service_calls, current_state, requested_mode
             )
-            # Fan and swing are queued last so they follow the mode switch.
-            self._queue_fan_swing_changes(char_values, service_calls)
+            # Temperature and fan/swing writes are meaningless when turning off.
+            if char_values.get(CHAR_ACTIVE) != 0:
+                self._handle_temperature_changes(
+                    char_values, service_calls, current_state, requested_mode
+                )
+                # Fan and swing are queued last so they follow the mode switch.
+                self._queue_fan_swing_changes(char_values, service_calls)
 
-        # The whole batch is awaited in order under the accessory lock so a
-        # later batch or setpoint cannot overtake the mode switch before it.
-        if service_calls:
-            self.hass.async_create_task(
-                self._async_apply_writes(service_calls), eager_start=True
-            )
+            for service_name, service_data in service_calls:
+                if not await self.async_call_service_and_wait(
+                    CLIMATE_DOMAIN,
+                    service_name,
+                    {ATTR_ENTITY_ID: self.entity_id, **service_data},
+                ):
+                    return
+                # The remembered mode is committed only once the entity
+                # accepted it, so a rejected mode is not restored later.
+                if (
+                    service_name == SERVICE_SET_HVAC_MODE
+                    and (mode := service_data[ATTR_HVAC_MODE]) != HVACMode.OFF
+                ):
+                    self._last_known_mode = mode
 
     def _queue_fan_swing_changes(
         self,
@@ -356,31 +378,6 @@ class HeaterCooler(HomeKitClimateAccessory):
             is not None
         ):
             service_calls.append((SERVICE_SET_SWING_MODE, params))
-
-    async def _async_apply_writes(
-        self, service_calls: list[tuple[str, dict[str, Any]]]
-    ) -> None:
-        """Apply the queued writes in order.
-
-        A failed write aborts the rest of the batch, since the tile was
-        already re-synced and later writes would target a mode the entity
-        refused to enter.
-        """
-        async with self._write_lock:
-            for service_name, service_data in service_calls:
-                if not await self.async_call_service_and_wait(
-                    CLIMATE_DOMAIN,
-                    service_name,
-                    {ATTR_ENTITY_ID: self.entity_id, **service_data},
-                ):
-                    return
-                # The remembered mode is committed only once the entity
-                # accepted it, so a rejected mode is not restored later.
-                if (
-                    service_name == SERVICE_SET_HVAC_MODE
-                    and (mode := service_data[ATTR_HVAC_MODE]) != HVACMode.OFF
-                ):
-                    self._last_known_mode = mode
 
     def _handle_active_mode_changes(
         self,
