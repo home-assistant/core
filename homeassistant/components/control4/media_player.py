@@ -646,7 +646,9 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
                 )
             )
         return BrowseMedia(
-            title=self._device_name or self.name or "Control4",
+            title=self._device_name
+            or (self.name if isinstance(self.name, str) else None)
+            or "Control4",
             media_class="directory",
             media_content_type=CONTROL4_BROWSE_ROOT,
             media_content_id="root",
