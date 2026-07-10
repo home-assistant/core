@@ -130,11 +130,12 @@ class AccessoryAidStorage:
         types = self.accessory_types
         keys = self._stable_storage_keys(entity_id)
         for key in keys:
-            if key in types:
+            if (accessory_type := types.get(key)) is not None:
                 if key != keys[0]:
-                    types[keys[0]] = types.pop(key)
+                    del types[key]
+                    types[keys[0]] = accessory_type
                     self.async_schedule_save()
-                return types[keys[0]]
+                return accessory_type
         return None
 
     def get_or_allocate_aid_for_entity_id(self, entity_id: str) -> int:
@@ -153,9 +154,7 @@ class AccessoryAidStorage:
         without allocating, so callers can tell a previously bridged entity
         from a new one.
         """
-        return any(
-            key in self.allocations for key in self._stable_storage_keys(entity_id)
-        )
+        return self.get_allocated_aid_for_entity_id(entity_id) is not None
 
     def _migrate_unique_id_aid_assignment_if_needed(
         self, sys_unique_id: str, entry: er.RegistryEntry
