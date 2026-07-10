@@ -76,11 +76,11 @@ class TodoGetItemsTool(Tool):
             return {"success": False, "error": "To-do list not found"}
         entity_id = result.states[0].entity_id
         service_data: dict[str, Any] = {"entity_id": entity_id}
-        if status := data.get("status"):
-            if status == "all":
-                service_data["status"] = ["needs_action", "completed"]
-            else:
-                service_data["status"] = [status]
+        status = data["status"]
+        if status == "all":
+            service_data["status"] = ["needs_action", "completed"]
+        else:
+            service_data["status"] = [status]
         service_result = await hass.services.async_call(
             DOMAIN,
             TodoServices.GET_ITEMS,
@@ -101,9 +101,6 @@ def async_get_tools(
 ) -> LLMTools | None:
     """Return the todo LLM tools when a to-do list is exposed."""
     if api_id != LLM_API_ASSIST:
-        return None
-
-    if not llm_context.assistant:
         return None
 
     entity_registry = er.async_get(hass)
