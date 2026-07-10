@@ -59,8 +59,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise HostNotFound from exc
     except ConnectionRefusedError as exc:
         raise CannotConnect from exc
-    except Exception as exc:
-        _LOGGER.error("Connection error: %s", exc)
+    except (OSError, TimeoutError, HabitronError) as exc:
+        # Genuinely-expected connection failures. ``test_connection`` wraps DNS
+        # and socket problems into ``HabitronError``; anything else (e.g. a
+        # response-processing bug) propagates so the caller's ``unknown`` path
+        # surfaces the real fault instead of hiding it as a network error.
         raise CannotConnect from exc
 
     if not result:

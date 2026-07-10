@@ -532,7 +532,7 @@ async def test_user_flow_unexpected_exception_maps_to_unknown(
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
 ) -> None:
-    """An unexpected error surfaces as ``cannot_connect``."""
+    """An unexpected error from the probe propagates and surfaces as ``unknown``."""
     mock_habitron_client.side_effect = RuntimeError("boom")
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -541,7 +541,7 @@ async def test_user_flow_unexpected_exception_maps_to_unknown(
         result["flow_id"], user_input=MOCK_CONFIG_DATA
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "unknown"}
 
 
 # ---------- user step pre-fill from discovery ----------
