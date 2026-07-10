@@ -392,12 +392,7 @@ class SensorFilter(SensorEntity):
 
         @callback
         def _async_hass_started(hass: HomeAssistant) -> None:
-            """Delay source entity tracking and seed the current source state.
-
-            History replay only covers recorded samples. If the source already
-            has a steady value at startup (including 0) and does not change
-            again, state_changed never fires and the filter would stay unknown.
-            """
+            """Track source changes and seed any steady state already present."""
             self.async_on_remove(
                 async_track_state_change_event(
                     self.hass, [self._entity], self._update_filter_sensor_state_event
