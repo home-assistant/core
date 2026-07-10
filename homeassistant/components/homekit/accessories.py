@@ -797,6 +797,11 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         try:
             if (state := self.hass.states.get(self.entity_id)) is not None:
                 self.async_update_state(state)
+            else:
+                _LOGGER.debug(
+                    "%s: cannot re-sync HomeKit state; entity has no state",
+                    self.entity_id,
+                )
         except Exception:
             _LOGGER.exception("%s: re-syncing HomeKit state failed", self.entity_id)
         return False

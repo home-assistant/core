@@ -792,6 +792,27 @@ async def test_call_service_resync_failure_is_logged(
     assert "re-syncing HomeKit state failed" in caplog.text
 
 
+async def test_call_service_resync_skip_is_logged(
+    hass: HomeAssistant, hk_driver: HomeDriver, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a resync skipped for a missing entity state is diagnosable."""
+    entity_id = "homekit.accessory"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(hass, hk_driver, "Home Accessory", entity_id, 2, {})
+    async_mock_service(
+        hass, "cover", "open_cover", raise_exception=HomeAssistantError("nope")
+    )
+
+    hass.states.async_remove(entity_id)
+    await hass.async_block_till_done()
+    acc.async_call_service("cover", "open_cover", {ATTR_ENTITY_ID: entity_id}, "value")
+    await hass.async_block_till_done()
+
+    assert "cannot re-sync HomeKit state" in caplog.text
+
+
 def test_home_bridge(hk_driver) -> None:
     """Test HomeBridge class."""
     bridge = HomeBridge("hass", hk_driver, BRIDGE_NAME)
