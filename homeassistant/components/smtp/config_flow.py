@@ -1,10 +1,12 @@
 """Config flow for the SMTP integration."""
 
+from collections.abc import Mapping
+from contextlib import suppress
 import logging
-from smtplib import SMTP, SMTP_SSL, SMTPAuthenticationError
+from smtplib import SMTP, SMTP_SSL, SMTPAuthenticationError, SMTPException
 import socket
 from ssl import SSLCertVerificationError
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -95,6 +97,22 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                autocomplete="username",
+            ),
+        ),
+        vol.Optional(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            ),
+        ),
+    }
+)
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -119,6 +137,7 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: SmtpConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -127,10 +146,12 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: SmtpConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -158,6 +179,7 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
         """Start subentry flow after creating main entry."""
         subentry_result = await self.hass.config_entries.subentries.async_init(
@@ -197,6 +219,39 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_USER_DATA_SCHEMA,
                 suggested_values=user_input or entry.data,
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication dialog."""
+        errors: dict[str, str] = {}
+
+        entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            errors = await self.hass.async_add_executor_job(
+                validate_input, {**entry.data, **user_input}
+            )
+            if not errors:
+                return self.async_update_and_abort(
+                    entry,
+                    data_updates=user_input,
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_REAUTH_DATA_SCHEMA,
+                suggested_values=user_input
+                or {CONF_USERNAME: entry.data.get(CONF_USERNAME)},
             ),
             errors=errors,
         )
@@ -256,18 +311,21 @@ def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
         if user_input.get(CONF_USERNAME) and user_input.get(CONF_PASSWORD):
             mail.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
 
+    except TimeoutError:
+        errors["base"] = "timeout_connect"
     except SMTPAuthenticationError:
         errors["base"] = "invalid_auth"
     except SSLCertVerificationError:
         errors["base"] = "invalid_cert"
-    except socket.gaierror, ConnectionRefusedError:
+    except socket.gaierror, ConnectionRefusedError, SMTPException:
         errors["base"] = "cannot_connect"
     except Exception:
         _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
     finally:
         if mail is not None:
-            mail.quit()
+            with suppress(SMTPException):
+                mail.quit()
 
     return errors
 

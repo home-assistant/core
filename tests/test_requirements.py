@@ -680,29 +680,11 @@ async def test_discovery_requirements_dhcp(hass: HomeAssistant) -> None:
             "core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+test_component%22",
         ),
         (
-            "pyserial",
-            False,
-            "Detected that custom integration",
-            "which should be replaced by serialx. This will stop"
-            " working in Home Assistant 2027.1, please create a bug report at "
-            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
-            "label%3A%22integration%3A+test_component%22",
-        ),
-        (
-            "pyserial>=3.5",
-            True,
-            "Detected that integration",
-            "which should be replaced by serialx. This will stop"
-            " working in Home Assistant 2027.1, please create a bug report at "
-            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
-            "label%3A%22integration%3A+test_component%22",
-        ),
-        (
             "pyserial-asyncio",
             False,
             "Detected that custom integration",
-            "which should be replaced by serialx. This will stop"
-            " working in Home Assistant 2027.1, please create a bug report at "
+            "which should be replaced by pyserial-asyncio-fast. This will stop"
+            " working in Home Assistant 2026.7, please create a bug report at "
             "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
             "label%3A%22integration%3A+test_component%22",
         ),
@@ -710,26 +692,8 @@ async def test_discovery_requirements_dhcp(hass: HomeAssistant) -> None:
             "pyserial-asyncio>=0.6",
             True,
             "Detected that integration",
-            "which should be replaced by serialx. This will stop"
-            " working in Home Assistant 2027.1, please create a bug report at "
-            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
-            "label%3A%22integration%3A+test_component%22",
-        ),
-        (
-            "pyserial-asyncio-fast",
-            False,
-            "Detected that custom integration",
-            "which should be replaced by serialx. This will stop"
-            " working in Home Assistant 2027.1, please create a bug report at "
-            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
-            "label%3A%22integration%3A+test_component%22",
-        ),
-        (
-            "pyserial-asyncio-fast>=0.6",
-            True,
-            "Detected that integration",
-            "which should be replaced by serialx. This will stop"
-            " working in Home Assistant 2027.1, please create a bug report at "
+            "which should be replaced by pyserial-asyncio-fast. This will stop"
+            " working in Home Assistant 2026.7, please create a bug report at "
             "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
             "label%3A%22integration%3A+test_component%22",
         ),

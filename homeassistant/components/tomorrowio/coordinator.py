@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 from math import ceil
-from typing import Any
+from typing import Any, override
 
 from pytomorrowio import TomorrowioV4
 from pytomorrowio.const import CURRENT, FORECASTS
@@ -199,6 +199,7 @@ class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.update_interval = async_set_update_interval(self.hass, self._api, entry)
         return not self.entry_id_to_location_dict
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         data: dict[str, Any] = {}

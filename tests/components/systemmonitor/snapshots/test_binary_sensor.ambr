@@ -1,8 +1,8 @@
 # serializer version: 1
 # name: test_binary_sensor[System Monitor Charging - attributes]
   ReadOnlyDict({
-    'device_class': 'battery_charging',
-    'friendly_name': 'System Monitor Charging',
+    <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'System Monitor Charging',
   })
 # ---
 # name: test_binary_sensor[System Monitor Charging - state]
@@ -10,9 +10,9 @@
 # ---
 # name: test_binary_sensor[System Monitor Process pip - attributes]
   ReadOnlyDict({
-    'device_class': 'running',
-    'friendly_name': 'System Monitor Process pip',
-    'icon': 'mdi:cpu-64-bit',
+    <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'System Monitor Process pip',
+    <EntityStateAttribute.ICON: 'icon'>: 'mdi:cpu-64-bit',
   })
 # ---
 # name: test_binary_sensor[System Monitor Process pip - state]
@@ -20,9 +20,9 @@
 # ---
 # name: test_binary_sensor[System Monitor Process python3 - attributes]
   ReadOnlyDict({
-    'device_class': 'running',
-    'friendly_name': 'System Monitor Process python3',
-    'icon': 'mdi:cpu-64-bit',
+    <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'System Monitor Process python3',
+    <EntityStateAttribute.ICON: 'icon'>: 'mdi:cpu-64-bit',
   })
 # ---
 # name: test_binary_sensor[System Monitor Process python3 - state]

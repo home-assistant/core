@@ -93,7 +93,7 @@ def mock_igd_device(mock_async_create_device) -> IgdDevice:
     mock_igd_device.device = mock_upnp_device
 
     mock_igd_device.async_get_traffic_and_status_data.return_value = IgdState(
-        timestamp=datetime.now(),
+        timestamp=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
         bytes_received=0,
         bytes_sent=0,
         packets_received=0,
@@ -106,6 +106,10 @@ def mock_igd_device(mock_async_create_device) -> IgdDevice:
         kibibytes_per_sec_sent=None,
         packets_per_sec_received=None,
         packets_per_sec_sent=None,
+        kibibytes_per_sec_received_no_rollover=None,
+        kibibytes_per_sec_sent_no_rollover=None,
+        packets_per_sec_received_no_rollover=None,
+        packets_per_sec_sent_no_rollover=None,
         port_mapping_number_of_entries=0,
     )
 

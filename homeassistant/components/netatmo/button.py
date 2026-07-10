@@ -1,6 +1,7 @@
 """Support for Netatmo/Bubendorff button."""
 
 import logging
+from typing import override
 
 from pyatmo import modules as NaModules
 
@@ -10,7 +11,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_BUTTON
-from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
+from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
 from .helper import device_type_to_str
 
@@ -63,10 +64,12 @@ class NetatmoCoverPreferredPositionButton(NetatmoModuleEntity, ButtonEntity):
         )
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         # No state to update for button
 
+    @override
     async def async_press(self) -> None:
         """Handle button press to move the cover to a preferred position."""
         _LOGGER.debug("Moving %s to a preferred position", self.device.entity_id)

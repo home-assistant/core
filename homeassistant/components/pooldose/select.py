@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, UnitOfVolume, UnitOfVolumeFlowRate
@@ -128,6 +128,7 @@ class PooldoseSelect(PooldoseEntity, SelectEntity):
         super().__init__(coordinator, serial_number, device_info, description, "select")
         self._async_update_attrs()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -145,6 +146,7 @@ class PooldoseSelect(PooldoseEntity, SelectEntity):
         else:
             self._attr_current_option = api_value
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         # Convert Home Assistant unit to API value if unit conversion is enabled

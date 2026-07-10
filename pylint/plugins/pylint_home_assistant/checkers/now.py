@@ -15,7 +15,10 @@ flagged.
 
 from pylint.lint import PyLinter
 
-from pylint_home_assistant.helpers.datetime_now import HassEnforceDatetimeNowChecker
+from pylint_home_assistant.helpers.datetime_now import (
+    CASE_OTHER,
+    HassEnforceDatetimeNowChecker,
+)
 
 
 class HassEnforceNowChecker(HassEnforceDatetimeNowChecker):
@@ -34,7 +37,7 @@ class HassEnforceNowChecker(HassEnforceDatetimeNowChecker):
     }
 
     message = "home-assistant-enforce-now"
-    flags_utc = False
+    flagged_case = CASE_OTHER
 
 
 def register(linter: PyLinter) -> None:

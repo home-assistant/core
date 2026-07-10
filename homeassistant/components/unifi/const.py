@@ -1,5 +1,6 @@
 """Constants for the UniFi Network integration."""
 
+from datetime import timedelta
 import logging
 
 from aiounifi.models.device import DeviceState
@@ -8,6 +9,12 @@ from homeassistant.const import Platform
 
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "unifi"
+
+# The UniFi controller keeps a record of every client it has ever seen. On busy
+# or guest networks that is easily tens of thousands of drive-by devices.
+# Only inactive clients seen within this window are restored on startup, older
+# ones are pruned together with their device so the registry stops growing.
+CLIENT_RESTORE_MAX_AGE = timedelta(days=30)
 
 PLATFORMS = [
     Platform.BUTTON,

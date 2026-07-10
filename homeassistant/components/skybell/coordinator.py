@@ -1,6 +1,7 @@
 """Data update coordinator for the Skybell integration."""
 
 from datetime import timedelta
+from typing import override
 
 from aioskybell import SkybellDevice, SkybellException
 
@@ -34,6 +35,7 @@ class SkybellDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.device = device
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         try:

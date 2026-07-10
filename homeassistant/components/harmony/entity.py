@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime
 import logging
+from typing import override
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -28,6 +29,7 @@ class HarmonyEntity(Entity):
         self._attr_should_poll = False
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if we're connected to the Hub, otherwise False."""
         return self._data.available

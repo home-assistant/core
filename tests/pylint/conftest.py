@@ -9,6 +9,9 @@ from pylint_home_assistant.checkers.config_flow.no_name import (
 from pylint_home_assistant.checkers.config_flow.no_polling import (
     HassEnforceConfigFlowNoPollingChecker,
 )
+from pylint_home_assistant.checkers.config_flow.serial_port_usb_dependency import (
+    HassEnforceSerialPortSelectorUsbChecker,
+)
 from pylint_home_assistant.checkers.config_flow.unique_id_no_ip import (
     HassEnforceConfigEntryUniqueIdNoIpChecker,
 )
@@ -17,6 +20,7 @@ from pylint_home_assistant.checkers.greek_micro_char import (
     HassEnforceGreekMicroCharChecker,
 )
 from pylint_home_assistant.checkers.imports import HassImportsFormatChecker
+from pylint_home_assistant.checkers.naive_now import HassEnforceNaiveNowChecker
 from pylint_home_assistant.checkers.now import HassEnforceNowChecker
 from pylint_home_assistant.checkers.runtime_data import HassEnforceRuntimeDataChecker
 from pylint_home_assistant.checkers.sorted_platforms import (
@@ -94,6 +98,17 @@ def enforce_config_entry_unique_id_no_ip_checker_fixture(
     return checker
 
 
+@pytest.fixture(name="enforce_serial_port_selector_usb_checker")
+def enforce_serial_port_selector_usb_checker_fixture(
+    linter: UnittestLinter,
+) -> BaseChecker:
+    """Fixture to provide a serial_port_selector usb dependency checker."""
+    clear_caches()
+    checker = HassEnforceSerialPortSelectorUsbChecker(linter)
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
+
+
 @pytest.fixture(name="enforce_config_flow_no_name_checker")
 def enforce_config_flow_no_name_checker_fixture(
     linter: UnittestLinter,
@@ -146,3 +161,11 @@ def enforce_utcnow_checker_fixture(linter: UnittestLinter) -> BaseChecker:
     enforce_utcnow_checker = HassEnforceUtcnowChecker(linter)
     enforce_utcnow_checker.module = "homeassistant.components.pylint_test"
     return enforce_utcnow_checker
+
+
+@pytest.fixture(name="enforce_naive_now_checker")
+def enforce_naive_now_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a naive_now checker."""
+    enforce_naive_now_checker = HassEnforceNaiveNowChecker(linter)
+    enforce_naive_now_checker.module = "homeassistant.components.pylint_test"
+    return enforce_naive_now_checker

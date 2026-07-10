@@ -96,7 +96,13 @@ PLATFORMS_BY_TYPE = {
     ],
     SupportedModels.HUBMINI_MATTER.value: [Platform.SENSOR],
     SupportedModels.CIRCULATOR_FAN.value: [Platform.FAN, Platform.SENSOR],
-    SupportedModels.STANDING_FAN.value: [Platform.SENSOR],
+    SupportedModels.STANDING_FAN.value: [
+        Platform.FAN,
+        Platform.SELECT,
+        Platform.NUMBER,
+        Platform.SWITCH,
+        Platform.SENSOR,
+    ],
     SupportedModels.S10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.S20_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
@@ -193,6 +199,12 @@ PLATFORMS_BY_TYPE = {
     ],
     SupportedModels.WEATHER_STATION.value: [Platform.SENSOR],
     SupportedModels.UNIVERSAL_REMOTE.value: [Platform.SENSOR],
+    SupportedModels.CANDLE_WARMER_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.RGBIC_NEON_ROPE_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.RGBIC_NEON_WIRE_ROPE_LIGHT.value: [
+        Platform.LIGHT,
+        Platform.SENSOR,
+    ],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -247,6 +259,9 @@ CLASS_BY_DEVICE = {
     SupportedModels.LOCK_VISION_PRO.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_VISION.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_PRO_WIFI.value: switchbot.SwitchbotLock,
+    SupportedModels.CANDLE_WARMER_LAMP.value: switchbot.SwitchbotCandleWarmerLamp,
+    SupportedModels.RGBIC_NEON_ROPE_LIGHT.value: switchbot.SwitchbotRgbicNeonLight,
+    SupportedModels.RGBIC_NEON_WIRE_ROPE_LIGHT.value: switchbot.SwitchbotRgbicNeonLight,
 }
 
 
@@ -413,9 +428,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
     version = entry.version
     minor_version = entry.minor_version
     _LOGGER.debug("Migrating from version %s.%s", version, minor_version)
-
-    if version > 1:
-        return False
 
     if version == 1 and minor_version < 2:
         new_options: dict[str, Any] = {**entry.options}
