@@ -71,9 +71,9 @@ def _ekey_user_value(module: Any, idx: int) -> str:
     return "Unknown"
 
 
-def _ekey_finger_value(module: Any, _idx: int) -> str | None:
+def _ekey_finger_value(module: Any, idx: int) -> str | None:
     """Translate a raw ekey finger value into a stable finger-key string."""
-    id_val = int(module.fingers[0].value or 0)
+    id_val = int(module.sensors[idx].value or 0)
     if id_val in range(1, 11):
         return _FINGER_KEYS[id_val - 1]
     # 0 (idle), 255 (error) or out of range → no current finger.
@@ -572,12 +572,19 @@ EKEY_ID_DESCRIPTION = HbtnSensorEntityDescription(
     value_fn=lambda module, idx: module.sensors[idx].value,
     subscribe_fn=lambda module, idx: module.sensors[idx],
 )
+# The finger sensors bind to ``module.sensors[idx]`` (not ``module.fingers[0]``)
+# because the 10-second poll parser (``_status_ekey`` in habitron_client) writes
+# the finger value to ``sensors[1]``, while the FINGER bus event writes it to
+# ``fingers[0]``. This PR is poll-only (the event receiver / update_entity
+# service is deferred to a later PR), so a sensor bound to ``fingers[0]`` would
+# never update here. Do NOT rebind to ``fingers`` until the library is unified so
+# the FINGER event also writes ``sensors[1]`` (the proper long-term fix).
 EKEY_FINGER_DESCRIPTION = HbtnSensorEntityDescription(
     key="ekey_finger",
     translation_key="ekey_finger",
     translated_name=True,
-    value_fn=lambda module, idx: module.fingers[0].value,
-    subscribe_fn=lambda module, idx: module.fingers[0],
+    value_fn=lambda module, idx: module.sensors[idx].value,
+    subscribe_fn=lambda module, idx: module.sensors[idx],
 )
 EKEY_USER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     key="ekey_user_name",
@@ -594,7 +601,7 @@ EKEY_FINGER_NAME_DESCRIPTION = HbtnSensorEntityDescription(
     options=list(_FINGER_KEYS),
     translated_name=True,
     value_fn=_ekey_finger_value,
-    subscribe_fn=lambda module, idx: module.fingers[0],
+    subscribe_fn=lambda module, idx: module.sensors[idx],
 )
 STATUS_DESCRIPTION = HbtnSensorEntityDescription(
     key="module_status",
