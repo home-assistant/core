@@ -174,12 +174,12 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
             self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="invalid_auth_no_details",
+                translation_key="invalid_auth",
             ) from ex
         except PortainerConnectionError as ex:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="cannot_connect_no_details",
+                translation_key="cannot_connect",
             ) from ex
         else:
             await self.coordinator.async_request_refresh()
