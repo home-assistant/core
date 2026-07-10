@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import Any, override
 
-from tesla_fleet_api.const import AutoSeat, Scope, Seat
+from tesla_fleet_api.const import AutoSeat, Scope
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -48,7 +48,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSwitchEntityDescription, ...] = (
             AutoSeat.FRONT_LEFT, True
         ),
         off_func=lambda api: api.remote_auto_seat_climate_request(
-            Seat.FRONT_LEFT, False
+            AutoSeat.FRONT_LEFT, False
         ),
         scopes=[Scope.VEHICLE_CMDS],
     ),

@@ -16,15 +16,27 @@ from homeassistant.components.infrared import (
     async_send_command,
     async_subscribe_receiver,
 )
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import MockInfraredEmitterEntity, MockInfraredReceiverEntity
 
-from tests.common import mock_restore_cache
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    MockPlatform,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    mock_restore_cache,
+)
+
+TEST_DOMAIN = "test"
 
 TEST_COMMAND = NECCommand(address=0x04FB, command=0x08F7, modulation=38000)
 
@@ -293,3 +305,91 @@ async def test_async_subscribe_receiver_component_not_loaded(
     """Test async_subscribe_receiver raises error when component not loaded."""
     with pytest.raises(HomeAssistantError, match="component_not_loaded"):
         async_subscribe_receiver(hass, "infrared.some_entity", lambda _: None)
+
+
+@pytest.mark.usefixtures("init_infrared")
+async def test_name(hass: HomeAssistant) -> None:
+    """Test entity name / device class naming fallback."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.INFRARED]
+        )
+        return True
+
+    class MockFlow(ConfigFlow):
+        """Test flow."""
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+        ),
+    )
+
+    # Unnamed emitter without has_entity_name -> no name
+    emitter1 = MockInfraredEmitterEntity("test_emitter1", name=None)
+    emitter1.entity_id = "infrared.test_emitter1"
+    emitter1._attr_has_entity_name = False
+
+    # Unnamed emitter with has_entity_name True -> name set from device class
+    emitter2 = MockInfraredEmitterEntity("test_emitter2", name=None)
+    emitter2.entity_id = "infrared.test_emitter2"
+    emitter2._attr_has_entity_name = True
+
+    # Unnamed receiver without has_entity_name -> no name
+    receiver1 = MockInfraredReceiverEntity("test_receiver1", name=None)
+    receiver1.entity_id = "infrared.test_receiver1"
+    receiver1._attr_has_entity_name = False
+
+    # Unnamed receiver with has_entity_name True -> name set from device class
+    receiver2 = MockInfraredReceiverEntity("test_receiver2", name=None)
+    receiver2.entity_id = "infrared.test_receiver2"
+    receiver2._attr_has_entity_name = True
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Set up test infrared platform via config entry."""
+        async_add_entities([emitter1, emitter2, receiver1, receiver2])
+
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{DOMAIN}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    with mock_config_flow(TEST_DOMAIN, MockFlow):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state1 = hass.states.get("infrared.test_emitter1")
+    assert state1 is not None
+    assert state1.attributes == {"device_class": "emitter"}
+
+    state2 = hass.states.get("infrared.test_emitter2")
+    assert state2 is not None
+    assert state2.attributes == {
+        "device_class": "emitter",
+        "friendly_name": "Infrared emitter",
+    }
+
+    state3 = hass.states.get("infrared.test_receiver1")
+    assert state3 is not None
+    assert state3.attributes == {"device_class": "receiver"}
+
+    state4 = hass.states.get("infrared.test_receiver2")
+    assert state4 is not None
+    assert state4.attributes == {
+        "device_class": "receiver",
+        "friendly_name": "Infrared receiver",
+    }
