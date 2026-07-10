@@ -1725,7 +1725,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_SOCKET_PATH: self.socket_path,
                 **self.security_keys.to_entry_data(),
                 CONF_USE_ADDON: True,
-                CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
+                # Keep the entry's add-on ownership if it installed the add-on.
+                CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon
+                or config_entry.data.get(CONF_INTEGRATION_CREATED_ADDON, False),
             },
             unique_id=str(version_info.home_id),
         )
@@ -1770,7 +1772,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_SOCKET_PATH: self.socket_path,
                 **self.security_keys.to_entry_data(),
                 CONF_USE_ADDON: True,
-                CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
+                # Keep the entry's add-on ownership if it installed the add-on.
+                CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon
+                or config_entry.data.get(CONF_INTEGRATION_CREATED_ADDON, False),
             }
         )
 
@@ -1830,13 +1834,17 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                         # in which case the config needs to be repaired.
                         and addon_info.options.get(CONF_ADDON_SOCKET)
                         == discovery_info.socket_path
+                        and addon_info.options.get(CONF_ADDON_DEVICE) is None
                     ):
                         # The ESPHome device fires discovery on every
                         # reconnect, so don't touch the add-on config or
                         # reload the entry if nothing changed.
                         return self.async_abort(reason="already_configured")
                     await self._addon_setup.async_set_addon_config(
-                        {CONF_ADDON_SOCKET: discovery_info.socket_path}
+                        {
+                            CONF_ADDON_DEVICE: None,
+                            CONF_ADDON_SOCKET: discovery_info.socket_path,
+                        }
                     )
                     if self._addon_setup.restart_addon:
                         await self._addon_setup.async_stop_addon()
