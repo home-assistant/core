@@ -138,7 +138,5 @@ class OverkizDescriptiveEntity(OverkizEntity):
         elif isinstance(description.name, str):
             self._attr_name = description.name
         else:
-            # Descriptions without a name use the device name only; set None
-            # explicitly so the annotation-only base doesn't fall back to the
-            # device class name.
+            # Fall back to the device name, not the device class name.
             self._attr_name = None
