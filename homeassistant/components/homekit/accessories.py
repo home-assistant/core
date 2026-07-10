@@ -838,8 +838,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         service: str,
         service_data: dict[str, Any],
         value: Any | None = None,
-    ) -> None:
-        """Fire event and call service, waiting for it to complete.
+    ) -> bool:
+        """Fire event and call service, returning True when it succeeded.
 
         blocking=True so the handler's exception reaches us (the
         non-blocking path swallows it); on failure we resync so pyhap's
@@ -876,9 +876,10 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
                 service,
             )
         else:
-            return
+            return True
         if (state := self.hass.states.get(self.entity_id)) is not None:
             self.async_update_state(state)
+        return False
 
     @ha_callback
     def async_reload(self) -> None:

@@ -76,7 +76,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import async_mock_service
@@ -867,6 +868,54 @@ async def test_heatercooler_set_active_on_heat_only(
     assert call_set_hvac_mode[0].data[ATTR_HVAC_MODE] == HVACMode.HEAT
 
 
+async def test_heatercooler_failed_write_aborts_batch(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a rejected mode write aborts the rest of the batch."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ),
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        ATTR_FAN_MODES: ["low", "high"],
+        ATTR_FAN_MODE: "low",
+        ATTR_TEMPERATURE: 20.0,
+    }
+
+    hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    async def _fail(call: ServiceCall) -> None:
+        raise HomeAssistantError("mode rejected")
+
+    hass.services.async_register(CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, _fail)
+    call_set_temperature = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
+    )
+    call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
+
+    _write_chars(
+        hk_driver,
+        acc,
+        {
+            CHAR_ACTIVE: 1,
+            CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0,
+            CHAR_ROTATION_SPEED: 100,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # The rejected mode change stops the temperature and fan writes
+    assert len(call_set_temperature) == 0
+    assert len(call_set_fan_mode) == 0
+
+
 async def test_heatercooler_set_chars_dispatch_order(
     hass: HomeAssistant, hk_driver: HomeDriver
 ) -> None:
@@ -895,8 +944,9 @@ async def test_heatercooler_set_chars_dispatch_order(
 
     async def _record_and_wait(
         domain: str, service: str, data: dict[str, Any], value: Any | None = None
-    ) -> None:
+    ) -> bool:
         services.append(service)
+        return True
 
     with (
         patch.object(
@@ -1100,6 +1150,7 @@ async def test_heatercooler_dual_capable_entity_in_single_mode(
     assert ATTR_TARGET_TEMP_HIGH not in call_set_temperature[0].data
 
     # Switching to Auto in the same batch sends a range write instead
+    async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
     _write_chars(
         hk_driver,
         acc,
@@ -2307,6 +2358,11 @@ async def test_heatercooler_auto_fan_mode_linked_fan_service(
             [HVACMode.HEAT, HVACMode.OFF],
             CATEGORY_HEATER,
             id="heat_only",
+        ),
+        pytest.param(
+            [HVACMode.DRY, HVACMode.OFF],
+            CATEGORY_AIR_CONDITIONER,
+            id="dry_only_is_not_a_heater",
         ),
     ],
 )

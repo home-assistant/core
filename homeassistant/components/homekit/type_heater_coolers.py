@@ -134,8 +134,12 @@ class HeaterCooler(HomeKitClimateAccessory):
         can_heat = HVACMode.HEAT in hvac_modes or supports_auto or supports_heat_cool
 
         # Standalone pairings advertise the category in the QR code and mDNS
-        # metadata, so pick the one matching the device instead of Thermostat.
-        self.category = CATEGORY_AIR_CONDITIONER if can_cool else CATEGORY_HEATER
+        # metadata, so pick the one matching the device instead of Thermostat;
+        # only a heat only device is a heater, everything else including the
+        # fan or dry only case is an air conditioner.
+        self.category = (
+            CATEGORY_HEATER if can_heat and not can_cool else CATEGORY_AIR_CONDITIONER
+        )
 
         # Per the HomeKit spec a heater must include the heating threshold and a
         # cooler the cooling one, so a one sided device gets a single slider. A
@@ -335,13 +339,19 @@ class HeaterCooler(HomeKitClimateAccessory):
         service_calls: list[tuple[str, dict[str, Any]]],
         fan_swing_char_values: dict[str, Any] | None,
     ) -> None:
-        """Apply the queued writes in order, then the fan and swing ones."""
+        """Apply the queued writes in order, then the fan and swing ones.
+
+        A failed write aborts the rest of the batch, since the tile was
+        already re-synced and later writes would target a mode the entity
+        refused to enter.
+        """
         for service_name, service_data in service_calls:
-            await self.async_call_service_and_wait(
+            if not await self.async_call_service_and_wait(
                 CLIMATE_DOMAIN,
                 service_name,
                 {ATTR_ENTITY_ID: self.entity_id, **service_data},
-            )
+            ):
+                return
         if fan_swing_char_values:
             self._handle_fan_swing_changes(fan_swing_char_values)
 
