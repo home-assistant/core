@@ -9,7 +9,6 @@ from probatio import UNSUPPORTED, to_openapi as convert
 import slugify as unicode_slug
 import voluptuous as vol
 
-from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_SERVICE,
@@ -26,7 +25,6 @@ from . import (
     area_registry as ar,
     config_validation as cv,
     device_registry as dr,
-    entity_registry as er,
     floor_registry as fr,
     intent,
     selector,
@@ -602,20 +600,6 @@ def _get_cached_action_parameters(
                 schema[key] = cv.string
 
         parameters = vol.Schema(schema)
-
-        if domain == SCRIPT_DOMAIN:
-            entity_registry = er.async_get(hass)
-            if (
-                entity_id := entity_registry.async_get_entity_id(domain, domain, action)
-            ) is not None and (
-                entity_entry := entity_registry.async_get(entity_id)
-            ) is not None:
-                aliases = er.async_get_entity_aliases(hass, entity_entry)
-                if aliases:
-                    if description:
-                        description = description + ". Aliases: " + str(sorted(aliases))
-                    else:
-                        description = "Aliases: " + str(sorted(aliases))
 
         parameters_cache.setdefault(domain, {})[action] = (description, parameters)
 

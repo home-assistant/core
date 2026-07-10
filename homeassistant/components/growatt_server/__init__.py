@@ -23,6 +23,7 @@ Error handling pattern for reauth:
   → raise ConfigEntryAuthFailed
 - All other errors → ConfigEntryError (setup) or UpdateFailed (coordinator)
 """
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from collections.abc import Mapping
 import datetime

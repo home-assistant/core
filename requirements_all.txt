@@ -38,7 +38,7 @@ PSNAWP==3.0.3
 # homeassistant.components.qrcode
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
-Pillow==12.2.0
+Pillow==12.3.0
 
 # homeassistant.components.plex
 PlexAPI==4.15.16
@@ -2338,7 +2338,7 @@ pylitejet==0.6.3
 pylitterbot==2025.5.0
 
 # homeassistant.components.lutron_caseta
-pylutron-caseta==0.28.0
+pylutron-caseta==0.29.0
 
 # homeassistant.components.lutron
 pylutron==0.4.2
@@ -3156,7 +3156,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.5.4
+tesla-fleet-api==1.6.0
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3246,7 +3246,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==15.5.0
+uiprotect==15.6.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3454,7 +3454,7 @@ zeroconf==0.150.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha-quirks==2.1.0
+zha-quirks==2.1.1
 
 # homeassistant.components.zha
 zha==2.0.0
