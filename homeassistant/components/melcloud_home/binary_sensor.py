@@ -22,34 +22,46 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class ATABinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Class to hold MELCloud Home ATA binary sensor description."""
+class MelCloudHomeBinarySensorEntityDescription[_UnitT: ATAUnit | ATWUnit](
+    BinarySensorEntityDescription
+):
+    """Class to hold MELCloud Home binary sensor description."""
 
-    state_fn: Callable[[ATAUnit], bool | None]
-
-
-@dataclass(frozen=True, kw_only=True)
-class ATWBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """Class to hold MELCloud Home ATW binary sensor description."""
-
-    state_fn: Callable[[ATWUnit], bool | None]
+    state_fn: Callable[[_UnitT], bool | None]
 
 
-ATA_SENSORS: tuple[ATABinarySensorEntityDescription, ...] = (
-    ATABinarySensorEntityDescription(
-        key="error",
-        translation_key="error",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        state_fn=lambda unit: unit.is_in_error,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    ATABinarySensorEntityDescription(
-        key="standby",
-        translation_key="standby",
-        state_fn=lambda unit: unit.in_standby_mode,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    ATABinarySensorEntityDescription(
+def _common_sensor_descriptions[_UnitT: ATAUnit | ATWUnit](
+    unit_type: type[_UnitT],
+) -> tuple[MelCloudHomeBinarySensorEntityDescription[_UnitT], ...]:
+    """Return the binary sensor descriptions shared by ATA and ATW units."""
+    return (
+        MelCloudHomeBinarySensorEntityDescription(
+            key="error",
+            translation_key="error",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            state_fn=lambda unit: unit.is_in_error,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        MelCloudHomeBinarySensorEntityDescription(
+            key="standby",
+            translation_key="standby",
+            state_fn=lambda unit: unit.in_standby_mode,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        MelCloudHomeBinarySensorEntityDescription(
+            key="holiday_mode",
+            translation_key="holiday_mode",
+            state_fn=lambda unit: (
+                unit.holiday_mode.enabled if unit.holiday_mode else None
+            ),
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    )
+
+
+ATA_SENSORS: tuple[MelCloudHomeBinarySensorEntityDescription[ATAUnit], ...] = (
+    *_common_sensor_descriptions(ATAUnit),
+    MelCloudHomeBinarySensorEntityDescription(
         key="frost_protection",
         translation_key="frost_protection",
         state_fn=lambda unit: (
@@ -57,7 +69,7 @@ ATA_SENSORS: tuple[ATABinarySensorEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    ATABinarySensorEntityDescription(
+    MelCloudHomeBinarySensorEntityDescription(
         key="overheat_protection",
         translation_key="overheat_protection",
         state_fn=lambda unit: (
@@ -65,38 +77,14 @@ ATA_SENSORS: tuple[ATABinarySensorEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    ATABinarySensorEntityDescription(
-        key="holiday_mode",
-        translation_key="holiday_mode",
-        state_fn=lambda unit: unit.holiday_mode.enabled if unit.holiday_mode else None,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
 )
 
-ATW_SENSORS: tuple[ATWBinarySensorEntityDescription, ...] = (
-    ATWBinarySensorEntityDescription(
-        key="error",
-        translation_key="error",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        state_fn=lambda unit: unit.is_in_error,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    ATWBinarySensorEntityDescription(
-        key="standby",
-        translation_key="standby",
-        state_fn=lambda unit: unit.in_standby_mode,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    ATWBinarySensorEntityDescription(
+ATW_SENSORS: tuple[MelCloudHomeBinarySensorEntityDescription[ATWUnit], ...] = (
+    *_common_sensor_descriptions(ATWUnit),
+    MelCloudHomeBinarySensorEntityDescription(
         key="forced_hot_water",
         translation_key="forced_hot_water",
         state_fn=lambda unit: unit.forced_hot_water_mode,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    ATWBinarySensorEntityDescription(
-        key="holiday_mode",
-        translation_key="holiday_mode",
-        state_fn=lambda unit: unit.holiday_mode.enabled if unit.holiday_mode else None,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -134,12 +122,12 @@ async def async_setup_entry(
 class ATABinarySensor(MelCloudHomeATAUnitEntity, BinarySensorEntity):
     """Representation of a MELCloud Home ATA binary sensor."""
 
-    entity_description: ATABinarySensorEntityDescription
+    entity_description: MelCloudHomeBinarySensorEntityDescription[ATAUnit]
 
     def __init__(
         self,
         coordinator: MelCloudHomeCoordinator,
-        entity_description: ATABinarySensorEntityDescription,
+        entity_description: MelCloudHomeBinarySensorEntityDescription[ATAUnit],
         unit: ATAUnit,
     ) -> None:
         """Initialize the entity."""
@@ -157,12 +145,12 @@ class ATABinarySensor(MelCloudHomeATAUnitEntity, BinarySensorEntity):
 class ATWBinarySensor(MelCloudHomeATWUnitEntity, BinarySensorEntity):
     """Representation of a MELCloud Home ATW binary sensor."""
 
-    entity_description: ATWBinarySensorEntityDescription
+    entity_description: MelCloudHomeBinarySensorEntityDescription[ATWUnit]
 
     def __init__(
         self,
         coordinator: MelCloudHomeCoordinator,
-        entity_description: ATWBinarySensorEntityDescription,
+        entity_description: MelCloudHomeBinarySensorEntityDescription[ATWUnit],
         unit: ATWUnit,
     ) -> None:
         """Initialize the entity."""

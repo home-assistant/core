@@ -23,259 +23,161 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
-from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity
+from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity, unit_ids
 
 PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class ATANumberEntityDescription(NumberEntityDescription):
-    """Class to hold MELCloud Home ATA number description."""
+class MelCloudHomeNumberEntityDescription[_UnitT: ATAUnit | ATWUnit](
+    NumberEntityDescription
+):
+    """Class to hold MELCloud Home number description."""
 
-    available_fn: Callable[[ATAUnit], bool]
-    value_fn: Callable[[ATAUnit], float | None]
-    set_value_fn: Callable[[MELCloudHome, ATAUnit, float], Coroutine[Any, Any, None]]
-    validate_fn: Callable[[ATAUnit, float], str | None] | None = None
-
-
-@dataclass(frozen=True, kw_only=True)
-class ATWNumberEntityDescription(NumberEntityDescription):
-    """Class to hold MELCloud Home ATW number description."""
-
-    available_fn: Callable[[ATWUnit], bool]
-    value_fn: Callable[[ATWUnit], float | None]
-    set_value_fn: Callable[[MELCloudHome, ATWUnit, float], Coroutine[Any, Any, None]]
-    validate_fn: Callable[[ATWUnit, float], str | None] | None = None
+    available_fn: Callable[[_UnitT], bool]
+    value_fn: Callable[[_UnitT], float | None]
+    set_value_fn: Callable[[MELCloudHome, _UnitT, float], Coroutine[Any, Any, None]]
+    validate_fn: Callable[[_UnitT, float], str | None] | None = None
 
 
-ATA_NUMBERS: tuple[ATANumberEntityDescription, ...] = (
-    ATANumberEntityDescription(
-        key="frost_protection_min_temp",
-        translation_key="frost_protection_min_temp",
-        device_class=NumberDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_category=EntityCategory.CONFIG,
-        native_min_value=0.0,
-        native_max_value=30.0,
-        native_step=0.5,
-        available_fn=lambda unit: (
-            unit.frost_protection is not None and unit.frost_protection.enabled
+def _number_descriptions[_UnitT: ATAUnit | ATWUnit](
+    unit_type: type[_UnitT],
+    *,
+    overheat_min_temp: float,
+    overheat_max_temp: float,
+) -> tuple[MelCloudHomeNumberEntityDescription[_UnitT], ...]:
+    """Return the number descriptions for a unit type."""
+    return (
+        MelCloudHomeNumberEntityDescription(
+            key="frost_protection_min_temp",
+            translation_key="frost_protection_min_temp",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            entity_category=EntityCategory.CONFIG,
+            native_min_value=0.0,
+            native_max_value=30.0,
+            native_step=0.5,
+            available_fn=lambda unit: (
+                unit.frost_protection is not None and unit.frost_protection.enabled
+            ),
+            value_fn=lambda unit: (
+                unit.frost_protection.min if unit.frost_protection else None
+            ),
+            set_value_fn=lambda client, unit, value: client.set_frost_protection(
+                enabled=unit.frost_protection.enabled
+                if unit.frost_protection
+                else False,
+                min_temp=value,
+                max_temp=unit.frost_protection.max if unit.frost_protection else 0.0,
+                **unit_ids(unit),
+            ),
+            validate_fn=lambda unit, value: (
+                "temperature_min_exceeds_max"
+                if unit.frost_protection and value >= unit.frost_protection.max
+                else None
+            ),
         ),
-        value_fn=lambda unit: (
-            unit.frost_protection.min if unit.frost_protection else None
+        MelCloudHomeNumberEntityDescription(
+            key="frost_protection_max_temp",
+            translation_key="frost_protection_max_temp",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            entity_category=EntityCategory.CONFIG,
+            native_min_value=0.0,
+            native_max_value=30.0,
+            native_step=0.5,
+            available_fn=lambda unit: (
+                unit.frost_protection is not None and unit.frost_protection.enabled
+            ),
+            value_fn=lambda unit: (
+                unit.frost_protection.max if unit.frost_protection else None
+            ),
+            set_value_fn=lambda client, unit, value: client.set_frost_protection(
+                enabled=unit.frost_protection.enabled
+                if unit.frost_protection
+                else False,
+                min_temp=unit.frost_protection.min if unit.frost_protection else 0.0,
+                max_temp=value,
+                **unit_ids(unit),
+            ),
+            validate_fn=lambda unit, value: (
+                "temperature_max_below_min"
+                if unit.frost_protection and value <= unit.frost_protection.min
+                else None
+            ),
         ),
-        set_value_fn=lambda client, unit, value: client.set_frost_protection(
-            enabled=unit.frost_protection.enabled if unit.frost_protection else False,
-            min_temp=value,
-            max_temp=unit.frost_protection.max if unit.frost_protection else 0.0,
-            ata_unit_ids=[unit.id],
+        MelCloudHomeNumberEntityDescription(
+            key="overheat_protection_min_temp",
+            translation_key="overheat_protection_min_temp",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            entity_category=EntityCategory.CONFIG,
+            native_min_value=overheat_min_temp,
+            native_max_value=overheat_max_temp,
+            native_step=0.5,
+            available_fn=lambda unit: (
+                unit.overheat_protection is not None
+                and unit.overheat_protection.enabled
+            ),
+            value_fn=lambda unit: (
+                unit.overheat_protection.min if unit.overheat_protection else None
+            ),
+            set_value_fn=lambda client, unit, value: client.set_overheat_protection(
+                enabled=unit.overheat_protection.enabled
+                if unit.overheat_protection
+                else False,
+                min_temp=value,
+                max_temp=unit.overheat_protection.max
+                if unit.overheat_protection
+                else 0.0,
+                **unit_ids(unit),
+            ),
+            validate_fn=lambda unit, value: (
+                "temperature_min_exceeds_max"
+                if unit.overheat_protection and value >= unit.overheat_protection.max
+                else None
+            ),
         ),
-        validate_fn=lambda unit, value: (
-            "temperature_min_exceeds_max"
-            if unit.frost_protection and value >= unit.frost_protection.max
-            else None
+        MelCloudHomeNumberEntityDescription(
+            key="overheat_protection_max_temp",
+            translation_key="overheat_protection_max_temp",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            entity_category=EntityCategory.CONFIG,
+            native_min_value=overheat_min_temp,
+            native_max_value=overheat_max_temp,
+            native_step=0.5,
+            available_fn=lambda unit: (
+                unit.overheat_protection is not None
+                and unit.overheat_protection.enabled
+            ),
+            value_fn=lambda unit: (
+                unit.overheat_protection.max if unit.overheat_protection else None
+            ),
+            set_value_fn=lambda client, unit, value: client.set_overheat_protection(
+                enabled=unit.overheat_protection.enabled
+                if unit.overheat_protection
+                else False,
+                min_temp=unit.overheat_protection.min
+                if unit.overheat_protection
+                else 0.0,
+                max_temp=value,
+                **unit_ids(unit),
+            ),
+            validate_fn=lambda unit, value: (
+                "temperature_max_below_min"
+                if unit.overheat_protection and value <= unit.overheat_protection.min
+                else None
+            ),
         ),
-    ),
-    ATANumberEntityDescription(
-        key="frost_protection_max_temp",
-        translation_key="frost_protection_max_temp",
-        device_class=NumberDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_category=EntityCategory.CONFIG,
-        native_min_value=0.0,
-        native_max_value=30.0,
-        native_step=0.5,
-        available_fn=lambda unit: (
-            unit.frost_protection is not None and unit.frost_protection.enabled
-        ),
-        value_fn=lambda unit: (
-            unit.frost_protection.max if unit.frost_protection else None
-        ),
-        set_value_fn=lambda client, unit, value: client.set_frost_protection(
-            enabled=unit.frost_protection.enabled if unit.frost_protection else False,
-            min_temp=unit.frost_protection.min if unit.frost_protection else 0.0,
-            max_temp=value,
-            ata_unit_ids=[unit.id],
-        ),
-        validate_fn=lambda unit, value: (
-            "temperature_max_below_min"
-            if unit.frost_protection and value <= unit.frost_protection.min
-            else None
-        ),
-    ),
-    ATANumberEntityDescription(
-        key="overheat_protection_min_temp",
-        translation_key="overheat_protection_min_temp",
-        device_class=NumberDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_category=EntityCategory.CONFIG,
-        native_min_value=31.0,
-        native_max_value=40.0,
-        native_step=0.5,
-        available_fn=lambda unit: (
-            unit.overheat_protection is not None and unit.overheat_protection.enabled
-        ),
-        value_fn=lambda unit: (
-            unit.overheat_protection.min if unit.overheat_protection else None
-        ),
-        set_value_fn=lambda client, unit, value: client.set_overheat_protection(
-            enabled=unit.overheat_protection.enabled
-            if unit.overheat_protection
-            else False,
-            min_temp=value,
-            max_temp=unit.overheat_protection.max if unit.overheat_protection else 0.0,
-            ata_unit_ids=[unit.id],
-        ),
-        validate_fn=lambda unit, value: (
-            "temperature_min_exceeds_max"
-            if unit.overheat_protection and value >= unit.overheat_protection.max
-            else None
-        ),
-    ),
-    ATANumberEntityDescription(
-        key="overheat_protection_max_temp",
-        translation_key="overheat_protection_max_temp",
-        device_class=NumberDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_category=EntityCategory.CONFIG,
-        native_min_value=31.0,
-        native_max_value=40.0,
-        native_step=0.5,
-        available_fn=lambda unit: (
-            unit.overheat_protection is not None and unit.overheat_protection.enabled
-        ),
-        value_fn=lambda unit: (
-            unit.overheat_protection.max if unit.overheat_protection else None
-        ),
-        set_value_fn=lambda client, unit, value: client.set_overheat_protection(
-            enabled=unit.overheat_protection.enabled
-            if unit.overheat_protection
-            else False,
-            min_temp=unit.overheat_protection.min if unit.overheat_protection else 0.0,
-            max_temp=value,
-            ata_unit_ids=[unit.id],
-        ),
-        validate_fn=lambda unit, value: (
-            "temperature_max_below_min"
-            if unit.overheat_protection and value <= unit.overheat_protection.min
-            else None
-        ),
-    ),
+    )
+
+
+ATA_NUMBERS: tuple[MelCloudHomeNumberEntityDescription[ATAUnit], ...] = (
+    _number_descriptions(ATAUnit, overheat_min_temp=31.0, overheat_max_temp=40.0)
 )
-
-ATW_NUMBERS: tuple[ATWNumberEntityDescription, ...] = (
-    ATWNumberEntityDescription(
-        key="frost_protection_min_temp",
-        translation_key="frost_protection_min_temp",
-        device_class=NumberDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_category=EntityCategory.CONFIG,
-        native_min_value=0.0,
-        native_max_value=30.0,
-        native_step=0.5,
-        available_fn=lambda unit: (
-            unit.frost_protection is not None and unit.frost_protection.enabled
-        ),
-        value_fn=lambda unit: (
-            unit.frost_protection.min if unit.frost_protection else None
-        ),
-        set_value_fn=lambda client, unit, value: client.set_frost_protection(
-            enabled=unit.frost_protection.enabled if unit.frost_protection else False,
-            min_temp=value,
-            max_temp=unit.frost_protection.max if unit.frost_protection else 0.0,
-            atw_unit_ids=[unit.id],
-        ),
-        validate_fn=lambda unit, value: (
-            "temperature_min_exceeds_max"
-            if unit.frost_protection and value >= unit.frost_protection.max
-            else None
-        ),
-    ),
-    ATWNumberEntityDescription(
-        key="frost_protection_max_temp",
-        translation_key="frost_protection_max_temp",
-        device_class=NumberDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_category=EntityCategory.CONFIG,
-        native_min_value=0.0,
-        native_max_value=30.0,
-        native_step=0.5,
-        available_fn=lambda unit: (
-            unit.frost_protection is not None and unit.frost_protection.enabled
-        ),
-        value_fn=lambda unit: (
-            unit.frost_protection.max if unit.frost_protection else None
-        ),
-        set_value_fn=lambda client, unit, value: client.set_frost_protection(
-            enabled=unit.frost_protection.enabled if unit.frost_protection else False,
-            min_temp=unit.frost_protection.min if unit.frost_protection else 0.0,
-            max_temp=value,
-            atw_unit_ids=[unit.id],
-        ),
-        validate_fn=lambda unit, value: (
-            "temperature_max_below_min"
-            if unit.frost_protection and value <= unit.frost_protection.min
-            else None
-        ),
-    ),
-    ATWNumberEntityDescription(
-        key="overheat_protection_min_temp",
-        translation_key="overheat_protection_min_temp",
-        device_class=NumberDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_category=EntityCategory.CONFIG,
-        native_min_value=20.0,
-        native_max_value=60.0,
-        native_step=0.5,
-        available_fn=lambda unit: (
-            unit.overheat_protection is not None and unit.overheat_protection.enabled
-        ),
-        value_fn=lambda unit: (
-            unit.overheat_protection.min if unit.overheat_protection else None
-        ),
-        set_value_fn=lambda client, unit, value: client.set_overheat_protection(
-            enabled=unit.overheat_protection.enabled
-            if unit.overheat_protection
-            else False,
-            min_temp=value,
-            max_temp=unit.overheat_protection.max if unit.overheat_protection else 0.0,
-            atw_unit_ids=[unit.id],
-        ),
-        validate_fn=lambda unit, value: (
-            "temperature_min_exceeds_max"
-            if unit.overheat_protection and value >= unit.overheat_protection.max
-            else None
-        ),
-    ),
-    ATWNumberEntityDescription(
-        key="overheat_protection_max_temp",
-        translation_key="overheat_protection_max_temp",
-        device_class=NumberDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_category=EntityCategory.CONFIG,
-        native_min_value=20.0,
-        native_max_value=60.0,
-        native_step=0.5,
-        available_fn=lambda unit: (
-            unit.overheat_protection is not None and unit.overheat_protection.enabled
-        ),
-        value_fn=lambda unit: (
-            unit.overheat_protection.max if unit.overheat_protection else None
-        ),
-        set_value_fn=lambda client, unit, value: client.set_overheat_protection(
-            enabled=unit.overheat_protection.enabled
-            if unit.overheat_protection
-            else False,
-            min_temp=unit.overheat_protection.min if unit.overheat_protection else 0.0,
-            max_temp=value,
-            atw_unit_ids=[unit.id],
-        ),
-        validate_fn=lambda unit, value: (
-            "temperature_max_below_min"
-            if unit.overheat_protection and value <= unit.overheat_protection.min
-            else None
-        ),
-    ),
+ATW_NUMBERS: tuple[MelCloudHomeNumberEntityDescription[ATWUnit], ...] = (
+    _number_descriptions(ATWUnit, overheat_min_temp=20.0, overheat_max_temp=60.0)
 )
 
 
@@ -337,12 +239,12 @@ async def async_setup_entry(
 class ATANumber(MelCloudHomeATAUnitEntity, NumberEntity):
     """Representation of a MELCloud Home ATA number."""
 
-    entity_description: ATANumberEntityDescription
+    entity_description: MelCloudHomeNumberEntityDescription[ATAUnit]
 
     def __init__(
         self,
         coordinator: MelCloudHomeCoordinator,
-        entity_description: ATANumberEntityDescription,
+        entity_description: MelCloudHomeNumberEntityDescription[ATAUnit],
         unit: ATAUnit,
     ) -> None:
         """Initialize the entity."""
@@ -383,12 +285,12 @@ class ATANumber(MelCloudHomeATAUnitEntity, NumberEntity):
 class ATWNumber(MelCloudHomeATWUnitEntity, NumberEntity):
     """Representation of a MELCloud Home ATW number."""
 
-    entity_description: ATWNumberEntityDescription
+    entity_description: MelCloudHomeNumberEntityDescription[ATWUnit]
 
     def __init__(
         self,
         coordinator: MelCloudHomeCoordinator,
-        entity_description: ATWNumberEntityDescription,
+        entity_description: MelCloudHomeNumberEntityDescription[ATWUnit],
         unit: ATWUnit,
     ) -> None:
         """Initialize the entity."""
