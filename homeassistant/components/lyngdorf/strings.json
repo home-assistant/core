@@ -1,0 +1,53 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_determine_id": "[%key:component::lyngdorf::config::error::cannot_determine_id%]",
+      "unsupported_model": "This Lyngdorf model is not supported"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_determine_id": "Could not determine device identity. Ensure the device is powered on and reachable.",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_model": "This Lyngdorf model is not supported"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up **{name}**?"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of the Lyngdorf device"
+        },
+        "title": "Lyngdorf device connection"
+      }
+    }
+  },
+  "device": {
+    "zone_b": {
+      "name": "{device_name} Zone B"
+    }
+  },
+  "entity": {
+    "media_player": {
+      "main_zone": {
+        "name": "Main zone"
+      }
+    }
+  },
+  "exceptions": {
+    "setup_connection_error": {
+      "message": "Failed to connect to {host}"
+    },
+    "setup_timeout": {
+      "message": "Timeout connecting to {host}"
+    }
+  }
+}
