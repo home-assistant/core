@@ -1,8 +1,9 @@
 """Common fixtures for Fuelprices.dk tests."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from pybraendstofpriser import Flist
 import pytest
 
 from homeassistant.components.fuelprices_dk.const import (
@@ -12,7 +13,6 @@ from homeassistant.components.fuelprices_dk.const import (
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -22,30 +22,13 @@ TEST_STATION = {"id": 1234, "name": "Aarhus C"}
 TEST_PRICES = {"Blyfri95": 14.29, "Diesel": 12.99, "Blyfri98": 14.99}
 
 
-class MockStations(list):
-    """Station list helper that mimics pybraendstofpriser find behavior."""
-
-    def find(self, key: str, value: str) -> dict:
-        """Find a station by key/value."""
-        for station in self:
-            if station[key] == value:
-                return station
-        raise ValueError(f"No station found for {key}={value}")
-
-
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry for config flow tests."""
-    with (
-        patch(
-            "homeassistant.components.fuelprices_dk.async_setup_entry",
-            return_value=True,
-        ) as mock_setup,
-        patch(
-            "homeassistant.components.fuelprices_dk.async_unload_entry",
-            return_value=True,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.fuelprices_dk.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
         yield mock_setup
 
 
@@ -72,8 +55,8 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-async def mock_braendstofpriser() -> AsyncGenerator[AsyncMock]:
-    """Mock pybraendstofpriser client in both config_flow and api modules."""
+def mock_braendstofpriser() -> Generator[AsyncMock]:
+    """Mock the pybraendstofpriser client used by the integration."""
     with (
         patch(
             "homeassistant.components.fuelprices_dk.config_flow.Braendstofpriser",
@@ -81,12 +64,12 @@ async def mock_braendstofpriser() -> AsyncGenerator[AsyncMock]:
         ) as mock_config_flow_client,
         patch(
             "homeassistant.components.fuelprices_dk.coordinator.Braendstofpriser",
-            autospec=True,
-        ) as mock_api_client,
+            new=mock_config_flow_client,
+        ),
     ):
         client = mock_config_flow_client.return_value
         client.list_companies.return_value = [{"company": TEST_COMPANY}]
-        client.list_stations.return_value = MockStations([TEST_STATION])
+        client.list_stations.return_value = Flist([TEST_STATION])
         client.get_prices.return_value = {
             "station": {
                 "id": TEST_STATION["id"],
@@ -95,21 +78,4 @@ async def mock_braendstofpriser() -> AsyncGenerator[AsyncMock]:
             },
             "prices": TEST_PRICES,
         }
-
-        api_client = mock_api_client.return_value
-        api_client.get_prices.return_value = client.get_prices.return_value
-
         yield client
-
-
-@pytest.fixture
-async def init_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-) -> MockConfigEntry:
-    """Set up the integration from a mock config entry."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    return mock_config_entry

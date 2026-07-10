@@ -1,9 +1,7 @@
 """Config flow for the Fuelprices.dk integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientResponseError
 from pybraendstofpriser import Braendstofpriser
@@ -38,6 +36,7 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -93,6 +92,7 @@ class FuelpricesDkConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

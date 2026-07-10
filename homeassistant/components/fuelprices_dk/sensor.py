@@ -1,25 +1,20 @@
 """Sensor platform for the Fuelprices.dk integration."""
 
-from __future__ import annotations
-
-from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.sensor import (
-    EntityCategory,
     RestoreSensor,
-    SensorDeviceClass,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify as util_slugify
 
 from .const import DOMAIN
-from .coordinator import APIClient
+from .coordinator import FuelPricesDKCoordinator
 
 if TYPE_CHECKING:
     from . import FuelpricesDkConfigEntry
@@ -32,14 +27,6 @@ SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:gas-station",
     ),
-    SensorEntityDescription(
-        key="last_updated",
-        name="Last Updated",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        icon="mdi:clock-outline",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
 ]
 
 
@@ -51,46 +38,31 @@ async def async_setup_entry(
     """Set up the sensor platform for Fuelprices.dk."""
 
     for coordinator in entry.runtime_data.values():
-        subentry_sensors = []
-        for sensor in SENSORS:
-            if sensor.key == "last_updated":
-                subentry_sensors.append(
-                    FuelpricesDkSensor(
-                        coordinator,
-                        coordinator.station_name,
-                        "last_updated",
-                        "Last Updated",
-                        sensor,
-                    )
+        async_add_entities(
+            (
+                FuelpricesDkSensor(
+                    coordinator,
+                    coordinator.station_name,
+                    product_key,
+                    sensor,
                 )
-                continue
-
-            for product_key, product_info in coordinator.products.items():
-                product_name = product_info["name"]
-                subentry_sensors.append(
-                    FuelpricesDkSensor(
-                        coordinator,
-                        coordinator.station_name,
-                        product_key,
-                        product_name if isinstance(product_name, str) else product_key,
-                        sensor,
-                    )
-                )
-
-        async_add_entities(subentry_sensors, config_subentry_id=coordinator.subentry_id)
+                for sensor in SENSORS
+                for product_key in coordinator.data
+            ),
+            config_subentry_id=coordinator.subentry_id,
+        )
 
 
-class FuelpricesDkSensor(CoordinatorEntity[APIClient], RestoreSensor):
+class FuelpricesDkSensor(CoordinatorEntity[FuelPricesDKCoordinator], RestoreSensor):
     """Sensor for Fuelprices.dk."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: APIClient,
+        coordinator: FuelPricesDKCoordinator,
         station_name: str,
         product_key: str,
-        product_name: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -98,10 +70,9 @@ class FuelpricesDkSensor(CoordinatorEntity[APIClient], RestoreSensor):
         self.entity_description = description
 
         self._product_key = product_key
-        self._product_name = product_name
         self._station_name = station_name
 
-        self._attr_name = self._product_name
+        self._attr_name = product_key
 
         self._attr_unique_id = util_slugify(
             f"{self.coordinator.station_id}_{self.entity_description.key}_{product_key}"
@@ -117,28 +88,16 @@ class FuelpricesDkSensor(CoordinatorEntity[APIClient], RestoreSensor):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the entity is available."""
-        if self.entity_description.key == "last_updated":
-            return super().available
-
-        return super().available and self._product_key in self.coordinator.products
+        return super().available and self._product_key in self.coordinator.data
 
     @property
-    def native_value(self) -> datetime | float | None:
+    @override
+    def native_value(self) -> float | None:
         """Return the current value of the sensor."""
-        if self.entity_description.key == "last_updated":
-            return self.coordinator.updated_at
-
-        if (product := self.coordinator.products.get(self._product_key)) is None:
-            return None
-
-        if isinstance(price := product.get("price"), int | float):
+        price = self.coordinator.data[self._product_key]
+        if isinstance(price, int | float):
             return float(price)
-
         return None
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_write_ha_state()

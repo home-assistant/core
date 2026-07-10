@@ -1,10 +1,8 @@
 """Coordinator for the Fuelprices.dk integration."""
 
-from __future__ import annotations
-
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientResponseError
 from pybraendstofpriser import Braendstofpriser
@@ -13,9 +11,6 @@ from pybraendstofpriser.exceptions import ProductNotFoundError
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util import dt as dt_util
-
-from .const import DOMAIN
 
 if TYPE_CHECKING:
     from . import FuelpricesDkConfigEntry
@@ -25,7 +20,7 @@ SCAN_INTERVAL = timedelta(hours=1)
 _LOGGER = logging.getLogger(__name__)
 
 
-class APIClient(DataUpdateCoordinator[None]):
+class FuelPricesDKCoordinator(DataUpdateCoordinator[dict[str, float | None]]):
     """Data update coordinator for the Fuelprices.dk integration."""
 
     def __init__(
@@ -37,10 +32,10 @@ class APIClient(DataUpdateCoordinator[None]):
         subentry_id: str,
         config_entry: FuelpricesDkConfigEntry,
     ) -> None:
-        """Initialize the API client."""
+        """Initialize the coordinator."""
         super().__init__(
             hass=hass,
-            name=DOMAIN,
+            name=company,
             logger=_LOGGER,
             update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
@@ -51,12 +46,9 @@ class APIClient(DataUpdateCoordinator[None]):
         self.station_id: int = station["id"]
         self.station_name: str = station["name"]
         self.subentry_id = subentry_id
-        self.products: dict[str, dict[str, str | float | None]] = {}
-        self.updated_at: datetime | None = None
 
-        self.name = self.company
-
-    async def _async_update_data(self) -> None:
+    @override
+    async def _async_update_data(self) -> dict[str, float | None]:
         """Handle data update request from the coordinator."""
         try:
             data = await self._api.get_prices(self.station_id)
@@ -68,31 +60,5 @@ class APIClient(DataUpdateCoordinator[None]):
             raise ConfigEntryError(exc) from exc
 
         self.station_name = data["station"]["name"]
-        last_update = data["station"]["last_update"]
-        if (
-            last_update is None
-            or (parsed_last_update := dt_util.parse_datetime(last_update)) is None
-        ):
-            self.updated_at = None
-        elif parsed_last_update.tzinfo is None:
-            self.updated_at = parsed_last_update.replace(tzinfo=dt_util.UTC)
-        else:
-            self.updated_at = dt_util.as_utc(parsed_last_update)
 
-        # Expose every available product for the station.
-        self.products = {
-            product: {"name": product, "price": price}
-            for product, price in data["prices"].items()
-        }
-
-        for product, product_data in self.products.items():
-            _LOGGER.debug("Getting price for %s", product)
-            _LOGGER.debug(
-                "Updated price for %s: %s",
-                product_data["name"],
-                product_data["price"],
-            )
-        _LOGGER.debug(
-            "Updated at: %s",
-            data["station"].get("last_update", "UNKNOWN"),
-        )
+        return dict(data["prices"])

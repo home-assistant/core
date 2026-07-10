@@ -1,169 +1,97 @@
 """Test sensor platform for Fuelprices.dk."""
 
-from __future__ import annotations
+from unittest.mock import AsyncMock, patch
 
-from datetime import UTC, datetime
-from typing import cast
-from unittest.mock import patch
+from freezegun.api import FrozenDateTimeFactory
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fuelprices_dk.const import DOMAIN
-from homeassistant.components.fuelprices_dk.coordinator import APIClient
-from homeassistant.components.fuelprices_dk.sensor import (
-    SENSORS,
-    FuelpricesDkSensor,
-    async_setup_entry,
-)
-from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import TEST_COMPANY, TEST_STATION
+from . import setup_integration
+from .conftest import TEST_PRICES
 
-from tests.common import MockConfigEntry
-
-
-class FakeCoordinator:
-    """Minimal coordinator used for sensor platform tests."""
-
-    def __init__(self, subentry_id: str) -> None:
-        """Initialize fake coordinator data."""
-        self.subentry_id = subentry_id
-        self.station_id = TEST_STATION["id"]
-        self.station_name = TEST_STATION["name"]
-        self.company = TEST_COMPANY
-        self.last_update_success = True
-        self.updated_at: datetime | None = datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
-        self.products: dict[str, dict[str, str | float | None]] = {
-            "Blyfri95": {"name": "Blyfri95", "price": 14.29},
-            "Blyfri98": {"name": "Blyfri98", "price": 14.99},
-        }
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-async def test_async_setup_entry_creates_sensors(hass: HomeAssistant) -> None:
-    """Test sensor setup creates one sensor per product and diagnostics."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        subentries_data=[
-            ConfigSubentryData(
-                subentry_type="station",
-                title="Circle K - Aarhus C",
-                unique_id="Circle K_1234",
-                data={},
-            )
-        ],
-    )
-    config_entry.add_to_hass(hass)
+async def test_sensors(
+    hass: HomeAssistant,
+    mock_braendstofpriser: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the sensor entities."""
+    with patch("homeassistant.components.fuelprices_dk.PLATFORMS", ["sensor"]):
+        await setup_integration(hass, mock_config_entry)
 
-    subentry_id = next(iter(config_entry.subentries))
-    coordinator = FakeCoordinator(subentry_id)
-    config_entry.runtime_data = {coordinator.subentry_id: coordinator}
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    added_entities: list[FuelpricesDkSensor] = []
-    add_kwargs: dict[str, str] = {}
 
-    def _async_add_entities(entities, *_args, **kwargs) -> None:
-        added_entities.extend(entities)
-        add_kwargs.update(kwargs)
+async def test_sensor_updates(
+    hass: HomeAssistant,
+    mock_braendstofpriser: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the sensor updates when the coordinator refreshes."""
+    await setup_integration(hass, mock_config_entry)
 
-    await async_setup_entry(
-        hass,
-        config_entry,
-        cast(AddConfigEntryEntitiesCallback, _async_add_entities),
-    )
+    assert hass.states.get("sensor.aarhus_c_blyfri95").state == "14.29"
 
-    assert len(added_entities) == 3
-    assert add_kwargs["config_subentry_id"] == coordinator.subentry_id
-    assert {entity.unique_id for entity in added_entities} == {
-        f"{TEST_STATION['id']}_last_updated_last_updated",
-        f"{TEST_STATION['id']}_price_blyfri95",
-        f"{TEST_STATION['id']}_price_blyfri98",
+    mock_braendstofpriser.get_prices.return_value = {
+        "station": {"id": 1234, "name": "Aarhus C", "last_update": None},
+        "prices": {**TEST_PRICES, "Blyfri95": 15.99},
     }
 
-    product_entity = next(
-        entity for entity in added_entities if entity.name == "Blyfri95"
-    )
+    freezer.tick(3600)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert product_entity.native_value == 14.29
-    assert product_entity.device_info is not None
-    assert product_entity.device_info["identifiers"] == {
-        (DOMAIN, str(TEST_STATION["id"]))
+    assert hass.states.get("sensor.aarhus_c_blyfri95").state == "15.99"
+
+
+async def test_sensor_becomes_unavailable_when_product_missing(
+    hass: HomeAssistant,
+    mock_braendstofpriser: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a sensor becomes unavailable when its product is not returned."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.aarhus_c_blyfri95").state == "14.29"
+
+    remaining = {k: v for k, v in TEST_PRICES.items() if k != "Blyfri95"}
+    mock_braendstofpriser.get_prices.return_value = {
+        "station": {"id": 1234, "name": "Aarhus C", "last_update": None},
+        "prices": remaining,
     }
-    assert product_entity.device_info["entry_type"] is DeviceEntryType.SERVICE
-    assert product_entity.device_class is None
 
-    last_updated_entity = next(
-        entity for entity in added_entities if entity.name == "Last Updated"
-    )
+    freezer.tick(3600)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    assert last_updated_entity.native_value == datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
-    assert last_updated_entity.entity_category is not None
+    assert hass.states.get("sensor.aarhus_c_blyfri95").state == STATE_UNAVAILABLE
 
 
-async def test_sensor_available_follows_product_presence() -> None:
-    """Test sensor availability follows the fetched products."""
-    coordinator = FakeCoordinator("station_1")
-    price_description = next(
-        description for description in SENSORS if description.key == "price"
-    )
+async def test_sensor_ignores_non_numeric_price(
+    hass: HomeAssistant,
+    mock_braendstofpriser: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a sensor reports unknown when the API returns a non-numeric price."""
+    await setup_integration(hass, mock_config_entry)
 
-    sensor = FuelpricesDkSensor(
-        cast(APIClient, coordinator),
-        coordinator.station_name,
-        "Blyfri95",
-        "Blyfri95",
-        price_description,
-    )
+    mock_braendstofpriser.get_prices.return_value = {
+        "station": {"id": 1234, "name": "Aarhus C", "last_update": None},
+        "prices": {**TEST_PRICES, "Blyfri95": "n/a"},
+    }
 
-    assert sensor.available is True
-    assert sensor.native_value == 14.29
+    freezer.tick(3600)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    coordinator.products.pop("Blyfri95")
-
-    assert sensor.available is False
-    assert sensor.native_value is None
-
-
-async def test_last_updated_sensor_uses_coordinator_timestamp() -> None:
-    """Test the last updated sensor exposes coordinator timestamp data."""
-    coordinator = FakeCoordinator("station_1")
-    last_updated_description = next(
-        description for description in SENSORS if description.key == "last_updated"
-    )
-
-    sensor = FuelpricesDkSensor(
-        cast(APIClient, coordinator),
-        coordinator.station_name,
-        "last_updated",
-        "Last Updated",
-        last_updated_description,
-    )
-
-    assert sensor.available is True
-    assert sensor.native_value == datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
-
-    coordinator.updated_at = None
-
-    assert sensor.available is True
-    assert sensor.native_value is None
-
-
-async def test_sensor_writes_state_on_coordinator_update() -> None:
-    """Test sensor writes state when coordinator data changes."""
-    coordinator = FakeCoordinator("station_1")
-    price_description = next(
-        description for description in SENSORS if description.key == "price"
-    )
-
-    sensor = FuelpricesDkSensor(
-        cast(APIClient, coordinator),
-        coordinator.station_name,
-        "Blyfri95",
-        "Blyfri95",
-        price_description,
-    )
-    with patch.object(sensor, "async_write_ha_state") as write_state_mock:
-        sensor._handle_coordinator_update()
-
-    write_state_mock.assert_called_once()
+    assert hass.states.get("sensor.aarhus_c_blyfri95").state == STATE_UNKNOWN
