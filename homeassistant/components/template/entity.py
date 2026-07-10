@@ -27,11 +27,7 @@ _SENTINEL = object()
 
 
 def _is_missing_template(value: Any) -> bool:
-    """Return True if a state template is unset or effectively empty.
-
-    UI config entries may store an empty string for optional template fields.
-    Treat those the same as a missing template so optimistic restore works.
-    """
+    """Return True if a state template is unset or empty/whitespace only."""
     if value is None:
         return True
     if isinstance(value, Template):

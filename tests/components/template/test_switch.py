@@ -601,11 +601,7 @@ async def test_restore_state(
 async def test_config_entry_optimistic_restore_with_empty_value_template(
     hass: HomeAssistant, test_state: str
 ) -> None:
-    """UI empty value_template should keep optimistic mode and restore state.
-
-    Config entries created from the UI may store an empty string for the optional
-    state field. That must not disable optimistic mode or block restore.
-    """
+    """UI empty value_template should keep optimistic mode and restore state."""
     mock_restore_cache(hass, (State("switch.my_template", test_state),))
     hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
@@ -635,7 +631,7 @@ async def test_config_entry_optimistic_restore_with_empty_value_template(
     assert state.attributes.get("assumed_state") is True
 
 
-async def test_config_entry_optimistic_turn_on_with_empty_value_template(
+async def test_config_entry_optimistic_turn_on_off_with_empty_value_template(
     hass: HomeAssistant,
 ) -> None:
     """UI empty value_template should still allow optimistic turn on/off."""
