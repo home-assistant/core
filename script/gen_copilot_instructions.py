@@ -17,6 +17,7 @@ INTEGRATION_SKILL_FILE = Path(".claude/skills/ha-integration-knowledge/SKILL.md"
 INTEGRATION_PATH_SPECIFIC_OUTPUT_FILE = Path(
     ".github/instructions/integrations.instructions.md"
 )
+PR_TEMPLATE_FILE = Path(".github/PULL_REQUEST_TEMPLATE.md")
 
 COPILOT_SPECIFIC_INSTRUCTIONS = """
 # Copilot code review instructions
@@ -25,6 +26,15 @@ COPILOT_SPECIFIC_INSTRUCTIONS = """
 - Do not comment on code style, formatting or linting issues.
 - Flag comments that over-explain straightforward code, narrate the obvious, or read like AI commentary (multi-sentence justifications for a single line).
 - A Pull Request with a dependency version bump should only contain changes required for the version bump. If the PR includes other changes, request that they are removed from the PR.
+- Check that the PR description is complete and filled in according to the PR template included below. Every section and checklist item from the template must be present, except the `## Breaking change` section which is optional. Nothing from the template should be missing. Even unchecked checkboxes or empty sections must be present. This is an hard requirement.
+
+## Pull Request template
+
+The PR description must follow this template (from `.github/PULL_REQUEST_TEMPLATE.md`):
+
+```markdown
+{pr_template}
+```
 """
 
 INTEGRATION_PATH_SPECIFIC_INSTRUCTIONS = """---
@@ -69,7 +79,15 @@ def generate_output() -> str:
         print(f"Error: {AGENTS_FILE} not found")
         sys.exit(1)
 
-    output_parts: list[str] = [GENERATED_MESSAGE, COPILOT_SPECIFIC_INSTRUCTIONS]
+    if not PR_TEMPLATE_FILE.exists():
+        print(f"Error: {PR_TEMPLATE_FILE} not found")
+        sys.exit(1)
+
+    copilot_instructions = COPILOT_SPECIFIC_INSTRUCTIONS.replace(
+        "{pr_template}", PR_TEMPLATE_FILE.read_text().strip()
+    )
+
+    output_parts: list[str] = [GENERATED_MESSAGE, copilot_instructions]
 
     # Add AGENTS.md content
     agents_content = AGENTS_FILE.read_text()
