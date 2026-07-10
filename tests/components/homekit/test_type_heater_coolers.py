@@ -189,45 +189,48 @@ async def test_heatercooler_with_fan_and_swing(
     assert acc.char_swing.value == 0  # off
 
 
-async def test_heatercooler_modes_auto_preferred(
-    hass: HomeAssistant, hk_driver: HomeDriver
-) -> None:
-    """Test HeaterCooler mode mapping when AUTO mode is available."""
-    entity_id = "climate.test"
-    base_attrs = {
-        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
-        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO, HVACMode.OFF],
-    }
-
-    hass.states.async_set(entity_id, HVACMode.AUTO, base_attrs)
-    await hass.async_block_till_done()
-
-    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
-    hk_driver.add_accessory(acc)
-
-    acc.run()
-    await hass.async_block_till_done()
-
-    # AUTO mode should be preferred for HC_TARGET_AUTO
-    assert acc._hk_to_ha_target[HC_TARGET_AUTO] == HVACMode.AUTO
-
-
-async def test_heatercooler_modes_heat_cool_fallback(
-    hass: HomeAssistant, hk_driver: HomeDriver
-) -> None:
-    """Test HeaterCooler mode mapping when HEAT_COOL mode is available but not AUTO."""
-    entity_id = "climate.test"
-    base_attrs = {
-        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
-        ATTR_HVAC_MODES: [
-            HVACMode.HEAT,
-            HVACMode.COOL,
+@pytest.mark.parametrize(
+    ("hvac_modes", "expected_auto_mode"),
+    [
+        pytest.param(
+            [HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO, HVACMode.OFF],
+            HVACMode.AUTO,
+            id="auto_only",
+        ),
+        pytest.param(
+            [HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL, HVACMode.OFF],
             HVACMode.HEAT_COOL,
-            HVACMode.OFF,
-        ],
+            id="heat_cool_only",
+        ),
+        # HEAT_COOL keeps its thresholds adjustable, AUTO may follow a
+        # schedule, so HEAT_COOL backs the HomeKit Auto target
+        pytest.param(
+            [
+                HVACMode.HEAT,
+                HVACMode.COOL,
+                HVACMode.HEAT_COOL,
+                HVACMode.AUTO,
+                HVACMode.OFF,
+            ],
+            HVACMode.HEAT_COOL,
+            id="heat_cool_preferred_over_auto",
+        ),
+    ],
+)
+async def test_heatercooler_auto_target_backing_mode(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    hvac_modes: list[HVACMode],
+    expected_auto_mode: HVACMode,
+) -> None:
+    """Test which range mode backs the HomeKit Auto target."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: hvac_modes,
     }
 
-    hass.states.async_set(entity_id, HVACMode.HEAT_COOL, base_attrs)
+    hass.states.async_set(entity_id, hvac_modes[0], base_attrs)
     await hass.async_block_till_done()
 
     acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
@@ -236,8 +239,46 @@ async def test_heatercooler_modes_heat_cool_fallback(
     acc.run()
     await hass.async_block_till_done()
 
-    # HEAT_COOL mode should be used for HC_TARGET_AUTO when AUTO is not available
-    assert acc._hk_to_ha_target[HC_TARGET_AUTO] == HVACMode.HEAT_COOL
+    assert acc._hk_to_ha_target[HC_TARGET_AUTO] == expected_auto_mode
+
+
+async def test_heatercooler_rejected_mode_is_not_remembered(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a rejected mode write does not become the restore mode."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+    }
+
+    hass.states.async_set(entity_id, HVACMode.HEAT, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
+    await hass.async_block_till_done()
+
+    # The entity rejects the mode write while off
+    async def _fail(call: ServiceCall) -> None:
+        raise HomeAssistantError("mode rejected")
+
+    hass.services.async_register(CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, _fail)
+    _write_chars(hk_driver, acc, {CHAR_TARGET_HEATER_COOLER_STATE: HC_TARGET_COOL})
+    await hass.async_block_till_done()
+
+    assert acc._last_known_mode == HVACMode.HEAT
+
+    # Turning Active on retries the last accepted mode, not the rejected one
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
+    _write_chars(hk_driver, acc, {CHAR_ACTIVE: 1})
+    await hass.async_block_till_done()
+
+    assert call_set_hvac_mode[-1].data[ATTR_HVAC_MODE] == HVACMode.HEAT
 
 
 async def test_heatercooler_modes_heat_cool_only_no_auto(

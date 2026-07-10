@@ -153,16 +153,17 @@ class HeaterCooler(HomeKitClimateAccessory):
 
         # Only expose the targets the entity actually supports so HomeKit does
         # not offer a mode the climate service would reject. Auto is backed by
-        # a range mode, preferring AUTO over HEAT_COOL.
+        # a range mode, preferring HEAT_COOL whose thresholds stay adjustable
+        # over AUTO, which may follow a schedule, like the thermostat does.
         self._hk_to_ha_target: dict[int, HVACMode] = {}
         if HVACMode.HEAT in hvac_modes:
             self._hk_to_ha_target[HC_TARGET_HEAT] = HVACMode.HEAT
         if HVACMode.COOL in hvac_modes:
             self._hk_to_ha_target[HC_TARGET_COOL] = HVACMode.COOL
-        if supports_auto:
-            self._hk_to_ha_target[HC_TARGET_AUTO] = HVACMode.AUTO
-        elif supports_heat_cool:
+        if supports_heat_cool:
             self._hk_to_ha_target[HC_TARGET_AUTO] = HVACMode.HEAT_COOL
+        elif supports_auto:
+            self._hk_to_ha_target[HC_TARGET_AUTO] = HVACMode.AUTO
         if not self._hk_to_ha_target:
             # Entities exposing neither heat, cool, nor a range mode (e.g.
             # fan-only) still need a valid target; map Auto to the first mode the
@@ -358,6 +359,13 @@ class HeaterCooler(HomeKitClimateAccessory):
                     {ATTR_ENTITY_ID: self.entity_id, **service_data},
                 ):
                     return
+                # The remembered mode is committed only once the entity
+                # accepted it, so a rejected mode is not restored later.
+                if (
+                    service_name == SERVICE_SET_HVAC_MODE
+                    and (mode := service_data[ATTR_HVAC_MODE]) != HVACMode.OFF
+                ):
+                    self._last_known_mode = mode
             if fan_swing_char_values:
                 self._handle_fan_swing_changes(fan_swing_char_values)
 
@@ -395,7 +403,6 @@ class HeaterCooler(HomeKitClimateAccessory):
                 service_calls.append(
                     (SERVICE_SET_HVAC_MODE, {ATTR_HVAC_MODE: requested_mode})
                 )
-                self._last_known_mode = requested_mode
             elif (restore := self._hk_target_mode(self._last_known_mode)) is not None:
                 # The write already changed the characteristic to a target
                 # the entity cannot enter, so put it back on the last mode.
