@@ -1042,6 +1042,73 @@ async def test_heatercooler_set_temperature_dual(
     assert call_set_temperature[0].data[ATTR_TARGET_TEMP_LOW] == 16.0
 
 
+async def test_heatercooler_dual_capable_entity_in_single_mode(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test dual capable entities in a single setpoint mode use temperature."""
+    entity_id = "climate.test"
+    # Entities like ecobee publish the range keys even in heat or cool
+    # mode, where only the single setpoint carries a value
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        ),
+        ATTR_HVAC_MODES: [
+            HVACMode.HEAT,
+            HVACMode.COOL,
+            HVACMode.HEAT_COOL,
+            HVACMode.OFF,
+        ],
+        ATTR_TARGET_TEMP_HIGH: None,
+        ATTR_TARGET_TEMP_LOW: None,
+        ATTR_TEMPERATURE: 22.0,
+    }
+
+    hass.states.async_set(entity_id, HVACMode.HEAT, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # The single setpoint is displayed instead of stale placeholder values
+    assert acc.char_heat.value == pytest.approx(22.0, abs=0.1)
+
+    # A threshold write in heat mode sends the single setpoint
+    call_set_temperature = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
+    )
+    _write_chars(hk_driver, acc, {CHAR_HEATING_THRESHOLD_TEMPERATURE: 21.0})
+    await hass.async_block_till_done()
+
+    assert len(call_set_temperature) == 1
+    assert call_set_temperature[0].data[ATTR_TEMPERATURE] == pytest.approx(
+        21.0, abs=0.1
+    )
+    assert ATTR_TARGET_TEMP_HIGH not in call_set_temperature[0].data
+
+    # Switching to Auto in the same batch sends a range write instead
+    _write_chars(
+        hk_driver,
+        acc,
+        {
+            CHAR_TARGET_HEATER_COOLER_STATE: HC_TARGET_AUTO,
+            CHAR_COOLING_THRESHOLD_TEMPERATURE: 26.0,
+            CHAR_HEATING_THRESHOLD_TEMPERATURE: 16.0,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert call_set_temperature[-1].data[ATTR_TARGET_TEMP_HIGH] == pytest.approx(
+        26.0, abs=0.1
+    )
+    assert call_set_temperature[-1].data[ATTR_TARGET_TEMP_LOW] == pytest.approx(
+        16.0, abs=0.1
+    )
+
+
 async def test_heatercooler_set_fan_speed(
     hass: HomeAssistant, hk_driver: HomeDriver
 ) -> None:

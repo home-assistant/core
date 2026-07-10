@@ -378,12 +378,28 @@ class HeaterCooler(HomeKitClimateAccessory):
         if cooling_temp is None and heating_temp is None:
             return
 
-        supports_dual_temp = current_state is not None and (
-            ATTR_TARGET_TEMP_HIGH in current_state.attributes
-            or ATTR_TARGET_TEMP_LOW in current_state.attributes
-        )
+        # A mode written in the same batch decides the write shape, since
+        # the entity state still holds the pre-change mode.
+        requested_mode: HVACMode | None = None
+        if (
+            target_mode := char_values.get(CHAR_TARGET_HEATER_COOLER_STATE)
+        ) is not None:
+            requested_mode = self._hk_to_ha_target.get(target_mode)
 
-        if supports_dual_temp:
+        # Entities that support both single and range targets publish the
+        # range keys even when they are unset, so the effective mode decides
+        # between a range and a single setpoint write; entities that only
+        # take a range always get one.
+        attributes = current_state.attributes if current_state else {}
+        current_mode = (
+            try_parse_enum(HVACMode, current_state.state) if current_state else None
+        )
+        effective_mode = requested_mode or current_mode
+        use_range = (
+            ATTR_TARGET_TEMP_HIGH in attributes or ATTR_TARGET_TEMP_LOW in attributes
+        ) and (effective_mode in RANGE_MODES or ATTR_TEMPERATURE not in attributes)
+
+        if use_range:
             service_calls.append(
                 (
                     SERVICE_SET_TEMPERATURE,
@@ -393,13 +409,6 @@ class HeaterCooler(HomeKitClimateAccessory):
                 )
             )
         else:
-            # A mode written in the same batch decides the setpoint side, since
-            # the entity state still holds the pre-change mode.
-            requested_mode: HVACMode | None = None
-            if (
-                target_mode := char_values.get(CHAR_TARGET_HEATER_COOLER_STATE)
-            ) is not None:
-                requested_mode = self._hk_to_ha_target.get(target_mode)
             self._handle_single_temp_changes(
                 service_calls, cooling_temp, heating_temp, current_state, requested_mode
             )
@@ -514,8 +523,11 @@ class HeaterCooler(HomeKitClimateAccessory):
         if not self._has_cool_threshold and not self._has_heat_threshold:
             return
         attributes = state.attributes
+        # Dual capable entities publish the range keys even in single
+        # setpoint modes, so only values decide what is displayed.
         supports_dual_temp = (
-            ATTR_TARGET_TEMP_HIGH in attributes or ATTR_TARGET_TEMP_LOW in attributes
+            attributes.get(ATTR_TARGET_TEMP_HIGH) is not None
+            or attributes.get(ATTR_TARGET_TEMP_LOW) is not None
         )
 
         if supports_dual_temp:
