@@ -497,8 +497,21 @@ class SonosDiscoveryManager:
             )
             if not known_speaker:
                 try:
+                    uid = await self.hass.async_add_executor_job(getattr, soco, "uid")
+                except HTTPError as err:
+                    await self._process_http_connection_error(err, ip_addr)
+                    continue
+                except (
+                    OSError,
+                    SoCoException,
+                    Timeout,
+                    TimeoutError,
+                ) as ex:
+                    _LOGGER.warning("Could not get Sonos uid from %s: %s", ip_addr, ex)
+                    continue
+                try:
                     await self._async_handle_discovery_message(
-                        soco.uid,
+                        uid,
                         ip_addr,
                         "manual zone scan",
                     )
@@ -515,7 +528,7 @@ class SonosDiscoveryManager:
                     # Only send the message if the ping was successful.
                     async_dispatcher_send(
                         self.hass,
-                        f"{SONOS_SPEAKER_ACTIVITY}-{soco.uid}",
+                        f"{SONOS_SPEAKER_ACTIVITY}-{known_speaker.uid}",
                         "manual zone scan",
                     )
                 except SonosUpdateError:
