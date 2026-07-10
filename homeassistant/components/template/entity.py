@@ -26,6 +26,21 @@ from .const import CONF_ATTRIBUTES, CONF_DEFAULT_ENTITY_ID, CONF_PICTURE
 _SENTINEL = object()
 
 
+def _is_missing_template(value: Any) -> bool:
+    """Return True if a state template is unset or effectively empty.
+
+    UI config entries may store an empty string for optional template fields.
+    Treat those the same as a missing template so optimistic restore works.
+    """
+    if value is None:
+        return True
+    if isinstance(value, Template):
+        return not value.template.strip()
+    if isinstance(value, str):
+        return not value.strip()
+    return False
+
+
 @dataclass
 class EntityTemplate:
     """Information class for properly handling template results."""
@@ -70,10 +85,12 @@ class AbstractTemplateEntity(Entity):
             optimistic = config.get(CONF_OPTIMISTIC)
 
             if self._state_option is not None:
-                assumed_optimistic = config.get(self._state_option) is None
+                assumed_optimistic = _is_missing_template(
+                    config.get(self._state_option)
+                )
                 if self._extra_optimistic_options:
                     assumed_optimistic = assumed_optimistic and all(
-                        config.get(option) is None
+                        _is_missing_template(config.get(option))
                         for option in self._extra_optimistic_options
                     )
 
@@ -160,18 +177,19 @@ class AbstractTemplateEntity(Entity):
         add_if_static: bool = True,
     ) -> Template | None:
         """Add a template."""
-        if (template := self._config.get(option)) and isinstance(template, Template):
-            if add_if_static or (not template.is_static):
-                self._templates[option] = EntityTemplate(
-                    attribute,
-                    template,
-                    validator,
-                    on_update,
-                    none_on_template_error,
-                )
-            return template
+        template = self._config.get(option)
+        if not isinstance(template, Template) or _is_missing_template(template):
+            return None
 
-        return None
+        if add_if_static or (not template.is_static):
+            self._templates[option] = EntityTemplate(
+                attribute,
+                template,
+                validator,
+                on_update,
+                none_on_template_error,
+            )
+        return template
 
     def add_script(
         self,

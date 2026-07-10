@@ -597,6 +597,92 @@ async def test_restore_state(
     assert state.state == test_state
 
 
+@pytest.mark.parametrize("test_state", [STATE_ON, STATE_OFF])
+async def test_config_entry_optimistic_restore_with_empty_value_template(
+    hass: HomeAssistant, test_state: str
+) -> None:
+    """UI empty value_template should keep optimistic mode and restore state.
+
+    Config entries created from the UI may store an empty string for the optional
+    state field. That must not disable optimistic mode or block restore.
+    """
+    mock_restore_cache(hass, (State("switch.my_template", test_state),))
+    hass.set_state(CoreState.starting)
+    mock_component(hass, "recorder")
+
+    entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": SWITCH_DOMAIN,
+            "value_template": "",
+            "turn_on": [],
+            "turn_off": [],
+        },
+        title="My template",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.my_template")
+    assert state is not None
+    assert state.state == test_state
+    assert state.attributes.get("assumed_state") is True
+
+
+async def test_config_entry_optimistic_turn_on_with_empty_value_template(
+    hass: HomeAssistant,
+) -> None:
+    """UI empty value_template should still allow optimistic turn on/off."""
+    entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": SWITCH_DOMAIN,
+            "value_template": "",
+            "turn_on": [],
+            "turn_off": [],
+        },
+        title="My template",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.my_template")
+    assert state is not None
+    assert state.attributes.get("assumed_state") is True
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.my_template"},
+        blocking=True,
+    )
+
+    state = hass.states.get("switch.my_template")
+    assert state is not None
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.my_template"},
+        blocking=True,
+    )
+
+    state = hass.states.get("switch.my_template")
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
 @pytest.mark.parametrize(
     ("count", "attribute_template"),
     [(1, "{{ is_state('switch.test_state', 'on') }}")],
