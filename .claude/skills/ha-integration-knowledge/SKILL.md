@@ -30,7 +30,7 @@ The following platforms have extra guidelines:
 - Entity base class (e.g. `SensorEntity`, `TrackerEntity`) provide a stable API for child classes to inherit from. Do not suggest redeclaring or duplicating attributes, properties, or methods the base class already provides, and do not add guards against the parent's behavior changing — rely on the base class instead.
 - Give every entity a stable `unique_id` from a persistent identifier the device or service provides (serial, account/installation id, or a MAC via `format_mac()`); the config entry id is a valid last-resort fallback when no such identifier exists. Never derive it from a user-entered value (host, IP, username), an index, or the entity name.
 - Set `_attr_has_entity_name = True`, and omit `translation_key` when a `device_class` already names the entity.
-- Set `PARALLEL_UPDATES = 0` on read-only, coordinator-based entity platforms.
+- Set `PARALLEL_UPDATES` explicitly in every entity platform file: `0` for read-only platforms of coordinator-based integrations, a bounded value (typically `1`) where actions call the device.
 - Prefer separate entities (disabled by default if noisy) over `extra_state_attributes`.
 
 ## Setup and coordinators
@@ -45,7 +45,7 @@ The following platforms have extra guidelines:
 
 ## Config flow
 
-- Validate the connection before creating the entry. Use `TextSelector` / `NumberSelector` / `SelectSelector` and `add_suggested_values_to_schema()`, set a `unique_id`, and guard duplicates with `_abort_if_unique_id_configured()` / `_async_abort_entries_match()` (check for a mismatch on reconfigure or reauth).
+- Validate the connection before creating the entry (integrations with nothing to test — webhook-based, helpers, runtime auto-discovery — are exempt). Use `TextSelector` / `NumberSelector` / `SelectSelector` and `add_suggested_values_to_schema()`, set a `unique_id` when a usable identifier exists, and guard duplicates with `_abort_if_unique_id_configured()` / `_async_abort_entries_match()` (check for a mismatch on reconfigure or reauth).
 
 ## Translations
 
