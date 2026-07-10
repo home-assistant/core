@@ -246,7 +246,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             self._expiration_trigger()
             self._expiration_trigger = None
             self._expired = False
-        await MqttEntity.async_will_remove_from_hass(self)
+        await super().async_will_remove_from_hass()
 
     @staticmethod
     @override
