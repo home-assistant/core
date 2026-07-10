@@ -104,16 +104,16 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                 """
             ) from err
 
-        try:
-            self.tcs = self.loc.gateways[0].systems[0]
-        except IndexError as err:
+        if not self.loc.gateways or not self.loc.gateways[0].systems:
             raise UpdateFailed(
                 f"""
                     Config error: the location at 'location_idx' = {self.loc_idx}
                     has no gateway/system available (this is not currently supported).
                     Unable to continue. Fix any configuration errors and restart HA
                 """
-            ) from err
+            )
+
+        self.tcs = self.loc.gateways[0].systems[0]
 
         if self.logger.isEnabledFor(logging.DEBUG):
             loc_info = {
