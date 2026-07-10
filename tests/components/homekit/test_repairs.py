@@ -277,7 +277,7 @@ async def test_gained_humidity_setpoint_drops_stored_choice(
         DOMAIN, _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
     )
     assert homekit.aid_storage is not None
-    assert not homekit.aid_storage.heater_cooler_entities
+    assert homekit.aid_storage.get_accessory_type(ENTITY_ID) is None
     await _async_stop_bridge(homekit)
 
 

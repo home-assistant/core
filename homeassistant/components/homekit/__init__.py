@@ -841,21 +841,19 @@ class HomeKit:
         # Candidacy is re-evaluated on every resolve
         self._heater_cooler_candidates.pop(entity_id, None)
         if climate_type := conf.get(CONF_TYPE):
-            aid_storage.async_set_heater_cooler(
-                entity_id, climate_type == TYPE_HEATER_COOLER
-            )
+            aid_storage.async_set_accessory_type(entity_id, climate_type)
             return
-        if aid_storage.entity_uses_heater_cooler(entity_id):
+        if aid_storage.get_accessory_type(entity_id) == TYPE_HEATER_COOLER:
             if not climate_controls_target_humidity(state):
                 conf[CONF_TYPE] = TYPE_HEATER_COOLER
                 return
             # A humidity setpoint gained since the choice was stored cannot
             # be represented by the HeaterCooler, so the routing is dropped.
-            aid_storage.async_set_heater_cooler(entity_id, False)
+            aid_storage.async_set_accessory_type(entity_id, None)
         if not climate_supports_heater_cooler(state):
             return
         if allow_auto and not aid_storage.entity_is_allocated(entity_id):
-            aid_storage.async_set_heater_cooler(entity_id, True)
+            aid_storage.async_set_accessory_type(entity_id, TYPE_HEATER_COOLER)
             conf[CONF_TYPE] = TYPE_HEATER_COOLER
             return
         self._heater_cooler_candidates[entity_id] = state.name

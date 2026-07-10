@@ -33,7 +33,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import State, callback
 from homeassistant.util.percentage import percentage_to_ordered_list_item
 
@@ -349,5 +354,8 @@ class HomeKitClimateAccessory(HomeAccessory):
             )
 
         self.char_fan_active.set_value(
-            int(new_state.state != HVACMode.OFF and fan_mode_lower != FAN_OFF)
+            int(
+                new_state.state not in (HVACMode.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN)
+                and fan_mode_lower != FAN_OFF
+            )
         )

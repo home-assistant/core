@@ -25,7 +25,7 @@ AID_MANAGER_SAVE_DELAY = 2
 
 ALLOCATIONS_KEY = "allocations"
 UNIQUE_IDS_KEY = "unique_ids"
-HEATER_COOLER_KEY = "heater_cooler_entities"
+ACCESSORY_TYPES_KEY = "accessory_types"
 
 INVALID_AIDS = (0, 1)
 
@@ -70,7 +70,7 @@ class AccessoryAidStorage:
         self.hass = hass
         self.allocations: dict[str, int] = {}
         self.allocated_aids: set[int] = set()
-        self.heater_cooler_entities: set[str] = set()
+        self.accessory_types: dict[str, str] = {}
         self._entry_id = entry_id
         self.store: Store | None = None
         self._entity_registry = er.async_get(hass)
@@ -86,7 +86,7 @@ class AccessoryAidStorage:
         assert isinstance(raw_storage, dict)
         self.allocations = raw_storage.get(ALLOCATIONS_KEY, {})
         self.allocated_aids = set(self.allocations.values())
-        self.heater_cooler_entities = set(raw_storage.get(HEATER_COOLER_KEY, []))
+        self.accessory_types = raw_storage.get(ACCESSORY_TYPES_KEY, {})
 
     def _stable_storage_keys(self, entity_id: str) -> tuple[str, ...]:
         """Return the keys the entity's stable identity can resolve to.
@@ -103,32 +103,35 @@ class AccessoryAidStorage:
         return tuple(keys)
 
     @callback
-    def async_set_heater_cooler(self, entity_id: str, heater_cooler: bool) -> None:
-        """Persist whether an entity is routed to the HeaterCooler accessory.
-
-        The routing choice must survive restarts, since the automatic pick
-        only applies the first time an entity is bridged.
-        """
-        entities = self.heater_cooler_entities
-        keys = self._stable_storage_keys(entity_id)
-        if heater_cooler == any(key in entities for key in keys):
-            return
-        if heater_cooler:
-            entities.add(keys[0])
-        else:
-            for key in keys:
-                entities.discard(key)
-        self.async_schedule_save()
-
-    def entity_uses_heater_cooler(self, entity_id: str) -> bool:
-        """Return True when the entity is routed to the HeaterCooler.
+    def async_set_accessory_type(
+        self, entity_id: str, accessory_type: str | None
+    ) -> None:
+        """Persist the accessory type an entity resolved to, None clears it.
 
         The choice is stored by the same stable identity as the aid
         allocation, so it survives entity id renames and unique id changes.
         """
-        return any(
-            key in self.heater_cooler_entities
-            for key in self._stable_storage_keys(entity_id)
+        types = self.accessory_types
+        keys = self._stable_storage_keys(entity_id)
+        current = next((types[key] for key in keys if key in types), None)
+        if accessory_type == current:
+            return
+        for key in keys:
+            types.pop(key, None)
+        if accessory_type is not None:
+            types[keys[0]] = accessory_type
+        self.async_schedule_save()
+
+    def get_accessory_type(self, entity_id: str) -> str | None:
+        """Return the stored accessory type for the entity, if any."""
+        types = self.accessory_types
+        return next(
+            (
+                types[key]
+                for key in self._stable_storage_keys(entity_id)
+                if key in types
+            ),
+            None,
         )
 
     def get_or_allocate_aid_for_entity_id(self, entity_id: str) -> int:
@@ -163,9 +166,8 @@ class AccessoryAidStorage:
         if aid := self.allocations.pop(old_sys_unique_id, None):
             self.allocations[sys_unique_id] = aid
             self.async_schedule_save()
-        if old_sys_unique_id in self.heater_cooler_entities:
-            self.heater_cooler_entities.discard(old_sys_unique_id)
-            self.heater_cooler_entities.add(sys_unique_id)
+        if accessory_type := self.accessory_types.pop(old_sys_unique_id, None):
+            self.accessory_types[sys_unique_id] = accessory_type
             self.async_schedule_save()
 
     def get_or_allocate_aid(self, unique_id: str | None, entity_id: str) -> int:
@@ -211,11 +213,11 @@ class AccessoryAidStorage:
         return await self.store.async_save(self._data_to_save())
 
     @callback
-    def _data_to_save(self) -> dict[str, dict[str, int] | list[str]]:
+    def _data_to_save(self) -> dict[str, dict[str, int] | dict[str, str]]:
         """Return data of entity map to store in a file."""
-        data: dict[str, dict[str, int] | list[str]] = {
+        data: dict[str, dict[str, int] | dict[str, str]] = {
             ALLOCATIONS_KEY: self.allocations
         }
-        if self.heater_cooler_entities:
-            data[HEATER_COOLER_KEY] = sorted(self.heater_cooler_entities)
+        if self.accessory_types:
+            data[ACCESSORY_TYPES_KEY] = self.accessory_types
         return data

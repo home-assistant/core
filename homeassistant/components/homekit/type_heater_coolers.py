@@ -4,6 +4,7 @@ import logging
 from typing import Any, override
 
 from pyhap.characteristic import Characteristic
+from pyhap.const import CATEGORY_AIR_CONDITIONER, CATEGORY_HEATER
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
@@ -132,6 +133,14 @@ class HeaterCooler(HomeKitClimateAccessory):
         supports_auto = HVACMode.AUTO in hvac_modes or current_mode == HVACMode.AUTO
         supports_heat_cool = (
             HVACMode.HEAT_COOL in hvac_modes or current_mode == HVACMode.HEAT_COOL
+        )
+
+        # Standalone pairings advertise the category in the QR code and mDNS
+        # metadata, so pick the one matching the device instead of Thermostat.
+        self.category = (
+            CATEGORY_AIR_CONDITIONER
+            if HVACMode.COOL in hvac_modes or supports_auto or supports_heat_cool
+            else CATEGORY_HEATER
         )
 
         # Per the HomeKit spec a heater must include the heating threshold and a

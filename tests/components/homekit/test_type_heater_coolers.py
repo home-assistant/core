@@ -2,7 +2,14 @@
 
 from unittest.mock import patch
 
-from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
+from pyhap.const import (
+    CATEGORY_AIR_CONDITIONER,
+    CATEGORY_HEATER,
+    HAP_REPR_AID,
+    HAP_REPR_CHARS,
+    HAP_REPR_IID,
+    HAP_REPR_VALUE,
+)
 import pytest
 
 from homeassistant.components.climate import (
@@ -116,7 +123,7 @@ async def test_heatercooler_basic(hass: HomeAssistant, hk_driver: HomeDriver) ->
     await hass.async_block_till_done()
 
     assert acc.aid == 1
-    assert acc.category == 9  # Thermostat
+    assert acc.category == CATEGORY_AIR_CONDITIONER
 
     # Check initial state (OFF)
     assert acc.char_active.value == 0
@@ -2130,6 +2137,54 @@ async def test_heatercooler_auto_fan_mode_linked_fan_service(
     hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
     await hass.async_block_till_done()
     assert acc.char_fan_active.value == 0
+
+    # An entity that is unavailable when the accessory is created starts
+    # with the fan inactive; state change propagation filters unavailable
+    # in the base accessory, so only the creation path sees it.
+    hass.states.async_set(entity_id, STATE_UNAVAILABLE, base_attrs)
+    await hass.async_block_till_done()
+    acc_unavailable = HeaterCooler(hass, hk_driver, "Climate", entity_id, 2, None)
+    assert acc_unavailable.char_fan_active.value == 0
+
+
+@pytest.mark.parametrize(
+    ("hvac_modes", "expected_category"),
+    [
+        pytest.param(
+            [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+            CATEGORY_AIR_CONDITIONER,
+            id="cooling_capable",
+        ),
+        pytest.param(
+            [HVACMode.HEAT_COOL, HVACMode.OFF],
+            CATEGORY_AIR_CONDITIONER,
+            id="heat_cool",
+        ),
+        pytest.param(
+            [HVACMode.HEAT, HVACMode.OFF],
+            CATEGORY_HEATER,
+            id="heat_only",
+        ),
+    ],
+)
+async def test_heatercooler_category(
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    hvac_modes: list[HVACMode],
+    expected_category: int,
+) -> None:
+    """Test the advertised category matches the device capabilities."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: hvac_modes,
+    }
+
+    hass.states.async_set(entity_id, hvac_modes[0], base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    assert acc.category == expected_category
 
 
 async def test_heatercooler_auto_fan_service_without_speeds(
