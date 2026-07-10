@@ -86,6 +86,34 @@ async def test_entities(
             )
         ],
         motion_detectors=[_battery_only_device()],
+        smoke_detectors=[
+            _battery_only_device(device_id="hdm:HomeMaticIP:smoke1", name="Smoke")
+        ],
+        thermostats=[
+            _battery_only_device(
+                device_id="hdm:HomeMaticIP:thermostat1", name="Thermostat"
+            )
+        ],
+        twinguards=[
+            _battery_only_device(
+                device_id="hdm:HomeMaticIP:twinguard1", name="Twinguard"
+            )
+        ],
+        universal_switches=[
+            _battery_only_device(
+                device_id="hdm:HomeMaticIP:universalswitch1", name="Universal Switch"
+            )
+        ],
+        wallthermostats=[
+            _battery_only_device(
+                device_id="hdm:HomeMaticIP:wallthermostat1", name="Wall Thermostat"
+            )
+        ],
+        water_leakage_detectors=[
+            _battery_only_device(
+                device_id="hdm:HomeMaticIP:waterleak1", name="Water Leakage Detector"
+            )
+        ],
     )
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
