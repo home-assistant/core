@@ -61,6 +61,7 @@ from .const import (
     TYPE_THERMOSTAT,
     VIDEO_CODEC_COPY,
 )
+from .models import HomeKitEntryData
 from .util import async_find_next_available_port, state_needs_accessory_mode
 
 CONF_CAMERA_AUDIO = "camera_audio"
@@ -68,6 +69,11 @@ CONF_CAMERA_COPY = "camera_copy"
 CONF_INCLUDE_EXCLUDE_MODE = "include_exclude_mode"
 
 CLIMATE_TYPE_AUTOMATIC = "automatic"
+# Display names for the accessory classes a climate entity can use
+CLIMATE_ACCESSORY_NAMES = {
+    "Thermostat": "Thermostat",
+    "HeaterCooler": "Heater Cooler",
+}
 
 MODE_INCLUDE = "include"
 MODE_EXCLUDE = "exclude"
@@ -428,11 +434,16 @@ class OptionsFlowHandler(OptionsFlow):
             return await self.async_step_bridged_device_triggers()
 
         # Field labels come from the schema keys, so key the form by the
-        # friendly name and map back to the entity id on submit.
+        # friendly name and map back to the entity id on submit. The
+        # accessory a bridged entity currently uses is shown so Automatic
+        # is not a mystery.
+        current_accessories = self._async_current_climate_accessories()
         self._climate_choices = {}
         for entity_id in self.included_climates:
             state = self.hass.states.get(entity_id)
             label = f"{state.name} ({entity_id})" if state else entity_id
+            if current := current_accessories.get(entity_id):
+                label = f"{label} [{current}]"
             self._climate_choices[label] = entity_id
 
         all_entity_config = hk_options.setdefault(CONF_ENTITY_CONFIG, {})
@@ -458,6 +469,29 @@ class OptionsFlowHandler(OptionsFlow):
             }
         )
         return self.async_show_form(step_id="climate", data_schema=data_schema)
+
+    @callback
+    def _async_current_climate_accessories(self) -> dict[str, str]:
+        """Map bridged climate entities to their current accessory name."""
+        entry_data: HomeKitEntryData | None = getattr(
+            self.config_entry, "runtime_data", None
+        )
+        if entry_data is None:
+            return {}
+        homekit = entry_data.homekit
+        accessories: Iterable[Any]
+        if homekit.bridge is not None:
+            accessories = homekit.bridge.accessories.values()
+        elif homekit.driver is not None and homekit.driver.accessory is not None:
+            accessories = [homekit.driver.accessory]
+        else:
+            return {}
+        return {
+            entity_id: CLIMATE_ACCESSORY_NAMES[accessory_name]
+            for accessory in accessories
+            if (entity_id := getattr(accessory, "entity_id", None)) is not None
+            and (accessory_name := type(accessory).__name__) in CLIMATE_ACCESSORY_NAMES
+        }
 
     async def async_step_yaml(
         self, user_input: dict[str, Any] | None = None

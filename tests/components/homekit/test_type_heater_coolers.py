@@ -651,6 +651,40 @@ async def test_heatercooler_fan_speed_updates(
         assert acc.char_speed.value == expected_percentage
 
 
+async def test_heatercooler_no_swing_toggle_without_off_mode(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test the swing toggle is not exposed without an advertised off mode."""
+    entity_id = "climate.test"
+    # Routed through the fan speeds; the swing list has no off mode, so
+    # the toggle's off write would be rejected by the entity
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.SWING_MODE
+        ),
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+        ATTR_FAN_MODES: [FAN_LOW, FAN_HIGH],
+        ATTR_SWING_MODES: ["vertical"],
+        ATTR_SWING_MODE: "vertical",
+    }
+
+    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    assert acc.swing_on_mode is None
+    serv = acc.get_service(SERV_HEATER_COOLER)
+    assert serv.get_characteristic(CHAR_ROTATION_SPEED) is not None
+    with pytest.raises(ValueError):
+        serv.get_characteristic(CHAR_SWING_MODE)
+
+
 async def test_heatercooler_swing_mode_updates(
     hass: HomeAssistant, hk_driver: HomeDriver
 ) -> None:
@@ -1259,12 +1293,15 @@ async def test_heatercooler_pending_mode_bridges_slow_state_updates(
         22.0, abs=0.1
     )
 
-    # A mid transition update still reporting the old mode keeps the bridge
+    # A mid transition update still reporting the old mode keeps the
+    # bridge, the displayed target, and the restore mode
     hass.states.async_set(
         entity_id, HVACMode.HEAT, {**base_attrs, ATTR_CURRENT_TEMPERATURE: 23.0}
     )
     await hass.async_block_till_done()
     assert acc._pending_mode == HVACMode.COOL
+    assert acc.char_target_state.value == HC_TARGET_COOL
+    assert acc._last_known_mode == HVACMode.COOL
 
     # Once the entity reports a mode change, its state is authoritative again
     hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)

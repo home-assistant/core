@@ -624,8 +624,11 @@ class HeaterCooler(HomeKitClimateAccessory):
                 # like attribute updates mid transition, keep the bridge.
                 self._pending_mode = None
             self._last_reported_mode = current_mode
-        if current_mode and (tgt := self._hk_target_mode(current_mode)) is not None:
-            self._last_known_mode = current_mode
+        # While a write is pending, the accepted mode stays the displayed
+        # and restore target so a stale re-report cannot flip the tile back.
+        display_mode = self._pending_mode or current_mode
+        if display_mode and (tgt := self._hk_target_mode(display_mode)) is not None:
+            self._last_known_mode = display_mode
             self.char_target_state.set_value(tgt)
 
         if new_state.state in CLIMATE_INACTIVE_STATES:

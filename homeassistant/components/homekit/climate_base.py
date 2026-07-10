@@ -50,6 +50,7 @@ from .climate_util import (
     get_swing_off_mode,
     get_swing_on_mode,
     get_temperature_range_from_state,
+    has_swing_off_mode,
     is_swing_on,
     resolve_target_temp_range,
     temperature_attribute_to_homekit,
@@ -124,7 +125,11 @@ class HomeKitClimateAccessory(HomeAccessory):
 
         self.swing_on_mode: str | None = None
         self.swing_off_mode: str = SWING_OFF
-        if features & ClimateEntityFeature.SWING_MODE:
+        # The binary swing toggle writes the off mode back, so it is only
+        # usable when the entity advertises one.
+        if features & ClimateEntityFeature.SWING_MODE and has_swing_off_mode(
+            attributes
+        ):
             self.swing_on_mode = get_swing_on_mode(attributes)
             self.swing_off_mode = get_swing_off_mode(attributes)
 
