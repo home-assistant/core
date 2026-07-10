@@ -177,9 +177,7 @@ class AbstractTemplateEntity(Entity):
         if not isinstance(template, Template):
             return None
 
-        # Only suppress empty state templates used for optimistic mode.
-        # Other options (for example availability) may intentionally use an
-        # empty template and must keep their previous render behavior.
+        # Empty availability templates must still render (false -> unavailable).
         if self._is_optimistic_state_option(option) and _is_missing_template(template):
             return None
 
