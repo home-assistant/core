@@ -300,12 +300,14 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_public_value="is_motion_detected",
+        ufp_event_driven=True,
     ),
     ProtectBinaryEntityDescription(
         key="smart_obj_any",
         translation_key="object_detected",
         ufp_required_field="feature_flags.has_smart_detect",
         ufp_public_value="is_smart_currently_detected",
+        ufp_event_driven=True,
         entity_registry_enabled_default=False,
     ),
     ProtectBinaryEntityDescription(
@@ -313,6 +315,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="person_detected",
         ufp_required_field="can_detect_person",
         ufp_public_value="is_person_currently_detected",
+        ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_person_detection_on"),
     ),
     ProtectBinaryEntityDescription(
@@ -320,6 +323,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="vehicle_detected",
         ufp_required_field="can_detect_vehicle",
         ufp_public_value="is_vehicle_currently_detected",
+        ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_vehicle_detection_on"),
     ),
     ProtectBinaryEntityDescription(
@@ -327,6 +331,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="animal_detected",
         ufp_required_field="can_detect_animal",
         ufp_public_value="is_animal_currently_detected",
+        ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_animal_detection_on"),
     ),
     ProtectBinaryEntityDescription(
@@ -334,6 +339,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="audio_object_detected",
         ufp_required_field="feature_flags.smart_detect_audio_types",
         ufp_public_value="is_audio_currently_detected",
+        ufp_event_driven=True,
         entity_registry_enabled_default=False,
     ),
     ProtectBinaryEntityDescription(
@@ -341,6 +347,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="smoke_alarm_detected",
         ufp_required_field="can_detect_smoke",
         ufp_public_value="is_smoke_currently_detected",
+        ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_smoke_detection_on"),
     ),
     ProtectBinaryEntityDescription(
@@ -349,6 +356,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.CO,
         ufp_required_field="can_detect_co",
         ufp_public_value="is_cmonx_currently_detected",
+        ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_co_detection_on"),
     ),
     ProtectBinaryEntityDescription(
@@ -356,6 +364,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="siren_detected",
         ufp_required_field="can_detect_siren",
         ufp_public_value="is_siren_currently_detected",
+        ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_siren_detection_on"),
     ),
     ProtectBinaryEntityDescription(
@@ -363,6 +372,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="baby_cry_detected",
         ufp_required_field="can_detect_baby_cry",
         ufp_public_value="is_baby_cry_currently_detected",
+        ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_baby_cry_detection_on"),
     ),
     ProtectBinaryEntityDescription(
@@ -370,6 +380,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="speaking_detected",
         ufp_required_field="can_detect_speaking",
         ufp_public_value="is_speaking_currently_detected",
+        ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_speaking_detection_on"),
     ),
     ProtectBinaryEntityDescription(
@@ -377,6 +388,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="barking_detected",
         ufp_required_field="can_detect_bark",
         ufp_public_value="is_bark_currently_detected",
+        ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_bark_detection_on"),
     ),
     ProtectBinaryEntityDescription(
@@ -384,6 +396,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="car_alarm_detected",
         ufp_required_field="can_detect_car_alarm",
         ufp_public_value="is_car_alarm_currently_detected",
+        ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_car_alarm_detection_on"),
     ),
     ProtectBinaryEntityDescription(
@@ -391,6 +404,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="car_horn_detected",
         ufp_required_field="can_detect_car_horn",
         ufp_public_value="is_car_horn_currently_detected",
+        ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_car_horn_detection_on"),
     ),
     ProtectBinaryEntityDescription(
@@ -398,6 +412,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="glass_break_detected",
         ufp_required_field="can_detect_glass_break",
         ufp_public_value="is_glass_break_currently_detected",
+        ufp_event_driven=True,
         ufp_public_enabled_fn=operator.attrgetter("is_glass_break_detection_on"),
     ),
 )

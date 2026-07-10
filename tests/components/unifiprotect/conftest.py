@@ -258,11 +258,18 @@ def mock_entry(
             ufp.devices_ws_state_subscription = ws_state_subscription
             return Mock()
 
+        def subscribe_events_websocket_state(
+            ws_state_subscription: Callable[[WebsocketState], None],
+        ) -> Any:
+            ufp.events_ws_state_subscription = ws_state_subscription
+            return Mock()
+
         ufp_client.subscribe_websocket = subscribe
         ufp_client.subscribe_websocket_state = subscribe_websocket_state
         ufp_client.subscribe_devices_websocket = subscribe_devices_websocket
         ufp_client.subscribe_events = subscribe_events
         ufp_client.subscribe_devices_websocket_state = subscribe_devices_websocket_state
+        ufp_client.subscribe_events_websocket_state = subscribe_events_websocket_state
 
         async def update_public() -> Any:
             # Mirror the library prime: populate PublicCamera.rtsps_streams for

@@ -1,10 +1,9 @@
 """The tests for unifiprotect recorder."""
 
 from datetime import datetime, timedelta
-from unittest.mock import Mock
 
 from uiprotect import EventChange, ProtectEvent, ProtectEventChannel
-from uiprotect.data import Camera, EventType, PublicBootstrap, SmartDetectObjectType
+from uiprotect.data import Camera, EventType, SmartDetectObjectType
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
@@ -16,7 +15,12 @@ from homeassistant.components.unifiprotect.event import EVENT_DESCRIPTIONS
 from homeassistant.const import ATTR_FRIENDLY_NAME, Platform
 from homeassistant.core import HomeAssistant
 
-from .utils import MockUFPFixture, ids_from_device_description, init_entry
+from .utils import (
+    MockUFPFixture,
+    ids_from_device_description,
+    init_entry,
+    setup_public_camera,
+)
 
 from tests.components.recorder.common import async_wait_recording_done
 
@@ -31,11 +35,9 @@ async def test_exclude_attributes(
 ) -> None:
     """The smart-detect event entity excludes event_id/smart_detect_types from recording."""
     now = fixed_now
-    # Smart-detect events arrive on the public events websocket.
-    ufp.api.has_public_bootstrap = True
-    ufp.api.public_bootstrap = Mock(
-        spec=PublicBootstrap, relays={}, sirens={}, arm_mode=None, arm_profiles={}
-    )
+    # Smart-detect events arrive on the public events websocket; the entity's
+    # availability also requires the public camera to resolve.
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
 
     description = next(d for d in EVENT_DESCRIPTIONS if d.key == "smart_detection")

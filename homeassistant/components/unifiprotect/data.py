@@ -95,6 +95,7 @@ class ProtectData:
         self.auth_retries = 0
         self.last_update_success = False
         self.last_public_update_success = False
+        self.last_events_update_success = False
         self.api = protect
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
@@ -178,6 +179,7 @@ class ProtectData:
         """Subscribe and do the refresh."""
         self.last_update_success = True
         self.last_public_update_success = True
+        self.last_events_update_success = True
         self._async_update_change(True, force_update=True)
         api = self.api
         self._unsubs = [
@@ -193,6 +195,7 @@ class ProtectData:
                 self._async_process_public_devices_ws_message
             ),
             api.subscribe_devices_websocket_state(self._async_public_ws_state_changed),
+            api.subscribe_events_websocket_state(self._async_events_ws_state_changed),
         ]
 
     @callback
@@ -273,6 +276,21 @@ class ProtectData:
         if success == self.last_public_update_success:
             return
         self.last_public_update_success = success
+        self._async_process_public_updates()
+
+    @callback
+    def _async_events_ws_state_changed(self, state: WebsocketState) -> None:
+        """Handle a change in the public events websocket state.
+
+        Entities whose values are derived from the events stream (the
+        detection booleans and the public event entities) include this in
+        their availability, since the devices websocket alone cannot tell
+        whether detections still flow.
+        """
+        success = state is WebsocketState.CONNECTED
+        if success == self.last_events_update_success:
+            return
+        self.last_events_update_success = success
         self._async_process_public_updates()
 
     @callback

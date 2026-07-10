@@ -455,6 +455,27 @@ async def test_public_ws_state_change_without_public_bootstrap(
     assert data.last_public_update_success is False
 
 
+async def test_events_ws_state_change_without_public_bootstrap(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """Events WS state changes flip the flag but no-op without a bootstrap."""
+    await init_entry(hass, ufp, [])
+    data = ufp.entry.runtime_data
+    assert data.last_events_update_success is True
+    assert ufp.events_ws_state_subscription is not None
+
+    # No public bootstrap -> re-signal step returns early.
+    ufp.events_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert data.last_events_update_success is False
+
+    # Same state again -> handler early-returns.
+    ufp.events_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert data.last_events_update_success is False
+
+
 async def test_relay_public_ws_message_without_public_old_obj(
     hass: HomeAssistant,
     ufp_with_relay: tuple[MockUFPFixture, Mock],

@@ -230,6 +230,9 @@ class BaseProtectEntity(Entity):
     # (set ``ufp_public_value``); ``None`` until primed/refreshed.
     _ufp_public_obj: PublicDeviceModel | None = None
     _ufp_uses_public: bool = False
+    # Values derived from the public events websocket (detection booleans,
+    # public event entities) additionally require that websocket to be healthy.
+    _ufp_requires_events_ws: bool = False
 
     def __init__(
         self,
@@ -279,12 +282,19 @@ class BaseProtectEntity(Entity):
             # Migrated entities are fully public: availability tracks the public
             # websocket health and the public object's state (CONNECTED only;
             # CONNECTING/DISCONNECTED/UNKNOWN and a missing object read as
-            # unavailable), independent of the private connection. An optional
-            # ``ufp_public_enabled_fn`` gate then mirrors ``ufp_enabled`` against
-            # the public object (e.g. a sensor feature toggled off).
+            # unavailable), independent of the private connection. Values fed by
+            # the events websocket also require it to be healthy — the devices
+            # websocket keeps the device state fresh, but only the events stream
+            # carries the detections. An optional ``ufp_public_enabled_fn`` gate
+            # then mirrors ``ufp_enabled`` against the public object (e.g. a
+            # sensor feature toggled off).
             public_obj = self._ufp_public_obj
             if (
                 self.data.last_public_update_success
+                and (
+                    not self._ufp_requires_events_ws
+                    or self.data.last_events_update_success
+                )
                 and public_obj is not None
                 and public_obj.state is DeviceState.CONNECTED
             ):
@@ -353,11 +363,18 @@ class BaseProtectEntity(Entity):
         )
         # Not every entity carries an entity_description (e.g. cameras), so getattr.
         description = getattr(self, "entity_description", None)
-        if isinstance(description, ProtectEntityDescription) and (
-            description.ufp_public_value is not None
-            or description.ufp_public_value_fn is not None
-        ):
-            self._ufp_uses_public = True
+        if isinstance(description, ProtectEntityDescription):
+            if (
+                description.ufp_public_value is not None
+                or description.ufp_public_value_fn is not None
+            ):
+                self._ufp_uses_public = True
+            if description.ufp_event_driven:
+                self._ufp_requires_events_ws = True
+        # ``_ufp_uses_public`` may also be declared as a class attribute by
+        # entities driven by the public API without a migrated value (the
+        # public event entities).
+        if self._ufp_uses_public:
             self._ufp_public_obj = self.data.async_get_public_device(self.device)
             self.async_on_remove(
                 self.data.async_subscribe_public(
@@ -484,6 +501,9 @@ class ProtectEntityDescription(EntityDescription, Generic[T]):  # noqa: UP046
     ufp_public_value: str | None = None
     # Callable variant of ``ufp_public_value`` for public values needing a transform.
     ufp_public_value_fn: Callable[[PublicDeviceModel], Any] | None = None
+    # True when the public value is derived from the events websocket (the
+    # detection booleans); availability then also tracks that websocket.
+    ufp_event_driven: bool = False
     ufp_enabled: str | None = None
     # Public counterpart of ``ufp_enabled``; a callable because public enablement
     # is often compound (e.g. mount type plus a settings flag).

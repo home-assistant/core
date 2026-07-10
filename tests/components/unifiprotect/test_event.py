@@ -14,10 +14,10 @@ from uiprotect.data import (
     Event,
     EventType,
     ModelType,
-    PublicBootstrap,
     SmartDetectAudioType,
     SmartDetectObjectType,
 )
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_ID,
@@ -26,7 +26,7 @@ from homeassistant.components.unifiprotect.const import (
     EVENT_TYPE_PACKAGE_DETECTED,
 )
 from homeassistant.components.unifiprotect.event import EVENT_DESCRIPTIONS
-from homeassistant.const import ATTR_ATTRIBUTION, Platform
+from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, Platform
 from homeassistant.core import Event as HAEvent, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
@@ -38,6 +38,7 @@ from .utils import (
     ids_from_device_description,
     init_entry,
     remove_entities,
+    setup_public_camera,
 )
 
 # Short delay for testing
@@ -78,15 +79,9 @@ async def test_doorbell_ring(
     """Test a doorbell ring event fired from the public events websocket."""
 
     # Ring is delivered over the public events websocket, which is only
-    # subscribed once update_public() has primed the public bootstrap.
-    ufp.api.has_public_bootstrap = True
-    ufp.api.public_bootstrap = Mock(
-        spec=PublicBootstrap,
-        relays={},
-        sirens={},
-        arm_mode=None,
-        arm_profiles={},
-    )
+    # subscribed once update_public() has primed the public bootstrap; the
+    # entity's availability also requires the public camera to resolve.
+    setup_public_camera(ufp)
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.EVENT, 7, 7)
@@ -138,7 +133,8 @@ async def test_doorbell_ring(
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    # Only the start of an event is dispatched; an update must be ignored.
+    # Updates are dispatched too, but the entity fires each event id only
+    # once, so a repeat dispatch of the same ring event must be suppressed.
     ufp.events_msg(
         ProtectEvent(
             id="test_ring_event",
@@ -166,15 +162,9 @@ async def test_package_detected(
     """Test a package detection event fired from the public events websocket."""
 
     # Package detection is delivered over the public events websocket, which is
-    # only subscribed once update_public() has primed the public bootstrap.
-    ufp.api.has_public_bootstrap = True
-    ufp.api.public_bootstrap = Mock(
-        spec=PublicBootstrap,
-        relays={},
-        sirens={},
-        arm_mode=None,
-        arm_profiles={},
-    )
+    # only subscribed once update_public() has primed the public bootstrap; the
+    # entity's availability also requires the public camera to resolve.
+    setup_public_camera(ufp)
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.EVENT, 7, 7)
@@ -232,7 +222,8 @@ async def test_package_detected(
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    # Only the start of a detection is dispatched; an update must be ignored.
+    # Updates are dispatched too, but the entity fires each (event id, type)
+    # once, so a repeat dispatch of the same package event must be suppressed.
     ufp.events_msg(
         ProtectEvent(
             id="test_package_event",
@@ -1747,14 +1738,6 @@ async def test_aiport_no_event_entities(
     assert_entity_counts(hass, Platform.EVENT, 0, 0)
 
 
-def _prime_public_events(ufp: MockUFPFixture) -> None:
-    """Prime the public bootstrap so the public events websocket is subscribed."""
-    ufp.api.has_public_bootstrap = True
-    ufp.api.public_bootstrap = Mock(
-        spec=PublicBootstrap, relays={}, sirens={}, arm_mode=None, arm_profiles={}
-    )
-
-
 async def test_motion_detection_event(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
@@ -1763,7 +1746,7 @@ async def test_motion_detection_event(
     fixed_now: datetime,
 ) -> None:
     """The motion event entity fires from the public events websocket."""
-    _prime_public_events(ufp)
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
 
     description = next(d for d in EVENT_DESCRIPTIONS if d.key == "motion_detection")
@@ -1799,7 +1782,7 @@ async def test_smart_detection_event(
     fixed_now: datetime,
 ) -> None:
     """The smart-detection event entity fires per object type with the full type set."""
-    _prime_public_events(ufp)
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
 
     description = next(d for d in EVENT_DESCRIPTIONS if d.key == "smart_detection")
@@ -1850,7 +1833,7 @@ async def test_sound_detection_event(
 ) -> None:
     """The sound-detection event entity fires for audio types (slugged event type)."""
     doorbell.feature_flags.smart_detect_audio_types = [SmartDetectAudioType.SMOKE]
-    _prime_public_events(ufp)
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
 
     description = next(d for d in EVENT_DESCRIPTIONS if d.key == "sound_detection")
@@ -1888,7 +1871,7 @@ async def test_sound_detection_event_late_type(
 ) -> None:
     """Audio types arrive on a later update, not at start; fire once when they appear."""
     doorbell.feature_flags.smart_detect_audio_types = [SmartDetectAudioType.SMOKE]
-    _prime_public_events(ufp)
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
 
     description = next(d for d in EVENT_DESCRIPTIONS if d.key == "sound_detection")
@@ -1973,7 +1956,7 @@ async def test_detection_event_removed_change_ignored(
     fixed_now: datetime,
 ) -> None:
     """A REMOVED (eviction) change does not fire a detection event."""
-    _prime_public_events(ufp)
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
 
     description = next(d for d in EVENT_DESCRIPTIONS if d.key == "smart_detection")
@@ -2015,7 +1998,7 @@ async def test_doorbell_ring_dedup_across_dispatches(
     fixed_now: datetime,
 ) -> None:
     """A ring fires once even though start, update and end are all dispatched."""
-    _prime_public_events(ufp)
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
 
     _, entity_id = await ids_from_device_description(
@@ -2077,7 +2060,7 @@ async def test_smart_detection_event_interleaved_dedup(
     fixed_now: datetime,
 ) -> None:
     """Two overlapping same-category events whose dispatches interleave don't re-fire."""
-    _prime_public_events(ufp)
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
 
     description = next(d for d in EVENT_DESCRIPTIONS if d.key == "smart_detection")
@@ -2135,7 +2118,7 @@ async def test_detection_event_dedup_is_bounded(
     fixed_now: datetime,
 ) -> None:
     """The fire-dedup tracker is bounded; distinct events keep firing."""
-    _prime_public_events(ufp)
+    setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
 
     description = next(d for d in EVENT_DESCRIPTIONS if d.key == "motion_detection")
@@ -2167,3 +2150,36 @@ async def test_detection_event_dedup_is_bounded(
     unsub()
 
     assert len(events) == 20
+
+
+async def test_event_entities_unavailable_on_events_ws_disconnect(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+) -> None:
+    """Public event entities follow the events websocket they fire from."""
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    ring = next(d for d in EVENT_DESCRIPTIONS if d.key == "doorbell")
+    _, ring_id = await ids_from_device_description(hass, Platform.EVENT, doorbell, ring)
+    motion = next(d for d in EVENT_DESCRIPTIONS if d.key == "motion_detection")
+    _, motion_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, motion
+    )
+    assert hass.states.get(ring_id).state != STATE_UNAVAILABLE
+    assert hass.states.get(motion_id).state != STATE_UNAVAILABLE
+
+    assert ufp.events_ws_state_subscription is not None
+    ufp.events_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ring_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(motion_id).state == STATE_UNAVAILABLE
+
+    ufp.events_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ring_id).state != STATE_UNAVAILABLE
+    assert hass.states.get(motion_id).state != STATE_UNAVAILABLE

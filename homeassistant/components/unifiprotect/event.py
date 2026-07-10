@@ -96,7 +96,13 @@ class ProtectDevicePublicEventEntity(
     A detection type can surface at the event start, on a later update, or only
     as the event ends, and every non-eviction change is dispatched — so firing is
     deduped per ``(event id, event type)``.
+
+    Availability follows the public API (device present and connected) plus the
+    events websocket, which is the only channel these entities fire from.
     """
+
+    _ufp_uses_public = True
+    _ufp_requires_events_ws = True
 
     entity_description: ProtectEventEntityDescription
     # A camera can run two overlapping events of the same category whose

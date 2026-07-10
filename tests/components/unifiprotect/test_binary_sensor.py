@@ -30,6 +30,7 @@ from homeassistant.components.unifiprotect.binary_sensor import (
     ProtectBinaryEntityDescription,
 )
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION, DOMAIN
+from homeassistant.components.unifiprotect.number import CAMERA_NUMBERS
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
@@ -712,6 +713,44 @@ async def test_binary_sensor_update_motion(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_OFF
+
+
+async def test_binary_sensor_detection_unavailable_on_events_ws_disconnect(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+) -> None:
+    """Detection sensors follow the events websocket their values derive from.
+
+    A migrated value fed by the devices websocket (microphone level) must not
+    be affected by an events websocket outage.
+    """
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    motion = next(d for d in CAMERA_SENSORS if d.key == "motion")
+    _, motion_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, doorbell, motion
+    )
+    mic_level = next(d for d in CAMERA_NUMBERS if d.key == "mic_level")
+    _, mic_id = await ids_from_device_description(
+        hass, Platform.NUMBER, doorbell, mic_level
+    )
+    assert hass.states.get(motion_id).state == STATE_OFF
+    assert hass.states.get(mic_id).state != STATE_UNAVAILABLE
+
+    assert ufp.events_ws_state_subscription is not None
+    ufp.events_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(motion_id).state == STATE_UNAVAILABLE
+    assert hass.states.get(mic_id).state != STATE_UNAVAILABLE
+
+    ufp.events_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(motion_id).state == STATE_OFF
 
 
 async def test_binary_sensor_update_light_motion(
