@@ -9,7 +9,6 @@ import pytest
 from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
 from homeassistant.components.dvla.coordinator import DVLACoordinator
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
@@ -121,10 +120,10 @@ async def test_async_update_data_raises_update_failed_on_client_error(
         await coordinator._async_update_data()
 
 
-async def test_async_update_data_raises_auth_failed_on_unauthorized(
+async def test_async_update_data_raises_update_failed_on_unauthorized(
     hass: HomeAssistant,
 ) -> None:
-    """Test coordinator raises ConfigEntryAuthFailed on auth errors."""
+    """Test coordinator raises UpdateFailed on auth errors."""
     session = MagicMock()
     session.post = AsyncMock(
         return_value=MockResponse(
@@ -135,7 +134,7 @@ async def test_async_update_data_raises_auth_failed_on_unauthorized(
 
     coordinator = create_coordinator(hass, session)
 
-    with pytest.raises(ConfigEntryAuthFailed):
+    with pytest.raises(UpdateFailed, match="Invalid authentication credentials"):
         await coordinator._async_update_data()
 
 

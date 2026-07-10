@@ -14,6 +14,7 @@ from homeassistant.const import UnitOfMass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_REG_NUMBER, DOMAIN
@@ -51,7 +52,9 @@ ENTITY_METADATA: dict[str, dict[str, Any]] = {
     "typeApproval": {"icon": "mdi:car"},
     "revenueWeight": {
         "icon": "mdi:weight-kilogram",
+        "device_class": SensorDeviceClass.WEIGHT,
         "native_unit_of_measurement": UnitOfMass.KILOGRAMS,
+        "title": "Revenue Weight",
     },
     "dateOfLastV5CIssued": {
         "icon": "mdi:calendar",
@@ -133,9 +136,6 @@ async def async_setup_entry(
     sensors: list[DVLASensor] = []
 
     for key in SENSOR_KEYS:
-        if key not in coordinator.data and key != "motExpiryDate":
-            continue
-
         metadata = ENTITY_METADATA.get(key, {})
 
         description = SensorEntityDescription(
@@ -147,7 +147,7 @@ async def async_setup_entry(
         )
 
         sensors.append(DVLASensor(coordinator, name, description))
-    async_add_entities(sensors, update_before_add=True)
+    async_add_entities(sensors)
 
 
 class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
@@ -168,20 +168,30 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
             manufacturer=DOMAIN.upper(),
             model=coordinator.data.get("make"),
             name=name.upper(),
-            configuration_url="https://github.com/jampez77/DVLA-Vehicle-Checker/",
         )
         self._attr_unique_id = f"{name}-{description.key}".lower()
         self.entity_id = f"sensor.{DOMAIN}_{name}_{description.key}".lower()
         self.attrs: dict[str, Any] = {}
         self.entity_description = description
-        self._state: str | date | None = None
+        self._state: StateType | date = None
         self.update_from_coordinator()
 
     def update_from_coordinator(self) -> None:
         """Update sensor state and attributes from coordinator data."""
-        self._state = self.coordinator.data.get(self.entity_description.key)
+        key = self.entity_description.key
+        self._state = self.coordinator.data.get(key)
 
-        if self.entity_description.key == "motExpiryDate" and not self._state:
+        if key == "monthOfFirstRegistration" and self._state is None:
+            self._state = self.coordinator.data.get("monthOfFirstDvlaRegistration")
+
+        if key == "revenueWeight" and self._state is not None:
+            with suppress(TypeError, ValueError):
+                self._state = int(self._state)
+
+            if not isinstance(self._state, int):
+                self._state = None
+
+        if key == "motExpiryDate" and not self._state:
             reg_month_str = self.coordinator.data.get("monthOfFirstRegistration")
             if reg_month_str:
                 with suppress(ValueError):
@@ -198,7 +208,7 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
             except ValueError:
                 self._state = None
 
-        self.attrs = dict(self.coordinator.data) if self._state is not None else {}
+        self.attrs = self.coordinator.data.copy() if self._state is not None else {}
 
     @callback
     @override
@@ -207,22 +217,16 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
         self.update_from_coordinator()
         self.async_write_ha_state()
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Handle adding to Home Assistant."""
-        await super().async_added_to_hass()
-        await self.async_update()
-
     @property
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
         # Ensure entity is available even if specific key is missing but we have coordinator data
-        return bool(self.coordinator.data)
+        return self.coordinator.last_update_success
 
     @property
     @override
-    def native_value(self) -> str | date | None:
+    def native_value(self) -> StateType | date:
         """Native value."""
         return self._state
 

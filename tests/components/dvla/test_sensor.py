@@ -4,55 +4,11 @@ from typing import Any
 from unittest.mock import patch
 
 from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-MOCK_SCHEMA: dict[str, Any] = {
-    "components": {
-        "schemas": {
-            "Vehicle": {
-                "properties": {
-                    "registrationNumber": {
-                        "type": "string",
-                        "description": "Registration number",
-                    },
-                    "taxStatus": {
-                        "type": "string",
-                        "description": "Tax status",
-                    },
-                    "taxDueDate": {
-                        "type": "string",
-                        "format": "date",
-                        "description": "Tax due date",
-                    },
-                    "engineCapacity": {
-                        "type": "integer",
-                        "description": "Engine capacity in cubic centimetres",
-                    },
-                    "co2Emissions": {
-                        "type": "integer",
-                        "description": "CO2 emissions in grams per kilometre",
-                    },
-                    "monthOfFirstRegistration": {
-                        "type": "string",
-                        "description": "Month of first registration",
-                    },
-                    "motExpiryDate": {
-                        "type": "string",
-                        "format": "date",
-                        "description": "Roadworthiness expiry date",
-                    },
-                    "markedForExport": {
-                        "type": "boolean",
-                        "description": "Marked for export",
-                    },
-                }
-            }
-        }
-    }
-}
 
 MOCK_VEHICLE_DATA: dict[str, Any] = {
     "registrationNumber": "AB12CDE",
@@ -66,7 +22,10 @@ MOCK_VEHICLE_DATA: dict[str, Any] = {
 }
 
 
-async def setup_dvla_entry(hass: HomeAssistant) -> None:
+async def setup_dvla_entry(
+    hass: HomeAssistant,
+    vehicle_data: dict[str, Any] | None = None,
+) -> None:
     """Set up the DVLA integration with mocked vehicle data."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -80,7 +39,7 @@ async def setup_dvla_entry(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.dvla.coordinator.DVLACoordinator._async_update_data",
-            return_value=MOCK_VEHICLE_DATA,
+            return_value=vehicle_data or MOCK_VEHICLE_DATA,
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -136,3 +95,22 @@ async def test_boolean_fields_are_not_sensor_entities(hass: HomeAssistant) -> No
     await setup_dvla_entry(hass)
 
     assert hass.states.get("sensor.dvla_ab12cde_markedforexport") is None
+
+
+async def test_revenue_weight_sensor_is_numeric(hass: HomeAssistant) -> None:
+    """Test revenue weight is exposed as a numeric weight sensor."""
+    await setup_dvla_entry(
+        hass,
+        {
+            "registrationNumber": "AB12CDE",
+            "make": "FORD",
+            "revenueWeight": "3500",
+        },
+    )
+
+    state = hass.states.get("sensor.dvla_ab12cde_revenueweight")
+
+    assert state is not None
+    assert state.state == "3500"
+    assert state.attributes["unit_of_measurement"] == "kg"
+    assert state.attributes["device_class"] == SensorDeviceClass.WEIGHT

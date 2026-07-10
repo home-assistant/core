@@ -8,8 +8,7 @@ from aiohttp import ClientError, ClientSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONTENT_TYPE_JSON
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import API_KEY, HOST
@@ -33,7 +32,7 @@ class DVLACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=HOMEASSISTANT_DOMAIN,
+            name=config_entry.title if config_entry else "DVLA",
             update_interval=timedelta(days=1),
         )
         self.session = session
@@ -51,14 +50,15 @@ class DVLACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 },
                 json={"registrationNumber": self.reg_number},
             )
+            resp.raise_for_status()
             body = await resp.json()
-        except ClientError as err:
+        except (ClientError, TimeoutError) as err:
             raise UpdateFailed(str(err)) from err
         except ValueError as err:
             raise UpdateFailed("Invalid response from DVLA API") from err
 
         if resp.status in (401, 403):
-            raise ConfigEntryAuthFailed("Invalid authentication credentials")
+            raise UpdateFailed("Invalid authentication credentials")
 
         if resp.status == 429:
             raise UpdateFailed("DVLA API rate limit exceeded")
@@ -73,7 +73,7 @@ class DVLACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if "message" in body:
             message = str(body["message"])
             if "Invalid authentication credentials" in message:
-                raise ConfigEntryAuthFailed(message)
+                raise UpdateFailed(message)
             if "API rate limit exceeded" in message:
                 raise UpdateFailed(message)
             raise UpdateFailed(f"Error setting up {self.reg_number}: {message}")

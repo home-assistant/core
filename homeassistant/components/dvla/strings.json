@@ -6,32 +6,17 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "no_calendar_selected": "You must select at least one calendar",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
         "data": {
-          "calendars": "Add events to calendar(s)",
           "reg_number": "Registration Number"
         },
         "data_description": {
-          "calendars": "Optionally add vehicle date events to selected calendars.",
           "reg_number": "The vehicle registration number to look up, for example AB12CDE."
         }
       }
-    }
-  },
-  "services": {
-    "lookup": {
-      "description": "Look up vehicle information from the DVLA Vehicle Enquiry Service.",
-      "fields": {
-        "reg_number": {
-          "description": "The vehicle registration number to look up.",
-          "name": "Registration number"
-        }
-      },
-      "name": "Look up vehicle"
     }
   }
 }
