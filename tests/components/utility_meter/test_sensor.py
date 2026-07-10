@@ -2253,27 +2253,71 @@ def test_month_aware_reset_scheduler_dst_fold() -> None:
 
 
 async def test_monthly_offset_resets_in_february(hass: HomeAssistant) -> None:
-    """Monthly meter with offset 28 (day 29) should still reset in February."""
-    # YAML rejects offset >= 28 days; config entry path allows 28.
-    # Exercise the sensor class directly for the UI offset case.
-    sensor = UtilityMeterSensor(
-        hass,
-        cron_pattern=None,
-        delta_values=False,
-        meter_offset=timedelta(days=28),
-        meter_type="monthly",
-        name="energy_bill",
-        net_consumption=False,
-        parent_meter="test",
-        periodically_resetting=True,
-        source_entity="sensor.energy",
-        tariff_entity=None,
-        tariff=None,
-        unique_id="test_energy_bill",
-        sensor_always_available=False,
-    )
-    sensor.hass = hass
-    sensor.entity_id = "sensor.energy_bill"
-    sensor._config_scheduler(dt_util.parse_datetime("2026-02-05T12:00:00+00:00"))
-    next_reset = next(sensor.scheduler)
-    assert next_reset.isoformat() == "2026-02-28T00:00:00+00:00"
+    """Config-entry monthly meter with offset 28 still resets in February."""
+    # YAML rejects offset >= 28 days; the UI/config-entry path allows 28 (day 29).
+    # Day 29 does not exist in non-leap February, so the scheduled reset must
+    # clamp to Feb 28 and fire through the normal timer path.
+    now = dt_util.parse_datetime("2026-02-27T23:59:00.000000+00:00")
+    with freeze_time(now):
+        config_entry = MockConfigEntry(
+            data={},
+            domain=DOMAIN,
+            options={
+                "cycle": "monthly",
+                "delta_values": False,
+                "name": "Energy bill",
+                "net_consumption": False,
+                "offset": 28,
+                "periodically_resetting": True,
+                "source": "sensor.energy",
+                "tariffs": [],
+            },
+            title="Energy bill",
+        )
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.energy_bill")
+        assert state is not None
+        assert state.attributes.get("next_reset") == "2026-02-28T00:00:00+00:00"
+
+        async_fire_time_changed(hass, now)
+        hass.states.async_set(
+            "sensor.energy",
+            1,
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+        )
+        await hass.async_block_till_done()
+
+    now += timedelta(seconds=30)
+    with freeze_time(now):
+        async_fire_time_changed(hass, now)
+        hass.states.async_set(
+            "sensor.energy",
+            3,
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+
+    now += timedelta(seconds=30)
+    with freeze_time(now):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+        hass.states.async_set(
+            "sensor.energy",
+            6,
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state is not None
+    assert state.attributes.get("last_period") == "2"
+    assert state.attributes.get("last_reset") == dt_util.as_utc(now).isoformat()
+    assert state.state == "3"
