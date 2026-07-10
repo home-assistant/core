@@ -332,6 +332,57 @@ async def test_slow_interval_poll_preserves_cached_schedule(
     assert slow_coordinator.data.dhw_schedule == cached_schedule
 
 
+async def test_slow_interval_poll_retries_missing_schedule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test interval polls retry the schedule until the first success.
+
+    A transient failure during the startup fetch leaves no cached schedule.
+    Interval polls must retry the schedule fetch until it succeeds, then stop
+    fetching it once cached.
+    """
+    schedule_value = mock_bsblan.hot_water_schedule.return_value
+    fetch_failed = False
+
+    async def _schedule(*args: object, **kwargs: object) -> object:
+        nonlocal fetch_failed
+        if not fetch_failed:
+            fetch_failed = True
+            raise BSBLANConnectionError("Schedule failed")
+        return schedule_value
+
+    mock_bsblan.hot_water_schedule.side_effect = _schedule
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    slow_coordinator = mock_config_entry.runtime_data.slow_coordinator
+    # The startup fetch failed, so no schedule is cached yet.
+    assert slow_coordinator.data.dhw_schedule is None
+
+    # The next interval poll retries the schedule fetch, which now succeeds.
+    freezer.tick(delta=timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert slow_coordinator.data.dhw_schedule == schedule_value
+
+    # Once cached, later polls carry the schedule forward without re-fetching.
+    mock_bsblan.hot_water_schedule.reset_mock()
+    freezer.tick(delta=timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not mock_bsblan.hot_water_schedule.called
+    assert slow_coordinator.data.dhw_schedule == schedule_value
+
+
 async def test_setup_does_not_block_on_slow_fetch(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
