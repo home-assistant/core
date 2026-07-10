@@ -28,7 +28,7 @@ class HassEnforceConfigEntryStepIdMatchMethodChecker(BaseChecker):
     name = "home_assistant_enforce_config_entry_step_id_match_method"
     priority = -1
     msgs = {
-        "W8989": (
+        "W7431": (
             "The step_id '%s' does not match the method name '%s'; "
             "the step_id should match the method name after"
             " removing the 'async_step_' prefix.",
@@ -51,18 +51,26 @@ class HassEnforceConfigEntryStepIdMatchMethodChecker(BaseChecker):
         if node.func.attrname not in CALLERS:
             return
 
-        parent = node.parent.parent
-        method: str = parent.name
-        method_step_id = method.removeprefix("async_step_")
+        method_step_id: str | None = None
+        for ancestor in node.func.node_ancestors():
+            if isinstance(
+                ancestor, nodes.AsyncFunctionDef
+            ) and ancestor.name.startswith("async_step_"):
+                method_step_id = ancestor.name.removeprefix("async_step_")
+                break
 
         step_id_node: nodes.NodeNG | None = None
         if node.keywords:
             for keyword in node.keywords:
                 if keyword.arg == "step_id":
-                    step_id_node = keyword.value
+                    values = list(keyword.value.infer())
+                    step_id_node = values[0] if values else None
                     break
 
-        if step_id_node is None:
+        if step_id_node is None or method_step_id is None:
+            # step_id_node is None follows the method directly
+            # method_step_id is None when callers are not directly
+            # in the async_step_* method, e.g. in a helper method.
             return
         step_id_node = step_id_node.value
 
@@ -72,7 +80,7 @@ class HassEnforceConfigEntryStepIdMatchMethodChecker(BaseChecker):
                 node=node,
                 args=(
                     step_id_node,
-                    method,
+                    f"async_step_{method_step_id}",
                 ),
             )
 
