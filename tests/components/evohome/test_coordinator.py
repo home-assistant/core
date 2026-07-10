@@ -11,6 +11,7 @@ from homeassistant.components.evohome import EvoData
 from homeassistant.components.evohome.const import CONF_LOCATION_IDX, DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 
@@ -57,7 +58,7 @@ async def test_setup_platform(
 
 async def test_setup_platform_no_gateway_at_location(
     hass: HomeAssistant,
-    config: dict[str, str],
+    config: ConfigType,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup fails cleanly when location_idx points at a gateway-less location.
