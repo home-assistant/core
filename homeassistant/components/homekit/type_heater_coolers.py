@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import functools
 import logging
-from typing import Any, Concatenate, override
+from typing import Any, Concatenate, NamedTuple, override
 
 from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_AIR_CONDITIONER, CATEGORY_HEATER
@@ -91,9 +91,16 @@ HC_HASS_TO_HOMEKIT_ACTION = {
 # Hysteresis band in Celsius used when the entity omits hvac_action
 ACTION_HYSTERESIS = 0.25
 
-# A queued climate write: service, data, and the mode to remember once
-# the entity accepts the call
-ClimateServiceCall = tuple[str, dict[str, Any], HVACMode | None]
+
+class ClimateServiceCall(NamedTuple):
+    """A queued climate write and the modes to apply once accepted."""
+
+    service: str
+    data: dict[str, Any]
+    # Remembered as the Active on restore target
+    commit_mode: HVACMode | None = None
+    # Bridges resolution until the entity reports a mode change
+    pending_mode: HVACMode | None = None
 
 
 def _locked_write[**_P](
@@ -323,6 +330,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         # integrations can return from the service before their state
         # callback arrives.
         self._pending_mode: HVACMode | None = None
+        self._last_reported_mode = current_mode
 
         self.async_update_state(state)
 
@@ -364,13 +372,9 @@ class HeaterCooler(HomeKitClimateAccessory):
             requested_mode = self._last_known_mode
 
         # Active/mode changes are handled first as they gate the others.
-        self._handle_active_mode_changes(
-            char_values, service_calls, current_state, requested_mode
-        )
-        # Temperature and fan/swing writes are meaningless when the off
-        # write goes out; a rejected off leaves the entity running, so the
-        # rest of the batch still applies.
-        if not (active == 0 and self._supports_off):
+        if self._handle_active_mode_changes(
+            active, target_mode, service_calls, current_state, requested_mode
+        ):
             # A just accepted mode stays effective for the setpoints until
             # the entity reports it, so a following batch does not resolve
             # against the pre-switch state.
@@ -383,19 +387,19 @@ class HeaterCooler(HomeKitClimateAccessory):
             # Fan and swing are queued last so they follow the mode switch.
             self._queue_fan_swing_changes(char_values, service_calls)
 
-        for service_name, service_data, commit_mode in service_calls:
+        for call in service_calls:
             if not await self.async_call_service_and_wait(
                 CLIMATE_DOMAIN,
-                service_name,
-                {ATTR_ENTITY_ID: self.entity_id, **service_data},
+                call.service,
+                {ATTR_ENTITY_ID: self.entity_id, **call.data},
             ):
                 return
-            if service_name == SERVICE_SET_HVAC_MODE:
-                self._pending_mode = service_data[ATTR_HVAC_MODE]
             # The remembered mode mirrors the accepted target, so a
             # rejected mode is not restored later.
-            if commit_mode:
-                self._last_known_mode = commit_mode
+            if call.pending_mode:
+                self._pending_mode = call.pending_mode
+            if call.commit_mode:
+                self._last_known_mode = call.commit_mode
 
     @override
     def _dispatch_climate_write(self, service: str, params: dict[str, Any]) -> None:
@@ -424,28 +428,27 @@ class HeaterCooler(HomeKitClimateAccessory):
             and (params := self._fan_speed_params(char_values[CHAR_ROTATION_SPEED]))
             is not None
         ):
-            service_calls.append((SERVICE_SET_FAN_MODE, params, None))
+            service_calls.append(ClimateServiceCall(SERVICE_SET_FAN_MODE, params))
         if (
             CHAR_SWING_MODE in char_values
             and (params := self._swing_mode_params(char_values[CHAR_SWING_MODE]))
             is not None
         ):
-            service_calls.append((SERVICE_SET_SWING_MODE, params, None))
+            service_calls.append(ClimateServiceCall(SERVICE_SET_SWING_MODE, params))
 
     def _handle_active_mode_changes(
         self,
-        char_values: dict[str, Any],
+        active: int | None,
+        target_mode: int | None,
         service_calls: list[ClimateServiceCall],
         current_state: State | None,
         requested_mode: HVACMode | None,
-    ) -> None:
-        """Handle active and mode changes."""
-        active = char_values.get(CHAR_ACTIVE)
-        target_mode = char_values.get(CHAR_TARGET_HEATER_COOLER_STATE)
+    ) -> bool:
+        """Handle active and mode changes.
 
-        if active is None and target_mode is None:
-            return
-
+        Returns False when an off write terminates the batch; a rejected
+        off leaves the entity running, so the rest still applies.
+        """
         if target_mode is not None and requested_mode is None:
             # The write already changed the characteristic to a target the
             # entity cannot enter, so put it back on the last mode.
@@ -460,13 +463,14 @@ class HeaterCooler(HomeKitClimateAccessory):
                 # than sent, so it is committed with the accepted off write
                 # and restored by the next Active on.
                 service_calls.append(
-                    (
+                    ClimateServiceCall(
                         SERVICE_SET_HVAC_MODE,
                         {ATTR_HVAC_MODE: HVACMode.OFF},
-                        requested_mode,
+                        commit_mode=requested_mode,
+                        pending_mode=HVACMode.OFF,
                     )
                 )
-                return
+                return False
             _LOGGER.debug(
                 "%s: Ignoring off request; entity has no off mode",
                 self.entity_id,
@@ -485,12 +489,14 @@ class HeaterCooler(HomeKitClimateAccessory):
             # known mode only when the entity is not already running, where
             # a pending off write means it is about to stop running.
             service_calls.append(
-                (
+                ClimateServiceCall(
                     SERVICE_SET_HVAC_MODE,
                     {ATTR_HVAC_MODE: requested_mode},
-                    requested_mode,
+                    commit_mode=requested_mode,
+                    pending_mode=requested_mode,
                 )
             )
+        return True
 
     def _handle_temperature_changes(
         self,
@@ -526,12 +532,11 @@ class HeaterCooler(HomeKitClimateAccessory):
 
         if use_range:
             service_calls.append(
-                (
+                ClimateServiceCall(
                     SERVICE_SET_TEMPERATURE,
                     self._dual_setpoint_params(
                         self.char_cool, self.char_heat, cooling_temp, heating_temp
                     ),
-                    None,
                 )
             )
         else:
@@ -588,7 +593,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         if selected_temp is not None:
             ha_temp = self._temperature_to_states(selected_temp)
             service_calls.append(
-                (SERVICE_SET_TEMPERATURE, {ATTR_TEMPERATURE: ha_temp}, None)
+                ClimateServiceCall(SERVICE_SET_TEMPERATURE, {ATTR_TEMPERATURE: ha_temp})
             )
 
     def _hk_target_mode(self, mode: HVACMode) -> int | None:
@@ -609,8 +614,12 @@ class HeaterCooler(HomeKitClimateAccessory):
         attributes = new_state.attributes
         current_mode = try_parse_enum(HVACMode, new_state.state)
         if current_mode is not None:
-            # The entity reported a mode, so its state is authoritative again
-            self._pending_mode = None
+            if current_mode != self._last_reported_mode:
+                # The entity moved to a new mode, so its state is
+                # authoritative again; re-reports of the pre-switch mode,
+                # like attribute updates mid transition, keep the bridge.
+                self._pending_mode = None
+            self._last_reported_mode = current_mode
         if current_mode and (tgt := self._hk_target_mode(current_mode)) is not None:
             self._last_known_mode = current_mode
             self.char_target_state.set_value(tgt)

@@ -1222,7 +1222,14 @@ async def test_heatercooler_pending_mode_bridges_slow_state_updates(
         22.0, abs=0.1
     )
 
-    # Once the entity reports a mode, its state is authoritative again
+    # A mid transition update still reporting the old mode keeps the bridge
+    hass.states.async_set(
+        entity_id, HVACMode.HEAT, {**base_attrs, ATTR_CURRENT_TEMPERATURE: 23.0}
+    )
+    await hass.async_block_till_done()
+    assert acc._pending_mode == HVACMode.COOL
+
+    # Once the entity reports a mode change, its state is authoritative again
     hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
     await hass.async_block_till_done()
     assert acc._pending_mode is None
