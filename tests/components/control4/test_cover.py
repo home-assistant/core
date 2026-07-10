@@ -93,7 +93,7 @@ def mock_c4_blind() -> Generator[MagicMock]:
         mock_instance.open = AsyncMock()
         mock_instance.close = AsyncMock()
         mock_instance.stop = AsyncMock()
-        mock_instance.setLevelTarget = AsyncMock()
+        mock_instance.set_level_target = AsyncMock()
         yield mock_instance
 
 
@@ -245,14 +245,14 @@ async def test_set_cover_position(
     hass: HomeAssistant,
     mock_c4_blind: MagicMock,
 ) -> None:
-    """Test setting cover position calls setLevelTarget with the requested value."""
+    """Test setting cover position calls set_level_target with the requested value."""
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 75},
         blocking=True,
     )
-    mock_c4_blind.setLevelTarget.assert_called_once_with(75)
+    mock_c4_blind.set_level_target.assert_called_once_with(75)
 
 
 @pytest.mark.parametrize("mock_cover_variables", [{}])
