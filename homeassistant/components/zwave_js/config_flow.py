@@ -22,6 +22,7 @@ from homeassistant.components import usb
 from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
 from homeassistant.config_entries import (
     SOURCE_ESPHOME,
+    SOURCE_IGNORE,
     SOURCE_USB,
     SOURCE_ZEROCONF,
     ConfigEntry,
@@ -551,6 +552,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # The reconfigure and migration flows override these.
         self._addon_configure_step = "configure_addon_user"
         self._addon_finish_step = "finish_addon_setup_user"
+        # Set if the flow unique id is a placeholder that must be replaced
+        # with the home ID before a config entry is created.
+        self._unique_id_is_placeholder = False
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -1153,7 +1157,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info = await self._addon_setup.async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
 
-        if not self.unique_id or self.source == SOURCE_USB:
+        if (
+            not self.unique_id
+            or self.source == SOURCE_USB
+            or self._unique_id_is_placeholder
+        ):
             if not self.version_info:
                 try:
                     self.version_info = await async_get_version_info(
@@ -1165,6 +1173,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(
                 str(self.version_info.home_id), raise_on_progress=False
             )
+            self._unique_id_is_placeholder = False
 
         self._abort_if_unique_id_configured(
             updates={
@@ -1810,6 +1819,18 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # Raise on progress to avoid a duplicate prompt when the same
             # adapter is rediscovered, e.g. with a new IP address.
             await self.async_set_unique_id(str(discovery_info.zwave_home_id))
+        else:
+            # Set a placeholder unique id so the discovery can be ignored
+            # also when the adapter doesn't report a home ID yet.
+            # It is replaced with the home ID before an entry is created.
+            self._unique_id_is_placeholder = True
+            await self.async_set_unique_id(f"esphome_{discovery_info.name}")
+
+        if any(
+            entry.source == SOURCE_IGNORE and entry.unique_id == self.unique_id
+            for entry in self._async_current_entries(include_ignore=True)
+        ):
+            return self.async_abort(reason="already_configured")
 
         self.socket_path = discovery_info.socket_path
         home_id_display = format_home_id_for_display(discovery_info.zwave_home_id)
