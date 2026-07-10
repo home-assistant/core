@@ -19,7 +19,9 @@ from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_ON,
+    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
     HVACAction,
@@ -326,26 +328,39 @@ class HeaterCooler(HomeKitClimateAccessory):
             self._handle_temperature_changes(
                 char_values, service_calls, current_state, requested_mode
             )
+            # Fan and swing are queued last so they follow the mode switch.
+            self._queue_fan_swing_changes(char_values, service_calls)
 
-        # Mode and temperature writes are awaited in order so a setpoint
-        # cannot reach the entity before its mode switch completes, with the
-        # fan and swing changes dispatched after them.
+        # The whole batch is awaited in order under the accessory lock so a
+        # later batch or setpoint cannot overtake the mode switch before it.
         if service_calls:
             self.hass.async_create_task(
-                self._async_apply_writes(
-                    service_calls, char_values if active_on else None
-                ),
-                eager_start=True,
+                self._async_apply_writes(service_calls), eager_start=True
             )
-        elif active_on:
-            self._handle_fan_swing_changes(char_values)
+
+    def _queue_fan_swing_changes(
+        self,
+        char_values: dict[str, Any],
+        service_calls: list[tuple[str, dict[str, Any]]],
+    ) -> None:
+        """Queue fan speed and swing mode changes."""
+        if (
+            CHAR_ROTATION_SPEED in char_values
+            and (params := self._fan_speed_params(char_values[CHAR_ROTATION_SPEED]))
+            is not None
+        ):
+            service_calls.append((SERVICE_SET_FAN_MODE, params))
+        if (
+            CHAR_SWING_MODE in char_values
+            and (params := self._swing_mode_params(char_values[CHAR_SWING_MODE]))
+            is not None
+        ):
+            service_calls.append((SERVICE_SET_SWING_MODE, params))
 
     async def _async_apply_writes(
-        self,
-        service_calls: list[tuple[str, dict[str, Any]]],
-        fan_swing_char_values: dict[str, Any] | None,
+        self, service_calls: list[tuple[str, dict[str, Any]]]
     ) -> None:
-        """Apply the queued writes in order, then the fan and swing ones.
+        """Apply the queued writes in order.
 
         A failed write aborts the rest of the batch, since the tile was
         already re-synced and later writes would target a mode the entity
@@ -366,8 +381,6 @@ class HeaterCooler(HomeKitClimateAccessory):
                     and (mode := service_data[ATTR_HVAC_MODE]) != HVACMode.OFF
                 ):
                     self._last_known_mode = mode
-            if fan_swing_char_values:
-                self._handle_fan_swing_changes(fan_swing_char_values)
 
     def _handle_active_mode_changes(
         self,
@@ -398,6 +411,16 @@ class HeaterCooler(HomeKitClimateAccessory):
                 # The write already flipped the characteristic; flip it
                 # back so HomeKit keeps showing the unit as on.
                 self._reject_char_write(self.char_active, 1)
+            if target_mode is not None:
+                # A target bundled with off is already on the tile, so it is
+                # remembered for the next Active on rather than sent now, or
+                # put back when the entity cannot enter it.
+                if requested_mode:
+                    self._last_known_mode = requested_mode
+                elif (
+                    restore := self._hk_target_mode(self._last_known_mode)
+                ) is not None:
+                    self._reject_char_write(self.char_target_state, restore)
         elif target_mode is not None:
             if requested_mode:
                 service_calls.append(
@@ -512,13 +535,6 @@ class HeaterCooler(HomeKitClimateAccessory):
         if selected_temp is not None:
             ha_temp = self._temperature_to_states(selected_temp)
             service_calls.append((SERVICE_SET_TEMPERATURE, {ATTR_TEMPERATURE: ha_temp}))
-
-    def _handle_fan_swing_changes(self, char_values: dict[str, Any]) -> None:
-        """Handle fan speed and swing mode changes."""
-        if CHAR_ROTATION_SPEED in char_values:
-            self._set_fan_speed(char_values[CHAR_ROTATION_SPEED])
-        if CHAR_SWING_MODE in char_values:
-            self._set_swing_mode(char_values[CHAR_SWING_MODE])
 
     def _hk_target_mode(self, mode: HVACMode) -> int | None:
         """Map HA hvac_mode to a HomeKit target heater-cooler state."""

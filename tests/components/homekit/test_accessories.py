@@ -740,7 +740,7 @@ async def test_call_service(
     ],
 )
 async def test_call_service_resyncs_on_failure(
-    hass: HomeAssistant, hk_driver, raise_exception: Exception
+    hass: HomeAssistant, hk_driver: HomeDriver, raise_exception: Exception
 ) -> None:
     """When the dispatched service raises, re-push the entity's current state.
 
@@ -769,7 +769,7 @@ async def test_call_service_resyncs_on_failure(
 
 
 async def test_call_service_resync_failure_is_logged(
-    hass: HomeAssistant, hk_driver, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, hk_driver: HomeDriver, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test a failing resync is logged instead of hitting the task handler."""
     entity_id = "homekit.accessory"

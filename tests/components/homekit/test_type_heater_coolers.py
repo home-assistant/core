@@ -242,6 +242,74 @@ async def test_heatercooler_auto_target_backing_mode(
     assert acc._hk_to_ha_target[HC_TARGET_AUTO] == expected_auto_mode
 
 
+async def test_heatercooler_off_with_bundled_target_mode(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a target bundled with off is remembered for the next power on."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+    }
+
+    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Turning off with a new target only sends the off write
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
+    _write_chars(
+        hk_driver,
+        acc,
+        {CHAR_ACTIVE: 0, CHAR_TARGET_HEATER_COOLER_STATE: HC_TARGET_HEAT},
+    )
+    await hass.async_block_till_done()
+
+    assert len(call_set_hvac_mode) == 1
+    assert call_set_hvac_mode[0].data[ATTR_HVAC_MODE] == HVACMode.OFF
+
+    # Power on activates the mode the tile displays
+    hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
+    await hass.async_block_till_done()
+    _write_chars(hk_driver, acc, {CHAR_ACTIVE: 1})
+    await hass.async_block_till_done()
+
+    assert call_set_hvac_mode[-1].data[ATTR_HVAC_MODE] == HVACMode.HEAT
+
+
+async def test_heatercooler_off_with_unsupported_bundled_target(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test an unsupported target bundled with off is put back on the tile."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
+    }
+
+    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
+    _write_chars(
+        hk_driver,
+        acc,
+        {CHAR_ACTIVE: 0, CHAR_TARGET_HEATER_COOLER_STATE: HC_TARGET_HEAT},
+    )
+    await hass.async_block_till_done()
+
+    assert acc.char_target_state.value == HC_TARGET_COOL
+
+
 async def test_heatercooler_rejected_mode_is_not_remembered(
     hass: HomeAssistant, hk_driver: HomeDriver
 ) -> None:

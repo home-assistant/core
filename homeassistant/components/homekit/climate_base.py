@@ -226,29 +226,40 @@ class HomeKitClimateAccessory(HomeAccessory):
         """Convert a temperature in the HomeKit unit to the entity's unit."""
         return temperature_to_states(temp, self._unit)
 
-    def _set_fan_speed(self, speed: int) -> None:
-        """Send the climate fan mode for a HomeKit rotation speed."""
+    def _fan_speed_params(self, speed: int) -> dict[str, Any] | None:
+        """Return the set_fan_mode data for a HomeKit rotation speed."""
         _LOGGER.debug("%s: Set fan speed to %s", self.entity_id, speed)
         if not self.ordered_fan_speeds or not 0 < speed <= 100:
-            return
+            return None
         mode = fan_speed_to_mode(self.ordered_fan_speeds, self.fan_modes, speed)
-        self.async_call_service(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode},
-        )
+        return {ATTR_FAN_MODE: mode}
+
+    def _set_fan_speed(self, speed: int) -> None:
+        """Send the climate fan mode for a HomeKit rotation speed."""
+        if (params := self._fan_speed_params(speed)) is not None:
+            self.async_call_service(
+                CLIMATE_DOMAIN,
+                SERVICE_SET_FAN_MODE,
+                {ATTR_ENTITY_ID: self.entity_id, **params},
+            )
+
+    def _swing_mode_params(self, swing_on: int) -> dict[str, Any] | None:
+        """Return the set_swing_mode data for a HomeKit swing toggle."""
+        if self.swing_on_mode is None:
+            return None
+        _LOGGER.debug("%s: Set swing mode to %s", self.entity_id, swing_on)
+        return {
+            ATTR_SWING_MODE: self.swing_on_mode if swing_on else self.swing_off_mode
+        }
 
     def _set_swing_mode(self, swing_on: int) -> None:
         """Send the climate swing mode for a HomeKit swing toggle."""
-        if self.swing_on_mode is None:
-            return
-        _LOGGER.debug("%s: Set swing mode to %s", self.entity_id, swing_on)
-        mode = self.swing_on_mode if swing_on else self.swing_off_mode
-        self.async_call_service(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_SWING_MODE,
-            {ATTR_ENTITY_ID: self.entity_id, ATTR_SWING_MODE: mode},
-        )
+        if (params := self._swing_mode_params(swing_on)) is not None:
+            self.async_call_service(
+                CLIMATE_DOMAIN,
+                SERVICE_SET_SWING_MODE,
+                {ATTR_ENTITY_ID: self.entity_id, **params},
+            )
 
     def _update_fan_speed_char(self, attributes: Mapping[str, Any]) -> None:
         """Update the rotation speed characteristic from the current fan mode."""
