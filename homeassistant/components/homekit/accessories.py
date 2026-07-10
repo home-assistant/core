@@ -250,8 +250,9 @@ class AccessoryTypeResolver:
         # Candidacy is re-evaluated on every resolve
         self._candidates.pop(entity_id, None)
         if climate_type := conf.get(CONF_TYPE):
-            aid_storage.async_set_accessory_type(entity_id, climate_type)
-            return None
+            # The explicit type is recorded by the caller like the automatic
+            # one, so every path defers persistence until the accessory exists.
+            return cast(str, climate_type)
         if aid_storage.get_accessory_type(entity_id) == TYPE_HEATER_COOLER:
             if not climate_controls_target_humidity(state):
                 conf[CONF_TYPE] = TYPE_HEATER_COOLER
