@@ -10,22 +10,6 @@ from homeassistant.util import location as location_util
 _LOGGER = logging.getLogger(__name__)
 
 
-def has_location(state: State) -> bool:
-    """Test if state contains a valid location.
-
-    Async friendly.
-    """
-    return (
-        isinstance(state, State)
-        and isinstance(
-            state.attributes.get(EntityStateAttribute.LATITUDE), (float, int)
-        )
-        and isinstance(
-            state.attributes.get(EntityStateAttribute.LONGITUDE), (float, int)
-        )
-    )
-
-
 def get_location(state: State) -> tuple[float, float] | None:
     """Return the state's location as a (latitude, longitude) tuple, or None.
 
@@ -33,12 +17,27 @@ def get_location(state: State) -> tuple[float, float] | None:
 
     Async friendly.
     """
-    if not has_location(state):
-        return None
-    return (
-        state.attributes[EntityStateAttribute.LATITUDE],
-        state.attributes[EntityStateAttribute.LONGITUDE],
-    )
+    if (
+        isinstance(state, State)
+        and isinstance(
+            latitude := state.attributes.get(EntityStateAttribute.LATITUDE),
+            (float, int),
+        )
+        and isinstance(
+            longitude := state.attributes.get(EntityStateAttribute.LONGITUDE),
+            (float, int),
+        )
+    ):
+        return (latitude, longitude)
+    return None
+
+
+def has_location(state: State) -> bool:
+    """Test if state contains a valid location.
+
+    Async friendly.
+    """
+    return get_location(state) is not None
 
 
 def closest(latitude: float, longitude: float, states: Iterable[State]) -> State | None:
