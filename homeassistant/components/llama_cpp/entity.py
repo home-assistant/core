@@ -28,7 +28,7 @@ from openai.types.chat import (
 )
 from openai.types.chat.chat_completion_message_function_tool_call_param import Function
 from openai.types.shared_params import FunctionDefinition, ResponseFormatJSONSchema
-from probatio import to_openapi as convert
+from probatio import to_openapi
 import voluptuous as vol
 
 from homeassistant.components import conversation
@@ -66,7 +66,7 @@ def _format_structured_output(
     name: str, structure: vol.Schema, llm_api: llm.APIInstance | None
 ) -> ResponseFormatJSONSchema:
     """Format structured output specification."""
-    schema = convert(
+    schema = to_openapi(
         structure, custom_serializer=llm_api.custom_serializer if llm_api else None
     )
     return ResponseFormatJSONSchema(
@@ -86,7 +86,7 @@ def _format_tool(
     """Format tool specification."""
     tool_spec = FunctionDefinition(
         name=tool.name,
-        parameters=convert(tool.parameters, custom_serializer=custom_serializer),
+        parameters=to_openapi(tool.parameters, custom_serializer=custom_serializer),
     )
     if tool.description:
         tool_spec["description"] = tool.description

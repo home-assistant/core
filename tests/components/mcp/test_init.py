@@ -394,7 +394,7 @@ async def test_convert_tool_schema_fails(
     )
 
     with patch(
-        "homeassistant.components.mcp.coordinator.convert_to_voluptuous",
+        "homeassistant.components.mcp.coordinator.from_openapi",
         side_effect=ValueError,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 import ollama
-from probatio import to_openapi as convert
+from probatio import to_openapi
 import voluptuous as vol
 
 from homeassistant.components import conversation
@@ -43,7 +43,7 @@ def _format_tool(
     """Format tool specification."""
     tool_spec = {
         "name": tool.name,
-        "parameters": convert(tool.parameters, custom_serializer=custom_serializer),
+        "parameters": to_openapi(tool.parameters, custom_serializer=custom_serializer),
     }
     if tool.description:
         tool_spec["description"] = tool.description
@@ -225,7 +225,7 @@ class OllamaBaseLLMEntity(Entity):
 
         output_format: dict[str, Any] | None = None
         if structure:
-            output_format = convert(
+            output_format = to_openapi(
                 structure,
                 custom_serializer=(
                     chat_log.llm_api.custom_serializer

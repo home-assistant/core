@@ -2,7 +2,7 @@
 
 from typing import Any, cast
 
-from probatio import UNSUPPORTED, to_field_list as convert
+from probatio import UNSUPPORTED, to_field_list
 
 from homeassistant.const import Platform
 from homeassistant.helpers import selector
@@ -17,17 +17,19 @@ def knx_serializer(schema: Any) -> Any:
         return [
             cast(
                 dict[str, Any],  # GroupSelectOption converts to a dict with subschema
-                convert(option, custom_serializer=knx_serializer),
+                to_field_list(option, custom_serializer=knx_serializer),
             )
             for option in schema.validators
         ]
     if isinstance(schema, KNXSelectorBase):
         result = schema.serialize()
         if schema.serialize_subschema:
-            result["schema"] = convert(schema.schema, custom_serializer=knx_serializer)
+            result["schema"] = to_field_list(
+                schema.schema, custom_serializer=knx_serializer
+            )
         return result
     if isinstance(schema, AllSerializeFirst):
-        return convert(schema.validators[0], custom_serializer=knx_serializer)
+        return to_field_list(schema.validators[0], custom_serializer=knx_serializer)
 
     if isinstance(schema, selector.Selector):
         return schema.serialize() | {"type": "ha_selector"}
@@ -40,5 +42,5 @@ def get_serialized_schema(
 ) -> dict[str, Any] | list[dict[str, Any]] | None:
     """Get the schema for a specific platform."""
     if knx_schema := KNX_SCHEMA_FOR_PLATFORM.get(platform):
-        return convert(knx_schema, custom_serializer=knx_serializer)
+        return to_field_list(knx_schema, custom_serializer=knx_serializer)
     return None

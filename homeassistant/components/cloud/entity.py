@@ -42,7 +42,7 @@ from openai.types.responses.response_input_param import (
     ImageGenerationCall as ImageGenerationCallParam,
 )
 from openai.types.responses.response_output_item import ImageGenerationCall
-from probatio import to_openapi as convert
+from probatio import to_openapi
 import voluptuous as vol
 
 from homeassistant.components import conversation
@@ -168,7 +168,7 @@ def _format_tool(
     custom_serializer: Callable[[Any], Any] | None,
 ) -> ToolParam:
     """Format a Home Assistant tool for the OpenAI Responses API."""
-    parameters = convert(tool.parameters, custom_serializer=custom_serializer)
+    parameters = to_openapi(tool.parameters, custom_serializer=custom_serializer)
 
     spec: FunctionToolParam = {
         "type": "function",
@@ -210,7 +210,7 @@ def _format_structured_output(
     schema: vol.Schema, llm_api: llm.APIInstance | None
 ) -> dict[str, Any]:
     """Format the schema to be compatible with OpenAI API."""
-    result: dict[str, Any] = convert(
+    result: dict[str, Any] = to_openapi(
         schema,
         custom_serializer=(
             llm_api.custom_serializer if llm_api else llm.selector_serializer

@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any, cast, override
 
 import anthropic
-from probatio import to_openapi as convert
+from probatio import to_openapi
 import voluptuous as vol
 
 from homeassistant.components.zone import ENTITY_ID_HOME
@@ -577,7 +577,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     "format": {
                         "type": "json_schema",
                         "schema": {
-                            **convert(location_schema),
+                            **to_openapi(location_schema),
                             "additionalProperties": False,
                         },
                     }

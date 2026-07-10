@@ -15,7 +15,7 @@ from typing import Any, cast
 from mcp import types
 from mcp.server import Server
 from mcp.server.lowlevel.helper_types import ReadResourceContents
-from probatio import to_openapi as convert
+from probatio import to_openapi
 from pydantic import AnyUrl
 import voluptuous as vol
 
@@ -42,7 +42,7 @@ def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
 ) -> types.Tool:
     """Format tool specification."""
-    input_schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    input_schema = to_openapi(tool.parameters, custom_serializer=custom_serializer)
     return types.Tool(
         name=tool.name,
         description=tool.description or "",

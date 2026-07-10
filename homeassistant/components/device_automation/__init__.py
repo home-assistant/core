@@ -9,7 +9,7 @@ import logging
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Literal, overload
 
-from probatio import to_field_list as serialize
+from probatio import to_field_list
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -318,7 +318,7 @@ async def _async_get_device_automation_capabilities(
     if (extra_fields := capabilities.get("extra_fields")) is None:
         capabilities["extra_fields"] = []
     else:
-        capabilities["extra_fields"] = serialize(
+        capabilities["extra_fields"] = to_field_list(
             extra_fields, custom_serializer=cv.custom_serializer
         )
 

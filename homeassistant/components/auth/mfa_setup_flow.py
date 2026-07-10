@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from probatio import to_field_list as serialize
+from probatio import to_field_list
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -153,6 +153,6 @@ def _prepare_result_json(result: data_entry_flow.FlowResult) -> dict[str, Any]:
     if (schema := result["data_schema"]) is None:
         data["data_schema"] = []
     else:
-        data["data_schema"] = serialize(schema)
+        data["data_schema"] = to_field_list(schema)
 
     return data

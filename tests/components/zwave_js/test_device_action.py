@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from probatio import to_field_list as serialize
+from probatio import to_field_list
 import pytest
 from zwave_js_server.client import Client
 from zwave_js_server.const import CommandClass
@@ -547,7 +547,7 @@ async def test_get_action_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert serialize(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -605,7 +605,7 @@ async def test_get_action_capabilities(
         ("94", "Z-Wave Plus Info"),
     ]
 
-    assert serialize(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -642,7 +642,7 @@ async def test_get_action_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert serialize(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -675,7 +675,7 @@ async def test_get_action_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert serialize(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -730,7 +730,7 @@ async def test_get_action_capabilities_lock_triggers(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert serialize(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [{"type": "string", "name": "code_slot", "required": True}]
 
@@ -747,7 +747,7 @@ async def test_get_action_capabilities_lock_triggers(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert serialize(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {"type": "string", "name": "code_slot", "required": True},
@@ -781,7 +781,7 @@ async def test_get_action_capabilities_meter_triggers(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert serialize(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [{"type": "string", "name": "value", "optional": True, "required": False}]
 

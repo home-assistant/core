@@ -103,7 +103,7 @@ from anthropic.types.web_fetch_tool_result_block import (
 from anthropic.types.web_fetch_tool_result_block_param import (
     Content as WebFetchToolResultBlockParamContentParam,
 )
-from probatio import to_openapi as convert
+from probatio import to_openapi
 import voluptuous as vol
 
 from homeassistant.components import conversation
@@ -150,7 +150,7 @@ def _format_tool(
 ) -> ToolParam:
     """Format tool specification."""
     unsupported_keys = {"oneOf", "anyOf", "allOf"}
-    schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    schema = to_openapi(tool.parameters, custom_serializer=custom_serializer)
     schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
 
     return ToolParam(
@@ -1109,7 +1109,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                 ] = JSONOutputFormatParam(
                     type="json_schema",
                     schema={
-                        **convert(
+                        **to_openapi(
                             structure,
                             custom_serializer=chat_log.llm_api.custom_serializer
                             if chat_log.llm_api
@@ -1157,7 +1157,7 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
                     ToolParam(
                         name=structure_name,
                         description="Use this tool to reply to the user",
-                        input_schema=convert(
+                        input_schema=to_openapi(
                             structure,
                             custom_serializer=chat_log.llm_api.custom_serializer
                             if chat_log.llm_api

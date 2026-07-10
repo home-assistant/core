@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Any, cast, overload
 from urllib.parse import urlparse
 from uuid import UUID
 
-from probatio import UNSUPPORTED, to_field_list as serialize
+from probatio import UNSUPPORTED, to_field_list
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -1188,7 +1188,7 @@ def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
             raise ValueError("Nesting expandable sections is not supported")
         return {
             "type": "expandable",
-            "schema": serialize(
+            "schema": to_field_list(
                 schema.schema,
                 custom_serializer=functools.partial(
                     _custom_serializer, allow_section=False

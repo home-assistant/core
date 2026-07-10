@@ -2,7 +2,7 @@
 
 import datetime
 
-from probatio import to_field_list as serialize
+from probatio import to_field_list
 import pytest
 from pytest_unordered import unordered
 
@@ -536,7 +536,7 @@ async def test_get_trigger_capabilities_on(hass: HomeAssistant) -> None:
 
     assert capabilities and "extra_fields" in capabilities
 
-    assert serialize(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -563,7 +563,7 @@ async def test_get_trigger_capabilities_off(hass: HomeAssistant) -> None:
 
     assert capabilities and "extra_fields" in capabilities
 
-    assert serialize(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -590,7 +590,7 @@ async def test_get_trigger_capabilities_humidity(hass: HomeAssistant) -> None:
 
     assert capabilities and "extra_fields" in capabilities
 
-    assert serialize(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {

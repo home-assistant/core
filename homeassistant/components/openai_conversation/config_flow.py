@@ -6,7 +6,7 @@ import logging
 from typing import Any, override
 
 import openai
-from probatio import to_openapi as convert
+from probatio import to_openapi
 import voluptuous as vol
 
 from homeassistant.components.zone import ENTITY_ID_HOME
@@ -663,7 +663,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         "name": "approximate_location",
                         "description": "Approximate location data of the user "
                         "for refined web search results",
-                        "schema": convert(location_schema),
+                        "schema": to_openapi(location_schema),
                         "strict": False,
                     }
                 },

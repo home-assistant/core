@@ -1,6 +1,6 @@
 """Tests for LCN device triggers."""
 
-from probatio import to_field_list as serialize
+from probatio import to_field_list
 from pypck.inputs import ModSendKeysHost, ModStatusAccessControl
 from pypck.lcn_addr import LcnAddr
 from pypck.lcn_defs import AccessControlPeriphery, KeyAction, SendKeyCommand
@@ -347,7 +347,7 @@ async def test_get_transponder_trigger_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert serialize(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -379,7 +379,7 @@ async def test_get_fingerprint_trigger_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert serialize(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -411,7 +411,7 @@ async def test_get_transmitter_trigger_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert serialize(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -464,7 +464,7 @@ async def test_get_send_keys_trigger_capabilities(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert serialize(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {

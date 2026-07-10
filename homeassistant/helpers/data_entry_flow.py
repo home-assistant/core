@@ -4,7 +4,7 @@ from http import HTTPStatus
 from typing import Any, Generic, TypeVar
 
 from aiohttp import web
-from probatio import to_field_list as serialize
+from probatio import to_field_list
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -47,7 +47,7 @@ class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT]):
         if (schema := result["data_schema"]) is None:
             data["data_schema"] = []
         else:
-            data["data_schema"] = serialize(
+            data["data_schema"] = to_field_list(
                 schema, custom_serializer=cv.custom_serializer
             )
         return data

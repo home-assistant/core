@@ -3,7 +3,7 @@
 import asyncio
 from unittest.mock import patch
 
-from probatio import to_field_list as serialize
+from probatio import to_field_list
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config, models as auth_models
@@ -251,7 +251,7 @@ async def test_setup_user_notify_service(hass: HomeAssistant) -> None:
     schema = step["data_schema"]
     schema({"notify_service": "test2"})
     # ensure the schema can be serialized
-    assert serialize(schema) == [
+    assert to_field_list(schema) == [
         {
             "name": "notify_service",
             "options": [

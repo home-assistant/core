@@ -4,7 +4,7 @@ from collections.abc import Callable
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from probatio import to_field_list as convert
+from probatio import to_field_list
 import pytest
 
 from homeassistant import config_entries
@@ -221,7 +221,7 @@ async def test_form_discovery_dhcp(hass: HomeAssistant) -> None:
         {"next_step_id": STEP_HUB_V2},
     )
     assert result2["type"] is FlowResultType.FORM
-    schema = convert(result2["data_schema"])
+    schema = to_field_list(result2["data_schema"])
     found_host = False
     for field in schema:
         if field["name"] == CONF_HOST:

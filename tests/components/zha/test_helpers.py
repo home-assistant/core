@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from probatio import to_field_list as serialize
+from probatio import to_field_list
 import pytest
 from zigpy.application import ControllerApplication
 from zigpy.types.basic import uint16_t
@@ -81,7 +81,7 @@ async def test_zcl_schema_conversions(hass: HomeAssistant) -> None:
             "required": False,
         },
     ]
-    vol_schema = serialize(
+    vol_schema = to_field_list(
         cluster_command_schema_to_vol_schema(command_schema),
         custom_serializer=cv.custom_serializer,
     )

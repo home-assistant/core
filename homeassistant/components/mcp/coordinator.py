@@ -12,7 +12,7 @@ from mcp import McpError
 from mcp.client.session import ClientSession
 from mcp.client.sse import sse_client
 from mcp.client.streamable_http import streamable_http_client
-from probatio import from_openapi as convert_to_voluptuous
+from probatio import from_openapi
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -223,7 +223,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         tools: list[llm.Tool] = []
         for tool in result.tools:
             try:
-                parameters = convert_to_voluptuous(tool.inputSchema)
+                parameters = from_openapi(tool.inputSchema)
             except Exception as err:
                 raise UpdateFailed(
                     f"Error converting schema {err}: {tool.inputSchema}"

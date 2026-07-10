@@ -1,6 +1,6 @@
 """The tests for Humidifier device conditions."""
 
-from probatio import to_field_list as serialize
+from probatio import to_field_list
 import pytest
 from pytest_unordered import unordered
 
@@ -485,7 +485,9 @@ async def test_capabilities(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        serialize(capabilities["extra_fields"], custom_serializer=cv.custom_serializer)
+        to_field_list(
+            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+        )
         == expected_capabilities
     )
 
@@ -657,7 +659,9 @@ async def test_capabilities_legacy(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        serialize(capabilities["extra_fields"], custom_serializer=cv.custom_serializer)
+        to_field_list(
+            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+        )
         == expected_capabilities
     )
 
@@ -696,6 +700,8 @@ async def test_capabilities_missing_entity(
     assert capabilities and "extra_fields" in capabilities
 
     assert (
-        serialize(capabilities["extra_fields"], custom_serializer=cv.custom_serializer)
+        to_field_list(
+            capabilities["extra_fields"], custom_serializer=cv.custom_serializer
+        )
         == expected_capabilities
     )

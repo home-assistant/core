@@ -10,7 +10,7 @@ from typing import Any
 
 import attr
 import attrs
-from probatio import to_field_list as serialize
+from probatio import to_field_list
 import pytest
 from syrupy.constants import EXIT_STATUS_FAIL_UNUSED
 from syrupy.data import Snapshot, SnapshotCollection, SnapshotCollections
@@ -114,7 +114,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         }:
             serializable_data = cls._serializable_conversation_result(data)
         elif isinstance(data, vol.Schema):
-            serializable_data = serialize(data)
+            serializable_data = to_field_list(data)
         elif isinstance(data, ConfigEntry):
             serializable_data = cls._serializable_config_entry(data)
         elif dataclasses.is_dataclass(type(data)):
