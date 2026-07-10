@@ -725,8 +725,11 @@ async def start_http_server_and_save_config(
     )
 
     if CONF_TRUSTED_PROXIES in conf:
+        # Store the full network (address and prefix) so the recovery config
+        # round-trips losslessly; ``network_address`` alone drops the netmask
+        # and would narrow e.g. 10.0.0.0/24 to a single host.
         conf[CONF_TRUSTED_PROXIES] = [
-            str(cast(IPv4Network | IPv6Network, ip).network_address)
+            str(cast(IPv4Network | IPv6Network, ip))
             for ip in conf[CONF_TRUSTED_PROXIES]
         ]
 
