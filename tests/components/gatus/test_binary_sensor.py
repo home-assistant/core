@@ -4,8 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
-from gatus_api import EndpointStatus, Result
-from gatus_api.client import GatusClientError
+from gatus_api import EndpointStatus, GatusClientError, Result
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from gatus_api.client import GatusClient, GatusClientError
+from gatus_api import EndpointStatus, GatusClient, GatusClientError
 import voluptuous as vol
 from yarl import URL
 
@@ -26,7 +26,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_input(
     hass: HomeAssistant, data: dict[str, Any]
-) -> list[dict[str, Any]]:
+) -> list[EndpointStatus]:
     """Validate that the user input allows us to connect to Gatus and return data."""
     client = GatusClient(url=data[CONF_URL], session=async_get_clientsession(hass))
 

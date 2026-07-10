@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from gatus_api.client import GatusClientError
+from gatus_api import GatusClientError
 import pytest
 
 from homeassistant.components.gatus.const import DOMAIN
