@@ -2729,12 +2729,7 @@ async def test_manager_handle_dynamic_encryption_key_connection_error(
 
 @pytest.fixture
 def mock_provisioning_client(mock_client: APIClient) -> Generator[Mock]:
-    """Mock the APIClient built for the zero PSK provisioning connection.
-
-    Constructions using the well known zero PSK get this dedicated instance;
-    every other construction is delegated to the regular mock_client, so the
-    tests can tell the provisioning connection apart from the main one.
-    """
+    """Mock the APIClient built for the zero PSK provisioning connection."""
     client = Mock(spec=APIClient)
     client.connect = AsyncMock()
     client.disconnect = AsyncMock()
