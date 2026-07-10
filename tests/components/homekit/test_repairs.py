@@ -13,11 +13,8 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.homekit import (
-    HomeKit,
-    _heater_cooler_issue_id,
-    async_remove_entry,
-)
+from homeassistant.components.homekit import HomeKit, async_remove_entry
+from homeassistant.components.homekit.climate_type import async_climate_type_issue_id
 from homeassistant.components.homekit.const import (
     CONF_ENTITY_CONFIG,
     DEFAULT_PORT,
@@ -84,7 +81,7 @@ def _create_candidate_issue(
     hass: HomeAssistant, entry: MockConfigEntry, entity_id: str
 ) -> str:
     """Create a candidate issue like the bridge would and return its id."""
-    issue_id = _heater_cooler_issue_id(entry.entry_id, entity_id)
+    issue_id = async_climate_type_issue_id(entry.entry_id, entity_id)
     ir.async_create_issue(
         hass,
         DOMAIN,
@@ -185,7 +182,7 @@ async def test_existing_entity_stays_thermostat_and_raises_issue(
     assert len(accessories) == 1
     assert type(accessories[0]).__name__ == "Thermostat"
     assert issue_registry.async_get_issue(
-        DOMAIN, _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
+        DOMAIN, async_climate_type_issue_id(entry.entry_id, ENTITY_ID)
     )
     await _async_stop_bridge(homekit)
 
@@ -208,7 +205,7 @@ async def test_new_entity_routes_to_heater_cooler_without_issue(
     assert len(accessories) == 1
     assert type(accessories[0]).__name__ == "HeaterCooler"
     assert not issue_registry.async_get_issue(
-        DOMAIN, _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
+        DOMAIN, async_climate_type_issue_id(entry.entry_id, ENTITY_ID)
     )
     await _async_stop_bridge(homekit)
 
@@ -256,7 +253,7 @@ async def test_heater_cooler_choice_survives_restart(
     accessories = list(homekit.bridge.accessories.values())
     assert type(accessories[0]).__name__ == "HeaterCooler"
     assert not issue_registry.async_get_issue(
-        DOMAIN, _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
+        DOMAIN, async_climate_type_issue_id(entry.entry_id, ENTITY_ID)
     )
     await _async_stop_bridge(homekit)
 
@@ -289,7 +286,7 @@ async def test_gained_humidity_setpoint_drops_stored_choice(
     accessories = list(homekit.bridge.accessories.values())
     assert type(accessories[0]).__name__ == "Thermostat"
     assert not issue_registry.async_get_issue(
-        DOMAIN, _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
+        DOMAIN, async_climate_type_issue_id(entry.entry_id, ENTITY_ID)
     )
     assert homekit.aid_storage is not None
     assert homekit.aid_storage.get_accessory_type(ENTITY_ID) is None
@@ -314,7 +311,7 @@ async def test_reload_accessory_resyncs_issue(
     hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
 
     homekit = await _async_start_bridge(hass, entry)
-    issue_id = _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
+    issue_id = async_climate_type_issue_id(entry.entry_id, ENTITY_ID)
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
     # Losing the fan speeds makes the entity ineligible, so a reload
@@ -368,7 +365,7 @@ async def test_automatic_keeps_explicit_choice(
     accessories = list(homekit.bridge.accessories.values())
     assert type(accessories[0]).__name__ == "Thermostat"
     assert issue_registry.async_get_issue(
-        DOMAIN, _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
+        DOMAIN, async_climate_type_issue_id(entry.entry_id, ENTITY_ID)
     )
     await _async_stop_bridge(homekit)
 
@@ -388,7 +385,7 @@ async def test_accessory_mode_reload_resyncs_issue(
     homekit = await _async_start_bridge(
         hass, entry, homekit_mode=HOMEKIT_MODE_ACCESSORY, existing_pairing=True
     )
-    issue_id = _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
+    issue_id = async_climate_type_issue_id(entry.entry_id, ENTITY_ID)
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
     # Losing the fan speeds makes the entity ineligible, so a reload
@@ -422,7 +419,7 @@ async def test_accessory_mode_new_pairing_routes_heater_cooler(
 
     assert type(homekit.driver.accessory).__name__ == "HeaterCooler"
     assert not issue_registry.async_get_issue(
-        DOMAIN, _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
+        DOMAIN, async_climate_type_issue_id(entry.entry_id, ENTITY_ID)
     )
     await _async_stop_bridge(homekit)
 
@@ -455,7 +452,7 @@ async def test_explicit_heater_cooler_wins_over_humidity_safeguard(
     accessories = list(homekit.bridge.accessories.values())
     assert type(accessories[0]).__name__ == "HeaterCooler"
     assert not issue_registry.async_get_issue(
-        DOMAIN, _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
+        DOMAIN, async_climate_type_issue_id(entry.entry_id, ENTITY_ID)
     )
     await _async_stop_bridge(homekit)
 
@@ -484,7 +481,7 @@ async def test_explicit_type_never_raises_issue(
     accessories = list(homekit.bridge.accessories.values())
     assert type(accessories[0]).__name__ == "Thermostat"
     assert not issue_registry.async_get_issue(
-        DOMAIN, _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
+        DOMAIN, async_climate_type_issue_id(entry.entry_id, ENTITY_ID)
     )
     await _async_stop_bridge(homekit)
 
@@ -513,7 +510,7 @@ async def test_yaml_bridge_never_raises_issue(
     accessories = list(homekit.bridge.accessories.values())
     assert type(accessories[0]).__name__ == "Thermostat"
     assert not issue_registry.async_get_issue(
-        DOMAIN, _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
+        DOMAIN, async_climate_type_issue_id(entry.entry_id, ENTITY_ID)
     )
     await _async_stop_bridge(homekit)
 
@@ -613,9 +610,9 @@ async def test_second_bridge_gets_its_own_issue(
 
     # Only this bridge's issue exists; the other bridge has not started
     assert issue_registry.async_get_issue(
-        DOMAIN, _heater_cooler_issue_id(entry.entry_id, ENTITY_ID)
+        DOMAIN, async_climate_type_issue_id(entry.entry_id, ENTITY_ID)
     )
     assert not issue_registry.async_get_issue(
-        DOMAIN, _heater_cooler_issue_id(other.entry_id, ENTITY_ID)
+        DOMAIN, async_climate_type_issue_id(other.entry_id, ENTITY_ID)
     )
     await _async_stop_bridge(homekit)
