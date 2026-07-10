@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.harbor.const import (
     CONF_CERT_PEM,
+    CONF_DISPLAY_NAME,
     CONF_KEY_PEM,
     CONF_SERIAL,
     DOMAIN,
@@ -64,7 +65,11 @@ async def test_user_flow(
 async def test_user_flow_uses_friendly_name(
     hass: HomeAssistant, mock_mqtt_client: AsyncMock
 ) -> None:
-    """Test the entry is titled with the camera's friendly name when set."""
+    """Test the entry is titled with the camera's friendly name when set.
+
+    The probed name is also persisted so setup can seed the device registry
+    with it before any MQTT message has arrived.
+    """
     mock_mqtt_client.return_value.get_settings.return_value = SimpleNamespace(
         settings=SimpleNamespace(preference_display_name="Nursery")
     )
@@ -85,6 +90,7 @@ async def test_user_flow_uses_friendly_name(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Nursery"
+    assert result["data"][CONF_DISPLAY_NAME] == "Nursery"
 
 
 @pytest.mark.parametrize(

@@ -6,7 +6,14 @@ from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_CERT_PEM, CONF_KEY_PEM, CONF_SERIAL, DOMAIN, PLATFORMS
+from .const import (
+    CONF_CERT_PEM,
+    CONF_DISPLAY_NAME,
+    CONF_KEY_PEM,
+    CONF_SERIAL,
+    DOMAIN,
+    PLATFORMS,
+)
 from .coordinator import HarborConfigEntry, HarborCoordinator
 
 
@@ -21,6 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HarborConfigEntry) -> bo
             key_pem=entry.data[CONF_KEY_PEM],
             ip_address=entry.data.get(CONF_IP_ADDRESS),
         ),
+        initial_display_name=entry.data.get(CONF_DISPLAY_NAME),
     )
     await coordinator.async_start()
     try:

@@ -81,6 +81,7 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
         hass: HomeAssistant,
         entry: HarborConfigEntry,
         config: HarborCameraConfig,
+        initial_display_name: str | None = None,
     ) -> None:
         """Initialize the Harbor coordinator."""
         super().__init__(
@@ -91,6 +92,8 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
         )
         self._config = config
         self.device = HarborCamera(config)
+        if initial_display_name is not None:
+            self.device.state.display_name = initial_display_name
         self.data = self.device.state
         self.connected = False
         self._ssl_context_cache: dict[str, Any] = {}
