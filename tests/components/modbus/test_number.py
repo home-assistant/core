@@ -2,8 +2,10 @@
 
 from datetime import timedelta
 import struct
+from unittest import mock
 
 from freezegun.api import FrozenDateTimeFactory
+from pymodbus.exceptions import ModbusException
 import pytest
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
@@ -111,7 +113,7 @@ ENTITY_ID = f"{NUMBER_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
         },
     ],
 )
-async def test_config_number(hass: HomeAssistant, mock_modbus) -> None:
+async def test_config_number(hass: HomeAssistant, mock_modbus: mock.AsyncMock) -> None:
     """Run configuration test for number."""
     assert NUMBER_DOMAIN in hass.config.components
 
@@ -204,7 +206,9 @@ async def test_config_number(hass: HomeAssistant, mock_modbus) -> None:
         ),
     ],
 )
-async def test_all_number(hass: HomeAssistant, mock_do_cycle, expected) -> None:
+async def test_all_number(
+    hass: HomeAssistant, mock_do_cycle: FrozenDateTimeFactory, expected: str
+) -> None:
     """Run test for number."""
     assert hass.states.get(ENTITY_ID).state == expected
 
@@ -294,7 +298,7 @@ async def test_service_number_set_value(
     hass: HomeAssistant,
     value: float,
     register_words: list[int],
-    mock_modbus_ha,
+    mock_modbus_ha: mock.AsyncMock,
 ) -> None:
     """Test set_value."""
     mock_modbus_ha.reset_mock()
@@ -316,6 +320,37 @@ async def test_service_number_set_value(
         mock_modbus_ha.write_registers.assert_called_with(
             51, values=list(register_words), device_id=10
         )
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_NUMBERS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                },
+            ],
+        },
+    ],
+)
+async def test_service_number_set_value_write_fails(
+    hass: HomeAssistant, mock_modbus_ha: mock.AsyncMock
+) -> None:
+    """Test set_value when the Modbus write fails."""
+    mock_modbus_ha.write_register.side_effect = ModbusException("fail write_")
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_VALUE: 31,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -361,7 +396,10 @@ async def test_service_number_set_value(
     ],
 )
 async def test_swap_number_read(
-    hass: HomeAssistant, mock_do_cycle, register_words: list[int], expected: str
+    hass: HomeAssistant,
+    mock_do_cycle: FrozenDateTimeFactory,
+    register_words: list[int],
+    expected: str,
 ) -> None:
     """Run test for number with swap on read."""
     state = hass.states.get(ENTITY_ID)
@@ -392,8 +430,8 @@ async def mock_restore(hass: HomeAssistant) -> None:
 async def test_restore_state_number(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_restore,
-    mock_pymodbus,
+    mock_restore: None,
+    mock_pymodbus: mock.AsyncMock,
 ) -> None:
     """Verify a restored value is shown until the first successful update."""
     config = {
@@ -441,7 +479,9 @@ async def test_restore_state_number(
         },
     ],
 )
-async def test_service_number_update(hass: HomeAssistant, mock_modbus_ha) -> None:
+async def test_service_number_update(
+    hass: HomeAssistant, mock_modbus_ha: mock.AsyncMock
+) -> None:
     """Run test for service homeassistant.update_entity."""
     mock_modbus_ha.read_holding_registers.return_value = ReadResult([27])
     await hass.services.async_call(
@@ -519,10 +559,47 @@ async def test_no_discovery_info_number(
             },
             id="custom_data_type",
         ),
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_MIN_VALUE: 100,
+                        CONF_MAX_VALUE: 0,
+                    }
+                ]
+            },
+            id="min_value_greater_than_max_value",
+        ),
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_NUMBER_STEP: 0,
+                    }
+                ]
+            },
+            id="zero_step",
+        ),
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_NUMBER_STEP: -1,
+                    }
+                ]
+            },
+            id="negative_step",
+        ),
     ],
 )
 async def test_err_config_number(
-    hass: HomeAssistant, mock_modbus, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, mock_modbus: mock.AsyncMock, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Run test for number with wrong config."""
     assert NUMBER_DOMAIN not in hass.config.components
