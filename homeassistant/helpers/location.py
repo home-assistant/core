@@ -17,16 +17,12 @@ def get_location(state: State) -> tuple[float, float] | None:
 
     Async friendly.
     """
-    if (
-        isinstance(state, State)
-        and isinstance(
-            latitude := state.attributes.get(EntityStateAttribute.LATITUDE),
-            (float, int),
-        )
-        and isinstance(
-            longitude := state.attributes.get(EntityStateAttribute.LONGITUDE),
-            (float, int),
-        )
+    if isinstance(
+        latitude := state.attributes.get(EntityStateAttribute.LATITUDE),
+        (float, int),
+    ) and isinstance(
+        longitude := state.attributes.get(EntityStateAttribute.LONGITUDE),
+        (float, int),
     ):
         return (latitude, longitude)
     return None
@@ -37,7 +33,7 @@ def has_location(state: State) -> bool:
 
     Async friendly.
     """
-    return get_location(state) is not None
+    return isinstance(state, State) and get_location(state) is not None
 
 
 def closest(latitude: float, longitude: float, states: Iterable[State]) -> State | None:
