@@ -6185,7 +6185,9 @@ async def test_reconfigure_abandoned_restores_addon_config(
     set_addon_options: AsyncMock,
 ) -> None:
     """Test an abandoned flow restores the add-on config it changed."""
-    addon_options.update({"device": "/test", "s0_legacy_key": "old123"})
+    addon_options.update(
+        {"device": "/test", "network_key": "legacy", "s0_legacy_key": "old123"}
+    )
     entry = integration
     hass.config_entries.async_update_entry(
         entry, unique_id="1234", data={**entry.data, "use_addon": True}
@@ -6222,13 +6224,60 @@ async def test_reconfigure_abandoned_restores_addon_config(
         hass.config_entries.flow.async_abort(result["flow_id"])
         await hass.async_block_till_done()
 
-    # The add-on config the flow changed is restored, and the running
-    # add-on is restarted to apply it, before the reload recovers the entry.
+    # The add-on config the flow changed is restored, without the legacy
+    # network key, before the reload recovers the entry.
     assert set_addon_options.call_args == call(
         "core_zwave_js",
         AddonsOptions(config={"device": "/test", "s0_legacy_key": "old123"}),
     )
     assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+async def test_reconfigure_abandoned_restore_failure_keeps_unloaded(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test the entry stays unloaded if restoring the add-on config fails."""
+    addon_options.update({"device": "/test", "s0_legacy_key": "old123"})
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="1234", data={**entry.data, "use_addon": True}
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "usb_path": "/new",
+            "s0_legacy_key": "old123",
+        },
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+    # Restoring the original add-on options fails on the cleanup path.
+    set_addon_options.side_effect = SupervisorError("Boom")
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done()
+
+    # The entry is left unloaded instead of adopting the unconfirmed options.
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed")
