@@ -861,15 +861,10 @@ async def test_action_tool(
     }
     assert tool.parameters.schema == schema
 
+    # The parameter cache stores the base description; ScriptTool appends aliases.
     assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
-        "test_script": (
-            "This is a test script. Aliases: ['script alias', 'script name']",
-            vol.Schema(schema),
-        ),
-        "script_with_no_fields": (
-            "This is another test script. Aliases: ['test script 2']",
-            vol.Schema({}),
-        ),
+        "test_script": ("This is a test script", vol.Schema(schema)),
+        "script_with_no_fields": ("This is another test script", vol.Schema({})),
     }
 
     # Test script with response
@@ -978,14 +973,8 @@ async def test_action_tool(
     assert tool.parameters.schema == schema
 
     assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
-        "test_script": (
-            "This is a new test script. Aliases: ['script alias', 'script name']",
-            vol.Schema(schema),
-        ),
-        "script_with_no_fields": (
-            "This is another test script. Aliases: ['test script 2']",
-            vol.Schema({}),
-        ),
+        "test_script": ("This is a new test script", vol.Schema(schema)),
+        "script_with_no_fields": ("This is another test script", vol.Schema({})),
     }
 
 
