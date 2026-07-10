@@ -9,6 +9,7 @@ from bsblan import (
     BSBLANAuthError,
     BSBLANConnectionError,
     BSBLANError,
+    HeatingSchedule,
     HotWaterConfig,
     HotWaterSchedule,
     HotWaterState,
@@ -58,6 +59,7 @@ class BSBLanSlowData:
 
     dhw_config: HotWaterConfig | None = None
     dhw_schedule: HotWaterSchedule | None = None
+    heating_schedule: HeatingSchedule | None = None
 
 
 class BSBLanCoordinator[T](DataUpdateCoordinator[T]):
