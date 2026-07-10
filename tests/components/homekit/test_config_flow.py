@@ -1,5 +1,7 @@
 """Test the HomeKit config flow."""
 
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -1739,9 +1741,21 @@ async def test_options_flow_cameras_step_with_whole_domain_included(
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-@pytest.mark.parametrize("homekit_mode", ["bridge", "accessory"])
+@pytest.mark.parametrize(
+    "homekit_attrs",
+    [
+        pytest.param(
+            lambda acc: {"bridge": Mock(accessories={2: acc})},
+            id="bridge",
+        ),
+        pytest.param(
+            lambda acc: {"bridge": None, "driver": Mock(accessory=acc)},
+            id="accessory",
+        ),
+    ],
+)
 async def test_options_flow_climate_step_shows_current_accessory(
-    hass: HomeAssistant, homekit_mode: str
+    hass: HomeAssistant, homekit_attrs: Callable[[Any], dict[str, Any]]
 ) -> None:
     """Test the climate labels show the accessory the entity uses now."""
     config_entry = _mock_config_entry_with_options_populated()
@@ -1753,11 +1767,7 @@ async def test_options_flow_climate_step_shows_current_accessory(
     # A loaded entry exposes the bridged accessories through its runtime
     # data; accessory mode reads the single accessory from the driver
     thermostat = type("Thermostat", (), {"entity_id": "climate.new"})()
-    if homekit_mode == "bridge":
-        homekit = Mock(bridge=Mock(accessories={2: thermostat}))
-    else:
-        homekit = Mock(bridge=None, driver=Mock(accessory=thermostat))
-    config_entry.runtime_data = Mock(homekit=homekit)
+    config_entry.runtime_data = Mock(homekit=Mock(**homekit_attrs(thermostat)))
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(

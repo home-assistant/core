@@ -327,6 +327,36 @@ async def test_accessory_mode_existing_pairing_stays_thermostat(
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
+async def test_stored_thermostat_survives_pairing_reset(
+    hass: HomeAssistant,
+) -> None:
+    """Test a stored Thermostat choice is kept when the entity looks new."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entry.add_to_hass(hass)
+    hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
+
+    # An explicit Thermostat choice is stored with the accessory
+    homekit = await _async_start_bridge(
+        hass,
+        entry,
+        {ENTITY_ID: {CONF_TYPE: "thermostat"}},
+        homekit_mode=HOMEKIT_MODE_ACCESSORY,
+    )
+    assert type(homekit.driver.accessory).__name__ == "Thermostat"
+    await _async_stop_bridge(homekit)
+
+    # A pairing reset makes the entry look brand new, but Automatic still
+    # keeps the stored Thermostat instead of flipping to the HeaterCooler
+    homekit = await _async_start_bridge(
+        hass, entry, homekit_mode=HOMEKIT_MODE_ACCESSORY
+    )
+    assert type(homekit.driver.accessory).__name__ == "Thermostat"
+    await _async_stop_bridge(homekit)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
 async def test_accessory_mode_new_pairing_routes_heater_cooler(
     hass: HomeAssistant,
 ) -> None:
