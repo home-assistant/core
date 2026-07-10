@@ -604,6 +604,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             if rf_region is None or rf_region == "Automatic":
                 # If the RF region is not set, we need to ask the user to select it.
                 return await self.async_step_rf_region()
+        if (
+            self._reconfigure_config_entry is None
+            and self._addon_owned_by_other_entry()
+        ):
+            # An add-on based entry was created while this flow was open,
+            # e.g. by a concurrent discovery flow. Abort before this flow
+            # overwrites the add-on config of that entry.
+            return self.async_abort(reason="addon_already_configured")
+
         if config_updates := self._addon_config_updates:
             # If we have updates to the add-on config,
             # set them before starting the add-on.
@@ -988,10 +997,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.use_addon = True
 
-        if any(
-            entry.data.get(CONF_USE_ADDON) and entry.unique_id != self.unique_id
-            for entry in self._async_current_entries(include_ignore=False)
-        ):
+        if self._addon_owned_by_other_entry():
             # The add-on can only connect to a single adapter, so abort before
             # the flow changes the add-on config of the existing entry.
             return self.async_abort(reason="addon_already_configured")
@@ -1067,6 +1073,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="configure_addon_user", data_schema=data_schema, errors=errors
+        )
+
+    @callback
+    def _addon_owned_by_other_entry(self) -> bool:
+        """Return if another config entry uses the add-on."""
+        return any(
+            entry.data.get(CONF_USE_ADDON) and entry.unique_id != self.unique_id
+            for entry in self._async_current_entries(include_ignore=False)
         )
 
     @callback
@@ -1193,10 +1207,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry_from_vars(self) -> ConfigFlowResult:
         """Return a config entry for the flow."""
-        if self.use_addon and any(
-            entry.data.get(CONF_USE_ADDON)
-            for entry in self._async_current_entries(include_ignore=False)
-        ):
+        if self.use_addon and self._addon_owned_by_other_entry():
             # The add-on can only connect to a single adapter,
             # so only one config entry may use the add-on.
             return self.async_abort(reason="addon_already_configured")
@@ -1259,9 +1270,34 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         assert config_entry is not None
         if (
             # The entry may have been removed while the flow was pending.
-            self.hass.config_entries.async_get_entry(config_entry.entry_id) is not None
-            and config_entry.state is ConfigEntryState.NOT_LOADED
+            self.hass.config_entries.async_get_entry(config_entry.entry_id) is None
+            or config_entry.state is not ConfigEntryState.NOT_LOADED
         ):
+            return
+        if (original_config := self._addon_setup.original_config) is not None:
+            # The flow changed the add-on config without completing.
+            # Restore the config before reloading the entry, so the entry
+            # doesn't adopt the unconfirmed adapter and keys on setup.
+            self.hass.async_create_task(
+                self._async_restore_addon_config_and_reload(original_config)
+            )
+            return
+        self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
+
+    async def _async_restore_addon_config_and_reload(
+        self, original_config: dict[str, Any]
+    ) -> None:
+        """Restore the add-on config and reload the config entry."""
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        addon_manager = self._addon_setup.addon_manager
+        try:
+            await addon_manager.async_set_addon_options(original_config)
+            if self._addon_setup.restart_addon:
+                await addon_manager.async_schedule_restart_addon()
+        except AddonError as err:
+            _LOGGER.error(err)
+        finally:
             self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
     async def async_step_intent_reconfigure(
@@ -1786,8 +1822,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 # Only update config automatically if using socket
                 if existing_entry.data.get(CONF_SOCKET_PATH):
+                    addon_info = await self._addon_setup.async_get_addon_info()
                     if (
                         existing_entry.data[CONF_SOCKET_PATH]
+                        == discovery_info.socket_path
+                        # The add-on may have been repointed externally,
+                        # in which case the config needs to be repaired.
+                        and addon_info.options.get(CONF_ADDON_SOCKET)
                         == discovery_info.socket_path
                     ):
                         # The ESPHome device fires discovery on every
