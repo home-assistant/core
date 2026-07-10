@@ -161,6 +161,14 @@
       }
     },
     "sensor": {
+      "active_mode": {
+        "name": "Mode",
+        "state": {
+          "cooling": "Cooling",
+          "heating": "Heating",
+          "standby": "[%key:common::state::standby%]"
+        }
+      },
       "boiler_supply_temperature": {
         "name": "Boiler supply temperature"
       },
