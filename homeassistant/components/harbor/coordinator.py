@@ -168,13 +168,25 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
         self.async_update_listeners()
 
     def _sync_device_registry(self) -> None:
-        """Refresh the device entry when its name or firmware changes."""
-        device_info = self.device_info
-        fingerprint = (device_info["name"], device_info.get("sw_version"))
+        """Refresh the device entry when its name or firmware changes.
+
+        The device is first registered with a placeholder name when entities
+        are added, before the camera's real name and firmware are known; this
+        adopts them once they arrive. Further changes are rare, so the
+        fingerprint check avoids re-registering on every message.
+        """
+        state = self.data
+        name = state.display_name or f"{MODEL} {state.serial}"
+        fingerprint = (name, state.os_version)
         if fingerprint == self._registered_device:
             return
         self._registered_device = fingerprint
         dr.async_get(self.hass).async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            **device_info,
+            identifiers={(DOMAIN, state.serial)},
+            manufacturer=MANUFACTURER,
+            model=MODEL,
+            name=name,
+            serial_number=state.serial,
+            sw_version=state.os_version,
         )

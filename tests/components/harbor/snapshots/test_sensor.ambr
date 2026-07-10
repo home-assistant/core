@@ -69,7 +69,6 @@
         'fair',
         'good',
         'poor',
-        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -112,7 +111,6 @@
         'fair',
         'good',
         'poor',
-        'unknown',
       ]),
     }),
     'context': <ANY>,
@@ -160,7 +158,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
+    'translation_key': None,
     'unique_id': '1234567890_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -217,7 +215,7 @@
     'supported_features': 0,
     'translation_key': 'num_viewers',
     'unique_id': '1234567890_num_viewers',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'viewers',
   })
 # ---
 # name: test_sensors[sensor.harbor_camera_1234567890_viewers-state]
@@ -225,6 +223,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Viewers',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'viewers',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.harbor_camera_1234567890_viewers',
@@ -270,7 +269,7 @@
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': '1234567890_wifi_strength',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'bars',
   })
 # ---
 # name: test_sensors[sensor.harbor_camera_1234567890_wi_fi_strength-state]
@@ -278,6 +277,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Nursery Wi-Fi strength',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bars',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.harbor_camera_1234567890_wi_fi_strength',

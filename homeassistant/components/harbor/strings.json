@@ -19,7 +19,7 @@
         },
         "data_description": {
           "cert_pem": "Paste the client certificate from the Harbor app.",
-          "ip_address": "Optional local IP override. Leave empty to use mDNS.",
+          "ip_address": "The local IP address of the Harbor device.",
           "key_pem": "Paste the private key that matches the client certificate.",
           "serial": "The 10-digit serial number printed on the Harbor device."
         },
@@ -33,7 +33,8 @@
         "name": "Bitrate"
       },
       "num_viewers": {
-        "name": "Viewers"
+        "name": "Viewers",
+        "unit_of_measurement": "viewers"
       },
       "stream_quality": {
         "name": "Stream quality",
@@ -41,15 +42,12 @@
           "excellent": "Excellent",
           "fair": "Fair",
           "good": "Good",
-          "poor": "Poor",
-          "unknown": "Unknown"
+          "poor": "Poor"
         }
       },
-      "temperature": {
-        "name": "Temperature"
-      },
       "wifi_strength": {
-        "name": "Wi-Fi strength"
+        "name": "Wi-Fi strength",
+        "unit_of_measurement": "bars"
       }
     }
   },

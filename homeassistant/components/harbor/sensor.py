@@ -30,24 +30,26 @@ CAMERA_SENSORS: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="wifi_strength",
         translation_key="wifi_strength",
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="stream_quality",
         translation_key="stream_quality",
         device_class=SensorDeviceClass.ENUM,
-        options=["excellent", "fair", "good", "poor", "unknown"],
+        options=["excellent", "fair", "good", "poor"],
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -83,4 +85,13 @@ class HarborSensor(HarborEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the current sensor value."""
-        return self.coordinator.data.values.get(self.entity_description.key)
+        value = self.coordinator.data.values.get(self.entity_description.key)
+        if (
+            self.entity_description.device_class == SensorDeviceClass.ENUM
+            and value == "unknown"
+        ):
+            # The library falls back to the literal string "unknown" for any
+            # enum value it doesn't recognize; surface that as no value
+            # rather than a bogus member of the options list.
+            return None
+        return value

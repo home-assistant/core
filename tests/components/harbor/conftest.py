@@ -13,6 +13,7 @@ from homeassistant.components.harbor.const import (
     CONF_SERIAL,
     DOMAIN,
 )
+from homeassistant.const import CONF_IP_ADDRESS
 
 from tests.common import MockConfigEntry
 
@@ -100,5 +101,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_SERIAL: SERIAL,
             CONF_CERT_PEM: CERT_PEM,
             CONF_KEY_PEM: KEY_PEM,
+            CONF_IP_ADDRESS: "192.168.1.10",
         },
     )

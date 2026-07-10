@@ -74,7 +74,12 @@ async def test_user_flow_uses_friendly_name(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_SERIAL: SERIAL, CONF_CERT_PEM: CERT_PEM, CONF_KEY_PEM: KEY_PEM},
+        {
+            CONF_SERIAL: SERIAL,
+            CONF_CERT_PEM: CERT_PEM,
+            CONF_KEY_PEM: KEY_PEM,
+            CONF_IP_ADDRESS: "192.168.1.10",
+        },
     )
     await hass.async_block_till_done()
 
@@ -82,48 +87,46 @@ async def test_user_flow_uses_friendly_name(
     assert result["title"] == "Nursery"
 
 
-@pytest.mark.usefixtures("mock_mqtt_client", "mock_setup_entry")
-async def test_user_flow_without_ip(hass: HomeAssistant) -> None:
-    """Test the user flow omits the IP address when not provided."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_SERIAL: f"  {SERIAL}  ",
-            CONF_CERT_PEM: f"\n{CERT_PEM}\n",
-            CONF_KEY_PEM: KEY_PEM,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert CONF_IP_ADDRESS not in result["data"]
-    assert result["data"][CONF_SERIAL] == SERIAL
-    assert result["data"][CONF_CERT_PEM] == CERT_PEM
-
-
 @pytest.mark.parametrize(
     ("user_input", "error_field", "error"),
     [
         (
-            {CONF_SERIAL: "123", CONF_CERT_PEM: CERT_PEM, CONF_KEY_PEM: KEY_PEM},
+            {
+                CONF_SERIAL: "123",
+                CONF_CERT_PEM: CERT_PEM,
+                CONF_KEY_PEM: KEY_PEM,
+                CONF_IP_ADDRESS: "192.168.1.10",
+            },
             CONF_SERIAL,
             "invalid_serial",
         ),
         (
-            {CONF_SERIAL: "abcdefghij", CONF_CERT_PEM: CERT_PEM, CONF_KEY_PEM: KEY_PEM},
+            {
+                CONF_SERIAL: "abcdefghij",
+                CONF_CERT_PEM: CERT_PEM,
+                CONF_KEY_PEM: KEY_PEM,
+                CONF_IP_ADDRESS: "192.168.1.10",
+            },
             CONF_SERIAL,
             "invalid_serial",
         ),
         (
-            {CONF_SERIAL: SERIAL, CONF_CERT_PEM: "not a cert", CONF_KEY_PEM: KEY_PEM},
+            {
+                CONF_SERIAL: SERIAL,
+                CONF_CERT_PEM: "not a cert",
+                CONF_KEY_PEM: KEY_PEM,
+                CONF_IP_ADDRESS: "192.168.1.10",
+            },
             CONF_CERT_PEM,
             "invalid_cert",
         ),
         (
-            {CONF_SERIAL: SERIAL, CONF_CERT_PEM: CERT_PEM, CONF_KEY_PEM: "not a key"},
+            {
+                CONF_SERIAL: SERIAL,
+                CONF_CERT_PEM: CERT_PEM,
+                CONF_KEY_PEM: "not a key",
+                CONF_IP_ADDRESS: "192.168.1.10",
+            },
             CONF_KEY_PEM,
             "invalid_key",
         ),
@@ -150,7 +153,12 @@ async def test_user_flow_validation_errors(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_SERIAL: SERIAL, CONF_CERT_PEM: CERT_PEM, CONF_KEY_PEM: KEY_PEM},
+        {
+            CONF_SERIAL: SERIAL,
+            CONF_CERT_PEM: CERT_PEM,
+            CONF_KEY_PEM: KEY_PEM,
+            CONF_IP_ADDRESS: "192.168.1.10",
+        },
     )
     await hass.async_block_till_done()
 
@@ -170,7 +178,12 @@ async def test_user_flow_already_configured(
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_SERIAL: SERIAL, CONF_CERT_PEM: CERT_PEM, CONF_KEY_PEM: KEY_PEM},
+        {
+            CONF_SERIAL: SERIAL,
+            CONF_CERT_PEM: CERT_PEM,
+            CONF_KEY_PEM: KEY_PEM,
+            CONF_IP_ADDRESS: "192.168.1.10",
+        },
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -192,7 +205,12 @@ async def test_user_flow_cannot_connect(
     with patch("homeassistant.components.harbor.coordinator.CONNECT_TIMEOUT", 0):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_SERIAL: SERIAL, CONF_CERT_PEM: CERT_PEM, CONF_KEY_PEM: KEY_PEM},
+            {
+                CONF_SERIAL: SERIAL,
+                CONF_CERT_PEM: CERT_PEM,
+                CONF_KEY_PEM: KEY_PEM,
+                CONF_IP_ADDRESS: "192.168.1.10",
+            },
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -206,7 +224,12 @@ async def test_user_flow_cannot_connect(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_SERIAL: SERIAL, CONF_CERT_PEM: CERT_PEM, CONF_KEY_PEM: KEY_PEM},
+        {
+            CONF_SERIAL: SERIAL,
+            CONF_CERT_PEM: CERT_PEM,
+            CONF_KEY_PEM: KEY_PEM,
+            CONF_IP_ADDRESS: "192.168.1.10",
+        },
     )
     await hass.async_block_till_done()
 

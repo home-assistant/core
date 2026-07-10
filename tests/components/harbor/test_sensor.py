@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
@@ -21,6 +22,7 @@ from .conftest import (
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -39,6 +41,7 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_missing_values_are_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -60,6 +63,7 @@ async def test_missing_values_are_unknown(
     )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_unexpected_enum_value_stays_valid(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -67,8 +71,9 @@ async def test_unexpected_enum_value_stays_valid(
 ) -> None:
     """Test a stream quality outside the declared options surfaces as unknown.
 
-    The library maps unrecognized enum values onto the in-set "unknown" member,
-    so the sensor always reports a valid enum state.
+    The library maps unrecognized enum values onto its own "unknown" member;
+    the sensor treats that as no value rather than exposing "unknown" as a
+    literal enum option.
     """
     await setup_integration(hass, mock_config_entry)
     entity_id = "sensor.harbor_camera_1234567890_stream_quality"

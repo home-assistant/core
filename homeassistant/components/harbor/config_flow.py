@@ -23,7 +23,7 @@ STEP_USER_SCHEMA = vol.Schema(
         vol.Required(CONF_KEY_PEM): selector.TextSelector(
             selector.TextSelectorConfig(multiline=True)
         ),
-        vol.Optional(CONF_IP_ADDRESS): selector.TextSelector(
+        vol.Required(CONF_IP_ADDRESS): selector.TextSelector(
             selector.TextSelectorConfig()
         ),
     }
@@ -101,7 +101,7 @@ class HarborConfigFlow(ConfigFlow, domain=DOMAIN):
                 serial=serial,
                 cert_pem=normalized[CONF_CERT_PEM],
                 key_pem=normalized[CONF_KEY_PEM],
-                ip_address=normalized.get(CONF_IP_ADDRESS) or None,
+                ip_address=normalized[CONF_IP_ADDRESS],
             )
             try:
                 display_name = await async_probe_camera(config)
@@ -119,9 +119,8 @@ class HarborConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SERIAL: serial,
             CONF_CERT_PEM: normalized[CONF_CERT_PEM],
             CONF_KEY_PEM: normalized[CONF_KEY_PEM],
+            CONF_IP_ADDRESS: normalized[CONF_IP_ADDRESS],
         }
-        if normalized.get(CONF_IP_ADDRESS):
-            entry_data[CONF_IP_ADDRESS] = normalized[CONF_IP_ADDRESS]
 
         return self.async_create_entry(
             title=display_name or f"Camera {serial}",
