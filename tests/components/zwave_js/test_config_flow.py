@@ -1576,6 +1576,7 @@ async def test_esphome_discovery_migration(
             "url": "ws://localhost:3000",
             "use_addon": True,
             "usb_path": "/dev/ttyUSB0",
+            "integration_created_addon": True,
         },
     )
 
@@ -1690,6 +1691,8 @@ async def test_esphome_discovery_migration(
     assert entry.data["usb_path"] is None
     assert entry.data["socket_path"] == "esphome://192.168.1.100:6053"
     assert entry.data["use_addon"] is True
+    # The entry keeps ownership of the add-on it installed.
+    assert entry.data["integration_created_addon"] is True
     # The finished migration cleans up the pending discovery prompt.
     assert not hass.config_entries.flow.async_progress()
 
@@ -1702,6 +1705,7 @@ async def test_esphome_discovery_repairs_addon_socket_drift(
 ) -> None:
     """Test rediscovery repairs an externally repointed add-on socket."""
     addon_options[CONF_ADDON_SOCKET] = "esphome://other-device:6053"
+    addon_options[CONF_ADDON_DEVICE] = "/dev/ttyUSB0"
 
     entry = MockConfigEntry(
         entry_id="mock-entry-id",
@@ -1725,7 +1729,8 @@ async def test_esphome_discovery_repairs_addon_socket_drift(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    # The add-on config is repaired and the entry reloaded.
+    # The add-on config is repaired, without the drifted USB device,
+    # and the entry is reloaded.
     assert set_addon_options.call_args == call(
         "core_zwave_js",
         AddonsOptions(config={CONF_ADDON_SOCKET: "esphome://192.168.1.100:6053"}),
@@ -2730,6 +2735,53 @@ async def test_reconfigure_addon_usb_socket_validation(
     assert result["step_id"] == "configure_addon_reconfigure"
     assert result["errors"] == {"base": "usb_and_socket_path"}
     set_addon_options.assert_not_called()
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_addon_already_configured_at_entry_creation(
+    hass: HomeAssistant,
+    addon_options: dict[str, Any],
+    get_server_version: AsyncMock,
+) -> None:
+    """Test entry creation aborts when an add-on entry appeared late."""
+    addon_options["device"] = "/test"
+    version_info = get_server_version.return_value
+
+    async def version_info_and_add_entry(*args: Any) -> VersionInfo:
+        # An add-on based entry is configured while the flow is
+        # fetching the server version, after the earlier guards ran.
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                "url": "ws://localhost:3000",
+                "usb_path": "/other",
+                "use_addon": True,
+            },
+            title=TITLE,
+            unique_id="4321",
+        )
+        entry.add_to_hass(hass)
+        return version_info
+
+    get_server_version.side_effect = version_info_and_add_entry
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "on_supervisor"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
