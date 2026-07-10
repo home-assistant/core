@@ -57,6 +57,16 @@ DEFAULT_SENSORS = {
     PARAM_STATUS: {PARAM_STATE: "online", PARAM_STATE_VARIANT: STATE_VARIANT_ENUM},
     PARAM_BATTERY: {PARAM_STATE: 85, PARAM_STATE_VARIANT: STATE_VARIANT_NUMERIC},
     PARAM_STORAGE_USED: {PARAM_STATE: 42, PARAM_STATE_VARIANT: STATE_VARIANT_NUMERIC},
+    "temperature_current": {
+        PARAM_STATE: 22.5,
+        PARAM_STATE_VARIANT: STATE_VARIANT_NUMERIC,
+    },
+    "humidity_current": {PARAM_STATE: 55.0, PARAM_STATE_VARIANT: STATE_VARIANT_NUMERIC},
+    "power": {PARAM_STATE: 12.3, PARAM_STATE_VARIANT: STATE_VARIANT_NUMERIC},
+    "voltage": {PARAM_STATE: 220.0, PARAM_STATE_VARIANT: STATE_VARIANT_NUMERIC},
+    "current": {PARAM_STATE: 0.5, PARAM_STATE_VARIANT: STATE_VARIANT_NUMERIC},
+    "switch_cnt": {PARAM_STATE: 3, PARAM_STATE_VARIANT: STATE_VARIANT_NUMERIC},
+    "use_electricity": {PARAM_STATE: 1.5, PARAM_STATE_VARIANT: STATE_VARIANT_NUMERIC},
     "use_time": {PARAM_STATE: 120, PARAM_STATE_VARIANT: STATE_VARIANT_NUMERIC},
 }
 
@@ -120,9 +130,9 @@ def create_device(
         PARAM_STATE_VARIANT: STATE_VARIANT_ENUM,
     }
     if switches:
-        device._switches.update(switches)
+        device._switches.update({key: dict(value) for key, value in switches.items()})
     if sensors:
-        device._sensors.update(sensors)
+        device._sensors.update({key: dict(value) for key, value in sensors.items()})
     return device
 
 

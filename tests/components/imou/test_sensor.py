@@ -211,3 +211,7 @@ async def test_storage_used_enum_suppresses_numeric_metadata(
     assert state.state == "e1"
     assert "unit_of_measurement" not in state.attributes
     assert "state_class" not in state.attributes
+    assert (
+        storage_entry.options.get("sensor", {}).get("suggested_display_precision")
+        is None
+    )
