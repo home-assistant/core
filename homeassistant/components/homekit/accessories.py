@@ -155,7 +155,9 @@ def climate_supports_heater_cooler(state: State) -> bool:
     has_swing = bool(features & ClimateEntityFeature.SWING_MODE) and (
         get_swing_on_mode(attributes) is not None
     )
-    return (has_fan or has_swing) and not climate_controls_target_humidity(state)
+    return (has_fan or has_swing) and not (
+        features & ClimateEntityFeature.TARGET_HUMIDITY
+    )
 
 
 def get_accessory(  # noqa: C901

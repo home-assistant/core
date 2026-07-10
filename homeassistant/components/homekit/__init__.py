@@ -59,7 +59,6 @@ from homeassistant.core import (
     ServiceCall,
     State,
     callback,
-    split_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import (
@@ -698,8 +697,7 @@ class HomeKit:
             self.driver.accessory = new_acc
             new_acc.run()
             self._async_update_accessories_hash()
-            if state.domain == CLIMATE_DOMAIN:
-                self._async_update_heater_cooler_issues()
+        self._async_update_heater_cooler_issues()
 
     def _async_remove_accessories_by_entity_id(
         self, entity_ids: Iterable[str]
@@ -714,6 +712,9 @@ class HomeKit:
             if aid not in self.bridge.accessories:
                 continue
             if acc := self.async_remove_bridge_accessory(aid):
+                # Removing the accessory ends its repair candidacy; the
+                # resolver re-establishes it when the entity is recreated.
+                self._heater_cooler_candidates.pop(entity_id, None)
                 self._async_shutdown_accessory(acc)
                 removed.append(entity_id)
         return removed
@@ -746,9 +747,6 @@ class HomeKit:
         """Recreate removed accessories in bridge mode."""
         for entity_id in removed:
             if not (state := self.hass.states.get(entity_id)):
-                # A gone entity never reaches the resolver, so drop its
-                # candidacy here.
-                self._heater_cooler_candidates.pop(entity_id, None)
                 _LOGGER.warning(
                     "The underlying entity %s disappeared during reload", entity_id
                 )
@@ -756,10 +754,7 @@ class HomeKit:
             if acc := self.add_bridge_accessory(state):
                 acc.run()
         self._async_update_accessories_hash()
-        if any(
-            split_entity_id(entity_id)[0] == CLIMATE_DOMAIN for entity_id in removed
-        ):
-            self._async_update_heater_cooler_issues()
+        self._async_update_heater_cooler_issues()
 
     @callback
     def _async_update_accessories_hash(self) -> bool:

@@ -88,6 +88,20 @@ class AccessoryAidStorage:
         self.allocated_aids = set(self.allocations.values())
         self.heater_cooler_entities = set(raw_storage.get(HEATER_COOLER_KEY, []))
 
+    def _stable_storage_keys(self, entity_id: str) -> tuple[str, ...]:
+        """Return the keys the entity's stable identity can resolve to.
+
+        The preferred key comes first, matching the aid allocation
+        preference for the system unique id over the entity id.
+        """
+        if not (entry := self._entity_registry.async_get(entity_id)):
+            return (entity_id,)
+        keys = [get_system_unique_id(entry, entry.unique_id)]
+        if previous_unique_id := entry.previous_unique_id:
+            keys.append(get_system_unique_id(entry, previous_unique_id))
+        keys.append(entity_id)
+        return tuple(keys)
+
     @callback
     def async_set_heater_cooler(self, entity_id: str, heater_cooler: bool) -> None:
         """Persist whether an entity is routed to the HeaterCooler accessory.
@@ -95,21 +109,15 @@ class AccessoryAidStorage:
         The routing choice must survive restarts, since the automatic pick
         only applies the first time an entity is bridged.
         """
-        if heater_cooler == self.entity_uses_heater_cooler(entity_id):
-            return
         entities = self.heater_cooler_entities
-        entry = self._entity_registry.async_get(entity_id)
+        keys = self._stable_storage_keys(entity_id)
+        if heater_cooler == any(key in entities for key in keys):
+            return
         if heater_cooler:
-            if entry:
-                entities.add(get_system_unique_id(entry, entry.unique_id))
-            else:
-                entities.add(entity_id)
+            entities.add(keys[0])
         else:
-            entities.discard(entity_id)
-            if entry:
-                entities.discard(get_system_unique_id(entry, entry.unique_id))
-                if previous_unique_id := entry.previous_unique_id:
-                    entities.discard(get_system_unique_id(entry, previous_unique_id))
+            for key in keys:
+                entities.discard(key)
         self.async_schedule_save()
 
     def entity_uses_heater_cooler(self, entity_id: str) -> bool:
@@ -118,16 +126,9 @@ class AccessoryAidStorage:
         The choice is stored by the same stable identity as the aid
         allocation, so it survives entity id renames and unique id changes.
         """
-        entities = self.heater_cooler_entities
-        if entity_id in entities:
-            return True
-        if not (entry := self._entity_registry.async_get(entity_id)):
-            return False
-        if get_system_unique_id(entry, entry.unique_id) in entities:
-            return True
-        return bool(
-            (previous_unique_id := entry.previous_unique_id)
-            and get_system_unique_id(entry, previous_unique_id) in entities
+        return any(
+            key in self.heater_cooler_entities
+            for key in self._stable_storage_keys(entity_id)
         )
 
     def get_or_allocate_aid_for_entity_id(self, entity_id: str) -> int:
@@ -146,15 +147,8 @@ class AccessoryAidStorage:
         without allocating, so callers can tell a previously bridged entity
         from a new one.
         """
-        if entity_id in self.allocations:
-            return True
-        if not (entry := self._entity_registry.async_get(entity_id)):
-            return False
-        if get_system_unique_id(entry, entry.unique_id) in self.allocations:
-            return True
-        return bool(
-            (previous_unique_id := entry.previous_unique_id)
-            and get_system_unique_id(entry, previous_unique_id) in self.allocations
+        return any(
+            key in self.allocations for key in self._stable_storage_keys(entity_id)
         )
 
     def _migrate_unique_id_aid_assignment_if_needed(

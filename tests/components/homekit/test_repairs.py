@@ -68,6 +68,12 @@ CAPABLE_ATTRS = {
 }
 
 
+INELIGIBLE_ATTRS = {
+    ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+    ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+}
+
+
 def _create_candidate_issue(
     hass: HomeAssistant, entry: MockConfigEntry, entity_id: str
 ) -> str:
@@ -91,9 +97,14 @@ def _create_candidate_issue(
 
 
 async def _async_stop_bridge(homekit: HomeKit) -> None:
-    """Stop the bridge with the pyhap driver stop patched out."""
+    """Stop the bridge and flush the delayed aid storage save.
+
+    The flush lets a following start read the stored routing choices.
+    """
     with patch("pyhap.accessory_driver.AccessoryDriver.async_stop"):
         await homekit.async_stop()
+    assert homekit.aid_storage is not None
+    await homekit.aid_storage.async_save()
 
 
 async def _async_start_bridge(
@@ -203,9 +214,6 @@ async def test_heater_cooler_choice_survives_restart(
     accessories = list(homekit.bridge.accessories.values())
     assert type(accessories[0]).__name__ == "HeaterCooler"
     await _async_stop_bridge(homekit)
-    # Flush the delayed aid storage save so the next start reads it
-    assert homekit.aid_storage is not None
-    await homekit.aid_storage.async_save()
 
     # The entity now has an aid allocation, so only the stored choice
     # keeps it on the HeaterCooler after a restart.
@@ -234,8 +242,6 @@ async def test_gained_humidity_setpoint_drops_stored_choice(
     accessories = list(homekit.bridge.accessories.values())
     assert type(accessories[0]).__name__ == "HeaterCooler"
     await _async_stop_bridge(homekit)
-    assert homekit.aid_storage is not None
-    await homekit.aid_storage.async_save()
 
     # The entity gains a humidity setpoint, which the HeaterCooler cannot
     # control, so the stored routing is dropped
@@ -287,10 +293,7 @@ async def test_reload_accessory_resyncs_issue(
     hass.states.async_set(
         ENTITY_ID,
         HVACMode.COOL,
-        {
-            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
-            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
-        },
+        INELIGIBLE_ATTRS,
     )
     await homekit.async_reload_accessories([ENTITY_ID])
     await hass.async_block_till_done()
@@ -321,8 +324,6 @@ async def test_automatic_keeps_explicit_choice(
     accessories = list(homekit.bridge.accessories.values())
     assert type(accessories[0]).__name__ == "HeaterCooler"
     await _async_stop_bridge(homekit)
-    assert homekit.aid_storage is not None
-    await homekit.aid_storage.async_save()
 
     # An explicit Thermostat overrides and updates the stored routing
     homekit = await _async_start_bridge(
@@ -331,8 +332,6 @@ async def test_automatic_keeps_explicit_choice(
     accessories = list(homekit.bridge.accessories.values())
     assert type(accessories[0]).__name__ == "Thermostat"
     await _async_stop_bridge(homekit)
-    assert homekit.aid_storage is not None
-    await homekit.aid_storage.async_save()
 
     # Back on automatic the entity keeps the Thermostat and is offered
     # the repair instead of flipping back to the HeaterCooler
@@ -368,10 +367,7 @@ async def test_accessory_mode_reload_resyncs_issue(
     hass.states.async_set(
         ENTITY_ID,
         HVACMode.COOL,
-        {
-            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
-            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
-        },
+        INELIGIBLE_ATTRS,
     )
     await homekit.async_reload_accessories([ENTITY_ID])
     await hass.async_block_till_done()

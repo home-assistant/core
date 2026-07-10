@@ -1621,8 +1621,17 @@ async def test_heatercooler_off_at_startup_activates_displayed_mode(
     assert call_set_hvac_mode[-1].data[ATTR_HVAC_MODE] == HVACMode.AUTO
 
 
+@pytest.mark.parametrize(
+    "mode_sequence",
+    [
+        pytest.param(
+            [HVACMode.COOL, HVACMode.DRY, HVACMode.OFF], id="mode_change_to_dry"
+        ),
+        pytest.param([HVACMode.DRY, HVACMode.OFF], id="starts_in_dry"),
+    ],
+)
 async def test_heatercooler_unrepresentable_mode_not_restored(
-    hass: HomeAssistant, hk_driver: HomeDriver
+    hass: HomeAssistant, hk_driver: HomeDriver, mode_sequence: list[HVACMode]
 ) -> None:
     """Test a mode without a HomeKit target is not restored by Active."""
     entity_id = "climate.test"
@@ -1635,7 +1644,7 @@ async def test_heatercooler_unrepresentable_mode_not_restored(
         ],
     }
 
-    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    hass.states.async_set(entity_id, mode_sequence[0], base_attrs)
     await hass.async_block_till_done()
 
     acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
@@ -1643,46 +1652,12 @@ async def test_heatercooler_unrepresentable_mode_not_restored(
     acc.run()
     await hass.async_block_till_done()
 
-    # Dry has no HomeKit target, so the tile keeps showing Cool and
-    # turning Active on must restore Cool, not Dry.
-    hass.states.async_set(entity_id, HVACMode.DRY, base_attrs)
-    await hass.async_block_till_done()
-    hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
-    await hass.async_block_till_done()
+    for mode in mode_sequence[1:]:
+        hass.states.async_set(entity_id, mode, base_attrs)
+        await hass.async_block_till_done()
 
-    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
-    _write_chars(hk_driver, acc, {CHAR_ACTIVE: 1})
-    await hass.async_block_till_done()
-    assert call_set_hvac_mode[-1].data[ATTR_HVAC_MODE] == HVACMode.COOL
-
-
-async def test_heatercooler_unrepresentable_mode_at_startup(
-    hass: HomeAssistant, hk_driver: HomeDriver
-) -> None:
-    """Test an entity starting in an unrepresentable mode restores the tile mode."""
-    entity_id = "climate.test"
-    base_attrs = {
-        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
-        ATTR_HVAC_MODES: [
-            HVACMode.COOL,
-            HVACMode.DRY,
-            HVACMode.OFF,
-        ],
-    }
-
-    hass.states.async_set(entity_id, HVACMode.DRY, base_attrs)
-    await hass.async_block_till_done()
-
-    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
-    hk_driver.add_accessory(acc)
-    acc.run()
-    await hass.async_block_till_done()
-
-    hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
-    await hass.async_block_till_done()
-
-    # The tile falls back to the default target, so Active must activate
-    # that mode instead of Dry.
+    # Dry has no HomeKit target, so the tile shows Cool and turning
+    # Active on must restore Cool, not Dry.
     call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
     _write_chars(hk_driver, acc, {CHAR_ACTIVE: 1})
     await hass.async_block_till_done()

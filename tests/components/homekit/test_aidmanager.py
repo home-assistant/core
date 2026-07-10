@@ -736,10 +736,7 @@ async def test_heater_cooler_choice_survives_entity_renames(
         "climate", "device", "unique_id", device_id=device_entry.id
     )
 
-    with patch(
-        "homeassistant.components.homekit.aidmanager.AccessoryAidStorage.async_schedule_save"
-    ):
-        aid_storage = AccessoryAidStorage(hass, config_entry.entry_id)
+    aid_storage = AccessoryAidStorage(hass, config_entry.entry_id)
     await aid_storage.async_initialize()
 
     aid_storage.async_set_heater_cooler(climate_ent.entity_id, True)

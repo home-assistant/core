@@ -1,7 +1,7 @@
 """Class to hold all heater cooler accessories."""
 
 import logging
-from typing import Any, TypeGuard, override
+from typing import Any, override
 
 from pyhap.characteristic import Characteristic
 
@@ -89,6 +89,9 @@ HC_HASS_TO_HOMEKIT_ACTION = {
 
 # Hysteresis band in Celsius used when the entity omits hvac_action
 ACTION_HYSTERESIS = 0.25
+
+# Modes that drive both a heating and a cooling threshold
+RANGE_MODES = (HVACMode.HEAT_COOL, HVACMode.AUTO)
 
 
 @TYPES.register("HeaterCooler")
@@ -269,8 +272,11 @@ class HeaterCooler(HomeKitClimateAccessory):
         # Fall back to the displayed target mode so turning Active on for a device
         # that was off at startup activates the mode HomeKit is showing rather than
         # an arbitrary one.
+        # Modes without a HomeKit target representation, like dry or fan
+        # only, are not remembered so turning Active on brings back the
+        # mode the tile is showing instead of one it cannot display.
         self._last_known_mode: HVACMode
-        if self._mode_is_restorable(current_mode):
+        if current_mode and self._hk_target_mode(current_mode) is not None:
             self._last_known_mode = current_mode
         else:
             self._last_known_mode = self._hk_to_ha_target[default_target]
@@ -409,7 +415,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         elif current_mode == HVACMode.HEAT:
             selected_temp = heating_temp
         elif (
-            current_mode in (HVACMode.HEAT_COOL, HVACMode.AUTO)
+            current_mode in RANGE_MODES
             and cooling_temp is not None
             and heating_temp is not None
         ):
@@ -443,24 +449,8 @@ class HeaterCooler(HomeKitClimateAccessory):
         if CHAR_SWING_MODE in char_values:
             self._set_swing_mode(char_values[CHAR_SWING_MODE])
 
-    def _mode_is_restorable(self, mode: HVACMode | None) -> TypeGuard[HVACMode]:
-        """Return True when an Active write may restore the mode later.
-
-        Modes without a HomeKit target representation, like dry or fan
-        only, are not remembered so turning Active on brings back the mode
-        the tile is showing instead of one it cannot display.
-        """
-        return (
-            mode is not None
-            and mode != HVACMode.OFF
-            and self._hk_target_mode(mode) is not None
-        )
-
-    def _hk_target_mode(self, mode: HVACMode | None) -> int | None:
+    def _hk_target_mode(self, mode: HVACMode) -> int | None:
         """Map HA hvac_mode to a HomeKit target heater-cooler state."""
-        if mode is None:
-            return None
-
         # HomeKit's HeaterCooler target only has Auto/Heat/Cool, so modes like
         # dry and fan_only have no representation; they are intentionally
         # collapsed to the Auto target (see the fallback in __init__) and cannot
@@ -476,10 +466,8 @@ class HeaterCooler(HomeKitClimateAccessory):
         """Update state without rechecking the device features."""
         attributes = new_state.attributes
         current_mode = try_parse_enum(HVACMode, new_state.state)
-        if self._mode_is_restorable(current_mode):
+        if current_mode and (tgt := self._hk_target_mode(current_mode)) is not None:
             self._last_known_mode = current_mode
-
-        if (tgt := self._hk_target_mode(current_mode)) is not None:
             self.char_target_state.set_value(tgt)
 
         if new_state.state in (HVACMode.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN):
@@ -546,7 +534,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         # Resolve the cool-above and heat-below setpoints for the active mode.
         # Range modes have independent thresholds; single-target modes only
         # drive one side. Any other mode (e.g. dry, fan_only) stays idle.
-        if mode in (HVACMode.HEAT_COOL, HVACMode.AUTO):
+        if mode in RANGE_MODES:
             cool_above = attributes.get(ATTR_TARGET_TEMP_HIGH)
             heat_below = attributes.get(ATTR_TARGET_TEMP_LOW)
             if cool_above is None and heat_below is None:
