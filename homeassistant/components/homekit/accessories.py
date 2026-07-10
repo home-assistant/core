@@ -184,7 +184,8 @@ def async_resolve_accessory_type(
     climate is the only such domain today. Returns the accessory type the
     caller must record with async_set_accessory_type once the accessory is
     successfully created, so a failed creation is not sticky across
-    restarts.
+    restarts; a stored routing the entity can no longer support is dropped
+    immediately instead.
     """
     if state.domain != CLIMATE_DOMAIN:
         return None

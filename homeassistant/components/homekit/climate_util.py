@@ -1,6 +1,7 @@
 """Shared fan, swing, and temperature helpers for the climate accessory types."""
 
 from collections.abc import Iterable
+import math
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -131,12 +132,14 @@ def get_temperature_range_from_state(
     because the Home app crashes on negative bounds.
     """
     if (min_temp := state.attributes.get(ATTR_MIN_TEMP)) is not None:
-        min_temp = round(temperature_to_homekit(min_temp, unit) * 2) / 2
+        # Round inward so the slider cannot produce a write the entity's
+        # own limit validation rejects
+        min_temp = math.ceil(temperature_to_homekit(min_temp, unit) * 2) / 2
     else:
         min_temp = default_min
 
     if (max_temp := state.attributes.get(ATTR_MAX_TEMP)) is not None:
-        max_temp = round(temperature_to_homekit(max_temp, unit) * 2) / 2
+        max_temp = math.floor(temperature_to_homekit(max_temp, unit) * 2) / 2
     else:
         max_temp = default_max
 

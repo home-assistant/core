@@ -1038,6 +1038,152 @@ async def test_heatercooler_power_on_with_thresholds_uses_activated_mode(
     )
 
 
+async def test_heatercooler_double_off_does_not_corrupt_mode_memory(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test repeated off writes never make off the restore mode."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
+    }
+
+    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # The entity accepts the calls but reports its state late
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
+    _write_chars(hk_driver, acc, {CHAR_ACTIVE: 0})
+    await hass.async_block_till_done()
+    _write_chars(hk_driver, acc, {CHAR_ACTIVE: 0})
+    await hass.async_block_till_done()
+
+    assert acc._last_known_mode == HVACMode.COOL
+
+    # Turning back on works even though the state still reads cool, since
+    # the pending off write means the entity is about to stop running
+    _write_chars(hk_driver, acc, {CHAR_ACTIVE: 1})
+    await hass.async_block_till_done()
+
+    assert call_set_hvac_mode[-1].data[ATTR_HVAC_MODE] == HVACMode.COOL
+
+
+async def test_heatercooler_no_off_entity_applies_rest_of_batch(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a rejected off write does not drop the bundled writes."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL],  # no off
+        ATTR_TEMPERATURE: 20.0,
+    }
+
+    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_set_hvac_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
+    call_set_temperature = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
+    )
+    _write_chars(
+        hk_driver,
+        acc,
+        {
+            CHAR_ACTIVE: 0,
+            CHAR_TARGET_HEATER_COOLER_STATE: HC_TARGET_HEAT,
+            CHAR_HEATING_THRESHOLD_TEMPERATURE: 21.0,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # The off is rejected, so the entity keeps running and the bundled
+    # mode and setpoint writes still apply
+    assert acc.char_active.value == 1
+    assert call_set_hvac_mode[-1].data[ATTR_HVAC_MODE] == HVACMode.HEAT
+    assert call_set_temperature[-1].data[ATTR_TEMPERATURE] == pytest.approx(
+        21.0, abs=0.1
+    )
+
+
+async def test_heatercooler_pending_mode_does_not_mask_target_reject(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test an unsupported target is rejected while a mode is pending."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.OFF],
+    }
+
+    hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Turning on leaves heat pending; the entity reports late
+    async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
+    _write_chars(hk_driver, acc, {CHAR_ACTIVE: 1})
+    await hass.async_block_till_done()
+
+    # Cool is not supported, so the characteristic is put back on heat
+    # instead of the pending mode masking the rejection
+    _write_chars(hk_driver, acc, {CHAR_TARGET_HEATER_COOLER_STATE: HC_TARGET_COOL})
+    await hass.async_block_till_done()
+
+    assert acc.char_target_state.value == HC_TARGET_HEAT
+
+
+async def test_heatercooler_range_only_one_sided_entity(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a range only entity with one sided modes gets range writes."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
+        ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.OFF],
+        ATTR_TARGET_TEMP_HIGH: 22.0,
+        ATTR_TARGET_TEMP_LOW: 20.0,
+    }
+
+    hass.states.async_set(entity_id, HVACMode.HEAT, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Both sides exist so the write can carry the full range
+    call_set_temperature = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
+    )
+    _write_chars(hk_driver, acc, {CHAR_HEATING_THRESHOLD_TEMPERATURE: 21.0})
+    await hass.async_block_till_done()
+
+    assert len(call_set_temperature) == 1
+    assert call_set_temperature[0].data[ATTR_TARGET_TEMP_LOW] == pytest.approx(
+        21.0, abs=0.1
+    )
+    assert call_set_temperature[0].data[ATTR_TARGET_TEMP_HIGH] == pytest.approx(
+        22.0, abs=0.1
+    )
+    assert ATTR_TEMPERATURE not in call_set_temperature[0].data
+
+
 async def test_heatercooler_pending_mode_bridges_slow_state_updates(
     hass: HomeAssistant, hk_driver: HomeDriver
 ) -> None:

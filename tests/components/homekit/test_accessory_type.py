@@ -168,6 +168,30 @@ async def test_new_entity_routes_to_heater_cooler(
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
+async def test_reset_does_not_allocate_for_unbridged_entities(
+    hass: HomeAssistant,
+) -> None:
+    """Test resetting an entity another bridge owns does not allocate."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entry.add_to_hass(hass)
+    hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
+
+    homekit = await _async_start_bridge(hass, entry)
+
+    # The reset service fans out to every instance, so an allocation here
+    # would wrongly mark the entity as previously bridged
+    await homekit.async_reset_accessories(["climate.not_bridged_here"])
+    assert homekit.aid_storage is not None
+    assert (
+        homekit.aid_storage.get_allocated_aid_for_entity_id("climate.not_bridged_here")
+        is None
+    )
+    await _async_stop_bridge(homekit)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
 async def test_failed_accessory_creation_is_not_recorded(
     hass: HomeAssistant,
 ) -> None:

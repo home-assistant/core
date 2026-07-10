@@ -1,8 +1,10 @@
 """Class to hold all heater cooler accessories."""
 
 import asyncio
+from collections.abc import Callable, Coroutine
+import functools
 import logging
-from typing import Any, override
+from typing import Any, Concatenate, override
 
 from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_AIR_CONDITIONER, CATEGORY_HEATER
@@ -93,6 +95,20 @@ ACTION_HYSTERESIS = 0.25
 # the entity accepts the call
 ClimateServiceCall = tuple[str, dict[str, Any], HVACMode | None]
 
+
+def _locked_write[**_P](
+    func: Callable[Concatenate[HeaterCooler, _P], Coroutine[Any, Any, None]],
+) -> Callable[Concatenate[HeaterCooler, _P], Coroutine[Any, Any, None]]:
+    """Run the write coroutine under the accessory's write lock."""
+
+    @functools.wraps(func)
+    async def _wrapper(self: HeaterCooler, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        async with self._write_lock:
+            await func(self, *args, **kwargs)
+
+    return _wrapper
+
+
 # Modes that drive both a heating and a cooling threshold
 RANGE_MODES = (HVACMode.HEAT_COOL, HVACMode.AUTO)
 
@@ -150,9 +166,12 @@ class HeaterCooler(HomeKitClimateAccessory):
 
         # Per the HomeKit spec a heater must include the heating threshold and a
         # cooler the cooling one, so a one sided device gets a single slider. A
-        # device with neither side (e.g. dry only with a setpoint) keeps both so
-        # the setpoint stays controllable.
-        if not can_cool and not can_heat:
+        # device with neither side (e.g. dry only with a setpoint) keeps both,
+        # and a range only device always needs both sides in a write, so the
+        # setpoints stay controllable.
+        if (not can_cool and not can_heat) or not (
+            features & ClimateEntityFeature.TARGET_TEMPERATURE
+        ):
             can_cool = can_heat = True
         self._has_cool_threshold = has_thresholds and can_cool
         self._has_heat_threshold = has_thresholds and can_heat
@@ -320,6 +339,7 @@ class HeaterCooler(HomeKitClimateAccessory):
             self._async_apply_batch(char_values), eager_start=True
         )
 
+    @_locked_write
     async def _async_apply_batch(self, char_values: dict[str, Any]) -> None:
         """Resolve one characteristic batch and apply its writes in order.
 
@@ -327,53 +347,55 @@ class HeaterCooler(HomeKitClimateAccessory):
         already re-synced and later writes would target a mode the entity
         refused to enter.
         """
-        async with self._write_lock:
-            service_calls: list[ClimateServiceCall] = []
-            current_state = self.hass.states.get(self.entity_id)
-            active = char_values.get(CHAR_ACTIVE)
+        service_calls: list[ClimateServiceCall] = []
+        current_state = self.hass.states.get(self.entity_id)
+        active = char_values.get(CHAR_ACTIVE)
 
-            # A mode written in the batch wins over the entity state, which
-            # still holds the pre-change mode.
-            requested_mode: HVACMode | None = None
-            if (
-                target_mode := char_values.get(CHAR_TARGET_HEATER_COOLER_STATE)
-            ) is not None:
-                requested_mode = self._hk_to_ha_target.get(target_mode)
-            elif active == 1:
-                # Turning on activates the last known mode, so setpoints in
-                # the same batch resolve against it instead of the off state.
-                requested_mode = self._last_known_mode
-            if requested_mode is None:
-                # A just accepted mode stays effective until the entity
-                # reports it, so a following batch does not resolve against
-                # the pre-switch state.
-                requested_mode = self._pending_mode
+        # A mode written in the batch wins over the entity state, which
+        # still holds the pre-change mode.
+        requested_mode: HVACMode | None = None
+        if (
+            target_mode := char_values.get(CHAR_TARGET_HEATER_COOLER_STATE)
+        ) is not None:
+            requested_mode = self._hk_to_ha_target.get(target_mode)
+        elif active == 1:
+            # Turning on activates the last known mode, so setpoints in
+            # the same batch resolve against it instead of the off state.
+            requested_mode = self._last_known_mode
 
-            # Active/mode changes are handled first as they gate the others.
-            self._handle_active_mode_changes(
-                char_values, service_calls, current_state, requested_mode
+        # Active/mode changes are handled first as they gate the others.
+        self._handle_active_mode_changes(
+            char_values, service_calls, current_state, requested_mode
+        )
+        # Temperature and fan/swing writes are meaningless when the off
+        # write goes out; a rejected off leaves the entity running, so the
+        # rest of the batch still applies.
+        if not (active == 0 and self._supports_off):
+            # A just accepted mode stays effective for the setpoints until
+            # the entity reports it, so a following batch does not resolve
+            # against the pre-switch state.
+            self._handle_temperature_changes(
+                char_values,
+                service_calls,
+                current_state,
+                requested_mode or self._pending_mode,
             )
-            # Temperature and fan/swing writes are meaningless when turning off.
-            if active != 0:
-                self._handle_temperature_changes(
-                    char_values, service_calls, current_state, requested_mode
-                )
-                # Fan and swing are queued last so they follow the mode switch.
-                self._queue_fan_swing_changes(char_values, service_calls)
+            # Fan and swing are queued last so they follow the mode switch.
+            self._queue_fan_swing_changes(char_values, service_calls)
 
-            for service_name, service_data, commit_mode in service_calls:
-                if not await self.async_call_service_and_wait(
-                    CLIMATE_DOMAIN,
-                    service_name,
-                    {ATTR_ENTITY_ID: self.entity_id, **service_data},
-                ):
-                    return
-                if service_name == SERVICE_SET_HVAC_MODE:
-                    self._pending_mode = service_data[ATTR_HVAC_MODE]
-                # The remembered mode mirrors the accepted target, so a
-                # rejected mode is not restored later.
-                if commit_mode:
-                    self._last_known_mode = commit_mode
+        for service_name, service_data, commit_mode in service_calls:
+            if not await self.async_call_service_and_wait(
+                CLIMATE_DOMAIN,
+                service_name,
+                {ATTR_ENTITY_ID: self.entity_id, **service_data},
+            ):
+                return
+            if service_name == SERVICE_SET_HVAC_MODE:
+                self._pending_mode = service_data[ATTR_HVAC_MODE]
+            # The remembered mode mirrors the accepted target, so a
+            # rejected mode is not restored later.
+            if commit_mode:
+                self._last_known_mode = commit_mode
 
     @override
     def _dispatch_climate_write(self, service: str, params: dict[str, Any]) -> None:
@@ -382,14 +404,14 @@ class HeaterCooler(HomeKitClimateAccessory):
             self._async_apply_locked_write(service, params), eager_start=True
         )
 
+    @_locked_write
     async def _async_apply_locked_write(
         self, service: str, params: dict[str, Any]
     ) -> None:
         """Await one write under the accessory lock."""
-        async with self._write_lock:
-            await self.async_call_service_and_wait(
-                CLIMATE_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id, **params}
-            )
+        await self.async_call_service_and_wait(
+            CLIMATE_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id, **params}
+        )
 
     def _queue_fan_swing_changes(
         self,
@@ -444,21 +466,24 @@ class HeaterCooler(HomeKitClimateAccessory):
                         requested_mode,
                     )
                 )
-            else:
-                _LOGGER.debug(
-                    "%s: Ignoring off request; entity has no off mode",
-                    self.entity_id,
-                )
-                # The write already flipped the characteristic; flip it
-                # back so HomeKit keeps showing the unit as on.
-                self._reject_char_write(self.char_active, 1)
-        elif requested_mode and (
+                return
+            _LOGGER.debug(
+                "%s: Ignoring off request; entity has no off mode",
+                self.entity_id,
+            )
+            # The write already flipped the characteristic; flip it back so
+            # HomeKit keeps showing the unit as on, and let the rest of the
+            # batch apply since the entity keeps running.
+            self._reject_char_write(self.char_active, 1)
+        if requested_mode and (
             target_mode is not None
             or current_state is None
+            or self._pending_mode == HVACMode.OFF
             or current_state.state in CLIMATE_INACTIVE_STATES
         ):
             # An explicit target always goes out; Active on sends the last
-            # known mode only when the entity is not already running.
+            # known mode only when the entity is not already running, where
+            # a pending off write means it is about to stop running.
             service_calls.append(
                 (
                     SERVICE_SET_HVAC_MODE,

@@ -680,8 +680,10 @@ class HomeKit:
         removed: list[str] = []
         acc: HomeAccessory | None
         for entity_id in entity_ids:
-            aid = self.aid_storage.get_or_allocate_aid_for_entity_id(entity_id)
-            if aid not in self.bridge.accessories:
+            # A lookup must not allocate; an allocation marks the entity as
+            # previously bridged, which would suppress the automatic routing.
+            aid = self.aid_storage.get_allocated_aid_for_entity_id(entity_id)
+            if aid is None or aid not in self.bridge.accessories:
                 continue
             if acc := self.async_remove_bridge_accessory(aid):
                 self._async_shutdown_accessory(acc)

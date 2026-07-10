@@ -720,6 +720,39 @@ async def test_accessory_type_round_trip(hass: HomeAssistant) -> None:
     assert final_storage.get_accessory_type("climate.demo") is None
 
 
+async def test_accessory_type_survives_repeated_unique_id_changes(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test reads heal the stored key so a second migration cannot orphan it."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    climate_ent = entity_registry.async_get_or_create(
+        "climate", "device", "u1", device_id=device_entry.id
+    )
+
+    aid_storage = AccessoryAidStorage(hass, config_entry.entry_id)
+    await aid_storage.async_initialize()
+    aid_storage.async_set_accessory_type(climate_ent.entity_id, "heater_cooler")
+
+    # Only the latest previous unique id stays resolvable, so the read
+    # moves the entry forward after each migration
+    entity_registry.async_update_entity(climate_ent.entity_id, new_unique_id="u2")
+    await hass.async_block_till_done()
+    assert aid_storage.get_accessory_type(climate_ent.entity_id) == "heater_cooler"
+    assert aid_storage.accessory_types == {"device.climate.u2": "heater_cooler"}
+
+    entity_registry.async_update_entity(climate_ent.entity_id, new_unique_id="u3")
+    await hass.async_block_till_done()
+    assert aid_storage.get_accessory_type(climate_ent.entity_id) == "heater_cooler"
+    assert aid_storage.accessory_types == {"device.climate.u3": "heater_cooler"}
+
+
 async def test_accessory_type_survives_entity_renames(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

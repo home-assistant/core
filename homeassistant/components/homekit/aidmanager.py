@@ -122,16 +122,20 @@ class AccessoryAidStorage:
         self.async_schedule_save()
 
     def get_accessory_type(self, entity_id: str) -> str | None:
-        """Return the stored accessory type for the entity, if any."""
+        """Return the stored accessory type for the entity, if any.
+
+        A type found under an outdated identity moves to the current one,
+        since only the latest previous unique id stays resolvable.
+        """
         types = self.accessory_types
-        return next(
-            (
-                types[key]
-                for key in self._stable_storage_keys(entity_id)
-                if key in types
-            ),
-            None,
-        )
+        keys = self._stable_storage_keys(entity_id)
+        for key in keys:
+            if key in types:
+                if key != keys[0]:
+                    types[keys[0]] = types.pop(key)
+                    self.async_schedule_save()
+                return types[keys[0]]
+        return None
 
     def get_or_allocate_aid_for_entity_id(self, entity_id: str) -> int:
         """Generate a stable aid for an entity id."""
@@ -165,9 +169,6 @@ class AccessoryAidStorage:
         if aid := self.allocations.pop(old_sys_unique_id, None):
             self.allocations[sys_unique_id] = aid
             self.async_schedule_save()
-        if accessory_type := self.accessory_types.pop(old_sys_unique_id, None):
-            self.accessory_types[sys_unique_id] = accessory_type
-            self.async_schedule_save()
 
     def get_or_allocate_aid(self, unique_id: str | None, entity_id: str) -> int:
         """Allocate (and return) a new aid for an accessory."""
@@ -189,6 +190,18 @@ class AccessoryAidStorage:
 
         raise ValueError(
             f"Unable to generate unique aid allocation for {entity_id} [{unique_id}]"
+        )
+
+    def get_allocated_aid_for_entity_id(self, entity_id: str) -> int | None:
+        """Return the entity's allocated aid without allocating one."""
+        allocations = self.allocations
+        return next(
+            (
+                allocations[key]
+                for key in self._stable_storage_keys(entity_id)
+                if key in allocations
+            ),
+            None,
         )
 
     @callback
