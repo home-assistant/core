@@ -4,6 +4,7 @@ from pathlib import Path
 import re
 from smtplib import (
     SMTPAuthenticationError,
+    SMTPException,
     SMTPHeloError,
     SMTPSenderRefused,
     SMTPServerDisconnected,
@@ -16,6 +17,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
+    ATTR_TARGET,
     DOMAIN as NOTIFY_DOMAIN,
     SERVICE_SEND_MESSAGE,
 )
@@ -359,4 +361,36 @@ async def test_notify_retry_on_disconnect_with_broken_quit(
         blocking=True,
     )
 
+    assert smtp.sendmail.call_count == 2
+
+
+@pytest.mark.parametrize("exception", [SMTPServerDisconnected, SMTPException])
+async def test_legacy_notify_exception(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    smtp: MagicMock,
+    exception: Exception,
+) -> None:
+    """Test legacy notify action raises when retries are exhausted."""
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    smtp.sendmail.side_effect = exception
+
+    with pytest.raises(HomeAssistantError) as e:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            "home_assistant",
+            {
+                ATTR_TARGET: ["recipient@example.com"],
+                ATTR_MESSAGE: "Hello World",
+            },
+            blocking=True,
+        )
+
+    assert e.value.translation_key == "send_mail_connection_error"
     assert smtp.sendmail.call_count == 2
