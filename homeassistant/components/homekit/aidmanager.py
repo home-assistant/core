@@ -121,11 +121,13 @@ class AccessoryAidStorage:
             types[keys[0]] = accessory_type
         self.async_schedule_save()
 
+    @callback
     def get_accessory_type(self, entity_id: str) -> str | None:
         """Return the stored accessory type for the entity, if any.
 
-        A type found under an outdated identity moves to the current one,
-        since only the latest previous unique id stays resolvable.
+        A type found under an outdated identity moves to the current one
+        and schedules a save, since only the latest previous unique id
+        stays resolvable; the read is loop bound because of that.
         """
         types = self.accessory_types
         keys = self._stable_storage_keys(entity_id)
