@@ -214,6 +214,26 @@ async def test_new_entity_routes_to_heater_cooler_without_issue(
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
+async def test_failed_accessory_creation_is_not_recorded(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a failed accessory creation does not persist the auto routing."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_NAME: "mock_name", CONF_PORT: 12345}
+    )
+    entry.add_to_hass(hass)
+    hass.states.async_set(ENTITY_ID, HVACMode.COOL, CAPABLE_ATTRS)
+
+    with patch(f"{PATH_HOMEKIT}.get_accessory", side_effect=ValueError):
+        homekit = await _async_start_bridge(hass, entry)
+
+    assert homekit.aid_storage is not None
+    assert homekit.aid_storage.get_accessory_type(ENTITY_ID) is None
+    await _async_stop_bridge(homekit)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf", "hk_driver")
 async def test_heater_cooler_choice_survives_restart(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,

@@ -803,7 +803,7 @@ class HomeKit:
         conf = self._config.get(state.entity_id, {}).copy()
         # Must run before the aid is allocated below so a never bridged
         # entity is still recognizable as new.
-        self._async_resolve_climate_type(state, conf, allow_auto=True)
+        pending_type = self._async_resolve_climate_type(state, conf, allow_auto=True)
         aid = self.aid_storage.get_or_allocate_aid_for_entity_id(state.entity_id)
         # If an accessory cannot be created or added due to an exception
         # of any kind (usually in pyhap) it should not prevent
@@ -812,6 +812,10 @@ class HomeKit:
             acc = get_accessory(self.hass, self.driver, state, aid, conf)
             if acc is not None:
                 self.bridge.add_accessory(acc)
+                if pending_type:
+                    self.aid_storage.async_set_accessory_type(
+                        state.entity_id, pending_type
+                    )
                 return acc
         except Exception:
             _LOGGER.exception(
@@ -822,19 +826,22 @@ class HomeKit:
     @callback
     def _async_resolve_climate_type(
         self, state: State, conf: dict[str, Any], *, allow_auto: bool
-    ) -> None:
+    ) -> str | None:
         """Resolve which accessory a climate entity uses.
 
         An explicit type in the entity config always wins, even for
         entities with a humidity setpoint, and updates the stored routing,
         so switching back to automatic keeps the accessory the entity
         already uses. In bridge mode an entity that has never been
-        bridged gets the HeaterCooler when capable, and the choice is written
-        down so it survives restarts. Anything else keeps the Thermostat and
-        is tracked as a repair candidate.
+        bridged gets the HeaterCooler when capable. Anything else keeps
+        the Thermostat and is tracked as a repair candidate.
+
+        Returns the accessory type the caller must record with
+        async_set_accessory_type once the accessory is successfully
+        created, so a failed creation is not sticky across restarts.
         """
         if state.domain != CLIMATE_DOMAIN:
-            return
+            return None
         aid_storage = self.aid_storage
         assert aid_storage is not None
         entity_id = state.entity_id
@@ -842,21 +849,21 @@ class HomeKit:
         self._heater_cooler_candidates.pop(entity_id, None)
         if climate_type := conf.get(CONF_TYPE):
             aid_storage.async_set_accessory_type(entity_id, climate_type)
-            return
+            return None
         if aid_storage.get_accessory_type(entity_id) == TYPE_HEATER_COOLER:
             if not climate_controls_target_humidity(state):
                 conf[CONF_TYPE] = TYPE_HEATER_COOLER
-                return
+                return None
             # A humidity setpoint gained since the choice was stored cannot
             # be represented by the HeaterCooler, so the routing is dropped.
             aid_storage.async_set_accessory_type(entity_id, None)
         if not climate_supports_heater_cooler(state):
-            return
+            return None
         if allow_auto and not aid_storage.entity_is_allocated(entity_id):
-            aid_storage.async_set_accessory_type(entity_id, TYPE_HEATER_COOLER)
             conf[CONF_TYPE] = TYPE_HEATER_COOLER
-            return
+            return TYPE_HEATER_COOLER
         self._heater_cooler_candidates[entity_id] = state.name
+        return None
 
     def _would_exceed_max_devices(self, name: str | None) -> bool:
         """Check if adding another devices would reach the limit and log."""
@@ -1096,7 +1103,9 @@ class HomeKit:
         # Accessory mode has no aid allocation to tell new from existing,
         # so only a brand new pairing routes automatically; anything else
         # keeps the Thermostat and is offered the repair.
-        self._async_resolve_climate_type(state, conf, allow_auto=self._first_ever_start)
+        pending_type = self._async_resolve_climate_type(
+            state, conf, allow_auto=self._first_ever_start
+        )
         acc = get_accessory(self.hass, self.driver, state, STANDALONE_AID, conf)
         if acc is None:
             _LOGGER.error(
@@ -1104,6 +1113,10 @@ class HomeKit:
                 self._name,
                 self._filter.config,
             )
+            return None
+        if pending_type:
+            assert self.aid_storage is not None
+            self.aid_storage.async_set_accessory_type(state.entity_id, pending_type)
         return acc
 
     async def _async_create_bridge_accessory(
