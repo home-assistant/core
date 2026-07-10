@@ -104,6 +104,9 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
         self._attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
         if description.options_key is not None:
             self._attr_supported_features |= WaterHeaterEntityFeature.OPERATION_MODE
+        self._attr_target_temperature_step = max(
+            self.device[description.key]["resolution"], 0.5
+        )
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_unique_id = f"{device_id}-{description.key}"
         dhw_modes = self.device.get(DHW_MODES, [])
