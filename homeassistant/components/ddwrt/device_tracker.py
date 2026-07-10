@@ -1,18 +1,13 @@
-"""Support for DD-WRT routers."""
+"""Support for DD-WRT routers as a device tracker."""
 
-from http import HTTPStatus
-import logging
-import re
-from typing import override
-
-import requests
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
     PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
+    AsyncSeeCallback,
+    ScannerEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -20,19 +15,22 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
-
-_DDWRT_DATA_REGEX = re.compile(r"\{(\w+)::([^\}]*)\}")
-_MAC_REGEX = re.compile(r"(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})")
-
-DEFAULT_SSL = False
-DEFAULT_VERIFY_SSL = True
-CONF_WIRELESS_ONLY = "wireless_only"
-DEFAULT_WIRELESS_ONLY = True
+from .const import (
+    CONF_WIRELESS_ONLY,
+    DEFAULT_NAME,
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
+    DEFAULT_WIRELESS_ONLY,
+    DOMAIN,
+)
+from .coordinator import DdWrtConfigEntry, DdWrtDataUpdateCoordinator
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
@@ -46,126 +44,112 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass: HomeAssistant, config: ConfigType) -> DdWrtDeviceScanner | None:
-    """Validate the configuration and return a DD-WRT scanner."""
-    try:
-        return DdWrtDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
-    except ConnectionError:
+async def async_setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    _async_see: AsyncSeeCallback,
+    _discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
+    """Set up the legacy DD-WRT device tracker by importing YAML config."""
+    import_data = {
+        CONF_HOST: config[CONF_HOST],
+        CONF_USERNAME: config[CONF_USERNAME],
+        CONF_PASSWORD: config[CONF_PASSWORD],
+        CONF_SSL: config[CONF_SSL],
+        CONF_VERIFY_SSL: config[CONF_VERIFY_SSL],
+        CONF_WIRELESS_ONLY: config[CONF_WIRELESS_ONLY],
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=import_data,
+    )
+
+    if result["type"] is FlowResultType.ABORT and result["reason"] == "cannot_connect":
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "yaml_import_cannot_connect",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="yaml_import_cannot_connect",
+            translation_placeholders={"host": config[CONF_HOST]},
+        )
+        return False
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": DEFAULT_NAME,
+        },
+    )
+
+    return True
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: DdWrtConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up device tracker entities for a DD-WRT config entry."""
+    coordinator = config_entry.runtime_data
+    tracked: set[str] = set()
+
+    @callback
+    def _async_update_devices() -> None:
+        """Add entities for newly discovered devices."""
+        new_entities = [
+            DdWrtScannerEntity(coordinator, mac)
+            for mac in coordinator.data
+            if mac not in tracked
+        ]
+        if new_entities:
+            tracked.update(entity.mac_address for entity in new_entities)
+            async_add_entities(new_entities)
+
+    config_entry.async_on_unload(coordinator.async_add_listener(_async_update_devices))
+    _async_update_devices()
+
+
+class DdWrtScannerEntity(CoordinatorEntity[DdWrtDataUpdateCoordinator], ScannerEntity):
+    """Representation of a device connected to a DD-WRT router."""
+
+    def __init__(self, coordinator: DdWrtDataUpdateCoordinator, mac: str) -> None:
+        """Initialize the tracked device."""
+        super().__init__(coordinator)
+        self._mac = mac
+        device = coordinator.data.get(mac) or {}
+        self._attr_name = device.get("hostname") or mac
+
+    @property
+    def is_connected(self) -> bool:
+        """Return true if the device is currently connected to the router."""
+        return self._mac in self.coordinator.data
+
+    @property
+    def mac_address(self) -> str:
+        """Return the MAC address of the device."""
+        return self._mac
+
+    @property
+    def ip_address(self) -> str | None:
+        """Return the IP address of the device."""
+        if device := self.coordinator.data.get(self._mac):
+            return device.get("ip")
         return None
 
-
-class DdWrtDeviceScanner(DeviceScanner):
-    """Class which queries a wireless router running DD-WRT firmware."""
-
-    def __init__(self, config):
-        """Initialize the DD-WRT scanner."""
-        self.protocol = "https" if config[CONF_SSL] else "http"
-        self.verify_ssl = config[CONF_VERIFY_SSL]
-        self.host = config[CONF_HOST]
-        self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
-        self.wireless_only = config[CONF_WIRELESS_ONLY]
-
-        self.last_results = {}
-        self.mac2name = {}
-
-        # Test the router is accessible
-        url = f"{self.protocol}://{self.host}/Status_Wireless.live.asp"
-        if not self.get_ddwrt_data(url):
-            raise ConnectionError("Cannot connect to DD-Wrt router")
-
-    @override
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-
-        return self.last_results
-
-    @override
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        # If not initialised and not already scanned and not found.
-        if device not in self.mac2name:
-            url = f"{self.protocol}://{self.host}/Status_Lan.live.asp"
-
-            if not (data := self.get_ddwrt_data(url)):
-                return None
-
-            if not (dhcp_leases := data.get("dhcp_leases")):
-                return None
-
-            # Remove leading and trailing quotes and spaces
-            cleaned_str = dhcp_leases.replace('"', "").replace("'", "").replace(" ", "")
-            elements = cleaned_str.split(",")
-            num_clients = int(len(elements) / 5)
-            self.mac2name = {}
-            for idx in range(num_clients):
-                # The data is a single array
-                # every 5 elements represents one host, the MAC
-                # is the third element and the name is the first.
-                mac_index = (idx * 5) + 2
-                if mac_index < len(elements):
-                    mac = elements[mac_index]
-                    self.mac2name[mac] = elements[idx * 5]
-
-        return self.mac2name.get(device)
-
-    def _update_info(self):
-        """Ensure the information from the DD-WRT router is up to date.
-
-        Return boolean if scanning successful.
-        """
-        _LOGGER.debug("Checking ARP")
-
-        endpoint = "Wireless" if self.wireless_only else "Lan"
-        url = f"{self.protocol}://{self.host}/Status_{endpoint}.live.asp"
-
-        if not (data := self.get_ddwrt_data(url)):
-            return False
-
-        self.last_results = []
-
-        if self.wireless_only:
-            active_clients = data.get("active_wireless")
-        else:
-            active_clients = data.get("arp_table")
-        if not active_clients:
-            return False
-
-        # The DD-WRT UI uses its own data format and then
-        # regex's out values so this is done here too
-        # Remove leading and trailing single quotes.
-        clean_str = active_clients.strip().strip("'")
-        elements = clean_str.split("','")
-
-        self.last_results.extend(item for item in elements if _MAC_REGEX.match(item))
-
-        return True
-
-    def get_ddwrt_data(self, url):
-        """Retrieve data from DD-WRT and return parsed result."""
-        try:
-            response = requests.get(
-                url,
-                auth=(self.username, self.password),
-                timeout=4,
-                verify=self.verify_ssl,
-            )
-        except requests.exceptions.Timeout:
-            _LOGGER.exception("Connection to the router timed out")
-            return None
-        if response.status_code == HTTPStatus.OK:
-            return _parse_ddwrt_response(response.text)
-        if response.status_code == HTTPStatus.UNAUTHORIZED:
-            # Authentication error
-            _LOGGER.exception(
-                "Failed to authenticate, check your username and password"
-            )
-            return None
-        _LOGGER.error("Invalid response from DD-WRT: %s", response)
+    @property
+    def hostname(self) -> str | None:
+        """Return the hostname of the device."""
+        if device := self.coordinator.data.get(self._mac):
+            return device.get("hostname")
         return None
-
-
-def _parse_ddwrt_response(data_str):
-    """Parse the DD-WRT data format."""
-    return dict(_DDWRT_DATA_REGEX.findall(data_str))

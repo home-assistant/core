@@ -148,6 +148,7 @@ FLOWS = {
         "daikin",
         "data_grand_lyon",
         "datadog",
+        "ddwrt",
         "deako",
         "deconz",
         "decora_wifi",
