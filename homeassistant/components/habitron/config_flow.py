@@ -223,7 +223,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Try a discovery probe to obtain a stable serial-based unique_id;
             # fall back to the host string when no probe response arrives.
+            # Canonicalize an own-IP host to the ``local`` sentinel first, so the
+            # fallback unique_id matches the host that ``validate_input`` will
+            # actually store (it rewrites an own IP to ``local`` only later).
             host_input = user_input[KEY_HOST]
+            own_ips = {
+                str(ip) for ip in await network.async_get_enabled_source_ips(self.hass)
+            }
+            if host_input in own_ips:
+                host_input = "local"
             unique_id: str | None = None
             devices = await self._cached_discover()
             target = next((d for d in devices if d.get("ip") == host_input), None)

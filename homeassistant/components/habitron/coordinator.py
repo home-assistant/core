@@ -54,8 +54,6 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
         )
         self.comm = hbtn_comm
         self.config = entry
-        self.rtr_id = 1
-        self.previous_devices: set[str] = set()
         self.smart_hub = SmartHub(hass, entry, hbtn_comm)
 
     @override

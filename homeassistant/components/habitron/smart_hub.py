@@ -12,7 +12,7 @@ from habitron_client import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import area_registry as ar, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 
 from .communicate import HbtnComm
 from .const import DOMAIN
@@ -145,7 +145,6 @@ class SmartHub:
     async def _register_bus_devices(self) -> None:
         """Register the router + module devices and push their registry ids."""
         dev_reg = dr.async_get(self.hass)
-        area_reg = ar.async_get(self.hass)
         router = self.router
 
         dev_reg.async_get_or_create(
@@ -165,6 +164,10 @@ class SmartHub:
 
         for module in router.modules:
             raddr = module.addr - router.id
+            # ``suggested_area`` seeds the area only on device creation; a
+            # forced ``async_update_device(area_id=...)`` here would clobber the
+            # user's manually chosen area on every reload, so it is intentionally
+            # not done.
             area_name = _area_name(router, module.area)
             dev_reg.async_get_or_create(
                 config_entry_id=self.config.entry_id,
@@ -181,10 +184,8 @@ class SmartHub:
                 via_device=(DOMAIN, router.uid),
             )
             dev = dev_reg.async_get_device(identifiers={(DOMAIN, module.uid)})
-            area = area_reg.async_get_or_create(area_name)
             if dev is not None:
                 await self.comm.send_devregid(raddr, dev.id)
-                dev_reg.async_update_device(dev.id, area_id=area.id)
 
     async def update(self) -> None:
         """Refresh the hub-level diagnostics from the SmartHub info query.

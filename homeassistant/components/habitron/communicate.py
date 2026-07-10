@@ -3,7 +3,6 @@
 import asyncio
 import ipaddress
 import logging
-import os
 from pathlib import Path
 from typing import Any, cast
 
@@ -232,9 +231,16 @@ class HbtnComm:
             self._hostip = info["hardware"]["network"]["ip"]
             self._hostname = info["hardware"]["network"]["host"]
             self._mac = info["hardware"]["network"]["lan mac"]
-            self.is_addon = os.getenv("SUPERVISOR_TOKEN") is not None
             software = cast("dict[str, Any]", info["software"])
-            self.slugname = software.get("slug", "") if self.is_addon else ""
+            # The SmartHub reports its own ingress slug only when it runs as the
+            # Home Assistant add-on; an external/standalone unit reports the
+            # literal sentinel "none" (or omits the slug). Deriving is_addon from
+            # this target-reported value is correct even when *this* HA is
+            # supervised but the target hub is external — unlike the local
+            # SUPERVISOR_TOKEN, which only describes this HA.
+            slug = software.get("slug", "")
+            self.is_addon = slug not in ("", "none")
+            self.slugname = slug if self.is_addon else ""
             self.logger.debug("SmartHub slugname: %s", self.slugname)
         except HabitronTimeoutError as exc:
             self.logger.error("Timeout connecting to SmartHub at %s", self._host)

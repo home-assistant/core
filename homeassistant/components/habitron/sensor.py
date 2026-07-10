@@ -400,6 +400,11 @@ class HbtnDescribedSensor(HbtnSensor):
             subscribe_fn(self._module, self._sensor_idx).add_listener(
                 self._handle_coordinator_update
             )
+        # CoordinatorEntity.async_added_to_hass does not write an initial state,
+        # and the coordinator's first refresh completed before this platform was
+        # set up, so without this the entity would read "unknown" until the next
+        # coordinator tick.
+        self._handle_coordinator_update()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -584,6 +589,7 @@ MEMORY_DESCRIPTION = HbtnSensorEntityDescription(
     icon="mdi:memory",
     translated_name=True,
     value_fn=lambda module, idx: module.sensors[idx].value,
+    subscribe_fn=lambda module, idx: module.sensors[idx],
 )
 DISK_DESCRIPTION = HbtnSensorEntityDescription(
     key="disk_free",
@@ -593,6 +599,7 @@ DISK_DESCRIPTION = HbtnSensorEntityDescription(
     icon="mdi:harddisk",
     translated_name=True,
     value_fn=lambda module, idx: module.sensors[idx].value,
+    subscribe_fn=lambda module, idx: module.sensors[idx],
 )
 CPU_LOAD_DESCRIPTION = HbtnSensorEntityDescription(
     key="cpu_load",
@@ -604,18 +611,20 @@ CPU_LOAD_DESCRIPTION = HbtnSensorEntityDescription(
     entity_registry_enabled_default=False,
     translated_name=True,
     value_fn=lambda module, idx: module.diags[idx].value,
+    subscribe_fn=lambda module, idx: module.diags[idx],
 )
 CPU_FREQUENCY_DESCRIPTION = HbtnSensorEntityDescription(
     key="cpu_frequency",
     translation_key="cpu_frequency",
     device_class=SensorDeviceClass.FREQUENCY,
-    native_unit_of_measurement=UnitOfFrequency.HERTZ,
+    native_unit_of_measurement=UnitOfFrequency.MEGAHERTZ,
     state_class=SensorStateClass.MEASUREMENT,
     icon="mdi:clock-fast",
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
     translated_name=True,
     value_fn=lambda module, idx: module.diags[idx].value,
+    subscribe_fn=lambda module, idx: module.diags[idx],
 )
 CPU_TEMPERATURE_DESCRIPTION = HbtnSensorEntityDescription(
     key="cpu_temperature",
@@ -627,6 +636,7 @@ CPU_TEMPERATURE_DESCRIPTION = HbtnSensorEntityDescription(
     entity_registry_enabled_default=False,
     translated_name=True,
     value_fn=lambda module, idx: module.diags[idx].value,
+    subscribe_fn=lambda module, idx: module.diags[idx],
 )
 LOGIC_DESCRIPTION = HbtnSensorEntityDescription(
     key="logic_state",

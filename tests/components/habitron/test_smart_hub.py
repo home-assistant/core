@@ -44,10 +44,10 @@ def smart_hub_stub() -> SmartHub:
     return SmartHub(hass, config, comm)
 
 
-def _smhub_info() -> dict:
+def _smhub_info(slug: str = "") -> dict:
     """A realistic SmartHub info payload as the client returns it."""
     return {
-        "software": {"version": "9.9.9", "slug": "habitron_smarthub"},
+        "software": {"version": "9.9.9", "slug": slug},
         "hardware": {
             "platform": {"type": "Other"},
             "network": {
@@ -60,19 +60,20 @@ def _smhub_info() -> dict:
 
 
 @pytest.mark.parametrize(
-    ("supervisor_token", "expected_conf_url"),
+    ("slug", "expected_conf_url"),
     [
-        (None, f"http://{MOCK_HOST}:7780/hub"),
+        # External/standalone hub: literal "none" slug -> direct base URL.
+        ("none", f"http://{MOCK_HOST}:7780/hub"),
+        # Add-on hub: it reports its ingress slug -> ingress base URL.
         (
-            "token",
+            "habitron_smarthub",
             f"http://{MOCK_HOST}:8123/habitron_smarthub/ingress?index=/hub",
         ),
     ],
 )
 async def test_setup_registers_hub_device(
     hass: HomeAssistant,
-    monkeypatch: pytest.MonkeyPatch,
-    supervisor_token: str | None,
+    slug: str,
     expected_conf_url: str,
 ) -> None:
     """Full config-entry setup registers the hub device in the registry.
@@ -80,12 +81,9 @@ async def test_setup_registers_hub_device(
     Drives the public path (config entry -> SmartHub.async_setup -> device
     registry); only the ``habitron_client`` boundary and the bus-model build are
     mocked, so the real wiring (addon vs standalone base URL included) runs.
+    The add-on vs standalone base URL is driven by the target hub's reported
+    slug, not this HA's supervisor token.
     """
-    if supervisor_token is None:
-        monkeypatch.delenv("SUPERVISOR_TOKEN", raising=False)
-    else:
-        monkeypatch.setenv("SUPERVISOR_TOKEN", supervisor_token)
-
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=MOCK_NAME,
@@ -97,7 +95,7 @@ async def test_setup_registers_hub_device(
 
     client = AsyncMock(spec=HabitronClient)
     client.host = MOCK_HOST
-    client.get_smhub_info = AsyncMock(return_value=_smhub_info())
+    client.get_smhub_info = AsyncMock(return_value=_smhub_info(slug))
     router = Router(uid="rt_1")
     router.modules = []
     router.areas = []
@@ -133,6 +131,16 @@ async def test_setup_registers_hub_device(
     assert device.manufacturer == "Habitron GmbH"
     assert device.sw_version == "9.9.9"
     assert device.configuration_url == expected_conf_url
+
+
+def test_smhub_public_properties(smart_hub_stub: SmartHub) -> None:
+    """The SmartHub exposes its version, hardware type and configured name."""
+    smart_hub_stub._version = "7.7.7"
+    smart_hub_stub._type = "Raspberry Pi 5"
+    smart_hub_stub._name = "Living room hub"
+    assert smart_hub_stub.smhub_version == "7.7.7"
+    assert smart_hub_stub.smhub_type == "Raspberry Pi 5"
+    assert smart_hub_stub.smhub_name == "Living room hub"
 
 
 async def test_update_short_circuits_when_no_info(smart_hub_stub: SmartHub) -> None:
