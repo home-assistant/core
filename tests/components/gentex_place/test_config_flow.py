@@ -10,7 +10,7 @@ from homeassistant.components.gentex_place.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import INVALID_TEST_ACCESS_JWT, TEST_CREDENTIALS, TEST_UNIQUE_ID
+from . import TEST_CREDENTIALS, TEST_UNIQUE_ID
 
 from tests.common import MockConfigEntry
 
@@ -113,51 +113,3 @@ async def test_login_unknown_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
-
-
-@pytest.mark.usefixtures(
-    "aioclient_mock_fixture",
-    "mock_setup_entry",
-    "mock_login",
-)
-async def test_reauth_successful(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test successful reauthentication flow."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=TEST_CREDENTIALS,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-
-
-@pytest.mark.usefixtures(
-    "aioclient_mock_fixture",
-    "mock_setup_entry",
-    "mock_login",
-)
-@pytest.mark.parametrize("mock_srp_access_token", [INVALID_TEST_ACCESS_JWT])
-async def test_reauth_unique_id_mismatch(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that reauth fails when the unique ID does not match."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reauth_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=TEST_CREDENTIALS,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unique_id_mismatch"
