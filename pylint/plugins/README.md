@@ -138,7 +138,7 @@ Every check has a code following the
 | `W7431` | [`home-assistant-options-flow-field-not-translated`](#w7431-home-assistant-options-flow-field-not-translated) | Options flow form field missing translation in `strings.json` |
 | `W7432` | [`home-assistant-subentry-flow-field-not-translated`](#w7432-home-assistant-subentry-flow-field-not-translated) | Subentry flow form field missing translation in `strings.json` |
 | `W7433` | [`home-assistant-missing-test-before-configure`](#w7433-home-assistant-missing-test-before-configure) | Config flow should test the connection before creating an entry |
-
+| `W7434` | [`home-assistant-step_id-match-method`](#w7434-home-assistant-step_id-match-method) | Config flow should use `step_id` parameter value same as the method it's in |
 
 ## `home_assistant_logger` checker
 
@@ -951,3 +951,15 @@ websocket command, which is only registered when the `usb` integration is set
 up. The selector therefore requires `usb` as a hard dependency
 (`"dependencies": ["usb"]`); `after_dependencies` is not sufficient because it
 does not force `usb` to be set up.
+
+## `home-assistant-step_id-match-method` checker
+
+Detects config flows using a `step_id` parameter different than the method it's
+currently in.
+
+### `W7434`: `home-assistant-step_id-match-method`
+
+Check the `step_id` parameter for all calls to `async_show_form`,
+`async_external_step`, `async_show_progress` and `async_show_menu`.
+The `step_id` parameter should be same as the method it's in
+As example: `step_id="user` should be used in `async_step_user`
