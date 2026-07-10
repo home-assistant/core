@@ -10,8 +10,13 @@ from pyoverkiz.models import Event
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.climate import ATTR_HVAC_ACTION, HVACAction
-from homeassistant.const import Platform
+from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_HVAC_ACTION,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.const import ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -39,9 +44,22 @@ COZYTOUCH = FixtureDevice(
     "climate.living_room_heater",
 )
 
+# Hitachi Yutaki 2-zone air-to-water heat pump
+YUTAKI_ZONE_1 = FixtureDevice(
+    "setup/cloud_hi_kumo_europe.json",
+    "modbus://1234-5678-2284/5416194/1#2",
+    "climate.somfy_tahoma_switch_yutaki_zone_1",
+)
+YUTAKI_ZONE_2 = FixtureDevice(
+    "setup/cloud_hi_kumo_europe.json",
+    "modbus://1234-5678-2284/5416194/1#3",
+    "climate.somfy_tahoma_switch_yutaki_zone_2",
+)
+
 SNAPSHOT_FIXTURES = [
     VALVE,
     COZYTOUCH,
+    YUTAKI_ZONE_1,
 ]
 
 
@@ -142,3 +160,21 @@ async def test_events_for_unknown_device_url(
     # Should not crash; valve entity should still be available
     state = hass.states.get(VALVE.entity_id)
     assert state is not None
+
+
+async def test_hitachi_air_to_water_heating_zone_2(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the second heating zone reads its own Zone2 states."""
+    await setup_overkiz_integration(fixture=YUTAKI_ZONE_2.fixture)
+
+    zone_1 = hass.states.get(YUTAKI_ZONE_1.entity_id)
+    assert zone_1 is not None
+    assert zone_1.attributes[ATTR_CURRENT_TEMPERATURE] == 18.5
+
+    zone_2 = hass.states.get(YUTAKI_ZONE_2.entity_id)
+    assert zone_2 is not None
+    assert zone_2.state == HVACMode.AUTO
+    assert zone_2.attributes[ATTR_CURRENT_TEMPERATURE] == 20.5
+    assert zone_2.attributes[ATTR_TEMPERATURE] == 21.0
