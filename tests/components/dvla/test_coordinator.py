@@ -280,3 +280,21 @@ async def test_async_update_data_raises_update_failed_on_rate_limit_message(
 
     with pytest.raises(UpdateFailed, match="API rate limit exceeded"):
         await coordinator._async_update_data()
+
+
+async def test_async_update_data_raises_update_failed_on_non_dict_response(
+    hass: HomeAssistant,
+) -> None:
+    """Test coordinator raises UpdateFailed on unexpected JSON response shape."""
+    session = MagicMock()
+    session.post = AsyncMock(
+        return_value=MockResponse(
+            ["unexpected", "response"],
+            status=200,
+        )
+    )
+
+    coordinator = create_coordinator(hass, session)
+
+    with pytest.raises(UpdateFailed, match="Invalid response from DVLA API"):
+        await coordinator._async_update_data()

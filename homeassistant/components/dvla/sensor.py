@@ -180,9 +180,6 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
         key = self.entity_description.key
         self._state = self.coordinator.data.get(key)
 
-        if key == "monthOfFirstRegistration" and self._state is None:
-            self._state = self.coordinator.data.get("monthOfFirstDvlaRegistration")
-
         if key == "revenueWeight" and self._state is not None:
             with suppress(TypeError, ValueError):
                 self._state = int(self._state)

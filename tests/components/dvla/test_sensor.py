@@ -156,54 +156,6 @@ async def test_month_of_first_registration_is_string_sensor(
     assert state.state == "2024-05"
 
 
-async def test_sensor_native_value_property(hass: HomeAssistant) -> None:
-    """Test sensor native value property."""
-    await setup_dvla_entry(hass)
-
-    state = hass.states.get("sensor.dvla_ab12cde_registrationnumber")
-
-    assert state is not None
-    assert state.state == "AB12CDE"
-
-
-async def test_sensor_native_value_and_coordinator_update(
-    hass: HomeAssistant,
-) -> None:
-    """Test direct sensor native value and coordinator update handling."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="AB12CDE",
-        data={CONF_REG_NUMBER: "AB12CDE"},
-    )
-    entry.add_to_hass(hass)
-
-    coordinator = DVLACoordinator(
-        hass,
-        entry,
-        None,
-        "AB12CDE",
-    )
-    coordinator.data = {"registrationNumber": "AB12CDE"}
-
-    sensor = DVLASensor(
-        coordinator,
-        "AB12CDE",
-        SensorEntityDescription(
-            key="registrationNumber",
-            name="Registration number",
-        ),
-    )
-
-    assert sensor.native_value == "AB12CDE"
-
-    with patch.object(sensor, "async_write_ha_state") as mock_write_state:
-        coordinator.data = {"registrationNumber": "XY99ZZZ"}
-        sensor._handle_coordinator_update()
-
-    assert sensor.native_value == "XY99ZZZ"
-    mock_write_state.assert_called_once()
-
-
 async def test_sensor_handle_coordinator_update(hass: HomeAssistant) -> None:
     """Test sensor handles coordinator updates."""
     entry = MockConfigEntry(
@@ -256,3 +208,28 @@ async def test_invalid_date_sensor_value_is_unknown(hass: HomeAssistant) -> None
 
     assert state is not None
     assert state.state == "unknown"
+
+
+async def test_registration_month_fields_are_distinct(
+    hass: HomeAssistant,
+) -> None:
+    """Test first registration month fields are not substituted."""
+    await setup_dvla_entry(
+        hass,
+        {
+            "registrationNumber": "AB12CDE",
+            "make": "FORD",
+            "monthOfFirstDvlaRegistration": "2024-05",
+        },
+    )
+
+    first_registration = hass.states.get("sensor.dvla_ab12cde_monthoffirstregistration")
+    first_dvla_registration = hass.states.get(
+        "sensor.dvla_ab12cde_monthoffirstdvlaregistration"
+    )
+
+    assert first_registration is not None
+    assert first_registration.state == "unknown"
+
+    assert first_dvla_registration is not None
+    assert first_dvla_registration.state == "2024-05"

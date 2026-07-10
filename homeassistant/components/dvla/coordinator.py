@@ -51,11 +51,13 @@ class DVLACoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 json={"registrationNumber": self.reg_number},
             )
             body = await resp.json()
-            resp.raise_for_status()
         except (ClientError, TimeoutError) as err:
             raise UpdateFailed(str(err)) from err
         except ValueError as err:
             raise UpdateFailed("Invalid response from DVLA API") from err
+
+        if not isinstance(body, dict):
+            raise UpdateFailed("Invalid response from DVLA API")
 
         if resp.status in (401, 403):
             raise UpdateFailed("Invalid authentication credentials")
@@ -63,20 +65,22 @@ class DVLACoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if resp.status == 429:
             raise UpdateFailed("DVLA API rate limit exceeded")
 
-        if "errors" in body:
-            error = body["errors"][0]
+        if errors := body.get("errors"):
+            error = errors[0]
             raise UpdateFailed(
-                f"Error setting up {self.reg_number}: "
-                f"{error.get('title')}({error.get('code')}) - {error.get('detail')}"
+                f"Error retrieving DVLA data for {self.reg_number}: "
+                f"{error.get('title')} ({error.get('code')}) - {error.get('detail')}"
             )
 
-        if "message" in body:
-            message = str(body["message"])
+        if message := body.get("message"):
+            message = str(message)
             if "Invalid authentication credentials" in message:
                 raise UpdateFailed(message)
             if "API rate limit exceeded" in message:
                 raise UpdateFailed(message)
-            raise UpdateFailed(f"Error setting up {self.reg_number}: {message}")
+            raise UpdateFailed(
+                f"Error retrieving DVLA data for {self.reg_number}: {message}"
+            )
 
         if resp.status >= 400:
             raise UpdateFailed(f"DVLA lookup failed with status {resp.status}: {body}")
