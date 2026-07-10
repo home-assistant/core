@@ -352,7 +352,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             if self._target_temp is None:
                 # If we have a previously saved temperature
                 if (
-                    old_state.attributes.get(ClimateEntityStateAttribute.TEMPERATURE)
+                    old_state.attributes.get(
+                        ClimateEntityStateAttribute.TARGET_TEMPERATURE
+                    )
                     is None
                 ):
                     if self.ac_mode:
@@ -365,7 +367,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     )
                 else:
                     self._target_temp = float(
-                        old_state.attributes[ClimateEntityStateAttribute.TEMPERATURE]
+                        old_state.attributes[
+                            ClimateEntityStateAttribute.TARGET_TEMPERATURE
+                        ]
                     )
             if (
                 self.preset_modes

@@ -829,7 +829,7 @@ class PrometheusMetrics:
     def _handle_climate(self, state: State) -> None:
         self._temperature_metric(
             state,
-            ClimateEntityStateAttribute.TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE,
             "climate_target_temperature_celsius",
             "Target temperature in degrees Celsius",
         )
