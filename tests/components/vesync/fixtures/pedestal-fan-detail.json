@@ -9,7 +9,7 @@
     "code": 0,
     "result": {
       "powerSwitch": 0,
-      "workMode": "normal",
+      "workMode": "eco",
       "fanSpeedLevel": 1,
       "temperature": 717,
       "muteSwitch": 1,
