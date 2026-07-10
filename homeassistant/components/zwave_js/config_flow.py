@@ -114,6 +114,20 @@ ADDON_USER_INPUT_MAP = {
 }
 
 
+def migrate_network_key(addon_config: Mapping[str, Any]) -> dict[str, Any]:
+    """Migrate the legacy network key to the S0 legacy key.
+
+    The network key was renamed to the S0 legacy key when S2 was added.
+    Old add-on configs may still only carry the legacy network key.
+    """
+    migrated = dict(addon_config)
+    if (network_key := migrated.pop(CONF_ADDON_NETWORK_KEY, None)) and not migrated.get(
+        CONF_ADDON_S0_LEGACY_KEY
+    ):
+        migrated[CONF_ADDON_S0_LEGACY_KEY] = network_key
+    return migrated
+
+
 @dataclass
 class SecurityKeys:
     """Security keys of a Z-Wave network."""
@@ -130,6 +144,8 @@ class SecurityKeys:
         cls, addon_config: Mapping[str, Any], defaults: SecurityKeys | None = None
     ) -> SecurityKeys:
         """Return keys from an add-on config, falling back to defaults."""
+        # Read a legacy network key as the S0 legacy key.
+        addon_config = migrate_network_key(addon_config)
         return cls(
             **{
                 field: addon_config.get(
@@ -315,8 +331,8 @@ class AddonFlowManager:
             # e.g. when the RF region step sets the region.
             # Copy the add-on config to keep the objects separate.
             self.original_config = dict(addon_config)
-        # Remove legacy network_key
-        new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
+        # Migrate a legacy network key to the S0 legacy key, then drop it.
+        new_addon_config = migrate_network_key(new_addon_config)
         try:
             await self.addon_manager.async_set_addon_options(new_addon_config)
         except AddonError as err:
@@ -1294,13 +1310,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
         addon_manager = self._addon_setup.addon_manager
-        # Remove the legacy network key, like async_set_addon_config does,
-        # so restoring doesn't fail on older add-on configurations.
-        restored_config = {
-            key: value
-            for key, value in original_config.items()
-            if key != CONF_ADDON_NETWORK_KEY
-        }
+        # Migrate the legacy network key, like async_set_addon_config does,
+        # so restoring doesn't drop the S0 key on older add-on configurations.
+        restored_config = migrate_network_key(original_config)
         try:
             await addon_manager.async_set_addon_options(restored_config)
         except AddonError as err:
@@ -1890,11 +1902,22 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_abort(reason="already_configured")
 
+        # The adapter may first be discovered without a home ID and get the
+        # placeholder unique id below, then report a home ID on a later
+        # discovery. Track the placeholder id so such a discovery can be
+        # deduplicated against a pending prompt or an ignored entry.
+        placeholder_unique_id = f"esphome_{discovery_info.name}"
+        if discovery_info.zwave_home_id:
             # We are not aborting if home ID configured
             # here, we just want to make sure that it's set.
             # We will update a USB based config entry
             # automatically in
             # `async_step_finish_addon_setup_user`.
+            if any(
+                flow["context"].get("unique_id") == placeholder_unique_id
+                for flow in self._async_in_progress()
+            ):
+                return self.async_abort(reason="already_in_progress")
             # Raise on progress to avoid a duplicate prompt when the same
             # adapter is rediscovered, e.g. with a new IP address.
             await self.async_set_unique_id(str(discovery_info.zwave_home_id))
@@ -1903,10 +1926,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # also when the adapter doesn't report a home ID yet.
             # It is replaced with the home ID before an entry is created.
             self._unique_id_is_placeholder = True
-            await self.async_set_unique_id(f"esphome_{discovery_info.name}")
+            await self.async_set_unique_id(placeholder_unique_id)
 
         if any(
-            entry.source == SOURCE_IGNORE and entry.unique_id == self.unique_id
+            entry.source == SOURCE_IGNORE
+            and entry.unique_id in (self.unique_id, placeholder_unique_id)
             for entry in self._async_current_entries(include_ignore=True)
         ):
             return self.async_abort(reason="already_configured")
@@ -1957,9 +1981,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=reason)
 
         self.revert_reason = reason
+        # Migrate a legacy network key so it is reverted as the S0 legacy key,
+        # which is what ADDON_USER_INPUT_MAP knows about.
+        original_config = migrate_network_key(self._addon_setup.original_config)
         addon_config_input = {
             ADDON_USER_INPUT_MAP[addon_key]: addon_val
-            for addon_key, addon_val in self._addon_setup.original_config.items()
+            for addon_key, addon_val in original_config.items()
             if addon_key in ADDON_USER_INPUT_MAP
         }
         _LOGGER.debug("Reverting app options, reason: %s", reason)
