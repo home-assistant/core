@@ -106,7 +106,7 @@
         "state": {
           "external": "External",
           "manual": "Manual",
-          "none": "-",
+          "none": "Inactive",
           "schedule": "Schedule",
           "setup": "Setup"
         }
@@ -165,7 +165,7 @@
           "irrigation_control_changed": "Irrigation control changed",
           "manual_mode": "Manual mode",
           "no_water": "No water",
-          "none": "-",
+          "none": "Inactive",
           "operational_mode_changed": "Operational mode changed",
           "other_schedule_with_same_start_time": "Other schedule with same start time",
           "position_changed": "Position changed",
