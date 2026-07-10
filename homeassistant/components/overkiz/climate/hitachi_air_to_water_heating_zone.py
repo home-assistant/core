@@ -47,8 +47,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
-    # A heat pump exposes each heating zone as its own device, carrying only
-    # that zone's states and command. Zone 1 is the default; zone 2 overrides.
+    # Each zone is its own device; zone 1 is the default, zone 2 overrides below.
     _auto_manu_mode_state = OverkizState.MODBUS_AUTO_MANU_MODE_ZONE_1
     _room_temperature_state = OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE_1
     _thermostat_setting_state = OverkizState.MODBUS_THERMOSTAT_SETTING_CONTROL_ZONE_1
