@@ -166,11 +166,7 @@ async def test_hitachi_air_to_water_heating_zone_2(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
 ) -> None:
-    """Test the second heating zone reads its own Zone2 states.
-
-    Both zones share one widget but each carries only its own Zone states,
-    so the entity must pick the enums matching its controllable_name.
-    """
+    """Test the second heating zone reads its own Zone2 states."""
     await setup_overkiz_integration(fixture=YUTAKI_ZONE_2.fixture)
 
     zone_1 = hass.states.get(YUTAKI_ZONE_1.entity_id)
