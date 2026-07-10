@@ -44,22 +44,23 @@ COZYTOUCH = FixtureDevice(
     "climate.living_room_heater",
 )
 
-SNAPSHOT_FIXTURES = [
-    VALVE,
-    COZYTOUCH,
-]
-
 # Hitachi Yutaki 2-zone air-to-water heat pump
 YUTAKI_ZONE_1 = FixtureDevice(
-    "setup/cloud_nexity_rail_din_europe.json",
-    "modbus://1234-5678-1698/5416194/1#2",
+    "setup/cloud_hi_kumo_europe.json",
+    "modbus://1234-5678-2284/5416194/1#2",
     "climate.somfy_tahoma_switch_yutaki_zone_1",
 )
 YUTAKI_ZONE_2 = FixtureDevice(
-    "setup/cloud_nexity_rail_din_europe.json",
-    "modbus://1234-5678-1698/5416194/1#3",
+    "setup/cloud_hi_kumo_europe.json",
+    "modbus://1234-5678-2284/5416194/1#3",
     "climate.somfy_tahoma_switch_yutaki_zone_2",
 )
+
+SNAPSHOT_FIXTURES = [
+    VALVE,
+    COZYTOUCH,
+    YUTAKI_ZONE_1,
+]
 
 
 @pytest.fixture(autouse=True)

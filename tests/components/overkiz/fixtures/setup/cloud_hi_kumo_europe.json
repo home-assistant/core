@@ -1,0 +1,2088 @@
+{
+  "creationTime": 1681567761000,
+  "lastUpdateTime": 1681567761000,
+  "id": "SETUP-1234-5678-2284",
+  "location": {
+    "creationTime": 1681567761000,
+    "lastUpdateTime": 1681567761000,
+    "city": "**",
+    "country": "**",
+    "postalCode": "**",
+    "addressLine1": "**",
+    "addressLine2": "**",
+    "timezone": "Europe/Paris",
+    "longitude": "**",
+    "latitude": "**",
+    "twilightMode": 2,
+    "twilightAngle": "CIVIL",
+    "twilightCity": "paris",
+    "summerSolsticeDuskMinutes": 1290,
+    "winterSolsticeDuskMinutes": 990,
+    "twilightOffsetEnabled": false,
+    "dawnOffset": 0,
+    "duskOffset": 0,
+    "countryCode": "FR"
+  },
+  "gateways": [
+    {
+      "gatewayId": "1234-5678-2284",
+      "type": 44,
+      "subType": 0,
+      "placeOID": "39502b85-28fa-4bab-9535-7dccae4589ac",
+      "autoUpdateEnabled": false,
+      "alive": true,
+      "timeReliable": true,
+      "connectivity": {
+        "status": "OK",
+        "protocolVersion": "2024.4.3"
+      },
+      "upToDate": true,
+      "updateStatus": "UP_TO_DATE",
+      "syncInProgress": false,
+      "mode": "ACTIVE",
+      "functions": "INTERNET_AUTHORIZATION,SCENARIO_DOWNLOAD,SCENARIO_AUTO_LAUNCHING,SCENARIO_TELECO_LAUNCHING,INTERNET_UPLOAD,INTERNET_UPDATE,TRIGGERS_SENSORS"
+    }
+  ],
+  "devices": [
+    {
+      "creationTime": 1681567761000,
+      "lastUpdateTime": 1681567761000,
+      "label": "Hub",
+      "deviceURL": "internal://1234-5678-2284/pod/0",
+      "shortcut": false,
+      "controllableName": "internal:PodMiniComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "update",
+            "nparams": 0
+          },
+          {
+            "commandName": "setCountryCode",
+            "nparams": 1
+          },
+          {
+            "commandName": "activateCalendar",
+            "nparams": 0
+          },
+          {
+            "commandName": "deactivateCalendar",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPodMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshUpdateStatus",
+            "nparams": 0
+          },
+          {
+            "commandName": "setCalendar",
+            "nparams": 1
+          },
+          {
+            "commandName": "setLightingLedPodMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPodLedOff",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPodLedOn",
+            "nparams": 0
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["offline", "online"],
+            "qualifiedName": "core:ConnectivityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:CountryCodeState"
+          },
+          {
+            "eventBased": true,
+            "type": "DataState",
+            "qualifiedName": "core:LocalAccessProofState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:LocalIPv4AddressState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "doublePress",
+              "longPress",
+              "simplePress",
+              "triplePress",
+              "veryLongPress"
+            ],
+            "qualifiedName": "internal:LastActionConfigButtonState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "internal:LightingLedPodModeState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "Pod",
+        "uiProfiles": ["UpdatableComponent"],
+        "uiClass": "Pod",
+        "qualifiedName": "internal:PodMiniComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Hub"
+        },
+        {
+          "name": "internal:LightingLedPodModeState",
+          "type": 2,
+          "value": 1.0
+        },
+        {
+          "name": "core:LocalIPv4AddressState",
+          "type": 3,
+          "value": "192.168.17.78"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "39502b85-28fa-4bab-9535-7dccae4589ac",
+      "widget": "Pod",
+      "type": 1,
+      "oid": "2b24e929-3fbc-40d4-be50-22720f5edc18",
+      "uiClass": "Pod"
+    },
+    {
+      "creationTime": 1681567908000,
+      "lastUpdateTime": 1681567908000,
+      "label": "Yutaki",
+      "deviceURL": "modbus://1234-5678-2284/5416194/1#1",
+      "shortcut": false,
+      "controllableName": "modbus:YutakiMainComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "refreshEcoModeOffset",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshEcoModeOffsetTarget",
+            "nparams": 0
+          },
+          {
+            "commandName": "setEcoModeOffset",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshCentralSetting1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshCentralSetting2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshCentralSetting3",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlBlockMenu",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlCommunicationAlarmBit",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlUnit",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlUnitMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshHLinkCommunicationAlarm",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshHardwareVersion",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshLCDCentralMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshLCDSoftwareNumber",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshOperationState",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshOutdoorAmbientTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPCB1SoftwareNumber",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshRoomThermostatSetTemperatureC1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshRoomThermostatSetTemperatureC2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshRoomThermostatTemperatureC1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshRoomThermostatTemperatureC2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshSoftwareVersion",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshSpaceMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusBlockMenu",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusCommunicationAlarmBit",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusUnitMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshSystemConfiguration",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshTahomaRoomThermostatAvailable",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWaterInletUnitTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWaterOutletUnitTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "setCentralSetting1",
+            "nparams": 1
+          },
+          {
+            "commandName": "setCentralSetting2",
+            "nparams": 1
+          },
+          {
+            "commandName": "setCentralSetting3",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlBlockMenu",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlCommunicationAlarmBit",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlUnit",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlUnitMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setEcoComfortMode",
+            "nparams": 4
+          },
+          {
+            "commandName": "setGlobalAutoManuMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setSpaceMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTahomaRoomThermostatAvailable",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["auto", "manu"],
+            "qualifiedName": "core:AutoManuModeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:AlarmNumberState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:CauseOfStoppageState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:CentralSetting1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:CentralSetting2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:CentralSetting3State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:CompressorCurrentValueState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:CompressorFrequencyState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:CompressorRunningCurrentState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["block", "no"],
+            "qualifiedName": "modbus:ControlBlockMenuState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["alarm", "no"],
+            "qualifiedName": "modbus:ControlCommunicationAlarmBitState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["cool", "heat"],
+            "qualifiedName": "modbus:ControlUnitModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["run", "stop"],
+            "qualifiedName": "modbus:ControlUnitState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:DefrostingState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:DischargeGasTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:DischargePressureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:DischargeTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "modbus:EcoModeOffsetState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "modbus:EcoModeOffsetTargetState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:EvaporatingTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:EvaporationTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:GasTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["alarm", "noAlarm"],
+            "qualifiedName": "modbus:HLinkCommunicationAlarmState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:HardwareVersionState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:IndoorExpansionValveOpeningState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:IndoorExpansionValveState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:InverterOperationFrequencyState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:LCDCentralModeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:LCDSoftwareNumberState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:LiquidTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:LiquidTemperatureTHMIState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:MixingValvePositionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "alarm",
+              "cool demand-off",
+              "cool thermo-off",
+              "cool thermo-on",
+              "dhw-off",
+              "heat demand-off",
+              "heat thermo-off",
+              "heat thermo-on",
+              "off",
+              "swp-off"
+            ],
+            "qualifiedName": "modbus:OperationState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:OutdoorAmbientTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:OutdoorExpansionValveState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:OutdoorUnitAmbientState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:PCB1SoftwareNumberState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:ProductSpecCodeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:RetryCodeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:RoomThermostatSetTemperatureC1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:RoomThermostatSetTemperatureC2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:RoomThermostatTemperatureC1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:RoomThermostatTemperatureC2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:SecondAmbientAverageTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:SecondAmbientTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:SoftwareNumberState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:SoftwareVersionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["comfort", "eco"],
+            "qualifiedName": "modbus:SpaceModeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:StatusBlockMenuState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["alarm", "no"],
+            "qualifiedName": "modbus:StatusCommunicationAlarmBitState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:StatusUnitModeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:SuctionPressureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:SuctionTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:SystemConfigurationState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:SystemStatus2State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "not available"],
+            "qualifiedName": "modbus:TahomaRoomThermostatAvailableState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:UnitModelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:VirtualEcoComfortModeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterFlowLevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterInletUnitTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterOutletHpTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterOutletTemperature2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterOutletTemperature3State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterOutletUnitTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterPumpSpeedState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterTemperatureSettingState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["auto", "holidays", "normal", "timer"],
+            "qualifiedName": "modbus:YutakiVirtualOperatingModeState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "HitachiAirToWaterMainComponent",
+        "uiProfiles": ["Specific"],
+        "uiClass": "HitachiHeatingSystem",
+        "qualifiedName": "modbus:YutakiMainComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "modbus:ControlUnitState",
+          "type": 3,
+          "value": "run"
+        },
+        {
+          "name": "modbus:ControlUnitModeState",
+          "type": 3,
+          "value": "heat"
+        },
+        {
+          "name": "modbus:ControlBlockMenuState",
+          "type": 3,
+          "value": "no"
+        },
+        {
+          "name": "modbus:ControlCommunicationAlarmBitState",
+          "type": 3,
+          "value": "no"
+        },
+        {
+          "name": "modbus:CentralSetting1State",
+          "type": 3,
+          "value": "Unit run/stop : stop -- Unit mode : cool -- Circuit 1 run/stop : stop -- Circuit 2 run/stop : stop -- Circuit 1 room ambient change : false -- Circuit 2 room ambient change : false -- Circuit 1 thermostat setting change : false -- Circuit 2 thermostat setting change : false"
+        },
+        {
+          "name": "modbus:CentralSetting2State",
+          "type": 3,
+          "value": "Circuit 1 Water setting heat : false -- Circuit 2 Water setting heat : false -- Circuit 1 Water setting cool : false -- Circuit 2 Water setting cool : false -- DHWT : off -- Swimming pool : off -- Anti legionella : off"
+        },
+        {
+          "name": "modbus:CentralSetting3State",
+          "type": 3,
+          "value": "Heating OTC 1 : off -- Heating OTC 2 : off -- Cooling OTC 1 : off -- Cooling OTC 2 : off -- DHWT : comfort -- Space mode : standard"
+        },
+        {
+          "name": "modbus:SpaceModeState",
+          "type": 3,
+          "value": "comfort"
+        },
+        {
+          "name": "modbus:TahomaRoomThermostatAvailableState",
+          "type": 3,
+          "value": "not available"
+        },
+        {
+          "name": "modbus:EcoModeOffsetTargetState",
+          "type": 1,
+          "value": 5
+        },
+        {
+          "name": "modbus:StatusUnitModeState",
+          "type": 3,
+          "value": "heat"
+        },
+        {
+          "name": "modbus:StatusBlockMenuState",
+          "type": 3,
+          "value": "no"
+        },
+        {
+          "name": "modbus:StatusCommunicationAlarmBitState",
+          "type": 3,
+          "value": "no"
+        },
+        {
+          "name": "modbus:LCDCentralModeState",
+          "type": 1,
+          "value": 1
+        },
+        {
+          "name": "modbus:SystemConfigurationState",
+          "type": 3,
+          "value": "Zone 1 heating : available -- Zone 2 heating : available -- Zone 1 cooling : unavailable -- Zone 2 cooling : unavailable -- DHWT : available -- Swimming pool : unavailable -- Room thermostat zone 1 : available -- Room thermostat zone 2 : available"
+        },
+        {
+          "name": "modbus:OperationState",
+          "type": 3,
+          "value": "heat thermo-on"
+        },
+        {
+          "name": "modbus:OutdoorAmbientTemperatureState",
+          "type": 1,
+          "value": -1
+        },
+        {
+          "name": "modbus:WaterInletUnitTemperatureState",
+          "type": 1,
+          "value": 32
+        },
+        {
+          "name": "modbus:WaterOutletUnitTemperatureState",
+          "type": 1,
+          "value": 34
+        },
+        {
+          "name": "modbus:HardwareVersionState",
+          "type": 1,
+          "value": 1
+        },
+        {
+          "name": "modbus:SoftwareVersionState",
+          "type": 1,
+          "value": 104
+        },
+        {
+          "name": "modbus:HLinkCommunicationAlarmState",
+          "type": 3,
+          "value": "noAlarm"
+        },
+        {
+          "name": "modbus:LCDSoftwareNumberState",
+          "type": 1,
+          "value": 258
+        },
+        {
+          "name": "modbus:PCB1SoftwareNumberState",
+          "type": 1,
+          "value": 222
+        },
+        {
+          "name": "modbus:RoomThermostatSetTemperatureC1State",
+          "type": 2,
+          "value": 21.0
+        },
+        {
+          "name": "modbus:RoomThermostatSetTemperatureC2State",
+          "type": 2,
+          "value": 21.0
+        },
+        {
+          "name": "modbus:RoomThermostatTemperatureC1State",
+          "type": 2,
+          "value": 18.5
+        },
+        {
+          "name": "modbus:RoomThermostatTemperatureC2State",
+          "type": 2,
+          "value": 20.5
+        },
+        {
+          "name": "modbus:EcoModeOffsetState",
+          "type": 1,
+          "value": 5
+        },
+        {
+          "name": "modbus:WaterOutletHpTemperatureState",
+          "type": 1,
+          "value": 34
+        },
+        {
+          "name": "modbus:OutdoorUnitAmbientState",
+          "type": 1,
+          "value": -1
+        },
+        {
+          "name": "modbus:SecondAmbientTemperatureState",
+          "type": 1,
+          "value": -127
+        },
+        {
+          "name": "modbus:SecondAmbientAverageTemperatureState",
+          "type": 1,
+          "value": -127
+        },
+        {
+          "name": "modbus:WaterOutletTemperature2State",
+          "type": 1,
+          "value": 32
+        },
+        {
+          "name": "modbus:WaterOutletTemperature3State",
+          "type": 1,
+          "value": -127
+        },
+        {
+          "name": "modbus:GasTemperatureState",
+          "type": 1,
+          "value": 38
+        },
+        {
+          "name": "modbus:LiquidTemperatureTHMIState",
+          "type": 1,
+          "value": 29
+        },
+        {
+          "name": "modbus:DischargeGasTemperatureState",
+          "type": 1,
+          "value": 47
+        },
+        {
+          "name": "modbus:EvaporationTemperatureState",
+          "type": 1,
+          "value": -11
+        },
+        {
+          "name": "modbus:IndoorExpansionValveState",
+          "type": 1,
+          "value": 35
+        },
+        {
+          "name": "modbus:OutdoorExpansionValveState",
+          "type": 1,
+          "value": 8
+        },
+        {
+          "name": "modbus:InverterOperationFrequencyState",
+          "type": 1,
+          "value": 50
+        },
+        {
+          "name": "modbus:CauseOfStoppageState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "modbus:CompressorRunningCurrentState",
+          "type": 1,
+          "value": 3
+        },
+        {
+          "name": "modbus:ProductSpecCodeState",
+          "type": 1,
+          "value": 40
+        },
+        {
+          "name": "modbus:MixingValvePositionState",
+          "type": 1,
+          "value": 100
+        },
+        {
+          "name": "modbus:DefrostingState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "modbus:UnitModelState",
+          "type": 1,
+          "value": 1
+        },
+        {
+          "name": "modbus:WaterTemperatureSettingState",
+          "type": 1,
+          "value": 45
+        },
+        {
+          "name": "modbus:WaterFlowLevelState",
+          "type": 2,
+          "value": 1.9
+        },
+        {
+          "name": "modbus:WaterPumpSpeedState",
+          "type": 1,
+          "value": 80
+        },
+        {
+          "name": "modbus:SystemStatus2State",
+          "type": 1,
+          "value": 44
+        },
+        {
+          "name": "modbus:AlarmNumberState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "modbus:DischargeTemperatureState",
+          "type": 1,
+          "value": 45
+        },
+        {
+          "name": "modbus:SuctionTemperatureState",
+          "type": 1,
+          "value": 45
+        },
+        {
+          "name": "modbus:LiquidTemperatureState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "modbus:EvaporatingTemperatureState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "modbus:DischargePressureState",
+          "type": 1,
+          "value": 90
+        },
+        {
+          "name": "modbus:SuctionPressureState",
+          "type": 1,
+          "value": 66
+        },
+        {
+          "name": "modbus:CompressorFrequencyState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "modbus:IndoorExpansionValveOpeningState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "modbus:CompressorCurrentValueState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "modbus:SoftwareNumberState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "modbus:RetryCodeState",
+          "type": 1,
+          "value": 0
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "39502b85-28fa-4bab-9535-7dccae4589ac",
+      "widget": "HitachiAirToWaterMainComponent",
+      "type": 1,
+      "oid": "1bbc9636-4347-4c71-be89-2164466c92c2",
+      "uiClass": "HitachiHeatingSystem"
+    },
+    {
+      "creationTime": 1685604455000,
+      "lastUpdateTime": 1685604455000,
+      "label": "Domestic Hot Water Energy",
+      "deviceURL": "modbus://1234-5678-2284/5416194/1#10",
+      "shortcut": false,
+      "controllableName": "modbus:YutakiV2DHWElectricalEnergyConsumptionComponent",
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ElectricEnergyConsumptionState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ElectricPowerConsumptionState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "CumulativeElectricPowerConsumptionSensor",
+        "uiProfiles": [
+          "ElectricEnergyAndPower",
+          "ElectricPowerMeter",
+          "ElectricEnergyConsumption"
+        ],
+        "uiClass": "ElectricitySensor",
+        "qualifiedName": "modbus:YutakiV2DHWElectricalEnergyConsumptionComponent",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:ElectricEnergyConsumptionState",
+          "type": 1,
+          "value": 27857
+        },
+        {
+          "name": "core:ElectricPowerConsumptionState",
+          "type": 1,
+          "value": 5885
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "39502b85-28fa-4bab-9535-7dccae4589ac",
+      "widget": "CumulativeElectricPowerConsumptionSensor",
+      "type": 2,
+      "oid": "57f30fb2-0c35-4bed-9f36-3f84d0c00b3e",
+      "uiClass": "ElectricitySensor"
+    },
+    {
+      "creationTime": 1683653416000,
+      "lastUpdateTime": 1683653416000,
+      "label": "Yutaki Zone 1",
+      "deviceURL": "modbus://1234-5678-2284/5416194/1#2",
+      "shortcut": false,
+      "controllableName": "modbus:YutakiV2Zone1Component",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "refreshMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "globalControl",
+            "nparams": 3
+          },
+          {
+            "commandName": "refreshControlCircuit1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlCoolingOTCZone1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlHeatingOTCZone1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshRoomAmbientTemperatureControlZone1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshRoomAmbientTemperatureStatusZone1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusCircuit1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusCoolingOTCZone1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusHeatingOTCZone1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshThermostatSettingControlZone1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshThermostatSettingStatusZone1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWaterCoolingSettingTemperatureControlZone1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWaterCoolingSettingTemperatureStatusZone1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWaterHeatingSettingTemperatureControlZone1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWaterHeatingSettingTemperatureStatusZone1",
+            "nparams": 0
+          },
+          {
+            "commandName": "setAutoManuMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlCircuit1",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlCoolingOTCZone1",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlHeatingOTCZone1",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHolidayMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setRoomAmbientTemperatureControlZone1",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setThermostatSettingControlZone1",
+            "nparams": 1
+          },
+          {
+            "commandName": "setWaterCoolingSettingTemperatureControlZone1",
+            "nparams": 1
+          },
+          {
+            "commandName": "setWaterHeatingSettingTemperatureControlZone1",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:AlarmNumberState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["auto", "manu"],
+            "qualifiedName": "modbus:AutoManuModeZone1State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["run", "stop"],
+            "qualifiedName": "modbus:ControlCircuit1State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["fix", "no", "points"],
+            "qualifiedName": "modbus:ControlCoolingOTCZone1State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["fix", "gradient", "no", "points"],
+            "qualifiedName": "modbus:ControlHeatingOTCZone1State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "modbus:HolidayModeZone1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:RoomAmbientTemperatureControlZone1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:RoomAmbientTemperatureStatusZone1State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["run", "stop"],
+            "qualifiedName": "modbus:StatusCircuit1State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["fix", "no", "points"],
+            "qualifiedName": "modbus:StatusCoolingOTCZone1State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["fix", "gradient", "no", "points"],
+            "qualifiedName": "modbus:StatusHeatingOTCZone1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:ThermostatSettingControlZone1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:ThermostatSettingStatusZone1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterCoolingSettingTemperatureControlZone1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterCoolingSettingTemperatureStatusZone1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterHeatingSettingTemperatureControlZone1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterHeatingSettingTemperatureStatusZone1State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["comfort", "eco"],
+            "qualifiedName": "modbus:YutakiModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["comfort", "eco"],
+            "qualifiedName": "modbus:YutakiTargetModeState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "HitachiAirToWaterHeatingZone",
+        "uiProfiles": ["Specific"],
+        "uiClass": "HitachiHeatingSystem",
+        "qualifiedName": "modbus:YutakiV2Zone1Component",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "modbus:AutoManuModeZone1State",
+          "type": 3,
+          "value": "auto"
+        },
+        {
+          "name": "modbus:HolidayModeZone1State",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "modbus:ControlCircuit1State",
+          "type": 3,
+          "value": "run"
+        },
+        {
+          "name": "modbus:ControlHeatingOTCZone1State",
+          "type": 3,
+          "value": "points"
+        },
+        {
+          "name": "modbus:ControlCoolingOTCZone1State",
+          "type": 3,
+          "value": "no"
+        },
+        {
+          "name": "modbus:ThermostatSettingControlZone1State",
+          "type": 2,
+          "value": 21.0
+        },
+        {
+          "name": "modbus:RoomAmbientTemperatureControlZone1State",
+          "type": 2,
+          "value": 18.5
+        },
+        {
+          "name": "modbus:WaterHeatingSettingTemperatureControlZone1State",
+          "type": 1,
+          "value": 40
+        },
+        {
+          "name": "modbus:WaterCoolingSettingTemperatureControlZone1State",
+          "type": 1,
+          "value": 19
+        },
+        {
+          "name": "modbus:StatusCircuit1State",
+          "type": 3,
+          "value": "run"
+        },
+        {
+          "name": "modbus:StatusHeatingOTCZone1State",
+          "type": 3,
+          "value": "points"
+        },
+        {
+          "name": "modbus:StatusCoolingOTCZone1State",
+          "type": 3,
+          "value": "no"
+        },
+        {
+          "name": "modbus:ThermostatSettingStatusZone1State",
+          "type": 2,
+          "value": 21.0
+        },
+        {
+          "name": "modbus:RoomAmbientTemperatureStatusZone1State",
+          "type": 2,
+          "value": 18.5
+        },
+        {
+          "name": "modbus:WaterHeatingSettingTemperatureStatusZone1State",
+          "type": 1,
+          "value": 40
+        },
+        {
+          "name": "modbus:WaterCoolingSettingTemperatureStatusZone1State",
+          "type": 1,
+          "value": 19
+        },
+        {
+          "name": "modbus:YutakiTargetModeState",
+          "type": 3,
+          "value": "comfort"
+        },
+        {
+          "name": "modbus:YutakiModeState",
+          "type": 3,
+          "value": "comfort"
+        },
+        {
+          "name": "modbus:AlarmNumberState",
+          "type": 1,
+          "value": 0
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "39502b85-28fa-4bab-9535-7dccae4589ac",
+      "widget": "HitachiAirToWaterHeatingZone",
+      "type": 1,
+      "oid": "d50e4e55-316d-4372-9c62-682d04a0c932",
+      "uiClass": "HitachiHeatingSystem"
+    },
+    {
+      "creationTime": 1683653416000,
+      "lastUpdateTime": 1683653416000,
+      "label": "Yutaki Zone 2",
+      "deviceURL": "modbus://1234-5678-2284/5416194/1#3",
+      "shortcut": false,
+      "controllableName": "modbus:YutakiV2Zone2Component",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "refreshMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "globalControl",
+            "nparams": 3
+          },
+          {
+            "commandName": "refreshControlCircuit2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlCoolingOTCZone2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlHeatingOTCZone2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshRoomAmbientTemperatureControlZone2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshRoomAmbientTemperatureStatusZone2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusCircuit2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusCoolingOTCZone2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusHeatingOTCZone2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshThermostatSettingControlZone2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshThermostatSettingStatusZone2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWaterCoolingSettingTemperatureControlZone2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWaterCoolingSettingTemperatureStatusZone2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWaterHeatingSettingTemperatureControlZone2",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWaterHeatingSettingTemperatureStatusZone2",
+            "nparams": 0
+          },
+          {
+            "commandName": "setAutoManuMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlCircuit2",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlCoolingOTCZone2",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlHeatingOTCZone2",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHolidayMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setRoomAmbientTemperatureControlZone2",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setThermostatSettingControlZone2",
+            "nparams": 1
+          },
+          {
+            "commandName": "setWaterCoolingSettingTemperatureControlZone2",
+            "nparams": 1
+          },
+          {
+            "commandName": "setWaterHeatingSettingTemperatureControlZone2",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:AlarmNumberState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["auto", "manu"],
+            "qualifiedName": "modbus:AutoManuModeZone2State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["run", "stop"],
+            "qualifiedName": "modbus:ControlCircuit2State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["fix", "no", "points"],
+            "qualifiedName": "modbus:ControlCoolingOTCZone2State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["fix", "gradient", "no", "points"],
+            "qualifiedName": "modbus:ControlHeatingOTCZone2State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "modbus:HolidayModeZone2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:RoomAmbientTemperatureControlZone2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:RoomAmbientTemperatureStatusZone2State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["run", "stop"],
+            "qualifiedName": "modbus:StatusCircuit2State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["fix", "no", "points"],
+            "qualifiedName": "modbus:StatusCoolingOTCZone2State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["fix", "gradient", "no", "points"],
+            "qualifiedName": "modbus:StatusHeatingOTCZone2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:ThermostatSettingControlZone2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:ThermostatSettingStatusZone2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterCoolingSettingTemperatureControlZone2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterCoolingSettingTemperatureStatusZone2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterHeatingSettingTemperatureControlZone2State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:WaterHeatingSettingTemperatureStatusZone2State"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["comfort", "eco"],
+            "qualifiedName": "modbus:YutakiModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["comfort", "eco"],
+            "qualifiedName": "modbus:YutakiTargetModeState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "HitachiAirToWaterHeatingZone",
+        "uiProfiles": ["Specific"],
+        "uiClass": "HitachiHeatingSystem",
+        "qualifiedName": "modbus:YutakiV2Zone2Component",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "modbus:AutoManuModeZone2State",
+          "type": 3,
+          "value": "auto"
+        },
+        {
+          "name": "modbus:HolidayModeZone2State",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "modbus:ControlCircuit2State",
+          "type": 3,
+          "value": "run"
+        },
+        {
+          "name": "modbus:ControlHeatingOTCZone2State",
+          "type": 3,
+          "value": "points"
+        },
+        {
+          "name": "modbus:ControlCoolingOTCZone2State",
+          "type": 3,
+          "value": "no"
+        },
+        {
+          "name": "modbus:ThermostatSettingControlZone2State",
+          "type": 2,
+          "value": 21.0
+        },
+        {
+          "name": "modbus:RoomAmbientTemperatureControlZone2State",
+          "type": 2,
+          "value": 20.5
+        },
+        {
+          "name": "modbus:WaterHeatingSettingTemperatureControlZone2State",
+          "type": 1,
+          "value": 38
+        },
+        {
+          "name": "modbus:WaterCoolingSettingTemperatureControlZone2State",
+          "type": 1,
+          "value": 19
+        },
+        {
+          "name": "modbus:StatusCircuit2State",
+          "type": 3,
+          "value": "run"
+        },
+        {
+          "name": "modbus:StatusHeatingOTCZone2State",
+          "type": 3,
+          "value": "points"
+        },
+        {
+          "name": "modbus:StatusCoolingOTCZone2State",
+          "type": 3,
+          "value": "no"
+        },
+        {
+          "name": "modbus:ThermostatSettingStatusZone2State",
+          "type": 2,
+          "value": 21.0
+        },
+        {
+          "name": "modbus:RoomAmbientTemperatureStatusZone2State",
+          "type": 2,
+          "value": 20.5
+        },
+        {
+          "name": "modbus:WaterHeatingSettingTemperatureStatusZone2State",
+          "type": 1,
+          "value": 38
+        },
+        {
+          "name": "modbus:WaterCoolingSettingTemperatureStatusZone2State",
+          "type": 1,
+          "value": 19
+        },
+        {
+          "name": "modbus:YutakiTargetModeState",
+          "type": 3,
+          "value": "comfort"
+        },
+        {
+          "name": "modbus:YutakiModeState",
+          "type": 3,
+          "value": "comfort"
+        },
+        {
+          "name": "modbus:AlarmNumberState",
+          "type": 1,
+          "value": 0
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "39502b85-28fa-4bab-9535-7dccae4589ac",
+      "widget": "HitachiAirToWaterHeatingZone",
+      "type": 1,
+      "oid": "f7acbaff-8c94-423b-8822-b62876771481",
+      "uiClass": "HitachiHeatingSystem"
+    },
+    {
+      "creationTime": 1685604455000,
+      "lastUpdateTime": 1685604455000,
+      "label": "Domestic Hot Water",
+      "deviceURL": "modbus://1234-5678-2284/5416194/1#4",
+      "shortcut": false,
+      "controllableName": "modbus:YutakiV2DHWTComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "refreshBoostMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "globalControlDHW",
+            "nparams": 3
+          },
+          {
+            "commandName": "refreshControlAntiLegionella",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlAntiLegionellaSettingTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlDHW",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlDHWSettingTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDHWMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDHWTTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusAntiLegionella",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusAntiLegionellaSettingTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusDHW",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusDHWSettingTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "setControlAntiLegionella",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlAntiLegionellaSettingTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlDHW",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlDHWSettingTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDHWMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetBoostMode",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:DHWTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:AlarmNumberState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:ControlAntiLegionellaSettingTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["run", "stop"],
+            "qualifiedName": "modbus:ControlAntiLegionellaState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:ControlDHWSettingTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["run", "stop"],
+            "qualifiedName": "modbus:ControlDHWState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["high demand", "standard"],
+            "qualifiedName": "modbus:DHWModeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:StatusAntiLegionellaSettingTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["run", "stop"],
+            "qualifiedName": "modbus:StatusAntiLegionellaState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:StatusDHWSettingTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:StatusDHWState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:VirtualGlobalControlState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["disabled", "enabled"],
+            "qualifiedName": "modbus:YutakiBoostModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["high demand", "off", "standard"],
+            "qualifiedName": "modbus:YutakiDHWVirtualOperatingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["disabled", "enabled"],
+            "qualifiedName": "modbus:YutakiTargetBoostModeState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "HitachiDHW",
+        "uiProfiles": ["DHWTemperature"],
+        "uiClass": "HitachiHeatingSystem",
+        "qualifiedName": "modbus:YutakiV2DHWTComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "modbus:ControlDHWState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "modbus:ControlDHWSettingTemperatureState",
+          "type": 1,
+          "value": 30
+        },
+        {
+          "name": "modbus:ControlAntiLegionellaState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "modbus:ControlAntiLegionellaSettingTemperatureState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "modbus:DHWModeState",
+          "type": 3,
+          "value": "standard"
+        },
+        {
+          "name": "modbus:StatusDHWState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "modbus:StatusDHWSettingTemperatureState",
+          "type": 1,
+          "value": 30
+        },
+        {
+          "name": "modbus:StatusAntiLegionellaState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "modbus:StatusAntiLegionellaSettingTemperatureState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "core:DHWTemperatureState",
+          "type": 1,
+          "value": 45
+        },
+        {
+          "name": "modbus:YutakiTargetBoostModeState",
+          "type": 3,
+          "value": "no request"
+        },
+        {
+          "name": "modbus:YutakiBoostModeState",
+          "type": 3,
+          "value": "disabled"
+        },
+        {
+          "name": "modbus:AlarmNumberState",
+          "type": 1,
+          "value": 0
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "39502b85-28fa-4bab-9535-7dccae4589ac",
+      "widget": "HitachiDHW",
+      "type": 1,
+      "oid": "c121ba66-a938-42c4-b0df-e4ad3b199047",
+      "uiClass": "HitachiHeatingSystem"
+    },
+    {
+      "creationTime": 1685604455000,
+      "lastUpdateTime": 1685604455000,
+      "label": "Room Thermostat Zone 1",
+      "deviceURL": "modbus://1234-5678-2284/5416194/1#6",
+      "shortcut": false,
+      "controllableName": "modbus:YutakiRoomThermostatZone1Component",
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:AlarmNumberState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "HitachiThermostat",
+        "uiProfiles": ["Specific"],
+        "uiClass": "HeatingSystem",
+        "qualifiedName": "modbus:YutakiRoomThermostatZone1Component",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "modbus:AlarmNumberState",
+          "type": 1,
+          "value": 0
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "39502b85-28fa-4bab-9535-7dccae4589ac",
+      "widget": "HitachiThermostat",
+      "type": 2,
+      "oid": "90ecec6f-6e7d-4b75-9d86-8eafc77aad8c",
+      "uiClass": "HeatingSystem"
+    },
+    {
+      "creationTime": 1685604455000,
+      "lastUpdateTime": 1685604455000,
+      "label": "Room Thermostat Zone 2",
+      "deviceURL": "modbus://1234-5678-2284/5416194/1#7",
+      "shortcut": false,
+      "controllableName": "modbus:YutakiRoomThermostatZone2Component",
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:AlarmNumberState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "HitachiThermostat",
+        "uiProfiles": ["Specific"],
+        "uiClass": "HeatingSystem",
+        "qualifiedName": "modbus:YutakiRoomThermostatZone2Component",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "modbus:AlarmNumberState",
+          "type": 1,
+          "value": 0
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "39502b85-28fa-4bab-9535-7dccae4589ac",
+      "widget": "HitachiThermostat",
+      "type": 2,
+      "oid": "8f85079d-ae96-4246-b9e4-d59f60f41a12",
+      "uiClass": "HeatingSystem"
+    },
+    {
+      "creationTime": 1683653416000,
+      "lastUpdateTime": 1683653416000,
+      "label": "Space Heating Energy",
+      "deviceURL": "modbus://1234-5678-2284/5416194/1#9",
+      "shortcut": false,
+      "controllableName": "modbus:YutakiV2SpaceHeatingElectricalEnergyConsumptionComponent",
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ElectricEnergyConsumptionState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ElectricPowerConsumptionState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "CumulativeElectricPowerConsumptionSensor",
+        "uiProfiles": [
+          "ElectricEnergyAndPower",
+          "ElectricPowerMeter",
+          "ElectricEnergyConsumption"
+        ],
+        "uiClass": "ElectricitySensor",
+        "qualifiedName": "modbus:YutakiV2SpaceHeatingElectricalEnergyConsumptionComponent",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:ElectricEnergyConsumptionState",
+          "type": 1,
+          "value": 41668
+        },
+        {
+          "name": "core:ElectricPowerConsumptionState",
+          "type": 1,
+          "value": 5554
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "39502b85-28fa-4bab-9535-7dccae4589ac",
+      "widget": "CumulativeElectricPowerConsumptionSensor",
+      "type": 2,
+      "oid": "20a30518-2348-474b-8877-800945e253c0",
+      "uiClass": "ElectricitySensor"
+    },
+    {
+      "creationTime": 1681567906000,
+      "lastUpdateTime": 1681567906000,
+      "label": "Modbus Controller",
+      "deviceURL": "ovp://1234-5678-2284/5416194",
+      "shortcut": false,
+      "controllableName": "ovp:ModbusMainController",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "unknown",
+        "uiProfiles": ["Specific"],
+        "uiClass": "Generic",
+        "qualifiedName": "ovp:ModbusMainController",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Modbus Controller"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "39502b85-28fa-4bab-9535-7dccae4589ac",
+      "widget": "unknown",
+      "type": 1,
+      "oid": "6e64bc4d-3bfe-4f7f-8170-ee0426ab4eb9",
+      "uiClass": "Generic"
+    }
+  ],
+  "zones": [],
+  "resellerDelegationType": "NEVER",
+  "oid": "1680fbe4-2a2f-44f9-a37b-18398e1dc4de",
+  "rootPlace": {
+    "creationTime": 1681567761000,
+    "lastUpdateTime": 1681567761000,
+    "label": "Birch Residence",
+    "type": 0,
+    "oid": "39502b85-28fa-4bab-9535-7dccae4589ac",
+    "subPlaces": []
+  },
+  "features": []
+}
