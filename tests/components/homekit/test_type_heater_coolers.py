@@ -332,10 +332,12 @@ async def test_heatercooler_rejected_mode_is_not_remembered(
     await hass.async_block_till_done()
 
     # The entity rejects the mode write while off
-    async def _fail(call: ServiceCall) -> None:
-        raise HomeAssistantError("mode rejected")
-
-    hass.services.async_register(CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, _fail)
+    async_mock_service(
+        hass,
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        raise_exception=HomeAssistantError("mode rejected"),
+    )
     _write_chars(hk_driver, acc, {CHAR_TARGET_HEATER_COOLER_STATE: HC_TARGET_COOL})
     await hass.async_block_till_done()
 
@@ -1061,9 +1063,6 @@ async def test_heatercooler_batch_resolves_after_prior_batch(
         await gate.wait()
         hass.states.async_set(entity_id, call.data[ATTR_HVAC_MODE], base_attrs)
 
-    async def _temp(call: ServiceCall) -> None:
-        pass
-
     hass.services.async_register(CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, _slow_hvac)
     call_set_temperature = async_mock_service(
         hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
@@ -1105,10 +1104,12 @@ async def test_heatercooler_failed_write_aborts_batch(
     acc.run()
     await hass.async_block_till_done()
 
-    async def _fail(call: ServiceCall) -> None:
-        raise HomeAssistantError("mode rejected")
-
-    hass.services.async_register(CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE, _fail)
+    async_mock_service(
+        hass,
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        raise_exception=HomeAssistantError("mode rejected"),
+    )
     call_set_temperature = async_mock_service(
         hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
     )
@@ -1213,14 +1214,7 @@ async def test_heatercooler_set_chars_dispatch_order(
         services.append(service)
         return True
 
-    with (
-        patch.object(
-            acc,
-            "async_call_service",
-            side_effect=lambda domain, service, data: services.append(service),
-        ),
-        patch.object(acc, "async_call_service_and_wait", _record_and_wait),
-    ):
+    with patch.object(acc, "async_call_service_and_wait", _record_and_wait):
         # Turning on activates heat, so the heating threshold applies
         _write_chars(
             hk_driver,

@@ -178,6 +178,15 @@ class HomeKitClimateAccessory(HomeAccessory):
         char.value = value
         char.notify()
 
+    def _dispatch_climate_write(self, service: str, params: dict[str, Any]) -> None:
+        """Send a climate write from a characteristic setter.
+
+        Subclasses can override this to serialize their writes.
+        """
+        self.async_call_service(
+            CLIMATE_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id, **params}
+        )
+
     def _update_temperature_char(
         self, char: Characteristic, state: State, attr: str
     ) -> None:
@@ -237,11 +246,7 @@ class HomeKitClimateAccessory(HomeAccessory):
     def _set_fan_speed(self, speed: int) -> None:
         """Send the climate fan mode for a HomeKit rotation speed."""
         if (params := self._fan_speed_params(speed)) is not None:
-            self.async_call_service(
-                CLIMATE_DOMAIN,
-                SERVICE_SET_FAN_MODE,
-                {ATTR_ENTITY_ID: self.entity_id, **params},
-            )
+            self._dispatch_climate_write(SERVICE_SET_FAN_MODE, params)
 
     def _swing_mode_params(self, swing_on: int) -> dict[str, Any] | None:
         """Return the set_swing_mode data for a HomeKit swing toggle."""
@@ -255,11 +260,7 @@ class HomeKitClimateAccessory(HomeAccessory):
     def _set_swing_mode(self, swing_on: int) -> None:
         """Send the climate swing mode for a HomeKit swing toggle."""
         if (params := self._swing_mode_params(swing_on)) is not None:
-            self.async_call_service(
-                CLIMATE_DOMAIN,
-                SERVICE_SET_SWING_MODE,
-                {ATTR_ENTITY_ID: self.entity_id, **params},
-            )
+            self._dispatch_climate_write(SERVICE_SET_SWING_MODE, params)
 
     def _update_fan_speed_char(self, attributes: Mapping[str, Any]) -> None:
         """Update the rotation speed characteristic from the current fan mode."""
@@ -337,8 +338,7 @@ class HomeKitClimateAccessory(HomeAccessory):
             self._reject_char_write(self.char_fan_active, 1)
             return
         mode = self._get_on_mode() if active else self.fan_modes[FAN_OFF]
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
-        self.async_call_service(CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, params)
+        self._dispatch_climate_write(SERVICE_SET_FAN_MODE, {ATTR_FAN_MODE: mode})
 
     def _set_fan_auto(self, auto: int) -> None:
         """Send the climate fan mode for a HomeKit fan auto toggle.
@@ -348,8 +348,7 @@ class HomeKitClimateAccessory(HomeAccessory):
         """
         _LOGGER.debug("%s: Set fan auto to %s", self.entity_id, auto)
         mode = self.fan_modes[FAN_AUTO] if auto else self._get_on_mode()
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
-        self.async_call_service(CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE, params)
+        self._dispatch_climate_write(SERVICE_SET_FAN_MODE, {ATTR_FAN_MODE: mode})
 
     @callback
     def _async_update_fan_service(self, new_state: State) -> None:
