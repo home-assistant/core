@@ -170,7 +170,6 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
             name=name.upper(),
         )
         self._attr_unique_id = f"{name}-{description.key}".lower()
-        self.entity_id = f"sensor.{DOMAIN}_{name}_{description.key}".lower()
         self.entity_description = description
         self._state: StateType | date = None
         self.update_from_coordinator()

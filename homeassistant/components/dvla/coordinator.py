@@ -35,15 +35,13 @@ class DVLACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             name=config_entry.title if config_entry else "DVLA",
             update_interval=timedelta(days=1),
         )
-        self.session = session
+        self.client = DVLAClient(session, API_KEY)
         self.reg_number = str(reg_number).replace(" ", "").upper()
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch vehicle data from the DVLA API."""
-        client = DVLAClient(self.session, API_KEY)
-
         try:
-            return await client.async_get_vehicle(self.reg_number)
+            return await self.client.async_get_vehicle(self.reg_number)
         except DVLAError as err:
             raise UpdateFailed(str(err)) from err
