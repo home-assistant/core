@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, final, override
 from propcache.api import cached_property
 
 from homeassistant.components import zone
-from homeassistant.components.zone import ATTR_PASSIVE, ATTR_RADIUS
+from homeassistant.components.zone import ZoneEntityStateAttribute
 from homeassistant.const import (  # noqa: F401
     ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
@@ -368,10 +368,14 @@ class TrackerEntity(
                     for entity_id in zones
                     if (zone_state := self.hass.states.get(entity_id)) is not None
                 ),
-                key=lambda z: z.attributes[ATTR_RADIUS],
+                key=lambda z: z.attributes[ZoneEntityStateAttribute.RADIUS],
             )
             self.__active_zone = next(
-                (z for z in zone_states if not z.attributes.get(ATTR_PASSIVE)),
+                (
+                    z
+                    for z in zone_states
+                    if not z.attributes.get(ZoneEntityStateAttribute.PASSIVE)
+                ),
                 None,
             )
             self.__in_zones = [z.entity_id for z in zone_states]

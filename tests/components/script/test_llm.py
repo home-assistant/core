@@ -35,6 +35,7 @@ async def setup_integrations(hass: HomeAssistant) -> None:
                     },
                 },
                 "unexposed_script": {"sequence": []},
+                "123456": {"sequence": []},
             }
         },
     )
@@ -84,3 +85,10 @@ async def test_script_tool_call(hass: HomeAssistant) -> None:
         hass, llm.ToolInput("test_script", {"beer": 1}), llm_context
     )
     assert response == {"success": True, "result": {"drinks": 2}}
+
+
+async def test_script_tool_name_not_started_with_digit(hass: HomeAssistant) -> None:
+    """Test a script whose id starts with a digit gets a valid tool name."""
+    async_expose_entity(hass, "conversation", "script.123456", True)
+    result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
+    assert "_123456" in [tool.name for tool in result.tools]
