@@ -152,12 +152,20 @@ async def test_doorbell_ring(
     unsub()
 
 
+@pytest.mark.parametrize(
+    "event_type",
+    [
+        pytest.param(EventType.SMART_DETECT, id="zone"),
+        pytest.param(EventType.SMART_DETECT_LINE, id="line"),
+    ],
+)
 async def test_package_detected(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    event_type: EventType,
 ) -> None:
     """Test a package detection event fired from the public events websocket."""
 
@@ -181,12 +189,13 @@ async def test_package_detected(
     unsub = async_track_state_change_event(hass, entity_id, _capture_event)
 
     # Package detection arrives on the public events websocket as a
-    # smartDetectZone detection event with the package object type. Protect
-    # records it already-ended; the event entity fires on the detection start.
+    # smartDetectZone or smartDetectLine detection event with the package
+    # object type. Protect records it already-ended; the event entity fires on
+    # the detection start.
     ufp.events_msg(
         ProtectEvent(
             id="test_package_event",
-            type=EventType.SMART_DETECT,
+            type=event_type,
             channel=ProtectEventChannel.DETECTION,
             device_id=doorbell.id,
             device_mac=doorbell.mac,
@@ -1774,14 +1783,26 @@ async def test_motion_detection_event(
     assert state.attributes[ATTR_EVENT_ID] == "motion-1"
 
 
+@pytest.mark.parametrize(
+    "event_type",
+    [
+        pytest.param(EventType.SMART_DETECT, id="zone"),
+        pytest.param(EventType.SMART_DETECT_LINE, id="line"),
+    ],
+)
 async def test_smart_detection_event(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    event_type: EventType,
 ) -> None:
-    """The smart-detection event entity fires per object type with the full type set."""
+    """The smart-detection event entity fires per object type with the full type set.
+
+    Both smartDetectZone and smartDetectLine events carry smart detections, so
+    a standalone line-crossing event must fire the entity too.
+    """
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
 
@@ -1800,7 +1821,7 @@ async def test_smart_detection_event(
     ufp.events_msg(
         ProtectEvent(
             id="smart-1",
-            type=EventType.SMART_DETECT,
+            type=event_type,
             channel=ProtectEventChannel.DETECTION,
             device_id=doorbell.id,
             device_mac=doorbell.mac,
