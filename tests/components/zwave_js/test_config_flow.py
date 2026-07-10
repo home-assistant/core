@@ -1935,14 +1935,17 @@ def test_migrate_legacy_network_key(
     addon_config: dict[str, str], expected_s0: str
 ) -> None:
     """Test the legacy network key is migrated to the S0 legacy key."""
+    original = dict(addon_config)
+
     migrated = migrate_network_key(addon_config)
     assert "network_key" not in migrated
     assert migrated.get("s0_legacy_key", "") == expected_s0
 
     keys = SecurityKeys.from_addon_config(addon_config)
     assert keys.s0_legacy == expected_s0
-    # The migration doesn't touch the caller's dict.
-    assert ("network_key" in addon_config) == ("network_key" in addon_config)
+
+    # Neither call mutates the caller's dict.
+    assert addon_config == original
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
