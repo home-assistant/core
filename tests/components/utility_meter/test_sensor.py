@@ -1,6 +1,6 @@
 """The tests for the utility_meter sensor platform."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from freezegun import freeze_time
 import pytest
@@ -17,14 +17,16 @@ from homeassistant.components.sensor import (
 from homeassistant.components.utility_meter import DEFAULT_OFFSET
 from homeassistant.components.utility_meter.const import (
     ATTR_VALUE,
+    BIMONTHLY,
     DAILY,
     DOMAIN,
     HOURLY,
+    MONTHLY,
     QUARTER_HOURLY,
+    QUARTERLY,
     SERVICE_CALIBRATE_METER,
     SERVICE_RESET,
 )
-from homeassistant.components.utility_meter.const import MONTHLY
 from homeassistant.components.utility_meter.sensor import (
     ATTR_LAST_RESET,
     ATTR_STATUS,
@@ -2159,14 +2161,59 @@ async def test_device_id(
 )
 def test_month_aware_reset_scheduler(start: str, day: int, expected: list[str]) -> None:
     """Monthly resets should clamp day-of-month to the length of each month."""
-    from datetime import datetime
-
     scheduler = _month_aware_reset_scheduler(
         datetime.fromisoformat(start),
         day=day,
         hour=0,
         minute=0,
         period=MONTHLY,
+    )
+    for expected_reset in expected:
+        assert next(scheduler) == datetime.fromisoformat(expected_reset)
+
+
+@pytest.mark.parametrize(
+    ("period", "start", "expected"),
+    [
+        (
+            QUARTERLY,
+            "2017-03-31T23:59:00+00:00",
+            [
+                "2017-04-01T00:00:00+00:00",
+                "2017-07-01T00:00:00+00:00",
+                "2017-10-01T00:00:00+00:00",
+                "2018-01-01T00:00:00+00:00",
+            ],
+        ),
+        (
+            BIMONTHLY,
+            "2017-12-31T23:59:00+00:00",
+            [
+                "2018-01-01T00:00:00+00:00",
+                "2018-03-01T00:00:00+00:00",
+                "2018-05-01T00:00:00+00:00",
+            ],
+        ),
+        (
+            BIMONTHLY,
+            "2018-01-01T23:59:00+00:00",
+            [
+                "2018-03-01T00:00:00+00:00",
+                "2018-05-01T00:00:00+00:00",
+            ],
+        ),
+    ],
+)
+def test_month_aware_reset_scheduler_period_alignment(
+    period: str, start: str, expected: list[str]
+) -> None:
+    """Multi-month schedules should stay aligned to January like cron did."""
+    scheduler = _month_aware_reset_scheduler(
+        datetime.fromisoformat(start),
+        day=1,
+        hour=0,
+        minute=0,
+        period=period,
     )
     for expected_reset in expected:
         assert next(scheduler) == datetime.fromisoformat(expected_reset)

@@ -121,14 +121,24 @@ def _month_aware_reset_scheduler(
     Cron day-of-month values such as 29 skip February in non-leap years.
     Clamp the intended day to the last day of each target month so monthly
     meters with large offsets still reset every month.
+
+    Multi-month periods stay aligned to January, matching the previous cron
+    patterns (`*/2`, `*/3`, and `1/12`).
     """
     month_step = _MONTH_PERIOD_STEPS[period]
-    # YEARLY always resets in January (month 1), matching the cron pattern.
-    fixed_month = 1 if period == YEARLY else None
 
     current = start
     year = current.year
-    month = fixed_month if fixed_month is not None else current.month
+    month = current.month
+
+    # Align to the calendar cycle that starts in January.
+    # monthly: every month; bimonthly: 1,3,5,...; quarterly: 1,4,7,10; yearly: 1
+    remainder = (month - 1) % month_step
+    if remainder:
+        month = month - remainder + month_step
+        while month > 12:
+            month -= 12
+            year += 1
 
     while True:
         last_day = calendar.monthrange(year, month)[1]
@@ -146,14 +156,10 @@ def _month_aware_reset_scheduler(
             yield candidate
             current = candidate
 
-        if fixed_month is not None:
+        month += month_step
+        while month > 12:
+            month -= 12
             year += 1
-            month = fixed_month
-        else:
-            month += month_step
-            while month > 12:
-                month -= 12
-                year += 1
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -480,26 +486,22 @@ class UtilityMeterSensor(RestoreSensor):
             dt_util.get_default_time_zone()
         )  # we need timezone for DST purposes (see issue #102984)
 
+        scheduler: Iterator[datetime] | None
         # Month-based periods need day-of-month clamping so offsets near the
         # end of the month still reset in short months such as February.
         if self._period in _MONTH_PERIOD_STEPS:
-            self.scheduler = _month_aware_reset_scheduler(
+            scheduler = _month_aware_reset_scheduler(
                 start,
                 day=self._meter_offset.days + 1,
                 hour=self._meter_offset.seconds // 3600,
                 minute=self._meter_offset.seconds % 3600 // 60,
                 period=self._period,
             )
-            return
-
-        self.scheduler = (
-            CronSim(
-                self._cron_pattern,
-                start,
-            )
-            if self._cron_pattern
-            else None
-        )
+        elif self._cron_pattern:
+            scheduler = CronSim(self._cron_pattern, start)
+        else:
+            scheduler = None
+        self.scheduler = scheduler
 
     def start(self, attributes: Mapping[str, Any]) -> None:
         """Initialize unit and state upon source initial update."""
