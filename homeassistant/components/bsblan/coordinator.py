@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the BSB-LAN integration."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
@@ -10,6 +10,7 @@ from bsblan import (
     BSBLANConnectionError,
     BSBLANError,
     BSBLANMalformedResponseError,
+    HeatingTimeSwitchPrograms,
     HotWaterConfig,
     HotWaterSchedule,
     HotWaterState,
@@ -59,6 +60,7 @@ class BSBLanSlowData:
 
     dhw_config: HotWaterConfig | None = None
     dhw_schedule: HotWaterSchedule | None = None
+    heating_schedule: dict[int, HeatingTimeSwitchPrograms] = field(default_factory=dict)
 
 
 class BSBLanCoordinator[T](DataUpdateCoordinator[T]):
@@ -172,6 +174,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         hass: HomeAssistant,
         config_entry: BSBLanConfigEntry,
         client: BSBLAN,
+        circuits: list[int],
     ) -> None:
         """Initialize the BSB-LAN slow coordinator."""
         super().__init__(
@@ -181,17 +184,20 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
             name=f"{DOMAIN}_slow_{config_entry.data[CONF_HOST]}",
             update_interval=SCAN_INTERVAL_SLOW,
         )
+        self.circuits: list[int] = circuits
         self._dhw_schedule_refresh_pending = True
         self._dhw_schedule_refresh_generation = 0
+        self._heating_schedule_refresh_pending = set(circuits)
+        self._retry_heating_schedule_errors: set[int] = set()
 
     @override
     async def _async_update_data(self) -> BSBLanSlowData:
         """Fetch slow-changing data from the BSB-LAN device.
 
-        Only the DHW config is polled here. The schedule changes rarely and is
+        Only the DHW config is polled here. Schedules change rarely and are
         refreshed separately (on startup and after a write) to avoid extra
-        serial-bus traffic on every interval, so it is carried over from the
-        previous update.
+        serial-bus traffic on every interval, so they are carried over from
+        the previous update.
         """
         previous = self.data or BSBLanSlowData()
         dhw_config: HotWaterConfig | None
@@ -225,15 +231,35 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
             ):
                 self._dhw_schedule_refresh_pending = False
 
+        heating_schedule = dict(previous.heating_schedule)
+        for circuit in self._heating_schedule_refresh_pending.copy():
+            (
+                refreshed_heating_schedule,
+                retryable,
+            ) = await self._async_fetch_heating_schedule(circuit)
+            if refreshed_heating_schedule is not None:
+                heating_schedule[circuit] = refreshed_heating_schedule
+                self._heating_schedule_refresh_pending.discard(circuit)
+                self._retry_heating_schedule_errors.discard(circuit)
+            elif not retryable and circuit not in self._retry_heating_schedule_errors:
+                self._heating_schedule_refresh_pending.discard(circuit)
+
         return BSBLanSlowData(
             dhw_config=dhw_config,
             dhw_schedule=dhw_schedule,
+            heating_schedule=heating_schedule,
         )
 
     async def async_refresh_schedule_after_write(self) -> None:
         """Refresh slow data after a successful schedule write."""
         self._dhw_schedule_refresh_pending = True
         self._dhw_schedule_refresh_generation += 1
+        await self.async_refresh()
+
+    async def async_refresh_heating_schedule_after_write(self, circuit: int) -> None:
+        """Refresh a heating schedule after a successful write."""
+        self._heating_schedule_refresh_pending.add(circuit)
+        self._retry_heating_schedule_errors.add(circuit)
         await self.async_refresh()
 
     async def _async_fetch_dhw_schedule(
@@ -256,6 +282,27 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         except BSBLANError, AttributeError:
             LOGGER.debug(
                 "DHW schedule not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
+            return None, False
+
+    async def _async_fetch_heating_schedule(
+        self, circuit: int
+    ) -> tuple[HeatingTimeSwitchPrograms | None, bool]:
+        """Fetch a heating schedule, returning None if unavailable."""
+        try:
+            return await self.client.heating_schedule(circuit=circuit), False
+        except BSBLANConnectionError, BSBLANAuthError, TimeoutError:
+            LOGGER.debug(
+                "Heating schedule not available for circuit %d on device at %s",
+                circuit,
+                self.config_entry.data[CONF_HOST],
+            )
+            return None, True
+        except BSBLANError, AttributeError:
+            LOGGER.debug(
+                "Heating schedule not available for circuit %d on device at %s",
+                circuit,
                 self.config_entry.data[CONF_HOST],
             )
             return None, False
