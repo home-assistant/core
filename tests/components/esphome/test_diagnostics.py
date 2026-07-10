@@ -129,6 +129,7 @@ async def test_diagnostics_with_bluetooth(
         "storage_data": {
             "api_version": {"major": 99, "minor": 99},
             "device_info": {
+                "api_encryption_provisionable": False,
                 "api_encryption_supported": False,
                 "area": {"area_id": 0, "name": ""},
                 "areas": [],
