@@ -12,11 +12,6 @@ from .const import DOMAIN
 from .coordinator import DucoCoordinator
 
 
-def get_duco_node_identifiers(mac: str, node_id: int) -> set[tuple[str, str]]:
-    """Return the device registry identifiers for a Duco node."""
-    return {(DOMAIN, f"{mac}_{node_id}")}
-
-
 class DucoEntity(CoordinatorEntity[DucoCoordinator]):
     """Base class for Duco entities."""
 
@@ -28,7 +23,7 @@ class DucoEntity(CoordinatorEntity[DucoCoordinator]):
         self._node_id = node.node_id
         mac = coordinator.mac
         device_info = DeviceInfo(
-            identifiers=get_duco_node_identifiers(mac, node.node_id),
+            identifiers={(DOMAIN, f"{mac}_{node.node_id}")},
             manufacturer="Duco",
             model=coordinator.board_info.box_name
             if node.general.node_type == NodeType.BOX

@@ -61,7 +61,9 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         )
         self.client = client
         self._configured_node_names = {}
-        self.mac = cast(str, config_entry.unique_id)
+        if (unique_id := config_entry.unique_id) is None:
+            raise ValueError("Duco config entry is missing a unique ID")
+        self.mac = unique_id
         self._supports_time_filter_remain = True
 
     async def _async_load_node_names(self) -> None:
