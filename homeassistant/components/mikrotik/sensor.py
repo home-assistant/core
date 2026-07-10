@@ -20,11 +20,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from .const import HEALTH, SYSTEM
 from .coordinator import _LOGGER, MikrotikConfigEntry, MikrotikDataUpdateCoordinator
+from .entity import MikrotikEntity
 
 PARALLEL_UPDATES = 0
 
@@ -163,11 +163,10 @@ async def async_setup_entry(
 
 
 class MikrotikSensorEntity(
-    CoordinatorEntity[MikrotikDataUpdateCoordinator], SensorEntity
+    MikrotikEntity[MikrotikSensorEntityDescription], SensorEntity
 ):
     """Sensor device."""
 
-    _attr_has_entity_name = True
     entity_description: MikrotikSensorEntityDescription
 
     def __init__(
@@ -176,10 +175,9 @@ class MikrotikSensorEntity(
         description: MikrotikSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{coordinator.api.serial_number}_{description.key}"
+        super().__init__(coordinator, description)
+
+        self._attr_unique_id = f"{self._serial}_{description.key}"
 
     @property
     @override

@@ -7,7 +7,6 @@ from typing import Any, override
 
 import librouteros
 from librouteros.login import plain as login_plain, token as login_token
-from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,7 +17,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -303,19 +301,6 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def api(self) -> MikrotikData:
         """Represent Mikrotik data object."""
         return self._mk_data
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            configuration_url=URL.build(scheme="http", host=self.host),
-            identifiers={(DOMAIN, self.serial_num)},
-            name=self.hostname,
-            manufacturer="Mikrotik",
-            model=self.model,
-            sw_version=self.firmware,
-            serial_number=self.serial_num,
-        )
 
     @override
     async def _async_update_data(self) -> None:
