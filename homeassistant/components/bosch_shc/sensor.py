@@ -42,7 +42,7 @@ class SHCSensorEntityDescription(SensorEntityDescription):
     attributes_fn: Callable[[SHCDevice], dict[str, Any]] | None = None
 
 
-# Each entry's value_fn is only ever wired to a device_helper list whose concrete type has the cast attribute.
+# Each entry's value_fn is only ever wired to a device_helper list whose concrete type has the accessed attribute.
 _TemperatureDevice = SHCThermostat | SHCWallThermostat | SHCTwinguard
 _HumidityDevice = SHCWallThermostat | SHCTwinguard
 _PowerMeterDevice = SHCSmartPlug | SHCLightSwitchBSM | SHCSmartPlugCompact
