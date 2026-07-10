@@ -195,8 +195,6 @@ def server_context_modern() -> ssl.SSLContext:
     Modern guidelines are followed.
     """
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    # Mozilla modern profile requires TLS 1.3 only
-    # https://wiki.mozilla.org/Security/Server_Side_TLS
     context.minimum_version = ssl.TLSVersion.TLSv1_3
 
     context.options |= ssl.OP_CIPHER_SERVER_PREFERENCE

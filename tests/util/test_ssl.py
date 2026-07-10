@@ -200,5 +200,4 @@ def test_server_context_modern_requires_tls_1_3() -> None:
     assert modern.minimum_version == ssl.TLSVersion.TLSv1_3
 
     intermediate = server_context_intermediate()
-    # Intermediate remains compatible with TLS 1.2 clients
     assert intermediate.minimum_version <= ssl.TLSVersion.TLSv1_2
