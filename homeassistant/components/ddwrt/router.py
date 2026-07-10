@@ -45,13 +45,20 @@ class DdWrtRouter:
         """Return the connected clients keyed by MAC address.
 
         Also serves as the connectivity/credentials check: it raises
-        DdWrtConnectionError when the router cannot be reached or the
-        credentials are rejected.
+        DdWrtConnectionError when the router cannot be reached, the
+        credentials are rejected, or the response is not a valid DD-WRT
+        status page (for example a login or proxy page returned with a
+        200 status).
         """
         endpoint = "Wireless" if self._wireless_only else "Lan"
         status = self._get_data(f"Status_{endpoint}.live.asp")
         field = "active_wireless" if self._wireless_only else "arp_table"
-        macs = self._extract_macs(status.get(field))
+        if field not in status:
+            raise DdWrtConnectionError(
+                f"Unexpected response from DD-WRT router at {self._host}, "
+                f"missing '{field}' field"
+            )
+        macs = self._extract_macs(status[field])
         leases = self._get_leases()
         return {mac: leases.get(mac, {"hostname": None, "ip": None}) for mac in macs}
 

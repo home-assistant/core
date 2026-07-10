@@ -24,7 +24,7 @@
   },
   "issues": {
     "yaml_import_cannot_connect": {
-      "description": "The YAML configuration for DD-WRT at `{host}` could not be imported because the connection failed.\n\nPlease check that `{host}` is reachable, update your `configuration.yaml` if needed, and restart Home Assistant.",
+      "description": "The YAML configuration for the DD-WRT router at `{host}` could not be imported because Home Assistant could not connect to it. Device tracking for this router is currently unavailable.\n\nTo fix this:\n\n1. Confirm that `{host}` is reachable and the router is online.\n2. Verify the username and password in your `configuration.yaml` are correct.\n3. Restart Home Assistant.\n\nAfter a successful restart, the router is imported automatically and this issue is removed.",
       "title": "YAML configuration import failed: cannot connect"
     }
   }

@@ -94,6 +94,19 @@ def test_get_clients_without_leases(mock_get: MagicMock) -> None:
 
 
 @patch("homeassistant.components.ddwrt.router.requests.get")
+def test_malformed_200_raises(mock_get: MagicMock) -> None:
+    """Test a 200 response without the expected field raises an error.
+
+    A login or proxy page returned with a 200 status must not be treated
+    as an empty client list, otherwise validation would falsely succeed.
+    """
+    mock_get.return_value = _mock_response(HTTPStatus.OK, "<html>Login</html>")
+
+    with pytest.raises(DdWrtConnectionError):
+        _make_router().get_clients()
+
+
+@patch("homeassistant.components.ddwrt.router.requests.get")
 def test_timeout_raises(mock_get: MagicMock) -> None:
     """Test a request timeout is translated to a connection error."""
     mock_get.side_effect = requests.exceptions.Timeout
