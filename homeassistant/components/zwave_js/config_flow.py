@@ -276,6 +276,8 @@ class AddonFlowManager:
         # Set to True if the add-on was running when its config was changed,
         # meaning a restart instead of a start is needed.
         self.restart_addon = False
+        # Set to True once this flow has started a stopped add-on.
+        self.addon_started = False
         # The add-on config before this flow changed it, for reverts.
         self.original_config: dict[str, Any] | None = None
 
@@ -339,6 +341,7 @@ class AddonFlowManager:
         if self.restart_addon:
             await self.addon_manager.async_schedule_restart_addon()
         else:
+            self.addon_started = True
             await self.addon_manager.async_schedule_start_addon()
         version_info: VersionInfo | None = None
         # Sleep some seconds to let the add-on start properly before connecting.
@@ -1291,19 +1294,28 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
         addon_manager = self._addon_setup.addon_manager
+        # Remove the legacy network key, like async_set_addon_config does,
+        # so restoring doesn't fail on older add-on configurations.
+        restored_config = {
+            key: value
+            for key, value in original_config.items()
+            if key != CONF_ADDON_NETWORK_KEY
+        }
         try:
-            await addon_manager.async_set_addon_options(original_config)
-            addon_info = await addon_manager.async_get_addon_info()
-            if addon_info.state is AddonState.RUNNING:
-                # The add-on is running with the unconfirmed options this flow
-                # set, either because it was already running or because this
-                # flow started it. Restart it to apply the restored options,
-                # so the entry doesn't reconnect to the unconfirmed adapter.
-                await addon_manager.async_schedule_restart_addon()
+            await addon_manager.async_set_addon_options(restored_config)
         except AddonError as err:
-            _LOGGER.error(err)
-        finally:
-            self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
+            # Don't reload the entry if the options were not restored, so the
+            # reload doesn't adopt the unconfirmed options still on the add-on.
+            _LOGGER.error("Failed to restore add-on options: %s", err)
+            return
+        if self._addon_setup.restart_addon or self._addon_setup.addon_started:
+            # The add-on is running with the unconfirmed options this flow set,
+            # either because it was already running or because this flow started
+            # it. Schedule a restart to apply the restored options, so the entry
+            # doesn't reconnect to the unconfirmed adapter. Don't await it, to
+            # avoid re-raising the cancellation of the flow's own start task.
+            addon_manager.async_schedule_restart_addon(catch_error=True)
+        self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
     async def async_step_intent_reconfigure(
         self, user_input: dict[str, Any] | None = None
