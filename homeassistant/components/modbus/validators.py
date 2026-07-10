@@ -28,6 +28,8 @@ from .const import (
     CONF_CURRENT_TEMP_SCALE,
     CONF_DATA_TYPE,
     CONF_FAN_MODE_VALUES,
+    CONF_MAX_VALUE,
+    CONF_MIN_VALUE,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
@@ -200,6 +202,18 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
         CONF_STRUCTURE: structure,
         CONF_SWAP: swap_type,
     }
+
+
+def number_min_max_validator(config: dict[str, Any]) -> dict[str, Any]:
+    """Check that min_value does not exceed max_value for a number entity."""
+    min_value = config[CONF_MIN_VALUE]
+    max_value = config[CONF_MAX_VALUE]
+    if min_value > max_value:
+        raise vol.Invalid(
+            f"{config[CONF_NAME]}: `{CONF_MIN_VALUE}: {min_value}` cannot be"
+            f" greater than `{CONF_MAX_VALUE}: {max_value}`"
+        )
+    return config
 
 
 def hvac_fixedsize_reglist_validator(value: Any) -> list:

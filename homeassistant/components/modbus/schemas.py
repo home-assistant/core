@@ -166,6 +166,7 @@ from .validators import (
     hvac_fixedsize_reglist_validator,
     nan_validator,
     not_zero_value,
+    number_min_max_validator,
     register_int_list_validator,
     struct_validator,
 )
@@ -484,10 +485,14 @@ NUMBER_SCHEMA = vol.All(
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_MIN_VALUE, default=DEFAULT_MIN_VALUE): vol.Coerce(float),
             vol.Optional(CONF_MAX_VALUE, default=DEFAULT_MAX_VALUE): vol.Coerce(float),
-            vol.Optional(CONF_NUMBER_STEP, default=DEFAULT_STEP): vol.Coerce(float),
+            vol.Optional(CONF_NUMBER_STEP, default=DEFAULT_STEP): vol.All(
+                vol.Coerce(float),
+                vol.Range(min=0, min_included=False, msg="Step must be greater than 0."),
+            ),
         }
     ),
     struct_validator,
+    number_min_max_validator,
 )
 
 BINARY_SENSOR_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
