@@ -80,7 +80,7 @@ class PlaceCoordinator(DataUpdateCoordinator[dict[str, PlaceDeviceShadow]]):
         if kind != "shadow":
             return
 
-        thing_name = self._thing_name_from_topic(topic)
+        thing_name = self.messages.thing_name_from_topic(topic)
         if not thing_name:
             return
 
@@ -114,11 +114,3 @@ class PlaceCoordinator(DataUpdateCoordinator[dict[str, PlaceDeviceShadow]]):
         """Stop the MQTT loop (runs in executor)."""
         self.mqtt_client.disconnect()
         self.mqtt_client.loop_stop()
-
-    @staticmethod
-    def _thing_name_from_topic(topic: str) -> str | None:
-        """Extract thing_name from an AWS IoT shadow topic ($aws/things/{name}/shadow/...)."""
-        parts = topic.split("/")
-        if len(parts) >= 3 and parts[0] == "$aws" and parts[1] == "things":
-            return parts[2]
-        return None
