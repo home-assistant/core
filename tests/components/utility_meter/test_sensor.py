@@ -24,12 +24,14 @@ from homeassistant.components.utility_meter.const import (
     SERVICE_CALIBRATE_METER,
     SERVICE_RESET,
 )
+from homeassistant.components.utility_meter.const import MONTHLY
 from homeassistant.components.utility_meter.sensor import (
     ATTR_LAST_RESET,
     ATTR_STATUS,
     COLLECTING,
     PAUSED,
     UtilityMeterSensor,
+    _month_aware_reset_scheduler,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -2118,3 +2120,80 @@ async def test_device_id(
     utility_meter_no_tariffs_entity = entity_registry.async_get("sensor.energy")
     assert utility_meter_no_tariffs_entity is not None
     assert utility_meter_no_tariffs_entity.device_id == source_entity.device_id
+
+
+@pytest.mark.parametrize(
+    ("start", "day", "expected"),
+    [
+        (
+            # Non-leap February with day 29 should clamp to Feb 28
+            "2026-02-05T12:00:00+00:00",
+            29,
+            [
+                "2026-02-28T00:00:00+00:00",
+                "2026-03-29T00:00:00+00:00",
+                "2026-04-29T00:00:00+00:00",
+            ],
+        ),
+        (
+            # Leap year February keeps day 29
+            "2024-02-05T12:00:00+00:00",
+            29,
+            [
+                "2024-02-29T00:00:00+00:00",
+                "2024-03-29T00:00:00+00:00",
+            ],
+        ),
+        (
+            # Day 31 clamps to last day of short months
+            "2026-01-05T00:00:00+00:00",
+            31,
+            [
+                "2026-01-31T00:00:00+00:00",
+                "2026-02-28T00:00:00+00:00",
+                "2026-03-31T00:00:00+00:00",
+                "2026-04-30T00:00:00+00:00",
+            ],
+        ),
+    ],
+)
+def test_month_aware_reset_scheduler(start: str, day: int, expected: list[str]) -> None:
+    """Monthly resets should clamp day-of-month to the length of each month."""
+    from datetime import datetime
+
+    scheduler = _month_aware_reset_scheduler(
+        datetime.fromisoformat(start),
+        day=day,
+        hour=0,
+        minute=0,
+        period=MONTHLY,
+    )
+    for expected_reset in expected:
+        assert next(scheduler) == datetime.fromisoformat(expected_reset)
+
+
+async def test_monthly_offset_resets_in_february(hass: HomeAssistant) -> None:
+    """Monthly meter with offset 28 (day 29) should still reset in February."""
+    # YAML rejects offset >= 28 days; config entry path allows 28.
+    # Exercise the sensor class directly for the UI offset case.
+    sensor = UtilityMeterSensor(
+        hass,
+        cron_pattern=None,
+        delta_values=False,
+        meter_offset=timedelta(days=28),
+        meter_type="monthly",
+        name="energy_bill",
+        net_consumption=False,
+        parent_meter="test",
+        periodically_resetting=True,
+        source_entity="sensor.energy",
+        tariff_entity=None,
+        tariff=None,
+        unique_id="test_energy_bill",
+        sensor_always_available=False,
+    )
+    sensor.hass = hass
+    sensor.entity_id = "sensor.energy_bill"
+    sensor._config_scheduler(dt_util.parse_datetime("2026-02-05T12:00:00+00:00"))
+    next_reset = next(sensor.scheduler)
+    assert next_reset.isoformat() == "2026-02-28T00:00:00+00:00"

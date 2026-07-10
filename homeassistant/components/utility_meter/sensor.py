@@ -1,6 +1,7 @@
 """Utility meter from sensors providing raw data."""
 
-from collections.abc import Mapping
+import calendar
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
@@ -98,6 +99,62 @@ PERIOD2CRON = {
     QUARTERLY: "{minute} {hour} {day} */3 *",
     YEARLY: "{minute} {hour} {day} 1/12 *",
 }
+
+_MONTH_PERIOD_STEPS = {
+    MONTHLY: 1,
+    BIMONTHLY: 2,
+    QUARTERLY: 3,
+    YEARLY: 12,
+}
+
+
+def _month_aware_reset_scheduler(
+    start: datetime,
+    *,
+    day: int,
+    hour: int,
+    minute: int,
+    period: str,
+) -> Iterator[datetime]:
+    """Yield reset times for month-based periods with day clamping.
+
+    Cron day-of-month values such as 29 skip February in non-leap years.
+    Clamp the intended day to the last day of each target month so monthly
+    meters with large offsets still reset every month.
+    """
+    month_step = _MONTH_PERIOD_STEPS[period]
+    # YEARLY always resets in January (month 1), matching the cron pattern.
+    fixed_month = 1 if period == YEARLY else None
+
+    current = start
+    year = current.year
+    month = fixed_month if fixed_month is not None else current.month
+
+    while True:
+        last_day = calendar.monthrange(year, month)[1]
+        target_day = min(day, last_day)
+        candidate = current.replace(
+            year=year,
+            month=month,
+            day=target_day,
+            hour=hour,
+            minute=minute,
+            second=0,
+            microsecond=0,
+        )
+        if candidate > current:
+            yield candidate
+            current = candidate
+
+        if fixed_month is not None:
+            year += 1
+            month = fixed_month
+        else:
+            month += month_step
+            while month > 12:
+                month -= 12
+                year += 1
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -396,6 +453,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._input_device_class = None
         self._attr_native_unit_of_measurement = None
         self._period = meter_type
+        self._meter_offset = meter_offset
         if meter_type is not None:
             # For backwards compatibility reasons we convert
             # the period and offset into a cron pattern
@@ -418,13 +476,26 @@ class UtilityMeterSensor(RestoreSensor):
         self._config_scheduler()
 
     def _config_scheduler(self, start_time: datetime | None = None) -> None:
+        start = start_time or dt_util.now(
+            dt_util.get_default_time_zone()
+        )  # we need timezone for DST purposes (see issue #102984)
+
+        # Month-based periods need day-of-month clamping so offsets near the
+        # end of the month still reset in short months such as February.
+        if self._period in _MONTH_PERIOD_STEPS:
+            self.scheduler = _month_aware_reset_scheduler(
+                start,
+                day=self._meter_offset.days + 1,
+                hour=self._meter_offset.seconds // 3600,
+                minute=self._meter_offset.seconds % 3600 // 60,
+                period=self._period,
+            )
+            return
+
         self.scheduler = (
             CronSim(
                 self._cron_pattern,
-                start_time
-                or dt_util.now(
-                    dt_util.get_default_time_zone()
-                ),  # we need timezone for DST purposes (see issue #102984)
+                start,
             )
             if self._cron_pattern
             else None
