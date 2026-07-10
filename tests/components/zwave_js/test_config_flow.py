@@ -6155,6 +6155,94 @@ async def test_migrate_flow_abandoned_reloads_entry(
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_migrate_flow_abandoned_after_commit_keeps_new_config(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+    get_server_version: AsyncMock,
+) -> None:
+    """Test abandoning after the migration commit doesn't revert the add-on."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry,
+        unique_id="1234",
+        data={
+            "url": "ws://localhost:3000",
+            "use_addon": True,
+            "usb_path": "/old",
+        },
+    )
+    client.driver.controller.data["homeId"] = 1234
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "choose_serial_port"
+
+    _set_home_id(get_server_version, 5678)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USB_PATH: "/new"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    client.driver.controller.data["homeId"] = 5678
+    await hass.async_block_till_done()
+
+    set_addon_options.reset_mock()
+
+    # The migration commits the entry to the new adapter and starts the
+    # restore, then the user closes the dialog.
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+    assert entry.unique_id == "5678"
+    assert entry.data[CONF_USB_PATH] == "/new"
+
+    # The migration is committed, so the revert snapshot is cleared: an abort
+    # from here on must not restore the old adapter's add-on config.
+    flow = next(
+        flow
+        for flow in hass.config_entries.flow._progress.values()
+        if flow.flow_id == result["flow_id"]
+    )
+    assert flow._addon_setup.original_config is None
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done()
+
+    # The committed new adapter config is not reverted to the old one.
+    for mock_call in set_addon_options.call_args_list:
+        assert mock_call.args[1].config.get(CONF_ADDON_DEVICE) != "/old"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_migrate_flow_abandoned_after_entry_removed(
     hass: HomeAssistant,
     integration: MockConfigEntry,

@@ -1773,6 +1773,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             },
             unique_id=str(version_info.home_id),
         )
+        # The migration is committed to the new adapter now, so drop the
+        # revert snapshot: if the flow is abandoned during the restore, the
+        # entry should be reloaded on the new adapter, not reverted to the old
+        # add-on config.
+        self._addon_setup.original_config = None
 
         return await self.async_step_restore_nvm()
 
