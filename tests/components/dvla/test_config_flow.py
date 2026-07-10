@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from voluptuous import raises
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.dvla.config_flow import (
@@ -138,7 +138,7 @@ async def test_validate_input_invalid_auth(hass: HomeAssistant) -> None:
             "homeassistant.components.dvla.config_flow.DVLACoordinator._async_update_data",
             side_effect=ConfigEntryAuthFailed,
         ),
-        raises(InvalidAuth),
+        pytest.raises(InvalidAuth),
     ):
         await validate_input(hass, {CONF_REG_NUMBER: "AB12CDE"})
 
@@ -150,7 +150,7 @@ async def test_validate_input_cannot_connect(hass: HomeAssistant) -> None:
             "homeassistant.components.dvla.config_flow.DVLACoordinator._async_update_data",
             side_effect=UpdateFailed("boom"),
         ),
-        raises(CannotConnect),
+        pytest.raises(CannotConnect),
     ):
         await validate_input(hass, {CONF_REG_NUMBER: "AB12CDE"})
 

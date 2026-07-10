@@ -1,9 +1,9 @@
 """Tests for the DVLA data update coordinator."""
 
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohttp import ClientError
+from aio_dvla_vehicle_enquiry import DVLAError
 import pytest
 
 from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
@@ -12,31 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
-
-
-class MockResponse:
-    """Mock aiohttp response."""
-
-    def __init__(
-        self,
-        data: dict[str, Any] | None = None,
-        *,
-        error: Exception | None = None,
-        status: int = 200,
-    ) -> None:
-        """Initialize the mock response."""
-        self._data = data or {}
-        self._error = error
-        self.status = status
-
-    def raise_for_status(self) -> None:
-        """Raise a mocked HTTP error."""
-        if self._error is not None:
-            raise self._error
-
-    async def json(self, *_args: Any, **_kwargs: Any) -> dict[str, Any]:
-        """Return mocked JSON data."""
-        return self._data
 
 
 def create_coordinator(
@@ -63,26 +38,25 @@ def create_coordinator(
 
 
 async def test_async_update_data_returns_vehicle_data(hass: HomeAssistant) -> None:
-    """Test coordinator returns vehicle data from the DVLA API."""
-    vehicle_data = {
+    """Test coordinator returns vehicle data from the DVLA client."""
+    vehicle_data: dict[str, Any] = {
         "registrationNumber": "AB12CDE",
         "make": "FORD",
         "taxStatus": "Taxed",
     }
     session = MagicMock()
-    session.post = AsyncMock(return_value=MockResponse(vehicle_data))
-
     coordinator = create_coordinator(hass, session)
 
-    result = await coordinator._async_update_data()
+    with patch(
+        "homeassistant.components.dvla.coordinator.DVLAClient.async_get_vehicle",
+        new_callable=AsyncMock,
+    ) as mock_get_vehicle:
+        mock_get_vehicle.return_value = vehicle_data
+
+        result = await coordinator._async_update_data()
 
     assert result == vehicle_data
-
-    session.post.assert_called_once()
-    assert session.post.call_args.kwargs["json"] == {
-        "registrationNumber": "AB12CDE",
-    }
-    assert "x-api-key" in session.post.call_args.kwargs["headers"]
+    mock_get_vehicle.assert_awaited_once_with("AB12CDE")
 
 
 async def test_async_update_data_normalizes_registration_number(
@@ -90,211 +64,34 @@ async def test_async_update_data_normalizes_registration_number(
 ) -> None:
     """Test coordinator strips spaces and uppercases the registration number."""
     session = MagicMock()
-    session.post = AsyncMock(
-        return_value=MockResponse(
-            {
-                "registrationNumber": "AB12CDE",
-                "make": "FORD",
-            }
-        )
-    )
     coordinator = create_coordinator(hass, session, "ab12 cde")
 
-    await coordinator._async_update_data()
+    with patch(
+        "homeassistant.components.dvla.coordinator.DVLAClient.async_get_vehicle",
+        new_callable=AsyncMock,
+    ) as mock_get_vehicle:
+        mock_get_vehicle.return_value = {
+            "registrationNumber": "AB12CDE",
+            "make": "FORD",
+        }
 
-    assert session.post.call_args.kwargs["json"] == {
-        "registrationNumber": "AB12CDE",
-    }
-
-
-async def test_async_update_data_raises_update_failed_on_client_error(
-    hass: HomeAssistant,
-) -> None:
-    """Test coordinator raises UpdateFailed on client errors."""
-    session = MagicMock()
-    session.post = AsyncMock(side_effect=ClientError("API error"))
-
-    coordinator = create_coordinator(hass, session)
-
-    with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
 
+    mock_get_vehicle.assert_awaited_once_with("AB12CDE")
 
-async def test_async_update_data_raises_update_failed_on_unauthorized(
+
+async def test_async_update_data_raises_update_failed_on_dvla_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test coordinator raises UpdateFailed on auth errors."""
+    """Test coordinator raises UpdateFailed on DVLA client errors."""
     session = MagicMock()
-    session.post = AsyncMock(
-        return_value=MockResponse(
-            {"message": "Invalid authentication credentials"},
-            status=401,
-        )
-    )
-
     coordinator = create_coordinator(hass, session)
 
-    with pytest.raises(UpdateFailed, match="Invalid authentication credentials"):
-        await coordinator._async_update_data()
+    with patch(
+        "homeassistant.components.dvla.coordinator.DVLAClient.async_get_vehicle",
+        new_callable=AsyncMock,
+    ) as mock_get_vehicle:
+        mock_get_vehicle.side_effect = DVLAError("Vehicle not found")
 
-
-async def test_async_update_data_raises_update_failed_on_rate_limit(
-    hass: HomeAssistant,
-) -> None:
-    """Test coordinator raises UpdateFailed on rate limit errors."""
-    session = MagicMock()
-    session.post = AsyncMock(
-        return_value=MockResponse(
-            {"message": "API rate limit exceeded."},
-            status=429,
-        )
-    )
-
-    coordinator = create_coordinator(hass, session)
-
-    with pytest.raises(UpdateFailed, match="rate limit"):
-        await coordinator._async_update_data()
-
-
-async def test_async_update_data_raises_update_failed_on_api_errors(
-    hass: HomeAssistant,
-) -> None:
-    """Test coordinator raises UpdateFailed on DVLA API errors."""
-    session = MagicMock()
-    session.post = AsyncMock(
-        return_value=MockResponse(
-            {
-                "errors": [
-                    {
-                        "title": "Bad Request",
-                        "code": "400",
-                        "detail": "Invalid registration number",
-                    }
-                ]
-            },
-            status=400,
-        )
-    )
-
-    coordinator = create_coordinator(hass, session)
-
-    with pytest.raises(UpdateFailed, match="Invalid registration number"):
-        await coordinator._async_update_data()
-
-
-async def test_async_update_data_raises_update_failed_on_invalid_json(
-    hass: HomeAssistant,
-) -> None:
-    """Test coordinator raises UpdateFailed on invalid JSON."""
-    session = MagicMock()
-    response = MockResponse()
-    response.json = AsyncMock(side_effect=ValueError("invalid json"))
-    session.post = AsyncMock(return_value=response)
-
-    coordinator = create_coordinator(hass, session)
-
-    with pytest.raises(UpdateFailed, match="Invalid response"):
-        await coordinator._async_update_data()
-
-
-async def test_async_update_data_raises_update_failed_on_timeout(
-    hass: HomeAssistant,
-) -> None:
-    """Test coordinator raises UpdateFailed on request timeout."""
-    session = MagicMock()
-    session.post = AsyncMock(side_effect=TimeoutError)
-
-    coordinator = create_coordinator(hass, session)
-
-    with pytest.raises(UpdateFailed):
-        await coordinator._async_update_data()
-
-
-async def test_async_update_data_raises_update_failed_on_message(
-    hass: HomeAssistant,
-) -> None:
-    """Test coordinator raises UpdateFailed on message response."""
-    session = MagicMock()
-    session.post = AsyncMock(
-        return_value=MockResponse(
-            {"message": "Vehicle not found"},
-            status=400,
-        )
-    )
-
-    coordinator = create_coordinator(hass, session)
-
-    with pytest.raises(UpdateFailed, match="Vehicle not found"):
-        await coordinator._async_update_data()
-
-
-async def test_async_update_data_raises_update_failed_on_http_error_without_message(
-    hass: HomeAssistant,
-) -> None:
-    """Test coordinator raises UpdateFailed on HTTP error without message."""
-    session = MagicMock()
-    session.post = AsyncMock(
-        return_value=MockResponse(
-            {"unexpected": "response"},
-            status=500,
-        )
-    )
-
-    coordinator = create_coordinator(hass, session)
-
-    with pytest.raises(UpdateFailed, match="status 500"):
-        await coordinator._async_update_data()
-
-
-async def test_async_update_data_raises_update_failed_on_auth_message(
-    hass: HomeAssistant,
-) -> None:
-    """Test coordinator raises UpdateFailed on auth message response."""
-    session = MagicMock()
-    session.post = AsyncMock(
-        return_value=MockResponse(
-            {"message": "Invalid authentication credentials"},
-            status=200,
-        )
-    )
-
-    coordinator = create_coordinator(hass, session)
-
-    with pytest.raises(UpdateFailed, match="Invalid authentication credentials"):
-        await coordinator._async_update_data()
-
-
-async def test_async_update_data_raises_update_failed_on_rate_limit_message(
-    hass: HomeAssistant,
-) -> None:
-    """Test coordinator raises UpdateFailed on rate limit message response."""
-    session = MagicMock()
-    session.post = AsyncMock(
-        return_value=MockResponse(
-            {"message": "API rate limit exceeded."},
-            status=200,
-        )
-    )
-
-    coordinator = create_coordinator(hass, session)
-
-    with pytest.raises(UpdateFailed, match="API rate limit exceeded"):
-        await coordinator._async_update_data()
-
-
-async def test_async_update_data_raises_update_failed_on_non_dict_response(
-    hass: HomeAssistant,
-) -> None:
-    """Test coordinator raises UpdateFailed on unexpected JSON response shape."""
-    session = MagicMock()
-    session.post = AsyncMock(
-        return_value=MockResponse(
-            ["unexpected", "response"],
-            status=200,
-        )
-    )
-
-    coordinator = create_coordinator(hass, session)
-
-    with pytest.raises(UpdateFailed, match="Invalid response from DVLA API"):
-        await coordinator._async_update_data()
+        with pytest.raises(UpdateFailed, match="Vehicle not found"):
+            await coordinator._async_update_data()

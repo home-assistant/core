@@ -156,6 +156,9 @@ afsapi==1.0.1
 # homeassistant.components.agent_dvr
 agent-py==0.0.24
 
+# homeassistant.components.dvla
+aio-dvla-vehicle-enquiry==0.1.0
+
 # homeassistant.components.geo_json_events
 aio-geojson-generic-client==0.5
 
