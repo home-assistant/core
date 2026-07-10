@@ -111,11 +111,10 @@ class AccessoryAidStorage:
         The choice is stored by the same stable identity as the aid
         allocation, so it survives entity id renames and unique id changes.
         """
+        if accessory_type == self.get_accessory_type(entity_id):
+            return
         types = self.accessory_types
         keys = self._stable_storage_keys(entity_id)
-        current = next((types[key] for key in keys if key in types), None)
-        if accessory_type == current:
-            return
         for key in keys:
             types.pop(key, None)
         if accessory_type is not None:

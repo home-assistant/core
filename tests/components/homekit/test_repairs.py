@@ -72,6 +72,12 @@ INELIGIBLE_ATTRS = {
     ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
     ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF],
 }
+HUMIDITY_ATTRS = {
+    **CAPABLE_ATTRS,
+    ATTR_SUPPORTED_FEATURES: (
+        CAPABLE_ATTRS[ATTR_SUPPORTED_FEATURES] | ClimateEntityFeature.TARGET_HUMIDITY
+    ),
+}
 
 
 def _create_candidate_issue(
@@ -107,17 +113,6 @@ async def _async_stop_bridge(homekit: HomeKit) -> None:
     await homekit.aid_storage.async_save()
 
 
-_ORIGINAL_SETUP = HomeKit.setup
-
-
-def _setup_with_existing_pairing(
-    homekit: HomeKit, async_zeroconf_instance: Any, uuid: str
-) -> bool:
-    """Run the real driver setup but report persisted pairing state."""
-    _ORIGINAL_SETUP(homekit, async_zeroconf_instance, uuid)
-    return True
-
-
 async def _async_start_bridge(
     hass: HomeAssistant,
     entry: MockConfigEntry,
@@ -150,11 +145,17 @@ async def _async_start_bridge(
         entry_id=entry.entry_id,
         entry_title=entry.title,
     )
-    setup_target = _setup_with_existing_pairing if existing_pairing else _ORIGINAL_SETUP
+    original_setup = HomeKit.setup
+
+    def _setup(homekit: HomeKit, async_zeroconf_instance: Any, uuid: str) -> bool:
+        """Run the real driver setup, faking persisted pairing state if asked."""
+        loaded = original_setup(homekit, async_zeroconf_instance, uuid)
+        return loaded or existing_pairing
+
     with (
         patch(f"{PATH_HOMEKIT}.async_show_setup_message"),
         patch("pyhap.accessory_driver.AccessoryDriver.async_start"),
-        patch(f"{PATH_HOMEKIT}.HomeKit.setup", setup_target),
+        patch(f"{PATH_HOMEKIT}.HomeKit.setup", _setup),
     ):
         await homekit.async_start()
     await hass.async_block_till_done()
@@ -262,13 +263,7 @@ async def test_gained_humidity_setpoint_drops_stored_choice(
     hass.states.async_set(
         ENTITY_ID,
         HVACMode.COOL,
-        {
-            **CAPABLE_ATTRS,
-            ATTR_SUPPORTED_FEATURES: (
-                CAPABLE_ATTRS[ATTR_SUPPORTED_FEATURES]
-                | ClimateEntityFeature.TARGET_HUMIDITY
-            ),
-        },
+        HUMIDITY_ATTRS,
     )
     homekit = await _async_start_bridge(hass, entry)
     accessories = list(homekit.bridge.accessories.values())
@@ -430,13 +425,7 @@ async def test_explicit_heater_cooler_wins_over_humidity_safeguard(
     hass.states.async_set(
         ENTITY_ID,
         HVACMode.COOL,
-        {
-            **CAPABLE_ATTRS,
-            ATTR_SUPPORTED_FEATURES: (
-                CAPABLE_ATTRS[ATTR_SUPPORTED_FEATURES]
-                | ClimateEntityFeature.TARGET_HUMIDITY
-            ),
-        },
+        HUMIDITY_ATTRS,
     )
 
     homekit = await _async_start_bridge(

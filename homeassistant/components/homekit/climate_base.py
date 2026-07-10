@@ -74,6 +74,9 @@ FAN_STATE_INACTIVE = 0
 FAN_STATE_IDLE = 1
 FAN_STATE_ACTIVE = 2
 
+# States in which a climate entity is inactive rather than idle
+CLIMATE_INACTIVE_STATES = frozenset({HVACMode.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN})
+
 HC_HASS_TO_HOMEKIT_FAN_STATE = {
     HVACAction.OFF: FAN_STATE_INACTIVE,
     HVACAction.IDLE: FAN_STATE_IDLE,
@@ -169,6 +172,11 @@ class HomeKitClimateAccessory(HomeAccessory):
         char.override_properties(valid_values=valid_values)
         char.allow_invalid_client_values = True
         return char
+
+    def _reject_char_write(self, char: Characteristic, value: Any) -> None:
+        """Flip a characteristic back after rejecting a client write."""
+        char.value = value
+        char.notify()
 
     def _update_temperature_char(
         self, char: Characteristic, state: State, attr: str
@@ -315,8 +323,7 @@ class HomeKitClimateAccessory(HomeAccessory):
             _LOGGER.debug(
                 "%s: Fan does not support off, resetting to on", self.entity_id
             )
-            self.char_fan_active.value = 1
-            self.char_fan_active.notify()
+            self._reject_char_write(self.char_fan_active, 1)
             return
         mode = self._get_on_mode() if active else self.fan_modes[FAN_OFF]
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: mode}
@@ -355,7 +362,7 @@ class HomeKitClimateAccessory(HomeAccessory):
 
         self.char_fan_active.set_value(
             int(
-                new_state.state not in (HVACMode.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN)
+                new_state.state not in CLIMATE_INACTIVE_STATES
                 and fan_mode_lower != FAN_OFF
             )
         )

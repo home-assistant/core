@@ -24,17 +24,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import State, callback
 from homeassistant.util.enum import try_parse_enum
 
 from .accessories import TYPES
-from .climate_base import HomeKitClimateAccessory
+from .climate_base import CLIMATE_INACTIVE_STATES, HomeKitClimateAccessory
 from .climate_util import temperature_attribute_to_homekit
 from .const import (
     CHAR_ACTIVE,
@@ -135,20 +130,17 @@ class HeaterCooler(HomeKitClimateAccessory):
             HVACMode.HEAT_COOL in hvac_modes or current_mode == HVACMode.HEAT_COOL
         )
 
+        can_cool = HVACMode.COOL in hvac_modes or supports_auto or supports_heat_cool
+        can_heat = HVACMode.HEAT in hvac_modes or supports_auto or supports_heat_cool
+
         # Standalone pairings advertise the category in the QR code and mDNS
         # metadata, so pick the one matching the device instead of Thermostat.
-        self.category = (
-            CATEGORY_AIR_CONDITIONER
-            if HVACMode.COOL in hvac_modes or supports_auto or supports_heat_cool
-            else CATEGORY_HEATER
-        )
+        self.category = CATEGORY_AIR_CONDITIONER if can_cool else CATEGORY_HEATER
 
         # Per the HomeKit spec a heater must include the heating threshold and a
         # cooler the cooling one, so a one sided device gets a single slider. A
         # device with neither side (e.g. dry only with a setpoint) keeps both so
         # the setpoint stays controllable.
-        can_cool = HVACMode.COOL in hvac_modes or supports_auto or supports_heat_cool
-        can_heat = HVACMode.HEAT in hvac_modes or supports_auto or supports_heat_cool
         if not can_cool and not can_heat:
             can_cool = can_heat = True
         self._has_cool_threshold = has_thresholds and can_cool
@@ -347,8 +339,7 @@ class HeaterCooler(HomeKitClimateAccessory):
                 )
                 # The write already flipped the characteristic; flip it
                 # back so HomeKit keeps showing the unit as on.
-                self.char_active.value = 1
-                self.char_active.notify()
+                self._reject_char_write(self.char_active, 1)
         elif target_mode is not None:
             if hass_mode := self._hk_to_ha_target.get(target_mode):
                 service_calls.append(
@@ -358,12 +349,11 @@ class HeaterCooler(HomeKitClimateAccessory):
             elif (restore := self._hk_target_mode(self._last_known_mode)) is not None:
                 # The write already changed the characteristic to a target
                 # the entity cannot enter, so put it back on the last mode.
-                self.char_target_state.value = restore
-                self.char_target_state.notify()
+                self._reject_char_write(self.char_target_state, restore)
         elif active == 1:
-            currently_active = current_state is not None and (
-                current_state.state
-                not in (HVACMode.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN)
+            currently_active = (
+                current_state is not None
+                and current_state.state not in CLIMATE_INACTIVE_STATES
             )
             if not currently_active:
                 service_calls.append(
@@ -488,7 +478,7 @@ class HeaterCooler(HomeKitClimateAccessory):
             self._last_known_mode = current_mode
             self.char_target_state.set_value(tgt)
 
-        if new_state.state in (HVACMode.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN):
+        if new_state.state in CLIMATE_INACTIVE_STATES:
             # An off or unavailable entity is inactive, not idle.
             self.char_active.set_value(0)
             self.char_current_state.set_value(HC_INACTIVE)

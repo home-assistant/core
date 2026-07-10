@@ -984,6 +984,9 @@ class HomeKit:
             # need to make sure its persisted to disk.
             async with self.hass.data[PERSIST_LOCK_DATA]:
                 await self.hass.async_add_executor_job(self.driver.persist)
+        # The pairing state is persisted now, so later reloads treat the
+        # entry as existing.
+        self._first_ever_start = False
         self.status = STATUS_RUNNING
 
         if self.driver.state.paired:
