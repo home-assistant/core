@@ -6,6 +6,7 @@ These APIs are the only documented way to interact with the bluetooth integratio
 import asyncio
 from asyncio import Future
 from collections.abc import Callable, Iterable
+from contextlib import ExitStack
 from typing import TYPE_CHECKING, cast
 
 from bleak import BleakScanner
@@ -178,15 +179,20 @@ async def async_process_advertisements(
         if not done.done() and callback(service_info):
             done.set_result(service_info)
 
-    unload = _get_manager(hass).async_register_callback(
-        _async_discovered_device, match_dict, mode, scan_duration=timeout
-    )
+    manager = _get_manager(hass)
 
-    try:
+    with ExitStack() as stack:
+        unload = manager.async_register_callback(
+            _async_discovered_device, match_dict, mode
+        )
+        stack.callback(unload)
+
+        if mode is BluetoothScanningMode.ACTIVE:
+            task = hass.async_create_task(manager.async_request_active_scan(timeout))
+            stack.callback(task.cancel)
+
         async with asyncio.timeout(timeout):
             return await done
-    finally:
-        unload()
 
 
 @hass_callback

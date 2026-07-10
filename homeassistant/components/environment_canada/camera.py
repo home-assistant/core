@@ -1,5 +1,7 @@
 """Support for the Environment Canada radar imagery."""
 
+from typing import override
+
 from env_canada import ECMap
 import voluptuous as vol
 
@@ -64,6 +66,7 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECMap]], Camera):
 
         self.content_type = "image/gif"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -72,6 +75,7 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECMap]], Camera):
         if not self.coordinator.last_update_success:
             await self.coordinator.async_request_refresh()
 
+    @override
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:

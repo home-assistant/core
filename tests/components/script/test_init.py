@@ -7,7 +7,7 @@ from unittest.mock import ANY, Mock, patch
 
 import pytest
 
-from homeassistant.components import labs, script
+from homeassistant.components import script
 from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED, ScriptEntity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -79,7 +79,7 @@ async def test_passing_variables(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {
@@ -148,7 +148,7 @@ async def test_turn_on_off_toggle(
         }
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {
@@ -203,7 +203,7 @@ async def test_setup_with_invalid_configs(
     hass: HomeAssistant, config, nbr_script_entities
 ) -> None:
     """Test setup with invalid configs."""
-    assert await async_setup_component(hass, "script", {"script": config})
+    assert await async_setup_component(hass, DOMAIN, {"script": config})
 
     assert len(hass.states.async_entity_ids(DOMAIN)) == nbr_script_entities
 
@@ -271,7 +271,7 @@ async def test_bad_config_validation_critical(
             "bad_script",
             {},
             "could not be validated",
-            "required key not provided @ data['sequence']",
+            "required key not provided @ data['sequence']. Got None",
             "validation_failed_schema",
         ),
         (
@@ -285,7 +285,22 @@ async def test_bad_config_validation_critical(
                 },
             },
             "failed to setup sequence",
-            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            ". Got {'alias': 'bad_script',",
+            "validation_failed_sequence",
+        ),
+        (
+            "bad_script",
+            {
+                "sequence": {
+                    "wait_for_trigger": [
+                        {"platform": "event", "event_type": "valid"},
+                        {"platform": "not_a_platform"},
+                    ],
+                },
+            },
+            "failed to setup sequence",
+            "Invalid trigger 'not_a_platform' specified. Got {'alias': 'bad_script',",
             "validation_failed_sequence",
         ),
     ],
@@ -385,7 +400,7 @@ async def test_reload_service(hass: HomeAssistant, running) -> None:
 
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {
@@ -561,7 +576,7 @@ async def test_service_descriptions(hass: HomeAssistant) -> None:
     # Test 1: has "description" but no "fields"
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {
@@ -640,7 +655,7 @@ async def test_shared_context(hass: HomeAssistant) -> None:
     hass.bus.async_listen(EVENT_SCRIPT_STARTED, run_mock)
 
     assert await async_setup_component(
-        hass, "script", {"script": {"test": {"sequence": [{"event": event}]}}}
+        hass, DOMAIN, {"script": {"test": {"sequence": [{"event": event}]}}}
     )
 
     await hass.services.async_call(
@@ -673,7 +688,7 @@ async def test_logging_script_error(
     """Test logging script error."""
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {"script": {"hello": {"sequence": [{"action": "non.existing"}]}}},
     )
     with pytest.raises(ServiceNotFound) as err:
@@ -686,7 +701,7 @@ async def test_logging_script_error(
 
 async def test_turning_no_scripts_off(hass: HomeAssistant) -> None:
     """Test it is possible to turn two scripts off."""
-    assert await async_setup_component(hass, "script", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # Testing it doesn't raise
     await hass.services.async_call(
@@ -904,6 +919,7 @@ async def test_extraction_functions(
         "script.test3",
     }
     assert set(script.entities_in_script(hass, "script.test1")) == {
+        "light.device_in_both",
         "light.in_both",
         "light.in_first",
     }
@@ -948,7 +964,7 @@ async def test_config_basic(
     """Test passing info in config."""
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test_script": {
@@ -973,7 +989,7 @@ async def test_config_multiple_domains(hass: HomeAssistant) -> None:
     """Test splitting configuration over multiple domains."""
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "first_script": {
@@ -1043,7 +1059,7 @@ async def test_concurrent_script(hass: HomeAssistant, concurrently) -> None:
         call_script_2 = {"action": "script.script2"}
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "script1": {
@@ -1127,7 +1143,7 @@ async def test_script_variables(
     """Test defining scripts."""
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "script1": {
@@ -1229,7 +1245,7 @@ async def test_script_this_var_always(
 
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "script1": {
@@ -1269,7 +1285,7 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "no_last_triggered": {
@@ -1314,7 +1330,7 @@ async def test_recursive_script(
 
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "script1": {
@@ -1364,7 +1380,7 @@ async def test_recursive_script_indirect(
 
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "script1": {
@@ -1503,7 +1519,7 @@ async def test_setup_with_duplicate_scripts(
     """Test setup with duplicate configs."""
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script one": {
                 "duplicate": {
@@ -1531,7 +1547,7 @@ async def test_websocket_config(
     }
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "hello": config,
@@ -1586,7 +1602,7 @@ async def test_script_service_changed_entity_id(
     # Make sure the service of a script with overridden entity_id works
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {
@@ -1769,7 +1785,7 @@ async def test_responses(hass: HomeAssistant, response: Any) -> None:
     mock_restore_cache(hass, ())
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {
@@ -1804,7 +1820,7 @@ async def test_responses_no_response(hass: HomeAssistant) -> None:
     mock_restore_cache(hass, ())
     assert await async_setup_component(
         hass,
-        "script",
+        DOMAIN,
         {
             "script": {
                 "test": {
@@ -1876,67 +1892,6 @@ async def test_script_queued_mode(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(DOMAIN, "test_main", blocking=True)
     assert calls == 4
-
-
-async def test_reload_when_labs_flag_changes(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test scripts are reloaded when labs flag changes."""
-    event = "test_event"
-    hass.states.async_set("test.script", "off")
-
-    ws_client = await hass_ws_client(hass)
-
-    assert await async_setup_component(
-        hass,
-        "script",
-        {
-            "script": {
-                "test": {
-                    "sequence": [
-                        {"event": event},
-                        {"wait_template": "{{ is_state('test.script', 'on') }}"},
-                    ]
-                }
-            }
-        },
-    )
-    assert await async_setup_component(hass, labs.DOMAIN, {})
-
-    assert hass.states.get(ENTITY_ID) is not None
-    assert hass.services.has_service(script.DOMAIN, "test")
-
-    for enabled, active_object_id, inactive_object_ids in (
-        (False, "test2", ("test",)),
-        (True, "test3", ("test", "test2")),
-    ):
-        with patch(
-            "homeassistant.config.load_yaml_config_file",
-            return_value={
-                "script": {active_object_id: {"sequence": [{"delay": {"seconds": 5}}]}}
-            },
-        ):
-            await ws_client.send_json_auto_id(
-                {
-                    "type": "labs/update",
-                    "domain": "automation",
-                    "preview_feature": "new_triggers_conditions",
-                    "enabled": enabled,
-                }
-            )
-
-            msg = await ws_client.receive_json()
-            assert msg["success"]
-            await hass.async_block_till_done()
-
-        for inactive_object_id in inactive_object_ids:
-            state = hass.states.get(f"script.{inactive_object_id}")
-            assert state.attributes["restored"] is True
-            assert not hass.services.has_service(script.DOMAIN, inactive_object_id)
-
-        assert hass.states.get(f"script.{active_object_id}") is not None
-        assert hass.services.has_service(script.DOMAIN, active_object_id)
 
 
 async def test_remove_script_entity_unloads_script(hass: HomeAssistant) -> None:

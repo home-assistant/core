@@ -1,6 +1,6 @@
 """Support for LiteJet switch."""
 
-from typing import Any
+from typing import Any, override
 
 from pylitejet import LiteJet, LiteJetError
 
@@ -58,12 +58,14 @@ class LiteJetSwitch(SwitchEntity):
             via_device=(DOMAIN, f"{entry_id}_mcp"),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         self._lj.on_switch_pressed(self._index, self._on_switch_pressed)
         self._lj.on_switch_released(self._index, self._on_switch_released)
         self._lj.on_connected_changed(self._on_connected_changed)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         self._lj.unsubscribe(self._on_switch_pressed)
@@ -83,10 +85,12 @@ class LiteJetSwitch(SwitchEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device-specific state attributes."""
         return {ATTR_NUMBER: self._index}
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Press the switch."""
         try:
@@ -94,6 +98,7 @@ class LiteJetSwitch(SwitchEntity):
         except LiteJetError as exc:
             raise HomeAssistantError from exc
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Release the switch."""
         try:

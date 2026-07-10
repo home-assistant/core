@@ -1,7 +1,7 @@
 """Config flow for Azure Data Explorer integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from azure.kusto.data.exceptions import KustoAuthenticationError, KustoServiceError
 import voluptuous as vol
@@ -61,6 +61,7 @@ class ADXConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

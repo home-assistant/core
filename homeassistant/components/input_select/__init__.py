@@ -1,7 +1,7 @@
 """Support to select an option from a list."""
 
 import logging
-from typing import Any, Self, cast
+from typing import Any, Self, cast, override
 
 import voluptuous as vol
 
@@ -15,12 +15,14 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
     SelectEntity,
+    SelectEntityCapabilityAttribute,
 )
-from homeassistant.const import (
+from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
+    CONF_OPTIONS,
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -32,13 +34,13 @@ import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
+from .const import InputSelectEntityStateAttribute
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "input_select"
 
 CONF_INITIAL = "initial"
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_OPTIONS = "options"
 
 SERVICE_SET_OPTIONS = "set_options"
 STORAGE_KEY = DOMAIN
@@ -116,6 +118,7 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 class InputSelectStore(Store):
     """Store entity registry data."""
 
+    @override
     async def _async_migrate_func(
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
     ) -> dict[str, Any]:
@@ -225,15 +228,18 @@ class InputSelectStorageCollection(collection.DictStorageCollection):
 
     CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_select))
 
+    @override
     async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the config is valid."""
         return cast(dict[str, Any], self.CREATE_UPDATE_SCHEMA(data))
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict[str, Any]) -> str:
         """Suggest an ID based on the config."""
         return cast(str, info[CONF_NAME])
 
+    @override
     async def _update_data(
         self, item: dict[str, Any], update_data: dict[str, Any]
     ) -> dict[str, Any]:
@@ -247,9 +253,10 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
     """Representation of a select input."""
 
     _entity_component_unrecorded_attributes = (
-        SelectEntity._entity_component_unrecorded_attributes - {ATTR_OPTIONS}  # noqa: SLF001
+        SelectEntity._entity_component_unrecorded_attributes  # noqa: SLF001
+        - {SelectEntityCapabilityAttribute.OPTIONS}
     )
-    _unrecorded_attributes = frozenset({ATTR_EDITABLE})
+    _unrecorded_attributes = frozenset({InputSelectEntityStateAttribute.EDITABLE})
 
     _attr_should_poll = False
     editable: bool
@@ -263,6 +270,7 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
         self._attr_unique_id = config[CONF_ID]
 
     @classmethod
+    @override
     def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         input_select = cls(config)
@@ -270,6 +278,7 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
         return input_select
 
     @classmethod
+    @override
     def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         input_select = cls(config)
@@ -277,6 +286,7 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
         input_select.editable = False
         return input_select
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
@@ -290,10 +300,12 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
             self._attr_current_option = state.state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the state attributes."""
-        return {ATTR_EDITABLE: self.editable}
+        return {InputSelectEntityStateAttribute.EDITABLE: self.editable}
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select new option."""
         if option not in self.options:
@@ -322,6 +334,7 @@ class InputSelect(collection.CollectionEntity, SelectEntity, RestoreEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._attr_icon = config.get(CONF_ICON)

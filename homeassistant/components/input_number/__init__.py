@@ -2,11 +2,12 @@
 
 from contextlib import suppress
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import voluptuous as vol
 
-from homeassistant.const import (
+from homeassistant.components.number import NumberEntity
+from homeassistant.const import (  # noqa: F401
     ATTR_EDITABLE,
     ATTR_MODE,
     CONF_ICON,
@@ -149,7 +150,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_VALUE,
         {vol.Required(ATTR_VALUE): vol.Coerce(float)},
-        "async_set_value",
+        "async_set_native_value",
     )
 
     component.async_register_entity_service(SERVICE_INCREMENT, None, "async_increment")
@@ -164,15 +165,18 @@ class NumberStorageCollection(collection.DictStorageCollection):
 
     SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_number))
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         return self.SCHEMA(data)
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
+    @override
     async def _async_load_data(self) -> collection.SerializedStorageCollection | None:
         """Load the data.
 
@@ -189,28 +193,41 @@ class NumberStorageCollection(collection.DictStorageCollection):
 
         return data
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.SCHEMA(update_data)
         return {CONF_ID: item[CONF_ID]} | update_data
 
 
-class InputNumber(collection.CollectionEntity, RestoreEntity):
+# pylint: disable-next=home-assistant-enforce-class-module
+class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
     """Representation of a slider."""
 
-    _unrecorded_attributes = frozenset(
-        {ATTR_EDITABLE, ATTR_MAX, ATTR_MIN, ATTR_MODE, ATTR_STEP}
-    )
+    _unrecorded_attributes = frozenset({ATTR_EDITABLE})
 
     _attr_should_poll = False
     editable: bool
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize an input number."""
-        self._config = config
-        self._current_value: float | None = config.get(CONF_INITIAL)
+        self._initial_value: float | None = config.get(CONF_INITIAL)
+        self._attr_native_value = self._initial_value
+        self._update_config_attributes(config)
+
+    def _update_config_attributes(self, config: ConfigType) -> None:
+        """Update attributes based on the config."""
+        self._attr_icon = config.get(CONF_ICON)
+        self._attr_mode = config[CONF_MODE]
+        self._attr_name = config.get(CONF_NAME)
+        self._attr_native_min_value = config[CONF_MIN]
+        self._attr_native_max_value = config[CONF_MAX]
+        self._attr_native_step = config[CONF_STEP]
+        self._attr_unique_id = config[CONF_ID]
+        self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @classmethod
+    @override
     def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         input_num = cls(config)
@@ -218,6 +235,7 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         return input_num
 
     @classmethod
+    @override
     def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         input_num = cls(config)
@@ -226,61 +244,19 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         return input_num
 
     @property
-    def _minimum(self) -> float:
-        """Return minimum allowed value."""
-        return self._config[CONF_MIN]
-
-    @property
-    def _maximum(self) -> float:
-        """Return maximum allowed value."""
-        return self._config[CONF_MAX]
-
-    @property
-    def name(self):
-        """Return the name of the input slider."""
-        return self._config.get(CONF_NAME)
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon to be used for this entity."""
-        return self._config.get(CONF_ICON)
-
-    @property
-    def state(self):
-        """Return the state of the component."""
-        return self._current_value
-
-    @property
-    def _step(self) -> int:
-        """Return entity's increment/decrement step."""
-        return self._config[CONF_STEP]
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return unique id of the entity."""
-        return self._config[CONF_ID]
-
-    @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
-            ATTR_INITIAL: self._config.get(CONF_INITIAL),
+            ATTR_INITIAL: self._initial_value,
             ATTR_EDITABLE: self.editable,
-            ATTR_MIN: self._minimum,
-            ATTR_MAX: self._maximum,
-            ATTR_STEP: self._step,
-            ATTR_MODE: self._config[CONF_MODE],
         }
 
+    @override
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        if self._current_value is not None:
+        if self._attr_native_value is not None:
             return
 
         value: float | None = None
@@ -289,38 +265,47 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
                 value = float(state.state)
 
         # Check against None because value can be 0
-        if value is not None and self._minimum <= value <= self._maximum:
-            self._current_value = value
+        if (
+            value is not None
+            and self.native_min_value <= value <= self.native_max_value
+        ):
+            self._attr_native_value = value
         else:
-            self._current_value = self._minimum
+            self._attr_native_value = self.native_min_value
 
-    async def async_set_value(self, value):
+    @override
+    async def async_set_native_value(self, value):
         """Set new value."""
         num_value = float(value)
 
-        if num_value < self._minimum or num_value > self._maximum:
+        if num_value < self.native_min_value or num_value > self.native_max_value:
             raise vol.Invalid(
-                f"Invalid value for {self.entity_id}: {value} (range {self._minimum} -"
-                f" {self._maximum})"
+                f"Invalid value for {self.entity_id}: {value} (range "
+                f"{self.native_min_value} - {self.native_max_value})"
             )
 
-        self._current_value = num_value
+        self._attr_native_value = num_value
         self.async_write_ha_state()
 
     async def async_increment(self):
         """Increment value."""
-        await self.async_set_value(min(self._current_value + self._step, self._maximum))
+        await self.async_set_native_value(
+            min(self._attr_native_value + self.native_step, self.native_max_value)
+        )
 
     async def async_decrement(self):
         """Decrement value."""
-        await self.async_set_value(max(self._current_value - self._step, self._minimum))
+        await self.async_set_native_value(
+            max(self._attr_native_value - self.native_step, self.native_min_value)
+        )
 
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
-        self._config = config
+        self._update_config_attributes(config)
         # just in case min/max values changed
-        if self._current_value is None:
+        if self._attr_native_value is None:
             return
-        self._current_value = min(self._current_value, self._maximum)
-        self._current_value = max(self._current_value, self._minimum)
+        self._attr_native_value = min(self._attr_native_value, self.native_max_value)
+        self._attr_native_value = max(self._attr_native_value, self.native_min_value)
         self.async_write_ha_state()

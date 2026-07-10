@@ -5,6 +5,7 @@ from enum import StrEnum
 import logging
 from typing import Final
 
+from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
 from homeassistant.util.signal_type import SignalType
 
 LOGGER: Final = logging.getLogger(__package__)
@@ -35,6 +36,42 @@ class TrackingType(StrEnum):
 
     CONNECTION = "connection"
     POSITION = "position"
+
+
+class DeviceTrackerEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for device tracker entities."""
+
+    TRACKING_TYPE = "tracking_type"
+
+
+class DeviceTrackerEntityStateAttribute(StrEnum):
+    """State attributes common to device tracker entities."""
+
+    SOURCE_TYPE = "source_type"
+    IN_ZONES = "in_zones"
+
+
+class TrackerEntityStateAttribute(
+    StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "LATITUDE": ("EntityStateAttribute.LATITUDE", "2027.2.0"),
+        "LONGITUDE": ("EntityStateAttribute.LONGITUDE", "2027.2.0"),
+    },
+):
+    """State attributes set by TrackerEntity."""
+
+    LATITUDE = "latitude"  # Deprecated, replaced with EntityStateAttribute.LATITUDE
+    LONGITUDE = "longitude"  # Deprecated, replaced with EntityStateAttribute.LONGITUDE
+    GPS_ACCURACY = "gps_accuracy"
+
+
+class ScannerEntityStateAttribute(StrEnum):
+    """State attributes set by ScannerEntity."""
+
+    IP = "ip"
+    MAC = "mac"
+    HOST_NAME = "host_name"
 
 
 CONF_SCAN_INTERVAL: Final = "interval_seconds"

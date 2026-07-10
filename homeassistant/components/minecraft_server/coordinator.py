@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_TYPE
@@ -46,6 +47,7 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the Minecraft Server data coordinator."""
 
@@ -62,6 +64,7 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
         except MinecraftServerAddressError as error:
             raise ConfigEntryNotReady(f"Initialization failed: {error}") from error
 
+    @override
     async def _async_update_data(self) -> MinecraftServerData:
         """Get updated data from the server."""
         try:

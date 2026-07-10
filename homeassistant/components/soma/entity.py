@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 import logging
-from typing import Any
+from typing import Any, override
 
 from requests import RequestException
 
@@ -69,16 +69,19 @@ class SomaEntity(Entity):
         self.api_is_available = True
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if the last API commands returned successfully."""
         return self.is_available
 
     @property
+    @override
     def unique_id(self):
         """Return the unique id base on the id returned by pysoma API."""
         return self.device["mac"]
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes.
 

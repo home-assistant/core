@@ -1,6 +1,6 @@
 """Data update coordinator for AirPatrol."""
 
-from typing import Any
+from typing import Any, override
 
 from airpatrol.api import AirPatrolAPI, AirPatrolAuthenticationError, AirPatrolError
 
@@ -33,6 +33,7 @@ class AirPatrolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, A
             config_entry=config_entry,
         )
 
+    @override
     async def _async_setup(self) -> None:
         try:
             await self._setup_client()
@@ -41,6 +42,7 @@ class AirPatrolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, A
                 f"Error communicating with AirPatrol API: {api_err}"
             ) from api_err
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Update unit data from AirPatrol API."""
         return {unit_data["unit_id"]: unit_data for unit_data in await self._get_data()}
