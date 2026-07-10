@@ -1,9 +1,7 @@
 """Provides a sensor to track various status aspects of a NUT device."""
 
-from __future__ import annotations
-
 import logging
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,8 +23,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NutConfigEntry
 from .const import KEY_STATUS, KEY_STATUS_DISPLAY, STATE_TYPES
+from .coordinator import NutConfigEntry
 from .entity import NUTBaseEntity
 
 # Coordinator is used to centralize the data updates
@@ -1138,6 +1136,7 @@ class NUTSensor(NUTBaseEntity, SensorEntity):
     """Representation of a sensor entity for NUT status values."""
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return entity state from NUT device."""
         status = self.coordinator.data

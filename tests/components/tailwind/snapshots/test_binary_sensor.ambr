@@ -2,8 +2,8 @@
 # name: test_number_entities[binary_sensor.door_1_operational_problem]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Door 1 Operational problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door 1 Operational problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.door_1_operational_problem',
@@ -15,8 +15,9 @@
 # ---
 # name: test_number_entities[binary_sensor.door_1_operational_problem].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -83,8 +84,8 @@
 # name: test_number_entities[binary_sensor.door_2_operational_problem]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Door 2 Operational problem',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Door 2 Operational problem',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.door_2_operational_problem',
@@ -96,8 +97,9 @@
 # ---
 # name: test_number_entities[binary_sensor.door_2_operational_problem].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

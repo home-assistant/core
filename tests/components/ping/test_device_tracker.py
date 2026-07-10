@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 @pytest.fixture
 def entity_registry_enabled_by_default() -> Generator[None]:
-    """Test fixture that ensures ping device_tracker entities are enabled in the registry."""
+    """Ensure ping device_tracker entities are enabled in the registry."""
     with patch(
         "homeassistant.components.ping.device_tracker.PingDeviceTracker.entity_registry_enabled_default",
         return_value=True,
@@ -38,7 +38,8 @@ async def test_setup_and_update(
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
-    # Verify that the device_tracker and binary_sensor entities are linked to the same device
+    # Verify that the device_tracker and binary_sensor entities are
+    # linked to the same device
     binary_sensor = entity_registry.async_get("binary_sensor.10_10_10_10")
     assert entry.device_id == binary_sensor.device_id
 

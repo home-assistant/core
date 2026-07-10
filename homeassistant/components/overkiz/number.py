@@ -1,11 +1,9 @@
 """Support for Overkiz (virtual) numbers."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
-from typing import cast
+from dataclasses import dataclass, replace
+from typing import cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -21,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import OverkizDataConfigEntry
 from .const import IGNORED_OVERKIZ_DEVICES
 from .coordinator import OverkizDataUpdateCoordinator
+from .cover import SUPPORTED_DEVICES as SUPPORTED_COVER_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 BOOST_MODE_DURATION_DELAY = 1
@@ -208,15 +207,28 @@ async def async_setup_entry(
         ):
             continue
 
-        entities.extend(
-            OverkizNumber(
-                device.device_url,
-                data.coordinator,
-                description,
+        for state in device.definition.states:
+            if not (description := SUPPORTED_STATES.get(state)):
+                continue
+
+            # Mirror the cover's position inversion.
+            if description.key == OverkizState.CORE_MEMORIZED_1_POSITION and (
+                cover_description := (
+                    SUPPORTED_COVER_DEVICES.get(device.widget)
+                    or SUPPORTED_COVER_DEVICES.get(device.ui_class)
+                )
+            ):
+                description = replace(
+                    description, inverted=cover_description.invert_position
+                )
+
+            entities.append(
+                OverkizNumber(
+                    device.device_url,
+                    data.coordinator,
+                    description,
+                )
             )
-            for state in device.definition.states
-            if (description := SUPPORTED_STATES.get(state.qualified_name))
-        )
 
     async_add_entities(entities)
 
@@ -250,6 +262,7 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
             self._attr_native_max_value = cast(float, state.value)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         if state := self.device.states.get(self.entity_description.key):
@@ -260,6 +273,7 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
 
         return None
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if self.entity_description.inverted:

@@ -1,10 +1,8 @@
 """Support for interface with an Aquos TV."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 import sharp_aquos_rc
 import voluptuous as vol
@@ -117,6 +115,7 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.PLAY
     )
+    _attr_volume_step = 2 / 60
 
     def __init__(
         self, name: str, remote: sharp_aquos_rc.TV, power_on_enabled: bool = False
@@ -157,37 +156,25 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         self._attr_volume_level = self._remote.volume() / 60
 
     @_retry
+    @override
     def turn_off(self) -> None:
         """Turn off tvplayer."""
         self._remote.power(0)
 
     @_retry
-    def volume_up(self) -> None:
-        """Volume up the media player."""
-        if self.volume_level is None:
-            _LOGGER.debug("Unknown volume in volume_up")
-            return
-        self._remote.volume(int(self.volume_level * 60) + 2)
-
-    @_retry
-    def volume_down(self) -> None:
-        """Volume down media player."""
-        if self.volume_level is None:
-            _LOGGER.debug("Unknown volume in volume_down")
-            return
-        self._remote.volume(int(self.volume_level * 60) - 2)
-
-    @_retry
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set Volume media player."""
         self._remote.volume(int(volume * 60))
 
     @_retry
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         self._remote.mute(0)
 
     @_retry
+    @override
     def turn_on(self) -> None:
         """Turn the media player on."""
         self._remote.power(1)
@@ -198,25 +185,30 @@ class SharpAquosTVDevice(MediaPlayerEntity):
         self._remote.remote_button(40)
 
     @_retry
+    @override
     def media_play(self) -> None:
         """Send play command."""
         self._remote.remote_button(16)
 
     @_retry
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         self._remote.remote_button(16)
 
     @_retry
+    @override
     def media_next_track(self) -> None:
         """Send next track command."""
         self._remote.remote_button(21)
 
     @_retry
+    @override
     def media_previous_track(self) -> None:
         """Send the previous track command."""
         self._remote.remote_button(19)
 
+    @override
     def select_source(self, source: str) -> None:
         """Set the input source."""
         for key, value in SOURCES.items():

@@ -1,9 +1,7 @@
 """Support for EZVIZ Switch sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyezvizapi.constants import DeviceSwitchType, SupportExt
 from pyezvizapi.exceptions import HTTPError, PyEzvizError
@@ -138,6 +136,7 @@ class EzvizSwitch(EzvizEntity, SwitchEntity):
         self.entity_description = SWITCH_TYPES[switch_number]
         self._attr_is_on = self.data["switches"][switch_number]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Change a device switch on the camera."""
         try:
@@ -153,6 +152,7 @@ class EzvizSwitch(EzvizEntity, SwitchEntity):
         except (HTTPError, PyEzvizError) as err:
             raise HomeAssistantError(f"Failed to turn on switch {self.name}") from err
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Change a device switch on the camera."""
         try:
@@ -169,6 +169,7 @@ class EzvizSwitch(EzvizEntity, SwitchEntity):
             raise HomeAssistantError(f"Failed to turn off switch {self.name}") from err
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_is_on = self.data["switches"].get(self._switch_number)

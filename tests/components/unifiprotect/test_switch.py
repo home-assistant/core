@@ -1,11 +1,18 @@
 """Test the UniFi Protect switch platform."""
 
-from __future__ import annotations
-
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, call
 
 import pytest
-from uiprotect.data import Camera, Light, Permission, RecordingMode, VideoMode
+from uiprotect.data import (
+    Camera,
+    Light,
+    Permission,
+    PublicHdrMode,
+    RecordingMode,
+    SmartDetectAudioType,
+    SmartDetectObjectType,
+    VideoMode,
+)
 from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
@@ -365,7 +372,7 @@ async def test_switch_camera_highfps(
     )
 
     with patch_ufp_method(
-        doorbell, "set_video_mode", new_callable=AsyncMock
+        doorbell, "set_video_mode_public", new_callable=AsyncMock
     ) as mock_method:
         await hass.services.async_call(
             "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -378,6 +385,102 @@ async def test_switch_camera_highfps(
         )
 
         mock_method.assert_called_with(VideoMode.DEFAULT)
+
+
+CAMERA_SWITCHES_DETECTIONS_EXTRA = [
+    d
+    for d in CAMERA_SWITCHES
+    if d.translation_key.startswith("detections_")
+    and d.key
+    not in {
+        "detections_motion",
+        "detections_person",
+        "detections_vehicle",
+        "detections_animal",
+    }
+]
+
+
+async def test_switch_camera_hdr(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """Tests HDR mode switch uses the public API helper."""
+
+    await init_entry(hass, ufp, [doorbell])
+    assert_entity_counts(hass, Platform.SWITCH, 17, 15)
+
+    description = next(d for d in CAMERA_SWITCHES if d.key == "hdr_mode")
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, doorbell, description
+    )
+    await enable_entity(hass, ufp.entry.entry_id, entity_id)
+
+    with patch_ufp_method(
+        doorbell, "set_hdr_mode_public", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+        mock_method.assert_has_calls(
+            [call(PublicHdrMode.AUTO), call(PublicHdrMode.OFF)]
+        )
+        assert mock_method.call_count == 2
+
+
+@pytest.mark.parametrize("description", CAMERA_SWITCHES_DETECTIONS_EXTRA)
+async def test_switch_camera_detections_public_api(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    description: ProtectSwitchEntityDescription,
+) -> None:
+    """Tests detection switches call the public API setters."""
+
+    doorbell.feature_flags.smart_detect_types = [
+        SmartDetectObjectType.PERSON,
+        SmartDetectObjectType.VEHICLE,
+        SmartDetectObjectType.ANIMAL,
+        SmartDetectObjectType.PACKAGE,
+        SmartDetectObjectType.LICENSE_PLATE,
+    ]
+    doorbell.feature_flags.smart_detect_audio_types = [
+        SmartDetectAudioType.SMOKE,
+        SmartDetectAudioType.CMONX,
+        SmartDetectAudioType.SIREN,
+        SmartDetectAudioType.BABY_CRY,
+        SmartDetectAudioType.SPEAK,
+        SmartDetectAudioType.BARK,
+        SmartDetectAudioType.BURGLAR,
+        SmartDetectAudioType.CAR_HORN,
+        SmartDetectAudioType.GLASS_BREAK,
+    ]
+
+    await init_entry(hass, ufp, [doorbell])
+
+    assert description.ufp_set_method is not None
+    assert description.ufp_set_method.endswith("_public")
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, doorbell, description
+    )
+
+    with patch_ufp_method(
+        doorbell, description.ufp_set_method, new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+        mock_method.assert_has_calls([call(True), call(False)])
+        assert mock_method.call_count == 2
 
 
 async def test_switch_camera_privacy(

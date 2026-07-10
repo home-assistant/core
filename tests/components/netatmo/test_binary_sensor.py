@@ -59,7 +59,7 @@ async def test_doortag_setup(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
         patch(
-            "homeassistant.components.netatmo.data_handler.PLATFORMS",
+            "homeassistant.components.netatmo.coordinator.PLATFORMS",
             ["camera", "binary_sensor"],
         ),
         patch(
@@ -67,7 +67,7 @@ async def test_doortag_setup(
             return_value=AsyncMock(),
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post
@@ -171,7 +171,7 @@ async def test_doortag_opening_status_change(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
         patch(
-            "homeassistant.components.netatmo.data_handler.PLATFORMS",
+            "homeassistant.components.netatmo.coordinator.PLATFORMS",
             ["camera", "binary_sensor"],
         ),
         patch(
@@ -179,7 +179,7 @@ async def test_doortag_opening_status_change(
             return_value=AsyncMock(),
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_tag_post
@@ -215,10 +215,7 @@ async def test_doortag_opening_status_change(
     for _ in range(11):
         freezer.tick(timedelta(seconds=30))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     # Change mocked status
     doortag_entity_id = "12:34:56:00:86:99"
@@ -231,10 +228,7 @@ async def test_doortag_opening_status_change(
     for _ in range(11):
         freezer.tick(timedelta(seconds=30))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     # Check connectivity mocked state
     assert hass.states.get(_doortag_entity_connectivity).state == "on"
@@ -304,7 +298,7 @@ async def test_doortag_opening_category(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
         patch(
-            "homeassistant.components.netatmo.data_handler.PLATFORMS",
+            "homeassistant.components.netatmo.coordinator.PLATFORMS",
             ["camera", "binary_sensor"],
         ),
         patch(
@@ -312,7 +306,7 @@ async def test_doortag_opening_category(
             return_value=AsyncMock(),
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_tag_post

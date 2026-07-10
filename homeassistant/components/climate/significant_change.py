@@ -1,7 +1,5 @@
 """Helper to test significant Climate state changes."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.const import UnitOfTemperature
@@ -11,32 +9,20 @@ from homeassistant.helpers.significant_change import (
     check_valid_float,
 )
 
-from . import (
-    ATTR_CURRENT_HUMIDITY,
-    ATTR_CURRENT_TEMPERATURE,
-    ATTR_FAN_MODE,
-    ATTR_HUMIDITY,
-    ATTR_HVAC_ACTION,
-    ATTR_PRESET_MODE,
-    ATTR_SWING_HORIZONTAL_MODE,
-    ATTR_SWING_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE,
-)
+from . import ClimateEntityStateAttribute
 
 SIGNIFICANT_ATTRIBUTES: set[str] = {
-    ATTR_CURRENT_HUMIDITY,
-    ATTR_CURRENT_TEMPERATURE,
-    ATTR_FAN_MODE,
-    ATTR_HUMIDITY,
-    ATTR_HVAC_ACTION,
-    ATTR_PRESET_MODE,
-    ATTR_SWING_MODE,
-    ATTR_SWING_HORIZONTAL_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
-    ATTR_TEMPERATURE,
+    ClimateEntityStateAttribute.CURRENT_HUMIDITY,
+    ClimateEntityStateAttribute.CURRENT_TEMPERATURE,
+    ClimateEntityStateAttribute.FAN_MODE,
+    ClimateEntityStateAttribute.HUMIDITY,
+    ClimateEntityStateAttribute.HVAC_ACTION,
+    ClimateEntityStateAttribute.PRESET_MODE,
+    ClimateEntityStateAttribute.SWING_MODE,
+    ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE,
+    ClimateEntityStateAttribute.TARGET_TEMP_HIGH,
+    ClimateEntityStateAttribute.TARGET_TEMP_LOW,
+    ClimateEntityStateAttribute.TEMPERATURE,
 }
 
 
@@ -65,11 +51,11 @@ def async_check_significant_change(
 
     for attr_name in changed_attrs:
         if attr_name in [
-            ATTR_FAN_MODE,
-            ATTR_HVAC_ACTION,
-            ATTR_PRESET_MODE,
-            ATTR_SWING_MODE,
-            ATTR_SWING_HORIZONTAL_MODE,
+            ClimateEntityStateAttribute.FAN_MODE,
+            ClimateEntityStateAttribute.HVAC_ACTION,
+            ClimateEntityStateAttribute.PRESET_MODE,
+            ClimateEntityStateAttribute.SWING_MODE,
+            ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE,
         ]:
             return True
 
@@ -85,17 +71,20 @@ def async_check_significant_change(
 
         absolute_change: float | None = None
         if attr_name in [
-            ATTR_CURRENT_TEMPERATURE,
-            ATTR_TARGET_TEMP_HIGH,
-            ATTR_TARGET_TEMP_LOW,
-            ATTR_TEMPERATURE,
+            ClimateEntityStateAttribute.CURRENT_TEMPERATURE,
+            ClimateEntityStateAttribute.TARGET_TEMP_HIGH,
+            ClimateEntityStateAttribute.TARGET_TEMP_LOW,
+            ClimateEntityStateAttribute.TEMPERATURE,
         ]:
             if ha_unit == UnitOfTemperature.FAHRENHEIT:
                 absolute_change = 1.0
             else:
                 absolute_change = 0.5
 
-        if attr_name in [ATTR_CURRENT_HUMIDITY, ATTR_HUMIDITY]:
+        if attr_name in [
+            ClimateEntityStateAttribute.CURRENT_HUMIDITY,
+            ClimateEntityStateAttribute.HUMIDITY,
+        ]:
             absolute_change = 1.0
 
         if absolute_change and check_absolute_change(

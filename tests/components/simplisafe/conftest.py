@@ -1,6 +1,5 @@
 """Define test fixtures for SimpliSafe."""
 
-from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -87,7 +86,7 @@ def data_settings_fixture() -> JsonObjectType:
 def data_subscription_fixture() -> JsonObjectType:
     """Define subscription data."""
     data = load_json_object_fixture("subscription_data.json", "simplisafe")
-    return {SYSTEM_ID: data}
+    return {SYSTEM_ID: data}  # type: ignore[return-value]
 
 
 @pytest.fixture(name="reauth_config")
@@ -98,11 +97,9 @@ def reauth_config_fixture() -> dict[str, str]:
     }
 
 
-@pytest.fixture(name="setup_simplisafe")
-async def setup_simplisafe_fixture(
-    hass: HomeAssistant, api: Mock, config: dict[str, str]
-) -> AsyncGenerator[None]:
-    """Define a fixture to set up SimpliSafe."""
+@pytest.fixture(name="patch_simplisafe_api")
+def patch_simplisafe_api_fixture(api: Mock, websocket: Mock):
+    """Patch the SimpliSafe API creation methods."""
     with (
         patch(
             "homeassistant.components.simplisafe.config_flow.API.async_from_auth",
@@ -117,16 +114,20 @@ async def setup_simplisafe_fixture(
             return_value=api,
         ),
         patch(
-            "homeassistant.components.simplisafe.SimpliSafe._async_start_websocket_loop"
-        ),
-        patch(
-            "homeassistant.components.simplisafe.PLATFORMS",
-            [],
+            "homeassistant.components.simplisafe.SimpliSafe._async_start_websocket_if_needed",
         ),
     ):
-        assert await async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
+        api.websocket = websocket
         yield
+
+
+@pytest.fixture(name="setup_simplisafe")
+async def setup_simplisafe_fixture(
+    hass: HomeAssistant, api: Mock, config: dict[str, str], patch_simplisafe_api
+) -> None:
+    """Define a fixture to set up SimpliSafe for config flow tests."""
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture(name="sms_config")
@@ -150,6 +151,7 @@ def system_v3_fixture(
     system.sensor_data = data_sensor
     system.settings_data = data_settings
     system.generate_device_objects()
+    system.async_update = AsyncMock(return_value=None)
     return system
 
 

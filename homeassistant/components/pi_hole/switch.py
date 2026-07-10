@@ -1,9 +1,7 @@
 """Support for turning on and off Pi-hole system."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from hole.exceptions import HoleError
 import voluptuous as vol
@@ -14,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PiHoleConfigEntry
 from .const import SERVICE_DISABLE, SERVICE_DISABLE_ATTR_DURATION
+from .coordinator import PiHoleConfigEntry
 from .entity import PiHoleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,28 +56,34 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
     _attr_icon = "mdi:pi-hole"
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the switch."""
         return self._name
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique id of the switch."""
         return f"{self._server_unique_id}/Switch"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if the service is on."""
         return self.api.status == "enabled"  # type: ignore[no-any-return]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the service."""
         try:
             await self.api.enable()
             await self.async_update()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HoleError as err:
             _LOGGER.error("Unable to enable Pi-hole: %s", err)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the service."""
         await self.async_disable()
@@ -98,5 +102,6 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
         try:
             await self.api.disable(duration_seconds)
             await self.async_update()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HoleError as err:
             _LOGGER.error("Unable to disable Pi-hole: %s", err)

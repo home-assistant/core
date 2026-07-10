@@ -43,8 +43,8 @@ def mock_error(spa):
     error.title = "Flow Switch Stuck Open"
     error.description = None
     error.active = True
-    error.created_at = datetime.now()
-    error.updated_at = datetime.now()
+    error.created_at = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+    error.updated_at = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
     error.error_type = "TUB_ERROR"
     return error
 
@@ -109,7 +109,7 @@ async def test_reset_reminder(spa, setup_entry, hass: HomeAssistant) -> None:
 async def test_cover_sensor(hass: HomeAssistant, spa, setup_entry) -> None:
     """Test cover sensor."""
 
-    entity_id = f"binary_sensor.{spa.brand}_{spa.model}_cover_sensor_1"
+    entity_id = f"binary_sensor.{spa.brand}_{spa.model}_cover_sensor"
 
     state = hass.states.get(entity_id)
     assert state is not None

@@ -1,7 +1,5 @@
 """Diagnostics support for Enphase Envoy."""
 
-from __future__ import annotations
-
 import copy
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
@@ -11,7 +9,7 @@ from attr import asdict
 from pyenphase.envoy import Envoy
 from pyenphase.exceptions import EnvoyError
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import async_redact_data, entity_entry_as_dict
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -67,6 +65,14 @@ async def _get_fixture_collection(envoy: Envoy, serial: str) -> dict[str, Any]:
         "/ivp/meters/readings",
         "/ivp/pdm/device_data",
         "/home",
+        "/inventory.json?deleted=1",
+        "/admin/lib/acb_config",
+        "/ivp/sc/sched",
+        "/admin/lib/network_display",
+        "/admin/lib/wireless_display",
+        "/ivp/ensemble/relay",
+        "/ivp/livedata/status",
+        "/ivp/pdm/energy",
     ]
 
     for end_point in end_points:
@@ -111,8 +117,7 @@ async def async_get_config_entry_diagnostics(
             if state := hass.states.get(entity.entity_id):
                 state_dict = dict(state.as_dict())
                 state_dict.pop("context", None)
-            entity_dict = asdict(entity)
-            entity_dict.pop("_cache", None)
+            entity_dict = entity_entry_as_dict(entity)
             entities.append({"entity": entity_dict, "state": state_dict})
         device_dict = asdict(device)
         device_dict.pop("_cache", None)
@@ -137,16 +142,15 @@ async def async_get_config_entry_diagnostics(
         "encharge_power": envoy_data.encharge_power,
         "encharge_aggregate": envoy_data.encharge_aggregate,
         "enpower": envoy_data.enpower,
+        "acb_power": envoy_data.acb_power,
+        "acb_inventory": envoy_data.acb_inventory,
+        "battery_aggregate": envoy_data.battery_aggregate,
+        "collar": envoy_data.collar,
+        "c6cc": envoy_data.c6cc,
         "system_consumption": envoy_data.system_consumption,
         "system_production": envoy_data.system_production,
         "system_consumption_phases": envoy_data.system_consumption_phases,
         "system_production_phases": envoy_data.system_production_phases,
-        "ctmeter_production": envoy_data.ctmeter_production,
-        "ctmeter_consumption": envoy_data.ctmeter_consumption,
-        "ctmeter_storage": envoy_data.ctmeter_storage,
-        "ctmeter_production_phases": envoy_data.ctmeter_production_phases,
-        "ctmeter_consumption_phases": envoy_data.ctmeter_consumption_phases,
-        "ctmeter_storage_phases": envoy_data.ctmeter_storage_phases,
         "ctmeters": envoy_data.ctmeters,
         "ctmeters_phases": envoy_data.ctmeters_phases,
         "dry_contact_status": envoy_data.dry_contact_status,

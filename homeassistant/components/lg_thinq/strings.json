@@ -72,11 +72,15 @@
           "fan_mode": {
             "state": {
               "auto": "[%key:common::state::auto%]",
+              "breeze": "Light breeze",
               "high": "[%key:common::state::high%]",
               "low": "[%key:common::state::low%]",
+              "low_mid": "Low medium",
               "medium": "[%key:common::state::medium%]",
+              "mid_high": "Medium high",
               "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
-              "slow": "Slow"
+              "slow": "Slow",
+              "slow_low": "Super low"
             }
           },
           "preset_mode": {
@@ -197,6 +201,11 @@
             }
           }
         }
+      }
+    },
+    "fan": {
+      "fan_speed": {
+        "name": "Hood"
       }
     },
     "humidifier": {
@@ -764,6 +773,9 @@
       "energy_usage_this_month": {
         "name": "Energy this month"
       },
+      "energy_usage_today": {
+        "name": "Energy today"
+      },
       "energy_usage_yesterday": {
         "name": "Energy yesterday"
       },
@@ -1153,6 +1165,30 @@
   "exceptions": {
     "failed_to_connect_mqtt": {
       "message": "Failed to connect MQTT: {error}"
+    }
+  },
+  "issues": {
+    "deprecated_fan_speed_number": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The number entity {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a fan entity.\n\nPlease update your dashboards and templates to use the new fan entity.\n\nAfter updating, click **Submit** to disable the number entity and fix this issue.",
+            "title": "Fan speed number entity deprecated"
+          }
+        }
+      },
+      "title": "[%key:component::lg_thinq::issues::deprecated_fan_speed_number::fix_flow::step::confirm::title%]"
+    },
+    "deprecated_fan_speed_number_scripts": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The number entity {entity_name} (`{entity_id}`) is deprecated because it has been replaced with a fan entity.\n\nThe entity was used in the following automations or scripts:\n{items}\n\nPlease update the above automations or scripts to use the new fan entity.\n\nAfter updating, click **Submit** to disable the number entity and fix this issue.",
+            "title": "[%key:component::lg_thinq::issues::deprecated_fan_speed_number::fix_flow::step::confirm::title%]"
+          }
+        }
+      },
+      "title": "[%key:component::lg_thinq::issues::deprecated_fan_speed_number::fix_flow::step::confirm::title%]"
     }
   }
 }

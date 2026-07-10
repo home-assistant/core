@@ -28,13 +28,13 @@
 # name: test_waste_pickup_calendar
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': True,
-      'description': '',
-      'end_time': '2022-01-07 00:00:00',
-      'friendly_name': 'Twente Milieu',
-      'location': '',
-      'message': 'Christmas tree pickup',
-      'start_time': '2022-01-06 00:00:00',
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: True,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: '',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2022-01-07 00:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Twente Milieu',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Christmas tree pickup',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2022-01-06 00:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.twente_milieu',
@@ -46,8 +46,9 @@
 # ---
 # name: test_waste_pickup_calendar.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

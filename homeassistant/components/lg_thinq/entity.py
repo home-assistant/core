@@ -1,10 +1,8 @@
 """Base class for ThinQ entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 import logging
-from typing import Any
+from typing import Any, override
 
 from thinqconnect import ThinQAPIException
 from thinqconnect.devices.const import Location
@@ -46,7 +44,10 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, coordinator.unique_id)},
             manufacturer=COMPANY,
-            model=f"{coordinator.api.device.model_name} ({self.coordinator.api.device.device_type})",
+            model=(
+                f"{coordinator.api.device.model_name}"
+                f" ({self.coordinator.api.device.device_type})"
+            ),
             name=coordinator.device_name,
         )
         self._attr_unique_id = (
@@ -83,11 +84,13 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         """
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_status()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
@@ -104,9 +107,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         except ThinQAPIException as exc:
             if on_fail_method:
                 on_fail_method()
-            raise ServiceValidationError(
-                exc.message, translation_domain=DOMAIN, translation_key=exc.code
-            ) from exc
+            raise ServiceValidationError(exc.message) from exc
         except ValueError as exc:
             if on_fail_method:
                 on_fail_method()

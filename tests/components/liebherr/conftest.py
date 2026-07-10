@@ -6,9 +6,18 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyliebherrhomeapi import (
+    AutoDoorControl,
+    BioFreshPlusControl,
+    BioFreshPlusMode,
     Device,
     DeviceState,
     DeviceType,
+    DoorState,
+    HydroBreezeControl,
+    HydroBreezeMode,
+    IceMakerControl,
+    IceMakerMode,
+    PresentationLightControl,
     TemperatureControl,
     TemperatureUnit,
     ToggleControl,
@@ -83,6 +92,45 @@ MOCK_DEVICE_STATE = DeviceState(
             zone_position=None,
             value=True,
         ),
+        IceMakerControl(
+            name="icemaker",
+            type="IceMakerControl",
+            zone_id=2,
+            zone_position=ZonePosition.BOTTOM,
+            ice_maker_mode=IceMakerMode.OFF,
+            has_max_ice=True,
+        ),
+        HydroBreezeControl(
+            name="hydrobreeze",
+            type="HydroBreezeControl",
+            zone_id=1,
+            current_mode=HydroBreezeMode.LOW,
+        ),
+        BioFreshPlusControl(
+            name="biofreshplus",
+            type="BioFreshPlusControl",
+            zone_id=1,
+            current_mode=BioFreshPlusMode.ZERO_ZERO,
+            supported_modes=[
+                BioFreshPlusMode.ZERO_ZERO,
+                BioFreshPlusMode.ZERO_MINUS_TWO,
+                BioFreshPlusMode.MINUS_TWO_MINUS_TWO,
+                BioFreshPlusMode.MINUS_TWO_ZERO,
+            ],
+        ),
+        PresentationLightControl(
+            name="presentationlight",
+            type="PresentationLightControl",
+            value=3,
+            max=5,
+        ),
+        AutoDoorControl(
+            name="autodoor",
+            type="AutoDoorControl",
+            zone_id=1,
+            zone_position=ZonePosition.TOP,
+            value=DoorState.CLOSED,
+        ),
     ],
 )
 
@@ -140,6 +188,11 @@ def mock_liebherr_client() -> Generator[MagicMock]:
         client.set_super_frost = AsyncMock()
         client.set_party_mode = AsyncMock()
         client.set_night_mode = AsyncMock()
+        client.set_ice_maker = AsyncMock()
+        client.set_hydro_breeze = AsyncMock()
+        client.set_bio_fresh_plus = AsyncMock()
+        client.set_presentation_light = AsyncMock()
+        client.trigger_auto_door = AsyncMock()
         yield client
 
 

@@ -1,10 +1,8 @@
 """Number platform for Liebherr integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pyliebherrhomeapi import TemperatureControl, TemperatureUnit
 
@@ -16,9 +14,11 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import LiebherrConfigEntry, LiebherrCoordinator
 from .entity import LiebherrZoneEntity
 
@@ -53,22 +53,41 @@ NUMBER_TYPES: tuple[LiebherrNumberEntityDescription, ...] = (
 )
 
 
+def _create_number_entities(
+    coordinators: list[LiebherrCoordinator],
+) -> list[LiebherrNumber]:
+    """Create number entities for the given coordinators."""
+    return [
+        LiebherrNumber(
+            coordinator=coordinator,
+            zone_id=temp_control.zone_id,
+            description=description,
+        )
+        for coordinator in coordinators
+        for temp_control in coordinator.data.get_temperature_controls().values()
+        for description in NUMBER_TYPES
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LiebherrConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Liebherr number entities."""
-    coordinators = entry.runtime_data
     async_add_entities(
-        LiebherrNumber(
-            coordinator=coordinator,
-            zone_id=temp_control.zone_id,
-            description=description,
+        _create_number_entities(list(entry.runtime_data.coordinators.values()))
+    )
+
+    @callback
+    def _async_new_device(coordinators: list[LiebherrCoordinator]) -> None:
+        """Add number entities for new devices."""
+        async_add_entities(_create_number_entities(coordinators))
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"{DOMAIN}_new_device_{entry.entry_id}", _async_new_device
         )
-        for coordinator in coordinators.values()
-        for temp_control in coordinator.data.get_temperature_controls().values()
-        for description in NUMBER_TYPES
     )
 
 
@@ -94,6 +113,7 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
             self._attr_translation_key = f"{description.translation_key}_{zone_key}"
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if (temp_control := self.temperature_control) is None:
@@ -101,6 +121,7 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
         return self.entity_description.unit_fn(temp_control)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         if TYPE_CHECKING:
@@ -108,6 +129,7 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
         return self.entity_description.value_fn(self.temperature_control)
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum value."""
         if (temp_control := self.temperature_control) is None:
@@ -117,6 +139,7 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
         return min_val
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
         if (temp_control := self.temperature_control) is None:
@@ -126,10 +149,12 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
         return max_val
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.temperature_control is not None
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if TYPE_CHECKING:

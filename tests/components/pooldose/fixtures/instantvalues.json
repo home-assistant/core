@@ -2,7 +2,7 @@
   "sensor": {
     "temperature": {
       "value": 25,
-      "unit": "°C"
+      "unit": "\u00b0C"
     },
     "ph": {
       "value": 6.8,
@@ -83,6 +83,14 @@
     "water_meter_total_resettable": {
       "value": 123.45,
       "unit": "m3"
+    },
+    "device_config": {
+      "value": "ph_orp",
+      "unit": null
+    },
+    "temperature_unit": {
+      "value": "celsius",
+      "unit": null
     }
   },
   "binary_sensor": {
@@ -117,6 +125,48 @@
       "value": false
     },
     "alarm_ofa_cl": {
+      "value": false
+    },
+    "alarm_ofa2_ph": {
+      "value": false
+    },
+    "alarm_ofa2_orp": {
+      "value": false
+    },
+    "alarm_ofa2_cl": {
+      "value": false
+    },
+    "alarm_water_too_cold": {
+      "value": true
+    },
+    "alarm_water_too_hot": {
+      "value": false
+    },
+    "alarm_ph_too_low": {
+      "value": false
+    },
+    "alarm_ph_too_high": {
+      "value": false
+    },
+    "alarm_cl_too_low_orp": {
+      "value": false
+    },
+    "alarm_cl_too_high_orp": {
+      "value": true
+    },
+    "alarm_cl_too_high": {
+      "value": false
+    },
+    "alarm_system_standby": {
+      "value": true
+    },
+    "circulation_pump_status": {
+      "value": false
+    },
+    "flow_delay_status": {
+      "value": false
+    },
+    "power_on_delay_status": {
       "value": false
     }
   },
@@ -183,6 +233,41 @@
       "min": 0,
       "max": 10,
       "step": 0.1
+    },
+    "time_off_ph_dosing": {
+      "value": 60,
+      "unit": "s",
+      "min": 1,
+      "max": 360,
+      "step": 1
+    },
+    "time_off_orp_dosing": {
+      "value": 60,
+      "unit": "s",
+      "min": 1,
+      "max": 360,
+      "step": 1
+    },
+    "time_off_cl_dosing": {
+      "value": 60,
+      "unit": "s",
+      "min": 1,
+      "max": 360,
+      "step": 1
+    },
+    "power_on_delay_timer": {
+      "value": 0,
+      "unit": "s",
+      "min": 0,
+      "max": 5400,
+      "step": 1
+    },
+    "flow_delay_timer": {
+      "value": 0,
+      "unit": "s",
+      "min": 0,
+      "max": 3600,
+      "step": 1
     }
   },
   "switch": {

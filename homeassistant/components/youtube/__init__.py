@@ -1,13 +1,15 @@
 """Support for YouTube."""
 
-from __future__ import annotations
+from aiohttp.client_exceptions import ClientError
 
-from aiohttp.client_exceptions import ClientError, ClientResponseError
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
@@ -16,13 +18,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .api import AsyncConfigEntryAuth
-from .const import AUTH, COORDINATOR, DOMAIN
-from .coordinator import YouTubeDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import YouTubeConfigEntry, YouTubeDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> bool:
     """Set up YouTube from a config entry."""
     try:
         implementation = await async_get_config_entry_implementation(hass, entry)
@@ -35,13 +37,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     auth = AsyncConfigEntryAuth(hass, session)
     try:
         await auth.check_and_refresh_token()
-    except ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauth required"
-            ) from err
-        raise ConfigEntryNotReady from err
-    except ClientError as err:
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed(
+            "OAuth session is not valid, reauth required"
+        ) from err
+    except (OAuth2TokenRequestError, ClientError) as err:
         raise ConfigEntryNotReady from err
     coordinator = YouTubeDataUpdateCoordinator(hass, entry, auth)
 
@@ -49,25 +49,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await delete_devices(hass, entry, coordinator)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        COORDINATOR: coordinator,
-        AUTH: auth,
-    }
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> bool:
     """Unload a config entry."""
-
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def delete_devices(
-    hass: HomeAssistant, entry: ConfigEntry, coordinator: YouTubeDataUpdateCoordinator
+    hass: HomeAssistant,
+    entry: YouTubeConfigEntry,
+    coordinator: YouTubeDataUpdateCoordinator,
 ) -> None:
     """Delete all devices created by integration."""
     channel_ids = list(coordinator.data)

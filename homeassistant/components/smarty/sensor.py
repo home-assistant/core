@@ -1,11 +1,10 @@
 """Support for Salda Smarty XP/XV Ventilation Unit Sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from pysmarty2 import Smarty
 
@@ -114,6 +113,7 @@ class SmartySensor(SmartyEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.client)

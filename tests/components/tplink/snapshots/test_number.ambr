@@ -36,14 +36,15 @@
 # ---
 # name: test_states[number.my_device_clean_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 65536,
-      'min': 0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 65536,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -78,11 +79,11 @@
 # name: test_states[number.my_device_clean_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Clean count',
-      'max': 65536,
-      'min': 0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Clean count',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 65536,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.my_device_clean_count',
@@ -94,14 +95,15 @@
 # ---
 # name: test_states[number.my_device_pan_degrees-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 65536,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 65536,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -136,11 +138,11 @@
 # name: test_states[number.my_device_pan_degrees-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Pan degrees',
-      'max': 65536,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Pan degrees',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 65536,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.my_device_pan_degrees',
@@ -152,14 +154,15 @@
 # ---
 # name: test_states[number.my_device_power_protection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 65536,
-      'min': 0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 65536,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -194,11 +197,11 @@
 # name: test_states[number.my_device_power_protection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Power protection',
-      'max': 65536,
-      'min': 0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Power protection',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 65536,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.my_device_power_protection',
@@ -210,14 +213,15 @@
 # ---
 # name: test_states[number.my_device_smooth_off-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 60,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -252,11 +256,11 @@
 # name: test_states[number.my_device_smooth_off-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Smooth off',
-      'max': 60,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Smooth off',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.my_device_smooth_off',
@@ -268,14 +272,15 @@
 # ---
 # name: test_states[number.my_device_smooth_on-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 60,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -310,11 +315,11 @@
 # name: test_states[number.my_device_smooth_on-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Smooth on',
-      'max': 60,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Smooth on',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.my_device_smooth_on',
@@ -326,14 +331,15 @@
 # ---
 # name: test_states[number.my_device_temperature_offset-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -368,12 +374,12 @@
 # name: test_states[number.my_device_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature_delta',
-      'friendly_name': 'my_device Temperature offset',
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature_delta',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Temperature offset',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.my_device_temperature_offset',
@@ -385,14 +391,15 @@
 # ---
 # name: test_states[number.my_device_tilt_degrees-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 65536,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 65536,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -427,11 +434,11 @@
 # name: test_states[number.my_device_tilt_degrees-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Tilt degrees',
-      'max': 65536,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Tilt degrees',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 65536,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.my_device_tilt_degrees',
@@ -443,14 +450,15 @@
 # ---
 # name: test_states[number.my_device_turn_off_in-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 60,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -485,11 +493,11 @@
 # name: test_states[number.my_device_turn_off_in-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my_device Turn off in',
-      'max': 60,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my_device Turn off in',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 60,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.my_device_turn_off_in',

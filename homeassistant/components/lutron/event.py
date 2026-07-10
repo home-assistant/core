@@ -1,8 +1,9 @@
 """Support for Lutron events."""
 
 from enum import StrEnum
+from typing import cast, override
 
-from pylutron import Button, Keypad, Lutron, LutronEvent
+from pylutron import Button, Keypad, Lutron, LutronEntity, LutronEvent
 
 from homeassistant.components.event import EventEntity
 from homeassistant.const import ATTR_ID
@@ -71,6 +72,7 @@ class LutronEventEntity(LutronKeypad, EventEntity):
         self._full_id = slugify(f"{area_name} {name}")
         self._id = slugify(name)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
@@ -78,9 +80,10 @@ class LutronEventEntity(LutronKeypad, EventEntity):
 
     @callback
     def handle_event(
-        self, button: Button, _context: None, event: LutronEvent, _params: dict
+        self, button: LutronEntity, _context: None, event: LutronEvent, _params: dict
     ) -> None:
         """Handle received event."""
+        button = cast(Button, button)
         action: LutronEventType | None = None
         if self._has_release_event:
             if event == Button.Event.PRESSED:

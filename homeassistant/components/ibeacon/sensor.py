@@ -1,9 +1,8 @@
 """Support for iBeacon device sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from ibeacon_ble import iBeaconAdvertisement
 
@@ -118,6 +117,7 @@ class IBeaconSensorEntity(IBeaconEntity, SensorEntity):
         self.entity_description = description
 
     @callback
+    @override
     def _async_seen(
         self,
         ibeacon_advertisement: iBeaconAdvertisement,
@@ -128,12 +128,14 @@ class IBeaconSensorEntity(IBeaconEntity, SensorEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def _async_unavailable(self) -> None:
         """Update state."""
         self._attr_available = False
         self.async_write_ha_state()
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._ibeacon_advertisement)

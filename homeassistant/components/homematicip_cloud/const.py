@@ -1,4 +1,4 @@
-"""Constants for the HomematicIP Cloud component."""
+"""Constants for the HomematicIP Cloud integration."""
 
 import logging
 
@@ -18,6 +18,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.LOCK,
     Platform.SENSOR,
+    Platform.SIREN,
     Platform.SWITCH,
     Platform.VALVE,
     Platform.WEATHER,

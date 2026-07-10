@@ -1,15 +1,15 @@
 {
   "items": [
     {
-      "deviceId": "05accb39-2017-c98b-a5ab-04a81f4d3d9a",
+      "deviceId": "01b28624-5907-c8bc-0325-8ad23f03a637",
       "name": "[robot vacuum] Samsung",
-      "label": "Robot vacuum",
+      "label": "Robot Vacuum",
       "manufacturerName": "Samsung Electronics",
       "presentationId": "DA-RVC-MAP-01011",
       "deviceManufacturerCode": "Samsung Electronics",
-      "locationId": "d31d0982-9bf9-4f0c-afd4-ad3d78842541",
-      "ownerId": "85532262-6537-54d9-179a-333db98dbcc0",
-      "roomId": "572f5713-53a9-4fb8-85fd-60515e44f1ed",
+      "locationId": "4647a408-2d4f-44a8-8ee6-f64328a0e480",
+      "ownerId": "8157695b-6c2f-4de5-98cb-bacaf51b8b2d",
+      "roomId": "9b0f3cf5-56b5-45fa-9bb8-81014bd63715",
       "deviceTypeName": "Samsung OCF Robot Vacuum",
       "components": [
         {
@@ -133,7 +133,19 @@
               "version": 1
             },
             {
+              "id": "samsungce.notification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.objectDetection",
+              "version": 1
+            },
+            {
               "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.sabbathMode",
               "version": 1
             },
             {
@@ -320,24 +332,24 @@
           "optional": false
         }
       ],
-      "createTime": "2025-06-20T14:12:56.260Z",
+      "createTime": "2026-02-27T10:49:02.683Z",
       "profile": {
-        "id": "5d345d41-a497-3fc7-84fe-eaaee50f0509"
+        "id": "0b3bf610-5ec4-3eeb-9e50-1038099f6904"
       },
       "ocf": {
         "ocfDeviceType": "oic.d.robotcleaner",
         "name": "[robot vacuum] Samsung",
         "specVersion": "core.1.1.0",
-        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "verticalDomainSpecVersion": "1.2.1",
         "manufacturerName": "Samsung Electronics",
-        "modelNumber": "JETBOT_COMBO_9X00_24K|50029141|80010b0002d8411f0100000000000000",
+        "modelNumber": "JETBOT_COMBOT_9X00_24K|50029141|80010a0002d8411f0100000000000000",
         "platformVersion": "1.0",
         "platformOS": "Tizen",
         "hwVersion": "",
-        "firmwareVersion": "20250123.105306",
+        "firmwareVersion": "20260120.215157",
         "vendorId": "DA-RVC-MAP-01011",
-        "vendorResourceClientServerVersion": "4.0.38",
-        "lastSignupTime": "2025-06-20T14:12:56.202953160Z",
+        "vendorResourceClientServerVersion": "4.0.40",
+        "lastSignupTime": "2026-02-27T12:08:52.022059763Z",
         "transferCandidate": false,
         "additionalAuthCodeRequired": false,
         "modelCode": "NONE"

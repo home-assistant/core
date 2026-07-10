@@ -1,20 +1,13 @@
 """Viessmann ViCare water_heater device."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
-from PyViCare.PyViCareUtils import (
-    PyViCareInvalidDataError,
-    PyViCareNotSupportedFeatureError,
-    PyViCareRateLimitError,
-)
-import requests
+from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -118,7 +111,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
-        try:
+        with self.vicare_api_handler():
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_current_temperature = (
                     self._api.getDomesticHotWaterStorageTemperature()
@@ -135,15 +128,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             with suppress(PyViCareNotSupportedFeatureError):
                 self._dhw_active = self._api.getDomesticHotWaterActive()
 
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("Unable to retrieve data from ViCare server")
-        except PyViCareRateLimitError as limit_exception:
-            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
-        except ValueError:
-            _LOGGER.error("Unable to decode data from ViCare server")
-        except PyViCareInvalidDataError as invalid_data_exception:
-            _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
-
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
@@ -151,6 +136,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             self._attr_target_temperature = temp
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return current operation ie. heat, cool, idle."""
         if self._dhw_active is not None:

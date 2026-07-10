@@ -16,13 +16,19 @@ rules:
     status: done
     comment: huawei-lte-api is from https://gitlab.salamek.cz/Mirrors/huawei-lte-api, see https://github.com/Salamek/huawei-lte-api/issues/253
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: todo
+  runtime-data: done
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
@@ -81,5 +87,4 @@ rules:
   inject-websession:
     status: exempt
     comment: Underlying huawei-lte-api does not use aiohttp or httpx, so this does not apply.
-  strict-typing:
-    status: done
+  strict-typing: done

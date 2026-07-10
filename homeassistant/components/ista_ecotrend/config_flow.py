@@ -1,10 +1,8 @@
 """Config flow for ista EcoTrend integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyecotrend_ista import KeycloakError, LoginError, PyEcotrendIsta, ServerError
 import voluptuous as vol
@@ -42,6 +40,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ista EcoTrend."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -51,7 +50,6 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
             ista = PyEcotrendIsta(
                 user_input[CONF_EMAIL],
                 user_input[CONF_PASSWORD],
-                _LOGGER,
             )
             try:
                 await self.hass.async_add_executor_job(ista.login)
@@ -102,7 +100,6 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
             ista = PyEcotrendIsta(
                 user_input[CONF_EMAIL],
                 user_input[CONF_PASSWORD],
-                _LOGGER,
             )
 
             def get_consumption_units() -> set[str]:

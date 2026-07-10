@@ -1,10 +1,8 @@
 """Define an update coordinator for OpenUV."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import datetime as dt
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyopenuv.errors import InvalidApiKeyError, OpenUvError
 
@@ -20,18 +18,20 @@ from .const import LOGGER
 
 DEFAULT_DEBOUNCER_COOLDOWN_SECONDS = 15 * 60
 
+type OpenUvConfigEntry = ConfigEntry[dict[str, OpenUvCoordinator]]
+
 
 class OpenUvCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Define an OpenUV data coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: OpenUvConfigEntry
     update_method: Callable[[], Awaitable[dict[str, Any]]]
 
     def __init__(
         self,
         hass: HomeAssistant,
         *,
-        entry: ConfigEntry,
+        entry: OpenUvConfigEntry,
         name: str,
         latitude: str,
         longitude: str,
@@ -55,6 +55,7 @@ class OpenUvCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.latitude = latitude
         self.longitude = longitude
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from OpenUV."""
         try:
@@ -72,6 +73,7 @@ class OpenUvProtectionWindowCoordinator(OpenUvCoordinator):
 
     _reprocess_listener: CALLBACK_TYPE | None = None
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         data = await super()._async_update_data()
 

@@ -1,11 +1,9 @@
 """Creates HomeWizard sensor entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Final
+from typing import Final, override
 
 from homewizard_energy.const import Model
 from homewizard_energy.models import CombinedModels, ExternalDevice
@@ -37,7 +35,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
-from homeassistant.util.variance import ignore_variance
 
 from .const import DOMAIN
 from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
@@ -67,13 +64,6 @@ def to_percentage(value: float | None) -> float | None:
     """Convert 0..1 value to percentage when value is not None."""
     return value * 100 if value is not None else None
 
-
-def uptime_to_datetime(value: int) -> datetime:
-    """Convert seconds to datetime timestamp."""
-    return utcnow().replace(microsecond=0) - timedelta(seconds=value)
-
-
-uptime_to_stable_datetime = ignore_variance(uptime_to_datetime, timedelta(minutes=5))
 
 SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     HomeWizardSensorEntityDescription(
@@ -610,6 +600,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         key="active_liter_lpm",
         translation_key="active_liter_lpm",
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         has_fn=lambda data: data.measurement.active_liter_lpm is not None,
         value_fn=lambda data: data.measurement.active_liter_lpm,
@@ -642,9 +633,35 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         value_fn=lambda data: data.measurement.cycles,
     ),
     HomeWizardSensorEntityDescription(
+        key="battery_group_power_w",
+        translation_key="battery_group_power_w",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+        has_fn=lambda data: data.batteries is not None,
+        value_fn=lambda data: (
+            data.batteries.power_w if data.batteries is not None else None
+        ),
+    ),
+    HomeWizardSensorEntityDescription(
+        key="battery_group_target_power_w",
+        translation_key="battery_group_target_power_w",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+        has_fn=lambda data: data.batteries is not None,
+        value_fn=lambda data: (
+            data.batteries.target_power_w if data.batteries is not None else None
+        ),
+    ),
+    HomeWizardSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         has_fn=(
@@ -652,7 +669,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         ),
         value_fn=(
             lambda data: (
-                uptime_to_stable_datetime(data.system.uptime_s)
+                utcnow() - timedelta(seconds=data.system.uptime_s)
                 if data.system is not None and data.system.uptime_s is not None
                 else None
             )
@@ -674,11 +691,13 @@ EXTERNAL_SENSORS = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_name="Heat meter",
     ),
-    ExternalDevice.DeviceType.WARM_WATER_METER: HomeWizardExternalSensorEntityDescription(
-        key="warm_water_meter",
-        suggested_device_class=SensorDeviceClass.WATER,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        device_name="Warm water meter",
+    ExternalDevice.DeviceType.WARM_WATER_METER: (
+        HomeWizardExternalSensorEntityDescription(
+            key="warm_water_meter",
+            suggested_device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_name="Warm water meter",
+        )
     ),
     ExternalDevice.DeviceType.WATER_METER: HomeWizardExternalSensorEntityDescription(
         key="water_meter",
@@ -686,11 +705,13 @@ EXTERNAL_SENSORS = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_name="Water meter",
     ),
-    ExternalDevice.DeviceType.INLET_HEAT_METER: HomeWizardExternalSensorEntityDescription(
-        key="inlet_heat_meter",
-        suggested_device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        device_name="Inlet heat meter",
+    ExternalDevice.DeviceType.INLET_HEAT_METER: (
+        HomeWizardExternalSensorEntityDescription(
+            key="inlet_heat_meter",
+            suggested_device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            device_name="Inlet heat meter",
+        )
     ),
 }
 
@@ -782,11 +803,13 @@ class HomeWizardSensorEntity(HomeWizardEntity, SensorEntity):
             self._attr_entity_registry_enabled_default = False
 
     @property
+    @override
     def native_value(self) -> StateType | datetime | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability of meter."""
         return super().available and self.native_value is not None
@@ -806,7 +829,7 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
         self.entity_description = description
         self._device_id = device_unique_id
         self._suggested_device_class = description.suggested_device_class
-        self._attr_unique_id = f"{DOMAIN}_{device_unique_id}"
+        self._attr_unique_id = f"{DOMAIN}_{device_unique_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_unique_id)},
             name=description.device_name,
@@ -821,6 +844,7 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
             )
 
     @property
+    @override
     def native_value(self) -> float | int | str | None:
         """Return the sensor value."""
         return self.device.value if self.device is not None else None
@@ -835,11 +859,13 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return availability of meter."""
         return super().available and self.device is not None
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement based on device unit."""
         if (device := self.device) is None:
@@ -852,6 +878,7 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
         return device.unit
 
     @property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Validate unit of measurement and set device class."""
         if (

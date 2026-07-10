@@ -1,9 +1,7 @@
 """Support for Broadlink device time."""
 
-from __future__ import annotations
-
 from datetime import time
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.time import TimeEntity
 from homeassistant.config_entries import ConfigEntry
@@ -22,6 +20,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Broadlink time."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     async_add_entities([BroadlinkTime(device)])
 
@@ -36,8 +36,9 @@ class BroadlinkTime(BroadlinkEntity, TimeEntity):
         """Initialize the sensor."""
         super().__init__(device)
 
-        self._attr_unique_id = f"{device.unique_id}-device_time"
+        self._attr_unique_id = f"{device.unique_id}-device_time"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
+    @override
     def _update_state(self, data: dict[str, Any]) -> None:
         """Update the state of the entity."""
         if data is None or "hour" not in data or "min" not in data or "sec" not in data:
@@ -50,6 +51,7 @@ class BroadlinkTime(BroadlinkEntity, TimeEntity):
                 tzinfo=dt_util.get_default_time_zone(),
             )
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Change the value."""
         await self._device.async_request(

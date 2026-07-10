@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_all_entities[climate.stove-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_modes': list([
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         '1',
         '2',
         '3',
@@ -14,13 +15,13 @@
         'high',
         'auto',
       ]),
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 50,
-      'min_temp': 5,
-      'target_temp_step': 1.0,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 50,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -55,9 +56,9 @@
 # name: test_all_entities[climate.stove-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 18,
-      'fan_mode': '3',
-      'fan_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 18,
+      <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: '3',
+      <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
         '1',
         '2',
         '3',
@@ -66,17 +67,17 @@
         'high',
         'auto',
       ]),
-      'friendly_name': 'Stove',
-      'hvac_action': <HVACAction.HEATING: 'heating'>,
-      'hvac_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Stove',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 50,
-      'min_temp': 5,
-      'supported_features': <ClimateEntityFeature: 393>,
-      'target_temp_step': 1.0,
-      'temperature': 21,
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 50,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 5,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 393>,
+      <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 21,
     }),
     'context': <ANY>,
     'entity_id': 'climate.stove',

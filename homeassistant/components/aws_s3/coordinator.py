@@ -1,15 +1,15 @@
 """DataUpdateCoordinator for AWS S3."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiobotocore.client import AioBaseClient as S3Client
 from botocore.exceptions import BotoCoreError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -53,11 +53,15 @@ class S3DataUpdateCoordinator(DataUpdateCoordinator[SensorData]):
         )
         self.client = client
         self._bucket: str = entry.data[CONF_BUCKET]
+        self._prefix: str = entry.data.get(CONF_PREFIX, "")
 
+    @override
     async def _async_update_data(self) -> SensorData:
         """Fetch data from AWS S3."""
         try:
-            backups = await async_list_backups_from_s3(self.client, self._bucket)
+            backups = await async_list_backups_from_s3(
+                self.client, self._bucket, self._prefix
+            )
         except BotoCoreError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

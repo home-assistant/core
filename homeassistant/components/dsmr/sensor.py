@@ -1,7 +1,5 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
 
-from __future__ import annotations
-
 import asyncio
 from asyncio import CancelledError
 from collections.abc import Callable, Generator
@@ -10,14 +8,15 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntEnum
 from functools import partial
+from typing import override
+from urllib.parse import urlparse
 
-from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
+from dsmr_parser.clients.protocol import create_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import (
     create_rfxtrx_dsmr_reader,
     create_rfxtrx_tcp_dsmr_reader,
 )
 from dsmr_parser.objects import DSMRObject, MbusDevice, Telegram
-import serial
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -63,6 +62,7 @@ from .const import (
     DOMAIN,
     DSMR_PROTOCOL,
     LOGGER,
+    RFXTRX_DSMR_PROTOCOL,
 )
 
 EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
@@ -87,6 +87,7 @@ class MbusDeviceType(IntEnum):
     GAS = 3
     HEAT = 4
     WATER = 7
+    HEAT_COOL = 12
 
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
@@ -571,6 +572,16 @@ SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
     ),
+    MbusDeviceType.HEAT_COOL: (
+        DSMRSensorEntityDescription(
+            key="heat_reading",
+            translation_key="heat_meter_reading",
+            obis_reference="MBUS_METER_READING",
+            is_heat=True,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+    ),
 }
 
 
@@ -761,34 +772,54 @@ async def async_setup_entry(
                 hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), telegram
             )
 
-    # Creates an asyncio.Protocol factory for reading DSMR telegrams from
-    # serial and calls update_entities_telegram to update entities on arrival
-    protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
+    # Legacy network entries stored host and port separately; combine them into
+    # the single socket://host:port form newer entries already use, in memory
+    # only, so the stored entry stays untouched and rolling back to an older
+    # Home Assistant version keeps working.
+    port = entry.data[CONF_PORT]
     if CONF_HOST in entry.data:
-        if protocol == DSMR_PROTOCOL:
-            create_reader = create_tcp_dsmr_reader
+        port = f"socket://{entry.data[CONF_HOST]}:{port}"
+
+    # Creates an asyncio.Protocol factory for reading DSMR telegrams and calls
+    # update_entities_telegram to update entities on arrival. A port starting
+    # with "/" is a local serial device, which doesn't need a liveness check;
+    # anything else is a network connection that can drop silently, so it gets a
+    # keep-alive watchdog that closes the connection (triggering a reconnect)
+    # when no telegram arrives in time.
+    protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
+    if protocol == RFXTRX_DSMR_PROTOCOL:
+        if port.startswith("/"):
+            reader_factory = partial(
+                create_rfxtrx_dsmr_reader,
+                port,
+                dsmr_version,
+                update_entities_telegram,
+                loop=hass.loop,
+            )
         else:
-            create_reader = create_rfxtrx_tcp_dsmr_reader
-        reader_factory = partial(
-            create_reader,
-            entry.data[CONF_HOST],
-            entry.data[CONF_PORT],
-            dsmr_version,
-            update_entities_telegram,
-            loop=hass.loop,
-            keep_alive_interval=60,
-        )
+            # The RFXtrx serial reader has no keep-alive support, so the network
+            # host and port are fed to the dedicated TCP reader instead.
+            address = urlparse(port)
+            reader_factory = partial(
+                create_rfxtrx_tcp_dsmr_reader,
+                address.hostname,
+                address.port,
+                dsmr_version,
+                update_entities_telegram,
+                loop=hass.loop,
+                keep_alive_interval=60,
+            )
     else:
-        if protocol == DSMR_PROTOCOL:
-            create_reader = create_dsmr_reader
-        else:
-            create_reader = create_rfxtrx_dsmr_reader
+        # create_dsmr_reader opens both local devices and any URL (socket://,
+        # esphome://, ...); the only difference is the keep-alive watchdog.
+        keep_alive = {} if port.startswith("/") else {"keep_alive_interval": 60}
         reader_factory = partial(
-            create_reader,
-            entry.data[CONF_PORT],
+            create_dsmr_reader,
+            port,
             dsmr_version,
             update_entities_telegram,
             loop=hass.loop,
+            **keep_alive,
         )
 
     async def connect_and_reconnect() -> None:
@@ -805,7 +836,7 @@ async def async_setup_entry(
             update_entities_telegram({})
 
             try:
-                transport, protocol = await hass.loop.create_task(reader_factory())
+                transport, protocol = await reader_factory()
 
                 if transport:
                     # Register listener to close transport on HA shutdown
@@ -837,7 +868,7 @@ async def async_setup_entry(
                 # throttle reconnect attempts
                 await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
 
-            except serial.SerialException, OSError:
+            except OSError:
                 # Log any error while establishing connection and drop to retry
                 # connection wait
                 LOGGER.exception("Error connecting to DSMR")
@@ -968,11 +999,13 @@ class DSMREntity(SensorEntity):
         return attr
 
     @property
+    @override
     def available(self) -> bool:
         """Entity is only available if there is a telegram."""
         return self.telegram is not None
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
         value: StateType

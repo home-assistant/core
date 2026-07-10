@@ -1,4 +1,4 @@
-"""Tests for the BSB-Lan water heater platform."""
+"""Tests for the BSB-LAN water heater platform."""
 
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
@@ -8,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.components.water_heater import (
     ATTR_OPERATION_MODE,
     DOMAIN as WATER_HEATER_DOMAIN,
@@ -28,7 +29,7 @@ from . import setup_with_selected_platforms
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-ENTITY_ID = "water_heater.bsb_lan"
+ENTITY_ID = "water_heater.water_heater"
 
 
 @pytest.fixture
@@ -181,7 +182,11 @@ async def test_set_invalid_operation_mode(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"Operation mode invalid_mode is not valid for water_heater\.bsb_lan\. Valid operation modes are: off, performance, eco",
+        match=(
+            r"Operation mode invalid_mode is not valid for"
+            r" water_heater\.water_heater\."
+            r" Valid operation modes are: off, performance, eco"
+        ),
     ):
         await hass.services.async_call(
             domain=WATER_HEATER_DOMAIN,
@@ -231,9 +236,7 @@ async def test_set_temperature_failure(
 
     mock_bsblan.set_hot_water.side_effect = BSBLANError("Test error")
 
-    with pytest.raises(
-        HomeAssistantError, match="An error occurred while setting the temperature"
-    ):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             domain=WATER_HEATER_DOMAIN,
             service=SERVICE_SET_TEMPERATURE,
@@ -243,6 +246,8 @@ async def test_set_temperature_failure(
             },
             blocking=True,
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "set_temperature_error"
 
 
 async def test_operation_mode_error(
@@ -257,9 +262,7 @@ async def test_operation_mode_error(
 
     mock_bsblan.set_hot_water.side_effect = BSBLANError("Test error")
 
-    with pytest.raises(
-        HomeAssistantError, match="An error occurred while setting the operation mode"
-    ):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             domain=WATER_HEATER_DOMAIN,
             service=SERVICE_SET_OPERATION_MODE,
@@ -269,6 +272,8 @@ async def test_operation_mode_error(
             },
             blocking=True,
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "set_operation_mode_error"
 
 
 async def test_water_heater_no_sensors(
@@ -297,6 +302,30 @@ async def test_water_heater_no_sensors(
     assert state.attributes.get("current_operation") is None
     assert state.attributes.get("current_temperature") is None
     assert state.attributes.get("temperature") is None
+
+
+async def test_current_operation_none_value(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test current_operation returns None when operating_mode value is None."""
+    await setup_with_selected_platforms(
+        hass, mock_config_entry, [Platform.WATER_HEATER]
+    )
+
+    mock_operating_mode = MagicMock()
+    mock_operating_mode.value = None
+    mock_bsblan.hot_water_state.return_value.operating_mode = mock_operating_mode
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("current_operation") is None
 
 
 @pytest.mark.parametrize(
@@ -425,9 +454,7 @@ async def test_turn_on_error(
 
     mock_bsblan.set_hot_water.side_effect = BSBLANError("Test error")
 
-    with pytest.raises(
-        HomeAssistantError, match="An error occurred while setting the operation mode"
-    ):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             domain=WATER_HEATER_DOMAIN,
             service=SERVICE_TURN_ON,
@@ -436,6 +463,8 @@ async def test_turn_on_error(
             },
             blocking=True,
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "set_operation_mode_error"
 
 
 async def test_turn_off_error(
@@ -450,9 +479,7 @@ async def test_turn_off_error(
 
     mock_bsblan.set_hot_water.side_effect = BSBLANError("Test error")
 
-    with pytest.raises(
-        HomeAssistantError, match="An error occurred while setting the operation mode"
-    ):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             domain=WATER_HEATER_DOMAIN,
             service=SERVICE_TURN_OFF,
@@ -461,3 +488,5 @@ async def test_turn_off_error(
             },
             blocking=True,
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "set_operation_mode_error"

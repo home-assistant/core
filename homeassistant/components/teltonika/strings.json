@@ -23,6 +23,18 @@
         "description": "A Teltonika device ({name}) was discovered at {host}. Enter the credentials to add it to Home Assistant.",
         "title": "Discovered Teltonika device"
       },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::teltonika::config::step::dhcp_confirm::data_description::password%]",
+          "username": "[%key:component::teltonika::config::step::dhcp_confirm::data_description::username%]"
+        },
+        "description": "Update the credentials for {name}. The current host is {host}.",
+        "title": "Authentication failed for {name}"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",

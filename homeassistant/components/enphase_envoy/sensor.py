@@ -1,13 +1,11 @@
 """Support for Enphase Envoy solar energy monitor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 import datetime
 import logging
 from operator import attrgetter
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pyenphase import (
     EnvoyACBPower,
@@ -405,8 +403,13 @@ CT_SENSORS = (
         )
         for cttype, key in (
             (CtType.NET_CONSUMPTION, "lifetime_net_consumption"),
-            # Production CT energy_delivered is not used
+            (CtType.PRODUCTION, "production_ct_energy_delivered"),
             (CtType.STORAGE, "lifetime_battery_discharged"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_energy_delivered"),
+            (CtType.BACKFEED, "backfeed_ct_energy_delivered"),
+            (CtType.LOAD, "load_ct_energy_delivered"),
+            (CtType.EVSE, "evse_ct_energy_delivered"),
+            (CtType.PV3P, "pv3p_ct_energy_delivered"),
         )
     ]
     + [
@@ -423,8 +426,13 @@ CT_SENSORS = (
         )
         for cttype, key in (
             (CtType.NET_CONSUMPTION, "lifetime_net_production"),
-            # Production CT energy_received is not used
+            (CtType.PRODUCTION, "production_ct_energy_received"),
             (CtType.STORAGE, "lifetime_battery_charged"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_energy_received"),
+            (CtType.BACKFEED, "backfeed_ct_energy_received"),
+            (CtType.LOAD, "load_ct_energy_received"),
+            (CtType.EVSE, "evse_ct_energy_received"),
+            (CtType.PV3P, "pv3p_ct_energy_received"),
         )
     ]
     + [
@@ -441,8 +449,13 @@ CT_SENSORS = (
         )
         for cttype, key in (
             (CtType.NET_CONSUMPTION, "net_consumption"),
-            # Production CT active_power is not used
+            (CtType.PRODUCTION, "production_ct_power"),
             (CtType.STORAGE, "battery_discharge"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_power"),
+            (CtType.BACKFEED, "backfeed_ct_power"),
+            (CtType.LOAD, "load_ct_power"),
+            (CtType.EVSE, "evse_ct_power"),
+            (CtType.PV3P, "pv3p_ct_power"),
         )
     ]
     + [
@@ -461,6 +474,11 @@ CT_SENSORS = (
             (CtType.NET_CONSUMPTION, "frequency", "net_ct_frequency"),
             (CtType.PRODUCTION, "production_ct_frequency", ""),
             (CtType.STORAGE, "storage_ct_frequency", ""),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_frequency", ""),
+            (CtType.BACKFEED, "backfeed_ct_frequency", ""),
+            (CtType.LOAD, "load_ct_frequency", ""),
+            (CtType.EVSE, "evse_ct_frequency", ""),
+            (CtType.PV3P, "pv3p_ct_frequency", ""),
         )
     ]
     + [
@@ -480,6 +498,11 @@ CT_SENSORS = (
             (CtType.NET_CONSUMPTION, "voltage", "net_ct_voltage"),
             (CtType.PRODUCTION, "production_ct_voltage", ""),
             (CtType.STORAGE, "storage_voltage", "storage_ct_voltage"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_voltage", ""),
+            (CtType.BACKFEED, "backfeed_ct_voltage", ""),
+            (CtType.LOAD, "load_ct_voltage", ""),
+            (CtType.EVSE, "evse_ct_voltage", ""),
+            (CtType.PV3P, "pv3p_ct_voltage", ""),
         )
     ]
     + [
@@ -499,6 +522,11 @@ CT_SENSORS = (
             (CtType.NET_CONSUMPTION, "net_ct_current"),
             (CtType.PRODUCTION, "production_ct_current"),
             (CtType.STORAGE, "storage_ct_current"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_current"),
+            (CtType.BACKFEED, "backfeed_ct_current"),
+            (CtType.LOAD, "load_ct_current"),
+            (CtType.EVSE, "evse_ct_current"),
+            (CtType.PV3P, "pv3p_ct_current"),
         )
     ]
     + [
@@ -516,6 +544,11 @@ CT_SENSORS = (
             (CtType.NET_CONSUMPTION, "net_ct_powerfactor"),
             (CtType.PRODUCTION, "production_ct_powerfactor"),
             (CtType.STORAGE, "storage_ct_powerfactor"),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_powerfactor"),
+            (CtType.BACKFEED, "backfeed_ct_powerfactor"),
+            (CtType.LOAD, "load_ct_powerfactor"),
+            (CtType.EVSE, "evse_ct_powerfactor"),
+            (CtType.PV3P, "pv3p_ct_powerfactor"),
         )
     ]
     + [
@@ -537,13 +570,17 @@ CT_SENSORS = (
             ),
             (CtType.PRODUCTION, "production_ct_metering_status", ""),
             (CtType.STORAGE, "storage_ct_metering_status", ""),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_metering_status", ""),
+            (CtType.BACKFEED, "backfeed_ct_metering_status", ""),
+            (CtType.LOAD, "load_ct_metering_status", ""),
+            (CtType.EVSE, "evse_ct_metering_status", ""),
+            (CtType.PV3P, "pv3p_ct_metering_status", ""),
         )
     ]
     + [
         EnvoyCTSensorEntityDescription(
             key=key,
             translation_key=(translation_key if translation_key != "" else key),
-            state_class=None,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
             value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
@@ -557,6 +594,11 @@ CT_SENSORS = (
             ),
             (CtType.PRODUCTION, "production_ct_status_flags", ""),
             (CtType.STORAGE, "storage_ct_status_flags", ""),
+            (CtType.TOTAL_CONSUMPTION, "total_consumption_ct_status_flags", ""),
+            (CtType.BACKFEED, "backfeed_ct_status_flags", ""),
+            (CtType.LOAD, "load_ct_status_flags", ""),
+            (CtType.EVSE, "evse_ct_status_flags", ""),
+            (CtType.PV3P, "pv3p_ct_status_flags", ""),
         )
     ]
 )
@@ -608,7 +650,6 @@ ENCHARGE_INVENTORY_SENSORS = (
     EnvoyEnchargeSensorEntityDescription(
         key=LAST_REPORTED_KEY,
         translation_key=LAST_REPORTED_KEY,
-        native_unit_of_measurement=None,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda encharge: dt_util.utc_from_timestamp(encharge.last_report_date),
     ),
@@ -686,7 +727,6 @@ COLLAR_SENSORS = (
     EnvoyCollarSensorEntityDescription(
         key=LAST_REPORTED_KEY,
         translation_key=LAST_REPORTED_KEY,
-        native_unit_of_measurement=None,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda collar: dt_util.utc_from_timestamp(collar.last_report_date),
     ),
@@ -724,7 +764,6 @@ C6CC_SENSORS = (
     EnvoyC6CCSensorEntityDescription(
         key=LAST_REPORTED_KEY,
         translation_key=LAST_REPORTED_KEY,
-        native_unit_of_measurement=None,
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda c6cc: dt_util.utc_from_timestamp(c6cc.last_report_date),
     ),
@@ -1016,6 +1055,7 @@ class EnvoyProductionEntity(EnvoySystemSensorEntity):
     entity_description: EnvoyProductionSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         system_production = self.data.system_production
@@ -1029,6 +1069,7 @@ class EnvoyConsumptionEntity(EnvoySystemSensorEntity):
     entity_description: EnvoyConsumptionSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         system_consumption = self.data.system_consumption
@@ -1042,6 +1083,7 @@ class EnvoyNetConsumptionEntity(EnvoySystemSensorEntity):
     entity_description: EnvoyConsumptionSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         system_net_consumption = self.data.system_net_consumption
@@ -1055,6 +1097,7 @@ class EnvoyProductionPhaseEntity(EnvoySystemSensorEntity):
     entity_description: EnvoyProductionSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         if TYPE_CHECKING:
@@ -1076,6 +1119,7 @@ class EnvoyConsumptionPhaseEntity(EnvoySystemSensorEntity):
     entity_description: EnvoyConsumptionSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         if TYPE_CHECKING:
@@ -1097,6 +1141,7 @@ class EnvoyNetConsumptionPhaseEntity(EnvoySystemSensorEntity):
     entity_description: EnvoyConsumptionSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         if TYPE_CHECKING:
@@ -1118,6 +1163,7 @@ class EnvoyCTEntity(EnvoySystemSensorEntity):
     entity_description: EnvoyCTSensorEntityDescription
 
     @property
+    @override
     def native_value(
         self,
     ) -> int | float | str | CtType | CtMeterStatus | CtStatusFlags | None:
@@ -1133,6 +1179,7 @@ class EnvoyCTPhaseEntity(EnvoySystemSensorEntity):
     entity_description: EnvoyCTSensorEntityDescription
 
     @property
+    @override
     def native_value(
         self,
     ) -> int | float | str | CtType | CtMeterStatus | CtStatusFlags | None:
@@ -1183,6 +1230,7 @@ class EnvoyInverterEntity(EnvoySensorBaseEntity):
         )
 
     @property
+    @override
     def native_value(self) -> datetime.datetime | float | None:
         """Return the state of the sensor."""
         inverters = self.data.inverters
@@ -1233,6 +1281,7 @@ class EnvoyEnchargeInventoryEntity(EnvoyEnchargeEntity):
     entity_description: EnvoyEnchargeSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | float | datetime.datetime | None:
         """Return the state of the inventory sensors."""
         encharge_inventory = self.data.encharge_inventory
@@ -1246,6 +1295,7 @@ class EnvoyEnchargePowerEntity(EnvoyEnchargeEntity):
     entity_description: EnvoyEnchargePowerSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the state of the power sensors."""
         encharge_power = self.data.encharge_power
@@ -1259,6 +1309,7 @@ class EnvoyEnchargeAggregateEntity(EnvoySystemSensorEntity):
     entity_description: EnvoyEnchargeAggregateSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the state of the aggregate sensors."""
         encharge_aggregate = self.data.encharge_aggregate
@@ -1292,6 +1343,7 @@ class EnvoyEnpowerEntity(EnvoySensorBaseEntity):
         )
 
     @property
+    @override
     def native_value(self) -> datetime.datetime | int | float | None:
         """Return the state of the power sensors."""
         enpower = self.data.enpower
@@ -1323,6 +1375,7 @@ class EnvoyAcbBatteryPowerEntity(EnvoySensorBaseEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int | str | None:
         """Return the state of the ACB Battery power sensors."""
         acb = self.data.acb_power
@@ -1336,6 +1389,7 @@ class EnvoyAcbBatteryEnergyEntity(EnvoySystemSensorEntity):
     entity_description: EnvoyAcbBatterySensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | str:
         """Return the state of the aggregate energy sensors."""
         acb = self.data.acb_power
@@ -1349,6 +1403,7 @@ class AggregateBatteryEntity(EnvoySystemSensorEntity):
     entity_description: EnvoyAggregateBatterySensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the state of the aggregate sensors."""
         battery_aggregate = self.data.battery_aggregate
@@ -1383,6 +1438,7 @@ class EnvoyCollarEntity(EnvoySensorBaseEntity):
         )
 
     @property
+    @override
     def native_value(self) -> datetime.datetime | int | float | str:
         """Return the state of the collar sensors."""
         collar_data = self.data.collar
@@ -1416,6 +1472,7 @@ class EnvoyC6CCEntity(EnvoySensorBaseEntity):
         )
 
     @property
+    @override
     def native_value(self) -> datetime.datetime:
         """Return the state of the c6cc inventory sensors."""
         c6cc_data = self.data.c6cc

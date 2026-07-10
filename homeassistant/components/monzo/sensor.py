@@ -1,24 +1,19 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import MonzoCoordinator
-from .const import DOMAIN
-from .coordinator import MonzoData
+from .coordinator import MonzoConfigEntry, MonzoCoordinator, MonzoData
 from .entity import MonzoBaseEntity
 
 
@@ -64,11 +59,11 @@ MODEL_POT = "Pot"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MonzoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator: MonzoCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     accounts = [
         MonzoSensor(
@@ -110,6 +105,7 @@ class MonzoSensor(MonzoBaseEntity, SensorEntity):
         self._attr_unique_id = f"{self.data['id']}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
 

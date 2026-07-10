@@ -1,9 +1,7 @@
 """Support for KNX date entities."""
 
-from __future__ import annotations
-
 from datetime import date as dt_date
-from typing import Any
+from typing import Any, override
 
 from xknx.devices import DateDevice as XknxDateDevice
 from xknx.dpt.dpt_11 import KNXDate as XKNXDate
@@ -76,6 +74,7 @@ class _KNXDate(DateEntity, RestoreEntity):
 
     _device: XknxDateDevice
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
@@ -89,10 +88,12 @@ class _KNXDate(DateEntity, RestoreEntity):
             )
 
     @property
+    @override
     def native_value(self) -> dt_date | None:
         """Return the latest value."""
         return self._device.value
 
+    @override
     async def async_set_value(self, value: dt_date) -> None:
         """Change the value."""
         await self._device.set(value)
@@ -105,20 +106,21 @@ class KnxYamlDate(_KNXDate, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX date."""
+        self._device = XknxDateDevice(
+            knx_module.xknx,
+            name=config[CONF_NAME],
+            localtime=False,
+            group_address=config[KNX_ADDRESS],
+            group_address_state=config.get(CONF_STATE_ADDRESS),
+            respond_to_read=config[CONF_RESPOND_TO_READ],
+            sync_state=config[CONF_SYNC_STATE],
+        )
         super().__init__(
             knx_module=knx_module,
-            device=XknxDateDevice(
-                knx_module.xknx,
-                name=config[CONF_NAME],
-                localtime=False,
-                group_address=config[KNX_ADDRESS],
-                group_address_state=config.get(CONF_STATE_ADDRESS),
-                respond_to_read=config[CONF_RESPOND_TO_READ],
-                sync_state=config[CONF_SYNC_STATE],
-            ),
+            unique_id=str(self._device.remote_value.group_address),
+            name=config[CONF_NAME],
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = str(self._device.remote_value.group_address)
 
 
 class KnxUiDate(_KNXDate, KnxUiEntity):

@@ -3,7 +3,7 @@
 from asyncio import timeout
 from contextlib import suppress
 from socket import gaierror
-from typing import Any
+from typing import Any, override
 
 import mpd
 from mpd.asyncio import MPDClient
@@ -26,6 +26,7 @@ SCHEMA = vol.Schema(
 class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
     """Music Player Daemon config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

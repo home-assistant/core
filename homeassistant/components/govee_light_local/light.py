@@ -1,9 +1,8 @@
 """Govee light local."""
 
-from __future__ import annotations
-
+from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from govee_local_api import GoveeDevice, GoveeLightFeatures
 
@@ -22,7 +21,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DEVICE_TIMEOUT, DOMAIN, MANUFACTURER
 from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,7 +79,6 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
 
         super().__init__(coordinator)
         self._device = device
-        device.set_update_callback(self._update_callback)
 
         self._attr_unique_id = device.fingerprint
 
@@ -120,26 +118,45 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         )
 
     @property
+    @override
+    def available(self) -> bool:
+        """Return if the device is reachable.
+
+        The underlying library updates ``lastseen`` whenever the device
+        replies to a status request. The coordinator polls every
+        ``SCAN_INTERVAL``, so if we have not heard back within
+        ``DEVICE_TIMEOUT`` we consider the device offline.
+        """
+        if not super().available:
+            return False
+        return datetime.now() - self._device.lastseen < DEVICE_TIMEOUT  # pylint: disable=home-assistant-enforce-naive-now
+
+    @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on (brightness above 0)."""
         return self._device.on
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return int((self._device.brightness / 100.0) * 255.0)
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature in Kelvin."""
         return self._device.temperature_color
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the rgb color."""
         return self._device.rgb_color
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode."""
         if self._fixed_color_mode:
@@ -155,6 +172,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
             return ColorMode.COLOR_TEMP
         return ColorMode.RGB
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -189,13 +207,27 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.coordinator.turn_off(self._device)
         self.async_write_ha_state()
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register update callback when entity is added."""
+        await super().async_added_to_hass()
+        self._device.set_update_callback(self._update_callback)
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Unregister update callback when entity is removed."""
+        self._device.set_update_callback(None)
+        await super().async_will_remove_from_hass()
+
     @callback
     def _update_callback(self, device: GoveeDevice) -> None:
+        """Handle device state updates pushed by the library."""
         self.async_write_ha_state()
 
     def _save_last_color_state(self) -> None:

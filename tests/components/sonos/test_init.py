@@ -2,6 +2,7 @@
 
 import asyncio
 from http import HTTPStatus
+from itertools import chain, repeat
 import logging
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -252,6 +253,15 @@ class _MockSoCoVisibleZones(MockSoCo):
         return self.vz_return
 
 
+class _MockSoCoUidError(MockSoCo):
+    """Mock SoCo used for uid property error tests."""
+
+    @property
+    def visible_zones(self):
+        """Return no additional zones without touching uid lookup."""
+        return set()
+
+
 async def _setup_hass(hass: HomeAssistant):
     await async_setup_component(
         hass,
@@ -290,6 +300,65 @@ async def test_async_poll_manual_hosts_1(
             f"Could not get visible Sonos devices from {soco_2.ip_address}"
             not in caplog.text
         )
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_async_poll_manual_hosts_uid_oserror(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test uid lookup OSError skips host and logs warning."""
+    soco_1 = soco_factory.cache_mock(_MockSoCoUidError(), "10.10.10.1", "Living Room")
+    soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    uid = soco_1.uid
+
+    with (
+        caplog.at_level(logging.WARNING),
+        patch.object(
+            type(soco_1),
+            "uid",
+            new_callable=PropertyMock,
+            create=True,
+            side_effect=chain([uid], repeat(OSError("uid unavailable"))),
+        ),
+    ):
+        await _setup_hass(hass)
+
+    assert "media_player.bedroom" in entity_registry.entities
+    assert "media_player.living_room" not in entity_registry.entities
+    assert f"Could not get Sonos uid from {soco_1.ip_address}" in caplog.text
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+
+async def test_async_poll_manual_hosts_uid_http_error(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test uid lookup HTTPError skips host."""
+    resp = Response()
+    resp.status_code = HTTPStatus.FORBIDDEN
+    http_error = HTTPError(response=resp)
+
+    soco_1 = soco_factory.cache_mock(_MockSoCoUidError(), "10.10.10.1", "Living Room")
+    soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    uid = soco_1.uid
+
+    with patch.object(
+        type(soco_1),
+        "uid",
+        new_callable=PropertyMock,
+        create=True,
+        side_effect=chain([uid], repeat(http_error)),
+    ):
+        await _setup_hass(hass)
+
+    assert "media_player.bedroom" in entity_registry.entities
+    assert "media_player.living_room" not in entity_registry.entities
 
     await hass.async_block_till_done(wait_background_tasks=True)
 

@@ -1,6 +1,7 @@
 """Implementation of the lock platform."""
 
 from datetime import timedelta
+from typing import Any, override
 
 from aiohttp import ClientError
 from igloohome_api import (
@@ -63,7 +64,8 @@ class IgloohomeLockEntity(IgloohomeBaseEntity, LockEntity):
         )
         self.bridge_id = bridge_id
 
-    async def async_lock(self, **kwargs):
+    @override
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock this lock."""
         try:
             await self.api.create_bridge_proxied_job(
@@ -72,7 +74,8 @@ class IgloohomeLockEntity(IgloohomeBaseEntity, LockEntity):
         except (ApiException, ClientError) as err:
             raise HomeAssistantError from err
 
-    async def async_unlock(self, **kwargs):
+    @override
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock this lock."""
         try:
             await self.api.create_bridge_proxied_job(
@@ -81,7 +84,8 @@ class IgloohomeLockEntity(IgloohomeBaseEntity, LockEntity):
         except (ApiException, ClientError) as err:
             raise HomeAssistantError from err
 
-    async def async_open(self, **kwargs):
+    @override
+    async def async_open(self, **kwargs: Any) -> None:
         """Open (unlatch) this lock."""
         try:
             await self.api.create_bridge_proxied_job(

@@ -10,8 +10,6 @@
       failed_results=list([
       ]),
       intent=None,
-      intent_targets=list([
-      ]),
       language='en',
       matched_states=list([
       ]),

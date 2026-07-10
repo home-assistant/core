@@ -1,9 +1,8 @@
 """Coordinator for the Moehlenhoff Alpha2."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 import aiohttp
 from moehlenhoff_alpha2 import Alpha2Base
@@ -17,14 +16,16 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=60)
 
+type Alpha2ConfigEntry = ConfigEntry[Alpha2BaseCoordinator]
+
 
 class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """Keep the base instance in one place and centralize the update."""
 
-    config_entry: ConfigEntry
+    config_entry: Alpha2ConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, base: Alpha2Base
+        self, hass: HomeAssistant, config_entry: Alpha2ConfigEntry, base: Alpha2Base
     ) -> None:
         """Initialize Alpha2Base data updater."""
         self.base = base
@@ -36,6 +37,7 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, dict]]:
         """Fetch the latest data from the source."""
         await self.base.update_data()

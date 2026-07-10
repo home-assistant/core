@@ -1,9 +1,7 @@
 """Config flow for the Trane Local integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from steamloop import PairingError, SteamloopConnectionError, ThermostatConnection
 import voluptuous as vol
@@ -25,8 +23,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class TraneConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Trane Local."""
 
-    VERSION = 1
-
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

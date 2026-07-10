@@ -1,12 +1,10 @@
 """Support for interfacing to the SqueezeBox API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime
 import json
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from lru import LRU
 from pysqueezebox import Server, async_discover
@@ -76,7 +74,7 @@ ATTR_QUERY_RESULT = "query_result"
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 ATTR_OTHER_PLAYER = "other_player"
 
@@ -136,7 +134,8 @@ async def async_setup_entry(
         manufacturer = player.creator
         model_id = player.model_type
         sw_version = ""
-        # Why? so we nicely merge with a server and a player linked by a MAC server is not all info lost
+        # So we nicely merge with a server and a player
+        # linked by a MAC server is not all info lost
         if (
             server_device
             and (CONNECTION_NETWORK_MAC, format_mac(player.player_id))
@@ -161,7 +160,7 @@ async def async_setup_entry(
             model=model,
             manufacturer=manufacturer,
             model_id=model_id,
-            hw_version=player.firmware,
+            hw_version=str(player.firmware) if player.firmware is not None else None,
             sw_version=sw_version,
             via_device=(DOMAIN, coordinator.server_uuid),
         )
@@ -238,6 +237,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         self._synthetic_media_browser_thumbnail_items: LRU[str, str] = LRU(5000)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self._previous_media_position != self.media_position:
@@ -246,6 +246,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def volume_step(self) -> float:
         """Return the step to be used for volume up down."""
         return float(
@@ -265,6 +266,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device-specific attributes."""
         return {
@@ -274,6 +276,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         }
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if not self._player.power:
@@ -285,18 +288,28 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         return None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
         await self._browse_data.async_init(self._player, self.browse_limit)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove from list of known players when removed from hass."""
-        self.coordinator.config_entry.runtime_data.known_player_ids.remove(
+        self.coordinator.async_shutdown_dispatcher()
+
+        self.coordinator.config_entry.runtime_data.known_player_ids.discard(
             self.coordinator.player.player_id
         )
 
+        self.coordinator.config_entry.runtime_data.player_coordinators.pop(
+            self.coordinator.player.player_id, None
+        )
+        await super().async_will_remove_from_hass()
+
     @property
+    @override
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         if self._player.volume is not None:
@@ -305,11 +318,13 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def is_volume_muted(self) -> bool:
         """Return true if volume is muted."""
         return bool(self._player.muting)
 
     @property
+    @override
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         if not self._player.playlist:
@@ -320,6 +335,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         return str(self._player.url)
 
     @property
+    @override
     def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         if not self._player.playlist:
@@ -329,46 +345,55 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         return MediaType.MUSIC
 
     @property
+    @override
     def media_duration(self) -> int:
         """Duration of current playing media in seconds."""
         return int(self._player.duration) if self._player.duration else 0
 
     @property
+    @override
     def media_position(self) -> int:
         """Position of current playing media in seconds."""
         return int(self._player.time) if self._player.time else 0
 
     @property
+    @override
     def media_position_updated_at(self) -> datetime | None:
         """Last time status was updated."""
         return self._last_update
 
     @property
+    @override
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         return str(self._player.image_url) if self._player.image_url else None
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Title of current playing media."""
         return cast(str | None, self._player.title)
 
     @property
+    @override
     def media_channel(self) -> str | None:
         """Channel (e.g. webradio name) of current playing media."""
         return cast(str | None, self._player.remote_title)
 
     @property
+    @override
     def media_artist(self) -> str | None:
         """Artist of current playing media."""
         return cast(str | None, self._player.artist)
 
     @property
+    @override
     def media_album_name(self) -> str | None:
         """Album of current playing media."""
         return cast(str | None, self._player.album)
 
     @property
+    @override
     def repeat(self) -> RepeatMode:
         """Repeat setting."""
         if self._player.repeat == "song":
@@ -378,12 +403,14 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         return RepeatMode.OFF
 
     @property
+    @override
     def shuffle(self) -> bool:
         """Boolean if shuffle is enabled."""
         # Squeezebox has a third shuffle mode (album) not recognized by Home Assistant
         return bool(self._player.shuffle == "song")
 
     @property
+    @override
     def group_members(self) -> list[str]:
         """List players we are synced with."""
         ent_reg = er.async_get(self.hass)
@@ -402,6 +429,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         """Return the result from the call_query service."""
         return self._query_result
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await safe_library_call(
@@ -409,6 +437,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         volume_percent = str(round(volume * 100))
@@ -420,6 +449,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         await safe_library_call(
@@ -429,6 +459,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command to media player."""
         await safe_library_call(
@@ -437,6 +468,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_media_play_pause(self) -> None:
         """Send pause/play toggle command to media player."""
         await safe_library_call(
@@ -445,6 +477,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_media_play(self) -> None:
         """Send play command to media player."""
         await safe_library_call(
@@ -453,6 +486,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command to media player."""
         await safe_library_call(
@@ -461,6 +495,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await safe_library_call(
@@ -470,6 +505,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await safe_library_call(
@@ -479,6 +515,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         await safe_library_call(
@@ -489,6 +526,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await safe_library_call(
@@ -498,6 +536,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_play_media(
         self,
         media_type: MediaType | str,
@@ -612,6 +651,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
         await self.coordinator.async_refresh()
 
+    @override
     async def async_search_media(
         self,
         query: SearchMediaQuery,
@@ -680,6 +720,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
         return SearchMedia(result=result)
 
+    @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode."""
         if repeat == RepeatMode.ALL:
@@ -696,6 +737,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable or disable shuffle mode."""
         shuffle_mode = "song" if shuffle else "none"
@@ -706,6 +748,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_clear_playlist(self) -> None:
         """Send the media player the command to clear the playlist."""
         await safe_library_call(
@@ -754,11 +797,12 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         _LOGGER.debug("call_query got result %s", self._query_result)
         self.async_write_ha_state()
 
+    @override
     async def async_join_players(self, group_members: list[str]) -> None:
         """Add other Squeezebox players to this player's sync group.
 
-        If the other player is a member of a sync group, it will leave the current sync group
-        without asking.
+        If the other player is a member of a sync group,
+        it will leave the current sync group without asking.
         """
         ent_reg = er.async_get(self.hass)
         for other_player_entity_id in group_members:
@@ -782,6 +826,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
                     },
                 )
 
+    @override
     async def async_unjoin_player(self) -> None:
         """Unsync this Squeezebox player."""
         await safe_library_call(
@@ -793,7 +838,8 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     def get_synthetic_id_and_cache_url(self, url: str) -> str:
         """Cache a thumbnail URL and return a synthetic ID.
 
-        This enables us to proxy thumbnails for apps and favorites, as those do not have IDs.
+        This enables us to proxy thumbnails for apps and
+        favorites, as those do not have IDs.
         """
         synthetic_id = f"s_{ulid_now()}"
 
@@ -801,6 +847,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
         return synthetic_id
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -837,6 +884,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
             self._browse_data,
         )
 
+    @override
     async def async_get_browse_image(
         self,
         media_content_type: MediaType | str,

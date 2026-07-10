@@ -1,6 +1,7 @@
 """Probe Plus base entity type."""
 
 from dataclasses import dataclass
+from typing import override
 
 from pyprobeplus import ProbePlusDevice
 
@@ -46,6 +47,7 @@ class ProbePlusEntity(CoordinatorEntity[ProbePlusDataUpdateCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the entity is available."""
         return super().available and self.coordinator.device.connected

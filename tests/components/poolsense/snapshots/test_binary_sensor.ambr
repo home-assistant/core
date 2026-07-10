@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[binary_sensor.test_test_com_chlorine_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,9 +39,9 @@
 # name: test_all_entities[binary_sensor.test_test_com_chlorine_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'PoolSense Data',
-      'device_class': 'problem',
-      'friendly_name': 'test@test.com Chlorine status',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'PoolSense Data',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test@test.com Chlorine status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_test_com_chlorine_status',
@@ -52,8 +53,9 @@
 # ---
 # name: test_all_entities[binary_sensor.test_test_com_ph_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -89,9 +91,9 @@
 # name: test_all_entities[binary_sensor.test_test_com_ph_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'PoolSense Data',
-      'device_class': 'problem',
-      'friendly_name': 'test@test.com pH status',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'PoolSense Data',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test@test.com pH status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_test_com_ph_status',

@@ -11,10 +11,11 @@
     "velbus-parser",
     "velbus-module",
     "velbus-packet",
-    "velbus-protocol"
+    "velbus-protocol",
+    "velbus-handler"
   ],
   "quality_scale": "silver",
-  "requirements": ["velbus-aio==2026.1.4"],
+  "requirements": ["velbus-aio==2026.4.1"],
   "usb": [
     {
       "pid": "0B1B",

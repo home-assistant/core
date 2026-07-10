@@ -1,13 +1,11 @@
 """Config flow for Rain Bird."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
-from pyrainbird.async_client import AsyncRainbirdClient, AsyncRainbirdController
+from pyrainbird.async_client import create_controller
 from pyrainbird.data import WifiParams
 from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
 import voluptuous as vol
@@ -64,6 +62,7 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: RainbirdConfigEntry,
     ) -> RainBirdOptionsFlowHandler:
@@ -99,6 +98,7 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -137,15 +137,9 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         Raises a ConfigFlowError on failure.
         """
         clientsession = async_create_clientsession()
-        controller = AsyncRainbirdController(
-            AsyncRainbirdClient(
-                clientsession,
-                host,
-                password,
-            )
-        )
         try:
             async with asyncio.timeout(TIMEOUT_SECONDS):
+                controller = await create_controller(clientsession, host, password)
                 return await asyncio.gather(
                     controller.get_serial_number(),
                     controller.get_wifi_params(),
