@@ -118,6 +118,11 @@ class Streams:
 @asynccontextmanager
 async def create_streams() -> AsyncGenerator[Streams]:
     """Create a new pair of streams for MCP server communication."""
+    read_stream: MemoryObjectReceiveStream[SessionMessage | Exception]
+    read_stream_writer: MemoryObjectSendStream[SessionMessage | Exception]
+    write_stream: MemoryObjectSendStream[SessionMessage]
+    write_stream_reader: MemoryObjectReceiveStream[SessionMessage]
+
     read_stream_writer, read_stream = anyio.create_memory_object_stream(0)
     write_stream, write_stream_reader = anyio.create_memory_object_stream(0)
     streams = Streams(
