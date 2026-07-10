@@ -28,7 +28,7 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@patch("homeassistant.components.yardian.button.asyncio.sleep", AsyncMock())
+@patch("homeassistant.components.yardian.button.BUTTON_REFRESH_DELAY", 0)
 async def test_stop_all_button(
     hass: HomeAssistant,
     mock_yardian_client: AsyncMock,
