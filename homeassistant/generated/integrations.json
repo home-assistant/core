@@ -2319,6 +2319,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "fuelprices_dk": {
+      "name": "Fuelprices.dk",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "fujitsu": {
       "name": "Fujitsu",
       "integrations": {
@@ -6184,6 +6190,12 @@
       "name": "Seattle City Light (SCL)",
       "integration_type": "virtual",
       "supported_by": "opower"
+    },
+    "scorpiontrack": {
+      "name": "ScorpionTrack",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "scrape": {
       "name": "Scrape",

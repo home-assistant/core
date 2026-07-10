@@ -740,7 +740,7 @@ async def test_call_service(
     ],
 )
 async def test_call_service_resyncs_on_failure(
-    hass: HomeAssistant, hk_driver, raise_exception: Exception
+    hass: HomeAssistant, hk_driver: HomeDriver, raise_exception: Exception
 ) -> None:
     """When the dispatched service raises, re-push the entity's current state.
 
@@ -766,6 +766,51 @@ async def test_call_service_resyncs_on_failure(
     pushed_state = mock_update_state.call_args.args[0]
     assert pushed_state.entity_id == entity_id
     assert pushed_state.state == STATE_OFF
+
+
+async def test_call_service_resync_failure_is_logged(
+    hass: HomeAssistant, hk_driver: HomeDriver, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a failing resync is logged instead of hitting the task handler."""
+    entity_id = "homekit.accessory"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(hass, hk_driver, "Home Accessory", entity_id, 2, {})
+    async_mock_service(
+        hass, "cover", "open_cover", raise_exception=HomeAssistantError("nope")
+    )
+
+    with patch.object(
+        acc, "async_update_state", side_effect=RuntimeError("resync boom")
+    ):
+        acc.async_call_service(
+            "cover", "open_cover", {ATTR_ENTITY_ID: entity_id}, "value"
+        )
+        await hass.async_block_till_done()
+
+    assert "re-syncing HomeKit state failed" in caplog.text
+
+
+async def test_call_service_resync_skip_is_logged(
+    hass: HomeAssistant, hk_driver: HomeDriver, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a resync skipped for a missing entity state is diagnosable."""
+    entity_id = "homekit.accessory"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(hass, hk_driver, "Home Accessory", entity_id, 2, {})
+    async_mock_service(
+        hass, "cover", "open_cover", raise_exception=HomeAssistantError("nope")
+    )
+
+    hass.states.async_remove(entity_id)
+    await hass.async_block_till_done()
+    acc.async_call_service("cover", "open_cover", {ATTR_ENTITY_ID: entity_id}, "value")
+    await hass.async_block_till_done()
+
+    assert "cannot re-sync HomeKit state" in caplog.text
 
 
 def test_home_bridge(hk_driver) -> None:

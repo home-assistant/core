@@ -240,6 +240,7 @@ def make_public_sensor(
     state: DeviceState | None = None,
     is_motion_detected: bool | None = None,
     motion_enabled: bool | None = None,
+    motion_sensitivity: int | None = None,
     mount_type: MountType | None = None,
     is_opened: bool | None = None,
     is_leak_detected: bool | None = None,
@@ -298,7 +299,12 @@ def make_public_sensor(
             sensor.motion_settings.is_enabled
             if motion_enabled is None
             else motion_enabled
-        )
+        ),
+        sensitivity=(
+            sensor.motion_settings.sensitivity
+            if motion_sensitivity is None
+            else motion_sensitivity
+        ),
     )
     public.wireless_connection_state = PublicWirelessConnectionState(
         battery_status=PublicWirelessBatteryStatus(
@@ -435,6 +441,7 @@ def make_public_camera(
     is_glass_break_currently_detected: bool = False,
     object_types: list[SmartDetectObjectType] | None = None,
     audio_types: list[SmartDetectAudioType] | None = None,
+    mic_volume: int | None = None,
     hdr_type: PublicHdrMode | None = None,
 ) -> Mock:
     """Build a public-API camera mirroring a private camera's migrated fields.
@@ -451,6 +458,7 @@ def make_public_camera(
     public.mac = camera.mac
     public.model = ModelType.CAMERA
     public.state = DeviceState[camera.state.name] if state is None else state
+    public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
     public.is_motion_detected = is_motion_detected
     public.is_smart_currently_detected = is_smart_currently_detected
     public.is_person_currently_detected = is_person_currently_detected
