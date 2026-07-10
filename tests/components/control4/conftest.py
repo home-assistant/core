@@ -98,16 +98,40 @@ def mock_c4_director() -> Generator[MagicMock]:
 
 @pytest.fixture(autouse=True)
 def mock_c4_websocket() -> Generator[MagicMock]:
-    """Mock C4Websocket to prevent real WebSocket connections during tests."""
+    """Mock C4Websocket to prevent real WebSocket connections during tests.
+
+    Tracks item callbacks in a real dict and captures the disconnect
+    callback so tests can drive disconnects through the same path the
+    integration uses, instead of poking entity internals directly.
+    """
+    item_callbacks: dict[int, list] = {}
+
+    def _add_item_callback(item_id, callback):
+        item_callbacks.setdefault(item_id, []).append(callback)
+
+    def _remove_item_callback(item_id, callback):
+        callbacks = item_callbacks.get(item_id, [])
+        if callback in callbacks:
+            callbacks.remove(callback)
+
     with patch(
         "homeassistant.components.control4.C4Websocket", autospec=True
     ) as mock_ws_class:
         mock_ws = mock_ws_class.return_value
         mock_ws.sio_connect = AsyncMock()
         mock_ws.sio_disconnect = AsyncMock()
-        mock_ws.add_item_callback = MagicMock()
-        mock_ws.remove_item_callback = MagicMock()
-        mock_ws.item_callbacks = {}
+        mock_ws.add_item_callback = MagicMock(side_effect=_add_item_callback)
+        mock_ws.remove_item_callback = MagicMock(side_effect=_remove_item_callback)
+        mock_ws.item_callbacks = item_callbacks
+        mock_ws.disconnect_callback = None
+
+        def _capture_callbacks(*args, **kwargs):
+            mock_ws.disconnect_callback = kwargs.get(
+                "disconnect_callback", args[3] if len(args) > 3 else None
+            )
+            return mock_ws
+
+        mock_ws_class.side_effect = _capture_callbacks
         yield mock_ws
 
 

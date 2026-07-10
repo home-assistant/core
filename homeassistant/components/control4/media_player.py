@@ -247,7 +247,9 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
             | MediaPlayerEntityFeature.PLAY_MEDIA
         )
         self._current_source: _RoomSource | None = None
-        self.hass.bus.async_listen(CONTROL4_MEDIA_JOIN_EVENT, self._handle_join)
+        self.async_on_remove(
+            self.hass.bus.async_listen(CONTROL4_MEDIA_JOIN_EVENT, self._handle_join)
+        )
 
     async def _handle_join(self, event) -> None:
         joining_entities = event.data.get(CONTROL4_MEDIA_JOIN_EVENT_ENTITIES)
@@ -478,9 +480,6 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
     @override
     async def async_select_source(self, source):
         """Select a new source."""
-        current_source = self._get_current_playing_device_id()
-        if current_source in self._sources:
-            self._sources[current_source].group_members.remove(self.entity_id)
         for avail_source in self._sources.values():
             if avail_source.name == source:
                 audio_only = _SourceType.VIDEO not in avail_source.source_type
@@ -490,7 +489,6 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
                     await self._create_api_object().set_video_and_audio_source(
                         avail_source.idx
                     )
-                avail_source.group_members.add(self.entity_id)
                 break
 
         await self.coordinator.async_request_refresh()

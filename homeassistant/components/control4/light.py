@@ -4,6 +4,8 @@ import json
 import logging
 from typing import Any, override
 
+from aiohttp import client_exceptions
+from pyControl4.error_handling import C4Exception
 from pyControl4.light import C4Light
 
 from homeassistant.components.light import (
@@ -177,7 +179,12 @@ class Control4Light(Control4Entity, LightEntity):
                 self._attr_color_mode = ColorMode.BRIGHTNESS
             else:
                 self._attr_color_mode = ColorMode.ONOFF
-        except Exception:  # noqa: BLE001
+        except (
+            C4Exception,
+            client_exceptions.ClientError,
+            TimeoutError,
+            json.JSONDecodeError,
+        ):
             _LOGGER.debug("get_item_setup failed for %s", self._idx)
         self.async_write_ha_state()
 

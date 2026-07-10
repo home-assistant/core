@@ -316,18 +316,14 @@ async def test_cover_partial_variables(
 )
 async def test_cover_unavailable_on_websocket_disconnect(
     hass: HomeAssistant,
+    mock_c4_websocket: MagicMock,
 ) -> None:
     """Cover becomes unavailable when the WebSocket disconnect callback fires."""
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
-    entity = next(
-        e
-        for e in hass.data["entity_components"]["cover"].entities
-        if e.entity_id == ENTITY_ID
-    )
-    await entity._update_callback(entity._idx, False)
+    await mock_c4_websocket.disconnect_callback()
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
