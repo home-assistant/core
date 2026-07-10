@@ -68,7 +68,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_SENDER): TextSelector(
             TextSelectorConfig(
-                type=TextSelectorType.TEXT,
+                type=TextSelectorType.EMAIL,
                 autocomplete="email",
             ),
         ),
@@ -351,7 +351,7 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
                     vol.Optional(CONF_NAME): cv.string,
                     vol.Required(CONF_RECIPIENT): TextSelector(
                         TextSelectorConfig(
-                            type=TextSelectorType.TEXT,
+                            type=TextSelectorType.EMAIL,
                             autocomplete="email",
                         ),
                     ),
