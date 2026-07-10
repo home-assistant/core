@@ -33,4 +33,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: RuuviGatewayConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, [])
+    return True
