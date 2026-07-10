@@ -1,5 +1,6 @@
 """Test different accessory types: HeaterCooler."""
 
+from typing import Any
 from unittest.mock import patch
 
 from pyhap.const import (
@@ -891,10 +892,19 @@ async def test_heatercooler_set_chars_dispatch_order(
     await hass.async_block_till_done()
 
     services: list[str] = []
-    with patch.object(
-        acc,
-        "async_call_service",
-        side_effect=lambda domain, service, data: services.append(service),
+
+    async def _record_and_wait(
+        domain: str, service: str, data: dict[str, Any], value: Any | None = None
+    ) -> None:
+        services.append(service)
+
+    with (
+        patch.object(
+            acc,
+            "async_call_service",
+            side_effect=lambda domain, service, data: services.append(service),
+        ),
+        patch.object(acc, "async_call_service_and_wait", _record_and_wait),
     ):
         _write_chars(
             hk_driver,
@@ -1107,6 +1117,42 @@ async def test_heatercooler_dual_capable_entity_in_single_mode(
     assert call_set_temperature[-1].data[ATTR_TARGET_TEMP_LOW] == pytest.approx(
         16.0, abs=0.1
     )
+
+
+async def test_heatercooler_range_keys_without_range_capability(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test a cool only entity reporting range keys still gets single writes."""
+    entity_id = "climate.test"
+    # A contradictory device config: range keys without any range mode
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+        ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
+        ATTR_TARGET_TEMP_HIGH: 24.0,
+        ATTR_TARGET_TEMP_LOW: 18.0,
+    }
+
+    hass.states.async_set(entity_id, HVACMode.COOL, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Only the cooling threshold exists, so a range write is impossible
+    # and the setpoint goes out as a single temperature
+    call_set_temperature = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
+    )
+    _write_chars(hk_driver, acc, {CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0})
+    await hass.async_block_till_done()
+
+    assert len(call_set_temperature) == 1
+    assert call_set_temperature[0].data[ATTR_TEMPERATURE] == pytest.approx(
+        22.0, abs=0.1
+    )
+    assert ATTR_TARGET_TEMP_HIGH not in call_set_temperature[0].data
 
 
 async def test_heatercooler_set_fan_speed(

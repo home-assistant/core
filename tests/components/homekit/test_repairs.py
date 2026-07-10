@@ -227,6 +227,18 @@ async def test_failed_accessory_creation_is_not_recorded(
 
     assert homekit.aid_storage is not None
     assert homekit.aid_storage.get_accessory_type(ENTITY_ID) is None
+    # The aid allocation is rolled back so the entity is still new
+    assert not homekit.aid_storage.allocations
+    await _async_stop_bridge(homekit)
+
+    # The next start treats the entity as never bridged and retries
+    # the automatic choice
+    homekit = await _async_start_bridge(hass, entry)
+    accessories = list(homekit.bridge.accessories.values())
+    assert type(accessories[0]).__name__ == "HeaterCooler"
+    assert not issue_registry.async_get_issue(
+        DOMAIN, accessory_type_issue_id(entry.entry_id, ENTITY_ID)
+    )
     await _async_stop_bridge(homekit)
 
 

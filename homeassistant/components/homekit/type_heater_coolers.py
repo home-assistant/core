@@ -317,17 +317,33 @@ class HeaterCooler(HomeKitClimateAccessory):
                 char_values, service_calls, current_state, requested_mode
             )
 
+        # Mode and temperature writes are awaited in order so a setpoint
+        # cannot reach the entity before its mode switch completes, with the
+        # fan and swing changes dispatched after them.
+        if service_calls:
+            self.hass.async_create_task(
+                self._async_apply_writes(
+                    service_calls, char_values if active_on else None
+                ),
+                eager_start=True,
+            )
+        elif active_on:
+            self._handle_fan_swing_changes(char_values)
+
+    async def _async_apply_writes(
+        self,
+        service_calls: list[tuple[str, dict[str, Any]]],
+        fan_swing_char_values: dict[str, Any] | None,
+    ) -> None:
+        """Apply the queued writes in order, then the fan and swing ones."""
         for service_name, service_data in service_calls:
-            self.async_call_service(
+            await self.async_call_service_and_wait(
                 CLIMATE_DOMAIN,
                 service_name,
                 {ATTR_ENTITY_ID: self.entity_id, **service_data},
             )
-
-        # Fan and swing are applied after the mode/temperature writes so the
-        # calls are dispatched in the intended order.
-        if active_on:
-            self._handle_fan_swing_changes(char_values)
+        if fan_swing_char_values:
+            self._handle_fan_swing_changes(fan_swing_char_values)
 
     def _handle_active_mode_changes(
         self,
@@ -401,8 +417,14 @@ class HeaterCooler(HomeKitClimateAccessory):
             current_state.state if current_state else None
         )
         use_range = (
-            ATTR_TARGET_TEMP_HIGH in attributes or ATTR_TARGET_TEMP_LOW in attributes
-        ) and (effective_mode in RANGE_MODES or ATTR_TEMPERATURE not in attributes)
+            self._has_cool_threshold
+            and self._has_heat_threshold
+            and (
+                ATTR_TARGET_TEMP_HIGH in attributes
+                or ATTR_TARGET_TEMP_LOW in attributes
+            )
+            and (effective_mode in RANGE_MODES or ATTR_TEMPERATURE not in attributes)
+        )
 
         if use_range:
             service_calls.append(

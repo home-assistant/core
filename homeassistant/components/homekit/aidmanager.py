@@ -191,6 +191,12 @@ class AccessoryAidStorage:
             f"Unable to generate unique aid allocation for {entity_id} [{unique_id}]"
         )
 
+    @callback
+    def async_delete_aid_for_entity_id(self, entity_id: str) -> None:
+        """Remove the aid allocation for an entity."""
+        for key in self._stable_storage_keys(entity_id):
+            self.delete_aid(key)
+
     def delete_aid(self, storage_key: str) -> None:
         """Delete an aid allocation."""
         if storage_key not in self.allocations:

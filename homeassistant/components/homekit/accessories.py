@@ -827,6 +827,25 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         value: Any | None = None,
     ) -> None:
         """Fire event and call service for changes from HomeKit."""
+        self.hass.async_create_task(
+            self.async_call_service_and_wait(domain, service, service_data, value),
+            eager_start=True,
+        )
+
+    async def async_call_service_and_wait(
+        self,
+        domain: str,
+        service: str,
+        service_data: dict[str, Any],
+        value: Any | None = None,
+    ) -> None:
+        """Fire event and call service, waiting for it to complete.
+
+        blocking=True so the handler's exception reaches us (the
+        non-blocking path swallows it); on failure we resync so pyhap's
+        optimistic target characteristic doesn't strand the tile on the
+        requested action.
+        """
         event_data = {
             ATTR_ENTITY_ID: service_data.get(ATTR_ENTITY_ID, self.entity_id),
             ATTR_DISPLAY_NAME: self.display_name,
@@ -837,36 +856,29 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
 
         self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data, context=context)
 
-        async def _call() -> None:
-            # blocking=True so the handler's exception reaches us (the
-            # non-blocking path swallows it); on failure we resync so pyhap's
-            # optimistic target characteristic doesn't strand the tile on the
-            # requested action.
-            try:
-                await self.hass.services.async_call(
-                    domain, service, service_data, blocking=True, context=context
-                )
-            except HomeAssistantError as err:
-                _LOGGER.warning(
-                    "%s: %s.%s failed (%s); re-syncing HomeKit state",
-                    self.entity_id,
-                    domain,
-                    service,
-                    err,
-                )
-            except Exception:
-                _LOGGER.exception(
-                    "%s: %s.%s raised unexpectedly; re-syncing HomeKit state",
-                    self.entity_id,
-                    domain,
-                    service,
-                )
-            else:
-                return
-            if (state := self.hass.states.get(self.entity_id)) is not None:
-                self.async_update_state(state)
-
-        self.hass.async_create_task(_call(), eager_start=True)
+        try:
+            await self.hass.services.async_call(
+                domain, service, service_data, blocking=True, context=context
+            )
+        except HomeAssistantError as err:
+            _LOGGER.warning(
+                "%s: %s.%s failed (%s); re-syncing HomeKit state",
+                self.entity_id,
+                domain,
+                service,
+                err,
+            )
+        except Exception:
+            _LOGGER.exception(
+                "%s: %s.%s raised unexpectedly; re-syncing HomeKit state",
+                self.entity_id,
+                domain,
+                service,
+            )
+        else:
+            return
+        if (state := self.hass.states.get(self.entity_id)) is not None:
+            self.async_update_state(state)
 
     @ha_callback
     def async_reload(self) -> None:

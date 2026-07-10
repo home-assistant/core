@@ -776,6 +776,7 @@ class HomeKit:
         pending_type = self._type_resolver.async_resolve(
             self.aid_storage, state, conf, allow_auto=True
         )
+        newly_allocated = not self.aid_storage.entity_is_allocated(state.entity_id)
         aid = self.aid_storage.get_or_allocate_aid_for_entity_id(state.entity_id)
         # If an accessory cannot be created or added due to an exception
         # of any kind (usually in pyhap) it should not prevent
@@ -790,6 +791,10 @@ class HomeKit:
             _LOGGER.exception(
                 "Failed to create a HomeKit accessory for %s", state.entity_id
             )
+        if newly_allocated:
+            # A failed first attempt must not classify the entity as
+            # existing on the next try.
+            self.aid_storage.async_delete_aid_for_entity_id(state.entity_id)
         return None
 
     @callback
