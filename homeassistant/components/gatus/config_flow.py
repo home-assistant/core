@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from gatus_api import EndpointStatus, GatusClient, GatusClientError
+from gatus_api import GatusClient, GatusClientError
 import voluptuous as vol
 from yarl import URL
 
@@ -24,14 +24,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(
-    hass: HomeAssistant, data: dict[str, Any]
-) -> list[EndpointStatus]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate that the user input allows us to connect to Gatus and return data."""
     client = GatusClient(url=data[CONF_URL], session=async_get_clientsession(hass))
 
     try:
-        return await client.get_endpoints_statuses()
+        await client.get_endpoints_statuses()
     except GatusClientError as err:
         _LOGGER.debug("Cannot connect to Gatus instance at %s: %s", data[CONF_URL], err)
         raise CannotConnect from err
@@ -53,7 +51,7 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
             except ValueError:
                 errors["base"] = "invalid_url"
             else:
-                if not url.scheme or not url.host:
+                if url.scheme not in {"http", "https"} or not url.host:
                     errors["base"] = "invalid_url"
                 else:
                     normalized_url = str(
