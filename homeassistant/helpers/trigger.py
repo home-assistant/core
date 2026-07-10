@@ -27,6 +27,7 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ALIAS,
+    CONF_AT,
     CONF_DEVICE_ID,
     CONF_ENABLED,
     CONF_ENTITY_ID,
@@ -2054,6 +2055,26 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
     """Extract entities from a trigger config."""
     if trigger_conf[CONF_PLATFORM] in ("state", "numeric_state"):
         return trigger_conf[CONF_ENTITY_ID]  # type: ignore[no-any-return]
+
+    if trigger_conf[CONF_PLATFORM] == "time":
+        # Each at time can be a time, an entity id, an entity id with
+        # an offset, or a template.
+        entity_ids: list[str] = []
+        for at_time in trigger_conf[CONF_AT]:
+            if isinstance(at_time, str) and valid_entity_id(at_time):
+                entity_ids.append(at_time)
+            elif isinstance(at_time, dict) and CONF_ENTITY_ID in at_time:
+                entity_ids.append(at_time[CONF_ENTITY_ID])
+        return entity_ids
+
+    if trigger_conf[CONF_PLATFORM] == "device":
+        # Only extract the entity if it has been resolved to an entity id
+        # during validation; unvalidated configs hold an entity registry id.
+        if isinstance(
+            entity_id := trigger_conf.get(CONF_ENTITY_ID), str
+        ) and valid_entity_id(entity_id):
+            return [entity_id]
+        return []
 
     if trigger_conf[CONF_PLATFORM] == "calendar":
         return [trigger_conf[CONF_OPTIONS][CONF_ENTITY_ID]]

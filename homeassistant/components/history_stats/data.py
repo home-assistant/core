@@ -197,8 +197,7 @@ class HistoryStats:
         finally:
             self._query_count -= 1
         self._history_current_period = [
-            HistoryState(state.state, state.last_changed.timestamp())
-            for state in states
+            HistoryState(state.state, state.last_changed_timestamp) for state in states
         ]
 
     def _state_changes_during_period(

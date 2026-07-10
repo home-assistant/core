@@ -3,6 +3,11 @@
   "name": "STIEBEL ELTRON",
   "codeowners": ["@fucm", "@ThyMYthOS"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "servicewelt*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/stiebel_eltron",
   "integration_type": "device",
   "iot_class": "local_polling",

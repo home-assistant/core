@@ -20,12 +20,11 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_API_KEY,
     CONF_LLM_HASS_API,
     CONF_NAME,
     CONF_PROMPT,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
@@ -654,8 +653,8 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     {
                         "role": "system",
                         "content": "Where are the following coordinates located: "
-                        f"({zone_home.attributes[ATTR_LATITUDE]},"
-                        f" {zone_home.attributes[ATTR_LONGITUDE]})?",
+                        f"({zone_home.attributes[EntityStateAttribute.LATITUDE]},"
+                        f" {zone_home.attributes[EntityStateAttribute.LONGITUDE]})?",
                     }
                 ],
                 text={
