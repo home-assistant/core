@@ -101,7 +101,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.contact_2_2-entry]
+# name: test_entities[binary_sensor.contact_2_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -115,7 +115,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.contact_2_2',
+    'entity_id': 'binary_sensor.contact_2_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -123,12 +123,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Battery',
     'platform': 'bosch_shc',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -138,21 +138,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.contact_2_2-state]
+# name: test_entities[binary_sensor.contact_2_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Contact 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Contact 2 Battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.contact_2_2',
+    'entity_id': 'binary_sensor.contact_2_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.contact_3-entry]
+# name: test_entities[binary_sensor.contact_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -166,7 +166,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.contact_3',
+    'entity_id': 'binary_sensor.contact_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -174,12 +174,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Battery',
     'platform': 'bosch_shc',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -189,21 +189,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.contact_3-state]
+# name: test_entities[binary_sensor.contact_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Contact',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Contact Battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.contact_3',
+    'entity_id': 'binary_sensor.contact_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.motion-entry]
+# name: test_entities[binary_sensor.motion_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -217,7 +217,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.motion',
+    'entity_id': 'binary_sensor.motion_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -225,12 +225,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Battery',
     'platform': 'bosch_shc',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -240,21 +240,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.motion-state]
+# name: test_entities[binary_sensor.motion_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Motion Battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.motion',
+    'entity_id': 'binary_sensor.motion_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.smoke-entry]
+# name: test_entities[binary_sensor.smoke_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -268,7 +268,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.smoke',
+    'entity_id': 'binary_sensor.smoke_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -276,12 +276,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Battery',
     'platform': 'bosch_shc',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -291,21 +291,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.smoke-state]
+# name: test_entities[binary_sensor.smoke_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smoke Battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.smoke',
+    'entity_id': 'binary_sensor.smoke_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.thermostat-entry]
+# name: test_entities[binary_sensor.thermostat_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -319,7 +319,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.thermostat',
+    'entity_id': 'binary_sensor.thermostat_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -327,12 +327,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Battery',
     'platform': 'bosch_shc',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -342,21 +342,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.thermostat-state]
+# name: test_entities[binary_sensor.thermostat_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat Battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.thermostat',
+    'entity_id': 'binary_sensor.thermostat_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.twinguard-entry]
+# name: test_entities[binary_sensor.twinguard_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -370,7 +370,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.twinguard',
+    'entity_id': 'binary_sensor.twinguard_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -378,12 +378,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Battery',
     'platform': 'bosch_shc',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -393,21 +393,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.twinguard-state]
+# name: test_entities[binary_sensor.twinguard_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Twinguard',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Twinguard Battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.twinguard',
+    'entity_id': 'binary_sensor.twinguard_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.universal_switch-entry]
+# name: test_entities[binary_sensor.universal_switch_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -421,7 +421,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.universal_switch',
+    'entity_id': 'binary_sensor.universal_switch_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -429,12 +429,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Battery',
     'platform': 'bosch_shc',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -444,21 +444,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.universal_switch-state]
+# name: test_entities[binary_sensor.universal_switch_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Universal Switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Universal Switch Battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.universal_switch',
+    'entity_id': 'binary_sensor.universal_switch_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.wall_thermostat-entry]
+# name: test_entities[binary_sensor.wall_thermostat_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -472,7 +472,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.wall_thermostat',
+    'entity_id': 'binary_sensor.wall_thermostat_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -480,12 +480,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Battery',
     'platform': 'bosch_shc',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -495,21 +495,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.wall_thermostat-state]
+# name: test_entities[binary_sensor.wall_thermostat_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Thermostat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wall Thermostat Battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.wall_thermostat',
+    'entity_id': 'binary_sensor.wall_thermostat_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.water_leakage_detector-entry]
+# name: test_entities[binary_sensor.water_leakage_detector_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -523,7 +523,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.water_leakage_detector',
+    'entity_id': 'binary_sensor.water_leakage_detector_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -531,12 +531,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Battery',
     'platform': 'bosch_shc',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -546,14 +546,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.water_leakage_detector-state]
+# name: test_entities[binary_sensor.water_leakage_detector_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Leakage Detector',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Leakage Detector Battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.water_leakage_detector',
+    'entity_id': 'binary_sensor.water_leakage_detector_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

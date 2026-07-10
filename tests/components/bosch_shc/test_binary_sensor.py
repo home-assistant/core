@@ -23,7 +23,7 @@ BATTERY_OK = SHCBatteryDevice.BatteryLevelService.State.OK
 BATTERY_LOW = SHCBatteryDevice.BatteryLevelService.State.LOW_BATTERY
 
 CONTACT_ENTITY_ID = "binary_sensor.contact"
-MOTION_BATTERY_ENTITY_ID = "binary_sensor.motion"
+MOTION_BATTERY_ENTITY_ID = "binary_sensor.motion_battery"
 
 
 def _shutter_contact_device(
