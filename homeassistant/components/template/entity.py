@@ -174,7 +174,13 @@ class AbstractTemplateEntity(Entity):
     ) -> Template | None:
         """Add a template."""
         template = self._config.get(option)
-        if not isinstance(template, Template) or _is_missing_template(template):
+        if not isinstance(template, Template):
+            return None
+
+        # Only suppress empty state templates used for optimistic mode.
+        # Other options (for example availability) may intentionally use an
+        # empty template and must keep their previous render behavior.
+        if self._is_optimistic_state_option(option) and _is_missing_template(template):
             return None
 
         if add_if_static or (not template.is_static):
@@ -186,6 +192,16 @@ class AbstractTemplateEntity(Entity):
                 none_on_template_error,
             )
         return template
+
+    def _is_optimistic_state_option(self, option: str) -> bool:
+        """Return True if option drives optimistic state for this entity."""
+        if not self._optimistic_entity:
+            return False
+        if option == self._state_option:
+            return True
+        return bool(
+            self._extra_optimistic_options and option in self._extra_optimistic_options
+        )
 
     def add_script(
         self,

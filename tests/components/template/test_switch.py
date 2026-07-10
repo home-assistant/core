@@ -680,6 +680,28 @@ async def test_config_entry_optimistic_turn_on_off_with_empty_value_template(
 
 
 @pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+async def test_empty_availability_template_keeps_entity_unavailable(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+) -> None:
+    """Empty availability templates should still render false and hide the entity."""
+    await setup_entity(
+        hass,
+        TEST_SWITCH,
+        style,
+        1,
+        {"availability": ""},
+        extra_config=SWITCH_ACTIONS,
+        state_template="{{ true }}",
+    )
+    await async_trigger(hass, TEST_STATE_ENTITY_ID)
+    assert hass.states.get(TEST_SWITCH.entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
     ("count", "attribute_template"),
     [(1, "{{ is_state('switch.test_state', 'on') }}")],
 )
