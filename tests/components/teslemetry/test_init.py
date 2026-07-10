@@ -242,10 +242,10 @@ async def test_vehicle_asleep_polling(
             {
                 "type": "command",
                 "cost": 1,
-                "accounting": {
-                    "quota_fraction_used": 0.5,
-                    "quota_credits_used": 5,
-                    "balance_credits_used": 0,
+                "quota": {
+                    "used": 5,
+                    "fraction": 0.5,
+                    "reset_at": "2026-07-10T00:00:00.000Z",
                 },
                 "balance": 0,
             },
@@ -256,10 +256,10 @@ async def test_vehicle_asleep_polling(
             {
                 "type": "command",
                 "cost": 1,
-                "accounting": {
-                    "quota_fraction_used": 1.0,
-                    "quota_credits_used": 10,
-                    "balance_credits_used": 0,
+                "quota": {
+                    "used": 10,
+                    "fraction": 1.0,
+                    "reset_at": "2026-07-10T00:00:00.000Z",
                 },
                 "balance": 0,
             },

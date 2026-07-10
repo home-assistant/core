@@ -129,10 +129,12 @@ def async_handle_credits(
     hass: HomeAssistant, entry: TeslemetryConfigEntry, credits: dict[str, Any]
 ) -> None:
     """Clear the insufficient credits issue when credits become available."""
-    accounting = credits.get("accounting")
+    quota = credits.get("quota")
+    fraction = quota.get("fraction") if isinstance(quota, dict) else None
     quota_available = (
-        accounting is not None
-        and accounting["quota_fraction_used"] < CREDITS_QUOTA_FRACTION_THRESHOLD
+        isinstance(fraction, (int, float))
+        and not isinstance(fraction, bool)
+        and fraction < CREDITS_QUOTA_FRACTION_THRESHOLD
     )
     if quota_available or credits.get("balance", 0) > CREDITS_BALANCE_THRESHOLD:
         ir.async_delete_issue(hass, DOMAIN, insufficient_credits_issue_id(entry))
