@@ -2069,7 +2069,7 @@ async def hassio_stubs(
 ) -> None:
     """Create mock hassio http client."""
     with patch(
-        "homeassistant.components.hassio.issues.SupervisorIssues.setup",
+        "homeassistant.components.hassio.coordinator.SupervisorIssuesCoordinator.async_refresh",
     ):
         await async_setup_component(hass, "hassio", {})
 

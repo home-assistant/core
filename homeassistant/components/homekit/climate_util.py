@@ -1,6 +1,7 @@
 """Shared fan, swing, and temperature helpers for the climate accessory types."""
 
 from collections.abc import Iterable
+import math
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -85,6 +86,12 @@ def get_swing_off_mode(attributes: dict[str, Any]) -> str:
     return _lower_to_original(swing_modes).get(SWING_OFF, SWING_OFF)
 
 
+def has_swing_off_mode(attributes: dict[str, Any]) -> bool:
+    """Return whether the entity advertises a swing off mode."""
+    swing_modes = attributes.get(ATTR_SWING_MODES) or []
+    return SWING_OFF in _lower_to_original(swing_modes)
+
+
 def fan_speed_to_mode(
     ordered_fan_speeds: list[str], fan_modes: dict[str, str], speed: int
 ) -> str:
@@ -125,17 +132,26 @@ def get_temperature_range_from_state(
     because the Home app crashes on negative bounds.
     """
     if (min_temp := state.attributes.get(ATTR_MIN_TEMP)) is not None:
-        min_temp = round(temperature_to_homekit(min_temp, unit) * 2) / 2
+        min_temp = temperature_to_homekit(min_temp, unit)
     else:
         min_temp = default_min
 
     if (max_temp := state.attributes.get(ATTR_MAX_TEMP)) is not None:
-        max_temp = round(temperature_to_homekit(max_temp, unit) * 2) / 2
+        max_temp = temperature_to_homekit(max_temp, unit)
     else:
         max_temp = default_max
 
     # Handle a reversed temperature range
     min_temp, max_temp = get_min_max(min_temp, max_temp)
+
+    # Round inward to the characteristic's 0.1 step so the slider cannot
+    # produce a write the entity's own limit validation rejects; a range
+    # too narrow to hold a step keeps the exact limits rather than
+    # expanding beyond them.
+    rounded_min = math.ceil(min_temp * 10) / 10
+    rounded_max = math.floor(max_temp * 10) / 10
+    if rounded_min <= rounded_max:
+        min_temp, max_temp = rounded_min, rounded_max
 
     min_temp = max(min_temp, 0)
     max_temp = max(max_temp, min_temp)

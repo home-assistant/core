@@ -607,6 +607,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/frontend/ @home-assistant/frontend
 /homeassistant/components/frontier_silicon/ @wlcrs
 /tests/components/frontier_silicon/ @wlcrs
+/homeassistant/components/fuelprices_dk/ @MTrab
+/tests/components/fuelprices_dk/ @MTrab
 /homeassistant/components/fujitsu_fglair/ @crevetor
 /tests/components/fujitsu_fglair/ @crevetor
 /homeassistant/components/fully_kiosk/ @cgarwood
@@ -779,8 +781,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/homematicip_cloud/ @hahn-th @lackas
 /homeassistant/components/homevolt/ @danielhiversen @liudger
 /tests/components/homevolt/ @danielhiversen @liudger
-/homeassistant/components/homewizard/ @DCSBL
-/tests/components/homewizard/ @DCSBL
+/homeassistant/components/homewizard/ @DCSBL @lexpostma
+/tests/components/homewizard/ @DCSBL @lexpostma
 /homeassistant/components/honeywell/ @mkmer
 /tests/components/honeywell/ @mkmer
 /homeassistant/components/honeywell_string_lights/ @balloob
@@ -1066,6 +1068,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/lutron/ @cdheiser @wilburCForce
 /homeassistant/components/lutron_caseta/ @swails @danaues @eclair4151
 /tests/components/lutron_caseta/ @swails @danaues @eclair4151
+/homeassistant/components/lyngdorf/ @fishloa
+/tests/components/lyngdorf/ @fishloa
 /homeassistant/components/lyric/ @timmo001
 /tests/components/lyric/ @timmo001
 /homeassistant/components/madvr/ @iloveicedgreentea
@@ -1586,6 +1590,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/schlage/ @dknowles2
 /tests/components/schlage/ @dknowles2
 /homeassistant/components/schluter/ @prairieapps
+/homeassistant/components/scorpiontrack/ @Herbertmt978
+/tests/components/scorpiontrack/ @Herbertmt978
 /homeassistant/components/scrape/ @fabaff @gjohansson-ST
 /tests/components/scrape/ @fabaff @gjohansson-ST
 /homeassistant/components/screenlogic/ @dieselrabbit @bdraco
