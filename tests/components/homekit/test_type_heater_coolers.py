@@ -978,6 +978,64 @@ async def test_heatercooler_set_active_on_heat_only(
     assert call_set_hvac_mode[0].data[ATTR_HVAC_MODE] == HVACMode.HEAT
 
 
+async def test_heatercooler_power_on_with_thresholds_uses_activated_mode(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test thresholds batched with Active on resolve against the new mode."""
+    entity_id = "climate.test"
+    base_attrs = {
+        ATTR_SUPPORTED_FEATURES: (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        ),
+        ATTR_HVAC_MODES: [
+            HVACMode.HEAT,
+            HVACMode.COOL,
+            HVACMode.HEAT_COOL,
+            HVACMode.OFF,
+        ],
+        ATTR_TARGET_TEMP_HIGH: 24.0,
+        ATTR_TARGET_TEMP_LOW: 18.0,
+        ATTR_TEMPERATURE: None,
+    }
+
+    hass.states.async_set(entity_id, HVACMode.HEAT_COOL, base_attrs)
+    await hass.async_block_till_done()
+
+    acc = HeaterCooler(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    hass.states.async_set(entity_id, HVACMode.OFF, base_attrs)
+    await hass.async_block_till_done()
+
+    # Power on restores heat cool, so the thresholds go out as a range
+    # write instead of a single setpoint picked from the off state
+    async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_HVAC_MODE)
+    call_set_temperature = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
+    )
+    _write_chars(
+        hk_driver,
+        acc,
+        {
+            CHAR_ACTIVE: 1,
+            CHAR_COOLING_THRESHOLD_TEMPERATURE: 26.0,
+            CHAR_HEATING_THRESHOLD_TEMPERATURE: 16.0,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(call_set_temperature) == 1
+    assert call_set_temperature[0].data[ATTR_TARGET_TEMP_HIGH] == pytest.approx(
+        26.0, abs=0.1
+    )
+    assert call_set_temperature[0].data[ATTR_TARGET_TEMP_LOW] == pytest.approx(
+        16.0, abs=0.1
+    )
+
+
 async def test_heatercooler_batch_resolves_after_prior_batch(
     hass: HomeAssistant, hk_driver: HomeDriver
 ) -> None:
@@ -1163,12 +1221,13 @@ async def test_heatercooler_set_chars_dispatch_order(
         ),
         patch.object(acc, "async_call_service_and_wait", _record_and_wait),
     ):
+        # Turning on activates heat, so the heating threshold applies
         _write_chars(
             hk_driver,
             acc,
             {
                 CHAR_ACTIVE: 1,
-                CHAR_COOLING_THRESHOLD_TEMPERATURE: 22.0,
+                CHAR_HEATING_THRESHOLD_TEMPERATURE: 22.0,
                 CHAR_ROTATION_SPEED: 100,
             },
         )

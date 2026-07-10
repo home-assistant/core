@@ -332,6 +332,10 @@ class HeaterCooler(HomeKitClimateAccessory):
                 target_mode := char_values.get(CHAR_TARGET_HEATER_COOLER_STATE)
             ) is not None:
                 requested_mode = self._hk_to_ha_target.get(target_mode)
+            elif char_values.get(CHAR_ACTIVE) == 1:
+                # Turning on activates the last known mode, so setpoints in
+                # the same batch resolve against it instead of the off state.
+                requested_mode = self._last_known_mode
 
             # Active/mode changes are handled first as they gate the others.
             self._handle_active_mode_changes(
