@@ -235,6 +235,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             )
 
             await live_coordinator.async_config_entry_first_refresh()
+            entry.async_on_unload(history_coordinator.async_add_listener(lambda: None))
 
             # Create energy site model
             model = None
@@ -296,6 +297,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) 
     statistic_ids = [
         build_statistic_id(site_id, key)
         for device in devices
+        if device.config_entries == {entry.entry_id}
         for domain, site_id in device.identifiers
         if domain == DOMAIN and site_id.isdigit()
         for key in ENERGY_HISTORY_FIELDS

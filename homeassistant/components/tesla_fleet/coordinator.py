@@ -1,8 +1,6 @@
 """Tesla Fleet Data Coordinator."""
 
 from datetime import datetime, timedelta
-from random import randint
-from time import time
 from typing import TYPE_CHECKING, Any, override
 
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
@@ -358,18 +356,6 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         self.site_name = site_name
         self.data = {}
         self.updated_once = False
-
-    @override
-    async def async_config_entry_first_refresh(self) -> None:
-        """Set up the data coordinator."""
-        await super().async_config_entry_first_refresh()
-
-        # Calculate seconds until next 5 minute period plus a random delay
-        delta = randint(310, 330) - (int(time()) % 300)
-        self.logger.debug("Scheduling next %s refresh in %s seconds", self.name, delta)
-        self.update_interval = timedelta(seconds=delta)
-        self._schedule_refresh()
-        self.update_interval = ENERGY_HISTORY_INTERVAL
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:

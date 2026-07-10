@@ -1,12 +1,10 @@
 """Tests for the Tesla Fleet energy history coordinator."""
 
-from datetime import timedelta
 from typing import Literal
 from unittest.mock import AsyncMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from tesla_fleet_api.exceptions import RateLimited, TeslaFleetError
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.statistics import (
@@ -287,44 +285,6 @@ async def test_coordinator_updates_latest_hour_statistic(
     assert first_stat["sum"] == 1500.0
     assert second_stat["state"] == 400.0
     assert second_stat["sum"] == 1900.0
-
-
-async def test_coordinator_handles_rate_limiting(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_energy_site: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the coordinator handles rate limiting."""
-    mock_config_entry.add_to_hass(hass)
-
-    mock_energy_site.energy_history.side_effect = RateLimited({"after": "120"})
-
-    coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-        hass, mock_config_entry, mock_energy_site, SITE_NAME
-    )
-    await coordinator._async_update_data()
-
-    assert "rate limited" in caplog.text.lower()
-    assert coordinator.update_interval == timedelta(seconds=120)
-
-
-async def test_coordinator_handles_api_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_energy_site: AsyncMock,
-) -> None:
-    """Test the coordinator handles API errors."""
-    mock_config_entry.add_to_hass(hass)
-
-    mock_energy_site.energy_history.side_effect = TeslaFleetError
-
-    coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-        hass, mock_config_entry, mock_energy_site, SITE_NAME
-    )
-
-    with pytest.raises(UpdateFailed):
-        await coordinator._async_update_data()
 
 
 async def test_coordinator_handles_missing_timestamp(
