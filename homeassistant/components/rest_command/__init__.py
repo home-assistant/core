@@ -117,12 +117,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         skip_url_encoding = command_config[CONF_SKIP_URL_ENCODING]
 
         auth = None
-        digest_middleware = None
+        digest_auth: tuple[str, str] | None = None
         if CONF_USERNAME in command_config:
             username = command_config[CONF_USERNAME]
             password = command_config.get(CONF_PASSWORD, "")
             if command_config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-                digest_middleware = aiohttp.DigestAuthMiddleware(username, password)
+                digest_auth = (username, password)
             else:
                 auth = aiohttp.BasicAuth(username, password=password)
 
@@ -177,8 +177,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 # Add authentication
                 if auth is not None:
                     request_kwargs["auth"] = auth
-                elif digest_middleware is not None:
-                    request_kwargs["middlewares"] = (digest_middleware,)
+                elif digest_auth is not None:
+                    request_kwargs["middlewares"] = (
+                        aiohttp.DigestAuthMiddleware(*digest_auth),
+                    )
 
                 async with getattr(websession, method)(
                     URL(request_url, encoded=skip_url_encoding),
