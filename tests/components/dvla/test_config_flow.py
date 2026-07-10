@@ -2,19 +2,14 @@
 
 from unittest.mock import patch
 
+from aio_dvla_vehicle_enquiry import DVLAError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.dvla.config_flow import (
-    CannotConnect,
-    InvalidAuth,
-    validate_input,
-)
+from homeassistant.components.dvla.config_flow import CannotConnect, validate_input
 from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
@@ -82,25 +77,6 @@ async def test_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_invalid_auth(hass: HomeAssistant) -> None:
-    """Test invalid auth error."""
-    with patch(
-        "homeassistant.components.dvla.config_flow.validate_input",
-        side_effect=InvalidAuth,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                CONF_REG_NUMBER: "AB12CDE",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
 async def test_unknown_error(hass: HomeAssistant) -> None:
     """Test unknown error."""
     with patch(
@@ -123,7 +99,7 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
 async def test_validate_input_success(hass: HomeAssistant) -> None:
     """Test validate_input returns config entry title."""
     with patch(
-        "homeassistant.components.dvla.config_flow.DVLACoordinator._async_update_data",
+        "homeassistant.components.dvla.config_flow.DVLAClient.async_get_vehicle",
         return_value={"registrationNumber": "AB12CDE"},
     ):
         result = await validate_input(hass, {CONF_REG_NUMBER: "AB12CDE"})
@@ -131,24 +107,12 @@ async def test_validate_input_success(hass: HomeAssistant) -> None:
     assert result == {"title": "AB12CDE"}
 
 
-async def test_validate_input_invalid_auth(hass: HomeAssistant) -> None:
-    """Test validate_input maps auth failures."""
-    with (
-        patch(
-            "homeassistant.components.dvla.config_flow.DVLACoordinator._async_update_data",
-            side_effect=ConfigEntryAuthFailed,
-        ),
-        pytest.raises(InvalidAuth),
-    ):
-        await validate_input(hass, {CONF_REG_NUMBER: "AB12CDE"})
-
-
 async def test_validate_input_cannot_connect(hass: HomeAssistant) -> None:
-    """Test validate_input maps update failures."""
+    """Test validate_input maps DVLA client failures."""
     with (
         patch(
-            "homeassistant.components.dvla.config_flow.DVLACoordinator._async_update_data",
-            side_effect=UpdateFailed("boom"),
+            "homeassistant.components.dvla.config_flow.DVLAClient.async_get_vehicle",
+            side_effect=DVLAError("boom"),
         ),
         pytest.raises(CannotConnect),
     ):

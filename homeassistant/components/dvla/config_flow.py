@@ -3,17 +3,16 @@
 import logging
 from typing import Any, override
 
+from aio_dvla_vehicle_enquiry import DVLAClient, DVLAError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow as ConfigFlowBase, ConfigFlowResult
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import CONF_REG_NUMBER, DOMAIN
-from .coordinator import DVLACoordinator
+from .const import API_KEY, CONF_REG_NUMBER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,18 +24,11 @@ async def validate_input(
     reg_number = user_input[CONF_REG_NUMBER]
 
     session = async_get_clientsession(hass)
-    coordinator = DVLACoordinator(
-        hass,
-        None,
-        session,
-        reg_number,
-    )
+    client = DVLAClient(session, API_KEY)
 
     try:
-        await coordinator._async_update_data()  # noqa: SLF001
-    except ConfigEntryAuthFailed as err:
-        raise InvalidAuth from err
-    except UpdateFailed as err:
+        await client.async_get_vehicle(reg_number)
+    except DVLAError as err:
         raise CannotConnect from err
 
     return {"title": reg_number}
@@ -65,8 +57,6 @@ class ConfigFlow(ConfigFlowBase, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -96,7 +86,3 @@ class ConfigFlow(ConfigFlowBase, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

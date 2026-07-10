@@ -62,18 +62,18 @@ async def test_sensor_entities_are_created(hass: HomeAssistant) -> None:
     assert tax_status.state == "Taxed"
 
 
-async def test_date_sensor_values(hass: HomeAssistant) -> None:
+async def test_date_sensor_values_and_missing_mot_expiry(hass: HomeAssistant) -> None:
     """Test date sensors expose valid date states."""
     await setup_dvla_entry(hass)
 
     tax_due_date = hass.states.get("sensor.dvla_ab12cde_taxduedate")
-    fallback_expiry_date = hass.states.get("sensor.dvla_ab12cde_motexpirydate")
+    mot_expiry_date = hass.states.get("sensor.dvla_ab12cde_motexpirydate")
 
     assert tax_due_date is not None
     assert tax_due_date.state == "2026-03-01"
 
-    assert fallback_expiry_date is not None
-    assert fallback_expiry_date.state == "2027-05-01"
+    assert mot_expiry_date is not None
+    assert mot_expiry_date.state == "unknown"
 
 
 async def test_sensor_units(hass: HomeAssistant) -> None:
@@ -233,3 +233,20 @@ async def test_registration_month_fields_are_distinct(
 
     assert first_dvla_registration is not None
     assert first_dvla_registration.state == "2024-05"
+
+
+async def test_mot_expiry_date_sensor_value(hass: HomeAssistant) -> None:
+    """Test M.O.T expiry date is exposed when returned by DVLA."""
+    await setup_dvla_entry(
+        hass,
+        {
+            "registrationNumber": "AB12CDE",
+            "make": "FORD",
+            "motExpiryDate": "2026-11-30",
+        },
+    )
+
+    state = hass.states.get("sensor.dvla_ab12cde_motexpirydate")
+
+    assert state is not None
+    assert state.state == "2026-11-30"

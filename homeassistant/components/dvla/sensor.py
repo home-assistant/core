@@ -187,14 +187,6 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
             if not isinstance(self._state, int):
                 self._state = None
 
-        if key == "motExpiryDate" and not self._state:
-            reg_month_str = self.coordinator.data.get("monthOfFirstRegistration")
-            if reg_month_str:
-                with suppress(ValueError):
-                    year_str, month_str = reg_month_str.split("-")
-                    calculated_date = date(int(year_str) + 3, int(month_str), 1)
-                    self._state = calculated_date.isoformat()
-
         if (
             self._state
             and self.entity_description.device_class == SensorDeviceClass.DATE
