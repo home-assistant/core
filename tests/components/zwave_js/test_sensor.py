@@ -254,8 +254,8 @@ async def test_invalid_multilevel_sensor_scale(
     assert state
     assert state.state == "9.0"
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
-    assert ATTR_DEVICE_CLASS not in state.attributes
-    assert ATTR_STATE_CLASS not in state.attributes
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
 
 async def test_energy_sensors(
@@ -828,15 +828,13 @@ async def test_unit_change(hass: HomeAssistant, zp3111, client, integration) -> 
 async def test_new_sensor_invalid_scale(
     hass: HomeAssistant, multisensor_6, client, integration
 ) -> None:
-    """Test new-style numeric sensor handles UnknownValueData from invalid scale."""
+    """Test new-style numeric sensor does not reload on invalid scale."""
     entity_id = AIR_TEMPERATURE_SENSOR
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "9.0"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
 
-    # Update the metadata to an invalid scale (255) to trigger UnknownValueData
-    # in _get_scale_type on the next value update
     event = Event(
         "metadata updated",
         {
@@ -864,10 +862,6 @@ async def test_new_sensor_invalid_scale(
     multisensor_6.receive_event(event)
     await hass.async_block_till_done()
 
-    # Fire a value updated event to trigger on_value_update which calls
-    # _get_scale_type - the invalid scale should raise UnknownValueData
-    # which is caught and returns None, triggering a reload since
-    # None != original TemperatureScale.CELSIUS
     with patch.object(
         hass.config_entries, "async_schedule_reload"
     ) as mock_schedule_reload:
@@ -891,7 +885,154 @@ async def test_new_sensor_invalid_scale(
         multisensor_6.receive_event(event)
         await hass.async_block_till_done()
 
-    mock_schedule_reload.assert_called_once_with(integration.entry_id)
+    mock_schedule_reload.assert_not_called()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "68.0"
+
+
+async def test_new_sensor_native_value_unknown(
+    hass: HomeAssistant, multisensor_6, client, integration
+) -> None:
+    """Test new-style numeric sensor reports unknown when value is cleared."""
+    entity_id = AIR_TEMPERATURE_SENSOR
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": multisensor_6.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "Air temperature",
+                "newValue": None,
+                "prevValue": 9,
+                "propertyName": "Air temperature",
+            },
+        },
+    )
+    multisensor_6.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_new_sensor_on_value_update_from_template(
+    hass: HomeAssistant, aeon_smart_switch_6, client, integration
+) -> None:
+    """Test new-style numeric sensor applies template data on value update."""
+    entity_id = "sensor.smart_switch_6_electric_consumed_a"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "9.699"
+
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        event = Event(
+            "value updated",
+            {
+                "source": "node",
+                "event": "value updated",
+                "nodeId": aeon_smart_switch_6.node_id,
+                "args": {
+                    "commandClassName": "Meter",
+                    "commandClass": 50,
+                    "endpoint": 0,
+                    "property": "value",
+                    "propertyKey": 66817,
+                    "propertyKeyName": "Electric_A_Consumed",
+                    "newValue": 10.5,
+                    "prevValue": 9.699,
+                    "propertyName": "value",
+                },
+            },
+        )
+        aeon_smart_switch_6.receive_event(event)
+        await hass.async_block_till_done()
+
+    mock_schedule_reload.assert_not_called()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "10.5"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfElectricCurrent.AMPERE
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.CURRENT
+
+
+async def test_new_sensor_unit_change(
+    hass: HomeAssistant, multisensor_6, client, integration
+) -> None:
+    """Test new-style numeric sensor handles unit change in place."""
+    entity_id = AIR_TEMPERATURE_SENSOR
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "9.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+
+    event = Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": multisensor_6.node_id,
+            "args": {
+                "commandClassName": "Multilevel Sensor",
+                "commandClass": 49,
+                "endpoint": 0,
+                "property": "Air temperature",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Air temperature",
+                    "ccSpecific": {"sensorType": 1, "scale": 1},
+                    "unit": "°F",
+                },
+                "propertyName": "Air temperature",
+                "nodeId": multisensor_6.node_id,
+            },
+        },
+    )
+    multisensor_6.receive_event(event)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "9.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        event = Event(
+            "value updated",
+            {
+                "source": "node",
+                "event": "value updated",
+                "nodeId": multisensor_6.node_id,
+                "args": {
+                    "commandClassName": "Multilevel Sensor",
+                    "commandClass": 49,
+                    "endpoint": 0,
+                    "property": "Air temperature",
+                    "newValue": 48.2,
+                    "prevValue": 9,
+                    "propertyName": "Air temperature",
+                },
+            },
+        )
+        multisensor_6.receive_event(event)
+        await hass.async_block_till_done()
+
+    mock_schedule_reload.assert_not_called()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "9.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
 
 
 CONTROLLER_STATISTICS_ENTITY_PREFIX = "sensor.z_stick_gen5_usb_controller_"

@@ -2,7 +2,6 @@
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from enum import IntEnum
 from typing import Any, cast, override
 
 import voluptuous as vol
@@ -23,32 +22,16 @@ from zwave_js_server.const.command_class.meter import (
     MeterType,
 )
 from zwave_js_server.const.command_class.multilevel_sensor import (
-    CC_SPECIFIC_SCALE as MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE,
     CC_SPECIFIC_SENSOR_TYPE,
     TEMPERATURE_SENSORS,
-    TemperatureScale,
 )
-from zwave_js_server.exceptions import (
-    BaseZwaveJSServerError,
-    RssiErrorReceived,
-    UnknownValueData,
-)
+from zwave_js_server.exceptions import BaseZwaveJSServerError, RssiErrorReceived
 from zwave_js_server.model.controller import Controller
 from zwave_js_server.model.controller.statistics import ControllerStatistics
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.node.statistics import NodeStatistics
-from zwave_js_server.model.value import Value as ZwaveValue
-from zwave_js_server.util.command_class.energy_production import (
-    get_energy_production_scale_type,
-)
-from zwave_js_server.util.command_class.meter import (
-    get_meter_scale_type,
-    get_meter_type,
-)
-from zwave_js_server.util.command_class.multilevel_sensor import (
-    get_multilevel_sensor_scale_type,
-)
+from zwave_js_server.util.command_class.meter import get_meter_type
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -831,38 +814,29 @@ class NewZWaveNumericSensor(ZWaveBaseEntity, SensorEntity):
         entity_description = info.entity_description
         if not entity_description.name or entity_description.name is UNDEFINED:
             self._attr_name = self.generate_name(include_value_name=True)
-        self._scale_type = self._get_scale_type()
 
-    def _get_scale_type(self) -> IntEnum | None:
-        """Return the scale type of the value."""
-        primary_value = self.info.primary_value
-        scale_type_function: Callable[[ZwaveValue], IntEnum] | None
-        match primary_value.command_class:
-            case CommandClass.METER:
-                scale_type_function = get_meter_scale_type
-            case CommandClass.SENSOR_MULTILEVEL:
-                scale_type_function = get_multilevel_sensor_scale_type
-            case CommandClass.ENERGY_PRODUCTION:
-                scale_type_function = get_energy_production_scale_type
-            case _:
-                scale_type_function = None
-        if scale_type_function is None:
+    @property
+    @override
+    def native_unit_of_measurement(self) -> str | None:
+        """Return unit of measurement the value is expressed in."""
+        if (unit := super().native_unit_of_measurement) is not None:
+            return unit
+        if self.info.primary_value.metadata.unit is None:
             return None
-        try:
-            scale_type = scale_type_function(primary_value)
-        except UnknownValueData:
-            return None
-
-        return scale_type
+        return str(self.info.primary_value.metadata.unit)
 
     @callback
     @override
     def on_value_update(self) -> None:
         """Handle scale changes for this value on value updated event."""
-        # TODO: Try to limit this to metadata updated event.  # pylint: disable=fixme
-        scale_type = self._get_scale_type()
-        if scale_type is not self._scale_type:
-            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+        data = NumericSensorDataTemplate().resolve_data(self.info.primary_value)
+        if data.entity_description_key or data.unit_of_measurement:
+            self.entity_description = get_entity_description(data)
+            self._attr_native_unit_of_measurement = data.unit_of_measurement
+        else:
+            self.__dict__.pop("_attr_native_unit_of_measurement", None)
+        self.__dict__.pop("native_unit_of_measurement", None)
+        self.__dict__.pop("suggested_unit_of_measurement", None)
 
     @property
     @override
@@ -1190,9 +1164,6 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.SENSOR_MULTILEVEL},
             type={ValueType.NUMBER},
-            all_available_cc_specific={
-                (MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE, TemperatureScale.CELSIUS),
-            },
             any_available_cc_specific={
                 (CC_SPECIFIC_SENSOR_TYPE, sensor_type)
                 for sensor_type in TEMPERATURE_SENSORS
@@ -1200,31 +1171,9 @@ DISCOVERY_SCHEMAS: list[NewZWaveDiscoverySchema] = [
         ),
         entity_class=NewZWaveNumericSensor,
         entity_description=SensorEntityDescription(
-            key="temperature_celsius",
+            key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        ),
-    ),
-    NewZWaveDiscoverySchema(
-        platform=Platform.SENSOR,
-        primary_value=ZWaveValueDiscoverySchema(
-            command_class={CommandClass.SENSOR_MULTILEVEL},
-            type={ValueType.NUMBER},
-            all_available_cc_specific={
-                (MULTILEVEL_SENSOR_CC_SPECIFIC_SCALE, TemperatureScale.FAHRENHEIT),
-            },
-            any_available_cc_specific={
-                (CC_SPECIFIC_SENSOR_TYPE, sensor_type)
-                for sensor_type in TEMPERATURE_SENSORS
-            },
-        ),
-        entity_class=NewZWaveNumericSensor,
-        entity_description=SensorEntityDescription(
-            key="temperature_fahrenheit",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
         ),
     ),
     NewZWaveDiscoverySchema(
