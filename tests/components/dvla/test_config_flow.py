@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.dvla.config_flow import InvalidAuth
-from homeassistant.components.dvla.const import CONF_CALENDARS, CONF_REG_NUMBER, DOMAIN
+from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -39,7 +39,6 @@ async def test_create_entry(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data={
                 CONF_REG_NUMBER: "AB12CDE",
-                CONF_CALENDARS: ["None"],
             },
         )
 
@@ -59,7 +58,6 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         unique_id="AB12CDE",
         data={
             CONF_REG_NUMBER: "AB12CDE",
-            CONF_CALENDARS: ["None"],
         },
     )
     entry.add_to_hass(hass)
@@ -69,28 +67,11 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_USER},
         data={
             CONF_REG_NUMBER: "ab12 cde",
-            CONF_CALENDARS: ["None"],
         },
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_no_calendar_selected(hass: HomeAssistant) -> None:
-    """Test no calendar selected error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={
-            CONF_REG_NUMBER: "AB12CDE",
-            CONF_CALENDARS: [],
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "no_calendar_selected"}
 
 
 async def test_invalid_auth(hass: HomeAssistant) -> None:
@@ -104,7 +85,6 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data={
                 CONF_REG_NUMBER: "AB12CDE",
-                CONF_CALENDARS: ["None"],
             },
         )
 
@@ -124,7 +104,6 @@ async def test_unknown_error(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_USER},
             data={
                 CONF_REG_NUMBER: "AB12CDE",
-                CONF_CALENDARS: ["None"],
             },
         )
 

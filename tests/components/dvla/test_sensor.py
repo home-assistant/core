@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
-from homeassistant.components.dvla.const import CONF_CALENDARS, CONF_REG_NUMBER, DOMAIN
+from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 
@@ -73,16 +73,11 @@ async def setup_dvla_entry(hass: HomeAssistant) -> None:
         title="AB12CDE",
         data={
             CONF_REG_NUMBER: "AB12CDE",
-            CONF_CALENDARS: ["None"],
         },
     )
     entry.add_to_hass(hass)
 
     with (
-        patch(
-            "homeassistant.components.dvla.async_get_schema",
-            return_value=MOCK_SCHEMA,
-        ),
         patch(
             "homeassistant.components.dvla.coordinator.DVLACoordinator._async_update_data",
             return_value=MOCK_VEHICLE_DATA,

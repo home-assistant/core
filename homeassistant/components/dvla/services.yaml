@@ -1,8 +1,0 @@
-lookup:
-  target: {}
-  fields:
-    reg_number:
-      required: true
-      example: "AB12CDE"
-      selector:
-        text: {}

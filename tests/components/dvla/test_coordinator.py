@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 from aiohttp import ClientError
 import pytest
 
-from homeassistant.components.dvla.const import CONF_CALENDARS, CONF_REG_NUMBER, DOMAIN
+from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
 from homeassistant.components.dvla.coordinator import DVLACoordinator
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -51,7 +51,6 @@ def create_coordinator(
         title=reg_number,
         data={
             CONF_REG_NUMBER: reg_number,
-            CONF_CALENDARS: ["None"],
         },
     )
     entry.add_to_hass(hass)
