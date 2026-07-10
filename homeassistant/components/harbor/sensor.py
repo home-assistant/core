@@ -1,5 +1,7 @@
 """Sensor entities for Harbor."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -77,6 +79,7 @@ class HarborSensor(HarborEntity, SensorEntity):
         self.entity_description = description
         super().__init__(coordinator, description.key)
 
+    @override
     @property
     def native_value(self) -> StateType:
         """Return the current sensor value."""

@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 from uuid import uuid4
 
 from harbor.config import HarborCameraConfig
@@ -130,6 +130,7 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
         async with asyncio.timeout(CONNECT_TIMEOUT):
             await self._connected_event.wait()
 
+    @override
     async def async_shutdown(self) -> None:
         """Stop the MQTT client and release device resources."""
         await super().async_shutdown()

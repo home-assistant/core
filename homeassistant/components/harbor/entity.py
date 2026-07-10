@@ -1,5 +1,7 @@
 """Base entities for Harbor."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -20,6 +22,7 @@ class HarborEntity(CoordinatorEntity[HarborCoordinator]):
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.data.serial}_{unique_key}"
 
+    @override
     @property
     def available(self) -> bool:
         """Return if the entity is currently available."""
@@ -27,6 +30,7 @@ class HarborEntity(CoordinatorEntity[HarborCoordinator]):
             return False
         return self.coordinator.data.last_seen is not None
 
+    @override
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info for the backing Harbor device."""
