@@ -6,14 +6,17 @@ from typing import Any, override
 
 from google_health_api import GoogleHealthApi
 from google_health_api.const import HealthApiScope
-from google_health_api.exceptions import GoogleHealthApiError
+from google_health_api.exceptions import (
+    GoogleHealthApiError,
+    HealthApiForbiddenException,
+)
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from .api import SimpleAuth
-from .const import DEFAULT_TITLE, DOMAIN, OAUTH_SCOPES
+from .const import API_CONSOLE_URL, DEFAULT_TITLE, DOMAIN, OAUTH_SCOPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,6 +71,12 @@ class OAuth2FlowHandler(
 
         try:
             identity = await api.get_identity()
+        except HealthApiForbiddenException as err:
+            _LOGGER.error("Error getting Google Health identity: %s", err)
+            return self.async_abort(
+                reason="api_not_enabled",
+                description_placeholders={"url": API_CONSOLE_URL},
+            )
         except GoogleHealthApiError as err:
             _LOGGER.error("Error getting Google Health identity: %s", err)
             return self.async_abort(reason="cannot_connect")
