@@ -383,42 +383,6 @@ async def test_aiport_no_camera_entities(
     assert_entity_counts(hass, Platform.CAMERA, 0, 0)
 
 
-async def test_aiport_stream_issue_cleanup(
-    hass: HomeAssistant,
-    ufp: MockUFPFixture,
-    aiport: AiPort,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Stale public-stream issues for AI Ports are cleaned up on setup."""
-    await init_entry(hass, ufp, [aiport])
-
-    issue_id = f"rtsp_disabled_{aiport.id}"
-    # Simulate a legacy issue created directly (bypass translation validation).
-    issue_registry.issues[(DOMAIN, issue_id)] = ir.IssueEntry(
-        active=True,
-        breaks_in_ha_version=None,
-        created=None,
-        data=None,
-        dismissed_version=None,
-        domain=DOMAIN,
-        is_fixable=True,
-        is_persistent=False,
-        issue_domain=None,
-        issue_id=issue_id,
-        learn_more_url=None,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="rtsp_disabled",
-        translation_placeholders=None,
-    )
-    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
-
-    await hass.config_entries.async_reload(ufp.entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
-    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
-
-
 async def test_snapshot_low_quality_without_stream(
     hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ) -> None:

@@ -9,7 +9,11 @@ from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from .utils import MockUFPFixture, init_entry
@@ -218,6 +222,37 @@ async def test_deprecate_entity_script(
         if i["issue_id"] == "deprecate_hdr_switch":
             issue = i
     assert issue is None
+
+
+async def test_migrate_remove_aiport_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+) -> None:
+    """A leftover AI Port device/entity is removed by type, bootstrap-independent."""
+    mac = "AABBCCDDEEFF"
+    device = device_registry.async_get_or_create(
+        config_entry_id=ufp.entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        model_id="AI Port",
+    )
+    entity = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{mac}_uptime",
+        config_entry=ufp.entry,
+        device_id=device.id,
+    )
+
+    # AI Port deliberately absent from the bootstrap — cleanup is registry-based
+    await init_entry(hass, ufp, [])
+
+    assert entity_registry.async_get(entity.entity_id) is None
+    assert (
+        device_registry.async_get_device(connections={(dr.CONNECTION_NETWORK_MAC, mac)})
+        is None
+    )
 
 
 async def test_migrate_insecure_camera_redirected(
