@@ -61,8 +61,8 @@ class TrackerEntityStateAttribute(
 ):
     """State attributes set by TrackerEntity."""
 
-    LATITUDE = "latitude"
-    LONGITUDE = "longitude"
+    LATITUDE = "latitude"  # Deprecated, replaced with EntityStateAttribute.LATITUDE
+    LONGITUDE = "longitude"  # Deprecated, replaced with EntityStateAttribute.LONGITUDE
     GPS_ACCURACY = "gps_accuracy"
 
 
