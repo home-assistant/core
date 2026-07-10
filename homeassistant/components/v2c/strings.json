@@ -171,5 +171,28 @@
       "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with `{replacement_entity_id}`.\n\nThe sensor was used in the following automations or scripts:\n{items}\n\nUpdate the above automations or scripts to use the replacement entity, then disable the deprecated sensor to have it removed after the next restart.",
       "title": "[%key:component::v2c::issues::deprecated_sensor::title%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "pv_available": "Photovoltaic installation"
+        },
+        "data_description": {
+          "pv_available": "The V2C Trydan EVSE photovoltaic installation option is enabled."
+        }
+      },
+      "pv": {
+        "data": {
+          "contracted_power_entity": "Contracted power entity",
+          "power_deviation_entity": "Power deviation entity for PV exclusive mode"
+        },
+        "data_description": {
+          "contracted_power_entity": "Number entity used as the contracted power in non-PV-exclusive modes.",
+          "power_deviation_entity": "Number entity used as the power deviation. Positive values will allow a grid consumption of the specified watts, while negative values will force an excess of the specified watts."
+        },
+        "title": "Photovoltaic settings"
+      }
+    }
   }
 }
