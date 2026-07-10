@@ -1,5 +1,4 @@
 """Support for Netgear LTE modems."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 
 from aiohttp.cookiejar import CookieJar
