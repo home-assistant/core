@@ -830,15 +830,10 @@ class ESPHomeManager:
         cli = APIClient(
             self.host,
             self.entry.data[CONF_PORT],
-            # No password: API password checking was removed from the
-            # protocol in ESPHome 2026.1.0, and any firmware new enough to
-            # report api_encryption_provisionable never enforces one
             None,
             client_info=CLIENT_INFO,
             zeroconf_instance=self.zeroconf_instance,
             noise_psk=ZERO_NOISE_PSK,
-            # Cheap hardening: verify the MAC in the server hello matches the
-            # device we think we are talking to (spoofable, but free)
             expected_mac=unique_id if unique_id and ":" in unique_id else None,
             timezone=self.hass.config.time_zone,
         )
