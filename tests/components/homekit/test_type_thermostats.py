@@ -1004,6 +1004,17 @@ async def test_thermostat_get_temperature_range(hass: HomeAssistant, hk_driver) 
     # entity's own minimum
     assert acc.get_temperature_range(state) == (16.0, 21.0)
 
+    # A range too narrow to hold a half degree step keeps the exact limits
+    # instead of expanding beyond them
+    acc._unit = UnitOfTemperature.CELSIUS
+    hass.states.async_set(
+        entity_id, HVACMode.OFF, {ATTR_MIN_TEMP: 20.1, ATTR_MAX_TEMP: 20.2}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state
+    assert acc.get_temperature_range(state) == (20.1, 20.2)
+
 
 async def test_thermostat_temperature_step_whole(
     hass: HomeAssistant, hk_driver
