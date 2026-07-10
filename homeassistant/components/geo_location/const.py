@@ -16,5 +16,5 @@ class GeolocationEntityStateAttribute(
     """State attributes for geolocation entities."""
 
     SOURCE = "source"
-    LATITUDE = "latitude"
-    LONGITUDE = "longitude"
+    LATITUDE = "latitude"  # Deprecated, replaced with EntityStateAttribute.LATITUDE
+    LONGITUDE = "longitude"  # Deprecated, replaced with EntityStateAttribute.LONGITUDE
