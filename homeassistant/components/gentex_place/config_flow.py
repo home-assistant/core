@@ -1,6 +1,5 @@
 """Config flow for place."""
 
-from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -66,25 +65,6 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Perform reauth upon an API authentication error."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Dialog that informs the user that reauth is required."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema(
-                    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
-                ),
-            )
-        return await self.async_step_user(user_input)
 
     @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
