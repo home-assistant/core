@@ -271,7 +271,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
     # startup; they are also refreshed after a schedule is written via the
     # services. Don't fail if DHW is not available so the integration still
     # works on devices without hot water support.
-    entry.async_create_task(
+    entry.async_create_background_task(
         hass,
         slow_coordinator.async_refresh_slow_data(),
         name=f"{DOMAIN}_slow_data_fetch_{entry.entry_id}",
