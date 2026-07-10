@@ -208,12 +208,7 @@ async def evohome(
 
 
 def _tcs_for_config(evo: EvohomeClient, config: dict[str, str]) -> ControlSystem:
-    """Return the ControlSystem for the location targeted by this config.
-
-    Mirrors the coordinator's own location_idx-based resolution
-    (coordinator.py's `self.loc.gateways[0].systems[0]`), rather than
-    evo.tcs, which only works for single-location accounts.
-    """
+    """Return the configured location's TCS; evo.tcs only supports one location."""
 
     loc_idx: int = config.get(CONF_LOCATION_IDX, 0)  # type: ignore[assignment]
     return evo.locations[loc_idx].gateways[0].systems[0]
