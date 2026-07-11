@@ -78,19 +78,18 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
 
     @staticmethod
     def _get_update_interval(next_delivery: dict) -> timedelta:
-        """Determine the polling interval for the given upcoming delivery.
+        """Poll faster around the delivery so the live ETA is picked up in time."""
+        eta = next_delivery.get("eta")
+        slot = next_delivery.get("slot")
 
-        Poll every minute around the delivery so the position-based ETA,
-        which the API only serves shortly before arrival, is picked up in
-        time. Ahead of that window, schedule no later than its start.
-        """
-        eta = next_delivery.get("eta") or {}
-        slot = next_delivery.get("slot") or {}
-
-        start = dt_util.parse_datetime(
-            str(eta.get("start") or slot.get("window_start"))
-        )
-        end = dt_util.parse_datetime(str(eta.get("end") or slot.get("window_end")))
+        if eta:
+            start = dt_util.parse_datetime(str(eta.get("start")))
+            end = dt_util.parse_datetime(str(eta.get("end")))
+        elif slot:
+            start = dt_util.parse_datetime(str(slot.get("window_start")))
+            end = dt_util.parse_datetime(str(slot.get("window_end")))
+        else:
+            return DEFAULT_UPDATE_INTERVAL
 
         if start is None or end is None:
             return DEFAULT_UPDATE_INTERVAL
