@@ -1,6 +1,6 @@
 """Config flow for ruuvitag_ble."""
 
-from typing import Any
+from typing import Any, override
 
 from ruuvitag_ble import RuuvitagBluetoothDeviceData
 import voluptuous as vol
@@ -27,6 +27,7 @@ class RuuvitagConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device: RuuvitagBluetoothDeviceData | None = None
         self._discovered_devices: dict[str, str] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -59,6 +60,7 @@ class RuuvitagConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

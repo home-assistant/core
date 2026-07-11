@@ -4,9 +4,11 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareFloorHeating import FloorHeating
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
@@ -19,16 +21,16 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
@@ -79,7 +81,7 @@ VICARE_UNIT_TO_HA_UNIT = {
     VICARE_CUBIC_METER: UnitOfVolume.CUBIC_METERS,
     VICARE_KW: UnitOfPower.KILO_WATT,
     VICARE_KWH: UnitOfEnergy.KILO_WATT_HOUR,
-    VICARE_PERCENT: PERCENTAGE,
+    VICARE_PERCENT: UnitOfRatio.PERCENTAGE,
     VICARE_W: UnitOfPower.WATT,
     VICARE_WH: UnitOfEnergy.WATT_HOUR,
 }
@@ -116,7 +118,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="outside_humidity",
         translation_key="outside_humidity",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_getter=lambda api: api.getOutsideHumidity(),
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -164,7 +166,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="primary_circuit_pump_rotation",
         translation_key="primary_circuit_pump_rotation",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_getter=lambda api: api.getPrimaryCircuitPumpRotation(),
         unit_getter=lambda api: api.getPrimaryCircuitPumpRotationUnit(),
         state_class=SensorStateClass.MEASUREMENT,
@@ -798,7 +800,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="ess_state_of_charge",
         translation_key="ess_state_of_charge",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getElectricalEnergySystemSOC(),
@@ -995,7 +997,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="room_humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getHumidity(),
     ),
@@ -1121,7 +1123,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ),
     ViCareSensorEntityDescription(
         key="battery_level",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -1141,7 +1143,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="zigbee_signal_strength",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_getter=lambda api: api.getZigbeeSignalStrength(),
         entity_registry_enabled_default=False,
     ),
@@ -1149,7 +1151,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="valve_position",
         translation_key="valve_position",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_getter=lambda api: api.getValvePosition(),
         entity_registry_enabled_default=False,
     ),
@@ -1176,7 +1178,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="supply_humidity",
         translation_key="supply_humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getSupplyHumidity(),
     ),
@@ -1228,28 +1230,28 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="pm01",
         device_class=SensorDeviceClass.PM1,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getAirborneDustPM1(),
     ),
     ViCareSensorEntityDescription(
         key="pm02",
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getAirborneDustPM2d5(),
     ),
     ViCareSensorEntityDescription(
         key="pm04",
         device_class=SensorDeviceClass.PM4,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getAirborneDustPM4(),
     ),
     ViCareSensorEntityDescription(
         key="pm10",
         device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getAirborneDustPM10(),
     ),
@@ -1273,6 +1275,16 @@ CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     SUPPLY_TEMPERATURE_SENSOR,
 )
 
+FLOOR_HEATING_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
+    ViCareSensorEntityDescription(
+        key="active_mode",
+        translation_key="active_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=["cooling", "heating", "standby"],
+        value_getter=lambda api: api.getActiveMode(),
+    ),
+)
+
 BURNER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="burner_starts",
@@ -1292,7 +1304,7 @@ BURNER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="burner_modulation",
         translation_key="burner_modulation",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_getter=lambda api: api.getModulation(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -1311,7 +1323,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="compressor_modulation",
         translation_key="compressor_modulation",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_getter=lambda api: api.getModulation(),
         unit_getter=lambda api: api.getModulationUnit(),
         state_class=SensorStateClass.MEASUREMENT,
@@ -1508,6 +1520,18 @@ def _build_entities(
             for description in GLOBAL_SENSORS
             if is_supported(description.key, description.value_getter, device.api)
         )
+        # add device-class-specific entities
+        if isinstance(device.api, FloorHeating):
+            entities.extend(
+                ViCareSensor(
+                    description,
+                    get_device_serial(device.api),
+                    device.config,
+                    device.api,
+                )
+                for description in FLOOR_HEATING_SENSORS
+                if is_supported(description.key, description.value_getter, device.api)
+            )
         # add component entities
         for component_list, entity_description_list in (
             (get_circuits(device.api), CIRCUIT_SENSORS),
@@ -1568,6 +1592,7 @@ class ViCareSensor(ViCareEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._attr_native_value is not None

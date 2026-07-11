@@ -14,7 +14,7 @@ from smtplib import (
 )
 from socket import gaierror
 from ssl import SSLContext
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -184,6 +184,7 @@ class MailNotifyEntity(NotifyEntity):
         )
         self._attr_name = subentry.title
 
+    @override
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send an email message via notify.send_message action."""
 
@@ -199,6 +200,9 @@ class MailNotifyEntity(NotifyEntity):
 
         msg["From"] = email.utils.formataddr(
             (self._entry.data.get(CONF_SENDER_NAME), self._entry.data[CONF_SENDER])
+        )
+        msg["To"] = email.utils.formataddr(
+            (self._subentry.title, self._subentry.unique_id)
         )
         msg["X-Mailer"] = "Home Assistant"
         msg["Date"] = email.utils.format_datetime(dt_util.now())
@@ -264,6 +268,7 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
             ssl_context=ssl_context,
         )
 
+    @override
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Build and send a message to a user.
 
@@ -310,21 +315,37 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
     def _send_email(self, msg: MIMEMultipart | MIMEText, recipients: list[str]) -> None:
         """Send the message."""
         mail = self.connect()
-        for _ in range(self.tries):
+        for attempt in range(self.tries):
             try:
                 mail.sendmail(self._sender, recipients, msg.as_string())
                 break
-            except SMTPServerDisconnected:
+            except SMTPServerDisconnected as e:
+                with suppress(SMTPException):
+                    mail.quit()
+                if attempt == self.tries - 1:
+                    _LOGGER.debug("Full exception:", exc_info=True)
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="send_mail_connection_error",
+                    ) from e
                 _LOGGER.warning(
-                    "SMTPServerDisconnected sending mail: retrying connection"
+                    "SMTPServerDisconnected sending mail: retrying connection",
+                    exc_info=_LOGGER.isEnabledFor(logging.DEBUG),
                 )
-                with suppress(SMTPException):
-                    mail.quit()
                 mail = self.connect()
-            except SMTPException:
-                _LOGGER.warning("SMTPException sending mail: retrying connection")
+            except SMTPException as e:
                 with suppress(SMTPException):
                     mail.quit()
+                if attempt == self.tries - 1:
+                    _LOGGER.debug("Full exception:", exc_info=True)
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="send_mail_connection_error",
+                    ) from e
+                _LOGGER.warning(
+                    "SMTPException sending mail: retrying connection",
+                    exc_info=_LOGGER.isEnabledFor(logging.DEBUG),
+                )
                 mail = self.connect()
         with suppress(SMTPException):
             mail.quit()

@@ -4,7 +4,7 @@ import asyncio
 import logging
 import threading
 import traceback
-from typing import Any
+from typing import Any, override
 
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.pool import (
@@ -52,6 +52,7 @@ class RecorderPool(SingletonThreadPool, NullPool):
         self.recorder_and_worker_thread_ids = recorder_and_worker_thread_ids
         SingletonThreadPool.__init__(self, creator, **kw)
 
+    @override
     def recreate(self) -> RecorderPool:
         """Recreate the pool."""
         self.logger.info("Pool recreating")
@@ -68,6 +69,7 @@ class RecorderPool(SingletonThreadPool, NullPool):
             recorder_and_worker_thread_ids=self.recorder_and_worker_thread_ids,
         )
 
+    @override
     def _do_return_conn(self, record: ConnectionPoolEntry) -> None:
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
             super()._do_return_conn(record)
@@ -84,12 +86,14 @@ class RecorderPool(SingletonThreadPool, NullPool):
         ):
             conn.close()
 
+    @override
     def dispose(self) -> None:
         """Dispose of the connection."""
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
             super().dispose()
 
-    def _do_get(self) -> ConnectionPoolEntry:  # type: ignore[return]  # noqa: RET503
+    @override  # noqa: RET503
+    def _do_get(self) -> ConnectionPoolEntry:  # type: ignore[return]
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
             return super()._do_get()
         try:
@@ -118,6 +122,7 @@ class RecorderPool(SingletonThreadPool, NullPool):
         )
         return NullPool._create_connection(self)  # noqa: SLF001
 
+    @override
     def connect(self) -> PoolProxiedConnection:
         """Return a connection from the pool."""
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
@@ -135,6 +140,7 @@ class MutexPool(StaticPool):
     _reference_counter = 0
     pool_lock: threading.RLock
 
+    @override
     def _do_return_conn(self, record: ConnectionPoolEntry) -> None:
         if DEBUG_MUTEX_POOL_TRACE:
             trace = traceback.extract_stack()
@@ -153,6 +159,25 @@ class MutexPool(StaticPool):
             )
         MutexPool.pool_lock.release()
 
+    @override
+    def dispose(self) -> None:
+        """Dispose of the shared connection under the pool lock.
+
+        StaticPool.dispose() closes the single in-memory connection directly.
+        Without the lock it can close it while another thread has it checked
+        out and is mid-query, freeing the sqlite3 handle underneath a running
+        statement -> segfault. Holding pool_lock makes dispose wait for the
+        in-flight checkout to return first.
+        """
+        # pylint: disable-next=consider-using-with
+        got_lock = MutexPool.pool_lock.acquire(timeout=10)
+        try:
+            super().dispose()
+        finally:
+            if got_lock:
+                MutexPool.pool_lock.release()
+
+    @override
     def _do_get(self) -> ConnectionPoolEntry:
         if DEBUG_MUTEX_POOL_TRACE:
             trace = traceback.extract_stack()

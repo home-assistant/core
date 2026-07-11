@@ -1,6 +1,6 @@
 """Support for Overkiz sirens."""
 
-from typing import Any
+from typing import Any, override
 
 from pyoverkiz.enums import OverkizState
 from pyoverkiz.enums.command import OverkizCommand, OverkizCommandParam
@@ -42,6 +42,7 @@ class OverkizSiren(OverkizEntity, SirenEntity):
     )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get whether the siren is in on state."""
         return (
@@ -49,6 +50,7 @@ class OverkizSiren(OverkizEntity, SirenEntity):
             == OverkizCommandParam.ON
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the on command."""
         if kwargs.get(ATTR_DURATION):
@@ -67,6 +69,7 @@ class OverkizSiren(OverkizEntity, SirenEntity):
             OverkizCommandParam.MEMORIZED_VOLUME,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the off command."""
         await self.executor.async_execute_command(OverkizCommand.OFF)

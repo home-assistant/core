@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohttp import ClientConnectorCertificateError, ClientError
 from pyoverkiz.auth.credentials import (
@@ -11,9 +11,14 @@ from pyoverkiz.auth.credentials import (
     UsernamePasswordCredentials,
 )
 from pyoverkiz.client import GatewayCandidate, OverkizClient
-from pyoverkiz.const import SERVERS_WITH_LOCAL_API, SUPPORTED_SERVERS
+from pyoverkiz.const import (
+    REXEL_OAUTH_CLIENT_ID,
+    SERVERS_WITH_LOCAL_API,
+    SUPPORTED_SERVERS,
+)
 from pyoverkiz.enums import APIType, Server
 from pyoverkiz.exceptions import (
+    ApplicationNotAllowedError,
     BadCredentialsError,
     CozyTouchBadCredentialsError,
     MaintenanceError,
@@ -27,6 +32,10 @@ from pyoverkiz.obfuscate import obfuscate_id
 from pyoverkiz.utils import create_local_server_config, is_overkiz_gateway
 import voluptuous as vol
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -76,6 +85,7 @@ class OverkizConfigFlow(
     _rexel_oauth_data: dict[str, Any]
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return LOGGER
@@ -116,6 +126,7 @@ class OverkizConfigFlow(
 
         return user_input
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -176,6 +187,18 @@ class OverkizConfigFlow(
             description_placeholders={"local_api_docs": LOCAL_API_DOCS_URL},
         )
 
+    @override
+    async def async_step_pick_implementation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Start the Rexel OAuth2 flow, re-importing the credential if removed."""
+        await async_import_client_credential(
+            self.hass,
+            DOMAIN,
+            ClientCredential(REXEL_OAUTH_CLIENT_ID, "", name="Rexel"),
+        )
+        return await super().async_step_pick_implementation(user_input)
+
     async def async_step_cloud(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -191,6 +214,8 @@ class OverkizConfigFlow(
                 await self.async_validate_input(user_input)
             except TooManyRequestsError:
                 errors["base"] = "too_many_requests"
+            except ApplicationNotAllowedError:
+                errors["base"] = "application_not_allowed"
             except (BadCredentialsError, NotAuthenticatedError) as exception:
                 # If authentication with CozyTouch auth server is
                 # valid, but token is invalid for Overkiz API
@@ -334,6 +359,7 @@ class OverkizConfigFlow(
             errors=errors,
         )
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Resolve the gateway after a successful Rexel OAuth2 authorization."""
         self._rexel_oauth_data = data
@@ -411,6 +437,7 @@ class OverkizConfigFlow(
 
         return self.async_create_entry(title=gateway.label or "Rexel", data=data)
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -422,6 +449,7 @@ class OverkizConfigFlow(
         LOGGER.debug("DHCP discovery detected gateway %s", obfuscate_id(gateway_id))
         return await self._process_discovery(gateway_id)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

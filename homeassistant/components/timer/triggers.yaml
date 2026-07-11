@@ -21,7 +21,7 @@ paused: *trigger_common
 restarted: *trigger_common
 started: *trigger_common
 
-time_remaining:
+remaining_time_reached:
   target:
     entity:
       domain: timer

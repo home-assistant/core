@@ -76,9 +76,9 @@
 # name: test_sensor[sensor.bucket_test_total_size_of_backups-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Bucket test Total size of backups',
-      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bucket test Total size of backups',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEBIBYTES: 'MiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bucket_test_total_size_of_backups',

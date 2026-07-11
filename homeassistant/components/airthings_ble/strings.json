@@ -45,13 +45,23 @@
         "name": "Radon 1-day average"
       },
       "radon_1day_level": {
-        "name": "Radon 1-day level"
+        "name": "Radon 1-day level",
+        "state": {
+          "fair": "Fair",
+          "good": "Good",
+          "poor": "Poor"
+        }
       },
       "radon_longterm_avg": {
         "name": "Radon longterm average"
       },
       "radon_longterm_level": {
-        "name": "Radon longterm level"
+        "name": "Radon longterm level",
+        "state": {
+          "fair": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::fair%]",
+          "good": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::good%]",
+          "poor": "[%key:component::airthings_ble::entity::sensor::radon_1day_level::state::poor%]"
+        }
       }
     }
   },

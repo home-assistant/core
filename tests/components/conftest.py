@@ -896,14 +896,6 @@ def supervisor_client() -> Generator[AsyncMock]:
             return_value=supervisor_client,
         ),
         patch(
-            "homeassistant.components.hassio.issues.get_supervisor_client",
-            return_value=supervisor_client,
-        ),
-        patch(
-            "homeassistant.components.hassio.jobs.get_supervisor_client",
-            return_value=supervisor_client,
-        ),
-        patch(
             "homeassistant.components.hassio.repairs.get_supervisor_client",
             return_value=supervisor_client,
         ),
@@ -1498,13 +1490,3 @@ async def check_translations(
     for description in translation_errors.values():
         if description != "used":
             pytest.fail(description)
-
-
-@pytest.fixture(name="enable_labs_preview_features")
-def enable_labs_preview_features() -> Generator[None]:
-    """Enable labs preview features."""
-    with patch(
-        "homeassistant.components.labs.async_is_preview_feature_enabled",
-        return_value=True,
-    ):
-        yield

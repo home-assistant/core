@@ -7,11 +7,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, patch
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
 
@@ -34,7 +30,6 @@ async def test_repair_flow(
     )
 
     assert await async_setup_component(hass, "repairs", {})
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
 
     result = await start_repair_fix_flow(client, DOMAIN, "under_voltage_detected")

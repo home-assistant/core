@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from reolink_aio.api import Chime, Host
 
@@ -74,6 +74,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="ir_lights",
         cmd_key="GetIrLights",
+        cmd_id=208,
         translation_key="ir_lights",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ir_lights"),
@@ -83,6 +84,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="record_audio",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="record_audio",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "audio"),
@@ -92,11 +94,22 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="siren_on_event",
         cmd_key="GetAudioAlarm",
+        cmd_id=232,
         translation_key="siren_on_event",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "siren"),
         value=lambda api, ch: api.audio_alarm_enabled(ch),
         method=lambda api, ch, value: api.set_audio_alarm(ch, value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="pre_siren_on_event",
+        cmd_key="GetAudioCfg",
+        cmd_id=264,
+        translation_key="pre_siren_on_event",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "pre_siren"),
+        value=lambda api, ch: api.pre_alarm_enabled(ch),
+        method=lambda api, ch, value: api.set_pre_alarm(ch, value),
     ),
     ReolinkSwitchEntityDescription(
         key="auto_tracking",
@@ -136,6 +149,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="email",
         cmd_key="GetEmail",
+        cmd_id=217,
         translation_key="email",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "email") and api.is_nvr,
@@ -145,6 +159,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="ftp_upload",
         cmd_key="GetFtp",
+        cmd_id=70,
         translation_key="ftp_upload",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ftp") and api.is_nvr,
@@ -163,6 +178,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="record",
         cmd_key="GetRec",
+        cmd_id=81,
         translation_key="record",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "rec_enable") and api.is_nvr,
@@ -200,6 +216,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="doorbell_button_sound",
         cmd_key="GetAudioCfg",
+        cmd_id=264,
         translation_key="doorbell_button_sound",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "doorbell_button_sound"),
@@ -209,6 +226,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="pir_enabled",
         cmd_key="GetPirInfo",
+        cmd_id=212,
         translation_key="pir_enabled",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -219,6 +237,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="pir_reduce_alarm",
         cmd_key="GetPirInfo",
+        cmd_id=212,
         translation_key="pir_reduce_alarm",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -260,6 +279,7 @@ HOST_SWITCH_ENTITIES = (
     ReolinkHostSwitchEntityDescription(
         key="email",
         cmd_key="GetEmail",
+        cmd_id=217,
         translation_key="email",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "email") and not api.is_hub,
@@ -269,6 +289,7 @@ HOST_SWITCH_ENTITIES = (
     ReolinkHostSwitchEntityDescription(
         key="ftp_upload",
         cmd_key="GetFtp",
+        cmd_id=70,
         translation_key="ftp_upload",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "ftp") and not api.is_hub,
@@ -287,6 +308,7 @@ HOST_SWITCH_ENTITIES = (
     ReolinkHostSwitchEntityDescription(
         key="record",
         cmd_key="GetRec",
+        cmd_id=81,
         translation_key="record",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api: api.supported(None, "rec_enable") and not api.is_hub,
@@ -381,17 +403,20 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         super().__init__(reolink_data, channel)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self.entity_description.value(self._host.api, self._channel)
 
     @raise_translated_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.method(self._host.api, self._channel, True)
         self.async_write_ha_state()
 
     @raise_translated_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.method(self._host.api, self._channel, False)
@@ -413,17 +438,20 @@ class ReolinkHostSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
         super().__init__(reolink_data)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.entity_description.value(self._host.api)
 
     @raise_translated_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.method(self._host.api, True)
         self.async_write_ha_state()
 
     @raise_translated_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.method(self._host.api, False)
@@ -446,17 +474,20 @@ class ReolinkChimeSwitchEntity(ReolinkChimeCoordinatorEntity, SwitchEntity):
         super().__init__(reolink_data, chime)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self.entity_description.value(self._chime)
 
     @raise_translated_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.method(self._chime, True)
         self.async_write_ha_state()
 
     @raise_translated_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.method(self._chime, False)
@@ -479,17 +510,20 @@ class ReolinkHostChimeSwitchEntity(ReolinkHostChimeCoordinatorEntity, SwitchEnti
         super().__init__(reolink_data, chime)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self.entity_description.value(self._chime)
 
     @raise_translated_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.method(self._chime, True)
         self.async_write_ha_state()
 
     @raise_translated_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.method(self._chime, False)
@@ -518,11 +552,13 @@ class ReolinkIndexSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         self._attr_unique_id = f"{self._attr_unique_id}_{index}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self.entity_description.value(self._host.api, self._channel, self._index)
 
     @raise_translated_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.method(
@@ -531,6 +567,7 @@ class ReolinkIndexSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @raise_translated_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.method(

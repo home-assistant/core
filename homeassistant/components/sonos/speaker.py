@@ -198,6 +198,7 @@ class SonosSpeaker:
             self._battery_poll_timer = async_track_time_interval(
                 self.hass, self.async_poll_battery, BATTERY_SCAN_INTERVAL
             )
+        entry.async_on_unload(self.async_shutdown)
 
         self.websocket = SonosWebsocket(
             self.soco.ip_address,
@@ -438,6 +439,17 @@ class SonosSpeaker:
         for result in results:
             self.log_subscription_result(result, "Unsubscribe")
         self._subscriptions = []
+
+    @callback
+    def async_shutdown(self) -> None:
+        """Cancel speaker-owned timers during unload."""
+        if self._battery_poll_timer:
+            self._battery_poll_timer()
+            self._battery_poll_timer = None
+
+        if self._poll_timer:
+            self._poll_timer()
+            self._poll_timer = None
 
     @callback
     def async_renew_failed(self, exception: Exception) -> None:
