@@ -45,8 +45,8 @@
       "cpu_temperature": {
         "name": "CPU temperature"
       },
-      "disk_free": {
-        "name": "Disk free"
+      "disk_usage": {
+        "name": "Disk usage"
       },
       "ekey_finger": {
         "name": "Finger value"
@@ -75,8 +75,8 @@
       "logic_state": {
         "name": "Cnt{number}: {name}"
       },
-      "memory_free": {
-        "name": "Memory free"
+      "memory_usage": {
+        "name": "Memory usage"
       },
       "module_status": {
         "name": "Status"

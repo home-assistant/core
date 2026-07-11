@@ -107,13 +107,13 @@ async def async_setup_entry(  # noqa: C901
 
     new_devices: list[SensorEntity] = []
     for smhub_sensor in smhub.sensors:
-        if smhub_sensor.name == "Memory free":
+        if smhub_sensor.name == "Memory usage":
             new_devices.append(
                 HbtnDescribedSensor(
                     smhub, smhub_sensor, hbtn_cord, len(new_devices), MEMORY_DESCRIPTION
                 )
             )
-        if smhub_sensor.name == "Disk free":
+        if smhub_sensor.name == "Disk usage":
             new_devices.append(
                 HbtnDescribedSensor(
                     smhub, smhub_sensor, hbtn_cord, len(new_devices), DISK_DESCRIPTION
@@ -623,8 +623,8 @@ POWER_TEMP_DESCRIPTION = HbtnSensorEntityDescription(
     value_fn=lambda module, idx: module.diags[idx].value,
 )
 MEMORY_DESCRIPTION = HbtnSensorEntityDescription(
-    key="memory_free",
-    translation_key="memory_free",
+    key="memory_usage",
+    translation_key="memory_usage",
     native_unit_of_measurement=PERCENTAGE,
     state_class=SensorStateClass.MEASUREMENT,
     icon="mdi:memory",
@@ -633,8 +633,8 @@ MEMORY_DESCRIPTION = HbtnSensorEntityDescription(
     subscribe_fn=lambda module, idx: module.sensors[idx],
 )
 DISK_DESCRIPTION = HbtnSensorEntityDescription(
-    key="disk_free",
-    translation_key="disk_free",
+    key="disk_usage",
+    translation_key="disk_usage",
     native_unit_of_measurement=PERCENTAGE,
     state_class=SensorStateClass.MEASUREMENT,
     icon="mdi:harddisk",
