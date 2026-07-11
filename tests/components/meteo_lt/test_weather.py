@@ -26,6 +26,7 @@ from homeassistant.components.weather import (
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -70,34 +71,39 @@ async def test_coordinator_requests_forecast_without_warnings(
     mock_meteo_lt_api.get_forecast.assert_called_with("vilnius", include_warnings=False)
 
 
-@pytest.mark.freeze_time("2025-09-25 10:00:00")
 @pytest.mark.parametrize(
-    ("latitude", "longitude", "expected_condition"),
+    "expected_condition",
     [
         pytest.param(
-            54.68705,
-            25.28291,
             ATTR_CONDITION_SUNNY,
-            id="sun_up",
+            marks=pytest.mark.freeze_time("2025-09-25 10:00:00"),  # 13:00 in Vilnius
+            id="day",
         ),
         pytest.param(
-            32.87336,
-            -117.22743,
             ATTR_CONDITION_CLEAR_NIGHT,
-            id="sun_down",
+            marks=pytest.mark.freeze_time("2025-09-25 22:00:00"),  # 01:00 in Vilnius
+            id="night",
         ),
     ],
 )
 async def test_condition_clear_maps_day_night(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    latitude: float,
-    longitude: float,
+    mock_meteo_lt_api: AsyncMock,
     expected_condition: str,
 ) -> None:
-    """Test that a clear condition code maps to sunny or clear-night based on sun position."""
-    hass.config.latitude = latitude
-    hass.config.longitude = longitude
+    """Test that a clear condition maps to sunny or clear-night by sun position at the forecast time."""
+    hass.config.latitude = 54.68705  # Vilnius, matching the forecast place
+    hass.config.longitude = 25.28291
+
+    forecast_data = await async_load_json_object_fixture(hass, "forecast.json", DOMAIN)
+    current_hour = dt_util.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    forecast_data["forecastTimestamps"][0]["forecastTimeUtc"] = current_hour
+    forecast_data["forecastTimestamps"][0]["conditionCode"] = "clear"
+    mock_meteo_lt_api.get_forecast.side_effect = lambda *args, **kwargs: (
+        Forecast.from_dict(forecast_data)
+    )
+
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

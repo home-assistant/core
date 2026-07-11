@@ -8,6 +8,7 @@ from meteo_lt import MeteoLtAPI, Place
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_PLACE_CODE, DOMAIN
 
@@ -19,7 +20,6 @@ class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._api = MeteoLtAPI()
         self._places: list[Place] = []
         self._selected_place: Place | None = None
 
@@ -49,9 +49,10 @@ class MeteoLtConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_location"
 
         if not self._places:
+            api = MeteoLtAPI(session=async_get_clientsession(self.hass))
             try:
-                await self._api.fetch_places()
-                self._places = self._api.places
+                await api.fetch_places()
+                self._places = api.places
             except (aiohttp.ClientError, TimeoutError) as err:
                 _LOGGER.error("Error fetching places: %s", err)
                 return self.async_abort(reason="cannot_connect")
