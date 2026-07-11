@@ -107,6 +107,7 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
     body: bytes = b""
     status: int | None = None
     redirected = False
+    fetch_complete = False
     try:
         async with (
             aiohttp.ClientSession() as session,
@@ -119,6 +120,10 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
 
                 if len(body) >= 10240:
                     break
+            else:
+                # The loop ran to completion, so the whole response was read
+                # within the size cap (no break, no exception).
+                fetch_complete = True
 
     except TimeoutError:
         _LOGGER.error("Timeout while looking up redirect_uri %s", url)
@@ -146,11 +151,18 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
     # No link tags found, fall back to an OAuth Client ID Metadata Document
     # (draft-ietf-oauth-client-id-metadata-document). The url and its document
     # are client-controlled and fetched unauthenticated, so rejections log at
-    # DEBUG (higher levels would be a log-flood vector).
-    if status != HTTPStatus.OK or redirected or urlparse(url).scheme != "https":
+    # DEBUG (higher levels would be a log-flood vector). An incomplete or
+    # truncated read is rejected here: a stranded or capped prefix must not be
+    # trusted even if it happens to be parseable.
+    if (
+        not fetch_complete
+        or status != HTTPStatus.OK
+        or redirected
+        or urlparse(url).scheme != "https"
+    ):
         _LOGGER.debug(
-            "Ignoring client ID metadata document for %s: status %s, redirected %s,"
-            " or non-https client_id",
+            "Ignoring client ID metadata document for %s: incomplete or truncated"
+            " response, status %s, redirected %s, or non-https client_id",
             url,
             status,
             redirected,
@@ -160,11 +172,7 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
     try:
         document = json.loads(text)
     except ValueError:
-        _LOGGER.debug(
-            "Client ID metadata document at %s is not valid JSON%s",
-            url,
-            " (truncated at 10 kB limit)" if len(body) >= 10240 else "",
-        )
+        _LOGGER.debug("Client ID metadata document at %s is not valid JSON", url)
         return []
 
     if not isinstance(document, dict):

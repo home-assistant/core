@@ -190,7 +190,6 @@ async def test_fetch_redirect_uris_metadata_document(
         hass, "https://example.com/client"
     )
 
-    # CIMD redirect uris are absolute and returned as-is (no relative resolution).
     assert redirect_uris == [
         "https://example.com/callback",
         "https://other.com/callback",
@@ -334,12 +333,10 @@ async def test_verify_redirect_uri_metadata_document(
         headers={"Content-Type": "application/json"},
     )
 
-    # Cross-origin redirect uri listed in the document is allowed.
     assert await indieauth.verify_redirect_uri(
         hass, client_id, "https://other.com/callback"
     )
 
-    # Cross-origin redirect uri not listed in the document is rejected.
     assert not await indieauth.verify_redirect_uri(
         hass, client_id, "https://other.com/not-listed"
     )
@@ -409,7 +406,7 @@ async def test_fetch_redirect_uris_metadata_document_private_use_scheme(
 async def test_fetch_redirect_uris_metadata_document_oversized(
     hass: HomeAssistant, mock_session: AiohttpClientMocker
 ) -> None:
-    """Test an oversized document truncates past the 10kB cap to invalid JSON."""
+    """Test a document past the 10kB cap is rejected as an incomplete read."""
     mock_session.get(
         "https://example.com/client",
         text=json.dumps(
@@ -417,6 +414,26 @@ async def test_fetch_redirect_uris_metadata_document_oversized(
                 "client_id": "https://example.com/client",
                 "redirect_uris": ["https://example.com/callback"],
                 "padding": "x" * 11000,
+            }
+        ),
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert await indieauth.fetch_redirect_uris(hass, "https://example.com/client") == []
+
+
+async def test_fetch_redirect_uris_metadata_document_at_cap_ineligible(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker
+) -> None:
+    """Test a valid document that reaches the 10kB cap is ineligible."""
+    mock_session.get(
+        "https://example.com/client",
+        text=json.dumps(
+            {
+                "client_id": "https://example.com/client",
+                "redirect_uris": [
+                    f"https://example.com/callback/{index}" for index in range(400)
+                ],
             }
         ),
         headers={"Content-Type": "application/json"},
