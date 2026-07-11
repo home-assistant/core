@@ -692,6 +692,9 @@
     "global_alarm_manager": {
       "message": "The alarm manager on this UniFi Protect NVR is set to Global mode and cannot be controlled locally."
     },
+    "motion_detection_public_only": {
+      "message": "Motion detection cannot be changed over the public API; configure it in the UniFi Protect app"
+    },
     "no_users_found": {
       "message": "No users found, please check Protect permissions"
     },

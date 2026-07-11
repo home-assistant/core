@@ -17,6 +17,7 @@ from homeassistant.components.unifiprotect.utils import get_camera_base_name
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from . import patch_ufp_method
@@ -448,6 +449,87 @@ async def test_adopt_before_public_bootstrap(
     camera._api = ufp.api
     await adopt_devices(hass, ufp, [camera], fully_adopt=True)
     assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+
+    # the public mirror arriving on the devices websocket creates the entity
+    for channel in camera.channels:
+        channel._api = ufp.api
+    public = make_public_camera(camera)
+    public.rtsps_streams = public_rtsps_for(camera)
+    ufp.api.public_bootstrap.cameras = {camera.id: public}
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+    assert_entity_counts(hass, Platform.CAMERA, 1, 1)
+
+
+async def test_public_only_camera_removed(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+) -> None:
+    """A public-only camera removed from the public bootstrap goes unavailable."""
+    for channel in camera.channels:
+        channel._api = ufp.api
+    public = make_public_camera(camera)
+    public.rtsps_streams = public_rtsps_for(camera)
+
+    async def _prime_public_only() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {camera.id: public}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_public_only)
+    ufp.api.is_public_only = True
+
+    await init_entry(hass, ufp, [])
+    entity_id = _channel_entity_id(camera, 0)
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    # on a delete the library has already dropped the object; the re-read
+    # comes up empty and the entity goes unavailable
+    ufp.api.public_bootstrap.cameras = {}
+    delete_msg = Mock()
+    delete_msg.changed_data = {}
+    delete_msg.new_obj = None
+    delete_msg.old_obj = public
+    ufp.devices_ws_subscription(delete_msg)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # the camera reappearing on the websocket recovers it
+    ufp.api.public_bootstrap.cameras = {camera.id: public}
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "service", ["enable_motion_detection", "disable_motion_detection"]
+)
+async def test_public_only_camera_motion_detection_raises(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera, service: str
+) -> None:
+    """Motion detection cannot be changed without a private session."""
+    for channel in camera.channels:
+        channel._api = ufp.api
+    public = make_public_camera(camera)
+    public.rtsps_streams = public_rtsps_for(camera)
+
+    async def _prime_public_only() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {camera.id: public}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_public_only)
+    ufp.api.is_public_only = True
+
+    await init_entry(hass, ufp, [])
+    entity_id = _channel_entity_id(camera, 0)
+
+    with pytest.raises(HomeAssistantError, match="public API"):
+        await hass.services.async_call(
+            "camera",
+            service,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
 
 
 async def test_hybrid_public_camera_without_private_deferred(

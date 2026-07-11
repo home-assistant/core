@@ -166,7 +166,11 @@ class ProtectData:
         api = self.api
         if not api.has_public_bootstrap:
             return
-        private_cameras = api.bootstrap.cameras
+        # An API-key-only client never initializes the private bootstrap;
+        # accessing it would raise.
+        private_cameras: dict[str, Camera] = (
+            {} if api.is_public_only else api.bootstrap.cameras
+        )
         for camera_id, public in api.public_bootstrap.cameras.items():
             private = private_cameras.get(camera_id)
             if private is not None and not private.is_adopted_by_us:
@@ -256,6 +260,16 @@ class ProtectData:
             self._async_signal_device_update(self.api.bootstrap.nvr)
             return
         if isinstance(new_obj, PublicDeviceModel):
+            # A camera deferred at enumeration because its public mirror had
+            # not arrived yet is dispatched here, once it has (the private
+            # channels-update path cannot be relied on to fire again).
+            if (
+                new_obj.model is ModelType.CAMERA
+                and new_obj.id in self._pending_camera_ids
+                and (camera := self.api.bootstrap.cameras.get(new_obj.id)) is not None
+            ):
+                self._pending_camera_ids.remove(new_obj.id)
+                async_dispatcher_send(self._hass, self.channels_signal, camera)
             self._async_signal_public_update(new_obj.mac, new_obj)
 
     @callback

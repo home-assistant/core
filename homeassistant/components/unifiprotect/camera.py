@@ -18,6 +18,7 @@ from uiprotect.data.public_devices import PublicCamera
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -214,6 +215,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         public API does not cover and is ``None`` in public-only mode.
         """
         self._public = public
+        self._public_missing = False
         self._private = private
         self._quality = quality
         self._is_package = quality is ChannelQuality.PACKAGE
@@ -315,6 +317,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._attr_is_recording = False
         self._attr_available = (
             self.data.last_public_update_success
+            and not self._public_missing
             and public.state is DeviceState.CONNECTED
         )
         self._async_set_stream_source()
@@ -332,12 +335,16 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
 
         ``obj`` is the refreshed public object, or ``None`` for a websocket
         state change or an unmergeable frame, in which case it is re-read from
-        the public bootstrap.
+        the public bootstrap. A camera missing from the bootstrap on re-read
+        has been removed and reads as unavailable until it reappears.
         """
         if obj is None:
             obj = self.data.async_get_public_device(self._public)
         if isinstance(obj, PublicCamera):
             self._public = obj
+            self._public_missing = False
+        else:
+            self._public_missing = True
         self._async_updated_event(cast(ProtectDeviceType, self._public))
 
     @override
@@ -386,14 +393,20 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
     @override
     async def async_enable_motion_detection(self) -> None:
         """Call the job and enable motion detection."""
-        # public-only has no motion-detection setter; configure it in Protect.
-        if (private := self._private) is not None:
-            await private.set_motion_detection(True)
+        await self._async_set_motion_detection(True)
 
     @async_ufp_instance_command
     @override
     async def async_disable_motion_detection(self) -> None:
         """Call the job and disable motion detection."""
-        # public-only has no motion-detection setter; configure it in Protect.
-        if (private := self._private) is not None:
-            await private.set_motion_detection(False)
+        await self._async_set_motion_detection(False)
+
+    async def _async_set_motion_detection(self, enabled: bool) -> None:
+        # the public API has no motion-detection setter; without a private
+        # session the command cannot be sent and must not report success.
+        if (private := self._private) is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="motion_detection_public_only",
+            )
+        await private.set_motion_detection(enabled)
