@@ -10,7 +10,8 @@ open_cover:
     speed:
       advanced: true
       selector:
-        text:
+        state:
+          attribute: supported_speeds
 
 close_cover:
   target:
@@ -22,7 +23,8 @@ close_cover:
     speed:
       advanced: true
       selector:
-        text:
+        state:
+          attribute: supported_speeds
 
 toggle:
   target:
@@ -49,7 +51,8 @@ set_cover_position:
     speed:
       advanced: true
       selector:
-        text:
+        state:
+          attribute: supported_speeds
 
 stop_cover:
   target:
