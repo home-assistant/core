@@ -222,9 +222,6 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
                 )
                 dhw_config = None
 
-            # Read the schedule from the latest data after the device await so a
-            # concurrent schedule-write refresh is not clobbered with a stale
-            # pre-await snapshot.
             previous = self.data
             dhw_schedule = previous.dhw_schedule if previous else None
 
