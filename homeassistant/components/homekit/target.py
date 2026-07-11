@@ -1,6 +1,7 @@
 """Helpers for tracking HomeKit target selections."""
 
 from collections.abc import Callable
+import logging
 from typing import Any, override
 
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
@@ -10,10 +11,16 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.target import TargetEntityChangeTracker, TargetSelection
 from homeassistant.helpers.typing import ConfigType
 
+from .const import TARGET_CHANGE_RELOAD_COOLDOWN
 
+_LOGGER = logging.getLogger(__name__)
+
+
+# This functionality should move into the core target tracker in a later PR.
 class HomeKitTargetEntitySetChangeTracker(TargetEntityChangeTracker):
     """Track changes to the entities referenced by a HomeKit target."""
 
@@ -27,13 +34,31 @@ class HomeKitTargetEntitySetChangeTracker(TargetEntityChangeTracker):
         super().__init__(hass, target_selection, lambda entity_ids: entity_ids)
         self._action = action
         self._tracked_entities: set[str] = set()
+        self._refresh_debouncer = Debouncer(
+            hass,
+            _LOGGER,
+            cooldown=TARGET_CHANGE_RELOAD_COOLDOWN,
+            immediate=False,
+            function=self._async_refresh,
+        )
 
     @override
     async def async_setup(self) -> CALLBACK_TYPE:
         """Set up tracking without reporting the initial entity set as a change."""
         self._setup_selective_registry_listeners()
         self._tracked_entities = self._referenced_entities()
-        return self._unsubscribe
+
+        @callback
+        def _async_unsubscribe() -> None:
+            self._refresh_debouncer.async_shutdown()
+            self._unsubscribe()
+
+        return _async_unsubscribe
+
+    @callback
+    def _async_refresh(self) -> None:
+        """Refresh the entities referenced by this target."""
+        self._handle_entities_update(self._referenced_entities())
 
     @callback
     @override
@@ -90,13 +115,18 @@ class HomeKitTargetEntitySetChangeTracker(TargetEntityChangeTracker):
     def _handle_entity_registry_update(self, event: Event[Any]) -> None:
         """Handle a relevant entity registry update."""
         if self._entity_registry_event_affects_target(event):
-            self._handle_target_update(event)
+            self._refresh_debouncer.async_schedule_call()
 
     @callback
     def _handle_device_registry_update(self, event: Event[Any]) -> None:
         """Handle a relevant device registry update."""
         if self._device_registry_event_affects_target(event):
-            self._handle_target_update(event)
+            self._refresh_debouncer.async_schedule_call()
+
+    @callback
+    def _handle_area_registry_update(self, _event: Event[Any]) -> None:
+        """Handle an area registry update."""
+        self._refresh_debouncer.async_schedule_call()
 
     def _setup_selective_registry_listeners(self) -> None:
         """Set up listeners for registries used by this target selection."""
@@ -118,7 +148,8 @@ class HomeKitTargetEntitySetChangeTracker(TargetEntityChangeTracker):
             # Area update events do not report which fields changed.
             self._registry_unsubs.append(
                 self._hass.bus.async_listen(
-                    ar.EVENT_AREA_REGISTRY_UPDATED, self._handle_target_update
+                    ar.EVENT_AREA_REGISTRY_UPDATED,
+                    self._handle_area_registry_update,
                 )
             )
 
