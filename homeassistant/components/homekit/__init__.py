@@ -70,7 +70,6 @@ from homeassistant.helpers import (
     entity_registry as er,
     instance_id,
 )
-from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entityfilter import (
     BASE_FILTER_SCHEMA,
@@ -150,6 +149,7 @@ from .const import (
     SERVICE_HOMEKIT_UNPAIR,
     SHUTDOWN_TIMEOUT,
     SIGNAL_RELOAD_ENTITIES,
+    TARGET_CHANGE_RELOAD_COOLDOWN as TARGET_CHANGE_RELOAD_COOLDOWN,
     TYPE_AIR_PURIFIER,
 )
 from .iidmanager import AccessoryIIDStorage
@@ -178,7 +178,6 @@ STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
 PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
-TARGET_CHANGE_RELOAD_COOLDOWN = 3
 
 _TARGET_PRIORITY = {
     ATTR_ENTITY_ID: 80,
@@ -464,26 +463,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
     include_targets = filter_config[CONF_INCLUDE_TARGETS]
     exclude_targets = filter_config[CONF_EXCLUDE_TARGETS]
     if include_targets or exclude_targets:
-
-        @callback
-        def _async_schedule_reload() -> None:
-            """Schedule a reload of the HomeKit config entry."""
-            hass.config_entries.async_schedule_reload(entry.entry_id)
-
-        reload_debouncer = Debouncer(
-            hass,
-            _LOGGER,
-            cooldown=TARGET_CHANGE_RELOAD_COOLDOWN,
-            immediate=False,
-            function=_async_schedule_reload,
-        )
+        reload_scheduled = False
 
         @callback
         def _async_reload_on_target_change(added: set[str], removed: set[str]) -> None:
             """Reload HomeKit when an expanded target changes."""
-            reload_debouncer.async_schedule_call()
+            nonlocal reload_scheduled
+            if reload_scheduled:
+                return
+            reload_scheduled = True
+            hass.config_entries.async_schedule_reload(entry.entry_id)
 
-        entry.async_on_unload(reload_debouncer.async_shutdown)
         for targets in (include_targets, exclude_targets):
             for target_type, target_ids in targets.items():
                 if not target_ids:
@@ -1000,9 +990,8 @@ class HomeKit:
             return _TARGET_PRIORITY[ATTR_ENTITY_ID]
         if any(fnmatchcase(entity_id, pattern) for pattern in config[globs_key]):
             return _ENTITY_GLOB_PRIORITY
-        if state_domain := entity_id.partition(".")[0]:
-            if state_domain in config[domains_key]:
-                return _DOMAIN_PRIORITY
+        if entity_id.partition(".")[0] in config[domains_key]:
+            return _DOMAIN_PRIORITY
         return _NO_MATCH_PRIORITY
 
     @callback

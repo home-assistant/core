@@ -73,8 +73,10 @@ from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     instance_id,
     label_registry as lr,
+    target as target_helper,
 )
 from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_DOMAINS,
@@ -737,6 +739,141 @@ async def test_homekit_target_filter(
     assert hass.states.get("light.excluded_by_glob") not in filtered_states
     assert hass.states.get("light.excluded_by_label") not in filtered_states
     assert hass.states.get("light.unrelated") not in filtered_states
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_homekit_native_target_expansion(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test native device, area, and floor target expansion."""
+    entry = await async_init_integration(hass)
+
+    include_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "include-device")}
+    )
+    exclude_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "exclude-device")}
+    )
+    include_area = area_registry.async_create("Include Area")
+    exclude_area = area_registry.async_create("Exclude Area")
+    include_floor = floor_registry.async_create("Include Floor")
+    exclude_floor = floor_registry.async_create("Exclude Floor")
+    include_floor_area = area_registry.async_create(
+        "Include Floor Area", floor_id=include_floor.floor_id
+    )
+    exclude_floor_area = area_registry.async_create(
+        "Exclude Floor Area", floor_id=exclude_floor.floor_id
+    )
+
+    entity_locations = {
+        "light.included_by_device": {"device_id": include_device.id},
+        "light.excluded_by_device": {"device_id": exclude_device.id},
+        "light.included_by_area": {"area_id": include_area.id},
+        "light.excluded_by_area": {"area_id": exclude_area.id},
+        "light.included_by_floor": {"area_id": include_floor_area.id},
+        "light.excluded_by_floor": {"area_id": exclude_floor_area.id},
+    }
+    for entity_id, location in entity_locations.items():
+        registry_entry = entity_registry.async_get_or_create(
+            "light",
+            "demo",
+            entity_id,
+            suggested_object_id=entity_id.partition(".")[2],
+            device_id=location.get("device_id"),
+        )
+        if area_id := location.get("area_id"):
+            entity_registry.async_update_entity(
+                registry_entry.entity_id, area_id=area_id
+            )
+        hass.states.async_set(entity_id, "on")
+
+    homekit = _mock_homekit(
+        hass,
+        entry,
+        HOMEKIT_MODE_BRIDGE,
+        generate_filter([], [], [], []),
+        include_targets={
+            ATTR_DEVICE_ID: [include_device.id],
+            ATTR_AREA_ID: [include_area.id],
+            ATTR_FLOOR_ID: [include_floor.floor_id],
+        },
+        exclude_targets={
+            ATTR_DEVICE_ID: [exclude_device.id],
+            ATTR_AREA_ID: [exclude_area.id],
+            ATTR_FLOOR_ID: [exclude_floor.floor_id],
+        },
+    )
+    homekit.bridge = Mock(accessories={})
+
+    filtered_entity_ids = {
+        state.entity_id for state in await homekit.async_configure_accessories()
+    }
+    assert filtered_entity_ids == {
+        "light.included_by_device",
+        "light.included_by_area",
+        "light.included_by_floor",
+    }
+
+
+@pytest.mark.parametrize(
+    ("include_type", "exclude_type", "expected"),
+    [
+        (ATTR_DEVICE_ID, ATTR_AREA_ID, True),
+        (ATTR_AREA_ID, ATTR_DEVICE_ID, False),
+        (ATTR_AREA_ID, ATTR_FLOOR_ID, True),
+        (ATTR_FLOOR_ID, ATTR_AREA_ID, False),
+        (ATTR_DEVICE_ID, ATTR_DEVICE_ID, True),
+    ],
+)
+async def test_homekit_expanded_target_specificity(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+    include_type: str,
+    exclude_type: str,
+    expected: bool,
+) -> None:
+    """Test specificity conflicts using native expanded targets."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    floor = floor_registry.async_create("Target Floor")
+    area = area_registry.async_create("Target Area", floor_id=floor.floor_id)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "target-device")},
+    )
+    registry_entry = entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "target_specificity",
+        suggested_object_id="target_specificity",
+        device_id=device.id,
+    )
+    entity_registry.async_update_entity(registry_entry.entity_id, area_id=area.id)
+    hass.states.async_set(registry_entry.entity_id, "on")
+    target_ids = {
+        ATTR_DEVICE_ID: device.id,
+        ATTR_AREA_ID: area.id,
+        ATTR_FLOOR_ID: floor.floor_id,
+    }
+    homekit = _mock_homekit(
+        hass,
+        entry,
+        HOMEKIT_MODE_BRIDGE,
+        generate_filter([], [], [], []),
+        include_targets={include_type: [target_ids[include_type]]},
+        exclude_targets={exclude_type: [target_ids[exclude_type]]},
+    )
+    homekit.bridge = Mock(accessories={})
+
+    filtered_states = await homekit.async_configure_accessories()
+    assert (hass.states.get(registry_entry.entity_id) in filtered_states) is expected
 
 
 @pytest.mark.parametrize(
@@ -2174,10 +2311,6 @@ async def test_entity_label_change_reloads_for_configured_labels(
         await hass.async_block_till_done()
         mock_reload.assert_not_called()
 
-        entity_registry.async_update_entity(registry_entry.entity_id, labels=set())
-        await hass.async_block_till_done()
-        mock_reload.assert_not_called()
-
         freezer.tick(TARGET_CHANGE_RELOAD_COOLDOWN)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
@@ -2305,27 +2438,34 @@ async def test_indirect_label_target_changes_are_debounced(
         suggested_object_id="area_device_entity",
         device_id=area_device.id,
     )
-    entry = await _async_setup_target_reload_test(
-        hass, {ATTR_LABEL_ID: [homekit_label.label_id]}
-    )
-
-    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
-        entity_registry.async_update_entity(
-            area_entity.entity_id, area_id=labeled_area.id
+    with patch(
+        "homeassistant.helpers.target.async_extract_referenced_entity_ids",
+        wraps=target_helper.async_extract_referenced_entity_ids,
+    ) as mock_expand:
+        entry = await _async_setup_target_reload_test(
+            hass, {ATTR_LABEL_ID: [homekit_label.label_id]}
         )
-        await hass.async_block_till_done()
-        entity_registry.async_update_entity(
-            device_entity.entity_id, device_id=labeled_device.id
-        )
-        await hass.async_block_till_done()
-        device_registry.async_update_device(area_device.id, area_id=labeled_area.id)
-        await hass.async_block_till_done()
-        mock_reload.assert_not_called()
+        assert mock_expand.call_count == 1
 
-        freezer.tick(TARGET_CHANGE_RELOAD_COOLDOWN)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        mock_reload.assert_called_once_with(entry.entry_id)
+        with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+            entity_registry.async_update_entity(
+                area_entity.entity_id, area_id=labeled_area.id
+            )
+            await hass.async_block_till_done()
+            entity_registry.async_update_entity(
+                device_entity.entity_id, device_id=labeled_device.id
+            )
+            await hass.async_block_till_done()
+            device_registry.async_update_device(area_device.id, area_id=labeled_area.id)
+            await hass.async_block_till_done()
+            mock_reload.assert_not_called()
+            assert mock_expand.call_count == 1
+
+            freezer.tick(TARGET_CHANGE_RELOAD_COOLDOWN)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+            assert mock_expand.call_count == 2
+            mock_reload.assert_called_once_with(entry.entry_id)
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")

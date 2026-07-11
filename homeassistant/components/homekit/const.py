@@ -10,6 +10,7 @@ DOMAIN = "homekit"
 PERSIST_LOCK_DATA = f"{DOMAIN}_persist_lock"
 HOMEKIT_FILE = ".homekit.state"
 SHUTDOWN_TIMEOUT = 30
+TARGET_CHANGE_RELOAD_COOLDOWN = 3
 CONF_ENTRY_INDEX = "index"
 EMPTY_MAC = "00:00:00:00:00:00"
 SIGNAL_RELOAD_ENTITIES: SignalTypeFormat[tuple[str, ...]] = SignalTypeFormat(
