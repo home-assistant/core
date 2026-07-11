@@ -4,8 +4,15 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from uiprotect.data import AiPort, Camera as ProtectCamera, DeviceState, StateType
+from uiprotect.data import (
+    AiPort,
+    Camera as ProtectCamera,
+    DeviceState,
+    ModelType,
+    StateType,
+)
 from uiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.camera import (
     CameraEntityFeature,
@@ -519,6 +526,76 @@ async def test_public_only_camera_removed(
     ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+
+async def test_public_only_camera_ws_state_availability(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+) -> None:
+    """Public devices websocket state drives a public-only camera without private reads."""
+    for channel in camera.channels:
+        channel._api = ufp.api
+    public = make_public_camera(camera)
+    public.rtsps_streams = public_rtsps_for(camera)
+
+    async def _prime_public_only() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {camera.id: public}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_public_only)
+    ufp.api.is_public_only = True
+
+    await init_entry(hass, ufp, [])
+    entity_id = _channel_entity_id(camera, 0)
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    # tripwire: from here on nothing may read the private bootstrap
+    ufp.api.bootstrap = None
+
+    # a public NVR frame has no private NVR to signal and is ignored
+    nvr_msg = Mock()
+    nvr_msg.changed_data = {}
+    nvr_msg.old_obj = None
+    nvr_msg.new_obj = Mock(model=ModelType.NVR)
+    ufp.devices_ws_subscription(nvr_msg)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    # a websocket drop marks the camera unavailable, a reconnect recovers it
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+
+async def test_camera_motion_detection_uses_replaced_device(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+) -> None:
+    """Motion commands act on the refreshed device after a bootstrap replacement."""
+    await init_entry(hass, ufp, [camera])
+    entity_id = _channel_entity_id(camera, 0)
+
+    new_camera = camera.model_copy()
+    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = new_camera
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+
+    with patch_ufp_method(
+        new_camera, "set_motion_detection", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "camera",
+            "enable_motion_detection",
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+        mock_method.assert_called_once_with(True)
 
 
 @pytest.mark.parametrize(

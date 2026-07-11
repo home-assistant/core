@@ -264,7 +264,9 @@ class ProtectData:
                 self._async_signal_public_update(old_obj.mac, None)
             return
         if new_obj.model is ModelType.NVR:
-            self._async_signal_device_update(self.api.bootstrap.nvr)
+            # An API-key-only client has no private NVR (reading it would raise).
+            if not self.api.is_public_only:
+                self._async_signal_device_update(self.api.bootstrap.nvr)
             return
         if isinstance(new_obj, PublicDeviceModel):
             # A camera deferred at enumeration because its public mirror had
@@ -324,7 +326,9 @@ class ProtectData:
         if not api.has_public_bootstrap:
             return
         # The NVR alarm panel reads the public arm_mode, so refresh it too.
-        self._async_signal_device_update(api.bootstrap.nvr)
+        # An API-key-only client has no private NVR (reading it would raise).
+        if not api.is_public_only:
+            self._async_signal_device_update(api.bootstrap.nvr)
         # Subscribers recompute from the public bootstrap on ``None``.
         for subscriptions in self._public_subscriptions.values():
             for update_callback in subscriptions:

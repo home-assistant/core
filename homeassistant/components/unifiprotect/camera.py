@@ -279,6 +279,14 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         if self._private is not None:
             super()._async_update_device_from_protect(device)
             updated_device = self.device
+            # A poll/resync can replace the bootstrap objects; follow them so
+            # commands and reads never act on a detached model.
+            self._private = updated_device
+            if isinstance(
+                public := self.data.async_get_public_device(updated_device),
+                PublicCamera,
+            ):
+                self._public = public
             channel_id = self._channel_id
             channel = (
                 updated_device.channels[channel_id]
