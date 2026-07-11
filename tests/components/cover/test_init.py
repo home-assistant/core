@@ -224,7 +224,6 @@ async def test_services_with_speed(
     state = hass.states.get(speed_cover.entity_id)
     assert state.attributes["supported_speeds"] == ["slow", "fast", "default"]
 
-    # Test open_cover with valid speed passes speed through and changes state
     speed_cover.last_kwargs = None
     await call_service_with_data(
         hass, SERVICE_OPEN_COVER, speed_cover, {ATTR_SPEED: "fast"}
