@@ -110,3 +110,19 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+
+async def test_form_vehicle_not_found(hass: HomeAssistant) -> None:
+    """Test vehicle not found maps to invalid registration."""
+    with patch(
+        "homeassistant.components.dvla.config_flow.DVLAClient.async_get_vehicle",
+        side_effect=DVLAInvalidRegistrationError("Vehicle not found"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_REG_NUMBER: "UNKNOWN"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_registration"}
