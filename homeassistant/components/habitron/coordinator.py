@@ -31,8 +31,8 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
     attributes via their ``_handle_coordinator_update`` callbacks. The
     coordinator acts as a heartbeat that fans out update events.
 
-    ``async_system_update`` returns the raw compact-status bytes, which serve
-    as the change-detection key. With ``always_update=False`` the coordinator
+    ``async_system_update`` returns the compact-status CRC (an ``int``), which
+    serves as the change-detection key. With ``always_update=False`` the coordinator
     only fans out to the entities when the bus status actually changed between
     ticks, avoiding a needless write of every entity on every tick.
     """
