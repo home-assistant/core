@@ -353,7 +353,20 @@ async def test_map_load_delayed(
     assert hass.states.get("image.roborock_s7_maxv_main_floor") is not None
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
 
-    # 5. Remove first map (Main Floor, flag 0)
+    # 5. Uninitialized map info (None)
+    fake_vacuum.v1_properties.home.home_map_info = None
+    fake_vacuum.v1_properties.home.home_map_content = None
+
+    # Notify update listener
+    for call in fake_vacuum.v1_properties.home.add_update_listener.call_args_list:
+        call.args[0]()
+    await hass.async_block_till_done()
+
+    # Assert both map entities still exist (were not deleted)
+    assert hass.states.get("image.roborock_s7_maxv_main_floor") is not None
+    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
+
+    # 6. Remove first map (Main Floor, flag 0)
     home_map_info_removed = {
         1: CombinedMapInfo(
             name="Upstairs",

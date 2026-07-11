@@ -49,7 +49,8 @@ async def async_setup_entry(
             @callback
             def async_update_map_entities() -> None:
                 """Add new map entities and remove deleted ones."""
-                map_infos = coordinator.properties_api.home.home_map_info or {}
+                if (map_infos := coordinator.properties_api.home.home_map_info) is None:
+                    return
                 current_flags = set(map_infos.keys())
                 existing_flags = set(map_entities.keys())
 
