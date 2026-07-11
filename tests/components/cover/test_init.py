@@ -220,7 +220,6 @@ async def test_services_with_speed(
     # speed_cover = cover with speed support
     ent1, ent2, _, _, _, _, speed_cover = mock_cover_entities
 
-    # Test capability attributes include supported_speeds
     state = hass.states.get(speed_cover.entity_id)
     assert state.attributes["supported_speeds"] == ["slow", "fast", "default"]
 
@@ -231,7 +230,6 @@ async def test_services_with_speed(
     assert speed_cover.last_kwargs == {"speed": "fast"}
     assert is_opening(hass, speed_cover, 50)
 
-    # Test close_cover with valid speed passes speed through and changes state
     speed_cover.last_kwargs = None
     await call_service_with_data(
         hass, SERVICE_CLOSE_COVER, speed_cover, {ATTR_SPEED: "slow"}
@@ -239,7 +237,6 @@ async def test_services_with_speed(
     assert speed_cover.last_kwargs == {"speed": "slow"}
     assert is_closing(hass, speed_cover, 50)
 
-    # Test set_cover_position with valid speed passes speed through
     speed_cover.last_kwargs = None
     await call_service_with_data(
         hass,
@@ -249,7 +246,6 @@ async def test_services_with_speed(
     )
     assert speed_cover.last_kwargs == {"position": 75, "speed": "default"}
 
-    # Test invalid speed raises NotValidSpeedError and does not call entity method
     speed_cover.last_kwargs = None
     with pytest.raises(NotValidSpeedError) as exc:
         await call_service_with_data(
@@ -275,7 +271,6 @@ async def test_services_with_speed(
     assert speed_cover.last_kwargs is None
     assert exc.value.translation_key == "not_valid_speed"
 
-    # Test cover without supported_speeds ignores speed and executes normally
     await call_service_with_data(hass, SERVICE_OPEN_COVER, ent1, {ATTR_SPEED: "ignore"})
     assert is_open(hass, ent1)
     assert ent1.last_kwargs == {"speed": "ignore"}
