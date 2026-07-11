@@ -63,6 +63,10 @@ async def async_setup_entry(
             )
             continue
         item_attributes = await director_get_entry_variables(hass, entry, item_id)
+        if not item_attributes:
+            _LOGGER.debug("Skipping light %s: no initial variables", item_name)
+            continue
+
         entity_list.append(
             Control4Light(
                 entry_data,

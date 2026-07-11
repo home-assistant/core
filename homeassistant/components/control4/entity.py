@@ -105,7 +105,7 @@ class Control4Entity(Entity):
                     for k, val in value.items():
                         self._extra_state_attributes[k] = val
                 else:
-                    self._extra_state_attributes[key.upper()] = value
+                    self._extra_state_attributes[key] = value
 
     @override
     @cached_property
