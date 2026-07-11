@@ -214,6 +214,7 @@ async def async_setup_entry(
             )
             for state in device.definition.states
             if (description := SUPPORTED_STATES.get(state))
+            and device.supports_command(description.command)
         )
 
     async_add_entities(entities)
