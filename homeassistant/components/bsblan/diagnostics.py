@@ -43,6 +43,11 @@ async def async_get_config_entry_diagnostics(
             slow_data["dhw_schedule"] = (
                 data.slow_coordinator.data.dhw_schedule.model_dump()
             )
+        if data.slow_coordinator.data.heating_schedule:
+            slow_data["heating_schedule"] = {
+                str(circuit): schedule.model_dump()
+                for circuit, schedule in data.slow_coordinator.data.heating_schedule.items()
+            }
         if slow_data:
             diagnostics["slow_coordinator_data"] = slow_data
 

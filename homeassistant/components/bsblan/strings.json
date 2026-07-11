@@ -127,11 +127,17 @@
     "no_config_entry_for_device": {
       "message": "No configuration entry found for device: {device_id}"
     },
+    "not_a_heating_circuit_device": {
+      "message": "The selected device ({device_name}) is not a heating circuit. Please select a heating circuit sub-device."
+    },
     "not_a_water_heater_device": {
       "message": "The selected device ({device_name}) is not a water heater. Please select the water heater sub-device."
     },
     "set_data_error": {
       "message": "An error occurred while sending the data to the BSB-LAN device"
+    },
+    "set_heating_schedule_failed": {
+      "message": "Failed to set heating schedule: {error}"
     },
     "set_operation_mode_error": {
       "message": "An error occurred while setting the operation mode"
@@ -165,6 +171,44 @@
     }
   },
   "services": {
+    "set_heating_schedule": {
+      "description": "Sets the heating schedule for a BSB-LAN heating circuit.",
+      "fields": {
+        "device_id": {
+          "description": "The heating circuit sub-device to configure.",
+          "name": "Heating circuit"
+        },
+        "friday_slots": {
+          "description": "[%key:component::bsblan::services::set_hot_water_schedule::fields::friday_slots::description%]",
+          "name": "[%key:component::bsblan::services::set_hot_water_schedule::fields::friday_slots::name%]"
+        },
+        "monday_slots": {
+          "description": "[%key:component::bsblan::services::set_hot_water_schedule::fields::monday_slots::description%]",
+          "name": "[%key:component::bsblan::services::set_hot_water_schedule::fields::monday_slots::name%]"
+        },
+        "saturday_slots": {
+          "description": "[%key:component::bsblan::services::set_hot_water_schedule::fields::saturday_slots::description%]",
+          "name": "[%key:component::bsblan::services::set_hot_water_schedule::fields::saturday_slots::name%]"
+        },
+        "sunday_slots": {
+          "description": "[%key:component::bsblan::services::set_hot_water_schedule::fields::sunday_slots::description%]",
+          "name": "[%key:component::bsblan::services::set_hot_water_schedule::fields::sunday_slots::name%]"
+        },
+        "thursday_slots": {
+          "description": "[%key:component::bsblan::services::set_hot_water_schedule::fields::thursday_slots::description%]",
+          "name": "[%key:component::bsblan::services::set_hot_water_schedule::fields::thursday_slots::name%]"
+        },
+        "tuesday_slots": {
+          "description": "[%key:component::bsblan::services::set_hot_water_schedule::fields::tuesday_slots::description%]",
+          "name": "[%key:component::bsblan::services::set_hot_water_schedule::fields::tuesday_slots::name%]"
+        },
+        "wednesday_slots": {
+          "description": "[%key:component::bsblan::services::set_hot_water_schedule::fields::wednesday_slots::description%]",
+          "name": "[%key:component::bsblan::services::set_hot_water_schedule::fields::wednesday_slots::name%]"
+        }
+      },
+      "name": "Set heating schedule"
+    },
     "set_hot_water_schedule": {
       "description": "Set the hot water heating schedule for a BSB-LAN device.",
       "fields": {

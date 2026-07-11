@@ -1,6 +1,6 @@
 """DataUpdateCoordinator for the BSB-LAN integration."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
@@ -9,6 +9,7 @@ from bsblan import (
     BSBLANAuthError,
     BSBLANConnectionError,
     BSBLANError,
+    HeatingTimeSwitchPrograms,
     HotWaterConfig,
     HotWaterSchedule,
     HotWaterState,
@@ -58,6 +59,7 @@ class BSBLanSlowData:
 
     dhw_config: HotWaterConfig | None = None
     dhw_schedule: HotWaterSchedule | None = None
+    heating_schedule: dict[int, HeatingTimeSwitchPrograms] = field(default_factory=dict)
 
 
 class BSBLanCoordinator[T](DataUpdateCoordinator[T]):
@@ -171,6 +173,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         hass: HomeAssistant,
         config_entry: BSBLanConfigEntry,
         client: BSBLAN,
+        circuits: list[int],
     ) -> None:
         """Initialize the BSB-LAN slow coordinator."""
         super().__init__(
@@ -180,16 +183,22 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
             name=f"{DOMAIN}_slow_{config_entry.data[CONF_HOST]}",
             update_interval=SCAN_INTERVAL_SLOW,
         )
+        self.circuits: list[int] = circuits
 
     @override
     async def _async_update_data(self) -> BSBLanSlowData:
-        """Fetch slow-changing data from the BSB-LAN device."""
+        """Fetch slow-changing data from the BSB-LAN device.
+
+        Only the DHW config is polled here. Schedules change rarely and are
+        refreshed separately (on startup and after a write) to avoid extra
+        serial-bus traffic on every interval, so they are carried over from
+        the previous update.
+        """
+        previous = self.data
         try:
             # Client is already initialized in async_setup_entry
             # Use include filtering to only fetch parameters we actually use
             dhw_config = await self.client.hot_water_config(include=DHW_CONFIG_INCLUDE)
-            dhw_schedule = await self.client.hot_water_schedule()
-
         except (BSBLANConnectionError, BSBLANAuthError) as err:
             # If config update fails, keep existing data
             LOGGER.debug(
@@ -197,8 +206,8 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
                 self.config_entry.data[CONF_HOST],
                 err,
             )
-            if self.data:
-                return self.data
+            if previous:
+                return previous
             # First fetch failed, return empty data
             return BSBLanSlowData()
         except BSBLANError, AttributeError:
@@ -207,9 +216,69 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
                 "DHW (Domestic Hot Water) not available on device at %s",
                 self.config_entry.data[CONF_HOST],
             )
-            return BSBLanSlowData()
+            dhw_config = None
 
         return BSBLanSlowData(
             dhw_config=dhw_config,
-            dhw_schedule=dhw_schedule,
+            dhw_schedule=previous.dhw_schedule if previous else None,
+            heating_schedule=dict(previous.heating_schedule) if previous else {},
         )
+
+    async def async_refresh_slow_data(self) -> None:
+        """Fetch DHW config and schedules off the polling interval.
+
+        Runs on startup (in the background) and after a schedule is written, so
+        these rarely changing values neither block startup nor add serial-bus
+        traffic on every interval. Values that fail to fetch keep their
+        previous value.
+        """
+        dhw_config = await self._async_fetch_dhw_config()
+        dhw_schedule = await self._async_fetch_dhw_schedule()
+        heating_schedule = await self._async_fetch_heating_schedules()
+
+        previous = self.data or BSBLanSlowData()
+        self.async_set_updated_data(
+            BSBLanSlowData(
+                dhw_config=dhw_config or previous.dhw_config,
+                dhw_schedule=dhw_schedule or previous.dhw_schedule,
+                heating_schedule=heating_schedule or previous.heating_schedule,
+            )
+        )
+
+    async def _async_fetch_dhw_config(self) -> HotWaterConfig | None:
+        """Fetch the DHW config, returning None if unavailable."""
+        try:
+            return await self.client.hot_water_config(include=DHW_CONFIG_INCLUDE)
+        except BSBLANError, AttributeError:
+            LOGGER.debug(
+                "DHW config not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
+            return None
+
+    async def _async_fetch_dhw_schedule(self) -> HotWaterSchedule | None:
+        """Fetch the DHW schedule, returning None if unavailable."""
+        try:
+            return await self.client.hot_water_schedule()
+        except BSBLANError, AttributeError:
+            LOGGER.debug(
+                "DHW schedule not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
+            return None
+
+    async def _async_fetch_heating_schedules(
+        self,
+    ) -> dict[int, HeatingTimeSwitchPrograms]:
+        """Fetch the heating schedule for each configured circuit."""
+        schedules: dict[int, HeatingTimeSwitchPrograms] = {}
+        for circuit in self.circuits:
+            try:
+                schedules[circuit] = await self.client.heating_schedule(circuit=circuit)
+            except BSBLANError, AttributeError:
+                LOGGER.debug(
+                    "Heating schedule not available for circuit %d on device at %s",
+                    circuit,
+                    self.config_entry.data[CONF_HOST],
+                )
+        return schedules
