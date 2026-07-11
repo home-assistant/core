@@ -159,6 +159,32 @@ async def test_set_hot_water_schedule(
         assert actual_schedule == expected_schedule
 
 
+async def test_set_hot_water_schedule_refreshes_coordinator(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    water_heater_device_entry: dr.DeviceEntry,
+) -> None:
+    """Test setting a schedule refreshes the slow coordinator."""
+    refreshed_schedule = MagicMock()
+    mock_bsblan.hot_water_schedule.return_value = refreshed_schedule
+    mock_bsblan.hot_water_schedule.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_hot_water_schedule",
+        {
+            "device_id": water_heater_device_entry.id,
+            "monday_slots": [{"start_time": time(6, 0), "end_time": time(8, 0)}],
+        },
+        blocking=True,
+    )
+
+    mock_bsblan.hot_water_schedule.assert_awaited_once_with()
+    slow_coordinator = mock_config_entry.runtime_data.slow_coordinator
+    assert slow_coordinator.data.dhw_schedule is refreshed_schedule
+
+
 async def test_invalid_device_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

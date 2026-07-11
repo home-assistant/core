@@ -332,18 +332,19 @@ async def test_slow_interval_poll_preserves_cached_schedule(
     assert slow_coordinator.data.dhw_schedule == cached_schedule
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [BSBLANConnectionError("Schedule failed"), BSBLANError("Invalid response")],
+    ids=["connection-error", "api-error"],
+)
 async def test_slow_interval_poll_retries_missing_schedule(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
     freezer: FrozenDateTimeFactory,
+    exception: Exception,
 ) -> None:
-    """Test interval polls retry the schedule until the first success.
-
-    A transient failure during the startup fetch leaves no cached schedule.
-    Interval polls must retry the schedule fetch until it succeeds, then stop
-    fetching it once cached.
-    """
+    """Test interval polls retry transient schedule failures until success."""
     schedule_value = mock_bsblan.hot_water_schedule.return_value
     fetch_failed = False
 
@@ -351,7 +352,7 @@ async def test_slow_interval_poll_retries_missing_schedule(
         nonlocal fetch_failed
         if not fetch_failed:
             fetch_failed = True
-            raise BSBLANConnectionError("Schedule failed")
+            raise exception
         return schedule_value
 
     mock_bsblan.hot_water_schedule.side_effect = _schedule
@@ -383,20 +384,14 @@ async def test_slow_interval_poll_retries_missing_schedule(
     assert slow_coordinator.data.dhw_schedule == schedule_value
 
 
-@pytest.mark.parametrize(
-    "exception",
-    [AttributeError(), BSBLANError("Schedule unsupported")],
-    ids=["missing-method", "api-error"],
-)
 async def test_slow_interval_poll_does_not_retry_unsupported_schedule(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
     freezer: FrozenDateTimeFactory,
-    exception: Exception,
 ) -> None:
     """Test interval polls do not retry an unsupported schedule."""
-    mock_bsblan.hot_water_schedule.side_effect = exception
+    mock_bsblan.hot_water_schedule.side_effect = AttributeError
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -418,12 +413,7 @@ async def test_setup_does_not_block_on_slow_fetch(
     mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
 ) -> None:
-    """Test setup completes without waiting for the background slow-data fetch.
-
-    The slow-data fetch runs as a background task, so config-entry setup must
-    finish even while the fetch is still pending. Using a normal task instead
-    would make async_block_till_done wait for the fetch and hang here.
-    """
+    """Test setup does not wait for the background slow-data fetch."""
     release = asyncio.Event()
     config_value = mock_bsblan.hot_water_config.return_value
 

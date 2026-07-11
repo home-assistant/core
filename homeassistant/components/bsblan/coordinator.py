@@ -280,7 +280,13 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
                 self.config_entry.data[CONF_HOST],
             )
             return None
-        except BSBLANError, AttributeError:
+        except BSBLANError:
+            LOGGER.debug(
+                "DHW schedule not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
+            return None
+        except AttributeError:
             self._dhw_schedule_supported = False
             LOGGER.debug(
                 "DHW schedule is not supported by device at %s",
