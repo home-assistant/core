@@ -130,13 +130,18 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
 
     @override
     async def async_shutdown(self) -> None:
-        """Detach listeners and close the Gaposa session."""
+        """Detach listeners and close the Gaposa session.
+
+        Idempotent: base DataUpdateCoordinator registers an unload
+        listener that also calls async_shutdown, and setup can fail
+        before self.gaposa is assigned in _async_setup.
+        """
         await super().async_shutdown()
         if self._listener is not None:
             for device in self.devices:
                 device.removeListener(self._listener)
             self._listener = None
         self.devices = []
-        # Setup can fail before self.gaposa is assigned in _async_setup.
-        if hasattr(self, "gaposa"):
-            await self.gaposa.close()
+        gaposa = self.__dict__.pop("gaposa", None)
+        if gaposa is not None:
+            await gaposa.close()
