@@ -281,6 +281,7 @@ async def test_map_load_delayed(
     mock_roborock_entry: MockConfigEntry,
     fake_vacuum: FakeDevice,
 ) -> None:
+    """Test map entities are not created if no maps initially exist, but are added dynamically later."""
     assert fake_vacuum.v1_properties
     home_trait = fake_vacuum.v1_properties.home
 
