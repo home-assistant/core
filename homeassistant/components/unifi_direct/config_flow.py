@@ -86,8 +86,8 @@ def _get_host_configs(data: dict[str, Any]) -> list[dict[str, Any]]:
 
 def validate_connection_data(data: dict[str, Any]) -> None:
     """Validate that we can connect to the UniFi AP with the provided configuration."""
-    try:
-        for host_config in _get_host_configs(data):
+    for host_config in _get_host_configs(data):
+        try:
             ap = UniFiAP(
                 target=host_config[CONF_HOST],
                 username=host_config[CONF_USERNAME],
@@ -95,8 +95,11 @@ def validate_connection_data(data: dict[str, Any]) -> None:
                 port=host_config[CONF_PORT],
             )
             ap.get_clients()
-    except (UniFiAPConnectionException, UniFiAPDataException) as err:
-        raise CannotConnect("Failed to connect to UniFi AP") from err
+        except (UniFiAPConnectionException, UniFiAPDataException) as err:
+            raise CannotConnect(
+                f"Failed to connect to UniFi AP at {host_config[CONF_HOST]}",
+                host=host_config[CONF_HOST],
+            ) from err
 
 
 class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -111,6 +114,7 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] | None = None
         if user_input is not None:
             host_configs = _get_host_configs(user_input)
             if not host_configs:
@@ -122,8 +126,9 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.hass.async_add_executor_job(
                         validate_connection_data, entry_data
                     )
-                except CannotConnect:
+                except CannotConnect as err:
                     errors["base"] = "cannot_connect"
+                    description_placeholders = {"host": err.host}
                 else:
                     return self.async_create_entry(
                         title=f"{DEFAULT_NAME} ({', '.join(host[CONF_HOST] for host in host_configs)})",
@@ -134,6 +139,7 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
@@ -164,3 +170,8 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(Exception):
     """Custom exception for failing to connect to the UniFiAP."""
+
+    def __init__(self, message: str, host: str) -> None:
+        """Initialize the exception."""
+        super().__init__(message)
+        self.host = host

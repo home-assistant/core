@@ -135,6 +135,7 @@ async def test_user_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+    assert result["description_placeholders"] == {"host": "192.168.1.2"}
 
     # Remove the UniFiAP.get_clients side effect and see if the flow recovers
     mock_unifiap.return_value.get_clients.side_effect = None

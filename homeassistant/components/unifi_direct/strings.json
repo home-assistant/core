@@ -4,11 +4,12 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "Could not connect to UniFi AP at {host}."
     },
     "step": {
       "user": {
         "data": {
+          "host": "[%key:common::config_flow::data::host%]",
           "hosts": "Hosts",
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
