@@ -1,6 +1,7 @@
 """Tests for the Mealie todo."""
 
 from datetime import timedelta
+import json
 from unittest.mock import AsyncMock, call, patch
 
 from aiomealie import (
@@ -16,6 +17,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.mealie import DOMAIN
 from homeassistant.components.mealie.todo import _convert_api_item, _parse_description
 from homeassistant.components.todo import (
+    ATTR_DESCRIPTION,
     ATTR_ITEM,
     ATTR_RENAME,
     ATTR_STATUS,
@@ -75,6 +77,7 @@ def test_convert_api_item(
         pytest.param("2 Gramm, organic", 2.0, "organic", id="quantity_unit_note"),
         pytest.param(", organic", 0.0, "organic", id="note_only_with_comma"),
         pytest.param("buy fresh", 0.0, "buy fresh", id="text_note_no_comma"),
+        pytest.param("buy fresh, organic", 0.0, "buy fresh, organic", id="text_note_with_comma"),
         pytest.param("1 can, ripe", 1.0, "ripe", id="quantity_unit_note_short"),
     ],
 )
@@ -104,7 +107,7 @@ async def test_update_todo_item_description(
         {
             ATTR_ITEM: "acorn squash",
             ATTR_RENAME: "acorn squash",
-            "description": "3 can, organic",
+            ATTR_DESCRIPTION: "3 can, organic",
         },
         target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
         blocking=True,
@@ -123,9 +126,19 @@ async def test_update_todo_item_status_keeps_description(
 ) -> None:
     """Test toggling status does not rewrite quantity/note from the rendered description.
 
-    The todo component re-sends the rendered description on every update; parsing it
-    back must be skipped when it is unchanged to avoid clobbering the Mealie item.
+    Uses a food item whose note starts with a digit so that _parse_description would
+    return a different (quantity, note) pair — proving the unchanged-description guard
+    is load-bearing and not just incidentally passing.
     """
+    items_data = json.loads(load_fixture("get_shopping_items.json", DOMAIN))
+    items_data["items"][1]["quantity"] = 0.0
+    items_data["items"][1]["note"] = "3 large"
+    items_data["items"][1]["unit"] = None
+    items_data["items"][1]["unitId"] = None
+    mock_mealie_client.get_shopping_items.return_value = ShoppingItemsResponse.from_json(
+        json.dumps(items_data)
+    )
+
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
@@ -139,9 +152,37 @@ async def test_update_todo_item_status_keeps_description(
     mock_mealie_client.update_shopping_item.assert_called_once()
     _, mutate = mock_mealie_client.update_shopping_item.call_args[0]
     assert mutate.checked is True
-    assert mutate.quantity == 1.0
-    assert mutate.note == ""
-    assert mutate.unit_id == "7bf539d4-fc78-48bc-b48e-c35ccccec34a"
+    assert mutate.quantity == 0.0
+    assert mutate.note == "3 large"
+    assert mutate.unit_id is None
+
+
+async def test_update_todo_item_nonfood_status_keeps_quantity(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test toggling status on a non-food item does not reset its quantity.
+
+    Non-food items have description=None in the todo layer, but _build_description
+    of the underlying ShoppingItem is non-None when quantity>0; the elif branch must
+    be skipped for non-food items to avoid zeroing out the quantity.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "2 Apples", ATTR_STATUS: "completed"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.update_shopping_item.assert_called_once()
+    _, mutate = mock_mealie_client.update_shopping_item.call_args[0]
+    assert mutate.checked is True
+    assert mutate.quantity == 2.0
+    assert mutate.note == "Apples"
 
 
 async def test_entities(

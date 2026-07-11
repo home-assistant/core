@@ -72,8 +72,7 @@ def _parse_description(description: str | None) -> tuple[float, str]:
         try:
             quantity = float(tokens[0])
         except ValueError:
-            if not found_comma:
-                note = prefix_part
+            note = description
 
     return quantity, note
 
@@ -240,7 +239,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             update_shopping_item.food_id = None
             update_shopping_item.quantity = 0.0
             update_shopping_item.checked = item.status == TodoItemStatus.COMPLETED
-        elif item.description != _build_description(list_item):
+        elif list_item.food and item.description != _build_description(list_item):
             # Only parse when the description actually changed; the todo component
             # re-sends the rendered description on every update, and parsing is lossy.
             quantity, note = _parse_description(item.description)
