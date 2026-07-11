@@ -365,12 +365,9 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
     ) -> bytes | None:
         """Return the Camera Image.
 
-        Snapshots always come from the public API (the private convenience just
-        forwards to it), so one call serves both modes off the public-master id.
         While snapshot-polling (no stream) request low quality to avoid
-        hammering the console; with a stream, honor the camera's full-HD
-        capability. highQuality is a no-op for the package channel. width/height
-        are unused (the public endpoint has no resize).
+        hammering the console. width/height are unused (the public endpoint
+        has no resize).
         """
         high_quality = bool(
             self._stream_source and self._public.feature_flags.support_full_hd_snapshot

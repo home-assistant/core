@@ -265,6 +265,14 @@ async def test_camera_not_in_public_bootstrap(
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 0, 0)
 
+    # the public mirror arriving on the devices websocket creates the entity
+    public = make_public_camera(camera)
+    public.rtsps_streams = public_rtsps_for(camera)
+    ufp.api.public_bootstrap.cameras = {camera.id: public}
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+    assert_entity_counts(hass, Platform.CAMERA, 1, 1)
+
 
 async def test_streams_unavailable(
     hass: HomeAssistant, ufp: MockUFPFixture, camera_all: ProtectCamera

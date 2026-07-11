@@ -155,13 +155,15 @@ class ProtectData:
 
     def get_public_cameras(
         self,
-    ) -> Generator[tuple[PublicCamera, Camera | None]]:
+    ) -> Generator[tuple[PublicCamera | None, Camera | None]]:
         """Iterate cameras public-master with private-fill.
 
         The public bootstrap is the master list; the matching private camera is
         paired by shared id when present (hybrid) and ``None`` in public-only
-        mode. Adopted-filtering mirrors ``get_cameras`` whenever a private object
-        is available.
+        mode. An adopted private camera not (yet) mirrored into the public
+        bootstrap is yielded as ``(None, private)`` so the caller can defer it.
+        Adopted-filtering mirrors ``get_cameras`` whenever a private object is
+        available.
         """
         api = self.api
         if not api.has_public_bootstrap:
@@ -171,11 +173,16 @@ class ProtectData:
         private_cameras: dict[str, Camera] = (
             {} if api.is_public_only else api.bootstrap.cameras
         )
-        for camera_id, public in api.public_bootstrap.cameras.items():
+        public_cameras = api.public_bootstrap.cameras
+        for camera_id, public in public_cameras.items():
             private = private_cameras.get(camera_id)
             if private is not None and not private.is_adopted_by_us:
                 continue
             yield public, private
+        for camera_id, private in private_cameras.items():
+            if camera_id in public_cameras or not private.is_adopted_by_us:
+                continue
+            yield None, private
 
     async def async_load_ptz_patrols(self) -> None:
         """Load PTZ patrols for all PTZ cameras."""
