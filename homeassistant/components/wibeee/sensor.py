@@ -362,17 +362,16 @@ class WibeeeSensor(CoordinatorEntity[WibeeeCoordinator], SensorEntity):
         self._attr_unique_id = (
             f"{device_info.mac_addr_formatted}_{phase_key}_{description.key}"
         )
-        self._attr_translation_key = description.translation_key
         self._attr_device_info = _build_device_info(device_info, phase_key)
 
     @property
     @override
     def native_value(self) -> float | None:
         """Return the sensor value."""
-        value = self.coordinator.data[self._phase_key][self.entity_description.key]
         try:
+            value = self.coordinator.data[self._phase_key][self.entity_description.key]
             return float(value)
-        except ValueError, TypeError:
+        except KeyError, ValueError, TypeError:
             return None
 
     @property
