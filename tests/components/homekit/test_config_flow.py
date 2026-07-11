@@ -1,11 +1,13 @@
 """Test the HomeKit config flow."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import (
     CONF_FILTER,
     DOMAIN,
@@ -1739,58 +1741,106 @@ async def test_options_flow_cameras_step_with_whole_domain_included(
     await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-@pytest.mark.parametrize("homekit_mode", ["bridge", "accessory"])
+@pytest.mark.parametrize(
+    (
+        "mode_options",
+        "init_input",
+        "entities_step",
+        "entities_input",
+        "extra_submits",
+    ),
+    [
+        pytest.param(
+            {},
+            {"domains": ["climate"], "include_exclude_mode": "include"},
+            "include",
+            {"entities": ["climate.new"]},
+            [{}],
+            id="bridge",
+        ),
+        pytest.param(
+            {"mode": "accessory"},
+            {
+                "domains": ["climate"],
+                "include_exclude_mode": "include",
+                "mode": "accessory",
+            },
+            "accessory",
+            {"entities": "climate.new"},
+            [],
+            id="accessory",
+        ),
+    ],
+)
+@patch(f"{PATH_HOMEKIT}.async_port_is_available", return_value=True)
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_options_flow_climate_step_shows_current_accessory(
-    hass: HomeAssistant, homekit_mode: str
+    port_mock: MagicMock,
+    hass: HomeAssistant,
+    hk_driver: HomeDriver,
+    mode_options: dict[str, str],
+    init_input: dict[str, Any],
+    entities_step: str,
+    entities_input: dict[str, Any],
+    extra_submits: list[dict[str, Any]],
 ) -> None:
     """Test the climate labels show the accessory the entity uses now."""
-    config_entry = _mock_config_entry_with_options_populated()
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_NAME: "mock_name", CONF_PORT: 12345},
+        options={
+            **mode_options,
+            "filter": {
+                "include_domains": [],
+                "include_entities": ["climate.new"],
+                "exclude_domains": [],
+                "exclude_entities": [],
+            },
+        },
+    )
     config_entry.add_to_hass(hass)
 
+    # A basic climate entity bridges as a Thermostat
     hass.states.async_set("climate.new", "off")
     await hass.async_block_till_done()
 
-    # A loaded entry exposes the bridged accessories through its runtime
-    # data; accessory mode reads the single accessory from the driver
-    thermostat = type("Thermostat", (), {"entity_id": "climate.new"})()
-    if homekit_mode == "bridge":
-        homekit = Mock(bridge=Mock(accessories={2: thermostat}))
-    else:
-        homekit = Mock(bridge=None, driver=Mock(accessory=thermostat))
-    config_entry.runtime_data = Mock(homekit=homekit)
+    with (
+        patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver),
+        patch("pyhap.util.get_local_address", return_value="10.10.10.10"),
+    ):
+        hk_driver.async_start = AsyncMock()
+        hk_driver.async_stop = AsyncMock()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            "domains": ["climate"],
-            "include_exclude_mode": "include",
-        },
-    )
-    result2 = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"entities": ["climate.new"]},
-    )
-    assert result2["step_id"] == "climate"
-    assert [str(key) for key in result2["data_schema"].schema] == [
-        "new (climate.new) [Thermostat]"
-    ]
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=init_input
+        )
+        assert result["step_id"] == entities_step
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input=entities_input
+        )
+        assert result2["step_id"] == "climate"
+        assert [str(key) for key in result2["data_schema"].schema] == [
+            "new (climate.new) [Thermostat]"
+        ]
 
-    # The annotated label still round trips to the entity id
-    result2 = await hass.config_entries.options.async_configure(
-        result2["flow_id"],
-        user_input={"new (climate.new) [Thermostat]": "heater_cooler"},
-    )
-    assert result2["step_id"] == "bridged_device_triggers"
-    with patch("homeassistant.components.homekit.async_setup_entry", return_value=True):
+        # The annotated label still round trips to the entity id
         result3 = await hass.config_entries.options.async_configure(
             result2["flow_id"],
-            user_input={},
+            user_input={"new (climate.new) [Thermostat]": "heater_cooler"},
         )
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options["entity_config"]["climate.new"]["type"] == (
-        "heater_cooler"
-    )
+        for submit_input in extra_submits:
+            result3 = await hass.config_entries.options.async_configure(
+                result3["flow_id"], user_input=submit_input
+            )
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
+        await hass.async_block_till_done()
+        assert config_entry.options["entity_config"]["climate.new"]["type"] == (
+            "heater_cooler"
+        )
+        await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 async def test_options_flow_climate_step_with_whole_domain_included(
