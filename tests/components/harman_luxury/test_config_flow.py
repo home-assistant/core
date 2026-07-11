@@ -147,3 +147,16 @@ async def test_ssdp_flow_missing_serial(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_ssdp_flow_serial_mismatch(
+    hass: HomeAssistant, mock_client: AsyncMock
+) -> None:
+    """Test SSDP discovery aborts when the API serial differs from the advertised one."""
+    mock_client.async_get_info.return_value = replace(DEVICE_INFO, serial="different")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"

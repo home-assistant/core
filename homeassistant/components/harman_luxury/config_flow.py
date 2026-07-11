@@ -66,7 +66,9 @@ class HarmanLuxuryConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         info = await self._async_get_info(host)
-        if info is None:
+        # The unique ID is the advertised serial; refuse a device whose API
+        # reports a different one, so setup cannot later fail on the mismatch.
+        if info is None or info.serial != serial:
             return self.async_abort(reason="cannot_connect")
 
         self._host = host
