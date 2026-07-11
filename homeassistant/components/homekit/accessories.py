@@ -215,7 +215,8 @@ def _async_resolve_climate_type(
         # one, so every path that sets a type defers persistence until
         # the accessory exists.
         return cast(str, climate_type)
-    if aid_storage.get_accessory_type(entity_id) == TYPE_HEATER_COOLER:
+    stored_type = aid_storage.get_accessory_type(entity_id)
+    if stored_type == TYPE_HEATER_COOLER:
         if not climate_controls_target_humidity(state):
             conf[CONF_TYPE] = TYPE_HEATER_COOLER
             return None
@@ -224,7 +225,14 @@ def _async_resolve_climate_type(
         aid_storage.async_set_accessory_type(entity_id, None)
     if not climate_supports_heater_cooler(state):
         return None
-    if allow_auto and not aid_storage.entity_is_allocated(entity_id):
+    if (
+        stored_type is None
+        and allow_auto
+        and not aid_storage.entity_is_allocated(entity_id)
+    ):
+        # A stored Thermostat choice survives even when the entity looks
+        # new again, like an accessory mode pairing reset, so Automatic
+        # keeps the accessory the entity already uses.
         conf[CONF_TYPE] = TYPE_HEATER_COOLER
         return TYPE_HEATER_COOLER
     return None
