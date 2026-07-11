@@ -102,6 +102,16 @@ SWITCH_ENTITIES = (
         method=lambda api, ch, value: api.set_audio_alarm(ch, value),
     ),
     ReolinkSwitchEntityDescription(
+        key="pre_siren_on_event",
+        cmd_key="GetAudioCfg",
+        cmd_id=264,
+        translation_key="pre_siren_on_event",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "pre_siren"),
+        value=lambda api, ch: api.pre_alarm_enabled(ch),
+        method=lambda api, ch, value: api.set_pre_alarm(ch, value),
+    ),
+    ReolinkSwitchEntityDescription(
         key="auto_tracking",
         cmd_key="GetAiCfg",
         translation_key="auto_tracking",

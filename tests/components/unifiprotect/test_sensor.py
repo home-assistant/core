@@ -692,22 +692,32 @@ async def test_sensor_precision(
     assert hass.states.get(entity_id).state == "17.49"
 
 
-async def test_aiport_no_camera_sensor_entities(
+async def test_aiport_no_sensor_entities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     aiport: AiPort,
 ) -> None:
-    """Test that AI Port devices do not create camera-specific sensor entities."""
+    """AI Port devices create no entities (support dropped)."""
     await init_entry(hass, ufp, [aiport])
 
-    # AI Port should only create base device sensors, not camera-specific sensors
-    # The exact count may vary, but camera motion/detection sensors should not exist
-    entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
+    assert not [e for e in entities if e.unique_id.startswith(f"{aiport.mac}_")]
 
-    # Check no camera-specific sensors like motion detection exist
-    for entity in entities:
-        if entity.domain == Platform.SENSOR:
-            # Camera-specific sensors should not exist for AI Port
-            assert "detected_object" not in entity.unique_id
-            assert "last_motion" not in entity.unique_id
+
+async def test_aiport_no_sensor_entities_on_runtime_adopt(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+    aiport: AiPort,
+) -> None:
+    """An AI Port adopted while running still creates no entities."""
+    await init_entry(hass, ufp, [sensor_all])
+
+    aiport._api = ufp.api
+    aiport.feature_flags = Mock(is_ptz=False)
+    await adopt_devices(hass, ufp, [aiport])
+
+    entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
+    assert not [e for e in entities if e.unique_id.startswith(f"{aiport.mac}_")]
