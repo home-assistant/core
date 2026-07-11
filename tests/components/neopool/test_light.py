@@ -287,17 +287,21 @@ async def test_light_write_schedules_follow_up_refresh(
     assert mock_neopool_client.async_read_all.await_count > reads_before
 
 
-async def test_light_timer_data_merged_into_coordinator(
+async def test_light_timer_enable_gates_writes(
     hass: HomeAssistant,
     mock_config_entry_light: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
-    """The timer enable field is merged into coordinator data as relay_light_enable."""
-    # Differ from the seeded ALWAYS_OFF so the assertion catches a missing merge.
+    """The relay-light timer enable read from read_all_timers gates writes.
+
+    The enable field only reaches the write-guard via the timer read, so an
+    auto mode here must make turn-on raise ServiceValidationError. A stale or
+    missing read would leave the seeded ALWAYS_OFF and let the write through.
+    """
     mock_neopool_client.read_all_timers = AsyncMock(
         return_value={
             "relay_light": {
-                "enable": TimerRelayMode.ALWAYS_ON,
+                "enable": TimerRelayMode.ENABLED,
                 "on": 3600,
                 "interval": 7200,
                 "period": 86400,
@@ -307,6 +311,8 @@ async def test_light_timer_data_merged_into_coordinator(
         }
     )
     await setup_integration(hass, mock_config_entry_light)
+    entity_id = _light_entity_id(hass, mock_config_entry_light)
 
-    coordinator = mock_config_entry_light.runtime_data
-    assert coordinator.data["relay_light_enable"] == TimerRelayMode.ALWAYS_ON
+    with pytest.raises(ServiceValidationError):
+        await _turn_on(hass, entity_id)
+    mock_neopool_client.async_set_relay_state.assert_not_called()

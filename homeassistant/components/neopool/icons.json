@@ -4,7 +4,6 @@
       "light": {
         "default": "mdi:lightbulb-off",
         "state": {
-          "off": "mdi:lightbulb-off",
           "on": "mdi:lightbulb-on"
         }
       }
