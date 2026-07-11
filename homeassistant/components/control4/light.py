@@ -115,7 +115,7 @@ async def async_setup_entry(
             item_coordinator = non_dimmer_coordinator
         else:
             director = runtime_data.director
-            item_variables = await director.getItemVariables(item_id)
+            item_variables = await director.get_item_variables(item_id)
             _LOGGER.warning(
                 (
                     "Couldn't get light state data for %s, skipping setup. Available"
@@ -229,10 +229,10 @@ class Control4Light(Control4Entity, LightEntity):
                 brightness = (kwargs[ATTR_BRIGHTNESS] / 255) * 100
             else:
                 brightness = 100
-            await c4_light.rampToLevel(brightness, transition_length)
+            await c4_light.ramp_to_level(brightness, transition_length)
         else:
             transition_length = 0
-            await c4_light.setLevel(100)
+            await c4_light.set_level(100)
         if transition_length == 0:
             transition_length = 1000
         delay_time = (transition_length / 1000) + 0.7
@@ -249,10 +249,10 @@ class Control4Light(Control4Entity, LightEntity):
                 transition_length = kwargs[ATTR_TRANSITION] * 1000
             else:
                 transition_length = 0
-            await c4_light.rampToLevel(0, transition_length)
+            await c4_light.ramp_to_level(0, transition_length)
         else:
             transition_length = 0
-            await c4_light.setLevel(0)
+            await c4_light.set_level(0)
         if transition_length == 0:
             transition_length = 1500
         delay_time = (transition_length / 1000) + 0.7

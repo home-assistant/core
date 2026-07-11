@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from tesla_wall_connector.wall_connector import Lifetime, Version, Vitals
+from tesla_wall_connector.wall_connector import Lifetime, Version, Vitals, WifiStatus
 
 from homeassistant.components.tesla_wall_connector.const import (
     DEFAULT_SCAN_INTERVAL,
@@ -52,7 +52,11 @@ def get_default_version_data():
 
 
 async def create_wall_connector_entry(
-    hass: HomeAssistant, side_effect=None, vitals_data=None, lifetime_data=None
+    hass: HomeAssistant,
+    side_effect: type[Exception] | Exception | None = None,
+    vitals_data: Vitals | None = None,
+    lifetime_data: Lifetime | None = None,
+    wifi_status_data: WifiStatus | None = None,
 ) -> MockConfigEntry:
     """Create a wall connector entry in hass."""
     entry = MockConfigEntry(
@@ -78,6 +82,11 @@ async def create_wall_connector_entry(
             return_value=lifetime_data,
             side_effect=side_effect,
         ),
+        patch(
+            "tesla_wall_connector.WallConnector.async_get_wifi_status",
+            return_value=wifi_status_data,
+            side_effect=side_effect,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -100,6 +109,7 @@ def get_vitals_mock() -> Vitals:
     mock.currentA_a = 10
     mock.currentB_a = 11.1
     mock.currentC_a = 12
+    mock.vehicle_current_a = 32
     mock.total_power_w = 7650.3
     mock.session_energy_wh = 1234.56
     mock.contactor_closed = False
@@ -110,6 +120,13 @@ def get_vitals_mock() -> Vitals:
 def get_lifetime_mock() -> Lifetime:
     """Get mocked lifetime object."""
     return MagicMock(auto_spec=Lifetime)
+
+
+def get_wifi_status_mock() -> WifiStatus:
+    """Get mocked Wi-Fi status object."""
+    mock = MagicMock(auto_spec=WifiStatus)
+    mock.wifi_rssi = -42
+    return mock
 
 
 @dataclass
@@ -123,17 +140,22 @@ class EntityAndExpectedValues:
 
 async def _test_sensors(
     hass: HomeAssistant,
-    entities_and_expected_values,
+    entities_and_expected_values: list[EntityAndExpectedValues],
     vitals_first_update: Vitals,
     vitals_second_update: Vitals,
     lifetime_first_update: Lifetime,
     lifetime_second_update: Lifetime,
+    wifi_status_first_update: WifiStatus,
+    wifi_status_second_update: WifiStatus,
 ) -> None:
     """Test update of sensor values."""
 
     # First Update: Data is fetched when the integration is initialized
     await create_wall_connector_entry(
-        hass, vitals_data=vitals_first_update, lifetime_data=lifetime_first_update
+        hass,
+        vitals_data=vitals_first_update,
+        lifetime_data=lifetime_first_update,
+        wifi_status_data=wifi_status_first_update,
     )
 
     # Verify expected vs actual values of first update
@@ -155,11 +177,15 @@ async def _test_sensors(
             "tesla_wall_connector.WallConnector.async_get_lifetime",
             return_value=lifetime_second_update,
         ),
+        patch(
+            "tesla_wall_connector.WallConnector.async_get_wifi_status",
+            return_value=wifi_status_second_update,
+        ),
     ):
         async_fire_time_changed(
             hass, dt_util.utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL)
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify expected vs actual values of second update
     for entity in entities_and_expected_values:
