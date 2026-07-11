@@ -111,7 +111,7 @@
   },
   "issues": {
     "router_system_error": {
-      "description": "Please check the module.",
+      "description": "Please check the router.",
       "title": "Router system error"
     }
   }
