@@ -2,7 +2,7 @@
 
 from functools import partial
 import logging
-from typing import cast
+from typing import Any, cast
 
 from xiaomi_ble import EncryptionScheme, SensorUpdate, XiaomiBluetoothDeviceData
 from xiaomi_ble.devices import S400_MODELS
@@ -12,6 +12,9 @@ from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
+)
+from homeassistant.components.bluetooth.passive_update_processor import (
+    PassiveBluetoothEntityKey,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -33,6 +36,12 @@ from .types import XiaomiBLEConfigEntry
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
+
+# Marker stored in the config entry's data to remember that the stale S400
+# impedance restore-cache values have already been purged once. See
+# _async_purge_stale_s400_impedance_restore_cache for why this must run
+# only once, rather than on every setup.
+DATA_S400_IMPEDANCE_CACHE_PURGED = "s400_impedance_restore_cache_purged"
 
 
 def process_service_info(
@@ -122,28 +131,13 @@ def format_discovered_event_class(address: str) -> str:
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old config entries to the current version.
 
-    Version 1.2 corrects the unique_ids of the S400 impedance sensors.
+    Version 1.2 renames the S400 impedance sensors' unique_ids to match
+    the xiaomi-ble library's corrected frequency mapping, preserving
+    entity history instead of disabling a leftover. Only applies to the
+    S400; other scales (V1/V2) never had this mislabeling.
 
-    The xiaomi-ble library used to mislabel the two impedance measurements
-    reported by the Mi Body Composition Scale S400:
-
-    - "impedance" (legacy, generic) actually held the 50 kHz (low frequency)
-      measurement.
-    - "impedance_low" actually held the 250 kHz (high frequency) measurement.
-
-    The library was corrected so that:
-
-    - "impedance_low" now correctly holds the 50 kHz (low frequency) value.
-    - "impedance_high" now correctly holds the 250 kHz (high frequency) value.
-
-    We rename the existing entities' unique_ids to match, so history and
-    long-term statistics stay attached to the right entity instead of being
-    lost on a disabled leftover. This only applies to the S400; other
-    scales (V1/V2) never had this mislabeling and are left untouched.
-
-    The rename must happen in this order: "impedance_low" -> "impedance_high"
-    first, to free up the "impedance_low" suffix before the legacy
-    "impedance" entity is moved onto it.
+    Must rename "impedance_low" -> "impedance_high" before the legacy
+    "impedance" -> "impedance_low", to avoid a unique_id collision.
     """
     if entry.version == 1 and entry.minor_version == 1:
         address = entry.unique_id
@@ -178,6 +172,80 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
     return True
+
+
+def _async_purge_stale_s400_impedance_restore_cache(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    coordinator: XiaomiActiveBluetoothProcessorCoordinator,
+) -> None:
+    """Drop stale, mislabeled S400 impedance values from the restore cache.
+
+    Entity unique_ids are renamed by async_migrate_entry, but that only
+    affects the entity registry. Bluetooth passive entities also restore
+    their last known *value* from a separate cache
+    (homeassistant.components.bluetooth.passive_update_processor's own
+    storage), keyed purely by the entity_key string the library currently
+    emits (e.g. "impedance_low___") -- completely independent of the
+    entity registry's unique_id.
+
+    Because that key string itself did not change, only its meaning did,
+    a freshly created entity for "impedance_low" (now correctly 50 kHz)
+    would restore its startup value from the old cached "impedance_low"
+    entry, which actually held the 250 kHz reading under the old, buggy
+    mapping. That would display -- and could even get recorded into
+    long-term statistics -- a wrong value until the scale is used again.
+
+    We drop the stale "impedance" and "impedance_low" cache entries so
+    the entity starts unavailable instead of showing wrong data, and
+    waits for a fresh, correctly labeled advertisement.
+
+    This must run exactly once per config entry: after that first
+    purge, live advertisements repopulate the cache with correctly
+    labeled data that must NOT be discarded on later restarts. We track
+    that with a marker in the config entry's data, since this needs to
+    happen after the coordinator (and therefore its restore_data) exists,
+    which is later than the version/minor_version check available in
+    async_migrate_entry.
+    """
+    if entry.data.get(DATA_S400_IMPEDANCE_CACHE_PURGED):
+        return
+
+    address = entry.unique_id
+    if address is None:
+        return
+
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get_device(
+        identifiers={(BLUETOOTH_DOMAIN, address)}
+    )
+    if device_entry is not None and device_entry.model in S400_MODELS:
+        sensor_restore_data = coordinator.restore_data.get(Platform.SENSOR)
+        if sensor_restore_data is not None:
+            stale_keys = (
+                PassiveBluetoothEntityKey(key="impedance", device_id=None).to_string(),
+                PassiveBluetoothEntityKey(
+                    key="impedance_low", device_id=None
+                ).to_string(),
+            )
+            restore_buckets: tuple[tuple[str, dict[str, Any]], ...] = (
+                ("entity_data", sensor_restore_data["entity_data"]),
+                ("entity_descriptions", sensor_restore_data["entity_descriptions"]),
+                ("entity_names", sensor_restore_data["entity_names"]),
+            )
+            for stale_key in stale_keys:
+                for bucket_name, bucket in restore_buckets:
+                    if bucket.pop(stale_key, None) is not None:
+                        _LOGGER.debug(
+                            "Purged stale S400 impedance restore cache entry: %s.%s",
+                            bucket_name,
+                            stale_key,
+                        )
+
+    hass.config_entries.async_update_entry(
+        entry,
+        data=entry.data | {DATA_S400_IMPEDANCE_CACHE_PURGED: True},
+    )
 
 
 def _async_purge_phantom_s400_impedance_entity(
@@ -288,6 +356,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry=entry,
     )
     entry.runtime_data = coordinator
+    # Must run before async_forward_entry_setups: that call is what makes
+    # the sensor platform register its processor and consume
+    # coordinator.restore_data, so any stale entries need to be gone first.
+    _async_purge_stale_s400_impedance_restore_cache(hass, entry, coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     # The sensor platform may have just recreated a phantom legacy
     # "impedance" entity from a stale bluetooth passive-processor restore

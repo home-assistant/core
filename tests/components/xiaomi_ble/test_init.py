@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from homeassistant.components.xiaomi_ble import (
+    DATA_S400_IMPEDANCE_CACHE_PURGED,
+    _async_purge_stale_s400_impedance_restore_cache,
+)
 from homeassistant.components.xiaomi_ble.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -36,6 +40,7 @@ def _async_add_entity(
     unique_id: str,
     *,
     original_name: str = "Impedance",
+    disabled_by: er.RegistryEntryDisabler | None = None,
 ) -> str:
     """Create a sensor entity with the given unique_id and return its entity_id."""
     entry_entity = entity_registry.async_get_or_create(
@@ -46,6 +51,10 @@ def _async_add_entity(
         device_id=device_id,
         original_name=original_name,
     )
+    if disabled_by is not None:
+        entry_entity = entity_registry.async_update_entity(
+            entry_entity.entity_id, disabled_by=disabled_by
+        )
     return entry_entity.entity_id
 
 
@@ -115,12 +124,7 @@ async def test_migrate_full_chain_no_collision(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test both legacy entities are renamed in the right order, without collision.
-
-    "impedance_low" must move to "impedance_high" before the legacy
-    "impedance" entity is moved onto "impedance_low", otherwise the second
-    rename would collide with the (not yet renamed) first one.
-    """
+    """Test both legacy entities are renamed without a unique-ID collision."""
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
     )
@@ -151,6 +155,43 @@ async def test_migrate_full_chain_no_collision(
     # The two entities must remain distinct: no unique_id collision.
     assert legacy_after.entity_id != low_after.entity_id
     assert legacy_after.unique_id != low_after.unique_id
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_migrate_preserves_user_disabled_reason(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a user-disabled legacy entity keeps its disable reason when renamed.
+
+    The migration must not override a disable reason set by someone else
+    (e.g. the user manually disabling the entity) with its own, nor skip
+    the rename just because the entity happens to be disabled.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
+    )
+    entry.add_to_hass(hass)
+    device = _async_setup_device(device_registry, entry)
+    entity_id = _async_add_entity(
+        entity_registry,
+        entry,
+        device.id,
+        f"{S400_ADDRESS}-impedance",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    after = entity_registry.async_get(entity_id)
+    assert after is not None
+    assert after.unique_id == f"{S400_ADDRESS}-impedance_low"
+    assert after.previous_unique_id == f"{S400_ADDRESS}-impedance"
+    assert after.disabled_by is er.RegistryEntryDisabler.USER
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -350,3 +391,117 @@ async def test_purge_phantom_noop_when_absent(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+class _FakeCoordinator:
+    """Minimal stand-in exposing only what the cache purge needs."""
+
+    def __init__(self, restore_data: dict) -> None:
+        self.restore_data = restore_data
+
+
+def _stale_s400_restore_data() -> dict:
+    """Build restore_data shaped like a pre-fix S400 cache dump."""
+    return {
+        Platform.SENSOR: {
+            "entity_data": {
+                "impedance___": 535.3,
+                "impedance_low___": 479.3,
+                "impedance_high___": 497.6,
+                "mass___": 74.2,
+            },
+            "entity_descriptions": {
+                "impedance___": {"key": "impedance_ohm"},
+                "impedance_low___": {"key": "impedance_low"},
+                "impedance_high___": {"key": "impedance_high"},
+                "mass___": {"key": "mass_kg"},
+            },
+            "entity_names": {},
+            "devices": {},
+        }
+    }
+
+
+async def test_purge_stale_restore_cache_removes_impedance_keys(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test stale impedance/impedance_low restore cache entries are dropped."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
+    )
+    entry.add_to_hass(hass)
+    _async_setup_device(device_registry, entry)
+
+    restore_data = _stale_s400_restore_data()
+    coordinator = _FakeCoordinator(restore_data)
+
+    _async_purge_stale_s400_impedance_restore_cache(hass, entry, coordinator)
+
+    sensor_data = restore_data[Platform.SENSOR]
+    assert "impedance___" not in sensor_data["entity_data"]
+    assert "impedance___" not in sensor_data["entity_descriptions"]
+    assert "impedance_low___" not in sensor_data["entity_data"]
+    assert "impedance_low___" not in sensor_data["entity_descriptions"]
+
+    # Unrelated keys, including the correctly labeled impedance_high,
+    # must be left untouched.
+    assert sensor_data["entity_data"]["impedance_high___"] == 497.6
+    assert sensor_data["entity_data"]["mass___"] == 74.2
+
+    assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True
+
+
+async def test_purge_stale_restore_cache_runs_once(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the purge does not run again once the marker is set.
+
+    Once real, correctly labeled data has repopulated the cache, a second
+    purge pass must not discard it.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=S400_ADDRESS,
+        version=1,
+        minor_version=2,
+        data={DATA_S400_IMPEDANCE_CACHE_PURGED: True},
+    )
+    entry.add_to_hass(hass)
+    _async_setup_device(device_registry, entry)
+
+    restore_data = _stale_s400_restore_data()
+    coordinator = _FakeCoordinator(restore_data)
+
+    _async_purge_stale_s400_impedance_restore_cache(hass, entry, coordinator)
+
+    # Marker was already set: the (here deliberately still-stale-looking)
+    # entries must be left alone, since real data may look identical in
+    # shape to what a fresh advertisement would have written.
+    sensor_data = restore_data[Platform.SENSOR]
+    assert "impedance___" in sensor_data["entity_data"]
+    assert "impedance_low___" in sensor_data["entity_data"]
+
+
+async def test_purge_stale_restore_cache_skipped_for_non_s400_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the cache purge leaves non-S400 scales' data untouched."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
+    )
+    entry.add_to_hass(hass)
+    _async_setup_device(device_registry, entry, model=NON_S400_MODEL)
+
+    restore_data = _stale_s400_restore_data()
+    coordinator = _FakeCoordinator(restore_data)
+
+    _async_purge_stale_s400_impedance_restore_cache(hass, entry, coordinator)
+
+    sensor_data = restore_data[Platform.SENSOR]
+    assert "impedance___" in sensor_data["entity_data"]
+    assert "impedance_low___" in sensor_data["entity_data"]
+    # The marker is still recorded, to avoid re-checking every restart.
+    assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True
