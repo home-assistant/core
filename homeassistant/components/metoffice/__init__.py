@@ -75,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MetOfficeConfigEntry) ->
     )
 
     entry.runtime_data = MetOfficeRuntimeData(
-        coordinates=f"{latitude}_{longitude}",
+        initial_coordinates=(latitude, longitude),
         hourly_coordinator=metoffice_hourly_coordinator,
         daily_coordinator=metoffice_daily_coordinator,
         twice_daily_coordinator=metoffice_twice_daily_coordinator,
