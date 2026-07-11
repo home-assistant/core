@@ -431,6 +431,15 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
             "2021-03-05T10:44:50+00:00",
         )
 
+        # The live estimate is cleared again once position data disappears
+        self.picnic_mock().get_delivery_position.return_value = {}
+        await self._coordinator.async_refresh()
+
+        self._assert_sensor(
+            "sensor.mock_title_estimated_arrival_of_next_delivery",
+            STATE_UNKNOWN,
+        )
+
     async def test_sensors_no_data(self):
         """Test sensor states when the api only returns empty objects."""
         # Setup platform with default responses
