@@ -66,14 +66,13 @@ class KarakeepConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            parsed_url = URL(user_input[CONF_URL].strip())
+            url = _normalize_url(user_input[CONF_URL])
             token = user_input[CONF_TOKEN].strip()
             verify_ssl = user_input[CONF_VERIFY_SSL]
 
-            if parsed_url.scheme not in ("http", "https") or not parsed_url.host:
+            if url is None:
                 errors["base"] = "invalid_url_format"
             else:
-                url = str(parsed_url).rstrip("/")
                 self._async_abort_entries_match({CONF_URL: url})
 
                 errors = await self._async_validate_input(url, token, verify_ssl)
@@ -92,3 +91,14 @@ class KarakeepConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
+
+
+def _normalize_url(raw_url: str) -> str | None:
+    """Return the normalized base URL, or None if it is not a valid URL."""
+    try:
+        parsed_url = URL(raw_url.strip())
+    except ValueError:
+        return None
+    if parsed_url.scheme not in ("http", "https") or not parsed_url.host:
+        return None
+    return str(parsed_url).rstrip("/")

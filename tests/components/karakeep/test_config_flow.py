@@ -47,8 +47,9 @@ async def test_full_flow(hass: HomeAssistant, mock_karakeep_client: AsyncMock) -
     mock_karakeep_client.async_get_stats.assert_awaited_once()
 
 
+@pytest.mark.parametrize("invalid_url", ["karakeep.example.com", "http://["])
 @pytest.mark.usefixtures("mock_setup_entry", "mock_karakeep_client")
-async def test_invalid_url(hass: HomeAssistant) -> None:
+async def test_invalid_url(hass: HomeAssistant, invalid_url: str) -> None:
     """Test invalid URL errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -58,7 +59,7 @@ async def test_invalid_url(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_URL: "karakeep.example.com",
+            CONF_URL: invalid_url,
             CONF_TOKEN: TEST_TOKEN,
         },
     )
