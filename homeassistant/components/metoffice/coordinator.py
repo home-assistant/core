@@ -76,13 +76,11 @@ class MetOfficeRuntimeData:
     ) -> None:
         """Updates the coordinates for the weather forecast."""
         if latitude is None and longitude is None:
-            # If neither is supplied, return to original location
             if self._current_coordinates != self._initial_coordinates:
                 await self._set_updated_coordinates(*self._initial_coordinates)
             return
 
         if latitude is None or longitude is None:
-            # Otherwise if only one is not supplied, treat as an error
             _LOGGER.error(
                 "When updating location, latitude and longitude must both be supplied or both be omitted"
             )
