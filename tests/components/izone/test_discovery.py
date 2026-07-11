@@ -11,6 +11,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
 from .conftest import (
+    async_install_discovery_service,
     async_load_yaml_exclude,
     create_mock_controller,
     create_mock_discovery_service,
@@ -50,8 +51,8 @@ async def test_async_maybe_stop_keeps_running_when_actionable_flow_exists(
     hass: HomeAssistant,
 ) -> None:
     """Discovery should stay running while an actionable iZone flow is in progress."""
-    service = create_mock_discovery_service()
-    hass.data[DATA_DISCOVERY_SERVICE] = service
+    service = await async_install_discovery_service(hass)
+    service.async_schedule_idle_stop = Mock()
 
     with (
         patch.object(
@@ -81,8 +82,8 @@ async def test_async_maybe_stop_keeps_running_when_actionable_entry_exists(
         data={},
     ).add_to_hass(hass)
 
-    service = create_mock_discovery_service()
-    hass.data[DATA_DISCOVERY_SERVICE] = service
+    service = await async_install_discovery_service(hass)
+    service.async_schedule_idle_stop = Mock()
 
     with patch(
         "homeassistant.components.izone.discovery.async_stop_discovery_service",
@@ -106,8 +107,10 @@ async def test_async_maybe_stop_stops_when_only_disabled_entry_matches_controlle
         data={},
     ).add_to_hass(hass)
 
-    service = create_mock_discovery_service(create_mock_controller("000000001"))
-    hass.data[DATA_DISCOVERY_SERVICE] = service
+    service = await async_install_discovery_service(
+        hass, create_mock_controller("000000001")
+    )
+    service.async_schedule_idle_stop = Mock()
 
     with patch(
         "homeassistant.components.izone.discovery.async_stop_discovery_service",
@@ -162,8 +165,7 @@ async def test_async_discover_controllers_refresh_calls_fetch_controllers(
     hass: HomeAssistant,
 ) -> None:
     """Refresh without UID delegates to fetch_controllers with timeout."""
-    service = create_mock_discovery_service()
-    hass.data[DATA_DISCOVERY_SERVICE] = service
+    service = await async_install_discovery_service(hass)
 
     controllers = await izone_discovery.async_discover_controllers(hass, refresh=True)
 
@@ -175,8 +177,7 @@ async def test_async_discover_controllers_waits_for_requested_uid(
     hass: HomeAssistant,
 ) -> None:
     """Refresh with wait_for_uid calls fetch_controller and returns all controllers."""
-    service = create_mock_discovery_service()
-    hass.data[DATA_DISCOVERY_SERVICE] = service
+    service = await async_install_discovery_service(hass)
     requested = create_mock_controller("000000777", "192.0.2.77")
 
     async def _fetch_and_add(uid: str, timeout: float | None = None) -> None:
@@ -255,20 +256,18 @@ async def test_async_start_discovery_service_returns_existing_instance(
     hass: HomeAssistant,
 ) -> None:
     """Starting discovery returns existing service when already running."""
-    existing = Mock()
-    hass.data[DATA_DISCOVERY_SERVICE] = existing
+    service = await async_install_discovery_service(hass)
 
     disco = await izone_discovery.async_start_discovery_service(hass)
 
-    assert disco is existing
+    assert disco is service
 
 
 async def test_async_maybe_stop_stops_when_no_controllers_remain(
     hass: HomeAssistant,
 ) -> None:
     """Discovery stops when no controllers are tracked and nothing is actionable."""
-    service = create_mock_discovery_service()
-    hass.data[DATA_DISCOVERY_SERVICE] = service
+    await async_install_discovery_service(hass)
 
     with (
         patch.object(
@@ -290,8 +289,10 @@ async def test_async_maybe_stop_keeps_running_when_controller_not_ignored(
     hass: HomeAssistant,
 ) -> None:
     """Discovery remains active if at least one discovered controller is still actionable."""
-    service = create_mock_discovery_service(create_mock_controller("000000001"))
-    hass.data[DATA_DISCOVERY_SERVICE] = service
+    service = await async_install_discovery_service(
+        hass, create_mock_controller("000000001")
+    )
+    service.async_schedule_idle_stop = Mock()
 
     with (
         patch.object(
@@ -321,15 +322,11 @@ async def test_async_stop_discovery_service_clears_stop_listener(
     hass: HomeAssistant,
 ) -> None:
     """Stop should remove the stop listener when it exists."""
-    service = Mock()
-    stop_listener = Mock()
-    service.remove_stop_listener = stop_listener
-    service.remove_config_flow_listener = None
-    service.async_cancel_idle_stop = Mock()
-    service.pi_disco.close = AsyncMock()
-    hass.data[DATA_DISCOVERY_SERVICE] = service
+    service = await async_install_discovery_service(hass)
+
+    assert service.remove_stop_listener is not None
 
     await izone_discovery.async_stop_discovery_service(hass)
 
-    stop_listener.assert_called_once()
     assert service.remove_stop_listener is None
+    assert DATA_DISCOVERY_SERVICE not in hass.data
