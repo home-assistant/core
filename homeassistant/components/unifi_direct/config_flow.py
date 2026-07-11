@@ -53,7 +53,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 def _get_host_configs(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return the configured UniFi AP hosts from the config data."""
+    """Return configured hosts from the config entry."""
     host_entries = data.get(CONF_HOSTS, [])
 
     host_configs: list[dict[str, Any]] = []
@@ -131,15 +131,17 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import existing config from configuration.yaml."""
-        host_entries = import_data.get(CONF_HOSTS, [])
-        if isinstance(host_entries, dict):
-            host_entries = [host_entries]
+        host_config = {
+            CONF_HOST: import_data.get(CONF_HOST),
+            CONF_USERNAME: import_data.get(CONF_USERNAME, ""),
+            CONF_PASSWORD: import_data.get(CONF_PASSWORD, ""),
+            CONF_PORT: import_data.get(CONF_PORT, DEFAULT_SSH_PORT),
+        }
 
-        host_configs = _get_host_configs({**import_data, CONF_HOSTS: host_entries})
-        if not host_configs:
+        if not host_config[CONF_HOST]:
             return self.async_abort(reason="cannot_connect")
 
-        entry_data = {CONF_HOSTS: host_configs}
+        entry_data = {CONF_HOSTS: [host_config]}
         self._async_abort_entries_match(entry_data)
 
         try:
@@ -148,7 +150,7 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
-            title=f"{DEFAULT_NAME} ({', '.join(host[CONF_HOST] for host in host_configs)})",
+            title=f"{DEFAULT_NAME} ({host_config[CONF_HOST]})",
             data=entry_data,
         )
 

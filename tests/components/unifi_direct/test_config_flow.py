@@ -201,19 +201,15 @@ async def test_migrate_single_host_entry_to_multi_host_config(
 
 
 async def test_import_flow(hass: HomeAssistant, mock_setup_entry, mock_unifiap) -> None:
-    """Test import initiated flow."""
+    """Test import initiated flow from legacy YAML configuration."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_HOSTS: [
-                {
-                    CONF_HOST: "192.168.1.2",
-                    CONF_USERNAME: "admin",
-                    CONF_PASSWORD: "password",
-                    CONF_PORT: 22,
-                }
-            ]
+            CONF_HOST: "192.168.1.2",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 22,
         },
     )
 
@@ -240,7 +236,12 @@ async def test_import_flow_entry_exists(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
-        data=MOCK_CONFIG,
+        data={
+            CONF_HOST: "192.168.1.2",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 22,
+        },
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -259,14 +260,10 @@ async def test_import_flow_cannot_connect(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
         data={
-            CONF_HOSTS: [
-                {
-                    CONF_HOST: "192.168.1.2",
-                    CONF_USERNAME: "admin",
-                    CONF_PASSWORD: "password",
-                    CONF_PORT: 22,
-                }
-            ]
+            CONF_HOST: "192.168.1.2",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 22,
         },
     )
 
