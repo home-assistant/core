@@ -20,8 +20,8 @@
   },
   "issues": {
     "deprecated_yaml_import_issue": {
-      "description": "Configuring NX584 using YAML is deprecated.\n\nWhile importing your configuration, an error occurred when trying to connect to the NX584 panel. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
-      "title": "NX584 YAML configuration deprecated"
+      "description": "Configuring NX584 using YAML is deprecated.\n\nWhile importing your configuration, an error occurred. Please review the Home Assistant logs and restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
+      "title": "NX584 YAML configuration import failed"
     }
   },
   "options": {
