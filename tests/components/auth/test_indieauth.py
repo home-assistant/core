@@ -339,6 +339,15 @@ async def test_fetch_redirect_uris_link_tag_precedence(
             ),
             id="redirect-uris-unparsable-entry",
         ),
+        pytest.param(
+            json.dumps(
+                {
+                    "client_id": "https://example.com/client",
+                    "redirect_uris": ["https://example.com/callback#"],
+                }
+            ),
+            id="redirect-uris-empty-fragment-entry",
+        ),
     ],
 )
 async def test_fetch_redirect_uris_metadata_document_invalid(
@@ -387,6 +396,31 @@ async def test_verify_redirect_uri_unparsable(hass: HomeAssistant) -> None:
     assert not await indieauth.verify_redirect_uri(
         hass, "https://example.com/client", "https://["
     )
+
+
+@pytest.mark.parametrize(
+    "client_id",
+    [
+        pytest.param("https://example.com", id="no-path"),
+        pytest.param("https://example.com/client#", id="empty-fragment"),
+    ],
+)
+async def test_fetch_redirect_uris_metadata_document_invalid_client_id(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker, client_id: str
+) -> None:
+    """Test client ids violating the metadata document URL rules are ignored."""
+    mock_session.get(
+        client_id,
+        text=json.dumps(
+            {
+                "client_id": client_id,
+                "redirect_uris": ["https://other.com/callback"],
+            }
+        ),
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert await indieauth.fetch_redirect_uris(hass, client_id) == []
 
 
 async def test_fetch_redirect_uris_metadata_document_exactly_at_cap(

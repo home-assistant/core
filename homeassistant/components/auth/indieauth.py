@@ -102,19 +102,34 @@ class LinkTagParser(HTMLParser):
             self.found.append(href)
 
 
+def _is_valid_metadata_client_id(url: str) -> bool:
+    """Validate a client_id URL for the metadata-document fallback.
+
+    The client identifier URL must be https with a path component and no
+    fragment (a bare trailing # counts as a fragment component). The remaining
+    client identifier rules are enforced upstream by _parse_client_id.
+    """
+    try:
+        parts = urlparse(url)
+    except ValueError:
+        return False
+    return parts.scheme == "https" and bool(parts.path) and "#" not in url
+
+
 def _is_valid_metadata_redirect_uri(redirect_uri: str) -> bool:
     """Validate a client ID metadata document redirect_uris entry.
 
     Entries must be absolute, fragment-free URIs: a non-empty scheme (so
     private-use schemes like app:/callback stay valid) and no fragment per
-    RFC 6749 3.1.2. An unparsable entry (e.g. an unbalanced IPv6 bracket)
-    invalidates the entry rather than raising into the login flow.
+    RFC 6749 3.1.2 (a bare trailing # counts as a fragment component). An
+    unparsable entry (e.g. an unbalanced IPv6 bracket) invalidates the entry
+    rather than raising into the login flow.
     """
     try:
         parts = urlparse(redirect_uri)
     except ValueError:
         return False
-    return bool(parts.scheme) and not parts.fragment
+    return bool(parts.scheme) and "#" not in redirect_uri
 
 
 async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
@@ -200,11 +215,12 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
         not fetch_complete
         or status != HTTPStatus.OK
         or redirected
-        or urlparse(url).scheme != "https"
+        or not _is_valid_metadata_client_id(url)
     ):
         _LOGGER.debug(
             "Not treating %s as a client ID metadata document: fetch complete %s,"
-            " status %s, redirected %s (client_id must be https)",
+            " status %s, redirected %s (client_id must be a fragment-free https"
+            " URL with a path)",
             url,
             fetch_complete,
             status,
