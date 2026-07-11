@@ -48,52 +48,6 @@ async def test_device_tracker_entities_created(
     )
 
 
-# async def test_two_device_trackers(
-#     hass: HomeAssistant,
-#     mock_config_entry,
-#     mock_second_config_entry,
-#     mock_unifiap,
-#     entity_registry: EntityRegistry,
-#     caplog: pytest.LogCaptureFixture,
-# ) -> None:
-#     """Test that duplicate device tracker entities are ignored for the second AP."""
-#     # TODO: Simply use the same returned mock data
-#     # TODO: Test for unique IDs
-#     # TODO: Test adding a device to the device registry from each AP. This should work
-#     mock_config_entry.add_to_hass(hass)
-
-#     device_registry = dr.async_get(hass)
-#     device_registry.async_get_or_create(
-#         config_entry_id=mock_config_entry.entry_id,
-#         connections={(dr.CONNECTION_NETWORK_MAC, "AA:BB:CC:DD:EE:FF")},
-#     )
-#     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-#     await hass.async_block_till_done()
-
-#     mock_second_config_entry.add_to_hass(hass)
-#     assert await hass.config_entries.async_setup(mock_second_config_entry.entry_id)
-#     await hass.async_block_till_done()
-
-#     entries = [
-#         entry
-#         for entry in entity_registry.entities.values()
-#         if entry.domain == "device_tracker" and entry.platform == "unifi_direct"
-#     ]
-#     assert len(entries) == 4
-
-#     entity_ids = {entry.entity_id for entry in entries}
-#     assert any(
-#         entity_id.startswith("device_tracker.my_phone") for entity_id in entity_ids
-#     )
-#     assert any(
-#         entity_id.startswith("device_tracker.my_laptop") for entity_id in entity_ids
-#     )
-#     assert any(
-#         entity_id.startswith("device_tracker.my_desktop") for entity_id in entity_ids
-#     )
-#     assert "Platform unifi_direct does not generate unique IDs." not in caplog.text
-
-
 async def test_device_tracker_deduplicates_multiple_ap_clients(
     hass: HomeAssistant,
     mock_unifiap,
