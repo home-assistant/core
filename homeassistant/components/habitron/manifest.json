@@ -9,7 +9,7 @@
   "iot_class": "local_polling",
   "loggers": ["habitron_client"],
   "quality_scale": "bronze",
-  "requirements": ["habitron_client==2.0.7"],
+  "requirements": ["habitron_client==2.0.9"],
   "ssdp": [
     {
       "st": "urn:habitron-com:device:SmartHub:1"
