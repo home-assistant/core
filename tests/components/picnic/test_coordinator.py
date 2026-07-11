@@ -1,11 +1,18 @@
 """Tests for the Picnic coordinator."""
 
+from datetime import timedelta
+import json
 from unittest.mock import MagicMock
 
+from homeassistant.components.picnic.coordinator import (
+    DEFAULT_UPDATE_INTERVAL,
+    DELIVERY_UPDATE_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 async def test_timeout_failed_with_retry(
@@ -21,3 +28,65 @@ async def test_timeout_failed_with_retry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_update_interval_default_without_current_delivery(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test that the update interval is the default without an undelivered order."""
+    coordinator = init_integration.runtime_data
+
+    assert coordinator.update_interval == DEFAULT_UPDATE_INTERVAL
+
+
+async def test_update_interval_around_delivery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_picnic_api: MagicMock,
+) -> None:
+    """Test that the update interval tightens around the delivery and relaxes after."""
+    delivery = json.loads(load_fixture("picnic/delivery.json"))
+    delivery["status"] = "CURRENT"
+    del delivery["delivery_time"]
+    delivery["eta2"] = {
+        "start": (dt_util.utcnow() - timedelta(minutes=5)).isoformat(),
+        "end": (dt_util.utcnow() + timedelta(minutes=15)).isoformat(),
+    }
+    mock_picnic_api.get_deliveries.return_value = [delivery]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.update_interval == DELIVERY_UPDATE_INTERVAL
+
+    # Once the delivery is completed, the interval returns to the default
+    delivery["status"] = "COMPLETED"
+    await coordinator.async_refresh()
+
+    assert coordinator.update_interval == DEFAULT_UPDATE_INTERVAL
+
+
+async def test_update_interval_default_before_delivery_day(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_picnic_api: MagicMock,
+) -> None:
+    """Test that the update interval stays default while the delivery is far away."""
+    delivery = json.loads(load_fixture("picnic/delivery.json"))
+    delivery["status"] = "CURRENT"
+    del delivery["delivery_time"]
+    delivery["eta2"] = {
+        "start": (dt_util.utcnow() + timedelta(days=2)).isoformat(),
+        "end": (dt_util.utcnow() + timedelta(days=2, hours=1)).isoformat(),
+    }
+    mock_picnic_api.get_deliveries.return_value = [delivery]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.update_interval == DEFAULT_UPDATE_INTERVAL

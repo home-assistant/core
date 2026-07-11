@@ -15,10 +15,16 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import ADDRESS, CART_DATA, LAST_ORDER_DATA, NEXT_DELIVERY_DATA, SLOT_DATA
 
 type PicnicConfigEntry = ConfigEntry[PicnicUpdateCoordinator]
+
+DEFAULT_UPDATE_INTERVAL = timedelta(minutes=30)
+DELIVERY_UPDATE_INTERVAL = timedelta(minutes=1)
+DELIVERY_WINDOW_LEAD_TIME = timedelta(minutes=30)
+DELIVERY_WINDOW_LAG_TIME = timedelta(hours=2)
 
 
 class PicnicUpdateCoordinator(DataUpdateCoordinator):
@@ -42,7 +48,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             logger,
             config_entry=config_entry,
             name="Picnic coordinator",
-            update_interval=timedelta(minutes=30),
+            update_interval=DEFAULT_UPDATE_INTERVAL,
         )
 
     @override
@@ -63,8 +69,47 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
                 "Timeout while connecting to the Picnic API", retry_after=120
             ) from error
 
+        # Poll faster around the delivery so the position-based ETA,
+        # which the API only serves shortly before arrival, is picked up
+        # while it is still actionable
+        self.update_interval = self._get_update_interval(
+            data.get(NEXT_DELIVERY_DATA) or {}
+        )
+
         # Return the fetched data
         return data
+
+    @staticmethod
+    def _get_update_interval(next_delivery: dict) -> timedelta:
+        """Determine the update interval based on the next delivery.
+
+        The default ETA is computed when the delivery routes are planned,
+        while shortly before arrival the API switches to a live ETA based
+        on the delivery vehicle's position. With a fixed 30 minute poll
+        interval that refinement would usually arrive too late, so poll
+        every minute from just before the expected delivery until it has
+        been completed.
+        """
+        eta = next_delivery.get("eta") or {}
+        slot = next_delivery.get("slot") or {}
+
+        start = dt_util.parse_datetime(
+            str(eta.get("start") or slot.get("window_start"))
+        )
+        end = dt_util.parse_datetime(str(eta.get("end") or slot.get("window_end")))
+
+        if (
+            start is not None
+            and end is not None
+            and (
+                start - DELIVERY_WINDOW_LEAD_TIME
+                <= dt_util.utcnow()
+                <= end + DELIVERY_WINDOW_LAG_TIME
+            )
+        ):
+            return DELIVERY_UPDATE_INTERVAL
+
+        return DEFAULT_UPDATE_INTERVAL
 
     def fetch_data(self):
         """Fetch data from the Picnic API.
