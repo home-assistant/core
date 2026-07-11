@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,9 +41,9 @@
 # name: test_sensors[sensor.karakeep_archived-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Karakeep Archived',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'items',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Karakeep Archived',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'items',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.karakeep_archived',
@@ -60,7 +60,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -95,9 +95,9 @@
 # name: test_sensors[sensor.karakeep_bookmarks-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Karakeep Bookmarks',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'bookmarks',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Karakeep Bookmarks',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'bookmarks',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.karakeep_bookmarks',
@@ -114,7 +114,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -149,9 +149,9 @@
 # name: test_sensors[sensor.karakeep_favorites-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Karakeep Favorites',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'favorites',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Karakeep Favorites',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'favorites',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.karakeep_favorites',
@@ -168,7 +168,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -203,9 +203,9 @@
 # name: test_sensors[sensor.karakeep_highlights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Karakeep Highlights',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'highlights',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Karakeep Highlights',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'highlights',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.karakeep_highlights',
@@ -222,7 +222,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -257,9 +257,9 @@
 # name: test_sensors[sensor.karakeep_lists-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Karakeep Lists',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'lists',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Karakeep Lists',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'lists',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.karakeep_lists',
@@ -276,7 +276,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -311,9 +311,9 @@
 # name: test_sensors[sensor.karakeep_tags-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Karakeep Tags',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'tags',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Karakeep Tags',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'tags',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.karakeep_tags',
