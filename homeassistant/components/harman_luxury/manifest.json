@@ -7,7 +7,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["aioharmanluxury==0.2.2"],
+  "requirements": ["aioharmanluxury==0.2.3"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
