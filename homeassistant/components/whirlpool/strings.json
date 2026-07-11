@@ -46,6 +46,17 @@
     }
   },
   "entity": {
+    "button": {
+      "oven_stop": {
+        "name": "Stop"
+      },
+      "oven_stop_lower": {
+        "name": "Lower oven stop"
+      },
+      "oven_stop_upper": {
+        "name": "Upper oven stop"
+      }
+    },
     "select": {
       "refrigerator_temperature_level": {
         "name": "Temperature level"
@@ -215,6 +226,12 @@
     },
     "appliances_fetch_failed": {
       "message": "Failed to fetch appliances"
+    },
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "invalid_value_set": {
       "message": "Invalid value provided"

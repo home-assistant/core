@@ -1,11 +1,9 @@
 """Home Assistant representation of an UPnP/IGD."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from functools import partial
 from ipaddress import ip_address
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
@@ -24,10 +22,14 @@ from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
     KIBIBYTES_PER_SEC_RECEIVED,
+    KIBIBYTES_PER_SEC_RECEIVED_NO_ROLLOVER,
     KIBIBYTES_PER_SEC_SENT,
+    KIBIBYTES_PER_SEC_SENT_NO_ROLLOVER,
     LOGGER as _LOGGER,
     PACKETS_PER_SEC_RECEIVED,
+    PACKETS_PER_SEC_RECEIVED_NO_ROLLOVER,
     PACKETS_PER_SEC_SENT,
+    PACKETS_PER_SEC_SENT_NO_ROLLOVER,
     PACKETS_RECEIVED,
     PACKETS_SENT,
     PORT_MAPPING_NUMBER_OF_ENTRIES_IPV4,
@@ -183,6 +185,7 @@ class Device:
         """Get the serial number."""
         return self._igd_device.device.serial_number
 
+    @override
     def __str__(self) -> str:
         """Get string representation."""
         return f"IGD Device: {self.name}/{self.udn}::{self.device_type}"
@@ -257,8 +260,12 @@ class Device:
             ROUTER_IP: get_value(igd_state.external_ip_address),
             KIBIBYTES_PER_SEC_RECEIVED: igd_state.kibibytes_per_sec_received,
             KIBIBYTES_PER_SEC_SENT: igd_state.kibibytes_per_sec_sent,
+            KIBIBYTES_PER_SEC_RECEIVED_NO_ROLLOVER: igd_state.kibibytes_per_sec_received_no_rollover,
+            KIBIBYTES_PER_SEC_SENT_NO_ROLLOVER: igd_state.kibibytes_per_sec_sent_no_rollover,
             PACKETS_PER_SEC_RECEIVED: igd_state.packets_per_sec_received,
             PACKETS_PER_SEC_SENT: igd_state.packets_per_sec_sent,
+            PACKETS_PER_SEC_RECEIVED_NO_ROLLOVER: igd_state.packets_per_sec_received_no_rollover,
+            PACKETS_PER_SEC_SENT_NO_ROLLOVER: igd_state.packets_per_sec_sent_no_rollover,
             PORT_MAPPING_NUMBER_OF_ENTRIES_IPV4: get_value(
                 igd_state.port_mapping_number_of_entries
             ),

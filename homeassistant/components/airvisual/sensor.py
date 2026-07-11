@@ -1,6 +1,6 @@
 """Support for AirVisual air quality sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -8,26 +8,23 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_STATE,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     CONF_COUNTRY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
+    UnitOfDensity,
+    UnitOfRatio,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import AirVisualConfigEntry
 from .const import CONF_CITY
+from .coordinator import AirVisualConfigEntry, AirVisualDataUpdateCoordinator
 from .entity import AirVisualEntity
 
 ATTR_CITY = "city"
@@ -96,12 +93,12 @@ POLLUTANT_LEVELS = {
 }
 
 POLLUTANT_UNITS = {
-    "co": CONCENTRATION_PARTS_PER_MILLION,
-    "n2": CONCENTRATION_PARTS_PER_BILLION,
-    "o3": CONCENTRATION_PARTS_PER_BILLION,
-    "p1": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "p2": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    "s2": CONCENTRATION_PARTS_PER_BILLION,
+    "co": UnitOfRatio.PARTS_PER_MILLION,
+    "n2": UnitOfRatio.PARTS_PER_BILLION,
+    "o3": UnitOfRatio.PARTS_PER_BILLION,
+    "p1": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+    "p2": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+    "s2": UnitOfRatio.PARTS_PER_BILLION,
 }
 
 
@@ -113,7 +110,7 @@ async def async_setup_entry(
     """Set up AirVisual sensors based on a config entry."""
     coordinator = entry.runtime_data
     async_add_entities(
-        AirVisualGeographySensor(coordinator, entry, description, locale)
+        AirVisualGeographySensor(coordinator, description, locale)
         for locale in GEOGRAPHY_SENSOR_LOCALES
         for description in GEOGRAPHY_SENSOR_DESCRIPTIONS
     )
@@ -124,14 +121,14 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        entry: ConfigEntry,
+        coordinator: AirVisualDataUpdateCoordinator,
         description: SensorEntityDescription,
         locale: str,
     ) -> None:
         """Initialize."""
-        super().__init__(coordinator, entry, description)
+        super().__init__(coordinator, description)
 
+        entry = coordinator.config_entry
         self._attr_extra_state_attributes.update(
             {
                 ATTR_CITY: entry.data.get(CONF_CITY),
@@ -144,11 +141,13 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         self._locale = locale
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.data["current"]["pollution"]
 
     @callback
+    @override
     def update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
         try:
@@ -182,16 +181,16 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
         #
         # We use any coordinates in the config entry and, in the case of a geography by
         # name, we fall back to the latitude longitude provided in the coordinator data:
-        latitude = self._entry.data.get(
+        latitude = self.coordinator.config_entry.data.get(
             CONF_LATITUDE,
             self.coordinator.data["location"]["coordinates"][1],
         )
-        longitude = self._entry.data.get(
+        longitude = self.coordinator.config_entry.data.get(
             CONF_LONGITUDE,
             self.coordinator.data["location"]["coordinates"][0],
         )
 
-        if self._entry.options[CONF_SHOW_ON_MAP]:
+        if self.coordinator.config_entry.options[CONF_SHOW_ON_MAP]:
             self._attr_extra_state_attributes[ATTR_LATITUDE] = latitude
             self._attr_extra_state_attributes[ATTR_LONGITUDE] = longitude
             self._attr_extra_state_attributes.pop("lati", None)

@@ -1,10 +1,9 @@
 """Matter vacuum platform."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any
+import logging
+from typing import TYPE_CHECKING, Any, override
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
@@ -16,15 +15,16 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class OperationalState(IntEnum):
@@ -52,11 +52,11 @@ class ModeTag(IntEnum):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter vacuum platform from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.VACUUM, async_add_entities)
 
 
@@ -89,6 +89,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                     return mode
         return None
 
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         # We simply set the RvcRunMode to the first runmode
@@ -104,14 +105,17 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             clusters.RvcRunMode.Commands.ChangeToMode(newMode=mode.mode)
         )
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         await self.send_device_command(clusters.RvcOperationalState.Commands.GoHome())
 
+    @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
         await self.send_device_command(clusters.Identify.Commands.Identify())
 
+    @override
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
         if TYPE_CHECKING:
@@ -152,6 +156,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             clusters.RvcRunMode.Commands.ChangeToMode(newMode=mode.mode)
         )
 
+    @override
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
         await self.send_device_command(clusters.RvcOperationalState.Commands.Pause())
@@ -168,8 +173,9 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         segments: dict[str, Segment] = {}
         for area in supported_areas:
             area_name = None
-            if area.areaInfo and area.areaInfo.locationInfo:
-                area_name = area.areaInfo.locationInfo.locationName
+            location_info = area.areaInfo.locationInfo
+            if location_info not in (None, clusters.NullValue):
+                area_name = location_info.locationName
 
             if area_name:
                 segment_id = str(area.areaID)
@@ -177,6 +183,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
 
         return segments
 
+    @override
     async def async_get_segments(self) -> list[Segment]:
         """Get the segments that can be cleaned.
 
@@ -184,6 +191,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """
         return list(self._current_segments.values())
 
+    @override
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Clean the specified segments.
 
@@ -210,7 +218,8 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             != clusters.ServiceArea.Enums.SelectAreasStatus.kSuccess
         ):
             raise HomeAssistantError(
-                f"Failed to select areas: {response['statusText'] or response['status']}"
+                "Failed to select areas: "
+                f"{response['statusText'] or response['status']}"
             )
 
         await self.send_device_command(
@@ -218,6 +227,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
@@ -253,9 +263,18 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             VacuumEntityFeature.CLEAN_AREA in self.supported_features
             and self.registry_entry is not None
             and (last_seen_segments := self.last_seen_segments) is not None
-            and self._current_segments != {s.id: s for s in last_seen_segments}
+            # Ignore empty segments; some devices transiently
+            # report an empty list before sending the real one.
+            and (current_segments := self._current_segments)
         ):
-            self.async_create_segments_issue()
+            last_seen_by_id = {s.id: s for s in last_seen_segments}
+            if current_segments != last_seen_by_id:
+                _LOGGER.debug(
+                    "Vacuum segments changed: last_seen=%s, current=%s",
+                    last_seen_by_id,
+                    current_segments,
+                )
+                self.async_create_segments_issue()
 
     @callback
     def _calculate_features(self) -> None:

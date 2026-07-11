@@ -5,10 +5,11 @@
     'capabilities': list([
       'AUDIO_PLAYER',
       'MICROPHONE',
+      'ALEXA_DEVICE_REBOOT',
     ]),
-    'device cluster members': list([
-      'echo_test_serial_number',
-    ]),
+    'device cluster members': dict({
+      'echo_test_serial_number': 'echo_test_device_id',
+    }),
     'device family': 'mine',
     'device type': 'echo',
     'online': True,
@@ -43,10 +44,11 @@
           'capabilities': list([
             'AUDIO_PLAYER',
             'MICROPHONE',
+            'ALEXA_DEVICE_REBOOT',
           ]),
-          'device cluster members': list([
-            'echo_test_serial_number',
-          ]),
+          'device cluster members': dict({
+            'echo_test_serial_number': 'echo_test_device_id',
+          }),
           'device family': 'mine',
           'device type': 'echo',
           'online': True,
@@ -97,7 +99,7 @@
       'subentries': list([
       ]),
       'title': '**REDACTED**',
-      'unique_id': 'fake_email@gmail.com',
+      'unique_id': 'amzn1.account.fake_user_id',
       'version': 1,
     }),
   })

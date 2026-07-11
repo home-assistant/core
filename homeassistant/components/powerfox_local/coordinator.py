@@ -1,6 +1,6 @@
 """Coordinator for Powerfox Local integration."""
 
-from __future__ import annotations
+from typing import override
 
 from powerfox import (
     LocalResponse,
@@ -42,6 +42,7 @@ class PowerfoxLocalDataUpdateCoordinator(DataUpdateCoordinator[LocalResponse]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> LocalResponse:
         """Fetch data from the local poweropti."""
         try:
@@ -49,12 +50,12 @@ class PowerfoxLocalDataUpdateCoordinator(DataUpdateCoordinator[LocalResponse]):
         except PowerfoxAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-                translation_placeholders={"error": str(err)},
+                translation_key="auth_failed",
+                translation_placeholders={"host": self.config_entry.data[CONF_HOST]},
             ) from err
         except PowerfoxConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="update_failed",
-                translation_placeholders={"error": str(err)},
+                translation_key="connection_error",
+                translation_placeholders={"host": self.config_entry.data[CONF_HOST]},
             ) from err

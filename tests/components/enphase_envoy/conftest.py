@@ -4,7 +4,6 @@ from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-import jwt
 import multidict
 from pyenphase import (
     EnvoyACBPower,
@@ -29,8 +28,17 @@ from pyenphase.models.tariff import EnvoyStorageSettings, EnvoyTariff
 import pytest
 
 from homeassistant.components.enphase_envoy import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.enphase_envoy.const import CONF_MANUAL_TOKEN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
+
+from . import envoy_token
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -47,15 +55,49 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(
-    hass: HomeAssistant, config: dict[str, str]
+    hass: HomeAssistant,
+    config: dict[str, Any],
+    request: pytest.FixtureRequest,
 ) -> MockConfigEntry:
     """Define a config entry fixture."""
+    token_mode = "none"
+    token_life = 365
+    if hasattr(request, "param"):
+        if isinstance(request.param, list):
+            token_mode = request.param[0]
+            if len(request.param) > 1:
+                token_life = request.param[1]
+        else:
+            token_mode = request.param
+    if token_mode == "none":
+        data = config
+    elif token_mode == "auto":
+        # config contains token from automatic retrieval
+        data = {
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: envoy_token(token_life),
+            CONF_MANUAL_TOKEN: False,
+        }
+    elif token_mode == "manual":
+        # config contains token from manual entry
+        data = {
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+            CONF_TOKEN: envoy_token(token_life),
+            CONF_MANUAL_TOKEN: True,
+        }
+
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="45a36e55aaddb2007c5f6602e0c38e72",
         title="Envoy 1234",
         unique_id="1234",
-        data=config,
+        data=data,
     )
 
 
@@ -75,11 +117,7 @@ async def mock_envoy(
     request: pytest.FixtureRequest,
 ) -> AsyncGenerator[AsyncMock]:
     """Define a mocked Envoy fixture."""
-    new_token = jwt.encode(
-        payload={"name": "envoy", "exp": 2007837780},
-        key="secret",
-        algorithm="HS256",
-    )
+    new_token = envoy_token()
     with (
         patch(
             "homeassistant.components.enphase_envoy.config_flow.Envoy",
@@ -96,11 +134,7 @@ async def mock_envoy(
     ):
         mock_envoy = mock_client.return_value
         # Add the fixtures specified
-        token = jwt.encode(
-            payload={"name": "envoy", "exp": 1907837780},
-            key="secret",
-            algorithm="HS256",
-        )
+        token = envoy_token(200)
         mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
         mock_envoy.serial_number = "1234"
         mock = Mock()
@@ -208,29 +242,6 @@ def _load_json_2_meter_data(
                 for phase, phase_data in meter_data.items()
             ]
             mocked_data.ctmeters_phases.update({meter: meter_phase_data})
-
-    if item := json_fixture["data"].get("ctmeter_production"):
-        mocked_data.ctmeter_production = EnvoyMeterData(**item)
-    if item := json_fixture["data"].get("ctmeter_consumption"):
-        mocked_data.ctmeter_consumption = EnvoyMeterData(**item)
-    if item := json_fixture["data"].get("ctmeter_storage"):
-        mocked_data.ctmeter_storage = EnvoyMeterData(**item)
-    if item := json_fixture["data"].get("ctmeter_production_phases"):
-        mocked_data.ctmeter_production_phases = {}
-        for sub_item, item_data in item.items():
-            mocked_data.ctmeter_production_phases[sub_item] = EnvoyMeterData(
-                **item_data
-            )
-    if item := json_fixture["data"].get("ctmeter_consumption_phases"):
-        mocked_data.ctmeter_consumption_phases = {}
-        for sub_item, item_data in item.items():
-            mocked_data.ctmeter_consumption_phases[sub_item] = EnvoyMeterData(
-                **item_data
-            )
-    if item := json_fixture["data"].get("ctmeter_storage_phases"):
-        mocked_data.ctmeter_storage_phases = {}
-        for sub_item, item_data in item.items():
-            mocked_data.ctmeter_storage_phases[sub_item] = EnvoyMeterData(**item_data)
 
 
 def _load_json_2_inverter_data(

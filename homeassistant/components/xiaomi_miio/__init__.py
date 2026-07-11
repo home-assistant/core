@@ -1,11 +1,8 @@
 """Support for Xiaomi Miio."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -33,7 +30,6 @@ from miio import (
     Timer,
     VacuumStatus,
 )
-from miio.gateway.gateway import GatewayException
 
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -47,7 +43,6 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    ATTR_AVAILABLE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
@@ -76,6 +71,7 @@ from .const import (
     AuthException,
     SetupException,
 )
+from .coordinator import UPDATE_INTERVAL, GatewayDeviceCoordinator
 from .gateway import ConnectXiaomiGateway
 from .services import async_setup_services
 from .typing import XiaomiMiioConfigEntry, XiaomiMiioRuntimeData
@@ -84,7 +80,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 POLLING_TIMEOUT_SEC = 10
-UPDATE_INTERVAL = timedelta(seconds=15)
 
 GATEWAY_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
@@ -127,6 +122,14 @@ MODEL_TO_CLASS_MAP = {
     MODEL_FAN_P18: FanMiot,
     MODEL_FAN_P5: FanP5,
     MODEL_FAN_ZA5: FanZA5,
+}
+
+# List of models requiring specific lazy_discover setting
+LAZY_DISCOVER_FOR_MODEL = {
+    "zhimi.fan.za3": True,
+    "zhimi.fan.za5": True,
+    "zhimi.airpurifier.za1": True,
+    "dmaker.fan.1c": True,
 }
 
 
@@ -312,13 +315,6 @@ async def async_create_miio_device_and_coordinator(
     update_method = _async_update_data_default
     coordinator_class: type[DataUpdateCoordinator[Any]] = DataUpdateCoordinator
 
-    # List of models requiring specific lazy_discover setting
-    LAZY_DISCOVER_FOR_MODEL = {
-        "zhimi.fan.za3": True,
-        "zhimi.fan.za5": True,
-        "zhimi.airpurifier.za1": True,
-        "dmaker.fan.1c": True,
-    }
     lazy_discover = LAZY_DISCOVER_FOR_MODEL.get(model, False)
 
     if (
@@ -359,7 +355,7 @@ async def async_create_miio_device_and_coordinator(
     elif model in MODELS_VACUUM or model.startswith(
         (ROBOROCK_GENERIC, ROCKROBO_GENERIC)
     ):
-        # TODO: add lazy_discover as argument when python-miio add support # pylint: disable=fixme
+        # TODO: add lazy_discover as argument  # pylint: disable=fixme
         device = RoborockVacuum(host, token)
         update_method = _async_update_data_vacuum
         coordinator_class = DataUpdateCoordinator[VacuumCoordinatorData]
@@ -446,31 +442,11 @@ async def async_setup_gateway_entry(
         hw_version=gateway_info.hardware_version,
     )
 
-    def update_data_factory(sub_device):
-        """Create update function for a subdevice."""
-
-        async def async_update_data():
-            """Fetch data from the subdevice."""
-            try:
-                await hass.async_add_executor_job(sub_device.update)
-            except GatewayException as ex:
-                _LOGGER.error("Got exception while fetching the state: %s", ex)
-                return {ATTR_AVAILABLE: False}
-            return {ATTR_AVAILABLE: True}
-
-        return async_update_data
-
-    coordinator_dict: dict[str, DataUpdateCoordinator] = {}
+    coordinator_dict: dict[str, GatewayDeviceCoordinator] = {}
     for sub_device in gateway.gateway_device.devices.values():
         # Create update coordinator
-        coordinator_dict[sub_device.sid] = DataUpdateCoordinator(
-            hass,
-            _LOGGER,
-            config_entry=entry,
-            name=name,
-            update_method=update_data_factory(sub_device),
-            # Polling interval. Will only be polled if there are subscribers.
-            update_interval=UPDATE_INTERVAL,
+        coordinator_dict[sub_device.sid] = GatewayDeviceCoordinator(
+            hass, entry, sub_device
         )
 
     entry.runtime_data = XiaomiMiioRuntimeData(

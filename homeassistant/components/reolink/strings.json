@@ -52,20 +52,6 @@
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
-      "animal_lens_0": {
-        "name": "Animal lens 0",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "animal_lens_1": {
-        "name": "Animal lens 1",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
       "crossline_dog_cat": {
         "name": "Crossline {zone_name} animal",
         "state": {
@@ -96,20 +82,6 @@
       },
       "face": {
         "name": "Face",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "face_lens_0": {
-        "name": "Face lens 0",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "face_lens_1": {
-        "name": "Face lens 1",
         "state": {
           "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
@@ -171,20 +143,6 @@
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
-      "motion_lens_0": {
-        "name": "Motion lens 0",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "motion_lens_1": {
-        "name": "Motion lens 1",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
       "non-motor_vehicle": {
         "name": "Bicycle",
         "state": {
@@ -199,20 +157,6 @@
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
-      "package_lens_0": {
-        "name": "Package lens 0",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "package_lens_1": {
-        "name": "Package lens 1",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
       "person": {
         "name": "Person",
         "state": {
@@ -220,36 +164,8 @@
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
-      "person_lens_0": {
-        "name": "Person lens 0",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "person_lens_1": {
-        "name": "Person lens 1",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
       "pet": {
         "name": "Pet",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "pet_lens_0": {
-        "name": "Pet lens 0",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "pet_lens_1": {
-        "name": "Pet lens 1",
         "state": {
           "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
@@ -276,28 +192,8 @@
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
         }
       },
-      "vehicle_lens_0": {
-        "name": "Vehicle lens 0",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
-      "vehicle_lens_1": {
-        "name": "Vehicle lens 1",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
-        }
-      },
       "visitor": {
         "name": "Visitor"
-      },
-      "visitor_lens_0": {
-        "name": "Visitor lens 0"
-      },
-      "visitor_lens_1": {
-        "name": "Visitor lens 1"
       }
     },
     "button": {
@@ -647,7 +543,8 @@
           "autoadaptive": "Auto adaptive",
           "off": "[%key:common::state::off%]",
           "onatnight": "On at night",
-          "schedule": "Schedule"
+          "schedule": "Schedule",
+          "scheduleplus": "Schedule plus"
         }
       },
       "hdr": {
@@ -1022,6 +919,9 @@
     "timeout": {
       "message": "Timeout waiting on a response: {err}"
     },
+    "uid_mismatch": {
+      "message": "UID {uid} of Reolink camera \"{name}\" did not match the stored configuration UID {conf_uid}, please check the connection details"
+    },
     "unexpected": {
       "message": "Unexpected Reolink error: {err}"
     },
@@ -1030,6 +930,9 @@
     },
     "update_already_running": {
       "message": "Reolink firmware update already running, wait on completion before starting another"
+    },
+    "webhook_no_url": {
+      "message": "Error registering URL for webhook {event_id}: Home Assistant URL is not available"
     }
   },
   "issues": {
@@ -1042,7 +945,7 @@
       "title": "Reolink firmware update required"
     },
     "https_webhook": {
-      "description": "Reolink products can not push motion events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`, a valid address could, for example, be `{example_url}` where `{example_ip}` is the IP of the Home Assistant device",
+      "description": "Reolink products cannot push motion events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`, a valid address could, for example, be `{example_url}` where `{example_ip}` is the IP of the Home Assistant device",
       "title": "Reolink webhook URL uses HTTPS (SSL)"
     },
     "password_too_long": {
@@ -1054,7 +957,7 @@
       "title": "Reolink incompatible with global SSL certificate"
     },
     "webhook_url": {
-      "description": "Did not receive initial ONVIF state from {name}. Most likely, the Reolink camera can not reach the current (local) Home Assistant URL `{base_url}`, please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}) that points to Home Assistant. For example `{example_url}` where `{example_ip}` is the IP of the Home Assistant device. Also, make sure the Reolink camera can reach that URL. Using fast motion/AI state polling until the first ONVIF push is received.",
+      "description": "Did not receive initial ONVIF state from {name}. Most likely, the Reolink camera cannot reach the current (local) Home Assistant URL `{base_url}`, please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}) that points to Home Assistant. For example `{example_url}` where `{example_ip}` is the IP of the Home Assistant device. Also, make sure the Reolink camera can reach that URL. Using fast motion/AI state polling until the first ONVIF push is received.",
       "title": "Reolink webhook URL unreachable"
     }
   },

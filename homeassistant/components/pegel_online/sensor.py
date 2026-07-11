@@ -1,9 +1,8 @@
 """PEGELONLINE sensor entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiopegelonline.models import CurrentMeasurement, StationMeasurements
 
@@ -145,6 +144,7 @@ class PegelOnlineSensor(PegelOnlineEntity, SensorEntity):
         return measurement
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the device."""
         return self.measurement.value

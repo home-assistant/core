@@ -1,7 +1,5 @@
 """Provide methods to bootstrap a Home Assistant instance."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 import contextlib
@@ -16,10 +14,11 @@ import platform
 import sys
 import threading
 from time import monotonic
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 # Import cryptography early since import openssl is not thread-safe
-# _frozen_importlib._DeadlockError: deadlock detected by _ModuleLock('cryptography.hazmat.backends.openssl.backend')
+# _frozen_importlib._DeadlockError: deadlock detected by
+# _ModuleLock('cryptography.hazmat.backends.openssl.backend')
 import cryptography.hazmat.backends.openssl.backend  # noqa: F401
 import voluptuous as vol
 import yarl
@@ -48,7 +47,7 @@ from .components import (
     file_upload as file_upload_pre_import,  # noqa: F401
     group as group_pre_import,  # noqa: F401
     history as history_pre_import,  # noqa: F401
-    http,  # not named pre_import since it has requirements
+    http as http_import,  # noqa: F401 - not named pre_import since it has requirements
     image_upload as image_upload_import,  # noqa: F401 - not named pre_import since it has requirements
     logbook as logbook_pre_import,  # noqa: F401
     lovelace as lovelace_pre_import,  # noqa: F401
@@ -67,10 +66,11 @@ from .const import (
     BASE_PLATFORMS,
     FORMAT_DATETIME,
     KEY_DATA_LOGGING as DATA_LOGGING,
+    KEY_DATA_LOGGING_DISABLED_REASON as DATA_LOGGING_DISABLED_REASON,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .core_config import async_process_ha_core_config
-from .exceptions import HomeAssistantError
+from .exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from .helpers import (
     area_registry,
     category_registry,
@@ -130,6 +130,11 @@ SETUP_ORDER_SORT_KEY = partial(contains, BASE_PLATFORMS)
 
 
 ERROR_LOG_FILENAME = "home-assistant.log"
+ENV_DISABLE_LOG_FILE = "HA_DISABLE_LOG_FILE"
+ENV_DUPLICATE_LOG_FILE = "HA_DUPLICATE_LOG_FILE"
+ENV_SUPERVISOR = "SUPERVISOR"
+LOG_FILE_DISABLED_REASON_ENVIRONMENT = "environment"
+LOG_FILE_DISABLED_REASON_SUPERVISOR = "supervisor"
 
 # hass.data key for logging information.
 DATA_REGISTRIES_LOADED: HassKey[None] = HassKey("bootstrap_registries_loaded")
@@ -167,10 +172,14 @@ FRONTEND_INTEGRATIONS = {
     # visible in frontend
     "frontend",
 }
-# Stage 0 is divided into substages. Each substage has a name, a set of integrations and a timeout.
-# The substage containing recorder should have no timeout, as it could cancel a database migration.
-# Recorder freezes "recorder" timeout during a migration, but it does not freeze other timeouts.
-# If we add timeouts to the frontend substages, we should make sure they don't apply in recovery mode.
+# Stage 0 is divided into substages. Each substage has a name,
+# a set of integrations and a timeout.
+# The substage containing recorder should have no timeout, as it
+# could cancel a database migration.
+# Recorder freezes "recorder" timeout during a migration, but it
+# does not freeze other timeouts.
+# If we add timeouts to the frontend substages, we should make sure
+# they don't apply in recovery mode.
 STAGE_0_INTEGRATIONS = (
     # Load logging and http deps as soon as possible
     ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS, None),
@@ -236,9 +245,31 @@ DEFAULT_INTEGRATIONS = {
     "input_text",
     "schedule",
     "timer",
+    #
+    # Base platforms:
+    # Note: Calendar and todo are not included to prevent them from registering
+    # their frontend panels when there are no calendar or todo integrations.
+    *(BASE_PLATFORMS - {"calendar", "todo"}),
+    #
+    # Integrations providing triggers and conditions for base platforms:
+    "air_quality",
+    "battery",
+    "door",
+    "garage_door",
+    "gate",
+    "humidity",
+    "illuminance",
+    "moisture",
+    "motion",
+    "occupancy",
+    "power",
+    "temperature",
+    "window",
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
     # These integrations are set up if recovery mode is activated.
+    "backup",
+    "cloud",
     "frontend",
 }
 DEFAULT_INTEGRATIONS_SUPERVISOR = {
@@ -383,12 +414,7 @@ async def async_setup_hass(
         _LOGGER.info("Starting in recovery mode")
         hass.config.recovery_mode = True
 
-        http_conf = (await http.async_get_last_config(hass)) or {}
-
-        await async_from_config_dict(
-            {"recovery_mode": {}, "http": http_conf},
-            hass,
-        )
+        await async_from_config_dict({"recovery_mode": {}}, hass)
 
     if runtime_config.open_ui:
         hass.add_job(open_hass_ui, hass)
@@ -433,32 +459,57 @@ def _init_blocking_io_modules_in_executor() -> None:
     is_docker_env()
 
 
-async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
-    """Load the registries and modules that will do blocking I/O."""
+async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
+    """Load the registries and modules that will do blocking I/O.
+
+    Return whether loading succeeded.
+    """
     if DATA_REGISTRIES_LOADED in hass.data:
-        return
+        return True
+
     hass.data[DATA_REGISTRIES_LOADED] = None
     entity.async_setup(hass)
     frame.async_setup(hass)
     template.async_setup(hass)
     translation.async_setup(hass)
-    await asyncio.gather(
-        create_eager_task(get_internal_store_manager(hass).async_initialize()),
-        create_eager_task(area_registry.async_load(hass)),
-        create_eager_task(category_registry.async_load(hass)),
-        create_eager_task(device_registry.async_load(hass)),
-        create_eager_task(entity_registry.async_load(hass)),
-        create_eager_task(floor_registry.async_load(hass)),
-        create_eager_task(issue_registry.async_load(hass)),
-        create_eager_task(label_registry.async_load(hass)),
-        hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
-        create_eager_task(template.async_load_custom_templates(hass)),
-        create_eager_task(restore_state.async_load(hass)),
-        create_eager_task(hass.config_entries.async_initialize()),
-        create_eager_task(async_get_system_info(hass)),
-        create_eager_task(condition.async_setup(hass)),
-        create_eager_task(trigger.async_setup(hass)),
-    )
+
+    recovery = hass.config.recovery_mode
+    device_registry.async_setup(hass)
+    try:
+        await asyncio.gather(
+            create_eager_task(get_internal_store_manager(hass).async_initialize()),
+            create_eager_task(area_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(category_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(device_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(entity_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(floor_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(issue_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(label_registry.async_load(hass, load_empty=recovery)),
+            hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
+            create_eager_task(template.async_load_custom_templates(hass)),
+            create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
+            create_eager_task(hass.config_entries.async_initialize()),
+            create_eager_task(async_get_system_info(hass)),
+            create_eager_task(condition.async_setup(hass)),
+            create_eager_task(trigger.async_setup(hass)),
+        )
+    except UnsupportedStorageVersionError as err:
+        # If we're already in recovery mode, we don't want to handle the exception
+        # and activate recovery mode again, as that would lead to an infinite loop.
+        if recovery:
+            raise
+
+        _LOGGER.error(
+            "Storage file %s was created by a newer version of Home Assistant"
+            " (storage version %s > %s); activating recovery mode; on-disk data"
+            " is preserved; upgrade Home Assistant or restore from a backup",
+            err.storage_key,
+            err.found_version,
+            err.max_supported_version,
+        )
+        return False
+
+    return True
 
 
 async def async_from_config_dict(
@@ -475,7 +526,9 @@ async def async_from_config_dict(
     # Prime custom component cache early so we know if registry entries are tied
     # to a custom integration
     await loader.async_get_custom_components(hass)
-    await async_load_base_functionality(hass)
+
+    if not await async_load_base_functionality(hass):
+        return None
 
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
@@ -590,10 +643,12 @@ async def async_enable_logging(
     logger.setLevel(logging.INFO if verbose else logging.WARNING)
 
     if log_file is None:
+        disabled_log_file_reason = _log_file_disabled_reason()
         default_log_path = hass.config.path(ERROR_LOG_FILENAME)
-        if "SUPERVISOR" in os.environ and "HA_DUPLICATE_LOG_FILE" not in os.environ:
+        if disabled_log_file_reason:
             # Rename the default log file if it exists, since previous versions created
-            # it even on Supervisor
+            # it before Supervisor disabled duplicate file logging or
+            # HA_DISABLE_LOG_FILE disabled the log file.
             def rename_old_file() -> None:
                 """Rename old log file in executor."""
                 if os.path.isfile(default_log_path):
@@ -605,6 +660,7 @@ async def async_enable_logging(
         else:
             err_log_path = default_log_path
     else:
+        disabled_log_file_reason = None
         err_log_path = os.path.abspath(log_file)
 
     if err_log_path:
@@ -617,8 +673,32 @@ async def async_enable_logging(
 
         # Save the log file location for access by other components.
         hass.data[DATA_LOGGING] = err_log_path
+    elif disabled_log_file_reason == LOG_FILE_DISABLED_REASON_ENVIRONMENT:
+        hass.data[DATA_LOGGING_DISABLED_REASON] = disabled_log_file_reason
 
     async_activate_log_queue_handler(hass)
+
+
+def _log_file_disabled_reason() -> str | None:
+    """Return why the log file is disabled."""
+    if ENV_SUPERVISOR in os.environ and ENV_DUPLICATE_LOG_FILE not in os.environ:
+        return LOG_FILE_DISABLED_REASON_SUPERVISOR
+
+    disable_log_file = os.environ.get(ENV_DISABLE_LOG_FILE)
+    if disable_log_file is None:
+        return None
+
+    try:
+        if cv.boolean(disable_log_file):
+            return LOG_FILE_DISABLED_REASON_ENVIRONMENT
+    except vol.Invalid:
+        _LOGGER.warning(
+            "Ignoring invalid %s value: %s. Expected a boolean value: "
+            "1/0, true/false, yes/no, on/off, or enable/disable",
+            ENV_DISABLE_LOG_FILE,
+            disable_log_file,
+        )
+    return None
 
 
 def _create_log_file(
@@ -645,6 +725,7 @@ def _create_log_file(
 class _RotatingFileHandlerWithoutShouldRollOver(RotatingFileHandler):
     """RotatingFileHandler that does not check if it should roll over on every log."""
 
+    @override
     def shouldRollover(self, record: logging.LogRecord) -> bool:
         """Never roll over.
 
@@ -681,7 +762,7 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
         domains.update(DEFAULT_INTEGRATIONS_RECOVERY_MODE)
 
     # Add domains depending on if the Supervisor is used or not
-    if "SUPERVISOR" in os.environ:
+    if ENV_SUPERVISOR in os.environ:
         domains.update(DEFAULT_INTEGRATIONS_SUPERVISOR)
 
     return domains

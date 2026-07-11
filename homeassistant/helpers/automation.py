@@ -1,12 +1,60 @@
 """Helpers for automation."""
 
-from typing import Any
+from collections.abc import Mapping
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Final, Self
 
 import voluptuous as vol
 
 from homeassistant.const import CONF_OPTIONS
+from homeassistant.core import HomeAssistant, split_entity_id
 
-from .typing import ConfigType
+from .entity import get_device_class_or_undefined
+from .typing import UNDEFINED, ConfigType, UndefinedType
+
+CONF_UNIT: Final = "unit"
+
+
+class AnyDeviceClassType(Enum):
+    """Singleton type for matching any device class."""
+
+    _singleton = 0
+
+
+ANY_DEVICE_CLASS = AnyDeviceClassType._singleton  # noqa: SLF001
+
+
+@dataclass(frozen=True, slots=True)
+class DomainSpec:
+    """Describes how to match and extract a value from an entity.
+
+    Used by triggers and conditions.
+    """
+
+    device_class: str | None | AnyDeviceClassType = ANY_DEVICE_CLASS
+    value_source: str | None = None
+    """Attribute name to extract the value from, or None for state.state."""
+
+
+def filter_by_domain_specs(
+    hass: HomeAssistant,
+    domain_specs: Mapping[str, DomainSpec],
+    entities: set[str],
+) -> set[str]:
+    """Filter entities matching any of the domain specs."""
+    result: set[str] = set()
+    for entity_id in entities:
+        if not (domain_spec := domain_specs.get(split_entity_id(entity_id)[0])):
+            continue
+        if (
+            domain_spec.device_class is not ANY_DEVICE_CLASS
+            and get_device_class_or_undefined(hass, entity_id)
+            != domain_spec.device_class
+        ):
+            continue
+        result.add(entity_id)
+    return result
 
 
 def get_absolute_description_key(domain: str, key: str) -> str:
@@ -86,3 +134,31 @@ def move_options_fields_to_top_level(
     new_config.update(options)
 
     return new_config
+
+
+@dataclass(frozen=True, kw_only=True)
+class ThresholdConfig:
+    """Configuration for threshold conditions and triggers."""
+
+    numerical: bool
+    entity: str | None
+    number: float | None
+    unit: str | None | UndefinedType
+
+    @classmethod
+    def from_config(cls, config: dict[str, Any] | None) -> Self | None:
+        """Create ThresholdConfig from config dict."""
+        if config is None:
+            return None
+
+        entity: str | None = None
+        number: float | None = None
+        unit: str | None | UndefinedType = UNDEFINED
+        numerical = "number" in config
+        if numerical:
+            number = config["number"]
+            unit = config.get("unit_of_measurement", UNDEFINED)
+        else:
+            entity = config["entity"]
+
+        return cls(numerical=numerical, number=number, entity=entity, unit=unit)

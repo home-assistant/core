@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[binary_sensor.gummibaum_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_all_entities[binary_sensor.gummibaum_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Gummibaum Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gummibaum_battery',
@@ -51,8 +52,9 @@
 # ---
 # name: test_all_entities[binary_sensor.gummibaum_light_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,7 +90,7 @@
 # name: test_all_entities[binary_sensor.gummibaum_light_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gummibaum Light notification',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Light notification',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gummibaum_light_notification',
@@ -100,8 +102,9 @@
 # ---
 # name: test_all_entities[binary_sensor.gummibaum_nutrition_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -137,7 +140,7 @@
 # name: test_all_entities[binary_sensor.gummibaum_nutrition_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gummibaum Nutrition notification',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Nutrition notification',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gummibaum_nutrition_notification',
@@ -149,8 +152,9 @@
 # ---
 # name: test_all_entities[binary_sensor.gummibaum_productive_plant-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -186,7 +190,7 @@
 # name: test_all_entities[binary_sensor.gummibaum_productive_plant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gummibaum Productive plant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Productive plant',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gummibaum_productive_plant',
@@ -198,8 +202,9 @@
 # ---
 # name: test_all_entities[binary_sensor.gummibaum_repotted-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -235,7 +240,7 @@
 # name: test_all_entities[binary_sensor.gummibaum_repotted-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gummibaum Repotted',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Repotted',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gummibaum_repotted',
@@ -247,8 +252,9 @@
 # ---
 # name: test_all_entities[binary_sensor.gummibaum_temperature_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -284,7 +290,7 @@
 # name: test_all_entities[binary_sensor.gummibaum_temperature_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gummibaum Temperature notification',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Temperature notification',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gummibaum_temperature_notification',
@@ -296,8 +302,9 @@
 # ---
 # name: test_all_entities[binary_sensor.gummibaum_update-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -333,8 +340,8 @@
 # name: test_all_entities[binary_sensor.gummibaum_update-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'update',
-      'friendly_name': 'Gummibaum Update',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'update',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Update',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gummibaum_update',
@@ -346,8 +353,9 @@
 # ---
 # name: test_all_entities[binary_sensor.gummibaum_water_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -383,7 +391,7 @@
 # name: test_all_entities[binary_sensor.gummibaum_water_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gummibaum Water notification',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Water notification',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gummibaum_water_notification',
@@ -395,8 +403,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -432,8 +441,8 @@
 # name: test_all_entities[binary_sensor.kakaobaum_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Kakaobaum Battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Battery',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kakaobaum_battery',
@@ -445,8 +454,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_light_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -482,7 +492,7 @@
 # name: test_all_entities[binary_sensor.kakaobaum_light_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kakaobaum Light notification',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Light notification',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kakaobaum_light_notification',
@@ -494,8 +504,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_nutrition_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -531,7 +542,7 @@
 # name: test_all_entities[binary_sensor.kakaobaum_nutrition_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kakaobaum Nutrition notification',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Nutrition notification',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kakaobaum_nutrition_notification',
@@ -543,8 +554,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_productive_plant-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -580,7 +592,7 @@
 # name: test_all_entities[binary_sensor.kakaobaum_productive_plant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kakaobaum Productive plant',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Productive plant',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kakaobaum_productive_plant',
@@ -592,8 +604,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_repotted-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -629,7 +642,7 @@
 # name: test_all_entities[binary_sensor.kakaobaum_repotted-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kakaobaum Repotted',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Repotted',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kakaobaum_repotted',
@@ -641,8 +654,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_temperature_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -678,7 +692,7 @@
 # name: test_all_entities[binary_sensor.kakaobaum_temperature_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kakaobaum Temperature notification',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Temperature notification',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kakaobaum_temperature_notification',
@@ -690,8 +704,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_update-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -727,8 +742,8 @@
 # name: test_all_entities[binary_sensor.kakaobaum_update-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'update',
-      'friendly_name': 'Kakaobaum Update',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'update',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Update',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kakaobaum_update',
@@ -740,8 +755,9 @@
 # ---
 # name: test_all_entities[binary_sensor.kakaobaum_water_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -777,7 +793,7 @@
 # name: test_all_entities[binary_sensor.kakaobaum_water_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kakaobaum Water notification',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Water notification',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.kakaobaum_water_notification',

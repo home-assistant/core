@@ -1,10 +1,9 @@
 """Sensor platform for ntfy integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import override
 
 from aiontfy import Account as NtfyAccount
 
@@ -244,6 +243,7 @@ class NtfySensorEntity(NtfyCommonBaseEntity, SensorEntity):
     coordinator: NtfyDataUpdateCoordinator
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
 

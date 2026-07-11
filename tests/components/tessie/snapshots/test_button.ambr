@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_buttons[button.test_flash_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_buttons[button.test_flash_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Flash lights',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Flash lights',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_flash_lights',
@@ -50,8 +51,9 @@
 # ---
 # name: test_buttons[button.test_homelink-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_buttons[button.test_homelink-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Homelink',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Homelink',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_homelink',
@@ -99,8 +101,9 @@
 # ---
 # name: test_buttons[button.test_honk_horn-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -136,7 +139,7 @@
 # name: test_buttons[button.test_honk_horn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Honk horn',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Honk horn',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_honk_horn',
@@ -148,8 +151,9 @@
 # ---
 # name: test_buttons[button.test_keyless_driving-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -185,7 +189,7 @@
 # name: test_buttons[button.test_keyless_driving-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Keyless driving',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Keyless driving',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_keyless_driving',
@@ -197,8 +201,9 @@
 # ---
 # name: test_buttons[button.test_play_fart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -234,7 +239,7 @@
 # name: test_buttons[button.test_play_fart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Play fart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Play fart',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_play_fart',
@@ -246,8 +251,9 @@
 # ---
 # name: test_buttons[button.test_wake-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -283,7 +289,7 @@
 # name: test_buttons[button.test_wake-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Wake',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Wake',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_wake',

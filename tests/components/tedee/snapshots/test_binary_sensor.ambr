@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensors[binary_sensor.lock_1a2b_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_binary_sensors[binary_sensor.lock_1a2b_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'Lock-1A2B Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lock-1A2B Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.lock_1a2b_charging',
@@ -49,10 +50,62 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[binary_sensor.lock_1a2b_connectivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.lock_1a2b_connectivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Connectivity',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Connectivity',
+    'platform': 'tedee',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12345-connectivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.lock_1a2b_connectivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lock-1A2B Connectivity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.lock_1a2b_connectivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensors[binary_sensor.lock_1a2b_lock_uncalibrated-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +141,8 @@
 # name: test_binary_sensors[binary_sensor.lock_1a2b_lock_uncalibrated-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Lock-1A2B Lock uncalibrated',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lock-1A2B Lock uncalibrated',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.lock_1a2b_lock_uncalibrated',
@@ -101,8 +154,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.lock_1a2b_pullspring_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,7 +192,7 @@
 # name: test_binary_sensors[binary_sensor.lock_1a2b_pullspring_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Lock-1A2B Pullspring enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lock-1A2B Pullspring enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.lock_1a2b_pullspring_enabled',
@@ -150,8 +204,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.lock_1a2b_semi_locked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -187,7 +242,7 @@
 # name: test_binary_sensors[binary_sensor.lock_1a2b_semi_locked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Lock-1A2B Semi locked',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lock-1A2B Semi locked',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.lock_1a2b_semi_locked',
@@ -199,8 +254,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.lock_2c3d_charging-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -236,8 +292,8 @@
 # name: test_binary_sensors[binary_sensor.lock_2c3d_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'Lock-2C3D Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lock-2C3D Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.lock_2c3d_charging',
@@ -247,10 +303,62 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[binary_sensor.lock_2c3d_connectivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.lock_2c3d_connectivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Connectivity',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Connectivity',
+    'platform': 'tedee',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '98765-connectivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.lock_2c3d_connectivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lock-2C3D Connectivity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.lock_2c3d_connectivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensors[binary_sensor.lock_2c3d_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -286,8 +394,8 @@
 # name: test_binary_sensors[binary_sensor.lock_2c3d_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Lock-2C3D Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lock-2C3D Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.lock_2c3d_door',
@@ -299,8 +407,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.lock_2c3d_lock_uncalibrated-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -336,8 +445,8 @@
 # name: test_binary_sensors[binary_sensor.lock_2c3d_lock_uncalibrated-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Lock-2C3D Lock uncalibrated',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lock-2C3D Lock uncalibrated',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.lock_2c3d_lock_uncalibrated',
@@ -349,8 +458,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.lock_2c3d_pullspring_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -386,7 +496,7 @@
 # name: test_binary_sensors[binary_sensor.lock_2c3d_pullspring_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Lock-2C3D Pullspring enabled',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lock-2C3D Pullspring enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.lock_2c3d_pullspring_enabled',
@@ -398,8 +508,9 @@
 # ---
 # name: test_binary_sensors[binary_sensor.lock_2c3d_semi_locked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -435,7 +546,7 @@
 # name: test_binary_sensors[binary_sensor.lock_2c3d_semi_locked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Lock-2C3D Semi locked',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Lock-2C3D Semi locked',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.lock_2c3d_semi_locked',

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_next_arrival-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_next_arrival-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'M15 - 1 Av/E 79 St Next arrival',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'M15 - 1 Av/E 79 St Next arrival',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.m15_1_av_e_79_st_next_arrival',
@@ -51,8 +52,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_next_arrival_destination-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,7 +90,7 @@
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_next_arrival_destination-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'M15 - 1 Av/E 79 St Next arrival destination',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'M15 - 1 Av/E 79 St Next arrival destination',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.m15_1_av_e_79_st_next_arrival_destination',
@@ -100,8 +102,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_next_arrival_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -137,7 +140,7 @@
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_next_arrival_route-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'M15 - 1 Av/E 79 St Next arrival route',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'M15 - 1 Av/E 79 St Next arrival route',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.m15_1_av_e_79_st_next_arrival_route',
@@ -149,8 +152,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_second_arrival-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -186,8 +190,8 @@
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_second_arrival-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'M15 - 1 Av/E 79 St Second arrival',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'M15 - 1 Av/E 79 St Second arrival',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.m15_1_av_e_79_st_second_arrival',
@@ -199,8 +203,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_second_arrival_destination-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -236,7 +241,7 @@
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_second_arrival_destination-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'M15 - 1 Av/E 79 St Second arrival destination',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'M15 - 1 Av/E 79 St Second arrival destination',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.m15_1_av_e_79_st_second_arrival_destination',
@@ -248,8 +253,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_second_arrival_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -285,7 +291,7 @@
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_second_arrival_route-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'M15 - 1 Av/E 79 St Second arrival route',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'M15 - 1 Av/E 79 St Second arrival route',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.m15_1_av_e_79_st_second_arrival_route',
@@ -297,8 +303,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_third_arrival-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -334,8 +341,8 @@
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_third_arrival-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'M15 - 1 Av/E 79 St Third arrival',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'M15 - 1 Av/E 79 St Third arrival',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.m15_1_av_e_79_st_third_arrival',
@@ -347,8 +354,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_third_arrival_destination-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -384,7 +392,7 @@
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_third_arrival_destination-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'M15 - 1 Av/E 79 St Third arrival destination',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'M15 - 1 Av/E 79 St Third arrival destination',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.m15_1_av_e_79_st_third_arrival_destination',
@@ -396,8 +404,9 @@
 # ---
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_third_arrival_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -433,7 +442,7 @@
 # name: test_bus_sensor[sensor.m15_1_av_e_79_st_third_arrival_route-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'M15 - 1 Av/E 79 St Third arrival route',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'M15 - 1 Av/E 79 St Third arrival route',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.m15_1_av_e_79_st_third_arrival_route',
@@ -445,8 +454,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_next_arrival-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -482,8 +492,8 @@
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_next_arrival-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': '1 - Times Sq - 42 St (N direction) Next arrival',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1 - Times Sq - 42 St (N direction) Next arrival',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.1_times_sq_42_st_n_direction_next_arrival',
@@ -495,8 +505,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_next_arrival_destination-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -532,7 +543,7 @@
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_next_arrival_destination-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1 - Times Sq - 42 St (N direction) Next arrival destination',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1 - Times Sq - 42 St (N direction) Next arrival destination',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.1_times_sq_42_st_n_direction_next_arrival_destination',
@@ -544,8 +555,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_next_arrival_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -581,7 +593,7 @@
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_next_arrival_route-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1 - Times Sq - 42 St (N direction) Next arrival route',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1 - Times Sq - 42 St (N direction) Next arrival route',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.1_times_sq_42_st_n_direction_next_arrival_route',
@@ -593,8 +605,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_second_arrival-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -630,8 +643,8 @@
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_second_arrival-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': '1 - Times Sq - 42 St (N direction) Second arrival',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1 - Times Sq - 42 St (N direction) Second arrival',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.1_times_sq_42_st_n_direction_second_arrival',
@@ -643,8 +656,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_second_arrival_destination-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -680,7 +694,7 @@
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_second_arrival_destination-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1 - Times Sq - 42 St (N direction) Second arrival destination',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1 - Times Sq - 42 St (N direction) Second arrival destination',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.1_times_sq_42_st_n_direction_second_arrival_destination',
@@ -692,8 +706,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_second_arrival_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -729,7 +744,7 @@
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_second_arrival_route-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1 - Times Sq - 42 St (N direction) Second arrival route',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1 - Times Sq - 42 St (N direction) Second arrival route',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.1_times_sq_42_st_n_direction_second_arrival_route',
@@ -741,8 +756,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_third_arrival-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -778,8 +794,8 @@
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_third_arrival-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': '1 - Times Sq - 42 St (N direction) Third arrival',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1 - Times Sq - 42 St (N direction) Third arrival',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.1_times_sq_42_st_n_direction_third_arrival',
@@ -791,8 +807,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_third_arrival_destination-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -828,7 +845,7 @@
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_third_arrival_destination-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1 - Times Sq - 42 St (N direction) Third arrival destination',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1 - Times Sq - 42 St (N direction) Third arrival destination',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.1_times_sq_42_st_n_direction_third_arrival_destination',
@@ -840,8 +857,9 @@
 # ---
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_third_arrival_route-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -877,7 +895,7 @@
 # name: test_subway_sensor[sensor.1_times_sq_42_st_n_direction_third_arrival_route-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '1 - Times Sq - 42 St (N direction) Third arrival route',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '1 - Times Sq - 42 St (N direction) Third arrival route',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.1_times_sq_42_st_n_direction_third_arrival_route',

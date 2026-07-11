@@ -154,3 +154,14 @@ COMPONENT_CONFIG_SCHEMA_CONNECTION = {
     vol.Inclusive(CONF_ORG, "v2_authentication"): cv.string,
     vol.Optional(CONF_BUCKET, default=DEFAULT_BUCKET): cv.string,
 }
+
+# Same keys without defaults, used in CONFIG_SCHEMA to validate
+# without injecting default values (so we can detect explicit keys).
+COMPONENT_CONFIG_SCHEMA_CONNECTION_VALIDATORS = {
+    (
+        vol.Optional(k.schema)
+        if isinstance(k, vol.Optional) and k.default is not vol.UNDEFINED
+        else k
+    ): v
+    for k, v in COMPONENT_CONFIG_SCHEMA_CONNECTION.items()
+}

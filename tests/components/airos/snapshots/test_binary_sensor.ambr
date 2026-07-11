@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[airos_NanoStation_M5_sta_v6.3.16.json][binary_sensor.nanostation_m5_dhcp_client-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_all_entities[airos_NanoStation_M5_sta_v6.3.16.json][binary_sensor.nanostation_m5_dhcp_client-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'NanoStation M5 DHCP client',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation M5 DHCP client',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_m5_dhcp_client',
@@ -51,8 +52,9 @@
 # ---
 # name: test_all_entities[airos_NanoStation_M5_sta_v6.3.16.json][binary_sensor.nanostation_m5_dhcp_server-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_all_entities[airos_NanoStation_M5_sta_v6.3.16.json][binary_sensor.nanostation_m5_dhcp_server-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'NanoStation M5 DHCP server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation M5 DHCP server',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_m5_dhcp_server',
@@ -101,8 +103,9 @@
 # ---
 # name: test_all_entities[airos_NanoStation_M5_sta_v6.3.16.json][binary_sensor.nanostation_m5_pppoe_link-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_all_entities[airos_NanoStation_M5_sta_v6.3.16.json][binary_sensor.nanostation_m5_pppoe_link-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'NanoStation M5 PPPoE link',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation M5 PPPoE link',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_m5_pppoe_link',
@@ -151,8 +154,9 @@
 # ---
 # name: test_all_entities[airos_NanoStation_loco_M5_v6.3.16_XM_sta.json][binary_sensor.nanostation_loco_m5_client_dhcp_client-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,8 +192,8 @@
 # name: test_all_entities[airos_NanoStation_loco_M5_v6.3.16_XM_sta.json][binary_sensor.nanostation_loco_m5_client_dhcp_client-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'NanoStation loco M5 Client DHCP client',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation loco M5 Client DHCP client',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_loco_m5_client_dhcp_client',
@@ -201,8 +205,9 @@
 # ---
 # name: test_all_entities[airos_NanoStation_loco_M5_v6.3.16_XM_sta.json][binary_sensor.nanostation_loco_m5_client_dhcp_server-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -238,8 +243,8 @@
 # name: test_all_entities[airos_NanoStation_loco_M5_v6.3.16_XM_sta.json][binary_sensor.nanostation_loco_m5_client_dhcp_server-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'NanoStation loco M5 Client DHCP server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation loco M5 Client DHCP server',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_loco_m5_client_dhcp_server',
@@ -251,8 +256,9 @@
 # ---
 # name: test_all_entities[airos_NanoStation_loco_M5_v6.3.16_XM_sta.json][binary_sensor.nanostation_loco_m5_client_pppoe_link-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -288,8 +294,8 @@
 # name: test_all_entities[airos_NanoStation_loco_M5_v6.3.16_XM_sta.json][binary_sensor.nanostation_loco_m5_client_pppoe_link-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'NanoStation loco M5 Client PPPoE link',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation loco M5 Client PPPoE link',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_loco_m5_client_pppoe_link',
@@ -301,8 +307,9 @@
 # ---
 # name: test_all_entities[airos_liteapgps_ap_ptmp_40mhz.json][binary_sensor.house_bridge_dhcp_client-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -338,8 +345,8 @@
 # name: test_all_entities[airos_liteapgps_ap_ptmp_40mhz.json][binary_sensor.house_bridge_dhcp_client-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'House-Bridge DHCP client',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'House-Bridge DHCP client',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.house_bridge_dhcp_client',
@@ -351,8 +358,9 @@
 # ---
 # name: test_all_entities[airos_liteapgps_ap_ptmp_40mhz.json][binary_sensor.house_bridge_dhcp_server-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -388,8 +396,8 @@
 # name: test_all_entities[airos_liteapgps_ap_ptmp_40mhz.json][binary_sensor.house_bridge_dhcp_server-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'House-Bridge DHCP server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'House-Bridge DHCP server',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.house_bridge_dhcp_server',
@@ -401,8 +409,9 @@
 # ---
 # name: test_all_entities[airos_liteapgps_ap_ptmp_40mhz.json][binary_sensor.house_bridge_dhcpv6_server-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -438,8 +447,8 @@
 # name: test_all_entities[airos_liteapgps_ap_ptmp_40mhz.json][binary_sensor.house_bridge_dhcpv6_server-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'House-Bridge DHCPv6 server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'House-Bridge DHCPv6 server',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.house_bridge_dhcpv6_server',
@@ -451,8 +460,9 @@
 # ---
 # name: test_all_entities[airos_liteapgps_ap_ptmp_40mhz.json][binary_sensor.house_bridge_port_forwarding-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -488,7 +498,7 @@
 # name: test_all_entities[airos_liteapgps_ap_ptmp_40mhz.json][binary_sensor.house_bridge_port_forwarding-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'House-Bridge Port forwarding',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'House-Bridge Port forwarding',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.house_bridge_port_forwarding',
@@ -500,8 +510,9 @@
 # ---
 # name: test_all_entities[airos_liteapgps_ap_ptmp_40mhz.json][binary_sensor.house_bridge_pppoe_link-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -537,8 +548,8 @@
 # name: test_all_entities[airos_liteapgps_ap_ptmp_40mhz.json][binary_sensor.house_bridge_pppoe_link-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'House-Bridge PPPoE link',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'House-Bridge PPPoE link',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.house_bridge_pppoe_link',
@@ -550,8 +561,9 @@
 # ---
 # name: test_all_entities[airos_loco5ac_ap-ptp.json][binary_sensor.nanostation_5ac_ap_name_dhcp_client-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -587,8 +599,8 @@
 # name: test_all_entities[airos_loco5ac_ap-ptp.json][binary_sensor.nanostation_5ac_ap_name_dhcp_client-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'NanoStation 5AC ap name DHCP client',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name DHCP client',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_5ac_ap_name_dhcp_client',
@@ -600,8 +612,9 @@
 # ---
 # name: test_all_entities[airos_loco5ac_ap-ptp.json][binary_sensor.nanostation_5ac_ap_name_dhcp_server-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -637,8 +650,8 @@
 # name: test_all_entities[airos_loco5ac_ap-ptp.json][binary_sensor.nanostation_5ac_ap_name_dhcp_server-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'NanoStation 5AC ap name DHCP server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name DHCP server',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_5ac_ap_name_dhcp_server',
@@ -650,8 +663,9 @@
 # ---
 # name: test_all_entities[airos_loco5ac_ap-ptp.json][binary_sensor.nanostation_5ac_ap_name_dhcpv6_server-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -687,8 +701,8 @@
 # name: test_all_entities[airos_loco5ac_ap-ptp.json][binary_sensor.nanostation_5ac_ap_name_dhcpv6_server-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'NanoStation 5AC ap name DHCPv6 server',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name DHCPv6 server',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_5ac_ap_name_dhcpv6_server',
@@ -700,8 +714,9 @@
 # ---
 # name: test_all_entities[airos_loco5ac_ap-ptp.json][binary_sensor.nanostation_5ac_ap_name_port_forwarding-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -737,7 +752,7 @@
 # name: test_all_entities[airos_loco5ac_ap-ptp.json][binary_sensor.nanostation_5ac_ap_name_port_forwarding-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NanoStation 5AC ap name Port forwarding',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name Port forwarding',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_5ac_ap_name_port_forwarding',
@@ -749,8 +764,9 @@
 # ---
 # name: test_all_entities[airos_loco5ac_ap-ptp.json][binary_sensor.nanostation_5ac_ap_name_pppoe_link-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -786,8 +802,8 @@
 # name: test_all_entities[airos_loco5ac_ap-ptp.json][binary_sensor.nanostation_5ac_ap_name_pppoe_link-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'NanoStation 5AC ap name PPPoE link',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NanoStation 5AC ap name PPPoE link',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_5ac_ap_name_pppoe_link',

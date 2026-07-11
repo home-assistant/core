@@ -1,0 +1,2325 @@
+{
+  "creationTime": 1634918922000,
+  "devices": [
+    {
+      "available": true,
+      "controllableName": "internal:PodV3Component",
+      "creationTime": 1634918957000,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "update",
+            "nparams": 0
+          },
+          {
+            "commandName": "setCountryCode",
+            "nparams": 1
+          },
+          {
+            "commandName": "activateCalendar",
+            "nparams": 0
+          },
+          {
+            "commandName": "deactivateCalendar",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshPodMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshUpdateStatus",
+            "nparams": 0
+          },
+          {
+            "commandName": "setCalendar",
+            "nparams": 1
+          },
+          {
+            "commandName": "setLightingLedPodMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setPodLedOff",
+            "nparams": 0
+          },
+          {
+            "commandName": "setPodLedOn",
+            "nparams": 0
+          }
+        ],
+        "dataProperties": [],
+        "qualifiedName": "internal:PodV3Component",
+        "states": [
+          {
+            "qualifiedName": "core:ConnectivityState",
+            "type": "DiscreteState",
+            "values": ["offline", "online"]
+          },
+          {
+            "qualifiedName": "core:CountryCodeState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:LocalIPv4AddressState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:NameState",
+            "type": "DataState"
+          },
+          {
+            "eventBased": true,
+            "qualifiedName": "internal:Button1State",
+            "type": "DiscreteState",
+            "values": ["pressed", "stop"]
+          },
+          {
+            "eventBased": true,
+            "qualifiedName": "internal:Button2State",
+            "type": "DiscreteState",
+            "values": ["pressed", "stop"]
+          },
+          {
+            "eventBased": true,
+            "qualifiedName": "internal:Button3State",
+            "type": "DiscreteState",
+            "values": ["pressed", "stop"]
+          },
+          {
+            "qualifiedName": "internal:LightingLedPodModeState",
+            "type": "ContinuousState"
+          }
+        ],
+        "type": "ACTUATOR",
+        "uiClass": "Pod",
+        "uiProfiles": ["UpdatableComponent"],
+        "widgetName": "Pod"
+      },
+      "deviceURL": "internal://1234-5678-5643/pod/0",
+      "enabled": true,
+      "label": "Kitchen Hub",
+      "lastUpdateTime": 1634918957000,
+      "oid": "eba1066f-58c5-458a-a323-9e0cc0aa1e00",
+      "placeOID": "61435d6a-4ba6-4c96-b7b5-105bb31d3b87",
+      "shortcut": false,
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Kitchen Hub"
+        },
+        {
+          "name": "internal:LightingLedPodModeState",
+          "type": 2,
+          "value": 1.0
+        },
+        {
+          "name": "core:CountryCodeState",
+          "type": 3,
+          "value": "FR"
+        },
+        {
+          "name": "core:LocalIPv4AddressState",
+          "type": 3,
+          "value": "192.168.1.129"
+        }
+      ],
+      "type": 1,
+      "uiClass": "Pod",
+      "widget": "Pod"
+    },
+    {
+      "available": true,
+      "controllableName": "internal:WifiComponent",
+      "creationTime": 1634918957000,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "clearCredentials",
+            "nparams": 0
+          },
+          {
+            "commandName": "setTargetInfraConfig",
+            "nparams": 2
+          },
+          {
+            "commandName": "setWifiMode",
+            "nparams": 1
+          }
+        ],
+        "dataProperties": [],
+        "qualifiedName": "internal:WifiComponent",
+        "states": [
+          {
+            "qualifiedName": "internal:CurrentInfraConfigState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "internal:SignalStrengthState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "internal:WifiModeState",
+            "type": "DataState"
+          }
+        ],
+        "type": "ACTUATOR",
+        "uiClass": "Wifi",
+        "uiProfiles": ["Specific"],
+        "widgetName": "Wifi"
+      },
+      "deviceURL": "internal://1234-5678-5643/wifi/0",
+      "enabled": true,
+      "label": "Bedroom Wifi",
+      "lastUpdateTime": 1634918957000,
+      "oid": "f681c28f-32a8-4b3b-9aeb-c81de84e1111",
+      "placeOID": "61435d6a-4ba6-4c96-b7b5-105bb31d3b87",
+      "shortcut": false,
+      "states": [
+        {
+          "name": "internal:WifiModeState",
+          "type": 3,
+          "value": "infrastructure"
+        },
+        {
+          "name": "internal:CurrentInfraConfigState",
+          "type": 3,
+          "value": "TAKprint"
+        },
+        {
+          "name": "internal:SignalStrengthState",
+          "type": 1,
+          "value": 83
+        }
+      ],
+      "type": 1,
+      "uiClass": "Wifi",
+      "widget": "Wifi"
+    },
+    {
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Atlantic Group"
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "A752001"
+        }
+      ],
+      "available": true,
+      "controllableName": "io:AtlanticDomesticHotWaterProductionV2_CE_FLAT_C2_IOComponent",
+      "creationTime": 1634919131000,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshAbsenceEndDate",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshAbsenceMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshAbsenceStartDate",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshBoostEndDate",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshBoostMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshBoostStartDate",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshBottomTankWaterTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshManufacturerName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMiddleWaterTemperatureIn",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWaterConsumption",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWaterTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWaterTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "setAbsenceEndDate",
+            "nparams": 1
+          },
+          {
+            "commandName": "setAbsenceMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setAbsenceStartDate",
+            "nparams": 1
+          },
+          {
+            "commandName": "setBoostEndDate",
+            "nparams": 1
+          },
+          {
+            "commandName": "setBoostMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setBoostStartDate",
+            "nparams": 1
+          },
+          {
+            "commandName": "setComfortTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDateTime",
+            "nparams": 1
+          },
+          {
+            "commandName": "setEcoTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setExpectedNumberOfShower",
+            "nparams": 1
+          },
+          {
+            "commandName": "setFrostProtectionTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetDHWTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setWaterTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setWaterTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshExpectedNumberOfShower",
+            "nparams": 0
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "refreshAntiLegionellosis",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshAwayModeDuration",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshBoilerInstallationOption",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshBoostModeDuration",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshCurrentOperatingMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDHWCapacity",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDHWError",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDHWMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshElectricalExtraManagement",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshExtractionOption",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshInstallation",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMiddleWaterTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshOperatingModeCapabilities",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshOperatingRange",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshOperatingTime",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshProgrammingSlots",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshRateManagement",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshSmartGridOption",
+            "nparams": 0
+          },
+          {
+            "commandName": "setAntiLegionellosis",
+            "nparams": 1
+          },
+          {
+            "commandName": "setAwayModeDuration",
+            "nparams": 1
+          },
+          {
+            "commandName": "setBoilerInstallationOption",
+            "nparams": 1
+          },
+          {
+            "commandName": "setBoostModeDuration",
+            "nparams": 1
+          },
+          {
+            "commandName": "setCurrentOperatingMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDHWMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setElectricalExtraManagement",
+            "nparams": 1
+          },
+          {
+            "commandName": "setExtractionOption",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHaltedTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setInstallation",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOperatingRange",
+            "nparams": 1
+          },
+          {
+            "commandName": "setProgrammingSlots",
+            "nparams": 1
+          },
+          {
+            "commandName": "setRateManagement",
+            "nparams": 1
+          },
+          {
+            "commandName": "setSmartGridOption",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "dataProperties": [
+          {
+            "qualifiedName": "core:identifyInterval",
+            "value": "500"
+          }
+        ],
+        "qualifiedName": "io:AtlanticDomesticHotWaterProductionV2_CE_FLAT_C2_IOComponent",
+        "states": [
+          {
+            "qualifiedName": "core:AbsenceEndDateState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:AbsenceStartDateState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:BoostElectricPowerConsumptionState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:BoostEndDateState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:BoostModeDurationState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:BoostStartDateState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:BottomTankWaterTemperatureState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:ComfortTargetTemperatureState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:ControlWaterTargetTemperatureState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:DHWPSoftwareVersionState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:DateTimeState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:DiscreteRSSILevelState",
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"]
+          },
+          {
+            "qualifiedName": "core:EcoTargetTemperatureState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:ExpectedNumberOfShowerState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:FrostProtectionTargetTemperatureState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:HaltedTargetTemperatureState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:HeatingStatusState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:ManufacturerNameState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:MaximalShowerManualModeState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:MaximalTemperatureManualModeState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:MiddleWaterTemperatureInState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:MinimalShowerManualModeState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:MinimalTemperatureManualModeState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:NameState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:NumberOfShowerRemainingState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:NumberOfTankState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:OperatingModeState",
+            "type": "DiscreteState",
+            "values": [
+              "antifreeze",
+              "auto",
+              "away",
+              "eco",
+              "frostprotection",
+              "manual",
+              "max",
+              "normal",
+              "off",
+              "on",
+              "prog",
+              "program",
+              "boost"
+            ]
+          },
+          {
+            "qualifiedName": "core:PowerHeatElectricalInState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:PriorityLockTimerState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:ProgrammingAvailableState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:RSSILevelState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:SecuredPositionTemperatureState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:StatusState",
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"]
+          },
+          {
+            "qualifiedName": "core:StopRelaunchState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:TargetDHWTemperatureState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:TargetTemperatureState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:TemperatureState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:V40WaterVolumeEstimationState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "core:VersionState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:WaterConsumptionState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:WaterTargetTemperatureState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:WaterTemperatureState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "io:AntiLegionellosisState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "io:AwayModeDurationState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "io:BoilerInstallationOptionState",
+            "type": "DiscreteState",
+            "values": [
+              "boilerOptimising",
+              "boilerPriority",
+              "heatPumpOptimising",
+              "heatPumpPriority"
+            ]
+          },
+          {
+            "qualifiedName": "io:DHWAbsenceModeState",
+            "type": "DiscreteState",
+            "values": ["off", "on", "prog"]
+          },
+          {
+            "qualifiedName": "io:DHWBoostModeState",
+            "type": "DiscreteState",
+            "values": ["off", "on", "prog"]
+          },
+          {
+            "qualifiedName": "io:DHWCapacityState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "io:DHWErrorState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "io:DHWModeState",
+            "type": "DiscreteState",
+            "values": ["autoMode", "manualEcoActive", "manualEcoInactive"]
+          },
+          {
+            "qualifiedName": "io:ElectricBoosterOperatingTimeState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "io:ElectricalExtraManagementState",
+            "type": "DiscreteState",
+            "values": ["auto", "deactive"]
+          },
+          {
+            "qualifiedName": "io:ExtractionOptionState",
+            "type": "DiscreteState",
+            "values": [
+              "fastExtractionSpeed",
+              "lowExtractionSpeed",
+              "noExtraction"
+            ]
+          },
+          {
+            "qualifiedName": "io:HeatPumpOperatingTimeState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "io:InstallationState",
+            "type": "DiscreteState",
+            "values": ["extraBoiler", "extraSolar", "onlyThermodynamic"]
+          },
+          {
+            "qualifiedName": "io:MiddleWaterTemperatureState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "io:OperatingModeCapabilitiesState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "io:OperatingRangeState",
+            "type": "DiscreteState",
+            "values": ["pac24h_elec24h", "pacProg_elecProg"]
+          },
+          {
+            "qualifiedName": "io:PowerConsumptionFanState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "io:PowerHeatElectricalState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "io:PowerHeatPumpState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "io:PriorityLockLevelState",
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ]
+          },
+          {
+            "qualifiedName": "io:PriorityLockOriginatorState",
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ]
+          },
+          {
+            "qualifiedName": "io:ProgrammingSlotsState",
+            "type": "DataState"
+          },
+          {
+            "qualifiedName": "io:RateManagementState",
+            "type": "DiscreteState",
+            "values": ["forbidden", "no", "recommended", "unsuitable", "wanted"]
+          },
+          {
+            "qualifiedName": "io:SmartGridOptionState",
+            "type": "DiscreteState",
+            "values": ["active", "deactive"]
+          }
+        ],
+        "type": "ACTUATOR",
+        "uiClass": "WaterHeatingSystem",
+        "uiProfiles": [
+          "StatefulDHWThermostat",
+          "DHWThermostat",
+          "StatefulThermostatWithSensor",
+          "StatefulThermostat",
+          "Thermostat",
+          "WaterConsumption"
+        ],
+        "widgetName": "DomesticHotWaterProduction"
+      },
+      "deviceURL": "io://1234-5678-5643/109286#1",
+      "enabled": true,
+      "label": "Patio Water Heating",
+      "lastUpdateTime": 1634919131000,
+      "oid": "e9f70659-ca2a-4408-8c7b-3181c72d67f2",
+      "placeOID": "61435d6a-4ba6-4c96-b7b5-105bb31d3b87",
+      "shortcut": false,
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Patio Water Heating"
+        },
+        {
+          "name": "core:VersionState",
+          "type": 3,
+          "value": "41373532303031202020"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "good"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 100.0
+        },
+        {
+          "name": "io:RateManagementState",
+          "type": 3,
+          "value": "?"
+        },
+        {
+          "name": "io:OperatingModeCapabilitiesState",
+          "type": 11,
+          "value": {
+            "absence": 1,
+            "energyDemandStatus": 0,
+            "rateManagement": 1,
+            "relaunch": 1
+          }
+        },
+        {
+          "name": "core:OperatingModeState",
+          "type": 11,
+          "value": {
+            "absence": "Not_Used",
+            "relaunch": "Not_Used"
+          }
+        },
+        {
+          "name": "core:WaterConsumptionState",
+          "type": 1,
+          "value": 159
+        },
+        {
+          "name": "io:DHWErrorState",
+          "type": 11,
+          "value": {
+            "code": 255,
+            "family": "W",
+            "minor": 255,
+            "type": 4
+          }
+        },
+        {
+          "name": "io:HeatPumpOperatingTimeState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:ElectricBoosterOperatingTimeState",
+          "type": 1,
+          "value": 1027
+        },
+        {
+          "name": "io:DHWModeState",
+          "type": 3,
+          "value": "manualEcoInactive"
+        },
+        {
+          "name": "core:TemperatureState",
+          "type": 2,
+          "value": 20.0
+        },
+        {
+          "name": "core:TargetTemperatureState",
+          "type": 2,
+          "value": 20.0
+        },
+        {
+          "name": "io:OperatingRangeState",
+          "type": 3,
+          "value": "pac24h_elec24h"
+        },
+        {
+          "name": "io:ProgrammingSlotsState",
+          "type": 11,
+          "value": {
+            "slot1": {
+              "end": "06:00",
+              "start": "22:00"
+            },
+            "slot2": {
+              "end": "00:00",
+              "start": "00:00"
+            }
+          }
+        },
+        {
+          "name": "io:AntiLegionellosisState",
+          "type": 1,
+          "value": 1
+        },
+        {
+          "name": "core:ProgrammingAvailableState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:DHWBoostModeState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "io:DHWAbsenceModeState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:NumberOfTankState",
+          "type": 1,
+          "value": 2
+        },
+        {
+          "name": "core:BoostElectricPowerConsumptionState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:PowerHeatElectricalInState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:MiddleWaterTemperatureState",
+          "type": 2,
+          "value": 64.4
+        },
+        {
+          "name": "core:BottomTankWaterTemperatureState",
+          "type": 2,
+          "value": 0.0
+        },
+        {
+          "name": "core:V40WaterVolumeEstimationState",
+          "type": 1,
+          "value": 44962
+        },
+        {
+          "name": "io:PowerHeatElectricalState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:PowerHeatPumpState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:WaterTargetTemperatureState",
+          "type": 2,
+          "value": 60.0
+        },
+        {
+          "name": "core:TargetDHWTemperatureState",
+          "type": 2,
+          "value": 60.0
+        },
+        {
+          "name": "core:WaterTemperatureState",
+          "type": 2,
+          "value": 60.0
+        },
+        {
+          "name": "core:ExpectedNumberOfShowerState",
+          "type": 1,
+          "value": 4
+        },
+        {
+          "name": "core:ControlWaterTargetTemperatureState",
+          "type": 2,
+          "value": 70.0
+        },
+        {
+          "name": "core:StopRelaunchState",
+          "type": 3,
+          "value": " Relaunch Enable"
+        },
+        {
+          "name": "core:MiddleWaterTemperatureInState",
+          "type": 2,
+          "value": 65.0
+        },
+        {
+          "name": "core:HeatingStatusState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:NumberOfShowerRemainingState",
+          "type": 1,
+          "value": 4
+        },
+        {
+          "name": "core:DateTimeState",
+          "type": 11,
+          "value": {
+            "day": 23,
+            "hour": 18,
+            "minute": 39,
+            "month": 1,
+            "second": 23,
+            "weekday": 6,
+            "year": 2022
+          }
+        },
+        {
+          "name": "core:ManufacturerNameState",
+          "type": 3,
+          "value": "Thermor"
+        },
+        {
+          "name": "core:DHWPSoftwareVersionState",
+          "type": 3,
+          "value": "MALICIO"
+        },
+        {
+          "name": "io:DHWCapacityState",
+          "type": 1,
+          "value": 80
+        },
+        {
+          "name": "core:BoostStartDateState",
+          "type": 11,
+          "value": {
+            "day": 13,
+            "hour": 18,
+            "minute": 26,
+            "month": 1,
+            "second": 32,
+            "weekday": 3,
+            "year": 2022
+          }
+        },
+        {
+          "name": "core:BoostEndDateState",
+          "type": 11,
+          "value": {
+            "day": 14,
+            "hour": 18,
+            "minute": 26,
+            "month": 1,
+            "second": 32,
+            "weekday": 4,
+            "year": 2022
+          }
+        },
+        {
+          "name": "core:AbsenceStartDateState",
+          "type": 11,
+          "value": {
+            "day": 29,
+            "hour": 14,
+            "minute": 18,
+            "month": 12,
+            "second": 11,
+            "weekday": 2,
+            "year": 2021
+          }
+        },
+        {
+          "name": "core:AbsenceEndDateState",
+          "type": 11,
+          "value": {
+            "day": 30,
+            "hour": 14,
+            "minute": 18,
+            "month": 12,
+            "second": 11,
+            "weekday": 3,
+            "year": 2021
+          }
+        },
+        {
+          "name": "core:MinimalTemperatureManualModeState",
+          "type": 2,
+          "value": 50.0
+        },
+        {
+          "name": "core:MaximalTemperatureManualModeState",
+          "type": 2,
+          "value": 70.0
+        },
+        {
+          "name": "core:MinimalShowerManualModeState",
+          "type": 1,
+          "value": 2
+        },
+        {
+          "name": "core:MaximalShowerManualModeState",
+          "type": 1,
+          "value": 4
+        }
+      ],
+      "type": 1,
+      "uiClass": "WaterHeatingSystem",
+      "widget": "DomesticHotWaterProduction"
+    },
+    {
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Atlantic Group"
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "A752001"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "mainSupply"
+        },
+        {
+          "name": "core:MeasuredValueType",
+          "type": 3,
+          "value": "core:ElectricalEnergyInWh"
+        }
+      ],
+      "available": true,
+      "controllableName": "io:DHWCumulatedElectricalEnergyConsumptionIOSystemDeviceSensor",
+      "creationTime": 1634919131000,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "refreshElectricEnergyConsumption",
+            "nparams": 0
+          }
+        ],
+        "dataProperties": [],
+        "qualifiedName": "io:DHWCumulatedElectricalEnergyConsumptionIOSystemDeviceSensor",
+        "states": [
+          {
+            "qualifiedName": "core:ConsumptionTariff0State",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:ConsumptionTariff1State",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:ConsumptionTariff2State",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:ConsumptionTariff3State",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:ConsumptionTariff4State",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:ConsumptionTariff5State",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:ConsumptionTariff6State",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:ConsumptionTariff7State",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:ConsumptionTariff8State",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:ConsumptionTariff9State",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:ElectricEnergyConsumptionState",
+            "type": "ContinuousState"
+          },
+          {
+            "qualifiedName": "core:StatusState",
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"]
+          }
+        ],
+        "type": "SENSOR",
+        "uiClass": "ElectricitySensor",
+        "uiProfiles": ["ElectricEnergyConsumption"],
+        "widgetName": "CumulativeElectricPowerConsumptionSensor"
+      },
+      "deviceURL": "io://1234-5678-5643/109286#2",
+      "enabled": true,
+      "label": "Office Energy Meter",
+      "lastUpdateTime": 1634919131000,
+      "oid": "087305a6-dbbd-4236-a050-1057e7324701",
+      "placeOID": "61435d6a-4ba6-4c96-b7b5-105bb31d3b87",
+      "shortcut": false,
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:ElectricEnergyConsumptionState",
+          "type": 1,
+          "value": 3579474
+        },
+        {
+          "name": "core:ConsumptionTariff1State",
+          "type": 1,
+          "value": 38377
+        },
+        {
+          "name": "core:ConsumptionTariff2State",
+          "type": 1,
+          "value": 239218
+        }
+      ],
+      "type": 2,
+      "uiClass": "ElectricitySensor",
+      "widget": "CumulativeElectricPowerConsumptionSensor"
+    },
+    {
+      "creationTime": 1776015407000,
+      "lastUpdateTime": 1776015407000,
+      "label": "Yutaki DHW",
+      "deviceURL": "modbus://1234-5678-5643/6381497/1#4",
+      "shortcut": false,
+      "controllableName": "modbus:YutakiV2DHWTComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "refreshBoostMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "globalControlDHW",
+            "nparams": 3
+          },
+          {
+            "commandName": "refreshControlAntiLegionella",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlAntiLegionellaSettingTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlDHW",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlDHWSettingTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDHWMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDHWTTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusAntiLegionella",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusAntiLegionellaSettingTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusDHW",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusDHWSettingTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "setControlAntiLegionella",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlAntiLegionellaSettingTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlDHW",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlDHWSettingTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDHWMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetBoostMode",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:DHWTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:AlarmNumberState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:ControlAntiLegionellaSettingTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["run", "stop"],
+            "qualifiedName": "modbus:ControlAntiLegionellaState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:ControlDHWSettingTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["run", "stop"],
+            "qualifiedName": "modbus:ControlDHWState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["high demand", "standard"],
+            "qualifiedName": "modbus:DHWModeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:StatusAntiLegionellaSettingTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["run", "stop"],
+            "qualifiedName": "modbus:StatusAntiLegionellaState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:StatusDHWSettingTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:StatusDHWState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:VirtualGlobalControlState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["disabled", "enabled"],
+            "qualifiedName": "modbus:YutakiBoostModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["high demand", "off", "standard"],
+            "qualifiedName": "modbus:YutakiDHWVirtualOperatingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["disabled", "enabled"],
+            "qualifiedName": "modbus:YutakiTargetBoostModeState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "HitachiDHW",
+        "uiProfiles": ["DHWTemperature"],
+        "uiClass": "HitachiHeatingSystem",
+        "qualifiedName": "modbus:YutakiV2DHWTComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "modbus:ControlDHWState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "modbus:ControlDHWSettingTemperatureState",
+          "type": 1,
+          "value": 54
+        },
+        {
+          "name": "modbus:ControlAntiLegionellaState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "modbus:ControlAntiLegionellaSettingTemperatureState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "modbus:DHWModeState",
+          "type": 3,
+          "value": "standard"
+        },
+        {
+          "name": "modbus:StatusDHWState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "modbus:StatusDHWSettingTemperatureState",
+          "type": 1,
+          "value": 54
+        },
+        {
+          "name": "modbus:StatusAntiLegionellaState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "modbus:StatusAntiLegionellaSettingTemperatureState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "core:DHWTemperatureState",
+          "type": 1,
+          "value": 46
+        },
+        {
+          "name": "modbus:YutakiTargetBoostModeState",
+          "type": 3,
+          "value": "no request"
+        },
+        {
+          "name": "modbus:YutakiBoostModeState",
+          "type": 3,
+          "value": "disabled"
+        },
+        {
+          "name": "modbus:AlarmNumberState",
+          "type": 1,
+          "value": 0
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "61435d6a-4ba6-4c96-b7b5-105bb31d3b87",
+      "widget": "HitachiDHW",
+      "type": 1,
+      "oid": "0e9ca3df-ac9e-4f5d-a9ac-0798a1fed947",
+      "uiClass": "HitachiHeatingSystem"
+    },
+    {
+      "available": true,
+      "controllableName": "io:StackComponent",
+      "creationTime": 1634919123000,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedSomfyDiscover",
+            "nparams": 1
+          },
+          {
+            "commandName": "discover1WayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "discoverActuators",
+            "nparams": 1
+          },
+          {
+            "commandName": "discoverSensors",
+            "nparams": 1
+          },
+          {
+            "commandName": "discoverSomfyUnsetActuators",
+            "nparams": 0
+          },
+          {
+            "commandName": "joinNetwork",
+            "nparams": 0
+          },
+          {
+            "commandName": "resetNetworkSecurity",
+            "nparams": 0
+          },
+          {
+            "commandName": "shareNetwork",
+            "nparams": 0
+          }
+        ],
+        "dataProperties": [],
+        "qualifiedName": "io:StackComponent",
+        "states": [],
+        "type": "PROTOCOL_GATEWAY",
+        "uiClass": "ProtocolGateway",
+        "uiProfiles": ["Specific"],
+        "widgetName": "IOStack"
+      },
+      "deviceURL": "io://1234-5678-5643/5705986",
+      "enabled": true,
+      "label": "Patio Protocol Gateway",
+      "lastUpdateTime": 1634919123000,
+      "oid": "3de91037-72a6-497f-9c10-fc577aa8f3a1",
+      "placeOID": "61435d6a-4ba6-4c96-b7b5-105bb31d3b87",
+      "shortcut": false,
+      "type": 5,
+      "uiClass": "ProtocolGateway",
+      "widget": "IOStack"
+    },
+    {
+      "creationTime": 1673778881000,
+      "lastUpdateTime": 1673778881000,
+      "label": "Living room heater",
+      "deviceURL": "modbuslink://1234-5678-5643/1#1",
+      "shortcut": false,
+      "controllableName": "modbuslink:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointMBLComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshAbsenceEndDate",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshAbsenceMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshAbsenceStartDate",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshBoostActivation",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDateTime",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshErrorCode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshFridayTimeProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshHeatingLevel",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshIdentifier",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshLanguage",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMaximumHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMondayTimeProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshOccupancyActivation",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshOnOffState",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshOperatingMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshSaturdayTimeProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshSundayTimeProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshThursdayTimeProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshTuesdayTimeProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWednesdayTimeProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "setAbsenceEndDate",
+            "nparams": 1
+          },
+          {
+            "commandName": "setAbsenceMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setAbsenceStartDate",
+            "nparams": 1
+          },
+          {
+            "commandName": "setBoostActivation",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDateTime",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHeatingLevel",
+            "nparams": 1
+          },
+          {
+            "commandName": "setLanguage",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMaximumHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMondayTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOccupancyActivation",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOnOff",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOperatingMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setSaturdayTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setSundayTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setWednesdayTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "setFridayTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setThursdayTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTuesdayTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshDiagnostic",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshSetpointLoweringTemperatureInProgMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStaticStates1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStaticStates2",
+            "nparams": 0
+          },
+          {
+            "commandName": "setSetpointLoweringTemperatureInProgMode",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AbsenceEndDateState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AbsenceStartDateState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["active", "inactive"],
+            "qualifiedName": "core:BoostActivationState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:DateTimeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ErrorCodeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:FridayTimeProgramState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:IdentifierState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:LanguageState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MaximumHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:MondayTimeProgramState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["active", "inactive"],
+            "qualifiedName": "core:OccupancyActivationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:OccupancySensorStatusState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:OnOffState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "antifreeze",
+              "auto",
+              "away",
+              "eco",
+              "frostprotection",
+              "manual",
+              "max",
+              "normal",
+              "off",
+              "on",
+              "prog",
+              "program",
+              "boost"
+            ],
+            "qualifiedName": "core:OperatingModeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:SaturdayTimeProgramState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:SundayTimeProgramState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "boost",
+              "comfort",
+              "comfort-1",
+              "comfort-2",
+              "eco",
+              "frostprotection",
+              "off",
+              "secured"
+            ],
+            "qualifiedName": "core:TargetHeatingLevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ThursdayTimeProgramState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:TuesdayTimeProgramState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:VersionState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:WednesdayTimeProgramState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on", "prog"],
+            "qualifiedName": "modbuslink:AbsenceModeState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "modbuslink:SetpointLoweringTemperatureInProgModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["boost", "comfort", "eco"],
+            "qualifiedName": "modbuslink:TargetHeatingLevelState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint",
+        "uiProfiles": [
+          "StatefulHeatingLevel",
+          "HeatingLevel",
+          "StatefulThermostat",
+          "Thermostat",
+          "StatefulSwitchable",
+          "Switchable"
+        ],
+        "uiClass": "HeatingSystem",
+        "uiClassifiers": ["emitter"],
+        "qualifiedName": "modbuslink:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointMBLComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "modbuslink:AbsenceModeState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:MaximumHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:IdentifierState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:MondayTimeProgramState",
+          "type": 11,
+          "value": {
+            "monday": [
+              {
+                "start": "06:00",
+                "end": "08:00"
+              },
+              {
+                "start": "18:00",
+                "end": "22:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              }
+            ]
+          }
+        },
+        {
+          "name": "core:TuesdayTimeProgramState",
+          "type": 11,
+          "value": {
+            "tuesday": [
+              {
+                "start": "06:00",
+                "end": "08:00"
+              },
+              {
+                "start": "18:00",
+                "end": "22:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              }
+            ]
+          }
+        },
+        {
+          "name": "core:WednesdayTimeProgramState",
+          "type": 11,
+          "value": {
+            "wednesday": [
+              {
+                "start": "06:00",
+                "end": "08:00"
+              },
+              {
+                "start": "12:00",
+                "end": "14:00"
+              },
+              {
+                "start": "18:00",
+                "end": "22:00"
+              }
+            ]
+          }
+        },
+        {
+          "name": "core:ThursdayTimeProgramState",
+          "type": 11,
+          "value": {
+            "thursday": [
+              {
+                "start": "06:00",
+                "end": "08:00"
+              },
+              {
+                "start": "18:00",
+                "end": "22:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              }
+            ]
+          }
+        },
+        {
+          "name": "core:FridayTimeProgramState",
+          "type": 11,
+          "value": {
+            "friday": [
+              {
+                "start": "06:00",
+                "end": "08:00"
+              },
+              {
+                "start": "18:00",
+                "end": "22:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              }
+            ]
+          }
+        },
+        {
+          "name": "core:SaturdayTimeProgramState",
+          "type": 11,
+          "value": {
+            "saturday": [
+              {
+                "start": "08:00",
+                "end": "22:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              }
+            ]
+          }
+        },
+        {
+          "name": "core:SundayTimeProgramState",
+          "type": 11,
+          "value": {
+            "sunday": [
+              {
+                "start": "08:00",
+                "end": "22:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              }
+            ]
+          }
+        },
+        {
+          "name": "core:TargetTemperatureState",
+          "type": 2,
+          "value": 7.0
+        },
+        {
+          "name": "modbuslink:SetpointLoweringTemperatureInProgModeState",
+          "type": 1,
+          "value": 15
+        },
+        {
+          "name": "core:OperatingModeState",
+          "type": 3,
+          "value": "manual"
+        },
+        {
+          "name": "core:BoostActivationState",
+          "type": 3,
+          "value": "active"
+        },
+        {
+          "name": "core:OccupancyActivationState",
+          "type": 3,
+          "value": "active"
+        },
+        {
+          "name": "modbuslink:TargetHeatingLevelState",
+          "type": 3,
+          "value": "comfort"
+        },
+        {
+          "name": "core:TargetHeatingLevelState",
+          "type": 3,
+          "value": "comfort"
+        },
+        {
+          "name": "core:OnOffState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:OccupancySensorStatusState",
+          "type": 3,
+          "value": "active"
+        },
+        {
+          "name": "core:VersionState",
+          "type": 1,
+          "value": 67
+        },
+        {
+          "name": "core:AbsenceEndDateState",
+          "type": 11,
+          "value": {
+            "month": 12,
+            "hour": 18,
+            "year": 2023,
+            "weekday": 4,
+            "day": 22,
+            "minute": 32,
+            "second": 39
+          }
+        },
+        {
+          "name": "core:AbsenceStartDateState",
+          "type": 11,
+          "value": {
+            "month": 12,
+            "hour": 20,
+            "year": 2023,
+            "weekday": 6,
+            "day": 17,
+            "minute": 22,
+            "second": 57
+          }
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "widget": "AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint",
+      "type": 1,
+      "uiClass": "HeatingSystem"
+    },
+    {
+      "creationTime": 1673778881000,
+      "lastUpdateTime": 1673778881000,
+      "label": "Living room temperature",
+      "deviceURL": "modbuslink://1234-5678-5643/1#2",
+      "shortcut": false,
+      "controllableName": "modbuslink:TemperatureInCelciusMBLSystemDeviceSensor",
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TemperatureState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "TemperatureSensor",
+        "uiProfiles": ["Temperature"],
+        "uiClass": "TemperatureSensor",
+        "qualifiedName": "modbuslink:TemperatureInCelciusMBLSystemDeviceSensor",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:TemperatureState",
+          "type": 2,
+          "value": 21.1
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:MeasuredValueType",
+          "type": 3,
+          "value": "core:TemperatureInCelcius"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "mainSupply"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "widget": "TemperatureSensor",
+      "type": 2,
+      "uiClass": "TemperatureSensor"
+    }
+  ],
+  "features": [],
+  "gateways": [
+    {
+      "alive": true,
+      "connectivity": {
+        "protocolVersion": "2021.5.4",
+        "status": "OK"
+      },
+      "functions": "INTERNET_AUTHORIZATION,SCENARIO_DOWNLOAD,SCENARIO_AUTO_LAUNCHING,SCENARIO_TELECO_LAUNCHING,INTERNET_UPLOAD,INTERNET_UPDATE,TRIGGERS_SENSORS",
+      "gatewayId": "1234-5678-5643",
+      "mode": "ACTIVE",
+      "placeOID": "61435d6a-4ba6-4c96-b7b5-105bb31d3b87",
+      "subType": 0,
+      "syncInProgress": false,
+      "timeReliable": true,
+      "type": 105,
+      "upToDate": true,
+      "updateStatus": "UP_TO_DATE"
+    }
+  ],
+  "id": "SETUP-1234-5678-5643",
+  "lastUpdateTime": 1634918922000,
+  "location": {
+    "addressLine1": "**",
+    "city": "**",
+    "country": "**",
+    "countryCode": "FR",
+    "creationTime": 1634918922000,
+    "dawnOffset": 0,
+    "duskOffset": 0,
+    "lastUpdateTime": 1641380642000,
+    "latitude": "**",
+    "longitude": "**",
+    "postalCode": "**",
+    "summerSolsticeDuskMinutes": 1290,
+    "tariffSettings": {
+      "tariffMode": "offPeakHours",
+      "tariffs": [
+        {
+          "name": "tariff2",
+          "startTime": "00:00"
+        },
+        {
+          "name": "tariff1",
+          "startTime": "00:54"
+        },
+        {
+          "name": "tariff2",
+          "startTime": "06:54"
+        },
+        {
+          "name": "tariff1",
+          "startTime": "12:24"
+        },
+        {
+          "name": "tariff2",
+          "startTime": "14:24"
+        }
+      ]
+    },
+    "timezone": "Europe/Paris",
+    "twilightAngle": "CIVIL",
+    "twilightCity": "paris",
+    "twilightMode": 2,
+    "twilightOffsetEnabled": false,
+    "winterSolsticeDuskMinutes": 990
+  },
+  "oid": "49aecc89-1993-49d8-aaea-0be205662751",
+  "resellerDelegationType": "NEVER",
+  "rootPlace": {
+    "creationTime": 1634918922000,
+    "label": "My Home",
+    "lastUpdateTime": 1634918922000,
+    "oid": "61435d6a-4ba6-4c96-b7b5-105bb31d3b87",
+    "subPlaces": [],
+    "type": 0
+  },
+  "zones": []
+}

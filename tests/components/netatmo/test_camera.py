@@ -54,10 +54,11 @@ async def test_entity(
 
 
 @pytest.mark.parametrize(
-    ("camera_type", "camera_id", "camera_entity"),
+    ("camera_type", "camera_id", "camera_entity", "expected_state"),
     [
-        ("NACamera", "12:34:56:00:f1:62", "camera.hall"),
-        ("NOC", "12:34:56:10:b9:0e", "camera.front"),
+        ("NACamera", "12:34:56:00:f1:62", "camera.hall", "streaming"),
+        ("NOC", "12:34:56:10:b9:0e", "camera.front", "streaming"),
+        ("NDB", "12:34:56:10:f1:66", "camera.netatmo_doorbell", "idle"),
     ],
 )
 async def test_setup_component_with_webhook(
@@ -67,6 +68,7 @@ async def test_setup_component_with_webhook(
     camera_type: str,
     camera_id: str,
     camera_entity: str,
+    expected_state: str,
 ) -> None:
     """Test setup with webhook."""
     with selected_platforms([Platform.CAMERA]):
@@ -78,7 +80,8 @@ async def test_setup_component_with_webhook(
     await hass.async_block_till_done()
 
     # Test on/off camera events
-    assert hass.states.get(camera_entity).state == "streaming"
+    assert hass.states.get(camera_entity).state == expected_state
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is True
     response = {
         "event_type": "off",
         "device_id": camera_id,
@@ -89,6 +92,7 @@ async def test_setup_component_with_webhook(
     await simulate_webhook(hass, webhook_id, response)
 
     assert hass.states.get(camera_entity).state == "idle"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
     response = {
         "event_type": "on",
@@ -99,7 +103,8 @@ async def test_setup_component_with_webhook(
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    assert hass.states.get(camera_entity).state == "streaming"
+    assert hass.states.get(camera_entity).state == expected_state
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
     # Test turn_on/turn_off services
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
@@ -441,10 +446,11 @@ async def test_service_set_camera_light_invalid_type(
 
 
 @pytest.mark.parametrize(
-    ("camera_type", "camera_id", "camera_entity"),
+    ("camera_type", "camera_id", "camera_entity", "expected_state"),
     [
-        ("NACamera", "12:34:56:00:f1:62", "camera.hall"),
-        ("NOC", "12:34:56:10:b9:0e", "camera.front"),
+        ("NACamera", "12:34:56:00:f1:62", "camera.hall", "streaming"),
+        ("NOC", "12:34:56:10:b9:0e", "camera.front", "streaming"),
+        ("NDB", "12:34:56:10:f1:66", "camera.netatmo_doorbell", "idle"),
     ],
 )
 async def test_camera_reconnect_webhook(
@@ -453,6 +459,7 @@ async def test_camera_reconnect_webhook(
     camera_type: str,
     camera_id: str,
     camera_entity: str,
+    expected_state: str,
 ) -> None:
     """Test webhook event on camera reconnect."""
     fake_post_hits = 0
@@ -467,12 +474,12 @@ async def test_camera_reconnect_webhook(
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post
@@ -511,7 +518,8 @@ async def test_camera_reconnect_webhook(
         assert fake_post_hits >= calls
 
         # Real camera disconnect
-        assert hass.states.get(camera_entity).state == "streaming"
+        assert hass.states.get(camera_entity).state == expected_state
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
         response = {
             "event_type": "disconnection",
             "device_id": camera_id,
@@ -522,6 +530,7 @@ async def test_camera_reconnect_webhook(
         await simulate_webhook(hass, webhook_id, response)
 
         assert hass.states.get(camera_entity).state == "idle"
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
         response = {
             "event_type": "connection",
@@ -532,7 +541,8 @@ async def test_camera_reconnect_webhook(
         }
         await simulate_webhook(hass, webhook_id, response)
 
-        assert hass.states.get(camera_entity).state == "streaming"
+        assert hass.states.get(camera_entity).state == expected_state
+        assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
 
 @pytest.mark.parametrize(
@@ -577,12 +587,12 @@ async def test_camera_webhook_consistency(
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ) as mock_webhook,
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post
@@ -697,12 +707,12 @@ async def test_setup_component_no_devices(
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post_no_data
@@ -740,12 +750,12 @@ async def test_camera_image_raises_exception(
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["camera"]),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["camera"]),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post

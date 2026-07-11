@@ -1,12 +1,10 @@
 """DataUpdateCoordinator for System Bridge."""
 
-from __future__ import annotations
-
 from asyncio import Task
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from systembridgeconnector.exceptions import (
     AuthenticationException,
@@ -36,18 +34,20 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, GET_DATA_WAIT_TIMEOUT, MODULES
 from .data import SystemBridgeData
 
+type SystemBridgeConfigEntry = ConfigEntry[SystemBridgeDataUpdateCoordinator]
+
 
 class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData]):
     """Class to manage fetching System Bridge data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: SystemBridgeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         LOGGER: logging.Logger,
         *,
-        entry: ConfigEntry,
+        entry: SystemBridgeConfigEntry,
     ) -> None:
         """Initialize global System Bridge data updater."""
         self.title = entry.title
@@ -168,6 +168,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             )
             await self.clean_disconnect()
 
+    @override
     async def _async_update_data(self) -> SystemBridgeData:
         """Update System Bridge data from WebSocket."""
         if self.listen_task is None or not self.websocket_client.connected:

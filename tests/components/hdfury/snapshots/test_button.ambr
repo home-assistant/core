@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_button_entities[button.hdfury_vrroom_02_issue_hotplug-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_button_entities[button.hdfury_vrroom_02_issue_hotplug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Issue hotplug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Issue hotplug',
     }),
     'context': <ANY>,
     'entity_id': 'button.hdfury_vrroom_02_issue_hotplug',
@@ -50,8 +51,9 @@
 # ---
 # name: test_button_entities[button.hdfury_vrroom_02_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,8 +89,8 @@
 # name: test_button_entities[button.hdfury_vrroom_02_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'HDFury VRROOM-02 Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.hdfury_vrroom_02_restart',

@@ -10,6 +10,7 @@ from homeassistant.components.websocket_api.messages import (
 )
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Context, Event, HomeAssistant, State, callback
+from homeassistant.util.json import json_loads
 
 from tests.common import async_capture_events
 
@@ -50,6 +51,19 @@ async def test_cached_event_message(hass: HomeAssistant) -> None:
     assert cache_info.hits == 3
     assert cache_info.misses == 2
     assert cache_info.currsize == 2
+
+
+async def test_cached_event_message_is_valid_json(hass: HomeAssistant) -> None:
+    """Test the cached event message is valid JSON with the id appended."""
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    hass.states.async_set("light.window", "on")
+    await hass.async_block_till_done()
+
+    parsed = json_loads(cached_event_message(b"2", events[0]))
+
+    assert parsed["id"] == 2
+    assert parsed["type"] == "event"
+    assert parsed["event"]["event_type"] == EVENT_STATE_CHANGED
 
 
 async def test_cached_event_message_with_different_idens(hass: HomeAssistant) -> None:
@@ -290,9 +304,9 @@ async def test_message_to_json_bytes(caplog: pytest.LogCaptureFixture) -> None:
 
     json_str2 = message_to_json_bytes({"id": 1, "message": _Unserializeable()})
 
-    assert (
-        json_str2
-        == b'{"id":1,"type":"result","success":false,"error":{"code":"unknown_error","message":"Invalid JSON in response"}}'
+    assert json_str2 == (
+        b'{"id":1,"type":"result","success":false,"error":'
+        b'{"code":"unknown_error","message":"Invalid JSON in response"}}'
     )
     assert "Unable to serialize to JSON" in caplog.text
 

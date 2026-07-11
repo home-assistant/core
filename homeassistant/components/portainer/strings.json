@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The Portainer instance ID does not match the previously configured instance. This can occur if the device was reset or reconfigured outside of Home Assistant."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -65,8 +66,23 @@
       "images_prune": {
         "name": "Prune unused images"
       },
+      "kill_container": {
+        "name": "Kill container"
+      },
+      "pause_container": {
+        "name": "Pause container"
+      },
+      "recreate_container": {
+        "name": "Recreate container"
+      },
       "restart_container": {
         "name": "Restart container"
+      },
+      "resume_container": {
+        "name": "Resume container"
+      },
+      "volumes_prune": {
+        "name": "Prune unused volumes"
       }
     },
     "sensor": {
@@ -161,6 +177,12 @@
       },
       "volume_disk_usage_total_size": {
         "name": "Volume disk usage total size"
+      },
+      "volume_driver": {
+        "name": "Volume driver"
+      },
+      "volume_size": {
+        "name": "Volume size"
       }
     },
     "switch": {
@@ -170,28 +192,24 @@
       "stack": {
         "name": "Stack"
       }
+    },
+    "update": {
+      "container_image_update": {
+        "name": "Image update available"
+      }
     }
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "An error occurred while trying to connect to the Portainer instance: {error}"
-    },
-    "cannot_connect_no_details": {
       "message": "An error occurred while trying to connect to the Portainer instance."
     },
     "invalid_auth": {
-      "message": "An error occurred while trying to authenticate: {error}"
-    },
-    "invalid_auth_no_details": {
       "message": "An error occurred while trying to authenticate."
     },
     "invalid_target": {
       "message": "Invalid device targeted."
     },
     "timeout_connect": {
-      "message": "A timeout occurred while trying to connect to the Portainer instance: {error}"
-    },
-    "timeout_connect_no_details": {
       "message": "A timeout occurred while trying to connect to the Portainer instance."
     }
   },
@@ -213,6 +231,29 @@
         }
       },
       "name": "Prune unused images"
+    },
+    "recreate_container": {
+      "description": "Recreates a container on a Portainer endpoint. This is more disruptive than a restart as the container will be stopped, removed, and then re-created with the same configuration. Use with caution.",
+      "fields": {
+        "container_device_id": {
+          "description": "The container to recreate.",
+          "name": "Container"
+        },
+        "pull_image": {
+          "description": "Whether to pull the image before recreating the container. This can be used to update the container to the latest version of the image.",
+          "name": "Pull image"
+        },
+        "timeout": {
+          "description": "The time to wait for the container to stop before killing it. If not provided, a default of 5 minutes will be used.",
+          "name": "Timeout"
+        }
+      },
+      "name": "Recreate container"
+    }
+  },
+  "system_health": {
+    "info": {
+      "can_reach_server": "Reach Portainer server"
     }
   }
 }

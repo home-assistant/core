@@ -1,6 +1,6 @@
 """Config flow for the IOmeter integration."""
 
-from typing import Any, Final
+from typing import Any, Final, override
 
 from iometer import (
     IOmeterClient,
@@ -28,6 +28,7 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
         self._host: str
         self._meter_number: str
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -68,6 +69,7 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"meter_number": self._meter_number},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_async_setup_entry[update.my_nc_url_local-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,19 +39,19 @@
 # name: test_async_setup_entry[update.my_nc_url_local-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'auto_update': False,
-      'display_precision': 0,
-      'entity_picture': '/api/brands/integration/nextcloud/icon.png',
-      'friendly_name': 'my.nc_url.local',
-      'in_progress': False,
-      'installed_version': '28.0.4.1',
-      'latest_version': '28.0.4.1',
-      'release_summary': None,
-      'release_url': 'https://nextcloud.com/changelog/#28-0-4',
-      'skipped_version': None,
-      'supported_features': <UpdateEntityFeature: 0>,
-      'title': None,
-      'update_percentage': None,
+      <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
+      <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/nextcloud/icon.png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my.nc_url.local',
+      <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
+      <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '28.0.4.1',
+      <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '28.0.4.1',
+      <UpdateEntityStateAttribute.RELEASE_SUMMARY: 'release_summary'>: None,
+      <UpdateEntityStateAttribute.RELEASE_URL: 'release_url'>: 'https://nextcloud.com/changelog/#28-0-4',
+      <UpdateEntityStateAttribute.SKIPPED_VERSION: 'skipped_version'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <UpdateEntityFeature: 0>,
+      <UpdateEntityStateAttribute.TITLE: 'title'>: None,
+      <UpdateEntityStateAttribute.UPDATE_PERCENTAGE: 'update_percentage'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'update.my_nc_url_local',

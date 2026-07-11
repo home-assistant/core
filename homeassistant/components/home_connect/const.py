@@ -1,7 +1,5 @@
 """Constants for the Home Connect integration."""
 
-from typing import cast
-
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey, StatusKey
 
 from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
@@ -44,6 +42,7 @@ BSH_EVENT_PRESENT_STATE_CONFIRMED = "BSH.Common.EnumType.EventPresentState.Confi
 BSH_EVENT_PRESENT_STATE_OFF = "BSH.Common.EnumType.EventPresentState.Off"
 
 
+BSH_OPERATION_STATE_DELAYED_START = "BSH.Common.EnumType.OperationState.DelayedStart"
 BSH_OPERATION_STATE_RUN = "BSH.Common.EnumType.OperationState.Run"
 BSH_OPERATION_STATE_PAUSE = "BSH.Common.EnumType.OperationState.Pause"
 BSH_OPERATION_STATE_FINISHED = "BSH.Common.EnumType.OperationState.Finished"
@@ -65,6 +64,7 @@ BSH_DOOR_STATE_OPEN = "BSH.Common.EnumType.DoorState.Open"
 
 SERVICE_SET_PROGRAM_AND_OPTIONS = "set_program_and_options"
 SERVICE_SETTING = "change_setting"
+SERVICE_START_SELECTED_PROGRAM = "start_selected_program"
 
 ATTR_AFFECTS_TO = "affects_to"
 ATTR_KEY = "key"
@@ -75,13 +75,36 @@ AFFECTS_TO_ACTIVE_PROGRAM = "active_program"
 AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
 
 
-TRANSLATION_KEYS_PROGRAMS_MAP = {
-    bsh_key_to_translation_key(program.value): cast(ProgramKey, program)
-    for program in ProgramKey
-    if program != ProgramKey.UNKNOWN
+FAVORITE_PROGRAMS = {
+    ProgramKey.BSH_COMMON_FAVORITE_001,
+    ProgramKey.BSH_COMMON_FAVORITE_002,
+    ProgramKey.BSH_COMMON_FAVORITE_003,
+    ProgramKey.BSH_COMMON_FAVORITE_004,
+    ProgramKey.BSH_COMMON_FAVORITE_005,
+    ProgramKey.BSH_COMMON_FAVORITE_006,
+    ProgramKey.BSH_COMMON_FAVORITE_007,
+    ProgramKey.BSH_COMMON_FAVORITE_008,
+    ProgramKey.BSH_COMMON_FAVORITE_009,
+    ProgramKey.BSH_COMMON_FAVORITE_010,
+    ProgramKey.BSH_COMMON_FAVORITE_011,
+    ProgramKey.BSH_COMMON_FAVORITE_012,
+    ProgramKey.BSH_COMMON_FAVORITE_013,
+    ProgramKey.BSH_COMMON_FAVORITE_014,
+    ProgramKey.BSH_COMMON_FAVORITE_015,
+    ProgramKey.BSH_COMMON_FAVORITE_016,
+    ProgramKey.BSH_COMMON_FAVORITE_017,
+    ProgramKey.BSH_COMMON_FAVORITE_018,
+    ProgramKey.BSH_COMMON_FAVORITE_019,
+    ProgramKey.BSH_COMMON_FAVORITE_020,
 }
 
-PROGRAMS_TRANSLATION_KEYS_MAP = {
+TRANSLATION_KEYS_PROGRAMS_MAP = {
+    bsh_key_to_translation_key(program.value): program
+    for program in ProgramKey
+    if program not in (ProgramKey.UNKNOWN, *FAVORITE_PROGRAMS)
+}
+
+PROGRAMS_TRANSLATION_KEYS_MAP: dict[ProgramKey, str] = {
     value: key for key, value in TRANSLATION_KEYS_PROGRAMS_MAP.items()
 }
 
@@ -394,17 +417,29 @@ OLD_NEW_UNIQUE_ID_SUFFIX_MAP = {
     "Remote Control": StatusKey.BSH_COMMON_REMOTE_CONTROL_ACTIVE,
     "Remote Start": StatusKey.BSH_COMMON_REMOTE_CONTROL_START_ALLOWED,
     "Supermode Freezer": SettingKey.REFRIGERATION_FRIDGE_FREEZER_SUPER_MODE_FREEZER,
-    "Supermode Refrigerator": SettingKey.REFRIGERATION_FRIDGE_FREEZER_SUPER_MODE_REFRIGERATOR,
+    "Supermode Refrigerator": (
+        SettingKey.REFRIGERATION_FRIDGE_FREEZER_SUPER_MODE_REFRIGERATOR
+    ),
     "Dispenser Enabled": SettingKey.REFRIGERATION_COMMON_DISPENSER_ENABLED,
     "Internal Light": SettingKey.REFRIGERATION_COMMON_LIGHT_INTERNAL_POWER,
     "External Light": SettingKey.REFRIGERATION_COMMON_LIGHT_EXTERNAL_POWER,
     "Chiller Door": StatusKey.REFRIGERATION_COMMON_DOOR_CHILLER,
     "Freezer Door": StatusKey.REFRIGERATION_COMMON_DOOR_FREEZER,
     "Refrigerator Door": StatusKey.REFRIGERATION_COMMON_DOOR_REFRIGERATOR,
-    "Door Alarm Freezer": EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_FREEZER,
-    "Door Alarm Refrigerator": EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_REFRIGERATOR,
-    "Temperature Alarm Freezer": EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_TEMPERATURE_ALARM_FREEZER,
-    "Bean Container Empty": EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_BEAN_CONTAINER_EMPTY,
-    "Water Tank Empty": EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_WATER_TANK_EMPTY,
+    "Door Alarm Freezer": (
+        EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_FREEZER
+    ),
+    "Door Alarm Refrigerator": (
+        EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_REFRIGERATOR
+    ),
+    "Temperature Alarm Freezer": (
+        EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_TEMPERATURE_ALARM_FREEZER
+    ),
+    "Bean Container Empty": (
+        EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_BEAN_CONTAINER_EMPTY
+    ),
+    "Water Tank Empty": (
+        EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_WATER_TANK_EMPTY
+    ),
     "Drip Tray Full": EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_DRIP_TRAY_FULL,
 }

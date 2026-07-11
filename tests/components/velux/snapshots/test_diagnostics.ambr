@@ -30,6 +30,7 @@
                 'current_position': 70,
                 'device_class': 'window',
                 'friendly_name': 'Test Window',
+                'is_closed': False,
                 'supported_features': 15,
               }),
               'entity_id': 'cover.test_window',

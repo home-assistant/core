@@ -1,9 +1,7 @@
 """Platform for the Garadget cover component."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import requests
 import voluptuous as vol
@@ -139,16 +137,19 @@ class GaradgetCover(CoverEntity):
             self.remove_token()
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the cover."""
         return self._name
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         data = {}
@@ -168,6 +169,7 @@ class GaradgetCover(CoverEntity):
         return data
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._state is None:
@@ -207,18 +209,21 @@ class GaradgetCover(CoverEntity):
         """Check the state of the service during an operation."""
         self.schedule_update_ha_state(True)
 
+    @override
     def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if self._state not in ["close", "closing"]:
             self._put_command("setState", "close")
             self._start_watcher("close")
 
+    @override
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self._state not in ["open", "opening"]:
             self._put_command("setState", "open")
             self._start_watcher("open")
 
+    @override
     def stop_cover(self, **kwargs: Any) -> None:
         """Stop the door where it is."""
         if self._state != "stopped":
@@ -254,7 +259,10 @@ class GaradgetCover(CoverEntity):
 
     def _get_variable(self, var):
         """Get latest status."""
-        url = f"{self.particle_url}/v1/devices/{self.device_id}/{var}?access_token={self.access_token}"
+        url = (
+            f"{self.particle_url}/v1/devices/{self.device_id}"
+            f"/{var}?access_token={self.access_token}"
+        )
         ret = requests.get(url, timeout=10)
         result = {}
         for pairs in ret.json()["result"].split("|"):

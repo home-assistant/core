@@ -1,6 +1,5 @@
 """The pushover component."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from pushover_complete import BadAPIRequestError, PushoverAPI
 from requests.exceptions import RequestException

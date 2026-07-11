@@ -1,7 +1,5 @@
 """Support for the AEMET OpenData diagnostics."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aemet_opendata.const import AOD_COORDS, AOD_IMG_BYTES

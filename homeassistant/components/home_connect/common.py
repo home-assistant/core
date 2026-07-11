@@ -19,7 +19,7 @@ from .coordinator import (
     HomeConnectApplianceData,
     HomeConnectConfigEntry,
 )
-from .entity import HomeConnectEntity, HomeConnectOptionEntity
+from .entity import HomeConnectEntity
 
 
 def should_add_option_entity(
@@ -48,7 +48,7 @@ def _create_option_entities(
     known_entity_unique_ids: dict[str, str],
     get_option_entities_for_appliance: Callable[
         [HomeConnectApplianceCoordinator, er.EntityRegistry],
-        list[HomeConnectOptionEntity],
+        list[HomeConnectEntity],
     ],
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
@@ -78,7 +78,7 @@ def _handle_paired_or_connected_appliance(
     ],
     get_option_entities_for_appliance: Callable[
         [HomeConnectApplianceCoordinator, er.EntityRegistry],
-        list[HomeConnectOptionEntity],
+        list[HomeConnectEntity],
     ]
     | None,
     changed_options_listener_remove_callbacks: dict[str, list[Callable[[], None]]],
@@ -108,27 +108,32 @@ def _handle_paired_or_connected_appliance(
                 )
                 if entity.unique_id not in known_entity_unique_ids
             )
-            for event_key in (
-                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-                EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+            if not (
+                callbacks_for_appliance := changed_options_listener_remove_callbacks[
+                    appliance_ha_id
+                ]
             ):
-                changed_options_listener_remove_callback = (
-                    appliance_coordinator.async_add_listener(
-                        partial(
-                            _create_option_entities,
-                            entity_registry,
-                            appliance_coordinator,
-                            known_entity_unique_ids,
-                            get_option_entities_for_appliance,
-                            async_add_entities,
-                        ),
-                        event_key,
+                for event_key in (
+                    EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                    EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+                ):
+                    changed_options_listener_remove_callback = (
+                        appliance_coordinator.async_add_listener(
+                            partial(
+                                _create_option_entities,
+                                entity_registry,
+                                appliance_coordinator,
+                                known_entity_unique_ids,
+                                get_option_entities_for_appliance,
+                                async_add_entities,
+                            ),
+                            event_key,
+                        )
                     )
-                )
-                entry.async_on_unload(changed_options_listener_remove_callback)
-                changed_options_listener_remove_callbacks[appliance_ha_id].append(
-                    changed_options_listener_remove_callback
-                )
+                    entry.async_on_unload(changed_options_listener_remove_callback)
+                    callbacks_for_appliance.append(
+                        changed_options_listener_remove_callback
+                    )
         known_entity_unique_ids.update(
             {cast(str, entity.unique_id): appliance_ha_id for entity in entities_to_add}
         )
@@ -161,7 +166,7 @@ def setup_home_connect_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
     get_option_entities_for_appliance: Callable[
         [HomeConnectApplianceCoordinator, er.EntityRegistry],
-        list[HomeConnectOptionEntity],
+        list[HomeConnectEntity],
     ]
     | None = None,
 ) -> None:

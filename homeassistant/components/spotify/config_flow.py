@@ -1,12 +1,10 @@
 """Config flow for Spotify."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
-from spotifyaio import SpotifyClient
+from spotifyaio import SpotifyClient, SpotifyForbiddenError
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_TOKEN
@@ -25,15 +23,18 @@ class SpotifyFlowHandler(
     VERSION = 1
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": ",".join(SPOTIFY_SCOPES)}
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for Spotify."""
         spotify = SpotifyClient(async_get_clientsession(self.hass))
@@ -41,6 +42,9 @@ class SpotifyFlowHandler(
 
         try:
             current_user = await spotify.get_current_user()
+        except SpotifyForbiddenError:
+            self.logger.exception("User is not subscribed to Spotify")
+            return self.async_abort(reason="user_not_premium")
         except Exception:
             self.logger.exception("Error while connecting to Spotify")
             return self.async_abort(reason="connection_error")

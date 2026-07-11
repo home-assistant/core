@@ -1,9 +1,7 @@
 """Update entities for Linn devices."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from async_upnp_client.client import UpnpError
@@ -13,12 +11,12 @@ from homeassistant.components.update import (
     UpdateEntity,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import OpenhomeConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,14 +24,14 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: OpenhomeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up update entities for Reolink component."""
 
     _LOGGER.debug("Setting up config entry: %s", config_entry.unique_id)
 
-    device = hass.data[DOMAIN][config_entry.entry_id]
+    device = config_entry.runtime_data
 
     entity = OpenhomeUpdateEntity(device)
 
@@ -53,7 +51,7 @@ class OpenhomeUpdateEntity(UpdateEntity):
     def __init__(self, device):
         """Initialize a Linn DS update entity."""
         self._device = device
-        self._attr_unique_id = f"{device.uuid()}-update"
+        self._attr_unique_id = f"{device.uuid()}-update"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, device.uuid()),
@@ -86,6 +84,7 @@ class OpenhomeUpdateEntity(UpdateEntity):
             ]
             self._attr_release_url = software_status["update_info"]["releasenotesuri"]
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
