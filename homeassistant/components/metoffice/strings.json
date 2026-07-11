@@ -27,5 +27,21 @@
         "title": "Connect to the UK Met Office"
       }
     }
+  },
+  "services": {
+    "set_forecast_location": {
+      "description": "Updates the location used for the weather forecast service.",
+      "fields": {
+        "latitude": {
+          "description": "Latitude of forecast location.",
+          "name": "[%key:common::config_flow::data::latitude%]"
+        },
+        "longitude": {
+          "description": "Longitude of forecast location.",
+          "name": "[%key:common::config_flow::data::longitude%]"
+        }
+      },
+      "name": "Set weather forecast location"
+    }
   }
 }

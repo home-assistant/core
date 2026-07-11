@@ -1,0 +1,20 @@
+set_forecast_location:
+  fields:
+    latitude:
+      required: false
+      example: 32.87336
+      selector:
+        number:
+          mode: box
+          min: -90
+          max: 90
+          step: any
+    longitude:
+      required: false
+      example: 117.22743
+      selector:
+        number:
+          mode: box
+          min: -180
+          max: 180
+          step: any

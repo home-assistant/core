@@ -13,8 +13,9 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SLOW_SCAN_INTERVAL
 from .coordinator import (
@@ -22,8 +23,17 @@ from .coordinator import (
     MetOfficeRuntimeData,
     MetOfficeUpdateCoordinator,
 )
+from .services import async_setup_services
 
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Met Office integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MetOfficeConfigEntry) -> bool:
