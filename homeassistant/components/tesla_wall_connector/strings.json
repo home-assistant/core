@@ -39,6 +39,9 @@
       "current_c_a": {
         "name": "Phase C current"
       },
+      "energy_kwh": {
+        "name": "Lifetime energy"
+      },
       "grid_hz": {
         "name": "Grid frequency"
       },
@@ -78,6 +81,9 @@
       "total_power_w": {
         "name": "Total power"
       },
+      "vehicle_current_a": {
+        "name": "Vehicle current"
+      },
       "voltage_a_v": {
         "name": "Phase A voltage"
       },
@@ -86,6 +92,9 @@
       },
       "voltage_c_v": {
         "name": "Phase C voltage"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
       }
     }
   }
