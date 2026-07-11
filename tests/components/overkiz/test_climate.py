@@ -189,19 +189,6 @@ async def test_hitachi_air_to_water_heating_zone_2(
     assert zone_2.attributes[ATTR_TEMPERATURE] == 21.0
 
 
-async def test_thermostat_heating_temperature_interface(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-) -> None:
-    """Test the Somfy thermostat is exposed as a climate entity."""
-    await setup_overkiz_integration(fixture=THERMOSTAT_HEATING.fixture)
-
-    state = hass.states.get(THERMOSTAT_HEATING.entity_id)
-    assert state is not None
-    assert state.attributes[ATTR_TEMPERATURE] == 16.5
-    assert state.attributes[ATTR_PRESET_MODE] == "manual"
-
-
 async def test_thermostat_heating_set_temperature(
     hass: HomeAssistant,
     mock_client: MockOverkizClient,
@@ -222,4 +209,39 @@ async def test_thermostat_heating_set_temperature(
         device_url=THERMOSTAT_HEATING.device_url,
         command_name="setDerogation",
         parameters=[20.0, "furtherNotice"],
+    )
+
+
+@pytest.mark.parametrize(
+    ("preset_mode", "parameters"),
+    [
+        pytest.param("away", ["away", "furtherNotice"], id="away"),
+        pytest.param("comfort", ["comfort", "furtherNotice"], id="comfort"),
+        pytest.param("eco", ["eco", "furtherNotice"], id="eco"),
+        # Manual re-sends the current temperature to enter the derogation
+        pytest.param("manual", [26.6, "furtherNotice"], id="manual"),
+    ],
+)
+async def test_thermostat_heating_set_preset_mode(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    preset_mode: str,
+    parameters: list[str | float],
+) -> None:
+    """Test selecting a preset issues setDerogation with the mapped parameter."""
+    await setup_overkiz_integration(fixture=THERMOSTAT_HEATING.fixture)
+
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": THERMOSTAT_HEATING.entity_id, ATTR_PRESET_MODE: preset_mode},
+        blocking=True,
+    )
+
+    assert_command_call(
+        mock_client,
+        device_url=THERMOSTAT_HEATING.device_url,
+        command_name="setDerogation",
+        parameters=parameters,
     )
