@@ -182,6 +182,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.update_public = AsyncMock()
     client.async_disconnect_ws = AsyncMock()
     client.has_public_bootstrap = True
+    client.is_public_only = False
 
     # The library owns RTSPS streams on ``PublicCamera.rtsps_streams`` and primes
     # them in ``update_public()``; the integration reads them synchronously. Start

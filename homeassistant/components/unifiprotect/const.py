@@ -78,6 +78,13 @@ PLATFORMS = [
     Platform.TEXT,
 ]
 
+# Platforms forwarded in public-API-only (API-key) mode. Only entities that are
+# fully backed by the public Integration API work without a local user; the
+# rest enumerate from the private bootstrap, which is absent in this mode.
+PUBLIC_ONLY_PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+]
+
 DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"

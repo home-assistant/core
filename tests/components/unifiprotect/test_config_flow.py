@@ -1422,8 +1422,12 @@ async def test_reconfigure(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_full"}
+    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_full"
 
     # Test with connection error
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
@@ -1473,8 +1477,12 @@ async def test_reconfigure_different_nvr(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_full"}
+    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_full"
 
     # Create a different NVR with different MAC (not matching MAC_ADDR)
     different_nvr = nvr.model_copy()
@@ -1512,8 +1520,12 @@ async def test_reconfigure_auth_error(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_full"}
+    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_full"
 
     # Test with password authentication error
     mock_api_bootstrap.side_effect = NotAuthorized
@@ -1547,8 +1559,12 @@ async def test_reconfigure_api_key_error(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_full"}
+    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_full"
 
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
@@ -1584,8 +1600,12 @@ async def test_reconfigure_cloud_user(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_full"}
+    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_full"
 
     # Set up bootstrap with cloud user
     bootstrap.nvr = nvr
@@ -1633,8 +1653,12 @@ async def test_reconfigure_outdated_version(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_full"}
+    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_full"
 
     # Set up NVR with outdated version
     old_nvr = nvr.model_copy()
@@ -1671,8 +1695,12 @@ async def test_reconfigure_form_defaults(
 
     result = await ufp_reauth_entry_alt.start_reconfigure_flow(hass)
 
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_full"}
+    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_full"
 
     # Verify that non-sensitive fields are pre-filled and sensitive fields are not
     # The data_schema will have been created with add_suggested_values_to_schema
@@ -1738,8 +1766,12 @@ async def test_reconfigure_same_nvr_updated_credentials(
     mock_config.add_to_hass(hass)
 
     result = await mock_config.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_full"}
+    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_full"
 
     bootstrap.nvr = nvr
     result = await hass.config_entries.flow.async_configure(
@@ -1781,6 +1813,10 @@ async def test_reconfigure_empty_credentials_keeps_existing(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_full"}
+    )
     assert result["type"] is FlowResultType.FORM
 
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
@@ -1841,6 +1877,10 @@ async def test_reconfigure_credential_update(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_full"}
+    )
     assert result["type"] is FlowResultType.FORM
 
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
@@ -1870,6 +1910,10 @@ async def test_reconfigure_invalid_existing_password_shows_error(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_full"}
+    )
     assert result["type"] is FlowResultType.FORM
 
     # Simulate invalid existing password (user leaves field empty)
@@ -2038,8 +2082,12 @@ async def test_reconfigure_clears_session_failure_continues(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_full"}
+    )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "reconfigure_full"
 
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
@@ -2279,6 +2327,103 @@ async def test_api_key_flow_mac_unresolved(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
             return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1", "api_key": "test-api-key"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reconfigure_flip_to_api_key(
+    hass: HomeAssistant,
+    ufp_reauth_entry: MockConfigEntry,
+    nvr: NVR,
+    mock_setup: None,
+) -> None:
+    """Reconfiguring a full entry to API-key-only drops the local credentials."""
+    ufp_reauth_entry.add_to_hass(hass)
+    nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
+
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_api_key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_api_key"
+
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=_meta_info(),
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
+            return_value=nvr.mac,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": DEFAULT_HOST, "api_key": "new-api-key"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    # The local-user credentials are gone; the entry is now public-only.
+    assert CONF_USERNAME not in ufp_reauth_entry.data
+    assert CONF_PASSWORD not in ufp_reauth_entry.data
+    assert ufp_reauth_entry.data[CONF_API_KEY] == "new-api-key"
+
+
+async def test_reconfigure_flip_wrong_nvr(
+    hass: HomeAssistant,
+    ufp_reauth_entry: MockConfigEntry,
+    mock_setup: None,
+) -> None:
+    """Flipping to API-key-only aborts if it resolves a different NVR."""
+    ufp_reauth_entry.add_to_hass(hass)
+
+    result = await ufp_reauth_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_api_key"}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=_meta_info(),
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
+            return_value="ffffffffffff",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": DEFAULT_HOST, "api_key": "new-api-key"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_nvr"
+
+
+async def test_api_key_flow_resolve_error(hass: HomeAssistant) -> None:
+    """A transport error while resolving the NVR mac surfaces cannot_connect."""
+    result = await _start_api_key_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=_meta_info(),
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
+            side_effect=ClientError,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(

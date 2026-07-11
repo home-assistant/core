@@ -78,7 +78,7 @@ def _build_data_without_credentials(entry_data: Mapping[str, Any]) -> dict[str, 
         CONF_HOST: entry_data[CONF_HOST],
         CONF_PORT: entry_data[CONF_PORT],
         CONF_VERIFY_SSL: entry_data[CONF_VERIFY_SSL],
-        CONF_USERNAME: entry_data[CONF_USERNAME],
+        CONF_USERNAME: entry_data.get(CONF_USERNAME, ""),
     }
 
 
@@ -533,7 +533,61 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle reconfiguration of the integration."""
+        """Let the user pick the connection mode when reconfiguring."""
+        return self.async_show_menu(
+            step_id="reconfigure",
+            menu_options=["reconfigure_full", "reconfigure_api_key"],
+        )
+
+    async def async_step_reconfigure_api_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure onto (or within) the public-API-only mode.
+
+        Switching from full access drops the stored local-user credentials so
+        the entry reloads in public-only mode.
+        """
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            mac, errors = await self._async_get_public_nvr_identity(user_input)
+            if mac and not errors:
+                await self.async_set_unique_id(_async_unifi_mac_from_hass(mac))
+                self._abort_if_unique_id_mismatch(reason="wrong_nvr")
+                # Build fresh data without username/password: their absence is
+                # the public-only signal, and the merge convention (empty =
+                # keep) could otherwise not remove them.
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data={
+                        **_normalize_port(user_input),
+                        CONF_ID: reconfigure_entry.data.get(
+                            CONF_ID, user_input[CONF_HOST]
+                        ),
+                    },
+                )
+
+        form_data = {
+            CONF_HOST: reconfigure_entry.data[CONF_HOST],
+            CONF_PORT: reconfigure_entry.data[CONF_PORT],
+            CONF_VERIFY_SSL: reconfigure_entry.data[CONF_VERIFY_SSL],
+        }
+        return self.async_show_form(
+            step_id="reconfigure_api_key",
+            description_placeholders={
+                "api_key_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
+                )
+            },
+            data_schema=self.add_suggested_values_to_schema(API_KEY_SCHEMA, form_data),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure_full(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration with a local user (full access)."""
         errors: dict[str, str] = {}
 
         reconfigure_entry = self._get_reconfigure_entry()
@@ -570,7 +624,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="reconfigure",
+            step_id="reconfigure_full",
             description_placeholders={
                 "local_user_documentation_url": (
                     await async_local_user_documentation_url(self.hass)

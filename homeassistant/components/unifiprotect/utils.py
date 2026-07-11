@@ -20,6 +20,7 @@ from uiprotect.data import (
 from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
@@ -107,13 +108,33 @@ def async_get_light_motion_current(obj: Light) -> str:
 
 
 @callback
+def async_entry_is_public_only(entry: UFPConfigEntry) -> bool:
+    """Return whether an entry uses the public-API-only (API-key) mode.
+
+    A public-only entry has no local user; the API key is the only credential.
+    """
+    return not entry.data.get(CONF_USERNAME)
+
+
+@callback
 def async_create_api_client(
     hass: HomeAssistant, entry: UFPConfigEntry
 ) -> ProtectApiClient:
     """Create ProtectApiClient from config entry."""
 
-    session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
     public_api_session = async_create_clientsession(hass)
+    if async_entry_is_public_only(entry):
+        return ProtectApiClient.public_only(
+            entry.data[CONF_HOST],
+            entry.data[CONF_PORT],
+            api_key=entry.data[CONF_API_KEY],
+            verify_ssl=entry.data[CONF_VERIFY_SSL],
+            public_api_session=public_api_session,
+            devices_ws_subscribed_models=DEVICES_WS_SUBSCRIBED_MODELS,
+            ignore_unadopted=False,
+        )
+
+    session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
     return ProtectApiClient(
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],

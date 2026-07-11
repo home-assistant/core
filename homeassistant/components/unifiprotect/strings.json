@@ -92,6 +92,14 @@
         "title": "Reauth UniFi Protect"
       },
       "reconfigure": {
+        "title": "Reconfigure UniFi Protect",
+        "description": "Choose how to connect to your UniFi Protect console.",
+        "menu_options": {
+          "reconfigure_full": "Local user (full access)",
+          "reconfigure_api_key": "API key only (limited, public API)"
+        }
+      },
+      "reconfigure_full": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "host": "[%key:common::config_flow::data::host%]",
@@ -109,7 +117,23 @@
           "verify_ssl": "[%key:component::unifiprotect::config::step::full::data_description::verify_ssl%]"
         },
         "description": "Update the configuration for your UniFi Protect device. Leave password and API key empty to keep your existing credentials. For more information: {local_user_documentation_url}",
-        "title": "Reconfigure UniFi Protect"
+        "title": "Reconfigure UniFi Protect (local user)"
+      },
+      "reconfigure_api_key": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "host": "[%key:component::unifiprotect::config::step::api_key::data_description::host%]",
+          "port": "[%key:component::unifiprotect::config::step::api_key::data_description::port%]",
+          "verify_ssl": "[%key:component::unifiprotect::config::step::api_key::data_description::verify_ssl%]",
+          "api_key": "[%key:component::unifiprotect::config::step::api_key::data_description::api_key%]"
+        },
+        "description": "Switch to (or update) API-key-only mode. Switching from a local user removes the stored credentials; a limited set of entities is available. For more information: {api_key_documentation_url}",
+        "title": "Reconfigure UniFi Protect (API key)"
       }
     }
   },
