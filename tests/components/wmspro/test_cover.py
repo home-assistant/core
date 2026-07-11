@@ -148,7 +148,9 @@ async def test_cover_open_and_close(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
+        before_action_list = len(mock_action_list_call.mock_calls)
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -161,13 +163,19 @@ async def test_cover_open_and_close(
         assert entity is not None
         assert entity.state == STATE_OPEN
         assert entity.attributes[ATTR_CURRENT_POSITION] == 100
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert (
+            len(mock_action_call.mock_calls) == before_action + 1
+            or len(mock_action_list_call.mock_calls) == before_action_list + 1
+        )
 
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
+        before_action_list = len(mock_action_list_call.mock_calls)
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -180,7 +188,11 @@ async def test_cover_open_and_close(
         assert entity is not None
         assert entity.state == STATE_CLOSED
         assert entity.attributes[ATTR_CURRENT_POSITION] == 0
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert (
+            len(mock_action_call.mock_calls) == before_action + 1
+            or len(mock_action_list_call.mock_calls) == before_action_list + 1
+        )
 
 
 @pytest.mark.parametrize(
@@ -238,7 +250,8 @@ async def test_cover_open_to_pos(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -251,7 +264,8 @@ async def test_cover_open_to_pos(
         assert entity is not None
         assert entity.state == STATE_OPEN
         assert entity.attributes[ATTR_CURRENT_POSITION] == 50
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + 1
 
 
 @pytest.mark.parametrize(
@@ -309,7 +323,8 @@ async def test_cover_open_and_stop(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -322,13 +337,15 @@ async def test_cover_open_and_stop(
         assert entity is not None
         assert entity.state == STATE_OPEN
         assert entity.attributes[ATTR_CURRENT_POSITION] == 80
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + 1
 
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -341,7 +358,8 @@ async def test_cover_open_and_stop(
         assert entity is not None
         assert entity.state == STATE_OPEN
         assert entity.attributes[ATTR_CURRENT_POSITION] == 80
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + 1
 
 
 @pytest.mark.parametrize(
@@ -381,7 +399,9 @@ async def test_cover_tilt_open_and_close(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
+        before_action_list = len(mock_action_list_call.mock_calls)
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -393,13 +413,19 @@ async def test_cover_tilt_open_and_close(
         entity = hass.states.get(entity_id)
         assert entity is not None
         assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 0
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert (
+            len(mock_action_call.mock_calls) == before_action + 1
+            or len(mock_action_list_call.mock_calls) == before_action_list + 1
+        )
 
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
+        before_action_list = len(mock_action_list_call.mock_calls)
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -411,7 +437,11 @@ async def test_cover_tilt_open_and_close(
         entity = hass.states.get(entity_id)
         assert entity is not None
         assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 50
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert (
+            len(mock_action_call.mock_calls) == before_action + 1
+            or len(mock_action_list_call.mock_calls) == before_action_list + 1
+        )
 
 
 @pytest.mark.parametrize(
@@ -451,7 +481,9 @@ async def test_cover_tilt_to_pos(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
+        before_action_list = len(mock_action_list_call.mock_calls)
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -463,7 +495,11 @@ async def test_cover_tilt_to_pos(
         entity = hass.states.get(entity_id)
         assert entity is not None
         assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 100
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert (
+            len(mock_action_call.mock_calls) == before_action + 1
+            or len(mock_action_list_call.mock_calls) == before_action_list + 1
+        )
 
 
 @pytest.mark.parametrize(
@@ -505,7 +541,9 @@ async def test_cover_tilt_with_open_and_close_pos(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
+        before_action_list = len(mock_action_list_call.mock_calls)
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -519,13 +557,19 @@ async def test_cover_tilt_with_open_and_close_pos(
         assert entity.state == STATE_OPEN
         assert entity.attributes[ATTR_CURRENT_POSITION] == 100
         assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 100
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert (
+            len(mock_action_call.mock_calls) == before_action + 1
+            or len(mock_action_list_call.mock_calls) == before_action_list + 1
+        )
 
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
+        before_action_list = len(mock_action_list_call.mock_calls)
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -539,4 +583,8 @@ async def test_cover_tilt_with_open_and_close_pos(
         assert entity.state == STATE_CLOSED
         assert entity.attributes[ATTR_CURRENT_POSITION] == 0
         assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 0
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert (
+            len(mock_action_call.mock_calls) == before_action + 1
+            or len(mock_action_list_call.mock_calls) == before_action_list + 1
+        )

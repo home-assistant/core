@@ -109,7 +109,8 @@ async def test_light_turn_on_and_off(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -122,13 +123,15 @@ async def test_light_turn_on_and_off(
         assert entity is not None
         assert entity.state == STATE_ON
         assert entity.attributes[ATTR_BRIGHTNESS] >= 1
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + 1
 
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -141,7 +144,8 @@ async def test_light_turn_on_and_off(
         assert entity is not None
         assert entity.state == STATE_OFF
         assert entity.attributes[ATTR_BRIGHTNESS] is None
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + 1
 
 
 @pytest.mark.parametrize(
@@ -172,7 +176,8 @@ async def test_light_dimm_on_and_off(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -185,13 +190,15 @@ async def test_light_dimm_on_and_off(
         assert entity is not None
         assert entity.state == STATE_ON
         assert entity.attributes[ATTR_BRIGHTNESS] >= 1
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + 1
 
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -204,13 +211,15 @@ async def test_light_dimm_on_and_off(
         assert entity is not None
         assert entity.state == STATE_ON
         assert entity.attributes[ATTR_BRIGHTNESS] == 128
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + 1
 
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
 
         await hass.services.async_call(
             LIGHT_DOMAIN,
@@ -223,4 +232,5 @@ async def test_light_dimm_on_and_off(
         assert entity is not None
         assert entity.state == STATE_OFF
         assert entity.attributes[ATTR_BRIGHTNESS] is None
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + 1

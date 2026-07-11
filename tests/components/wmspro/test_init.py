@@ -56,6 +56,8 @@ async def test_config_entry_persistent_storage(
     )
 
     assert await setup_config_entry(hass, mock_config_entry)
+    assert len(mock_hub_ping.mock_calls) == 1
+    assert len(mock_hub_refresh.mock_calls) == 1
     assert config_dir.is_dir()  # created during setup
 
     assert await unload_config_entry(hass, mock_config_entry)

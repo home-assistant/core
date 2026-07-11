@@ -110,7 +110,8 @@ async def test_switch_turn_on_and_off(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -122,13 +123,15 @@ async def test_switch_turn_on_and_off(
         entity = hass.states.get("switch.terasse_heizung_links")
         assert entity is not None
         assert entity.state == STATE_ON
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + 1
 
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -140,4 +143,5 @@ async def test_switch_turn_on_and_off(
         entity = hass.states.get("switch.terasse_heizung_links")
         assert entity is not None
         assert entity.state == STATE_OFF
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + 1

@@ -100,7 +100,8 @@ async def test_number_set_value(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status.mock_calls)
+        before_status = len(mock_hub_status.mock_calls)
+        before_action = len(mock_action_call.mock_calls)
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -117,7 +118,8 @@ async def test_number_set_value(
         entity = hass.states.get(entity_id)
         assert entity is not None
         assert float(entity.state) == float(target_value)
-        assert len(mock_hub_status.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) <= before_action + 1
 
 
 @pytest.mark.parametrize(
@@ -138,8 +140,6 @@ async def test_number_set_and_restore_value(
     mock_hub_ping: AsyncMock,
     mock_hub_configuration: AsyncMock,
     mock_hub_status: AsyncMock,
-    mock_action_call: AsyncMock,
-    freezer: FrozenDateTimeFactory,
     entity_id: str,
     initial_value: str,
     target_value: str,
