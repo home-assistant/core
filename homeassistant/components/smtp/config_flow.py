@@ -1,14 +1,16 @@
 """Config flow for the SMTP integration."""
 
 from collections.abc import Mapping
+from contextlib import suppress
 import logging
-from smtplib import SMTP, SMTP_SSL, SMTPAuthenticationError
+from smtplib import SMTP, SMTP_SSL, SMTPAuthenticationError, SMTPException
 import socket
 from ssl import SSLCertVerificationError
 from typing import Any, override
 
 import voluptuous as vol
 
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigFlow,
@@ -32,7 +34,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -67,7 +69,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_SENDER): TextSelector(
             TextSelectorConfig(
-                type=TextSelectorType.TEXT,
+                type=TextSelectorType.EMAIL,
                 autocomplete="email",
             ),
         ),
@@ -310,18 +312,21 @@ def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
         if user_input.get(CONF_USERNAME) and user_input.get(CONF_PASSWORD):
             mail.login(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
 
+    except TimeoutError:
+        errors["base"] = "timeout_connect"
     except SMTPAuthenticationError:
         errors["base"] = "invalid_auth"
     except SSLCertVerificationError:
         errors["base"] = "invalid_cert"
-    except socket.gaierror, ConnectionRefusedError:
+    except socket.gaierror, ConnectionRefusedError, SMTPException:
         errors["base"] = "cannot_connect"
     except Exception:
         _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
     finally:
         if mail is not None:
-            mail.quit()
+            with suppress(SMTPException):
+                mail.quit()
 
     return errors
 
@@ -347,11 +352,60 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
                     vol.Optional(CONF_NAME): cv.string,
                     vol.Required(CONF_RECIPIENT): TextSelector(
                         TextSelectorConfig(
-                            type=TextSelectorType.TEXT,
+                            type=TextSelectorType.EMAIL,
                             autocomplete="email",
                         ),
                     ),
                 }
+            ),
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure flow to update a recipient."""
+
+        entry = self._get_entry()
+        subentry = self._get_reconfigure_subentry()
+
+        if user_input is not None:
+            old_unique_id = subentry.unique_id
+            result = self.async_update_and_abort(
+                entry,
+                subentry=subentry,
+                title=(
+                    user_input[CONF_RECIPIENT]
+                    if subentry.title == old_unique_id
+                    else subentry.title
+                ),
+                data_updates={},
+                unique_id=user_input[CONF_RECIPIENT],
+            )
+            if result.get("reason") == "reconfigure_successful" and (
+                entity := er.async_get(self.hass).async_get_entity_id(
+                    NOTIFY_DOMAIN, DOMAIN, f"{entry.entry_id}_{old_unique_id}"
+                )
+            ):
+                er.async_get(self.hass).async_update_entity(
+                    entity,
+                    new_unique_id=f"{entry.entry_id}_{user_input[CONF_RECIPIENT]}",
+                )
+            return result
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_RECIPIENT): TextSelector(
+                            TextSelectorConfig(
+                                type=TextSelectorType.EMAIL,
+                                autocomplete="email",
+                            ),
+                        )
+                    }
+                ),
+                suggested_values={CONF_RECIPIENT: subentry.unique_id},
             ),
         )
 

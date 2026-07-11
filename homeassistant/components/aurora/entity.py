@@ -1,4 +1,4 @@
-"""The aurora component."""
+"""The Aurora integration."""
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity

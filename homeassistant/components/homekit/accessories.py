@@ -12,6 +12,10 @@ from pyhap.iid_manager import IIDManager
 from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntityFeature,
+)
 from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.lawn_mower import LawnMowerEntityFeature
 from homeassistant.components.media_player import MediaPlayerDeviceClass
@@ -51,10 +55,17 @@ from homeassistant.core import (
     callback as ha_callback,
     split_entity_id,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.decorator import Registry
 
+from .aidmanager import AccessoryAidStorage
+from .climate_util import (
+    get_fan_modes_and_speeds,
+    get_swing_on_mode,
+    has_swing_off_mode,
+)
 from .const import (
     ATTR_DISPLAY_NAME,
     ATTR_INTEGRATION,
@@ -86,10 +97,12 @@ from .const import (
     TYPE_AIR_PURIFIER,
     TYPE_FAN,
     TYPE_FAUCET,
+    TYPE_HEATER_COOLER,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_SWITCH,
+    TYPE_THERMOSTAT,
     TYPE_VALVE,
 )
 from .iidmanager import AccessoryIIDStorage
@@ -116,6 +129,10 @@ FAN_TYPES = {
     TYPE_AIR_PURIFIER: "AirPurifier",
     TYPE_FAN: "Fan",
 }
+CLIMATE_TYPES = {
+    TYPE_HEATER_COOLER: "HeaterCooler",
+    TYPE_THERMOSTAT: "Thermostat",
+}
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
 RELOAD_ON_CHANGE_ATTRS = (
@@ -123,6 +140,94 @@ RELOAD_ON_CHANGE_ATTRS = (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
 )
+
+
+def climate_controls_target_humidity(state: State) -> bool:
+    """Return True when a climate entity exposes a humidity setpoint.
+
+    HeaterCooler cannot control a humidity setpoint; entities that
+    expose one (e.g. econet) stay on the Thermostat, which can.
+    """
+    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    return bool(features & ClimateEntityFeature.TARGET_HUMIDITY)
+
+
+def climate_supports_heater_cooler(state: State) -> bool:
+    """Return True when a climate entity fits the HeaterCooler accessory."""
+    attributes = state.attributes
+    features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    # Timing fan modes like auto or circulate do not count as speeds.
+    has_fan = bool(features & ClimateEntityFeature.FAN_MODE) and (
+        len(get_fan_modes_and_speeds(attributes)[1]) >= 2
+    )
+    # The binary swing control writes the off mode back, so automatic
+    # routing requires the entity to advertise one.
+    has_swing = bool(features & ClimateEntityFeature.SWING_MODE) and (
+        get_swing_on_mode(attributes) is not None and has_swing_off_mode(attributes)
+    )
+    return (has_fan or has_swing) and not (
+        features & ClimateEntityFeature.TARGET_HUMIDITY
+    )
+
+
+@ha_callback
+def async_resolve_accessory_type(
+    aid_storage: AccessoryAidStorage,
+    state: State,
+    conf: dict[str, Any],
+    *,
+    allow_auto: bool,
+) -> str | None:
+    """Resolve which accessory an entity uses into conf.
+
+    Some domains can be represented by more than one HomeKit accessory;
+    climate is the only such domain today. Returns the accessory type the
+    caller must record with async_set_accessory_type once the accessory is
+    successfully created, so a failed creation is not sticky across
+    restarts; a stored routing the entity can no longer support is dropped
+    immediately instead.
+    """
+    if state.domain != CLIMATE_DOMAIN:
+        return None
+    return _async_resolve_climate_type(aid_storage, state, conf, allow_auto=allow_auto)
+
+
+@ha_callback
+def _async_resolve_climate_type(
+    aid_storage: AccessoryAidStorage,
+    state: State,
+    conf: dict[str, Any],
+    *,
+    allow_auto: bool,
+) -> str | None:
+    """Resolve which accessory a climate entity uses into conf.
+
+    An explicit type in the entity config always wins, even for entities
+    with a humidity setpoint, and updates the stored routing, so switching
+    back to automatic keeps the accessory the entity already uses. In
+    bridge mode an entity that has never been bridged gets the HeaterCooler
+    when capable. Anything else keeps the Thermostat; the accessory type
+    can be changed at any time from the bridge options.
+    """
+    entity_id = state.entity_id
+    if climate_type := conf.get(CONF_TYPE):
+        # The explicit type is recorded by the caller like the automatic
+        # one, so every path that sets a type defers persistence until
+        # the accessory exists.
+        return cast(str, climate_type)
+    if aid_storage.get_accessory_type(entity_id) == TYPE_HEATER_COOLER:
+        if not climate_controls_target_humidity(state):
+            conf[CONF_TYPE] = TYPE_HEATER_COOLER
+            return None
+        # A humidity setpoint gained since the choice was stored cannot
+        # be represented by the HeaterCooler, so the routing is dropped.
+        aid_storage.async_set_accessory_type(entity_id, None)
+    if not climate_supports_heater_cooler(state):
+        return None
+    if allow_auto and not aid_storage.entity_is_allocated(entity_id):
+        conf[CONF_TYPE] = TYPE_HEATER_COOLER
+        return TYPE_HEATER_COOLER
+    return None
 
 
 def get_accessory(  # noqa: C901
@@ -150,7 +255,8 @@ def get_accessory(  # noqa: C901
         a_type = "BinarySensor"
 
     elif state.domain == "climate":
-        a_type = "Thermostat"
+        # The type is resolved by the bridge before the accessory is created.
+        a_type = CLIMATE_TYPES[config.get(CONF_TYPE, TYPE_THERMOSTAT)]
 
     elif state.domain == "cover":
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
@@ -636,6 +742,25 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         value: Any | None = None,
     ) -> None:
         """Fire event and call service for changes from HomeKit."""
+        self.hass.async_create_task(
+            self.async_call_service_and_wait(domain, service, service_data, value),
+            eager_start=True,
+        )
+
+    async def async_call_service_and_wait(
+        self,
+        domain: str,
+        service: str,
+        service_data: dict[str, Any],
+        value: Any | None = None,
+    ) -> bool:
+        """Fire event and call service, returning True when it succeeded.
+
+        blocking=True so the handler's exception reaches us (the
+        non-blocking path swallows it); on failure we resync so pyhap's
+        optimistic target characteristic doesn't strand the tile on the
+        requested action.
+        """
         event_data = {
             ATTR_ENTITY_ID: service_data.get(ATTR_ENTITY_ID, self.entity_id),
             ATTR_DISPLAY_NAME: self.display_name,
@@ -645,12 +770,41 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         context = Context()
 
         self.hass.bus.async_fire(EVENT_HOMEKIT_CHANGED, event_data, context=context)
-        self.hass.async_create_task(
-            self.hass.services.async_call(
-                domain, service, service_data, context=context
-            ),
-            eager_start=True,
-        )
+
+        try:
+            await self.hass.services.async_call(
+                domain, service, service_data, blocking=True, context=context
+            )
+        except HomeAssistantError as err:
+            _LOGGER.warning(
+                "%s: %s.%s failed (%s); re-syncing HomeKit state",
+                self.entity_id,
+                domain,
+                service,
+                err,
+            )
+        except Exception:
+            _LOGGER.exception(
+                "%s: %s.%s raised unexpectedly; re-syncing HomeKit state",
+                self.entity_id,
+                domain,
+                service,
+            )
+        else:
+            return True
+        # This coroutine often runs fire-and-forget, so failures must be
+        # logged here instead of by the loop's default task handler.
+        try:
+            if (state := self.hass.states.get(self.entity_id)) is not None:
+                self.async_update_state(state)
+            else:
+                _LOGGER.debug(
+                    "%s: cannot re-sync HomeKit state; entity has no state",
+                    self.entity_id,
+                )
+        except Exception:
+            _LOGGER.exception("%s: re-syncing HomeKit state failed", self.entity_id)
+        return False
 
     @ha_callback
     def async_reload(self) -> None:
