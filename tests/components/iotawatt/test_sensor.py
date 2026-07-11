@@ -19,6 +19,7 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import INPUT_SENSOR, OUTPUT_SENSOR
@@ -27,7 +28,10 @@ from tests.common import async_fire_time_changed
 
 
 async def test_sensor_type_input(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_iotawatt: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_iotawatt: MagicMock,
 ) -> None:
     """Test input sensors work."""
     assert await async_setup_component(hass, DOMAIN, {})
@@ -53,16 +57,24 @@ async def test_sensor_type_input(
     assert state.attributes["channel"] == "1"
     assert state.attributes["type"] == "Input"
 
+    entry = entity_registry.async_get("sensor.test_device_my_sensor")
+    assert entry is not None
+    assert entry.unique_id == "mock-mac-input-1-Watts"
+
     mock_iotawatt.getSensors.return_value["sensors"].pop("my_sensor_key")
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.test_device_my_sensor") is None
+    assert entity_registry.async_get("sensor.test_device_my_sensor") is None
 
 
 async def test_sensor_type_output(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_iotawatt: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    mock_iotawatt: MagicMock,
 ) -> None:
     """Tests the sensor type of Output."""
     mock_iotawatt.getSensors.return_value["sensors"]["my_watthour_sensor_key"] = (
@@ -73,18 +85,23 @@ async def test_sensor_type_output(
 
     assert len(hass.states.async_entity_ids()) == 1
 
-    state = hass.states.get("sensor.my_watthour_sensor")
+    state = hass.states.get("sensor.test_device_my_watthour_sensor")
     assert state is not None
     assert state.state == "243"
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "My WattHour Sensor"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Device My WattHour Sensor"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.WATT_HOUR
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
     assert state.attributes["type"] == "Output"
+
+    entry = entity_registry.async_get("sensor.test_device_my_watthour_sensor")
+    assert entry is not None
+    assert entry.unique_id == "mock-mac-output-My WattHour Sensor"
 
     mock_iotawatt.getSensors.return_value["sensors"].pop("my_watthour_sensor_key")
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.my_watthour_sensor") is None
+    assert hass.states.get("sensor.test_device_my_watthour_sensor") is None
+    assert entity_registry.async_get("sensor.test_device_my_watthour_sensor") is None

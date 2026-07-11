@@ -168,6 +168,8 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
             self._attr_unique_id = (
                 f"{data.hub_mac_address}-input-{data.getChannel()}-{data.getUnit()}"
             )
+        else:
+            self._attr_unique_id = f"{data.hub_mac_address}-output-{data.getName()}"
         self.entity_description = entity_description
 
     @property
@@ -198,10 +200,7 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self._key not in self.coordinator.data["sensors"]:
-            if self._attr_unique_id:
-                er.async_get(self.hass).async_remove(self.entity_id)
-            else:
-                self.hass.async_create_task(self.async_remove())
+            er.async_get(self.hass).async_remove(self.entity_id)
             return
 
         if (begin := self._sensor_data.getBegin()) and (
