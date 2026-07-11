@@ -1,6 +1,7 @@
 """Data update coordinator for the Met Office integration."""
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 from typing import Literal, override
 
@@ -49,6 +50,7 @@ class MetOfficeUpdateCoordinator(TimestampDataUpdateCoordinator[Forecast]):
         latitude: float,
         longitude: float,
         frequency: Literal["daily", "twice-daily", "hourly"],
+        update_interval: timedelta = DEFAULT_SCAN_INTERVAL,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -56,7 +58,7 @@ class MetOfficeUpdateCoordinator(TimestampDataUpdateCoordinator[Forecast]):
             _LOGGER,
             name=name,
             config_entry=entry,
-            update_interval=DEFAULT_SCAN_INTERVAL,
+            update_interval=update_interval,
         )
         self._connection = connection
         self._latitude = latitude

@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN
+from .const import DOMAIN, SLOW_SCAN_INTERVAL
 from .coordinator import (
     MetOfficeConfigEntry,
     MetOfficeRuntimeData,
@@ -54,6 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MetOfficeConfigEntry) ->
         latitude=latitude,
         longitude=longitude,
         frequency="daily",
+        update_interval=SLOW_SCAN_INTERVAL,
     )
 
     metoffice_twice_daily_coordinator = MetOfficeUpdateCoordinator(
@@ -64,6 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MetOfficeConfigEntry) ->
         latitude=latitude,
         longitude=longitude,
         frequency="twice-daily",
+        update_interval=SLOW_SCAN_INTERVAL,
     )
 
     # Fetch initial data so we have data when entities subscribe

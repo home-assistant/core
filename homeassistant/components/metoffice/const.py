@@ -37,6 +37,7 @@ DEFAULT_NAME = "Met Office"
 ATTRIBUTION = "Data provided by the Met Office"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=15)
+SLOW_SCAN_INTERVAL = timedelta(minutes=60)
 
 CONDITION_CLASSES: dict[str, list[int]] = {
     ATTR_CONDITION_CLEAR_NIGHT: [0],
