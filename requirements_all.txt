@@ -1204,7 +1204,7 @@ ha-ffmpeg==3.2.2
 ha-iotawattpy==0.2.1
 
 # homeassistant.components.philips_js
-ha-philipsjs==3.3.5
+ha-philipsjs==3.2.5
 
 # homeassistant.components.homeassistant_hardware
 ha-silabs-firmware-client==0.3.0
