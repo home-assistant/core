@@ -3,7 +3,6 @@
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
-from importlib.metadata import entry_points
 import logging
 from typing import Any
 
@@ -22,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import SOLAX_INVERTER_ENTRY_POINT_GROUP
+from .const import INVERTER_MODELS
 from .coordinator import SolaxDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -48,8 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolaxConfigEntry) -> boo
 
     kwargs: dict[str, Any] = {"return_when": asyncio.FIRST_COMPLETED}
     if model := entry.data.get(CONF_MODEL):
-        (ep,) = entry_points(group=SOLAX_INVERTER_ENTRY_POINT_GROUP, name=model)
-        kwargs["inverters"] = [ep.load()]
+        kwargs["inverters"] = [INVERTER_MODELS[model]]
 
     try:
         inverter = await discover(
