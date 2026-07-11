@@ -13,6 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
+    ATTR_PRESET_MODE,
     HVACAction,
     HVACMode,
 )
@@ -61,6 +62,13 @@ SNAPSHOT_FIXTURES = [
     COZYTOUCH,
     YUTAKI_ZONE_1,
 ]
+
+# Somfy Thermostat PRO (io:HeatingThermostatIOComponent)
+THERMOSTAT_HEATING = FixtureDevice(
+    "setup/cloud_somfy_thermostat_heating_interface.json",
+    "io://1234-5678-9387/386310#1",
+    "climate.my_home_thermostat",
+)
 
 
 @pytest.fixture(autouse=True)
@@ -127,6 +135,38 @@ async def test_valve_hvac_action_none_state(
     assert state.attributes.get(ATTR_HVAC_ACTION) is None
 
 
+async def test_valve_away_preset_mode(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test that the awayMode derogation state maps to the away preset."""
+    await setup_overkiz_integration(fixture=VALVE.fixture)
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                device_url=VALVE.device_url,
+                device_states=[
+                    {
+                        "name": OverkizState.IO_DEROGATION_HEATING_MODE,
+                        "type": 3,
+                        "value": "awayMode",
+                    }
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(VALVE.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_PRESET_MODE] == "away"
+
+
 UNKNOWN_DEVICE_URL = "zigbee://1234-5678-1698/65535"
 
 
@@ -178,3 +218,39 @@ async def test_hitachi_air_to_water_heating_zone_2(
     assert zone_2.state == HVACMode.AUTO
     assert zone_2.attributes[ATTR_CURRENT_TEMPERATURE] == 20.5
     assert zone_2.attributes[ATTR_TEMPERATURE] == 21.0
+
+
+async def test_thermostat_heating_temperature_interface(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the Somfy thermostat is exposed as a climate entity."""
+    await setup_overkiz_integration(fixture=THERMOSTAT_HEATING.fixture)
+
+    state = hass.states.get(THERMOSTAT_HEATING.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_TEMPERATURE] == 16.5
+    assert state.attributes[ATTR_PRESET_MODE] == "manual"
+
+
+async def test_thermostat_heating_set_temperature(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test setting a temperature issues setDerogation, not setComfortTemperature."""
+    await setup_overkiz_integration(fixture=THERMOSTAT_HEATING.fixture)
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {"entity_id": THERMOSTAT_HEATING.entity_id, ATTR_TEMPERATURE: 20.0},
+        blocking=True,
+    )
+
+    first = mock_client.execute_action_group.await_args_list[0].kwargs["actions"]
+    assert first[0].commands[0].name == "setDerogation"
+    assert [str(param) for param in first[0].commands[0].parameters] == [
+        "20.0",
+        "furtherNotice",
+    ]
