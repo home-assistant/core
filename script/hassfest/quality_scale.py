@@ -695,6 +695,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "panel_iframe",
     "peco",
     "pencom",
+    "permobil",
     "persistent_notification",
     "person",
     "philips_js",
