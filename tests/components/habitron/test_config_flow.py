@@ -102,6 +102,36 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+async def test_user_flow_duplicate_host_of_ssdp_entry(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+) -> None:
+    """Manually adding the host of an SSDP-configured hub aborts.
+
+    An SSDP entry is keyed by its UDN, so the serial/host unique id derived
+    by the manual step does not match it and ``_abort_if_unique_id_configured``
+    does not fire. The host-based duplicate guard must still abort instead of
+    creating a second entry (and connection) for the same hub.
+    """
+    MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_NAME,
+        unique_id=MOCK_UDN,
+        data=MOCK_CONFIG_DATA,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_CONFIG_DATA,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_ssdp_discovery_with_udn(
     hass: HomeAssistant,
     setup_homeassistant: None,
