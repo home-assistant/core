@@ -62,58 +62,39 @@ def mock_motors() -> list[MagicMock]:
 
 
 @pytest.fixture
-def mock_gaposa_instance(mock_motors: list[MagicMock]) -> MagicMock:
-    """Return a mocked Gaposa client instance populated with test data."""
+def mock_gaposa(mock_motors: list[MagicMock]) -> Generator[MagicMock]:
+    """Patch pygaposa.Gaposa and yield the shared mocked instance.
+
+    The Gaposa class is imported at module load time in both the
+    coordinator and config flow, so both have to be patched.
+    """
     device = _make_mock_device(TEST_DEVICE_SERIAL, mock_motors)
     client = _make_mock_client([device], TEST_CLIENT_ID)
     user = MagicMock()
-
     instance = MagicMock()
     instance.login = AsyncMock()
     instance.update = AsyncMock()
     instance.close = AsyncMock()
     instance.clients = [(client, user)]
-    return instance
-
-
-@pytest.fixture
-def mock_gaposa(
-    mock_gaposa_instance: MagicMock,
-) -> Generator[MagicMock]:
-    """Patch pygaposa.Gaposa in the coordinator and config flow modules.
-
-    Both locations import Gaposa at module load time, so both have to be
-    patched. Tests consume the shared ``mock_gaposa_instance`` via the
-    fixture above — they don't need to drill through the class mock.
-    """
     with (
         patch(
             "homeassistant.components.gaposa.coordinator.Gaposa",
-            return_value=mock_gaposa_instance,
-        ) as mock_class,
+            return_value=instance,
+        ),
         patch(
             "homeassistant.components.gaposa.config_flow.Gaposa",
-            return_value=mock_gaposa_instance,
+            return_value=instance,
         ),
     ):
-        yield mock_class
+        yield instance
 
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry and async_unload_entry for config-flow tests.
-
-    Config flow tests care about the flow result and the data that ends up
-    on the created entry — they should not exercise the real coordinator
-    setup. Mocking unload too keeps HA's teardown path happy (the real
-    async_unload_entry assumes runtime_data is populated).
-    """
-    with (
-        patch(
-            "homeassistant.components.gaposa.async_setup_entry", return_value=True
-        ) as mock_setup,
-        patch("homeassistant.components.gaposa.async_unload_entry", return_value=True),
-    ):
+    """Override async_setup_entry for config-flow tests."""
+    with patch(
+        "homeassistant.components.gaposa.async_setup_entry", return_value=True
+    ) as mock_setup:
         yield mock_setup
 
 

@@ -82,7 +82,6 @@ async def test_form_aborts_when_already_configured(
 )
 async def test_form_validation_errors(
     hass: HomeAssistant,
-    mock_gaposa_instance: MagicMock,
     mock_gaposa: MagicMock,
     exc: Exception,
     expected_error: str,
@@ -91,7 +90,7 @@ async def test_form_validation_errors(
     if isinstance(exc, ConnectionError):
         exc = ClientConnectionError("boom")
 
-    mock_gaposa_instance.login.side_effect = exc
+    mock_gaposa.login.side_effect = exc
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -106,11 +105,10 @@ async def test_form_validation_errors(
 
 async def test_form_no_clients_returns_unknown(
     hass: HomeAssistant,
-    mock_gaposa_instance: MagicMock,
     mock_gaposa: MagicMock,
 ) -> None:
     """Login succeeds but account has no clients — treated as unknown error."""
-    mock_gaposa_instance.clients = []
+    mock_gaposa.clients = []
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}

@@ -46,11 +46,11 @@ async def test_coordinator_normal_refresh_interval(
 async def test_update_failure_shortens_interval(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    mock_gaposa_instance: MagicMock,
+    mock_gaposa: MagicMock,
 ) -> None:
     """A failed refresh should flip the coordinator to the fast interval."""
     coordinator = _get_coordinator(init_integration)
-    mock_gaposa_instance.update.side_effect = OSError("boom")
+    mock_gaposa.update.side_effect = OSError("boom")
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
@@ -61,17 +61,17 @@ async def test_update_failure_shortens_interval(
 async def test_recovery_restores_normal_interval(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    mock_gaposa_instance: MagicMock,
+    mock_gaposa: MagicMock,
 ) -> None:
     """After a recovered refresh the interval returns to UPDATE_INTERVAL."""
     coordinator = _get_coordinator(init_integration)
 
-    mock_gaposa_instance.update.side_effect = OSError("boom")
+    mock_gaposa.update.side_effect = OSError("boom")
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
     assert coordinator.update_interval == timedelta(seconds=UPDATE_INTERVAL_FAST)
 
-    mock_gaposa_instance.update.side_effect = None
+    mock_gaposa.update.side_effect = None
     await coordinator._async_update_data()
     assert coordinator.update_interval == timedelta(seconds=UPDATE_INTERVAL)
 
@@ -83,12 +83,12 @@ async def test_recovery_restores_normal_interval(
 async def test_auth_errors_raise_update_failed(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    mock_gaposa_instance: MagicMock,
+    mock_gaposa: MagicMock,
     exc: type[Exception],
 ) -> None:
     """Auth errors on refresh surface as UpdateFailed (no reauth flow yet)."""
     coordinator = _get_coordinator(init_integration)
-    mock_gaposa_instance.update.side_effect = exc("credentials rejected")
+    mock_gaposa.update.side_effect = exc("credentials rejected")
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
