@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components.number import NumberEntity
 from homeassistant.const import (  # noqa: F401
-    ATTR_EDITABLE,
     ATTR_MODE,
     CONF_ICON,
     CONF_ID,
@@ -24,6 +23,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
+
+from .const import InputNumberEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -204,7 +205,7 @@ class NumberStorageCollection(collection.DictStorageCollection):
 class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
     """Representation of a slider."""
 
-    _unrecorded_attributes = frozenset({ATTR_EDITABLE})
+    _unrecorded_attributes = frozenset({InputNumberEntityStateAttribute.EDITABLE})
 
     _attr_should_poll = False
     editable: bool
@@ -248,8 +249,8 @@ class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
-            ATTR_INITIAL: self._initial_value,
-            ATTR_EDITABLE: self.editable,
+            InputNumberEntityStateAttribute.INITIAL: self._initial_value,
+            InputNumberEntityStateAttribute.EDITABLE: self.editable,
         }
 
     @override
