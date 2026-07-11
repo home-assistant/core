@@ -64,6 +64,23 @@ async def test_sensor_invalid_value(
     assert state.state == STATE_UNAVAILABLE
 
 
+async def test_sensor_unavailable_on_missing_key(
+    hass: HomeAssistant, loaded_entry: MockConfigEntry
+) -> None:
+    """Test a sensor goes unavailable when a later payload omits its key."""
+    coordinator = loaded_entry.runtime_data.coordinator
+    coordinator.async_set_updated_data(
+        {
+            "fase1": {"vrms": "230.5", "p_activa": "277"},
+            "fase4": {"vrms": "230.5"},
+        }
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.wibeee_2233_active_power")
+    assert state.state == STATE_UNAVAILABLE
+
+
 async def test_sensors_polling_mode_keeps_all_keys(
     hass: HomeAssistant, mock_wibeee_api: MagicMock
 ) -> None:

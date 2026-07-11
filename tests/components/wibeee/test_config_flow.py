@@ -139,6 +139,7 @@ async def test_dhcp_already_configured_updates_host(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.250"
 
 
 async def test_dhcp_not_wibeee_device(
