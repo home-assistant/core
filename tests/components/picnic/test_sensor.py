@@ -409,7 +409,8 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
             "eta_window": {
                 "start": "2021-03-05T10:19:20.452+00:00",
                 "end": "2021-03-05T10:39:20.452+00:00",
-            }
+            },
+            "eta": 1614941090000,
         }
         await self._coordinator.async_refresh()
 
@@ -424,6 +425,10 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
         self._assert_sensor(
             "sensor.mock_title_expected_end_of_next_delivery",
             "2021-03-05T10:39:20+00:00",
+        )
+        self._assert_sensor(
+            "sensor.mock_title_estimated_arrival_of_next_delivery",
+            "2021-03-05T10:44:50+00:00",
         )
 
     async def test_sensors_no_data(self):

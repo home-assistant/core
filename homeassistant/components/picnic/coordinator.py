@@ -153,6 +153,10 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         if "eta2" in next_delivery:
             del next_delivery["eta2"]
 
+        # Keep the precise position-based arrival estimate (unix timestamp
+        # in milliseconds), only served shortly before the actual delivery
+        next_delivery["estimated_arrival"] = delivery_position.get("eta")
+
         # Determine the total price by adding up the total price of all sub-orders
         total_price = 0
         for order in last_order.get("orders", []):
