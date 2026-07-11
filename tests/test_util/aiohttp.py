@@ -64,6 +64,7 @@ class AiohttpClientMocker:
         side_effect=None,
         closing=None,
         timeout=None,
+        history=(),
     ):
         """Mock a request."""
         if not isinstance(url, RETYPE):
@@ -83,6 +84,7 @@ class AiohttpClientMocker:
             headers=headers,
             side_effect=side_effect,
             closing=closing,
+            history=history,
         )
         self._mocks.append(resp)
         return resp
@@ -185,6 +187,7 @@ class AiohttpClientMockResponse:
         headers=None,
         side_effect=None,
         closing=None,
+        history=(),
     ) -> None:
         """Initialize a fake response."""
         if json is not None:
@@ -197,7 +200,7 @@ class AiohttpClientMockResponse:
         self.method = method
         self._url = url
         self.status = status
-        self.history = ()
+        self.history = history
         self._response = response
         self.exc = exc
         self.side_effect = side_effect

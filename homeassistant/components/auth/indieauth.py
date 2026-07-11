@@ -187,12 +187,15 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
         )
         return []
 
-    # redirect_uris must be absolute URIs (a non-empty scheme, so private-use
-    # schemes like app:/callback stay valid); we return them unmodified for
-    # RFC 6749 exact matching rather than resolving relative references.
+    # redirect_uris must be absolute, fragment-free URIs (a non-empty scheme, so
+    # private-use schemes like app:/callback stay valid, and no fragment per
+    # RFC 6749 3.1.2); we return them unmodified for RFC 6749 exact matching
+    # rather than resolving relative references.
     redirect_uris = document.get("redirect_uris")
     if not isinstance(redirect_uris, list) or not all(
-        isinstance(redirect_uri, str) and urlparse(redirect_uri).scheme
+        isinstance(redirect_uri, str)
+        and (parts := urlparse(redirect_uri)).scheme
+        and not parts.fragment
         for redirect_uri in redirect_uris
     ):
         _LOGGER.debug(

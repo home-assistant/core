@@ -299,6 +299,15 @@ async def test_fetch_redirect_uris_link_tag_precedence(
             ),
             id="redirect-uris-relative-entry",
         ),
+        pytest.param(
+            json.dumps(
+                {
+                    "client_id": "https://example.com/client",
+                    "redirect_uris": ["https://example.com/callback#fragment"],
+                }
+            ),
+            id="redirect-uris-fragment-entry",
+        ),
     ],
 )
 async def test_fetch_redirect_uris_metadata_document_invalid(
@@ -381,6 +390,25 @@ async def test_fetch_redirect_uris_metadata_document_http_scheme(
     assert not await indieauth.verify_redirect_uri(
         hass, client_id, "https://other.com/callback"
     )
+
+
+async def test_fetch_redirect_uris_metadata_document_redirected(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker
+) -> None:
+    """Test a metadata document reached via a redirect is ignored."""
+    mock_session.get(
+        "https://example.com/client",
+        text=json.dumps(
+            {
+                "client_id": "https://example.com/client",
+                "redirect_uris": ["https://example.com/callback"],
+            }
+        ),
+        headers={"Content-Type": "application/json"},
+        history=(object(),),
+    )
+
+    assert await indieauth.fetch_redirect_uris(hass, "https://example.com/client") == []
 
 
 async def test_fetch_redirect_uris_metadata_document_private_use_scheme(
