@@ -9,7 +9,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from roborock import MultiMapsList, RoborockException
-from roborock.data import RoborockStateCode
+from roborock.data import CombinedMapInfo, RoborockStateCode
 from roborock.devices.traits.v1.map_content import MapContent
 
 from homeassistant.components.roborock.const import V1_LOCAL_NOT_CLEANING_INTERVAL
@@ -274,3 +274,48 @@ async def test_q10_map_image(
     resp = await client.get(f"/api/image_proxy/{entity_id}")
     assert resp.status == HTTPStatus.OK
     assert await resp.read() == b"\x89PNG-q10-new"
+
+
+async def test_map_load_delayed(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test map entities are not created if no maps initially exist, but are added dynamically later."""
+    assert fake_vacuum.v1_properties
+
+    # Start with no maps
+    fake_vacuum.v1_properties.home.home_map_info = None
+    fake_vacuum.v1_properties.home.home_map_content = None
+
+    # Setup the config entry
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Assert no map entities for fake_vacuum are created initially
+    assert hass.states.get("image.roborock_s7_maxv_main_floor") is None
+
+    # Later, maps show up
+    home_map_info = {
+        0: CombinedMapInfo(
+            name="Main Floor",
+            map_flag=0,
+            rooms=[],
+        )
+    }
+    home_map_content = {
+        0: MapContent(
+            image_content=b"\x89PNG-001",
+            map_data=None,
+        )
+    }
+    fake_vacuum.v1_properties.home.home_map_info = home_map_info
+    fake_vacuum.v1_properties.home.home_map_content = home_map_content
+
+    # Notify update listener
+    for call in fake_vacuum.v1_properties.home.add_update_listener.call_args_list:
+        call.args[0]()
+    await hass.async_block_till_done()
+
+    # Assert map entity has been created!
+    assert hass.states.get("image.roborock_s7_maxv_main_floor") is not None

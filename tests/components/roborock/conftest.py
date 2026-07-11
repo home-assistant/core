@@ -416,6 +416,8 @@ def make_home_trait(
     home_trait.home_map_info = home_map_info
     home_trait.current_map_data = home_map_info[current_map]
     home_trait.home_map_content = home_map_content
+    notify = attach_update_listeners(home_trait)
+    home_trait.refresh.side_effect = notify
     return home_trait
 
 

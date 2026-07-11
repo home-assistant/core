@@ -42,23 +42,38 @@ async def async_setup_entry(
         coordinator: RoborockCoordinatorType,
     ) -> None:
         """Add entities for a specific coordinator."""
-        entities: list[ImageEntity] = []
         if isinstance(coordinator, RoborockDataUpdateCoordinator):
-            entities.extend(
-                RoborockMap(
-                    config_entry,
-                    coordinator,
-                    coordinator.properties_api.home,
-                    map_info.map_flag,
-                    map_info.name,
+            added_map_flags: set[int] = set()
+
+            @callback
+            def async_create_map_entities() -> None:
+                """Create entities for maps that have not been added yet."""
+                map_infos = coordinator.properties_api.home.home_map_info or {}
+                new_entities = []
+                for map_info in map_infos.values():
+                    if map_info.map_flag not in added_map_flags:
+                        new_entities.append(
+                            RoborockMap(
+                                config_entry,
+                                coordinator,
+                                coordinator.properties_api.home,
+                                map_info.map_flag,
+                                map_info.name,
+                            )
+                        )
+                        added_map_flags.add(map_info.map_flag)
+                if new_entities:
+                    async_add_entities(new_entities)
+
+            async_create_map_entities()
+
+            config_entry.async_on_unload(
+                coordinator.properties_api.home.add_update_listener(
+                    async_create_map_entities
                 )
-                for map_info in (
-                    coordinator.properties_api.home.home_map_info or {}
-                ).values()
             )
         elif isinstance(coordinator, RoborockB01Q10UpdateCoordinator):
-            entities.append(RoborockMapQ10(coordinator))
-        async_add_entities(entities)
+            async_add_entities([RoborockMapQ10(coordinator)])
 
     for coordinator in coordinators.values():
         async_add_coordinator_entities(coordinator)
