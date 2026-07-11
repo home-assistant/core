@@ -233,7 +233,7 @@ async def test_entity_reads_state_from_current_coordinator_data(
     assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_OPEN
 
     coordinator = init_integration.runtime_data
-    original_key = "DEVICE123.motors.motor-1"
+    original_key = "DEVICE123_motor-1"
     assert original_key in coordinator.data
 
     replacement = MagicMock()

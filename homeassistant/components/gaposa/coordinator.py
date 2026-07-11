@@ -29,24 +29,21 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
     """Fetch state for every Gaposa motor on the account."""
 
     config_entry: GaposaConfigEntry
+    gaposa: Gaposa
 
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: GaposaConfigEntry,
-        *,
-        name: str,
-        update_interval: timedelta,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=name,
-            update_interval=update_interval,
+            name=config_entry.title,
+            update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
-        self.gaposa: Gaposa | None = None
         self.devices: list[Device] = []
         self._listener: Callable[[], None] | None = None
 
@@ -70,8 +67,6 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
 
     async def _async_update_data(self) -> dict[str, Motor]:
         """Refresh motor state from the Gaposa cloud."""
-        assert self.gaposa is not None  # set in _async_setup
-
         try:
             async with timeout(10):
                 await self.gaposa.update()
@@ -113,16 +108,14 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
     def _get_data_from_devices(self) -> dict[str, Motor]:
         """Flatten all motors across all devices into a single dict.
 
-        The dictionary key is a unique id for the motor of the form
-        ``<device serial number>.motors.<motor.id>``.
+        The key ``<device serial>_<motor id>`` is unique across all
+        motors on the account and is used as the cover unique_id.
         """
         data: dict[str, Motor] = {}
-        if self.gaposa is None:
-            return data
         for client, _user in self.gaposa.clients:
             for device in client.devices:
                 for motor in device.motors:
-                    data[f"{device.serial}.motors.{motor.id}"] = motor
+                    data[f"{device.serial}_{motor.id}"] = motor
         return data
 
     def _on_device_polled(self) -> None:
@@ -143,6 +136,6 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
                 device.removeListener(self._listener)
             self._listener = None
         self.devices = []
-        if self.gaposa is not None:
+        # Setup can fail before self.gaposa is assigned in _async_setup.
+        if hasattr(self, "gaposa"):
             await self.gaposa.close()
-            self.gaposa = None

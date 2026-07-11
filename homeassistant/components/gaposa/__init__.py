@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import UPDATE_INTERVAL
 from .coordinator import DataUpdateCoordinatorGaposa
 
 PLATFORMS: list[Platform] = [Platform.COVER]
@@ -18,12 +15,7 @@ type GaposaConfigEntry = ConfigEntry[DataUpdateCoordinatorGaposa]
 
 async def async_setup_entry(hass: HomeAssistant, entry: GaposaConfigEntry) -> bool:
     """Set up Gaposa from a config entry."""
-    coordinator = DataUpdateCoordinatorGaposa(
-        hass,
-        entry,
-        name=entry.title,
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
-    )
+    coordinator = DataUpdateCoordinatorGaposa(hass, entry)
     try:
         await coordinator.async_config_entry_first_refresh()
     except Exception:

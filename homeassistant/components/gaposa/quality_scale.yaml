@@ -2,7 +2,10 @@ rules:
   # Bronze
   action-setup:
     status: exempt
-    comment: This integration does not register custom actions.
+    comment: |
+      This integration only exposes standard cover platform actions
+      (open, close, stop) via the CoverEntity feature flags. It does
+      not register any custom action handlers.
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -43,15 +46,12 @@ rules:
   devices: done
   diagnostics: todo
   discovery:
-    status: exempt
+    status: todo
     comment: |
-      Gaposa is a cloud service; there is no discoverable hub on the
-      local network to find.
-  discovery-update-info:
-    status: exempt
-    comment: |
-      Gaposa is a cloud service; there is no discoverable hub on the
-      local network to find.
+      Gaposa control is via the cloud, but the RollApp hub is
+      on the local network. Investigate DHCP discovery matching on
+      the hub's MAC prefix or hostname.
+  discovery-update-info: todo
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

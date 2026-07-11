@@ -32,7 +32,7 @@ async def test_coordinator_populates_data(
     assert coordinator.data is not None
     assert len(coordinator.data) == 2
     keys = set(coordinator.data.keys())
-    assert keys == {"DEVICE123.motors.motor-1", "DEVICE123.motors.motor-2"}
+    assert keys == {"DEVICE123_motor-1", "DEVICE123_motor-2"}
 
 
 async def test_coordinator_normal_refresh_interval(
