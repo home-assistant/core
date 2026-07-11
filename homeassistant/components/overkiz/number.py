@@ -186,6 +186,34 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
     ),
+    # AtlanticElectricalTowelDryer - boost mode duration in minutes
+    OverkizNumberDescription(
+        key=OverkizState.IO_BOOST_DURATION_USER_PARAMETER,
+        name="Boost mode duration",
+        icon="mdi:radiator",
+        command=OverkizCommand.SET_TOWEL_DRYER_BOOST_MODE_DURATION,
+        native_min_value=0,
+        native_max_value=60,
+        native_step=1,
+        max_value_state_name=OverkizState.IO_BOOST_DURATION_MAX,
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+    ),
+    # AtlanticElectricalTowelDryer - drying duration in minutes
+    OverkizNumberDescription(
+        key=OverkizState.IO_DRYING_DURATION_USER_PARAMETER,
+        name="Drying duration",
+        icon="mdi:tumble-dryer",
+        command=OverkizCommand.SET_DRYING_DURATION,
+        native_min_value=0,
+        native_max_value=120,
+        native_step=1,
+        max_value_state_name=OverkizState.IO_DRYING_DURATION_MAX,
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in NUMBER_DESCRIPTIONS}
