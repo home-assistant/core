@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfMass
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -103,7 +103,7 @@ ENTITY_DESCRIPTIONS: dict[str, str] = {
     "taxStatus": "Tax status",
     "taxDueDate": "Tax due date",
     "artEndDate": "Additional rate of tax end date",
-    "motStatus": "M.O.T status",
+    "motStatus": "MOT status",  # codespell:ignore
     "make": "Make",
     "yearOfManufacture": "Year of manufacture",
     "engineCapacity": "Engine capacity",
@@ -113,7 +113,7 @@ ENTITY_DESCRIPTIONS: dict[str, str] = {
     "typeApproval": "Type approval",
     "revenueWeight": "Revenue weight",
     "dateOfLastV5CIssued": "Date of last V5C issued",
-    "motExpiryDate": "M.O.T expiry date",
+    "motExpiryDate": "MOT expiry date",  # codespell:ignore
     "wheelplan": "Wheelplan",
     "monthOfFirstRegistration": "Month of first registration",
     "monthOfFirstDvlaRegistration": "Month of first DVLA registration",
@@ -168,6 +168,7 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
             manufacturer=DOMAIN.upper(),
             model=coordinator.data.get("make"),
             name=name.upper(),
+            entry_type=DeviceEntryType.SERVICE,
         )
         self._attr_unique_id = f"{name}-{description.key}".lower()
         self.entity_description = description

@@ -5,6 +5,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_registration": "Invalid or unknown vehicle registration number",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {

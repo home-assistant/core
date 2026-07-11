@@ -2,11 +2,15 @@
 
 from unittest.mock import patch
 
-from aio_dvla_vehicle_enquiry import DVLAError
+from aio_dvla_vehicle_enquiry import DVLAError, DVLAInvalidRegistrationError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.dvla.config_flow import CannotConnect, validate_input
+from homeassistant.components.dvla.config_flow import (
+    CannotConnect,
+    InvalidRegistration,
+    validate_input,
+)
 from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -134,3 +138,31 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_validate_input_invalid_registration(hass: HomeAssistant) -> None:
+    """Test validate_input maps invalid registrations."""
+    with (
+        patch(
+            "homeassistant.components.dvla.config_flow.DVLAClient.async_get_vehicle",
+            side_effect=DVLAInvalidRegistrationError("Invalid registration number"),
+        ),
+        pytest.raises(InvalidRegistration),
+    ):
+        await validate_input(hass, {CONF_REG_NUMBER: "INVALID"})
+
+
+async def test_form_invalid_registration(hass: HomeAssistant) -> None:
+    """Test form shows invalid registration errors."""
+    with patch(
+        "homeassistant.components.dvla.config_flow.validate_input",
+        side_effect=InvalidRegistration,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_REG_NUMBER: "INVALID"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_registration"}

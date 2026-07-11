@@ -8,7 +8,8 @@ from homeassistant.components.dvla.coordinator import DVLACoordinator
 from homeassistant.components.dvla.sensor import DVLASensor
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceEntryType
 
 from tests.common import MockConfigEntry
 
@@ -59,8 +60,10 @@ async def setup_dvla_entry(
 
     with (
         patch(
-            "homeassistant.components.dvla.coordinator.DVLACoordinator._async_update_data",
-            return_value=vehicle_data or MOCK_VEHICLE_DATA,
+            "homeassistant.components.dvla.coordinator.DVLAClient.async_get_vehicle",
+            return_value=vehicle_data
+            if vehicle_data is not None
+            else MOCK_VEHICLE_DATA,
         ),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -249,7 +252,8 @@ async def test_registration_month_fields_are_distinct(
 
 
 async def test_mot_expiry_date_sensor_value(hass: HomeAssistant) -> None:
-    """Test M.O.T expiry date is exposed when returned by DVLA."""
+    """Test MOT expiry date is exposed when returned by DVLA."""  # codespell:ignore
+
     await setup_dvla_entry(
         hass,
         {
@@ -262,3 +266,14 @@ async def test_mot_expiry_date_sensor_value(hass: HomeAssistant) -> None:
     state = get_state(hass, "motExpiryDate")
 
     assert state.state == "2026-11-30"
+
+
+async def test_device_entry_type(hass: HomeAssistant) -> None:
+    """Test DVLA device is marked as a service."""
+    await setup_dvla_entry(hass)
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device({(DOMAIN, "AB12CDE")})
+
+    assert device is not None
+    assert device.entry_type is DeviceEntryType.SERVICE

@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from aio_dvla_vehicle_enquiry import DVLAClient, DVLAError
+from aio_dvla_vehicle_enquiry import DVLAClient, DVLAError, DVLAInvalidRegistrationError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow as ConfigFlowBase, ConfigFlowResult
@@ -28,6 +28,8 @@ async def validate_input(
 
     try:
         await client.async_get_vehicle(reg_number)
+    except DVLAInvalidRegistrationError as err:
+        raise InvalidRegistration from err
     except DVLAError as err:
         raise CannotConnect from err
 
@@ -55,6 +57,8 @@ class ConfigFlow(ConfigFlowBase, domain=DOMAIN):
 
             try:
                 info = await validate_input(self.hass, user_input)
+            except InvalidRegistration:
+                errors["base"] = "invalid_registration"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
@@ -86,3 +90,7 @@ class ConfigFlow(ConfigFlowBase, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class InvalidRegistration(HomeAssistantError):
+    """Error to indicate the registration number is invalid or unknown."""
