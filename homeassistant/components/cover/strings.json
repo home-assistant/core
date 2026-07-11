@@ -212,7 +212,7 @@
   },
   "exceptions": {
     "not_valid_speed": {
-      "message": "Speed {speed} is not valid, valid speeds are: {supported_speeds}."
+      "message": "Speed {speed} is not valid. Valid speeds are: {supported_speeds}."
     }
   },
   "services": {
