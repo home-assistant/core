@@ -263,12 +263,7 @@ async def test_set_cover_position(
 async def test_cover_not_created_when_no_initial_data(
     hass: HomeAssistant,
 ) -> None:
-    """Test cover entity is not created when there is no initial variable data.
-
-    Matches the local_polling integration's behavior: an item with no
-    reported variables never appears in the coordinator's data and is
-    skipped rather than created in an unknown state.
-    """
+    """Test cover entity is not created when there is no initial variable data."""
     state = hass.states.get(ENTITY_ID)
     assert state is None
 

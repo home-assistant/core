@@ -1,6 +1,5 @@
 """Platform for Control4 Rooms Media Players."""
 
-import base64
 from dataclasses import dataclass
 from datetime import timedelta
 import enum
@@ -339,56 +338,6 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
         if not current_source or current_source not in self._sources:
             return None
         return self._sources[current_source].name
-
-    @override
-    @property
-    def media_playlist(self) -> str | None:
-        """Return the genre of the current media as a playlist label."""
-        media_info = self._get_media_info()
-        if not media_info or "genre" not in media_info:
-            return None
-        return base64.b64decode(media_info["genre"]).decode("ascii")
-
-    @override
-    @property
-    def media_image_url(self) -> str | None:
-        """Return the image URL for the current media."""
-        media_info = self._get_media_info()
-        if not media_info or "img" not in media_info:
-            return None
-
-        url = base64.b64decode(media_info["img"]).decode("ascii")
-        base_url_http = self.entry_data[CONF_DIRECTOR].base_url.replace(
-            "https://", "http://"
-        )  # avoid self-signed cert issue
-        return url.replace("controller:/", base_url_http)
-
-    @override
-    @property
-    def media_artist(self) -> str | None:
-        """Return the artist of the current media."""
-        media_info = self._get_media_info()
-        if not media_info or "artist" not in media_info:
-            return None
-        return media_info["artist"]
-
-    @override
-    @property
-    def media_album_name(self) -> str | None:
-        """Return the album name of the current media."""
-        media_info = self._get_media_info()
-        if not media_info or "album" not in media_info:
-            return None
-        return media_info["album"]
-
-    @override
-    @property
-    def media_channel(self) -> str | None:
-        """Return the channel of the current media."""
-        media_info = self._get_media_info()
-        if not media_info or "channel" not in media_info:
-            return None
-        return media_info["channel"]
 
     @override
     @property
