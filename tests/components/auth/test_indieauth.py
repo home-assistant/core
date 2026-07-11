@@ -169,6 +169,27 @@ async def test_find_link_tag_max_size(hass: HomeAssistant, mock_session) -> None
     assert redirect_uris == ["http://127.0.0.1:8000/wine"]
 
 
+async def test_find_link_tag_without_href(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker
+) -> None:
+    """Test a redirect_uri link tag without an href is skipped."""
+    mock_session.get(
+        "http://127.0.0.1:8000",
+        text="""
+<!doctype html>
+<html>
+  <head>
+    <link rel="redirect_uri">
+    <link rel="redirect_uri" href="https://example.com/cb">
+  </head>
+</html>
+""",
+    )
+    redirect_uris = await indieauth.fetch_redirect_uris(hass, "http://127.0.0.1:8000")
+
+    assert redirect_uris == ["https://example.com/cb"]
+
+
 async def test_fetch_redirect_uris_metadata_document(
     hass: HomeAssistant, mock_session: AiohttpClientMocker
 ) -> None:

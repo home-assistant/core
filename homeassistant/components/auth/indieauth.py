@@ -16,6 +16,9 @@ from homeassistant.util.network import is_local
 
 _LOGGER = logging.getLogger(__name__)
 
+# We limit reads of a client_id page to the first 10kB.
+MAX_FETCH_BYTES = 10240
+
 
 async def verify_redirect_uri(
     hass: HomeAssistant, client_id: str, redirect_uri: str
@@ -65,7 +68,7 @@ class LinkTagParser(HTMLParser):
         """Initialize a link tag parser."""
         super().__init__()
         self.rel = rel
-        self.found: list[str | None] = []
+        self.found: list[str] = []
 
     @override
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
@@ -75,8 +78,12 @@ class LinkTagParser(HTMLParser):
 
         attributes: dict[str, str | None] = dict(attrs)
 
-        if attributes.get("rel") == self.rel:
-            self.found.append(attributes.get("href"))
+        # Skip href-less tags: urljoin would raise on a None href.
+        if (
+            attributes.get("rel") == self.rel
+            and (href := attributes.get("href")) is not None
+        ):
+            self.found.append(href)
 
 
 async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
@@ -118,7 +125,9 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
             async for data in resp.content.iter_chunked(1024):
                 body += data
 
-                if len(body) >= 10240:
+                if len(body) >= MAX_FETCH_BYTES:
+                    # A chunk can cross the boundary, so clamp to the cap.
+                    body = body[:MAX_FETCH_BYTES]
                     break
             else:
                 # The loop ran to completion, so the whole response was read
