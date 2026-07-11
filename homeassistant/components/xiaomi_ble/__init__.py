@@ -119,12 +119,10 @@ def format_discovered_event_class(address: str) -> str:
     return f"{DOMAIN}_discovered_event_class_{address}"
 
 
-def _async_migrate_s400_impedance_unique_ids(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    device_registry: DeviceRegistry,
-) -> None:
-    """Migrate legacy S400 impedance unique_ids to match the corrected frequency mapping.
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old config entries to the current version.
+
+    Version 1.2 corrects the unique_ids of the S400 impedance sensors.
 
     The xiaomi-ble library used to mislabel the two impedance measurements
     reported by the Mi Body Composition Scale S400:
@@ -138,20 +136,80 @@ def _async_migrate_s400_impedance_unique_ids(
     - "impedance_low" now correctly holds the 50 kHz (low frequency) value.
     - "impedance_high" now correctly holds the 250 kHz (high frequency) value.
 
-    The "impedance_low"/"impedance_high" keys are now emitted directly by
-    the library under their final, correct unique_ids, so they must not be
-    touched here. Only the obsolete legacy "impedance" entity (which the
-    library no longer emits for the S400) needs to be disabled, so it stops
-    lingering, unused, in the UI. We disable rather than remove it: removing
-    it outright can race with Home Assistant's own entity restoration at
-    startup, which would simply recreate it right after. This only applies
-    to the S400; other scales (V1/V2) never had this mislabeling and are
-    left untouched.
+    We rename the existing entities' unique_ids to match, so history and
+    long-term statistics stay attached to the right entity instead of being
+    lost on a disabled leftover. This only applies to the S400; other
+    scales (V1/V2) never had this mislabeling and are left untouched.
+
+    The rename must happen in this order: "impedance_low" -> "impedance_high"
+    first, to free up the "impedance_low" suffix before the legacy
+    "impedance" entity is moved onto it.
+    """
+    if entry.version == 1 and entry.minor_version == 1:
+        address = entry.unique_id
+        if address is not None:
+            device_registry = dr.async_get(hass)
+            device_entry = device_registry.async_get_device(
+                identifiers={(BLUETOOTH_DOMAIN, address)}
+            )
+            if device_entry is not None and device_entry.model in S400_MODELS:
+                entity_registry = er.async_get(hass)
+
+                old_low_id = f"{address}-impedance_low"
+                new_high_id = f"{address}-impedance_high"
+                if entity_id := entity_registry.async_get_entity_id(
+                    Platform.SENSOR, DOMAIN, old_low_id
+                ):
+                    _LOGGER.debug("S400 migration: %s -> %s", old_low_id, new_high_id)
+                    entity_registry.async_update_entity(
+                        entity_id, new_unique_id=new_high_id
+                    )
+
+                old_legacy_id = f"{address}-impedance"
+                new_low_id = f"{address}-impedance_low"
+                if entity_id := entity_registry.async_get_entity_id(
+                    Platform.SENSOR, DOMAIN, old_legacy_id
+                ):
+                    _LOGGER.debug("S400 migration: %s -> %s", old_legacy_id, new_low_id)
+                    entity_registry.async_update_entity(
+                        entity_id, new_unique_id=new_low_id
+                    )
+
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    return True
+
+
+def _async_purge_phantom_s400_impedance_entity(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """Remove a phantom legacy S400 impedance entity, if one reappeared.
+
+    The unique_id migration in async_migrate_entry renames the legacy
+    "-impedance" entity away once, for good: after that, this key should
+    never be legitimate again for an S400 device.
+
+    However, Bluetooth passive entities are also restored from a separate
+    cache (homeassistant.components.bluetooth.passive_update_processor's
+    own storage, keyed by config_entry_id), independent from the entity
+    registry. On instances that ran an older version of this integration
+    (before the xiaomi-ble fix), that cache still remembers an entity
+    description for the old generic "impedance" key. Since the entity
+    registry entry for that unique_id was already renamed away, the
+    passive processor recreates a brand new (and empty/phantom) entity for
+    it every time the platform is set up, before any fresh advertisement
+    is even parsed.
+
+    This entity never holds any real history (it's freshly created each
+    time), so unlike the legacy entity handled by the migration, it's
+    safe to simply remove it here, every setup, until the underlying
+    passive-processor cache eventually stops replaying the stale key.
     """
     address = entry.unique_id
     if address is None:
         return
 
+    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
         identifiers={(BLUETOOTH_DOMAIN, address)}
     )
@@ -159,17 +217,12 @@ def _async_migrate_s400_impedance_unique_ids(
         return
 
     entity_registry = er.async_get(hass)
-
     legacy_unique_id = f"{address}-impedance"
     if entity_id := entity_registry.async_get_entity_id(
         Platform.SENSOR, DOMAIN, legacy_unique_id
     ):
-        legacy_entry = entity_registry.entities[entity_id]
-        if legacy_entry.disabled_by is None:
-            _LOGGER.debug("S400 migration: disabling legacy entity %s", entity_id)
-            entity_registry.async_update_entity(
-                entity_id, disabled_by=er.RegistryEntryDisabler.INTEGRATION
-            )
+        _LOGGER.debug("Removing phantom S400 legacy impedance entity: %s", entity_id)
+        entity_registry.async_remove(entity_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -218,8 +271,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device_registry = dr.async_get(hass)
 
-    _async_migrate_s400_impedance_unique_ids(hass, entry, device_registry)
-
     coordinator = XiaomiActiveBluetoothProcessorCoordinator(
         hass,
         _LOGGER,
@@ -238,6 +289,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # The sensor platform may have just recreated a phantom legacy
+    # "impedance" entity from a stale bluetooth passive-processor restore
+    # cache (see _async_purge_phantom_s400_impedance_entity). Clean it up
+    # now that platform setup has had a chance to (re)create it.
+    _async_purge_phantom_s400_impedance_entity(hass, entry)
     # only start after all platforms have had a chance to subscribe
     entry.async_on_unload(coordinator.async_start())
     return True
