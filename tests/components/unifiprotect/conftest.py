@@ -6,7 +6,6 @@ from functools import partial
 from ipaddress import IPv4Address
 from pathlib import Path
 from tempfile import gettempdir
-from types import SimpleNamespace
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -22,6 +21,8 @@ from uiprotect.data import (
     CloudAccount,
     Light,
     Liveview,
+    ModelType,
+    ProtectModelWithId,
     Sensor,
     SmartDetectObjectType,
     StateType,
@@ -45,25 +46,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import _patch_discovery
-from .utils import MockUFPFixture
+from .utils import MockUFPFixture, make_public_camera, public_rtsps_for
 
 from tests.common import MockConfigEntry, load_json_object_fixture
-
-
-def _public_rtsps_for(camera: Any) -> RTSPSStreams | None:
-    """Build a camera's primed RTSPS streams from its RTSP-enabled channels.
-
-    Mirrors what the library writes onto ``PublicCamera.rtsps_streams`` during
-    ``update_public()`` — only RTSP-enabled channels carry an active URL, and a
-    camera with none is left streamless (``None``).
-    """
-    urls = {
-        channel.rtsps_quality: channel.rtsps_url
-        for channel in camera.channels
-        if channel.is_rtsp_enabled and channel.rtsps_quality is not None
-    }
-    return RTSPSStreams(**urls) if urls else None
-
 
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
 
@@ -182,6 +167,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.update_public = AsyncMock()
     client.async_disconnect_ws = AsyncMock()
     client.has_public_bootstrap = True
+    client.is_public_only = False
 
     # The library owns RTSPS streams on ``PublicCamera.rtsps_streams`` and primes
     # them in ``update_public()``; the integration reads them synchronously. Start
@@ -193,15 +179,25 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.public_bootstrap.sirens = {}
     client.public_bootstrap.arm_profiles = {}
     client.public_bootstrap.arm_mode = None
-    # No paired public device by default; tests opt in via setup_public_* helpers.
-    client.public_bootstrap.get = Mock(return_value=None)
+
+    # Cameras resolve to their primed public model (see ``update_public`` in
+    # ``mock_entry``); other device types opt in via the ``setup_public_*``
+    # helpers, so they default to no paired public object.
+    def _public_bootstrap_get(
+        model: ModelType, obj_id: str
+    ) -> ProtectModelWithId | None:
+        if model is ModelType.CAMERA:
+            return client.public_bootstrap.cameras.get(obj_id)
+        return None
+
+    client.public_bootstrap.get = Mock(side_effect=_public_bootstrap_get)
 
     async def get_camera_rtsps_streams(
         camera_id: str, *args: Any, **kwargs: Any
     ) -> RTSPSStreams | None:
         """Fetch a camera's RTSPS streams (used by the repair flow)."""
         camera = client.bootstrap.cameras.get(camera_id)
-        return _public_rtsps_for(camera) if camera is not None else None
+        return public_rtsps_for(camera) if camera is not None else None
 
     client.get_camera_rtsps_streams = AsyncMock(side_effect=get_camera_rtsps_streams)
     client.create_camera_rtsps_streams = AsyncMock(return_value=None)
@@ -265,23 +261,20 @@ def mock_entry(
         ufp_client.subscribe_devices_websocket_state = subscribe_devices_websocket_state
 
         async def update_public() -> Any:
-            # Mirror the library prime: populate PublicCamera.rtsps_streams for
-            # every camera from the private bootstrap (connected cameras only, so
-            # a disconnected camera stays streamless), keyed by id.
+            # Mirror the library prime: build each camera's public model from the
+            # private bootstrap and attach its RTSPS streams (connected cameras
+            # only, so a disconnected camera stays streamless), keyed by id.
             pb = ufp_client.public_bootstrap
-            pb.cameras = {
-                camera.id: SimpleNamespace(
-                    id=camera.id,
-                    name=camera.display_name,
-                    state=camera.state,
-                    rtsps_streams=(
-                        _public_rtsps_for(camera)
-                        if camera.state is StateType.CONNECTED
-                        else None
-                    ),
+            cameras: dict[str, Any] = {}
+            for camera in ufp_client.bootstrap.cameras.values():
+                public = make_public_camera(camera)
+                public.rtsps_streams = (
+                    public_rtsps_for(camera)
+                    if camera.state is StateType.CONNECTED
+                    else None
                 )
-                for camera in ufp_client.bootstrap.cameras.values()
-            }
+                cameras[camera.id] = public
+            pb.cameras = cameras
             return pb
 
         ufp_client.update_public = AsyncMock(side_effect=update_public)

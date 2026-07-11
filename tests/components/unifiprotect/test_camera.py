@@ -1,11 +1,10 @@
 """Test the UniFi Protect camera platform."""
 
-from types import SimpleNamespace
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
-from uiprotect.data import AiPort, Camera as ProtectCamera, StateType
+from uiprotect.data import AiPort, Camera as ProtectCamera, DeviceState, StateType
 from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.components.camera import (
@@ -16,7 +15,7 @@ from homeassistant.components.camera import (
 from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
 from homeassistant.components.unifiprotect.utils import get_camera_base_name
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
@@ -27,14 +26,18 @@ from .utils import (
     assert_entity_counts,
     enable_entity,
     init_entry,
+    make_public_camera,
+    public_device_ws_message,
+    public_rtsps_for,
     remove_entities,
 )
 
 
 def _channel_entity_id(camera_obj: ProtectCamera, channel_id: int) -> str:
     """Return the entity_id for a camera channel."""
-    channel = camera_obj.channels[channel_id]
-    base_name = get_camera_base_name(channel)
+    quality = camera_obj.channels[channel_id].rtsps_quality
+    assert quality is not None
+    base_name = get_camera_base_name(quality)
     return f"camera.{camera_obj.name}_{base_name}".replace(" ", "_").lower()
 
 
@@ -242,32 +245,17 @@ async def test_package_camera_without_stream(
     assert ufp.api.get_public_api_camera_snapshot.call_args.kwargs["package"] is True
 
 
-async def test_package_only_camera(
-    hass: HomeAssistant,
-    ufp: MockUFPFixture,
-    camera: ProtectCamera,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """A camera with only a package channel still exposes a snapshot entity."""
-    package = camera.channels[0].model_copy()
-    package.id = 3
-    package.fps = 2
-    package.is_rtsp_enabled = False
-    camera.channels = [package]
-
-    await init_entry(hass, ufp, [camera])
-
-    # only the package snapshot entity (disabled by default); no main fallback, no repair
-    assert_entity_counts(hass, Platform.CAMERA, 1, 0)
-    _assert_entity(hass, camera, 0, enabled=False)
-    assert issue_registry.async_get_issue(DOMAIN, f"rtsp_disabled_{camera.id}") is None
-
-
-async def test_no_channels(
+async def test_camera_not_in_public_bootstrap(
     hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ) -> None:
-    """A camera without channels yet creates no entities."""
-    camera.channels = []
+    """A camera not yet mirrored into the public bootstrap is deferred."""
+
+    async def _prime_without_camera() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_without_camera)
 
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.CAMERA, 0, 0)
@@ -280,11 +268,9 @@ async def test_streams_unavailable(
 
     async def _prime_streamless() -> Any:
         pb = ufp.api.public_bootstrap
-        pb.cameras = {
-            camera_all.id: SimpleNamespace(
-                id=camera_all.id, state=camera_all.state, rtsps_streams=None
-            )
-        }
+        public = make_public_camera(camera_all)
+        public.rtsps_streams = None
+        pb.cameras = {camera_all.id: public}
         return pb
 
     ufp.api.update_public = AsyncMock(side_effect=_prime_streamless)
@@ -380,6 +366,106 @@ async def test_aiport_no_camera_entities(
 ) -> None:
     """AI Port devices do not create camera entities."""
     await init_entry(hass, ufp, [aiport])
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+
+
+async def test_public_only_camera(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+) -> None:
+    """A camera present only in the public bootstrap builds a working entity.
+
+    Mirrors public-only mode (no private fill): the entity is built from the
+    public object, streams from the public API, and tracks the public devices
+    websocket for availability. Recording/diagnostic state degrades.
+    """
+    # This camera is intentionally kept out of the private bootstrap; wire the
+    # channel api so its public RTSPS URLs resolve, as add_device would.
+    for channel in camera.channels:
+        channel._api = ufp.api
+    public = make_public_camera(camera)
+    public.rtsps_streams = public_rtsps_for(camera)
+
+    async def _prime_public_only() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {camera.id: public}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_public_only)
+    ufp.api.is_public_only = True
+
+    # No private cameras in the bootstrap: the public object is the only source.
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.CAMERA, 1, 1)
+
+    entity_id = _channel_entity_id(camera, 0)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    # diagnostics have no public equivalent and degrade to None
+    assert state.attributes["fps"] is None
+
+    assert (
+        await async_get_stream_source(hass, entity_id)
+        == camera.channels[0].rtsps_no_srtp_url
+    )
+
+    ufp.api.get_public_api_camera_snapshot = AsyncMock()
+    await async_get_image(hass, entity_id)
+    ufp.api.get_public_api_camera_snapshot.assert_called_once()
+
+    # a frame without a merged object re-reads the public bootstrap and stays up
+    none_msg = Mock()
+    none_msg.changed_data = {}
+    none_msg.new_obj = None
+    none_msg.old_obj = public
+    ufp.devices_ws_subscription(none_msg)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    # a public devices websocket update drives availability
+    public.state = DeviceState.DISCONNECTED
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_adopt_before_public_bootstrap(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+) -> None:
+    """A camera adopted before the public bootstrap mirrors it is deferred."""
+
+    async def _prime_empty() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_empty)
+
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+
+    # adopt the camera while it is still absent from the public bootstrap
+    camera._api = ufp.api
+    await adopt_devices(hass, ufp, [camera], fully_adopt=True)
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+
+
+async def test_hybrid_public_camera_without_private_deferred(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+) -> None:
+    """Hybrid: a public camera without its private twin is left to the adopt flow."""
+    public = make_public_camera(camera)
+
+    async def _prime_public_only() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {camera.id: public}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_public_only)
+
+    # Not public-only mode (conftest default): the entity must not be built
+    # private-less; the later adopt dispatch creates it with its private fill.
+    await init_entry(hass, ufp, [])
     assert_entity_counts(hass, Platform.CAMERA, 0, 0)
 
 

@@ -21,6 +21,7 @@ from uiprotect.data import (
     PublicDeviceModel,
     WSSubscriptionMessage,
 )
+from uiprotect.data.public_devices import PublicCamera
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.utils import log_event
 from uiprotect.websocket import WebsocketState
@@ -151,6 +152,26 @@ class ProtectData:
         return cast(
             Generator[Camera], self.get_by_types({ModelType.CAMERA}, ignore_unadopted)
         )
+
+    def get_public_cameras(
+        self,
+    ) -> Generator[tuple[PublicCamera, Camera | None]]:
+        """Iterate cameras public-master with private-fill.
+
+        The public bootstrap is the master list; the matching private camera is
+        paired by shared id when present (hybrid) and ``None`` in public-only
+        mode. Adopted-filtering mirrors ``get_cameras`` whenever a private object
+        is available.
+        """
+        api = self.api
+        if not api.has_public_bootstrap:
+            return
+        private_cameras = api.bootstrap.cameras
+        for camera_id, public in api.public_bootstrap.cameras.items():
+            private = private_cameras.get(camera_id)
+            if private is not None and not private.is_adopted_by_us:
+                continue
+            yield public, private
 
     async def async_load_ptz_patrols(self) -> None:
         """Load PTZ patrols for all PTZ cameras."""
@@ -529,7 +550,7 @@ class ProtectData:
 
     @callback
     def async_get_public_device(
-        self, device: ProtectDeviceType
+        self, device: ProtectDeviceType | PublicDeviceModel
     ) -> PublicDeviceModel | None:
         """Return the public-API object matching a device, if available."""
         api = self.api
