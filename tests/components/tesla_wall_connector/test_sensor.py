@@ -7,6 +7,7 @@ from .conftest import (
     _test_sensors,
     get_lifetime_mock,
     get_vitals_mock,
+    get_wifi_status_mock,
 )
 
 
@@ -36,6 +37,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
             "sensor.tesla_wall_connector_energy", "988.022", "989.0"
         ),
         EntityAndExpectedValues(
+            "sensor.tesla_wall_connector_vehicle_current", "32", "16"
+        ),
+        EntityAndExpectedValues(
             "sensor.tesla_wall_connector_phase_a_current", "10", "7"
         ),
         EntityAndExpectedValues(
@@ -59,6 +63,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         EntityAndExpectedValues(
             "sensor.tesla_wall_connector_session_energy", "1.23456", "0.1122"
         ),
+        EntityAndExpectedValues("sensor.tesla_wall_connector_wifi_rssi", "-42", "-54"),
     ]
 
     mock_vitals_first_update = get_vitals_mock()
@@ -76,6 +81,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     mock_vitals_second_update.currentA_a = 7
     mock_vitals_second_update.currentB_a = 8
     mock_vitals_second_update.currentC_a = 9
+    mock_vitals_second_update.vehicle_current_a = 16
     mock_vitals_second_update.total_power_w = 5499.5
     mock_vitals_second_update.session_energy_wh = 112.2
 
@@ -83,6 +89,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
     lifetime_mock_first_update.energy_wh = 988022
     lifetime_mock_second_update = get_lifetime_mock()
     lifetime_mock_second_update.energy_wh = 989000
+    wifi_status_first_update = get_wifi_status_mock()
+    wifi_status_second_update = get_wifi_status_mock()
+    wifi_status_second_update.wifi_rssi = -54
 
     await _test_sensors(
         hass,
@@ -91,4 +100,6 @@ async def test_sensors(hass: HomeAssistant) -> None:
         vitals_second_update=mock_vitals_second_update,
         lifetime_first_update=lifetime_mock_first_update,
         lifetime_second_update=lifetime_mock_second_update,
+        wifi_status_first_update=wifi_status_first_update,
+        wifi_status_second_update=wifi_status_second_update,
     )
