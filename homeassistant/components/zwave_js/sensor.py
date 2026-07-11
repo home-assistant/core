@@ -833,25 +833,33 @@ class NewZWaveNumericSensor(ZWaveBaseEntity, SensorEntity):
     @override
     def on_value_update(self) -> None:
         """Handle scale changes for this value on value updated event."""
+        self.__dict__.pop("device_class", None)
+        self.__dict__.pop("state_class", None)
+        self.__dict__.pop("native_unit_of_measurement", None)
+        self.__dict__.pop("suggested_unit_of_measurement", None)
+
         try:
             data = NumericSensorDataTemplate().resolve_data(self.info.primary_value)
         except UnknownValueData:
             data = NumericSensorDataTemplateData()
+
         if data.entity_description_key or data.unit_of_measurement:
             self.entity_description = get_entity_description(data)
-            self._attr_native_unit_of_measurement = data.unit_of_measurement
+            if data.unit_of_measurement is not None:
+                self._attr_native_unit_of_measurement = data.unit_of_measurement
+            else:
+                self.__dict__.pop("_attr_native_unit_of_measurement", None)
         elif isinstance(self.info, NewZwaveDiscoveryInfo):
             discovery_description = cast(
                 SensorEntityDescription, self.info.entity_description
             )
             self.entity_description = discovery_description
-            self._attr_native_unit_of_measurement = (
-                discovery_description.native_unit_of_measurement
-            )
-        self.__dict__.pop("device_class", None)
-        self.__dict__.pop("state_class", None)
-        self.__dict__.pop("native_unit_of_measurement", None)
-        self.__dict__.pop("suggested_unit_of_measurement", None)
+            if discovery_description.native_unit_of_measurement is not None:
+                self._attr_native_unit_of_measurement = (
+                    discovery_description.native_unit_of_measurement
+                )
+            else:
+                self.__dict__.pop("_attr_native_unit_of_measurement", None)
 
     @property
     @override
