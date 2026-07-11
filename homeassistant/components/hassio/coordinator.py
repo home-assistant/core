@@ -2,10 +2,11 @@
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Awaitable
-from dataclasses import dataclass
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, replace
 import logging
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import Any, Literal, cast, override
+from uuid import UUID
 
 from aiohasupervisor import SupervisorError, SupervisorNotFoundError
 from aiohasupervisor.models import (
@@ -17,6 +18,8 @@ from aiohasupervisor.models import (
     HostInfo,
     InstalledAddon,
     InstalledAddonComplete,
+    Issue as SupervisorIssue,
+    Job,
     NetworkInfo,
     NFSMountResponse,
     OSInfo,
@@ -25,22 +28,39 @@ from aiohasupervisor.models import (
     StoreInfo,
     SupervisorInfo,
     SupervisorStats,
+    UnhealthyReason,
+    UnsupportedReason,
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MANUFACTURER
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HomeAssistant,
+    callback,
+    is_callback_check_partial,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     ATTR_ADDONS,
     ATTR_DATA,
+    ATTR_HEALTHY,
     ATTR_REPOSITORIES,
+    ATTR_SLUG,
     ATTR_STARTUP,
+    ATTR_SUPPORTED,
+    ATTR_UNHEALTHY_REASONS,
+    ATTR_UNSUPPORTED_REASONS,
     ATTR_UPDATE_KEY,
     ATTR_WS_EVENT,
     CONTAINER_STATS,
@@ -59,25 +79,666 @@ from .const import (
     DATA_SUPERVISOR_INFO,
     DATA_SUPERVISOR_STATS,
     DOMAIN,
+    EVENT_HEALTH_CHANGED,
+    EVENT_ISSUE_CHANGED,
+    EVENT_ISSUE_REMOVED,
+    EVENT_JOB,
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
+    EVENT_SUPPORTED_CHANGED,
+    EXTRA_PLACEHOLDERS,
     HASSIO_ADDON_UPDATE_INTERVAL,
+    HASSIO_ISSUES_UPDATE_INTERVAL,
     HASSIO_MAIN_UPDATE_INTERVAL,
     HASSIO_STATS_UPDATE_INTERVAL,
+    ISSUE_KEY_ADDON_BOOT_FAIL,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH,
+    ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
+    ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
+    ISSUE_KEY_ADDON_PWNED,
+    ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
+    ISSUE_KEY_SYSTEM_FREE_SPACE,
+    ISSUE_MOUNT_MOUNT_FAILED,
+    PLACEHOLDER_KEY_ADDON,
+    PLACEHOLDER_KEY_ADDON_URL,
+    PLACEHOLDER_KEY_FREE_SPACE,
+    PLACEHOLDER_KEY_REASON,
+    PLACEHOLDER_KEY_REFERENCE,
     REQUEST_REFRESH_DELAY,
     STARTUP_COMPLETE,
     SUPERVISOR_CONTAINER,
+    SUPERVISOR_JOBS_UPDATE_INTERVAL,
     UPDATE_KEY_SUPERVISOR,
     SupervisorEntityModel,
 )
 from .exceptions import HassioNotReadyError
 from .handler import get_supervisor_client
-from .jobs import SupervisorJobs
-
-if TYPE_CHECKING:
-    from .issues import SupervisorIssues
+from .issues import Issue, IssueDataType, Suggestion
 
 _LOGGER = logging.getLogger(__name__)
+
+ISSUE_KEY_UNHEALTHY = "unhealthy"
+ISSUE_KEY_UNSUPPORTED = "unsupported"
+ISSUE_ID_UNHEALTHY = "unhealthy_system"
+ISSUE_ID_UNSUPPORTED = "unsupported_system"
+
+INFO_URL_UNHEALTHY = "https://www.home-assistant.io/more-info/unhealthy"
+INFO_URL_UNSUPPORTED = "https://www.home-assistant.io/more-info/unsupported"
+
+# Some unsupported reasons also mark the system as unhealthy. If the unsupported reason
+# provides no additional information beyond the unhealthy one then skip that repair.
+UNSUPPORTED_SKIP_REPAIR = {"privileged"}
+
+# Keys (type + context) of issues that when found should be made into a repair.
+ISSUE_KEYS_FOR_REPAIRS = {
+    ISSUE_KEY_ADDON_BOOT_FAIL,
+    ISSUE_MOUNT_MOUNT_FAILED,
+    "issue_system_multiple_data_disks",
+    "issue_system_reboot_required",
+    ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
+    ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
+    ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
+    "issue_system_disk_lifetime",
+    ISSUE_KEY_SYSTEM_FREE_SPACE,
+    ISSUE_KEY_ADDON_PWNED,
+    ISSUE_KEY_ADDON_DEPRECATED_ARCH,
+    "issue_system_ntp_sync_failed",
+}
+
+
+@dataclass(slots=True, frozen=True)
+class IssueSubscription:
+    """Subscribe for updates on supervisor issues matching a key."""
+
+    event_callback: Callable[[IssueSubscriptionEvent], None]
+    key: str
+
+    def __post_init__(self) -> None:
+        """Validate inputs."""
+        if not self.key:
+            raise ValueError("A key must be provided!")
+        if not is_callback_check_partial(self.event_callback):
+            raise ValueError("event_callback must be a homeassistant.core.callback!")
+
+    def matches(self, issue: Issue) -> bool:
+        """Return true if issue matches this subscription."""
+        return issue.key == self.key
+
+
+@dataclass(slots=True, frozen=True)
+class IssueSubscriptionEvent:
+    """Issue subscription event."""
+
+    event: Literal["changed", "removed"]
+    issue: Issue
+
+
+@dataclass(slots=True, frozen=True)
+class SupervisorIssuesData:
+    """Data class for supervisor issues."""
+
+    unhealthy_reasons: set[str]
+    unsupported_reasons: set[str]
+    issues: dict[UUID, Issue]
+
+
+class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
+    """Manage supervisor issues state and repair synchronization."""
+
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+        """Initialize supervisor issues coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="SupervisorIssuesCoordinator",
+            update_interval=HASSIO_ISSUES_UPDATE_INTERVAL,
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
+        )
+        self._supervisor_client = get_supervisor_client(hass)
+        self._subscriptions: set[IssueSubscription] = set()
+        self._dispatcher_disconnect: Callable[[], None] | None = (
+            async_dispatcher_connect(
+                self.hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_issues
+            )
+        )
+        # Keep polling active even if initial refresh fails so coordinator can recover.
+        self.async_add_listener(lambda: None)
+
+    @property
+    def unhealthy_reasons(self) -> set[str]:
+        """Get unhealthy reasons. Returns empty set if system is healthy."""
+        return self.data.unhealthy_reasons if self.data is not None else set()
+
+    @property
+    def unsupported_reasons(self) -> set[str]:
+        """Get unsupported reasons. Returns empty set if system is supported."""
+        return self.data.unsupported_reasons if self.data is not None else set()
+
+    @property
+    def issues(self) -> set[Issue]:
+        """Get issues."""
+        if self.data is None:
+            return set()
+        return set(self.data.issues.values())
+
+    def get_issue(self, issue_id: str) -> Issue | None:
+        """Get issue from key."""
+        if self.data is None:
+            return None
+        return self.data.issues.get(UUID(issue_id))
+
+    def subscribe(self, subscription: IssueSubscription) -> CALLBACK_TYPE:
+        """Subscribe to updates for issue key. Callback is used to unsubscribe."""
+        self._subscriptions.add(subscription)
+
+        for match in [issue for issue in self.issues if subscription.matches(issue)]:
+            self._notify_issue_subscription_event(
+                subscription, IssueSubscriptionEvent(event="changed", issue=match)
+            )
+
+        def _unsubscribe() -> None:
+            self._subscriptions.discard(subscription)
+
+        return _unsubscribe
+
+    def _process_issue_change(self, event: IssueSubscriptionEvent) -> None:
+        """Process an issue change by triggering callbacks on subscribers."""
+        for sub in self._subscriptions:
+            if sub.matches(event.issue):
+                self._notify_issue_subscription_event(sub, event)
+
+    def _notify_issue_subscription_event(
+        self, subscription: IssueSubscription, event: IssueSubscriptionEvent
+    ) -> None:
+        """Run a subscription callback and log callback failures."""
+        try:
+            subscription.event_callback(event)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error(
+                "Error encountered processing Supervisor issue (%s %s %s) - %s",
+                event.issue.key,
+                event.issue.reference,
+                event.issue.uuid,
+                err,
+            )
+
+    @staticmethod
+    def _issue_equal(previous_issue: Issue, issue: Issue) -> bool:
+        """Return true if issues are equal including suggestions."""
+        return (
+            previous_issue == issue and previous_issue.suggestions == issue.suggestions
+        )
+
+    def _process_reason_deltas(
+        self,
+        previous_data: SupervisorIssuesData,
+        current_data: SupervisorIssuesData,
+    ) -> None:
+        """Create/delete unhealthy and unsupported repairs based on reason deltas."""
+        for unhealthy in (
+            current_data.unhealthy_reasons - previous_data.unhealthy_reasons
+        ):
+            if unhealthy in UnhealthyReason:
+                translation_key = f"{ISSUE_KEY_UNHEALTHY}_{unhealthy}"
+                translation_placeholders = None
+            else:
+                translation_key = ISSUE_KEY_UNHEALTHY
+                translation_placeholders = {PLACEHOLDER_KEY_REASON: unhealthy}
+
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{ISSUE_ID_UNHEALTHY}_{unhealthy}",
+                is_fixable=False,
+                learn_more_url=f"{INFO_URL_UNHEALTHY}/{unhealthy}",
+                severity=IssueSeverity.CRITICAL,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+            )
+
+        for fixed in previous_data.unhealthy_reasons - current_data.unhealthy_reasons:
+            async_delete_issue(self.hass, DOMAIN, f"{ISSUE_ID_UNHEALTHY}_{fixed}")
+
+        for unsupported in (
+            current_data.unsupported_reasons
+            - UNSUPPORTED_SKIP_REPAIR
+            - previous_data.unsupported_reasons
+        ):
+            if unsupported in UnsupportedReason:
+                translation_key = f"{ISSUE_KEY_UNSUPPORTED}_{unsupported}"
+                translation_placeholders = None
+            else:
+                translation_key = ISSUE_KEY_UNSUPPORTED
+                translation_placeholders = {PLACEHOLDER_KEY_REASON: unsupported}
+
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"{ISSUE_ID_UNSUPPORTED}_{unsupported}",
+                is_fixable=False,
+                learn_more_url=f"{INFO_URL_UNSUPPORTED}/{unsupported}",
+                severity=IssueSeverity.WARNING,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+            )
+
+        for fixed in previous_data.unsupported_reasons - (
+            current_data.unsupported_reasons - UNSUPPORTED_SKIP_REPAIR
+        ):
+            async_delete_issue(self.hass, DOMAIN, f"{ISSUE_ID_UNSUPPORTED}_{fixed}")
+
+    def _create_or_update_issue_repair(self, issue: Issue) -> None:
+        """Create/update a repair for an issue if needed."""
+        if issue.key not in ISSUE_KEYS_FOR_REPAIRS:
+            return
+
+        if not issue.suggestions and issue.key in EXTRA_PLACEHOLDERS:
+            placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[issue.key].copy()
+        else:
+            placeholders = {}
+
+        if issue.reference:
+            placeholders[PLACEHOLDER_KEY_REFERENCE] = issue.reference
+
+            if issue.key in {
+                ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
+                ISSUE_KEY_ADDON_PWNED,
+            }:
+                placeholders[PLACEHOLDER_KEY_ADDON_URL] = (
+                    f"/hassio/addon/{issue.reference}"
+                )
+                addons_list = get_addons_list(self.hass) or []
+                placeholders[PLACEHOLDER_KEY_ADDON] = issue.reference
+                for addon in addons_list:
+                    if addon[ATTR_SLUG] == issue.reference:
+                        placeholders[PLACEHOLDER_KEY_ADDON] = addon[ATTR_NAME]
+                        break
+
+        elif issue.key == ISSUE_KEY_SYSTEM_FREE_SPACE:
+            host_info = get_host_info(self.hass)
+            if host_info and "disk_free" in host_info:
+                placeholders[PLACEHOLDER_KEY_FREE_SPACE] = str(host_info["disk_free"])
+            else:
+                placeholders[PLACEHOLDER_KEY_FREE_SPACE] = "<2"
+
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue.uuid.hex,
+            is_fixable=bool(issue.suggestions),
+            severity=IssueSeverity.WARNING,
+            translation_key=issue.key,
+            translation_placeholders=placeholders or None,
+        )
+
+    def _delete_issue_repair(self, issue: Issue) -> None:
+        """Delete repair for issue if it maps to a repair."""
+        if issue.key in ISSUE_KEYS_FOR_REPAIRS:
+            async_delete_issue(self.hass, DOMAIN, issue.uuid.hex)
+
+    def _process_issue_deltas(
+        self,
+        previous_data: SupervisorIssuesData,
+        current_data: SupervisorIssuesData,
+    ) -> None:
+        """Create/delete issue repairs and notify subscribers based on issue deltas."""
+        for issue in current_data.issues.values():
+            previous_issue = previous_data.issues.get(issue.uuid)
+            if previous_issue is not None and self._issue_equal(previous_issue, issue):
+                continue
+
+            self._create_or_update_issue_repair(issue)
+            self._process_issue_change(
+                IssueSubscriptionEvent(event="changed", issue=issue)
+            )
+
+        for issue_uuid, issue in previous_data.issues.items():
+            if issue_uuid not in current_data.issues:
+                self._delete_issue_repair(issue)
+                self._process_issue_change(
+                    IssueSubscriptionEvent(event="removed", issue=issue)
+                )
+
+    @override
+    async def _async_update_data(self) -> SupervisorIssuesData:
+        """Update issues data from Supervisor resolution center."""
+        try:
+            data = await self._supervisor_client.resolution.info()
+        except SupervisorError as err:
+            raise UpdateFailed(f"Error on Supervisor API: {err}") from err
+
+        issue_from_data_results = await asyncio.gather(
+            *(self._issue_from_data(issue) for issue in data.issues)
+        )
+        issues = {
+            issue_from_data.uuid: issue_from_data
+            for issue_from_data in issue_from_data_results
+            if issue_from_data is not None
+        }
+
+        return SupervisorIssuesData(
+            unhealthy_reasons={str(reason) for reason in data.unhealthy},
+            unsupported_reasons={str(reason) for reason in data.unsupported},
+            issues=issues,
+        )
+
+    async def _issue_from_data(self, data: SupervisorIssue) -> Issue | None:
+        """Build an Issue model from Supervisor issue data and fetched suggestions."""
+        try:
+            suggestions = (
+                await self._supervisor_client.resolution.suggestions_for_issue(
+                    data.uuid
+                )
+            )
+        except SupervisorError:
+            _LOGGER.error(
+                "Could not get suggestions for supervisor issue %s, skipping it",
+                data.uuid.hex,
+            )
+            return None
+
+        return Issue(
+            uuid=data.uuid,
+            type=str(data.type),
+            context=data.context,
+            reference=data.reference,
+            suggestions=[
+                Suggestion(
+                    uuid=suggestion.uuid,
+                    type=str(suggestion.type),
+                    context=suggestion.context,
+                    reference=suggestion.reference,
+                )
+                for suggestion in suggestions
+            ],
+        )
+
+    @override
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+        raise_on_entry_error: bool = False,
+    ) -> None:
+        """Refresh issue data and apply repair/subscription deltas."""
+        previous_data = self.data or SupervisorIssuesData(set(), set(), {})
+        await super()._async_refresh(
+            log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
+        )
+        if self.last_update_success and self.data is not None:
+            self._process_reason_deltas(previous_data, self.data)
+            self._process_issue_deltas(previous_data, self.data)
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Shut down the coordinator."""
+        await super().async_shutdown()
+        if self._dispatcher_disconnect:
+            self._dispatcher_disconnect()
+            self._dispatcher_disconnect = None
+
+    @callback
+    def _supervisor_events_to_issues(self, event: dict[str, Any]) -> None:
+        """Update issues data from supervisor events."""
+        if ATTR_WS_EVENT not in event:
+            return
+
+        if (
+            event[ATTR_WS_EVENT] == EVENT_SUPERVISOR_UPDATE
+            and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
+            and event.get(ATTR_DATA, {}).get(ATTR_STARTUP) == STARTUP_COMPLETE
+        ):
+            self.config_entry.async_create_task(self.hass, self.async_refresh())
+            return
+
+        previous_data = self.data or SupervisorIssuesData(set(), set(), {})
+
+        if event[ATTR_WS_EVENT] == EVENT_HEALTH_CHANGED:
+            unhealthy_reasons = (
+                set()
+                if event[ATTR_DATA][ATTR_HEALTHY]
+                else set(event[ATTR_DATA][ATTR_UNHEALTHY_REASONS])
+            )
+            updated_data = SupervisorIssuesData(
+                unhealthy_reasons=unhealthy_reasons,
+                unsupported_reasons=set(previous_data.unsupported_reasons),
+                issues=dict(previous_data.issues),
+            )
+        elif event[ATTR_WS_EVENT] == EVENT_SUPPORTED_CHANGED:
+            unsupported_reasons = (
+                set()
+                if event[ATTR_DATA][ATTR_SUPPORTED]
+                else set(event[ATTR_DATA][ATTR_UNSUPPORTED_REASONS])
+            )
+            updated_data = SupervisorIssuesData(
+                unhealthy_reasons=set(previous_data.unhealthy_reasons),
+                unsupported_reasons=unsupported_reasons,
+                issues=dict(previous_data.issues),
+            )
+        elif event[ATTR_WS_EVENT] == EVENT_ISSUE_CHANGED:
+            issue = Issue.from_dict(cast(IssueDataType, event[ATTR_DATA]))
+            updated_issues = dict(previous_data.issues)
+            updated_issues[issue.uuid] = issue
+            updated_data = SupervisorIssuesData(
+                unhealthy_reasons=set(previous_data.unhealthy_reasons),
+                unsupported_reasons=set(previous_data.unsupported_reasons),
+                issues=updated_issues,
+            )
+        elif event[ATTR_WS_EVENT] == EVENT_ISSUE_REMOVED:
+            issue = Issue.from_dict(cast(IssueDataType, event[ATTR_DATA]))
+            updated_issues = dict(previous_data.issues)
+            updated_issues.pop(issue.uuid, None)
+            updated_data = SupervisorIssuesData(
+                unhealthy_reasons=set(previous_data.unhealthy_reasons),
+                unsupported_reasons=set(previous_data.unsupported_reasons),
+                issues=updated_issues,
+            )
+        else:
+            return
+
+        self.async_set_updated_data(updated_data)
+        self._process_reason_deltas(previous_data, updated_data)
+        self._process_issue_deltas(previous_data, updated_data)
+
+
+@dataclass(slots=True, frozen=True)
+class JobSubscription:
+    """Subscribe for updates on jobs which match filters.
+
+    UUID is preferred match but only available in cases of a background API that
+    returns the UUID before taking the action. Others are used to match jobs only
+    if UUID is omitted. Either name or UUID is required to be able to match.
+
+    event_callback must be safe annotated as a homeassistant.core.callback
+    and safe to call in the event loop.
+    """
+
+    event_callback: Callable[[Job], None]
+    uuid: str | None = None
+    name: str | None = None
+    reference: str | None = None
+
+    def __post_init__(self) -> None:
+        """Validate at least one filter option is present."""
+        if not self.name and not self.uuid:
+            raise ValueError("Either name or uuid must be provided!")
+        if not is_callback_check_partial(self.event_callback):
+            raise ValueError("event_callback must be a homeassistant.core.callback!")
+
+    def matches(self, job: Job) -> bool:
+        """Return true if job matches subscription filters."""
+        if self.uuid:
+            return job.uuid == self.uuid
+        return job.name == self.name and self.reference in (None, job.reference)
+
+
+class SupervisorJobsCoordinator(DataUpdateCoordinator[dict[UUID, Job]]):
+    """Manage access to Supervisor jobs."""
+
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+        """Initialize object."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name="SupervisorJobsCoordinator",
+            update_interval=SUPERVISOR_JOBS_UPDATE_INTERVAL,
+            # We don't want an immediate refresh since we want to avoid
+            # hammering the Supervisor API on startup
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
+        )
+        self._supervisor_client = get_supervisor_client(hass)
+        self._subscriptions: set[JobSubscription] = set()
+        self._dispatcher_disconnect: Callable[[], None] | None = None
+        self._noop_listener_disconnect: Callable[[], None] | None = None
+
+    @property
+    def current_jobs(self) -> list[Job]:
+        """Return current jobs."""
+        return list(self.data.values()) if self.data is not None else []
+
+    @staticmethod
+    def _build_jobs(jobs: list[Job]) -> dict[UUID, Job]:
+        """Flatten jobs and child jobs into a UUID keyed cache."""
+        job_queue: list[Job] = jobs.copy()
+        cached_jobs: dict[UUID, Job] = {}
+
+        while job_queue:
+            job = job_queue.pop(0)
+            job_queue.extend(job.child_jobs)
+            cached_jobs[job.uuid] = replace(job, child_jobs=[])
+
+        return cached_jobs
+
+    @override
+    async def _async_update_data(self) -> dict[UUID, Job]:
+        """Fetch data from Supervisor."""
+        job_data = await self._supervisor_client.jobs.info()
+        return self._build_jobs(job_data.jobs)
+
+    def _process_job_change(self, job: Job) -> None:
+        """Process a job change by triggering callbacks on subscribers."""
+        for sub in self._subscriptions:
+            if sub.matches(job):
+                sub.event_callback(job)
+
+    def _process_job_deltas(
+        self,
+        previous_jobs: dict[UUID, Job],
+        current_jobs: dict[UUID, Job],
+    ) -> None:
+        """Notify subscribers about changes between two job caches."""
+        for job in current_jobs.values():
+            if (previous_job := previous_jobs.get(job.uuid)) is not None and (
+                previous_job == job
+            ):
+                continue
+            self._process_job_change(job)
+
+        for uuid, job in previous_jobs.items():
+            if uuid not in current_jobs and job.done is False:
+                self._process_job_change(replace(job, done=True))
+
+    def subscribe(self, subscription: JobSubscription) -> CALLBACK_TYPE:
+        """Subscribe to updates for job. Return callback is used to unsubscribe.
+
+        If any jobs match the subscription at the time this is called, runs the
+        callback on them.
+        """
+        self._subscriptions.add(subscription)
+
+        # Connect a stub listener to start the update interval polling on first subscriber
+        if self._noop_listener_disconnect is None:
+            self._noop_listener_disconnect = self.async_add_listener(lambda: None)
+
+        # Run the callback on each existing match
+        # We catch all errors to prevent an error in one from stopping the others
+        for match in [job for job in self.current_jobs if subscription.matches(job)]:
+            try:
+                subscription.event_callback(match)
+            except Exception as err:  # noqa: BLE001
+                _LOGGER.error(
+                    "Error encountered processing Supervisor Job (%s %s %s) - %s",
+                    match.name,
+                    match.reference,
+                    match.uuid,
+                    err,
+                )
+
+        def _unsubscribe() -> None:
+            self._subscriptions.discard(subscription)
+
+            # Stop polling if there are no more subscribers
+            if not self._subscriptions and self._noop_listener_disconnect is not None:
+                self._noop_listener_disconnect()
+                self._noop_listener_disconnect = None
+
+        return _unsubscribe
+
+    @callback
+    @override
+    def _async_refresh_finished(self) -> None:
+        """Register to receive Supervisor events after the first successful refresh."""
+        if self.last_update_success and self._dispatcher_disconnect is None:
+            self._dispatcher_disconnect = async_dispatcher_connect(
+                self.hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_jobs
+            )
+
+    @override
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+        raise_on_entry_error: bool = False,
+    ) -> None:
+        """Refresh data and notify subscribers about cache changes."""
+        previous_jobs = self.data or {}
+        await super()._async_refresh(
+            log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
+        )
+        if self.last_update_success and self.data is not None:
+            self._process_job_deltas(previous_jobs, self.data)
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Shut down the coordinator."""
+        await super().async_shutdown()
+        if self._dispatcher_disconnect:
+            self._dispatcher_disconnect()
+            self._dispatcher_disconnect = None
+
+    @callback
+    def _supervisor_events_to_jobs(self, event: dict[str, Any]) -> None:
+        """Update job data cache from supervisor events."""
+        if ATTR_WS_EVENT not in event:
+            return
+
+        if (
+            event[ATTR_WS_EVENT] == EVENT_SUPERVISOR_UPDATE
+            and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
+            and event.get(ATTR_DATA, {}).get(ATTR_STARTUP) == STARTUP_COMPLETE
+        ):
+            self.config_entry.async_create_task(self.hass, self.async_request_refresh())
+
+        elif event[ATTR_WS_EVENT] == EVENT_JOB:
+            job = Job.from_dict(event[ATTR_DATA] | {"child_jobs": []})
+            previous_jobs = self.data or {}
+            updated_jobs = {**previous_jobs, job.uuid: job}
+            if job.done:
+                updated_jobs.pop(job.uuid, None)
+            self.async_set_updated_data(updated_jobs)
+            self._process_job_change(job)
 
 
 @dataclass
@@ -344,7 +1005,7 @@ def get_core_info(hass: HomeAssistant) -> dict[str, Any]:
 
 
 @callback
-def get_issues_info(hass: HomeAssistant) -> SupervisorIssues | None:
+def get_issues_info(hass: HomeAssistant) -> SupervisorIssuesCoordinator | None:
     """Return Supervisor issues info.
 
     Async friendly.
@@ -591,7 +1252,6 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         dev_reg: dr.DeviceRegistry,
-        jobs: SupervisorJobs,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -610,7 +1270,6 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         self.dev_reg = dev_reg
         self._addon_info_subscriptions: defaultdict[str, set[str]] = defaultdict(set)
         self.supervisor_client = get_supervisor_client(hass)
-        self.jobs = jobs
 
     @override
     async def _async_update_data(self) -> HassioAddonData:
@@ -800,7 +1459,6 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         self.dev_reg = dev_reg
         self.is_hass_os = False
         self.supervisor_client = get_supervisor_client(hass)
-        self.jobs = SupervisorJobs(hass)
         self._dispatcher_disconnect = async_dispatcher_connect(
             hass, EVENT_SUPERVISOR_EVENT, self._supervisor_event
         )
@@ -854,7 +1512,6 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                 ),
             )
             mounts_info = await client.mounts.info()
-            await self.jobs.refresh_data(is_first_update)
         except SupervisorError as err:
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
@@ -951,4 +1608,3 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         """Shut down and clean up when config entry unloaded."""
         await super().async_shutdown()
         self._dispatcher_disconnect()
-        self.jobs.unload()

@@ -113,7 +113,7 @@
       "service": "mdi:shuffle"
     },
     "toggle": {
-      "service": "mdi:play-pause"
+      "service": "mdi:power"
     },
     "turn_off": {
       "service": "mdi:power"

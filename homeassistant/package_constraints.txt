@@ -13,7 +13,7 @@ aiozoneinfo==0.2.3
 annotatedyaml==1.0.2
 astral==2.2
 async-interrupt==1.2.2
-async-upnp-client==0.46.2
+async-upnp-client==0.47.0
 atomicwrites-homeassistant==1.4.1
 attrs==26.1.0
 audioop-lts==0.2.2
@@ -39,7 +39,7 @@ habluetooth==6.26.5
 hass-nabucasa==2.2.0
 hassil==3.8.0
 home-assistant-bluetooth==2.0.0
-home-assistant-frontend==20260624.4
+home-assistant-frontend==20260624.5
 home-assistant-intents==2026.6.24
 httpx==0.28.1
 ifaddr==0.2.0
@@ -50,7 +50,7 @@ openai==2.21.0
 orjson==3.11.9
 packaging>=23.1
 paho-mqtt==2.1.0
-Pillow==12.2.0
+Pillow==12.3.0
 propcache==0.5.2
 psutil-home-assistant==0.0.1
 PyJWT==2.12.1
@@ -70,7 +70,7 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.15.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
-uv==0.11.25
+uv==0.11.26
 voluptuous-openapi==0.4.1
 voluptuous-serialize==2.7.0
 voluptuous==0.15.2
@@ -256,3 +256,7 @@ azure-kusto-data==4.5.1
 azure-kusto-ingest==4.5.1
 coloredlogs==15.0.1
 setuptools==81.0.0
+
+# Pin cffi to 2.0.0 to avoid version mismatch with the pre-baked _cffi_backend in the base image.
+# https://github.com/home-assistant/core/issues/175832
+cffi==2.0.0
