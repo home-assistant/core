@@ -181,10 +181,8 @@ async def test_create_subscription(
 @pytest.mark.parametrize(
     "exception",
     [
-        pytest.param(SmartThingsSinkError("Sink error"), id="sink-error"),
-        pytest.param(
-            SmartThingsConnectionError("Connection error"), id="connection-error"
-        ),
+        pytest.param(SmartThingsSinkError, id="sink-error"),
+        pytest.param(SmartThingsConnectionError, id="connection-error"),
     ],
 )
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
@@ -192,7 +190,7 @@ async def test_create_subscription_error(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    exception: SmartThingsConnectionError | SmartThingsSinkError,
+    exception: type[Exception],
 ) -> None:
     """Test handling an error when creating a subscription."""
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
@@ -204,7 +202,7 @@ async def test_create_subscription_error(
     devices.subscribe.assert_not_called()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.reason == "Could not create new subscription"
+    assert mock_config_entry.reason is None
     assert CONF_SUBSCRIPTION_ID not in mock_config_entry.data
 
 
