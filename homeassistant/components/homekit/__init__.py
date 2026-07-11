@@ -89,7 +89,6 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.target import (
     TargetSelection,
     async_extract_referenced_entity_ids,
-    async_track_target_selector_entity_change,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
@@ -155,6 +154,7 @@ from .const import (
 )
 from .iidmanager import AccessoryIIDStorage
 from .models import HomeKitConfigEntry, HomeKitEntryData
+from .target import async_track_target_entity_change
 from .type_triggers import DeviceTriggerAccessory
 from .util import (
     accessory_friendly_name,
@@ -489,7 +489,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
                 if not target_ids:
                     continue
                 entry.async_on_unload(
-                    await async_track_target_selector_entity_change(
+                    await async_track_target_entity_change(
                         hass,
                         {target_type: target_ids},
                         _async_reload_on_target_change,
