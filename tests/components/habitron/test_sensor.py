@@ -154,7 +154,7 @@ def test_static_diagnostic_descriptions(
 def test_hub_memory_descriptions_are_user_visible(
     description: HbtnSensorEntityDescription,
 ) -> None:
-    """Memory/Disk free are ordinary, enabled hub sensors."""
+    """Memory/Disk usage are ordinary, enabled hub sensors."""
     assert description.entity_category is None
     assert description.entity_registry_enabled_default is True
 
@@ -399,8 +399,8 @@ def test_logic_sensor_value_uses_idx_not_nmbr() -> None:
         (EKEY_FINGER_NAME_DESCRIPTION, "sensors", "Finger"),
         # Hub host-diagnostic sensors also push via subscribe_fn so they stay
         # fresh even though the coordinator uses always_update=False.
-        (MEMORY_DESCRIPTION, "sensors", "Memory free"),
-        (DISK_DESCRIPTION, "sensors", "Disk free"),
+        (MEMORY_DESCRIPTION, "sensors", "Memory usage"),
+        (DISK_DESCRIPTION, "sensors", "Disk usage"),
         (CPU_LOAD_DESCRIPTION, "diags", "CPU load"),
         (CPU_FREQUENCY_DESCRIPTION, "diags", "CPU Frequency"),
         (CPU_TEMPERATURE_DESCRIPTION, "diags", "CPU Temperature"),
@@ -549,11 +549,11 @@ async def test_async_setup_entry_emits_all_sensor_types(hass: HomeAssistant) -> 
     """async_setup_entry creates the broad mix of sensor entities."""
     # SmartHub-level sensors
     mem = MagicMock()
-    mem.name = "Memory free"
+    mem.name = "Memory usage"
     mem.nmbr = 0
     mem.type = 1
     disk = MagicMock()
-    disk.name = "Disk free"
+    disk.name = "Disk usage"
     disk.nmbr = 1
     disk.type = 1
     cpu_freq = MagicMock()
@@ -671,8 +671,8 @@ async def test_async_setup_entry_emits_all_sensor_types(hass: HomeAssistant) -> 
 
     keys = {e.entity_description.key for e in added}
     assert keys == {
-        "memory_free",
-        "disk_free",
+        "memory_usage",
+        "disk_usage",
         "cpu_frequency",
         "cpu_load",
         "cpu_temperature",

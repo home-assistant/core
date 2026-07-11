@@ -123,8 +123,8 @@ class SmartHub:
                 Diagnostic(name="CPU Temperature", nmbr=2, type=10),
             ]
             self.sensors = [
-                Sensor(name="Memory free", nmbr=0, type=2, value=0),
-                Sensor(name="Disk free", nmbr=1, type=2, value=0),
+                Sensor(name="Memory usage", nmbr=0, type=2, value=0),
+                Sensor(name="Disk usage", nmbr=1, type=2, value=0),
             ]
             self.loglvl = [
                 Sensor(name="Logging level console", nmbr=0, type=2, value=0),

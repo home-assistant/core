@@ -192,8 +192,8 @@ async def test_update_writes_diag_sensor_and_log_levels(
         Diagnostic(name="CPU Temperature", nmbr=2, type=10),
     ]
     smart_hub_stub.sensors = [
-        Sensor(name="Memory free", nmbr=0, type=2, value=0),
-        Sensor(name="Disk free", nmbr=1, type=2, value=0),
+        Sensor(name="Memory usage", nmbr=0, type=2, value=0),
+        Sensor(name="Disk usage", nmbr=1, type=2, value=0),
     ]
     smart_hub_stub.loglvl = [
         Sensor(name="Logging level console", nmbr=0, type=2, value=0),
