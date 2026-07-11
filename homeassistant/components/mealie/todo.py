@@ -244,9 +244,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             # re-sends the rendered description on every update, and parsing is lossy.
             quantity, note = _parse_description(item.description)
             update_shopping_item.quantity = quantity
-            if list_item.food:
-                update_shopping_item.note = note
-            # For non-food items note == display == summary; only update quantity.
+            update_shopping_item.note = note
 
         try:
             await self.coordinator.client.update_shopping_item(

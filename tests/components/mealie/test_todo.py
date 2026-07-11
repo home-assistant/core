@@ -77,7 +77,9 @@ def test_convert_api_item(
         pytest.param("2 Gramm, organic", 2.0, "organic", id="quantity_unit_note"),
         pytest.param(", organic", 0.0, "organic", id="note_only_with_comma"),
         pytest.param("buy fresh", 0.0, "buy fresh", id="text_note_no_comma"),
-        pytest.param("buy fresh, organic", 0.0, "buy fresh, organic", id="text_note_with_comma"),
+        pytest.param(
+            "buy fresh, organic", 0.0, "buy fresh, organic", id="text_note_with_comma"
+        ),
         pytest.param("1 can, ripe", 1.0, "ripe", id="quantity_unit_note_short"),
     ],
 )
@@ -130,13 +132,15 @@ async def test_update_todo_item_status_keeps_description(
     return a different (quantity, note) pair — proving the unchanged-description guard
     is load-bearing and not just incidentally passing.
     """
-    items_data = json.loads(load_fixture("get_shopping_items.json", DOMAIN))
+    items_data = json.loads(
+        await async_load_fixture(hass, "get_shopping_items.json", DOMAIN)
+    )
     items_data["items"][1]["quantity"] = 0.0
     items_data["items"][1]["note"] = "3 large"
     items_data["items"][1]["unit"] = None
     items_data["items"][1]["unitId"] = None
-    mock_mealie_client.get_shopping_items.return_value = ShoppingItemsResponse.from_json(
-        json.dumps(items_data)
+    mock_mealie_client.get_shopping_items.return_value = (
+        ShoppingItemsResponse.from_json(json.dumps(items_data))
     )
 
     await setup_integration(hass, mock_config_entry)
