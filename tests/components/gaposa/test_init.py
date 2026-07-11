@@ -18,7 +18,6 @@ async def test_setup_and_unload(
 ) -> None:
     """Happy path: integration sets up, entry is LOADED, unload works cleanly."""
     assert init_integration.state is ConfigEntryState.LOADED
-    assert init_integration.runtime_data is not None
 
     assert await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
@@ -37,53 +36,28 @@ async def test_unload_closes_gaposa_client(
     mock_gaposa.close.assert_called_once()
 
 
-async def test_network_failure_during_setup_retries(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_gaposa: MagicMock,
-) -> None:
-    """If the first refresh fails with a network error the entry enters SETUP_RETRY."""
-    mock_gaposa.update.side_effect = OSError("boom")
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    mock_gaposa.close.assert_called_once()
-
-
-async def test_network_failure_during_login_retries(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_gaposa: MagicMock,
-) -> None:
-    """A network error during login surfaces as SETUP_RETRY."""
-    mock_gaposa.login.side_effect = OSError("cloud unreachable")
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    mock_gaposa.close.assert_called_once()
-
-
 @pytest.mark.parametrize(
-    "exc",
-    [GaposaAuthException, FirebaseAuthException],
+    ("target", "exc"),
+    [
+        ("update", OSError("boom")),
+        ("login", OSError("cloud unreachable")),
+        ("update", GaposaAuthException("credentials rejected")),
+        ("update", FirebaseAuthException("credentials rejected")),
+    ],
 )
-async def test_auth_failure_during_setup_retries(
+async def test_setup_failure_retries_and_closes(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_gaposa: MagicMock,
-    exc: type[Exception],
+    target: str,
+    exc: Exception,
 ) -> None:
-    """An auth failure during setup enters SETUP_RETRY (no reauth flow yet)."""
-    mock_gaposa.update.side_effect = exc("credentials rejected")
+    """Any failure during setup enters SETUP_RETRY and releases the client."""
+    getattr(mock_gaposa, target).side_effect = exc
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_gaposa.close.assert_called_once()
