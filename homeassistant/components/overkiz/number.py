@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -19,6 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import OverkizDataConfigEntry
 from .const import IGNORED_OVERKIZ_DEVICES
 from .coordinator import OverkizDataUpdateCoordinator
+from .cover import SUPPORTED_DEVICES as SUPPORTED_COVER_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 BOOST_MODE_DURATION_DELAY = 1
@@ -206,16 +207,31 @@ async def async_setup_entry(
         ):
             continue
 
-        entities.extend(
-            OverkizNumber(
-                device.device_url,
-                data.coordinator,
-                description,
+        for state in device.definition.states:
+            if not (description := SUPPORTED_STATES.get(state)):
+                continue
+
+            if not device.supports_command(description.command):
+                continue
+
+            # Mirror the cover's position inversion.
+            if description.key == OverkizState.CORE_MEMORIZED_1_POSITION and (
+                cover_description := (
+                    SUPPORTED_COVER_DEVICES.get(device.widget)
+                    or SUPPORTED_COVER_DEVICES.get(device.ui_class)
+                )
+            ):
+                description = replace(
+                    description, inverted=cover_description.invert_position
+                )
+
+            entities.append(
+                OverkizNumber(
+                    device.device_url,
+                    data.coordinator,
+                    description,
+                )
             )
-            for state in device.definition.states
-            if (description := SUPPORTED_STATES.get(state))
-            and device.supports_command(description.command)
-        )
 
     async_add_entities(entities)
 

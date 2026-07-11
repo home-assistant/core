@@ -1,4 +1,5 @@
 """The NMBS component."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 

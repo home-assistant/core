@@ -25,7 +25,7 @@ from homeassistant.components import (
     wake_word,
     websocket_api,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, MATCH_ALL
+from homeassistant.const import MATCH_ALL, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -1255,7 +1255,7 @@ class PipelineRun:
                     if (
                         intent_agent_state := self.hass.states.get(self.intent_agent.id)
                     ) and intent_agent_state.attributes.get(
-                        ATTR_SUPPORTED_FEATURES, 0
+                        EntityStateAttribute.SUPPORTED_FEATURES, 0
                     ) & conversation.ConversationEntityFeature.CONTROL:
                         intent_filter = _async_local_fallback_intent_filter
 
