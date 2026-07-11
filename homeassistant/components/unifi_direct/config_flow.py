@@ -167,6 +167,49 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
             data=entry_data,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        assert config_entry is not None
+
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] | None = None
+        if user_input is not None:
+            host_configs = _get_host_configs(user_input)
+            if not host_configs:
+                errors["base"] = "invalid_config"
+            else:
+                entry_data = {CONF_HOSTS: host_configs}
+                try:
+                    await self.hass.async_add_executor_job(
+                        validate_connection_data, entry_data
+                    )
+                except CannotConnect as err:
+                    errors["base"] = "cannot_connect"
+                    description_placeholders = {"host": err.host}
+                else:
+                    self.hass.config_entries.async_update_entry(
+                        config_entry, data=entry_data
+                    )
+                    await self.hass.config_entries.async_reload(config_entry.entry_id)
+                    return self.async_abort(reason="reconfigure_successful")
+
+        # Prepare initial data from current config entry
+        initial_data = config_entry.data.copy()
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, initial_data
+            ),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
+
 
 class CannotConnect(Exception):
     """Custom exception for failing to connect to the UniFiAP."""

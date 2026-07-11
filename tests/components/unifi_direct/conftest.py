@@ -90,18 +90,24 @@ def mock_unifiap() -> Generator[MagicMock]:
             )
             return ap_instance
 
-        default_ap_instance = _build_ap_instance(MOCK_HOST)
-        mock.return_value = default_ap_instance
+        side_effect_state: dict[str, object | None] = {"get_clients": None}
 
         def _mock_unifiap(*args: object, **kwargs: object) -> MagicMock:
             target = kwargs.get("target")
             if target is None and args:
                 target = args[0]
-            if isinstance(target, str):
-                if target == MOCK_HOST:
-                    return default_ap_instance
-                return _build_ap_instance(target)
-            return default_ap_instance
+            host = target if isinstance(target, str) else MOCK_HOST
+            instance = _build_ap_instance(host)
 
+            get_clients_side_effect = side_effect_state["get_clients"]
+            if get_clients_side_effect is not None:
+                instance.get_clients.side_effect = get_clients_side_effect
+            return instance
+
+        def _set_get_clients_side_effect(side_effect: object | None) -> None:
+            side_effect_state["get_clients"] = side_effect
+
+        # Patch the mock to allow setting side_effect from tests
         mock.side_effect = _mock_unifiap
+        mock._set_get_clients_side_effect = _set_get_clients_side_effect
         yield mock

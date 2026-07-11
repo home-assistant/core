@@ -110,9 +110,7 @@ async def test_user_flow_cannot_connect(
 ) -> None:
     """Test config flow when connection fails."""
     # Make the UniFiAP.get_clients raise an exception
-    mock_unifiap.return_value.get_clients.side_effect = UniFiAPConnectionException(
-        "fail"
-    )
+    mock_unifiap._set_get_clients_side_effect(UniFiAPConnectionException("fail"))
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -138,7 +136,7 @@ async def test_user_flow_cannot_connect(
     assert result["description_placeholders"] == {"host": "192.168.1.2"}
 
     # Remove the UniFiAP.get_clients side effect and see if the flow recovers
-    mock_unifiap.return_value.get_clients.side_effect = None
+    mock_unifiap._set_get_clients_side_effect(None)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=user_input
@@ -253,9 +251,7 @@ async def test_import_flow_cannot_connect(
     hass: HomeAssistant, mock_setup_entry, mock_unifiap
 ) -> None:
     """Test import config flow when connection fails."""
-    mock_unifiap.return_value.get_clients.side_effect = UniFiAPConnectionException(
-        "fail"
-    )
+    mock_unifiap._set_get_clients_side_effect(UniFiAPConnectionException("fail"))
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -270,3 +266,98 @@ async def test_import_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant, mock_setup_entry, mock_unifiap, mock_config_entry
+) -> None:
+    """Test successful reconfiguration with new hosts."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "reconfigure", "entry_id": mock_config_entry.entry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Reconfigure with a different host
+    new_user_input = {
+        CONF_HOSTS: [
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_USERNAME: "newadmin",
+                CONF_PASSWORD: "newpassword",
+                CONF_PORT: 2222,
+            }
+        ]
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=new_user_input
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOSTS: [
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_USERNAME: "newadmin",
+                CONF_PASSWORD: "newpassword",
+                CONF_PORT: 2222,
+            }
+        ]
+    }
+
+
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant, mock_setup_entry, mock_unifiap, mock_config_entry
+) -> None:
+    """Test reconfigure flow when connection fails."""
+    mock_config_entry.add_to_hass(hass)
+    mock_unifiap._set_get_clients_side_effect(UniFiAPConnectionException("fail"))
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "reconfigure", "entry_id": mock_config_entry.entry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOSTS: [
+                {
+                    CONF_HOST: "192.168.1.100",
+                    CONF_USERNAME: "admin",
+                    CONF_PASSWORD: "password",
+                    CONF_PORT: 22,
+                }
+            ]
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["description_placeholders"] == {"host": "192.168.1.100"}
+
+    # Fix the connection and retry
+    mock_unifiap._set_get_clients_side_effect(None)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOSTS: [
+                {
+                    CONF_HOST: "192.168.1.100",
+                    CONF_USERNAME: "admin",
+                    CONF_PASSWORD: "password",
+                    CONF_PORT: 22,
+                }
+            ]
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

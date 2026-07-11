@@ -143,9 +143,7 @@ async def test_setup_scanner_legacy_platform_creates_issue_on_cannot_connect(
         CONF_PORT: 22,
     }
 
-    mock_unifiap.return_value.get_clients.side_effect = UniFiAPConnectionException(
-        "fail"
-    )
+    mock_unifiap._set_get_clients_side_effect(UniFiAPConnectionException("fail"))
 
     assert await async_setup_component(
         hass,
