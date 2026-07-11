@@ -1,12 +1,10 @@
 """Tests for the DVLA sensor platform."""
 
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
-from homeassistant.components.dvla.coordinator import DVLACoordinator
-from homeassistant.components.dvla.sensor import DVLASensor
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType
@@ -179,6 +177,11 @@ async def test_month_of_first_registration_is_string_sensor(
 
 async def test_sensor_handle_coordinator_update(hass: HomeAssistant) -> None:
     """Test sensor handles coordinator updates."""
+    updated_vehicle_data = {
+        **MOCK_VEHICLE_DATA,
+        "registrationNumber": "XY99ZZZ",
+    }
+
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="AB12CDE",
@@ -186,32 +189,22 @@ async def test_sensor_handle_coordinator_update(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    coordinator = DVLACoordinator(
-        hass,
-        entry,
-        MagicMock(),
-        "AB12CDE",
-    )
-    coordinator.data = {"registrationNumber": "AB12CDE"}
+    with patch(
+        "homeassistant.components.dvla.coordinator.DVLAClient.async_get_vehicle",
+        side_effect=[MOCK_VEHICLE_DATA, updated_vehicle_data],
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    sensor = DVLASensor(
-        coordinator,
-        "AB12CDE",
-        SensorEntityDescription(
-            key="registrationNumber",
-            name="Registration number",
-        ),
-    )
+        state = get_state(hass, "registrationNumber")
+        assert state.state == "AB12CDE"
 
-    assert sensor.native_value == "AB12CDE"
+        coordinator = entry.runtime_data["coordinator"]
+        await coordinator.async_request_refresh()
+        await hass.async_block_till_done()
 
-    coordinator.data = {"registrationNumber": "XY99ZZZ"}
-
-    with patch.object(sensor, "async_write_ha_state") as mock_write_state:
-        sensor._handle_coordinator_update()
-
-    assert sensor.native_value == "XY99ZZZ"
-    mock_write_state.assert_called_once()
+    state = get_state(hass, "registrationNumber")
+    assert state.state == "XY99ZZZ"
 
 
 async def test_invalid_date_sensor_value_is_unknown(hass: HomeAssistant) -> None:

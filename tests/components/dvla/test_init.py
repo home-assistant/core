@@ -35,12 +35,8 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.dvla.coordinator.DVLACoordinator._async_update_data",
-            return_value={
-                "registrationNumber": "AB12CDE",
-                "make": "FORD",
-                "taxStatus": "Taxed",
-            },
+            "homeassistant.components.dvla.coordinator.DVLAClient.async_get_vehicle",
+            return_value=VEHICLE_DATA,
         ),
         patch.object(
             hass.config_entries,
