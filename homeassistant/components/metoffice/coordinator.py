@@ -63,14 +63,25 @@ class MetOfficeRuntimeData:
     _initial_coordinates: tuple[float, float]
     _current_coordinates: tuple[float, float]
 
+    async def _set_updated_coordinates(self, latitude: float, longitude: float) -> None:
+        self._current_coordinates = (latitude, longitude)
+        await asyncio.gather(
+            self.daily_coordinator.update_location(latitude, longitude),
+            self.twice_daily_coordinator.update_location(latitude, longitude),
+            self.hourly_coordinator.update_location(latitude, longitude),
+        )
+
     async def update_coordinates(
         self, latitude: float | None, longitude: float | None
     ) -> None:
         """Updates the coordinates for the weather forecast."""
         if latitude is None and longitude is None:
             # If neither is supplied, return to original location
-            [latitude, longitude] = self._initial_coordinates
-        elif latitude is None or longitude is None:
+            if self._current_coordinates != self._initial_coordinates:
+                await self._set_updated_coordinates(*self._initial_coordinates)
+            return
+
+        if latitude is None or longitude is None:
             # Otherwise if only one is not supplied, treat as an error
             _LOGGER.error(
                 "When updating location, latitude and longitude must both be supplied or both be omitted"
@@ -80,20 +91,13 @@ class MetOfficeRuntimeData:
         # Update the location only if we have moved significantly from the previous
         # location. This will limit the number of times the API is queried unless
         # moving extremely quickly.
-        [current_latitude, current_longitude] = self._current_coordinates
         distance = location_util.distance(
-            current_latitude,
-            current_longitude,
+            *self._current_coordinates,
             latitude,
             longitude,
         )
         if distance is not None and distance > UPDATE_MINIMUM_DISTANCE:
-            self._current_coordinates = (latitude, longitude)
-            await asyncio.gather(
-                self.daily_coordinator.update_location(latitude, longitude),
-                self.twice_daily_coordinator.update_location(latitude, longitude),
-                self.hourly_coordinator.update_location(latitude, longitude),
-            )
+            await self._set_updated_coordinates(latitude, longitude)
 
 
 class MetOfficeUpdateCoordinator(TimestampDataUpdateCoordinator[Forecast]):
