@@ -468,6 +468,9 @@ NUMBER_SCHEMA = vol.All(
             vol.Optional(CONF_INPUT_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
                 [CALL_TYPE_REGISTER_HOLDING]
             ),
+            vol.Optional(CONF_WRITE_TYPE, default=CALL_TYPE_REGISTER_HOLDING): vol.In(
+                [CALL_TYPE_REGISTER_HOLDING, CALL_TYPE_X_REGISTER_HOLDINGS]
+            ),
             vol.Optional(CONF_DATA_TYPE, default=DataType.INT16): vol.In(
                 [
                     DataType.INT16,

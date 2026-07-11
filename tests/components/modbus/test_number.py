@@ -11,6 +11,7 @@ import pytest
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_X_REGISTER_HOLDINGS,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
@@ -24,6 +25,7 @@ from homeassistant.components.modbus.const import (
     CONF_SWAP_BYTE,
     CONF_SWAP_WORD,
     CONF_SWAP_WORD_BYTE,
+    CONF_WRITE_TYPE,
     DOMAIN,
     TCP,
     DataType,
@@ -330,6 +332,41 @@ async def test_service_number_set_value(
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
+                    CONF_SLAVE: 10,
+                    CONF_DATA_TYPE: DataType.INT16,
+                    CONF_WRITE_TYPE: CALL_TYPE_X_REGISTER_HOLDINGS,
+                },
+            ],
+        },
+    ],
+)
+async def test_service_number_set_value_forces_write_registers(
+    hass: HomeAssistant, mock_modbus_ha: mock.AsyncMock
+) -> None:
+    """Test write_type: holdings forces write_registers for a single register."""
+    mock_modbus_ha.reset_mock()
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_VALUE: 31,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    mock_modbus_ha.write_registers.assert_called_with(51, values=[31], device_id=10)
+    mock_modbus_ha.write_register.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_NUMBERS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
                 },
             ],
         },
@@ -595,6 +632,18 @@ async def test_no_discovery_info_number(
                 ]
             },
             id="negative_step",
+        ),
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_WRITE_TYPE: "coil",
+                    }
+                ]
+            },
+            id="coil_write_type",
         ),
     ],
 )
