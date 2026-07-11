@@ -517,6 +517,17 @@ class HoneywellUSThermostat(ClimateEntity):
                 if mode in HEATING_MODES:
                     await self._device.set_hold_heat(True)
 
+            except (
+                TimeoutError,
+                AscConnectionError,
+                APIRateLimited,
+                AuthError,
+                ClientConnectionError,
+            ) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="set_hold_failed",
+                ) from err
             except SomeComfortError as err:
                 _LOGGER.error("Couldn't set permanent hold")
                 raise HomeAssistantError(
