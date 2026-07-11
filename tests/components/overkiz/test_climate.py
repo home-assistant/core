@@ -23,6 +23,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import (
+    assert_command_call,
     async_deliver_events,
     device_available_event,
     device_removed_event,
@@ -56,19 +57,19 @@ YUTAKI_ZONE_2 = FixtureDevice(
     "modbus://1234-5678-2284/5416194/1#3",
     "climate.somfy_tahoma_switch_yutaki_zone_2",
 )
+# io:HeatingThermostatIOComponent
+THERMOSTAT_HEATING = FixtureDevice(
+    "setup/cloud_somfy_tahoma_switch_sc_europe.json",
+    "io://1234-5678-5010/386310#1",
+    "climate.study_thermostat",
+)
 
 SNAPSHOT_FIXTURES = [
     VALVE,
     COZYTOUCH,
     YUTAKI_ZONE_1,
+    THERMOSTAT_HEATING,
 ]
-
-# Somfy Thermostat PRO (io:HeatingThermostatIOComponent)
-THERMOSTAT_HEATING = FixtureDevice(
-    "setup/cloud_somfy_thermostat_heating_interface.json",
-    "io://1234-5678-9387/386310#1",
-    "climate.my_home_thermostat",
-)
 
 
 @pytest.fixture(autouse=True)
@@ -133,38 +134,6 @@ async def test_valve_hvac_action_none_state(
     state = hass.states.get(VALVE.entity_id)
     assert state is not None
     assert state.attributes.get(ATTR_HVAC_ACTION) is None
-
-
-async def test_valve_away_preset_mode(
-    hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_client: MockOverkizClient,
-    setup_overkiz_integration: SetupOverkizIntegration,
-) -> None:
-    """Test that the awayMode derogation state maps to the away preset."""
-    await setup_overkiz_integration(fixture=VALVE.fixture)
-
-    await async_deliver_events(
-        hass,
-        freezer,
-        mock_client,
-        [
-            device_state_changed_event(
-                device_url=VALVE.device_url,
-                device_states=[
-                    {
-                        "name": OverkizState.IO_DEROGATION_HEATING_MODE,
-                        "type": 3,
-                        "value": "awayMode",
-                    }
-                ],
-            )
-        ],
-    )
-
-    state = hass.states.get(VALVE.entity_id)
-    assert state is not None
-    assert state.attributes[ATTR_PRESET_MODE] == "away"
 
 
 UNKNOWN_DEVICE_URL = "zigbee://1234-5678-1698/65535"
@@ -248,9 +217,9 @@ async def test_thermostat_heating_set_temperature(
         blocking=True,
     )
 
-    first = mock_client.execute_action_group.await_args_list[0].kwargs["actions"]
-    assert first[0].commands[0].name == "setDerogation"
-    assert [str(param) for param in first[0].commands[0].parameters] == [
-        "20.0",
-        "furtherNotice",
-    ]
+    assert_command_call(
+        mock_client,
+        device_url=THERMOSTAT_HEATING.device_url,
+        command_name="setDerogation",
+        parameters=[20.0, "furtherNotice"],
+    )

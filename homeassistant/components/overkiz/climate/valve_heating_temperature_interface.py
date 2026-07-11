@@ -32,7 +32,7 @@ OVERKIZ_TO_HVAC_ACTION: dict[str, HVACAction] = {
 OVERKIZ_TO_PRESET_MODE: dict[str, str] = {
     OverkizCommandParam.GEOFENCING_MODE: PRESET_NONE,
     OverkizCommandParam.SUDDEN_DROP_MODE: PRESET_NONE,
-    OverkizCommandParam.AWAY_MODE: PRESET_AWAY,
+    OverkizCommandParam.AWAY: PRESET_AWAY,
     OverkizCommandParam.COMFORT: PRESET_COMFORT,
     OverkizCommandParam.ECO: PRESET_ECO,
     OverkizCommandParam.FROSTPROTECTION: PRESET_FROST_PROTECTION,
