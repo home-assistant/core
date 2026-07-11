@@ -19,7 +19,7 @@ from homeassistant.components.update import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.enum import try_parse_enum
@@ -122,7 +122,16 @@ class ESPHomeDashboardUpdateEntity(
         self._attr_unique_id = entry_data.device_info.mac_address
         self._attr_device_info = DeviceInfo(
             connections={
-                (dr.CONNECTION_NETWORK_MAC, entry_data.device_info.mac_address)
+                (
+                    dr.CONNECTION_BLUETOOTH
+                    if entry_data.transport == "ble"
+                    else dr.CONNECTION_NETWORK_MAC,
+                    format_mac(
+                        entry_data.device_info.mac_address
+                        if entry_data.transport == "ip"
+                        else entry_data.host
+                    ),
+                )
             }
         )
         self._install_lock = asyncio.Lock()

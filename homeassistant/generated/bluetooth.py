@@ -122,6 +122,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "CC-RT-BLE-EQ",
     },
     {
+        "connectable": True,
+        "domain": "esphome",
+        "service_uuid": "e51b0d8b-1c9c-4444-8964-45545339803e",
+    },
+    {
         "domain": "eufylife_ble",
         "local_name": "eufy T9120",
     },

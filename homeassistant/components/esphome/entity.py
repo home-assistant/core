@@ -29,6 +29,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .config_flow import format_mac
 from .const import DOMAIN
 
 # Import config flow so that it's added to the registry
@@ -127,7 +128,18 @@ def async_static_info_updated(
         else:
             # Entity now belongs to the main device
             new_device = dev_reg.async_get_device(
-                connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
+                connections={
+                    (
+                        dr.CONNECTION_BLUETOOTH
+                        if entry_data.transport == "ble"
+                        else dr.CONNECTION_NETWORK_MAC,
+                        format_mac(
+                            device_info.mac_address
+                            if entry_data.transport == "ip"
+                            else entry_data.host
+                        ),
+                    )
+                }
             )
 
         if new_device:
@@ -369,7 +381,18 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
         else:
             # Entity belongs to the main device
             self._attr_device_info = DeviceInfo(
-                connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
+                connections={
+                    (
+                        dr.CONNECTION_BLUETOOTH
+                        if entry_data.transport == "ble"
+                        else dr.CONNECTION_NETWORK_MAC,
+                        format_mac(
+                            device_info.mac_address
+                            if entry_data.transport == "ip"
+                            else entry_data.host
+                        ),
+                    )
+                }
             )
 
     @override
@@ -507,7 +530,18 @@ class EsphomeAssistEntity(EsphomeBaseEntity):
             f"{device_info.mac_address}-{self.entity_description.key}"
         )
         self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
+            connections={
+                (
+                    dr.CONNECTION_BLUETOOTH
+                    if entry_data.transport == "ble"
+                    else dr.CONNECTION_NETWORK_MAC,
+                    format_mac(
+                        device_info.mac_address
+                        if entry_data.transport == "ip"
+                        else entry_data.host
+                    ),
+                )
+            }
         )
 
     @override

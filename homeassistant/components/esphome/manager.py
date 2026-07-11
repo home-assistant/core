@@ -2,11 +2,12 @@
 
 import asyncio
 import base64
+from collections.abc import Callable
 from functools import partial
 import logging
 import secrets
 import struct
-from typing import TYPE_CHECKING, Any, Final, NamedTuple
+from typing import TYPE_CHECKING, Any, Final, Literal, NamedTuple
 
 from aioesphomeapi import (
     APIClient,
@@ -29,9 +30,11 @@ from aioesphomeapi import (
     parse_log_message,
 )
 from awesomeversion import AwesomeVersion
+from home_assistant_bluetooth import BluetoothServiceInfoBleak
 import voluptuous as vol
 
 from homeassistant.components import bluetooth, tag, zeroconf
+from homeassistant.components.bluetooth.models import BluetoothChange
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     CONF_MODE,
@@ -191,6 +194,7 @@ class ESPHomeManager:
     __slots__ = (
         "_cancel_subscribe_logs",
         "_log_level",
+        "bluetooth_advertisement_unsubscribe",
         "cli",
         "device_id",
         "domain_data",
@@ -200,6 +204,7 @@ class ESPHomeManager:
         "host",
         "password",
         "reconnect_logic",
+        "transport",
         "zeroconf_instance",
     )
 
@@ -209,6 +214,7 @@ class ESPHomeManager:
         entry: ESPHomeConfigEntry,
         host: str,
         password: str | None,
+        transport: Literal["ip", "ble"],
         cli: APIClient,
         zeroconf_instance: zeroconf.HaZeroconf,
         domain_data: DomainData,
@@ -217,6 +223,7 @@ class ESPHomeManager:
         self.hass = hass
         self.host = host
         self.password = password
+        self.transport = transport
         self.entry = entry
         self.cli = cli
         self.device_id: str | None = None
@@ -226,10 +233,14 @@ class ESPHomeManager:
         self.entry_data = entry.runtime_data
         self._cancel_subscribe_logs: CALLBACK_TYPE | None = None
         self._log_level = LogLevel.LOG_LEVEL_NONE
+        self.bluetooth_advertisement_unsubscribe: Callable[[], None] | None = None
 
     async def on_stop(self, event: Event) -> None:
         """Cleanup the socket client on HA close."""
         await cleanup_instance(self.entry)
+        if self.bluetooth_advertisement_unsubscribe:
+            self.bluetooth_advertisement_unsubscribe()
+            self.bluetooth_advertisement_unsubscribe = None
 
     @property
     def services_issue(self) -> str:
@@ -554,6 +565,9 @@ class ESPHomeManager:
         assert reconnect_logic is not None, "Reconnect logic must be set"
         hass = self.hass
         cli = self.cli
+        if self.bluetooth_advertisement_unsubscribe:
+            self.bluetooth_advertisement_unsubscribe()
+            self.bluetooth_advertisement_unsubscribe = None
         stored_device_name: str | None = entry.data.get(CONF_DEVICE_NAME)
         unique_id_is_mac_address = unique_id and ":" in unique_id
         if entry.options.get(CONF_SUBSCRIBE_LOGS):
@@ -727,6 +741,13 @@ class ESPHomeManager:
             self.hass, self.entry_data.device_info, zwave_home_id
         )
 
+    def _on_bluetooth_device_advertisement(
+        self, discovery_info: BluetoothServiceInfoBleak, change: BluetoothChange
+    ) -> None:
+        pass
+        # bluetooth.async_clear_advertisement_history(self.hass, self.host)
+        # self.reconnect_logic._schedule_connect(1.0)  # pylint: disable=protected-access
+
     async def on_disconnect(self, expected_disconnect: bool) -> None:
         """Run disconnect callbacks on API disconnect."""
         entry_data = self.entry_data
@@ -754,6 +775,19 @@ class ESPHomeManager:
             # writes when we already know we're shutting down and the state
             # will be cleared anyway.
             entry_data.async_update_device_state()
+            # bluetooth.async_clear_advertisement_history(hass, host)
+            if (
+                entry_data.transport == "ble"
+                and not self.bluetooth_advertisement_unsubscribe
+            ):
+                self.bluetooth_advertisement_unsubscribe = (
+                    bluetooth.async_register_callback(
+                        hass,
+                        self._on_bluetooth_device_advertisement,
+                        {"address": host},
+                        bluetooth.BluetoothScanningMode.ACTIVE,
+                    )
+                )
 
         if Platform.ASSIST_SATELLITE in self.entry_data.loaded_platforms:
             await self.hass.config_entries.async_unload_platforms(
@@ -945,7 +979,7 @@ class ESPHomeManager:
             client=self.cli,
             on_connect=self.on_connect,
             on_disconnect=self.on_disconnect,
-            zeroconf_instance=self.zeroconf_instance,
+            # zeroconf_instance=self.zeroconf_instance,
             name=entry.data.get(CONF_DEVICE_NAME, self.host),
             on_connect_error=self.on_connect_error,
         )
@@ -1009,6 +1043,20 @@ class ESPHomeManager:
                     self.host,
                 )
 
+        if (
+            entry_data.transport == "ble"
+            and not self.bluetooth_advertisement_unsubscribe
+        ):
+            # bluetooth.async_clear_advertisement_history(hass, self.host)
+            self.bluetooth_advertisement_unsubscribe = (
+                bluetooth.async_register_callback(
+                    hass,
+                    self._on_bluetooth_device_advertisement,
+                    {"address": self.host},
+                    bluetooth.BluetoothScanningMode.ACTIVE,
+                )
+            )
+
 
 @callback
 def _async_setup_device_registry(
@@ -1022,7 +1070,16 @@ def _async_setup_device_registry(
     device_registry = dr.async_get(hass)
     # Build sets of valid device identifiers and connections
     valid_connections = {
-        (dr.CONNECTION_NETWORK_MAC, format_mac(device_info.mac_address))
+        (
+            dr.CONNECTION_BLUETOOTH
+            if entry_data.transport == "ble"
+            else dr.CONNECTION_NETWORK_MAC,
+            format_mac(
+                device_info.mac_address
+                if entry_data.transport == "ip"
+                else entry_data.host
+            ),
+        )
     }
     valid_identifiers = {
         (DOMAIN, f"{device_info.mac_address}_{sub_device.device_id}")
@@ -1079,7 +1136,18 @@ def _async_setup_device_registry(
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
-        connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
+        connections={
+            (
+                dr.CONNECTION_BLUETOOTH
+                if entry_data.transport == "ble"
+                else dr.CONNECTION_NETWORK_MAC,
+                format_mac(
+                    device_info.mac_address
+                    if entry_data.transport == "ip"
+                    else entry_data.host
+                ),
+            )
+        },
         name=entry_data.friendly_name or entry_data.name,
         manufacturer=manufacturer,
         model=model,
@@ -1410,7 +1478,14 @@ async def async_replace_device(
     for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
         dev_reg.async_update_device(
             device.id,
-            new_connections={(dr.CONNECTION_NETWORK_MAC, new_mac)},
+            new_connections={
+                (
+                    dr.CONNECTION_BLUETOOTH
+                    if entry.runtime_data.transport == "ble"
+                    else dr.CONNECTION_NETWORK_MAC,
+                    new_mac,
+                )
+            },
         )
 
     ent_reg = er.async_get(hass)
