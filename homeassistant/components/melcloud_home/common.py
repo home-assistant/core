@@ -31,3 +31,10 @@ def async_setup_unit_entities(
 
     _async_add_new_ata_units(list(coordinator.ata_units.values()))
     _async_add_new_atw_units(list(coordinator.atw_units.values()))
+
+
+def unit_ids(unit: ATAUnit | ATWUnit) -> dict[str, list[str]]:
+    """Return the client keyword argument selecting this unit."""
+    if isinstance(unit, ATAUnit):
+        return {"ata_unit_ids": [unit.id]}
+    return {"atw_unit_ids": [unit.id]}

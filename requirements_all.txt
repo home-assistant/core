@@ -3165,7 +3165,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==1.6.0
+tesla-fleet-api==1.6.3
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.3
@@ -3255,7 +3255,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==15.7.1
+uiprotect==15.9.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
