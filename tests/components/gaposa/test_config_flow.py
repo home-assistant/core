@@ -8,8 +8,8 @@ from aiohttp import ClientConnectionError
 from pygaposa import FirebaseAuthException, GaposaAuthException
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.gaposa.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -34,41 +34,39 @@ async def test_form_creates_entry(
 ) -> None:
     """Happy path: the form creates a config entry with the submitted data."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
-    await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Gaposa Gateway"
-    assert result2["data"] == USER_INPUT
-    assert result2["result"].unique_id == TEST_CLIENT_ID
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Gaposa Gateway"
+    assert result["data"] == USER_INPUT
+    assert result["result"].unique_id == TEST_CLIENT_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_aborts_when_already_configured(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_gaposa: MagicMock,
 ) -> None:
     """A second setup flow for the same account aborts."""
-    MockConfigEntry(
-        domain=DOMAIN, data=USER_INPUT, unique_id=TEST_CLIENT_ID
-    ).add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
 
-    assert result2["type"] == FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
@@ -76,46 +74,56 @@ async def test_form_aborts_when_already_configured(
     [
         (GaposaAuthException("bad creds"), "invalid_auth"),
         (FirebaseAuthException("bad firebase token"), "invalid_auth"),
-        (ConnectionError(), "cannot_connect"),
+        (ClientConnectionError("boom"), "cannot_connect"),
         (Exception("boom"), "unknown"),
     ],
 )
-async def test_form_validation_errors(
+async def test_form_validation_errors_recover(
     hass: HomeAssistant,
     mock_gaposa: MagicMock,
     exc: Exception,
     expected_error: str,
 ) -> None:
-    """Each login failure mode surfaces as the right form error."""
-    if isinstance(exc, ConnectionError):
-        exc = ClientConnectionError("boom")
-
+    """Each login failure surfaces as the right error, then the user can retry."""
     mock_gaposa.login.side_effect = exc
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": expected_error}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    mock_gaposa.login.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_form_no_clients_returns_unknown(
+async def test_form_no_clients_recovers(
     hass: HomeAssistant,
     mock_gaposa: MagicMock,
 ) -> None:
-    """Login succeeds but account has no clients — treated as unknown error."""
+    """Login succeeds but the account has no clients; user can then retry."""
+    real_clients = mock_gaposa.clients
     mock_gaposa.clients = []
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_clients"}
+
+    mock_gaposa.clients = real_clients
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

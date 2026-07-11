@@ -59,7 +59,7 @@ class GaposaConfigFlow(ConfigFlow, domain=DOMAIN):
             await gaposa.close()
 
         if not gaposa.clients:
-            return None, "unknown"
+            return None, "no_clients"
         return gaposa.clients[0][0].id, ""
 
     async def async_step_user(
