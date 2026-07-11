@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiokarakeep import KarakeepStats
 
@@ -93,6 +94,7 @@ class KarakeepStatSensor(KarakeepEntity, SensorEntity):
         self._attr_unique_id = f"{entry.entry_id}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

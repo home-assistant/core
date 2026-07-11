@@ -1,6 +1,7 @@
 """Data update coordinator for the Karakeep integration."""
 
 import logging
+from typing import override
 
 from aiokarakeep import (
     KarakeepApiError,
@@ -45,10 +46,12 @@ class KarakeepDataUpdateCoordinator(DataUpdateCoordinator[KarakeepStats]):
             config_entry=entry,
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Fetch the server version once during setup."""
         self.version = await self.client.async_get_version()
 
+    @override
     async def _async_update_data(self) -> KarakeepStats:
         """Fetch data from Karakeep API."""
         try:
