@@ -1,11 +1,9 @@
 """Config flow for Gaposa integration."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from pygaposa import FirebaseAuthException, Gaposa, GaposaAuthException
@@ -62,6 +60,7 @@ class GaposaConfigFlow(ConfigFlow, domain=DOMAIN):
             return None, "no_clients"
         return gaposa.clients[0][0].id, ""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,10 +1,8 @@
 """Gaposa cover entity."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pygaposa import Motor
 
@@ -85,10 +83,12 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         return self.coordinator.data[self._motor_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Entity is available while the motor is known to the coordinator."""
         return super().available and self._motor_id in self.coordinator.data
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Cancel any pending motion-window refresh on removal."""
         await super().async_will_remove_from_hass()
@@ -106,6 +106,7 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         return None
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return whether the cover is fully closed."""
         if self.motor.state == STATE_DOWN:
@@ -115,11 +116,13 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         return None
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return whether the cover is opening right now."""
         return self._is_moving() and self._last_command == COMMAND_UP
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return whether the cover is closing right now."""
         return self._is_moving() and self._last_command == COMMAND_DOWN
@@ -136,6 +139,7 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         self._last_command = command
         self._last_command_time = dt_util.utcnow()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.motor.up(False)
@@ -143,6 +147,7 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         self.async_write_ha_state()
         self._schedule_refresh_after_motion()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.motor.down(False)
@@ -150,6 +155,7 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         self.async_write_ha_state()
         self._schedule_refresh_after_motion()
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover and collapse the motion window immediately."""
         self._last_command = COMMAND_STOP

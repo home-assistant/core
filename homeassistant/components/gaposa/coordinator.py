@@ -1,12 +1,10 @@
 """Data update coordinator for the Gaposa integration."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aiohttp import ClientError
 from pygaposa import Device, FirebaseAuthException, Gaposa, GaposaAuthException, Motor
@@ -47,6 +45,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
         self.devices: list[Device] = []
         self._listener: Callable[[], None] | None = None
 
+    @override
     async def _async_setup(self) -> None:
         """Log in to the Gaposa API once, before the first refresh."""
         websession = async_get_clientsession(self.hass)
@@ -65,6 +64,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
             raise ConfigEntryNotReady(f"Error connecting to Gaposa: {exc}") from exc
         self.gaposa = gaposa
 
+    @override
     async def _async_update_data(self) -> dict[str, Motor]:
         """Refresh motor state from the Gaposa cloud."""
         try:
@@ -128,6 +128,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
         _LOGGER.debug("Gaposa device polled, pushing new data")
         self.async_set_updated_data(self._get_data_from_devices())
 
+    @override
     async def async_shutdown(self) -> None:
         """Detach listeners and close the Gaposa session."""
         await super().async_shutdown()
