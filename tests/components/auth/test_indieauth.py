@@ -337,7 +337,7 @@ async def test_fetch_redirect_uris_link_tag_precedence(
                     "redirect_uris": ["https://["],
                 }
             ),
-            id="redirect-uris-unparseable-entry",
+            id="redirect-uris-unparsable-entry",
         ),
     ],
 )
@@ -382,8 +382,8 @@ async def test_verify_redirect_uri_metadata_document(
     )
 
 
-async def test_verify_redirect_uri_unparseable(hass: HomeAssistant) -> None:
-    """Test an unparseable requested redirect uri is rejected without raising."""
+async def test_verify_redirect_uri_unparsable(hass: HomeAssistant) -> None:
+    """Test an unparsable requested redirect uri is rejected without raising."""
     assert not await indieauth.verify_redirect_uri(
         hass, "https://example.com/client", "https://["
     )

@@ -107,7 +107,7 @@ def _is_valid_metadata_redirect_uri(redirect_uri: str) -> bool:
 
     Entries must be absolute, fragment-free URIs: a non-empty scheme (so
     private-use schemes like app:/callback stay valid) and no fragment per
-    RFC 6749 3.1.2. An unparseable entry (e.g. an unbalanced IPv6 bracket)
+    RFC 6749 3.1.2. An unparsable entry (e.g. an unbalanced IPv6 bracket)
     invalidates the entry rather than raising into the login flow.
     """
     try:
