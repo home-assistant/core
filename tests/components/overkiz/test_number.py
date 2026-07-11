@@ -192,7 +192,7 @@ async def test_number_inverted_memorized_position_set(
     [
         pytest.param(EXPECTED_NUMBER_OF_SHOWER, 2, 4, id="expected_number_of_shower"),
         pytest.param(TOWEL_DRYER_BOOST_MODE_DURATION, 0, 60, id="boost_mode_duration"),
-        pytest.param(TOWEL_DRYER_DRYING_DURATION, 0, 120, id="drying_duration"),
+        pytest.param(TOWEL_DRYER_DRYING_DURATION, 30, 120, id="drying_duration"),
     ],
 )
 async def test_number_dynamic_min_max(

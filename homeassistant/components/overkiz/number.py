@@ -200,15 +200,15 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
-    # AtlanticElectricalTowelDryer - drying duration in minutes
+    # AtlanticElectricalTowelDryer - drying duration in minutes (30 - 120)
     OverkizNumberDescription(
         key=OverkizState.IO_DRYING_DURATION_USER_PARAMETER,
         name="Drying duration",
         icon="mdi:tumble-dryer",
         command=OverkizCommand.SET_DRYING_DURATION,
-        native_min_value=0,
+        native_min_value=30,
         native_max_value=120,
-        native_step=1,
+        native_step=30,
         max_value_state_name=OverkizState.IO_DRYING_DURATION_MAX,
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.DURATION,
