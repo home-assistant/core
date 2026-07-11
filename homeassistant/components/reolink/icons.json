@@ -141,6 +141,9 @@
       "guard_set": {
         "default": "mdi:crosshairs-gps"
       },
+      "pre_siren": {
+        "default": "mdi:alarm-light"
+      },
       "ptz_auto": {
         "default": "mdi:infinity"
       },
@@ -583,6 +586,9 @@
       },
       "pre_record": {
         "default": "mdi:history"
+      },
+      "pre_siren_on_event": {
+        "default": "mdi:alarm-light"
       },
       "privacy_mask": {
         "default": "mdi:eye",
