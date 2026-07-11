@@ -116,9 +116,9 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         self.idx = idx
 
         if (
-            coordinator.data
-            and idx < len(coordinator.data.info.radios)
-            and coordinator.data.info.radios[idx].zb_type in ZWAVE_TYPES
+            (data := coordinator.data)
+            and idx < len(data.info.radios)
+            and data.info.radios[idx].zb_type in ZWAVE_TYPES
         ):
             if description.key == "zigbee_update":
                 self._attr_translation_key = "z_wave_update"
@@ -182,7 +182,16 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     def release_notes(self) -> str | None:
         """Return release notes for firmware."""
         if "zigbee" in self.entity_description.key:
-            notes = f"### {'ZNP' if self.idx else 'EZSP'} Firmware\n\n"
+            radio_desc = "Zigbee"
+            if (data := self.coordinator.data) and self.idx < len(data.info.radios):
+                radio = data.info.radios[self.idx]
+                if radio.zb_type in ZWAVE_TYPES:
+                    radio_desc = "Z-Wave"
+                elif radio.zb_hw and "EFR32" in radio.zb_hw:
+                    radio_desc = "EZSP"
+                elif radio.zb_hw and "CC2" in radio.zb_hw:
+                    radio_desc = "ZNP"
+            notes = f"### {radio_desc} Firmware\n\n"
         else:
             notes = "### Core Firmware\n\n"
 
