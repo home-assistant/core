@@ -88,13 +88,13 @@ class Control4Entity(Entity):
                     "Control4 entity %s (%s) is unavailable", self.name, self._idx
                 )
             self._attr_available = False
-        elif message["evtName"] == "OnDataToUI":
+        elif message.get("evtName") == "OnDataToUI":
             if not self._attr_available:
                 _LOGGER.info(
                     "Control4 entity %s (%s) is available again", self.name, self._idx
                 )
             self._attr_available = True
-            await self._data_to_extra_state_attributes(message["data"])
+            await self._data_to_extra_state_attributes(message.get("data"))
         self.async_write_ha_state()
 
     async def _data_to_extra_state_attributes(self, data: Any) -> None:

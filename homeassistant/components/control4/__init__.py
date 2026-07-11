@@ -106,10 +106,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) ->
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     entry_data = entry.runtime_data
-    _LOGGER.debug("Disconnecting C4Websocket for config entry unload")
-    await entry_data[CONF_WEBSOCKET].sio_disconnect()
-    _LOGGER.debug("Cancelling scheduled token refresh for config entry unload")
-    entry_data[CONF_CANCEL_TOKEN_REFRESH_CALLBACK]()
+    websocket = entry_data.get(CONF_WEBSOCKET)
+    if websocket is not None:
+        _LOGGER.debug("Disconnecting C4Websocket for config entry unload")
+        await websocket.sio_disconnect()
+    cancel_refresh = entry_data.get(CONF_CANCEL_TOKEN_REFRESH_CALLBACK)
+    if cancel_refresh is not None:
+        _LOGGER.debug("Cancelling scheduled token refresh for config entry unload")
+        cancel_refresh()
     return unload_ok
 
 

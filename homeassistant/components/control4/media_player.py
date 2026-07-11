@@ -271,7 +271,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
             return media_info["mediainfo"]
         return None
 
-    def _get_current_source_state(self) -> str | None:
+    def _get_current_source_state(self) -> MediaPlayerState | None:
         current_source = self._get_current_playing_device_id()
         while current_source:
             current_data = self.coordinator.data.get(current_source, None)

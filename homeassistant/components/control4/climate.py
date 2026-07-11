@@ -509,9 +509,9 @@ class Control4Climate(Control4Entity, ClimateEntity):
                     await self._set_heat_setpoint(low_temp)
                 if high_temp is not None:
                     await self._set_cool_setpoint(high_temp)
-        elif self.hvac_mode == HVACMode.COOL and temp:
+        elif self.hvac_mode == HVACMode.COOL and temp is not None:
             await self._set_cool_setpoint(temp)
-        elif self.hvac_mode == HVACMode.HEAT and temp:
+        elif self.hvac_mode == HVACMode.HEAT and temp is not None:
             await self._set_heat_setpoint(temp)
 
     async def async_turn_aux_heat_on(self) -> None:
