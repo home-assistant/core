@@ -68,6 +68,7 @@ class Control4Entity(Entity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe WebSocket callbacks."""
+        await super().async_will_remove_from_hass()
         try:
             self.entry_data[CONF_WEBSOCKET].remove_item_callback(
                 self._idx, self._update_callback
@@ -103,9 +104,13 @@ class Control4Entity(Entity):
             for key, value in data.items():
                 if isinstance(value, dict):
                     for k, val in value.items():
-                        self._extra_state_attributes[k] = val
+                        self._extra_state_attributes[k] = (
+                            None if val == "Undefined" else val
+                        )
                 else:
-                    self._extra_state_attributes[key] = value
+                    self._extra_state_attributes[key] = (
+                        None if value == "Undefined" else value
+                    )
 
     @override
     @cached_property

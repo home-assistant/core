@@ -210,7 +210,7 @@ class C4WebsocketConnectionTracker:
             return
         _LOGGER.info("WebSocket connection to Control4 re-established")
         item_callbacks = self.entry.runtime_data[CONF_WEBSOCKET].item_callbacks
-        for item_id, callbacks in item_callbacks.items():
+        for item_id, callbacks in list(item_callbacks.items()):
             try:
                 item_attributes = await director_get_entry_variables(
                     self.hass, self.entry, item_id
@@ -236,7 +236,7 @@ class C4WebsocketConnectionTracker:
         )
         self._was_disconnected = True
         item_callbacks = self.entry.runtime_data[CONF_WEBSOCKET].item_callbacks
-        for item_id, callbacks in item_callbacks.items():
+        for item_id, callbacks in list(item_callbacks.items()):
             for callback in list(callbacks):
                 await callback(item_id, False)
 
