@@ -92,7 +92,6 @@ def mock_c4_director() -> Generator[MagicMock]:
             return_value=json.loads(load_fixture("ui_configuration.json", DOMAIN))
         )
         mock_director.get_item_variables = AsyncMock(return_value=[])
-        mock_director.get_item_setup = AsyncMock(return_value={})
         yield mock_director
 
 

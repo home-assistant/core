@@ -43,8 +43,6 @@
 # name: test_media_player_with_and_without_sources[media_player.living_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'CURRENT MEDIA INFO': dict({
-      }),
       'CURRENT_VIDEO_DEVICE': 100,
       'CURRENT_VOLUME': 50,
       'IS_MUTED': False,

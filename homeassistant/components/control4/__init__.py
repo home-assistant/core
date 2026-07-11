@@ -175,9 +175,6 @@ async def refresh_tokens(hass: HomeAssistant, entry: Control4ConfigEntry) -> Non
             connection_tracker.disconnect_callback,
         )
         entry_data[CONF_WEBSOCKET] = websocket
-        logging.getLogger("socketio.client").setLevel(logging.WARNING)
-        logging.getLogger("engineio.client").setLevel(logging.WARNING)
-        logging.getLogger("charset_normalizer").setLevel(logging.ERROR)
 
     try:
         await entry_data[CONF_WEBSOCKET].sio_connect(director.director_bearer_token)

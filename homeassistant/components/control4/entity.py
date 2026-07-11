@@ -17,6 +17,10 @@ from .const import CONF_CONTROLLER_UNIQUE_ID, CONF_WEBSOCKET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+# Media metadata is large, changes frequently, and isn't documented as a
+# stable attribute, so it's kept out of the publicly exposed state attributes.
+_EXCLUDED_COORDINATOR_ATTRIBUTES = {"CURRENT MEDIA INFO"}
+
 
 class Control4Entity(Entity):
     """Base entity for Control4 that receives state from WebSocket push events."""
@@ -58,12 +62,8 @@ class Control4Entity(Entity):
         """Subscribe to WebSocket push events for this item."""
         await super().async_added_to_hass()
         websocket = self.entry_data[CONF_WEBSOCKET]
-
-        def _register() -> None:
-            websocket.add_item_callback(self._idx, self._update_callback)
-            websocket.add_item_callback(self._device_id, self._update_callback)
-
-        await self.hass.async_add_executor_job(_register)
+        websocket.add_item_callback(self._idx, self._update_callback)
+        websocket.add_item_callback(self._device_id, self._update_callback)
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -177,4 +177,8 @@ class Control4CoordinatorEntity(CoordinatorEntity[Any]):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
         self._extra_state_attributes.update(self.coordinator.data.get(self._idx, {}))
-        return self._extra_state_attributes
+        return {
+            key: value
+            for key, value in self._extra_state_attributes.items()
+            if key not in _EXCLUDED_COORDINATOR_ATTRIBUTES
+        }
