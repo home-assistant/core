@@ -25,6 +25,9 @@
   "exceptions": {
     "command_failed": {
       "message": "Failed to send the command to the device."
+    },
+    "unexpected_device": {
+      "message": "The device at this address reports a different serial number than the configured device."
     }
   }
 }

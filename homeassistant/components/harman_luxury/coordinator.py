@@ -13,8 +13,11 @@ from aioharmanluxury import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +56,11 @@ class HarmanLuxuryCoordinator(DataUpdateCoordinator[HarmanLuxuryState]):
             self.device_info = await self.client.async_get_info()
         except HarmanLuxuryError as err:
             raise UpdateFailed(str(err)) from err
+        if self.device_info.serial != self.config_entry.unique_id:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unexpected_device",
+            )
 
     @override
     async def _async_update_data(self) -> HarmanLuxuryState:
