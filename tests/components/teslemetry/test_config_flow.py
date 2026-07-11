@@ -113,7 +113,7 @@ async def test_reauth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    flows = hass.config_entries.flow.async_progress()
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert len(flows) == 1
 
     # Progress from reauth_confirm to external OAuth step

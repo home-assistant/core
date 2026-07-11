@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass, field
 
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 
@@ -34,7 +35,9 @@ class TeslemetryData:
 class TeslemetryVehicleData:
     """Data for a vehicle in the Teslemetry integration."""
 
-    api: Vehicle
+    # Plain cloud Vehicle, or a VehicleRouter that tries a paired
+    # VehicleBluetooth first and falls back to the cloud Vehicle per command.
+    api: Vehicle | VehicleRouter
     config_entry: ConfigEntry
     coordinator: TeslemetryVehicleDataCoordinator
     poll: bool
@@ -43,6 +46,7 @@ class TeslemetryVehicleData:
     vin: str
     firmware: str
     device: DeviceInfo
+    subentry_id: str
     wakelock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
