@@ -252,6 +252,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
+            # A hub already added via SSDP is keyed by its UDN, so the serial-
+            # or host-based unique_id derived here does not match it. Guard
+            # against a duplicate entry (and a second connection to the same
+            # hub) by also checking the entered host/IP against existing entries.
+            probed_ip = target.get("ip") if target else None
+            if self._is_device_already_configured(user_input[KEY_HOST], probed_ip):
+                return self.async_abort(reason="already_configured")
+
             try:
                 info = await validate_input(self.hass, user_input)
                 return self.async_create_entry(title=info["title"], data=user_input)
