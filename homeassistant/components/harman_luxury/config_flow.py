@@ -23,12 +23,15 @@ class HarmanLuxuryConfigFlow(ConfigFlow, domain=DOMAIN):
     _name: str
 
     async def _async_get_info(self, host: str) -> DeviceInfo | None:
-        """Return the device info, or ``None`` if it cannot be reached."""
+        """Return the device info, or ``None`` if it has no usable identity."""
         client = HarmanLuxuryClient(host, async_get_clientsession(self.hass))
         try:
-            return await client.async_get_info()
+            info = await client.async_get_info()
         except HarmanLuxuryError:
             return None
+        if not info.serial:
+            return None
+        return info
 
     @override
     async def async_step_user(

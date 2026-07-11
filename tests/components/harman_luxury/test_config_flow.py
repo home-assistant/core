@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import SSDP_DISCOVERY, TEST_HOST, TEST_NAME, TEST_SERIAL
+from .conftest import DEVICE_INFO, SSDP_DISCOVERY, TEST_HOST, TEST_NAME, TEST_SERIAL
 
 from tests.common import MockConfigEntry
 
@@ -56,6 +56,22 @@ async def test_user_flow_cannot_connect(
         result["flow_id"], {CONF_HOST: TEST_HOST}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_flow_blank_serial(
+    hass: HomeAssistant, mock_client: AsyncMock
+) -> None:
+    """Test the user flow rejects a device that reports no serial."""
+    mock_client.async_get_info.return_value = replace(DEVICE_INFO, serial="")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 @pytest.mark.usefixtures("mock_client")
