@@ -146,6 +146,7 @@ from .const import (
 from .iidmanager import AccessoryIIDStorage
 from .models import HomeKitConfigEntry, HomeKitEntryData
 from .services import async_setup_services
+from .target import async_track_target_entity_change
 from .type_triggers import DeviceTriggerAccessory
 from .util import (
     accessory_friendly_name,
@@ -388,7 +389,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> N
                 if not target_ids:
                     continue
                 entry.async_on_unload(
-                    await async_track_target_selector_entity_change(
+                    await async_track_target_entity_change(
                         hass,
                         {target_type: target_ids},
                         _async_reload_on_target_change,
