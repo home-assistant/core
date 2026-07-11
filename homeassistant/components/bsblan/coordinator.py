@@ -185,6 +185,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
         # schedule-write refresh completing during a poll's device await
         # cannot be overwritten with the poll's stale pre-await snapshot.
         self._refresh_lock = asyncio.Lock()
+        self._dhw_schedule_supported = True
 
     @override
     async def _async_update_data(self) -> BSBLanSlowData:
@@ -231,7 +232,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
             # startup fetch failed (e.g. a transient connection error) no
             # schedule is cached yet, so retry here until the first success.
             # Once cached, subsequent polls carry it forward without re-fetching.
-            if dhw_schedule is None:
+            if dhw_schedule is None and self._dhw_schedule_supported:
                 dhw_schedule = await self._async_fetch_dhw_schedule()
 
             return BSBLanSlowData(
@@ -242,11 +243,10 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
     async def async_refresh_slow_data(self) -> None:
         """Fetch DHW config and schedule off the polling interval.
 
-        Runs on startup (in the background) and after a schedule is written. The
-        schedule is not polled on every interval to avoid extra serial-bus
-        traffic, so it is refreshed here instead. The config is refreshed too
-        for immediacy, though it is also fetched by the interval poll. Values
-        that fail to fetch keep their previous value.
+        Runs on startup (in the background) and after a schedule is written, so
+        these rarely changing values neither block startup nor add serial-bus
+        traffic on every interval. Values that fail to fetch keep their
+        previous value.
         """
         async with self._refresh_lock:
             dhw_config = await self._async_fetch_dhw_config()
@@ -273,11 +273,20 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
 
     async def _async_fetch_dhw_schedule(self) -> HotWaterSchedule | None:
         """Fetch the DHW schedule, returning None if unavailable."""
+        if not self._dhw_schedule_supported:
+            return None
         try:
             return await self.client.hot_water_schedule()
-        except BSBLANError, AttributeError, TimeoutError:
+        except BSBLANConnectionError, BSBLANAuthError, TimeoutError:
             LOGGER.debug(
                 "DHW schedule not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
+            return None
+        except BSBLANError, AttributeError:
+            self._dhw_schedule_supported = False
+            LOGGER.debug(
+                "DHW schedule is not supported by device at %s",
                 self.config_entry.data[CONF_HOST],
             )
             return None

@@ -383,6 +383,36 @@ async def test_slow_interval_poll_retries_missing_schedule(
     assert slow_coordinator.data.dhw_schedule == schedule_value
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [AttributeError(), BSBLANError("Schedule unsupported")],
+    ids=["missing-method", "api-error"],
+)
+async def test_slow_interval_poll_does_not_retry_unsupported_schedule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test interval polls do not retry an unsupported schedule."""
+    mock_bsblan.hot_water_schedule.side_effect = exception
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_bsblan.hot_water_schedule.call_count == 1
+
+    for _ in range(2):
+        freezer.tick(delta=timedelta(minutes=5, seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_bsblan.hot_water_schedule.call_count == 1
+
+
 async def test_setup_does_not_block_on_slow_fetch(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
