@@ -74,13 +74,24 @@
   "config_subentries": {
     "recipient": {
       "abort": {
-        "already_configured": "Recipient is already configured"
+        "already_configured": "Recipient is already configured",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "entry_type": "Recipient",
       "initiate_flow": {
         "user": "Add recipient"
       },
       "step": {
+        "reconfigure": {
+          "data": {
+            "recipient": "[%key:common::config_flow::data::email%]"
+          },
+          "data_description": {
+            "recipient": "[%key:component::smtp::config_subentries::recipient::step::user::data_description::recipient%]"
+          },
+          "description": "Update the recipient email address.",
+          "title": "Reconfigure recipient"
+        },
         "user": {
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
