@@ -15,59 +15,15 @@
     },
     "flow_title": "{name} ({ip_address})",
     "step": {
-      "discovery_confirm": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
-        },
-        "data_description": {
-          "api_key": "[%key:component::unifiprotect::config::step::user::data_description::api_key%]",
-          "password": "[%key:component::unifiprotect::config::step::user::data_description::password%]",
-          "port": "[%key:component::unifiprotect::config::step::user::data_description::port%]",
-          "username": "[%key:component::unifiprotect::config::step::user::data_description::username%]",
-          "verify_ssl": "[%key:component::unifiprotect::config::step::user::data_description::verify_ssl%]"
-        },
-        "description": "Do you want to set up {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud users will not work. For more information: {local_user_documentation_url}",
-        "title": "UniFi Protect discovered"
-      },
-      "reauth_confirm": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "data_description": {
-          "api_key": "API key for your local user account. Leave empty to keep your existing API key.",
-          "password": "Password for your local user account. Leave empty to keep your existing password.",
-          "username": "[%key:component::unifiprotect::config::step::user::data_description::username%]"
-        },
-        "description": "Your credentials or API key seem to be missing or invalid. Leave password and API key empty to keep your existing credentials. For more information: {local_user_documentation_url}",
-        "title": "Reauth UniFi Protect"
-      },
-      "reconfigure": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
-        },
-        "data_description": {
-          "api_key": "[%key:component::unifiprotect::config::step::reauth_confirm::data_description::api_key%]",
-          "host": "[%key:component::unifiprotect::config::step::user::data_description::host%]",
-          "password": "[%key:component::unifiprotect::config::step::reauth_confirm::data_description::password%]",
-          "port": "[%key:component::unifiprotect::config::step::user::data_description::port%]",
-          "username": "[%key:component::unifiprotect::config::step::user::data_description::username%]",
-          "verify_ssl": "[%key:component::unifiprotect::config::step::user::data_description::verify_ssl%]"
-        },
-        "description": "Update the configuration for your UniFi Protect device. Leave password and API key empty to keep your existing credentials. For more information: {local_user_documentation_url}",
-        "title": "Reconfigure UniFi Protect"
-      },
       "user": {
+        "title": "UniFi Protect setup",
+        "description": "Choose how to connect to your UniFi Protect console.",
+        "menu_options": {
+          "full": "Local user (full access)",
+          "api_key": "API key only (limited, public API)"
+        }
+      },
+      "full": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "host": "[%key:common::config_flow::data::host%]",
@@ -85,7 +41,75 @@
           "verify_ssl": "Verify SSL certificate of the UniFi Protect device."
         },
         "description": "You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud users will not work. For more information: {local_user_documentation_url}",
-        "title": "UniFi Protect setup"
+        "title": "UniFi Protect setup (local user)"
+      },
+      "api_key": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your UniFi Protect device.",
+          "port": "Port of your UniFi Protect device.",
+          "verify_ssl": "Verify SSL certificate of the UniFi Protect device.",
+          "api_key": "API key from your UniFi OS Console. Only the public Integration API is used; some entities that require a local user are unavailable in this mode."
+        },
+        "description": "Connect using only an API key, without a local user. A limited set of entities is available. For more information: {api_key_documentation_url}",
+        "title": "UniFi Protect setup (API key)"
+      },
+      "discovery_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::unifiprotect::config::step::full::data_description::api_key%]",
+          "password": "[%key:component::unifiprotect::config::step::full::data_description::password%]",
+          "port": "[%key:component::unifiprotect::config::step::full::data_description::port%]",
+          "username": "[%key:component::unifiprotect::config::step::full::data_description::username%]",
+          "verify_ssl": "[%key:component::unifiprotect::config::step::full::data_description::verify_ssl%]"
+        },
+        "description": "Do you want to set up {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud users will not work. For more information: {local_user_documentation_url}",
+        "title": "UniFi Protect discovered"
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "api_key": "API key for your local user account. Leave empty to keep your existing API key.",
+          "password": "Password for your local user account. Leave empty to keep your existing password.",
+          "username": "[%key:component::unifiprotect::config::step::full::data_description::username%]"
+        },
+        "description": "Your credentials or API key seem to be missing or invalid. Leave password and API key empty to keep your existing credentials. For more information: {local_user_documentation_url}",
+        "title": "Reauth UniFi Protect"
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::unifiprotect::config::step::reauth_confirm::data_description::api_key%]",
+          "host": "[%key:component::unifiprotect::config::step::full::data_description::host%]",
+          "password": "[%key:component::unifiprotect::config::step::reauth_confirm::data_description::password%]",
+          "port": "[%key:component::unifiprotect::config::step::full::data_description::port%]",
+          "username": "[%key:component::unifiprotect::config::step::full::data_description::username%]",
+          "verify_ssl": "[%key:component::unifiprotect::config::step::full::data_description::verify_ssl%]"
+        },
+        "description": "Update the configuration for your UniFi Protect device. Leave password and API key empty to keep your existing credentials. For more information: {local_user_documentation_url}",
+        "title": "Reconfigure UniFi Protect"
       }
     }
   },

@@ -147,6 +147,17 @@ def _build_schema(
     return vol.Schema(schema)
 
 
+def _build_api_key_schema(*, include_host: bool = True) -> vol.Schema:
+    """Build the schema for the public-API-only (API-key) connection mode."""
+    schema: dict[vol.Marker, selector.Selector] = {}
+    if include_host:
+        schema[vol.Required(CONF_HOST)] = _TEXT_SELECTOR
+    schema[vol.Required(CONF_PORT, default=DEFAULT_PORT)] = _PORT_SELECTOR
+    schema[vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)] = _BOOL_SELECTOR
+    schema[vol.Required(CONF_API_KEY)] = _PASSWORD_SELECTOR
+    return vol.Schema(schema)
+
+
 # Schemas for different flow contexts
 # User flow: all fields required
 CONFIG_SCHEMA = _build_schema()
@@ -154,6 +165,8 @@ CONFIG_SCHEMA = _build_schema()
 RECONFIGURE_SCHEMA = _build_schema(credentials_optional=True)
 # Discovery flow: host comes from discovery, user sets port/ssl
 DISCOVERY_SCHEMA = _build_schema(include_host=False)
+# Public-API-only (API key, no local user) flow
+API_KEY_SCHEMA = _build_api_key_schema()
 # Reauth flow: only credentials, connection settings preserved
 REAUTH_SCHEMA = _build_schema(
     include_host=False, include_connection=False, credentials_optional=True
@@ -393,6 +406,81 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return nvr_data, errors
 
+    async def _async_get_public_nvr_identity(
+        self,
+        user_input: dict[str, Any],
+    ) -> tuple[str | None, dict[str, str]]:
+        """Validate a public-API-only (API-key) connection.
+
+        Returns the resolved NVR mac (the unique id) and any errors. Uses only
+        the public Integration API: the API key is validated and the minimum
+        version checked via ``get_meta_info``, and the NVR identity is resolved
+        via ``resolve_nvr_mac`` (public bootstrap, else the console fallback).
+        """
+        public_api_session = async_get_clientsession(self.hass)
+        host = user_input[CONF_HOST]
+        port = int(user_input.get(CONF_PORT, DEFAULT_PORT))
+        verify_ssl = user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+
+        protect = ProtectApiClient.public_only(
+            host,
+            port,
+            api_key=user_input[CONF_API_KEY],
+            verify_ssl=verify_ssl,
+            public_api_session=public_api_session,
+        )
+
+        errors: dict[str, str] = {}
+        try:
+            meta = await protect.get_meta_info()
+        except NotAuthorized as ex:
+            _LOGGER.debug(ex)
+            errors[CONF_API_KEY] = "invalid_auth"
+            return None, errors
+        except ClientError as ex:
+            _LOGGER.error(ex)
+            errors["base"] = "cannot_connect"
+            return None, errors
+
+        if meta.version < MIN_REQUIRED_PROTECT_V:
+            _LOGGER.debug(OUTDATED_LOG_MESSAGE, meta.version, MIN_REQUIRED_PROTECT_V)
+            errors["base"] = "protect_version"
+            return None, errors
+
+        try:
+            mac = await protect.resolve_nvr_mac()
+        except ClientError as ex:
+            _LOGGER.error(ex)
+            errors["base"] = "cannot_connect"
+            return None, errors
+
+        if not mac:
+            errors["base"] = "cannot_connect"
+        return mac, errors
+
+    async def async_step_api_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the public-API-only (API key, no local user) setup."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            mac, errors = await self._async_get_public_nvr_identity(user_input)
+            if mac and not errors:
+                await self.async_set_unique_id(_async_unifi_mac_from_hass(mac))
+                self._abort_if_unique_id_configured()
+                return self._async_create_entry(user_input[CONF_HOST], user_input)
+
+        return self.async_show_form(
+            step_id="api_key",
+            description_placeholders={
+                "api_key_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
+                )
+            },
+            data_schema=self.add_suggested_values_to_schema(API_KEY_SCHEMA, user_input),
+            errors=errors,
+        )
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
@@ -498,7 +586,16 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initiated by the user."""
+        """Let the user pick the connection mode (full vs. public-API-only)."""
+        return self.async_show_menu(
+            step_id="user",
+            menu_options=["full", "api_key"],
+        )
+
+    async def async_step_full(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle full-access setup with a local user (username + password)."""
 
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -511,7 +608,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self._async_create_entry(nvr_data.display_name, user_input)
 
         return self.async_show_form(
-            step_id="user",
+            step_id="full",
             description_placeholders={
                 "local_user_documentation_url": (
                     await async_local_user_documentation_url(self.hass)

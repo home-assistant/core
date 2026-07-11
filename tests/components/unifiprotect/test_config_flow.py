@@ -100,6 +100,10 @@ async def test_user_flow(hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR) ->
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "full"}
+    )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 
@@ -155,6 +159,9 @@ async def test_form_version_too_old(
     """Test we handle the version being too old and can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "full"}
     )
 
     bootstrap.nvr = old_nvr
@@ -214,6 +221,9 @@ async def test_form_invalid_auth_password(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "full"}
+    )
 
     with (
         patch(
@@ -270,6 +280,9 @@ async def test_form_invalid_auth_api_key(
     """Test we handle invalid auth api key and can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "full"}
     )
 
     with (
@@ -332,6 +345,9 @@ async def test_form_cloud_user(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "full"}
+    )
 
     user = bootstrap.users[bootstrap.auth_user_id]
     user.cloud_account = cloud_account
@@ -393,6 +409,9 @@ async def test_form_cannot_connect(
     """Test we handle cannot connect error and can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "full"}
     )
 
     with (
@@ -2063,6 +2082,10 @@ async def test_form_api_key_client_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "full"}
+    )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
@@ -2099,6 +2122,10 @@ async def test_port_int_conversion(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "full"}
+    )
     assert result["type"] is FlowResultType.FORM
 
     bootstrap.nvr = nvr
@@ -2130,3 +2157,134 @@ async def test_port_int_conversion(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PORT] == 8443
     assert isinstance(result["data"][CONF_PORT], int)
+
+
+async def _start_api_key_flow(hass: HomeAssistant) -> ConfigFlowResult:
+    """Advance the user menu to the API-key-only step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "api_key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "api_key"
+    return result
+
+
+def _meta_info(version: str = "7.1.83") -> Mock:
+    """Build a MetaInfo-like mock with a parsed version."""
+    meta = Mock()
+    meta.version = Version(version)
+    return meta
+
+
+async def test_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
+    """A valid API key creates a public-only config entry."""
+    result = await _start_api_key_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=_meta_info(),
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
+            return_value=nvr.mac,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1", "api_key": "test-api-key"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "host": "1.1.1.1",
+        "port": 443,
+        "verify_ssl": False,
+        "api_key": "test-api-key",
+        "id": "1.1.1.1",
+    }
+    assert result["result"].unique_id == _async_unifi_mac_from_hass(nvr.mac)
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_api_key_flow_invalid_auth(hass: HomeAssistant) -> None:
+    """A rejected API key surfaces an invalid_auth error and can recover."""
+    result = await _start_api_key_flow(hass)
+
+    with patch(
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+        side_effect=NotAuthorized,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1", "api_key": "bad-key"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"api_key": "invalid_auth"}
+
+
+async def test_api_key_flow_cannot_connect(hass: HomeAssistant) -> None:
+    """A transport error surfaces cannot_connect."""
+    result = await _start_api_key_flow(hass)
+
+    with patch(
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+        side_effect=ClientError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1", "api_key": "test-api-key"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_api_key_flow_version_too_old(hass: HomeAssistant) -> None:
+    """An NVR below the minimum version is rejected."""
+    result = await _start_api_key_flow(hass)
+
+    with patch(
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+        return_value=_meta_info("1.0.0"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1", "api_key": "test-api-key"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "protect_version"}
+
+
+async def test_api_key_flow_mac_unresolved(hass: HomeAssistant) -> None:
+    """An unresolvable NVR mac surfaces cannot_connect."""
+    result = await _start_api_key_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=_meta_info(),
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1", "api_key": "test-api-key"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
