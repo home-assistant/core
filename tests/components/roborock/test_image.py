@@ -284,7 +284,7 @@ async def test_map_load_delayed(
     """Test map entities are not created if no maps initially exist, but are added dynamically later."""
     assert fake_vacuum.v1_properties
 
-    # Start with no maps
+    # 1. Start with no maps
     fake_vacuum.v1_properties.home.home_map_info = None
     fake_vacuum.v1_properties.home.home_map_content = None
 
@@ -294,8 +294,9 @@ async def test_map_load_delayed(
 
     # Assert no map entities for fake_vacuum are created initially
     assert hass.states.get("image.roborock_s7_maxv_main_floor") is None
+    assert hass.states.get("image.roborock_s7_maxv_upstairs") is None
 
-    # Later, maps show up
+    # 2. Add first map (Main Floor, flag 0)
     home_map_info = {
         0: CombinedMapInfo(
             name="Main Floor",
@@ -317,5 +318,63 @@ async def test_map_load_delayed(
         call.args[0]()
     await hass.async_block_till_done()
 
-    # Assert map entity has been created!
+    # Assert first map entity is created, second is still None
     assert hass.states.get("image.roborock_s7_maxv_main_floor") is not None
+    assert hass.states.get("image.roborock_s7_maxv_upstairs") is None
+
+    # 3. Add second map (Upstairs, flag 1)
+    home_map_info[1] = CombinedMapInfo(
+        name="Upstairs",
+        map_flag=1,
+        rooms=[],
+    )
+    home_map_content[1] = MapContent(
+        image_content=b"\x89PNG-002",
+        map_data=None,
+    )
+    fake_vacuum.v1_properties.home.home_map_info = home_map_info
+    fake_vacuum.v1_properties.home.home_map_content = home_map_content
+
+    # Notify update listener
+    for call in fake_vacuum.v1_properties.home.add_update_listener.call_args_list:
+        call.args[0]()
+    await hass.async_block_till_done()
+
+    # Assert both map entities exist
+    assert hass.states.get("image.roborock_s7_maxv_main_floor") is not None
+    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
+
+    # 4. No-op update (no changes)
+    for call in fake_vacuum.v1_properties.home.add_update_listener.call_args_list:
+        call.args[0]()
+    await hass.async_block_till_done()
+
+    # Assert both map entities still exist
+    assert hass.states.get("image.roborock_s7_maxv_main_floor") is not None
+    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
+
+    # 5. Remove first map (Main Floor, flag 0)
+    home_map_info_removed = {
+        1: CombinedMapInfo(
+            name="Upstairs",
+            map_flag=1,
+            rooms=[],
+        )
+    }
+    home_map_content_removed = {
+        1: MapContent(
+            image_content=b"\x89PNG-002",
+            map_data=None,
+        )
+    }
+    fake_vacuum.v1_properties.home.home_map_info = home_map_info_removed
+    fake_vacuum.v1_properties.home.home_map_content = home_map_content_removed
+
+    # Notify update listener
+    for call in fake_vacuum.v1_properties.home.add_update_listener.call_args_list:
+        call.args[0]()
+    await hass.async_block_till_done()
+
+    # Assert first map entity is removed, second still exists
+    assert hass.states.get("image.roborock_s7_maxv_main_floor") is None
+    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
