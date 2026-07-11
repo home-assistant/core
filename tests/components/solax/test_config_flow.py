@@ -2,19 +2,15 @@
 
 from unittest.mock import patch
 
-from solax import RealTimeAPI
+import pytest
 from solax.inverter import InverterResponse
 from solax.inverters import X1MiniV34
 
 from homeassistant import config_entries
 from homeassistant.components.solax.const import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-
-
-def __mock_real_time_api_success():
-    return RealTimeAPI(X1MiniV34)
 
 
 def __mock_get_data():
@@ -27,7 +23,27 @@ def __mock_get_data():
     )
 
 
-async def test_form_success(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        pytest.param(
+            {CONF_IP_ADDRESS: "192.168.1.87", CONF_PORT: 80, CONF_PASSWORD: "password"},
+            id="auto_detect",
+        ),
+        pytest.param(
+            {
+                CONF_IP_ADDRESS: "192.168.1.87",
+                CONF_PORT: 80,
+                CONF_PASSWORD: "password",
+                CONF_MODEL: "x1_mini_v34",
+            },
+            id="model_selected",
+        ),
+    ],
+)
+async def test_form_success(
+    hass: HomeAssistant, user_input: dict[str, str | int]
+) -> None:
     """Test successful form."""
     flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -37,8 +53,8 @@ async def test_form_success(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.solax.config_flow.real_time_api",
-            return_value=__mock_real_time_api_success(),
+            "homeassistant.components.solax.config_flow.discover",
+            return_value=X1MiniV34,
         ),
         patch("solax.RealTimeAPI.get_data", return_value=__mock_get_data()),
         patch(
@@ -47,18 +63,13 @@ async def test_form_success(hass: HomeAssistant) -> None:
         ) as mock_setup_entry,
     ):
         entry_result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"],
-            {CONF_IP_ADDRESS: "192.168.1.87", CONF_PORT: 80, CONF_PASSWORD: "password"},
+            flow["flow_id"], user_input
         )
         await hass.async_block_till_done()
 
     assert entry_result["type"] is FlowResultType.CREATE_ENTRY
     assert entry_result["title"] == "ABCDEFGHIJ"
-    assert entry_result["data"] == {
-        CONF_IP_ADDRESS: "192.168.1.87",
-        CONF_PORT: 80,
-        CONF_PASSWORD: "password",
-    }
+    assert entry_result["data"] == user_input
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -71,7 +82,7 @@ async def test_form_connect_error(hass: HomeAssistant) -> None:
     assert flow["errors"] == {}
 
     with patch(
-        "homeassistant.components.solax.config_flow.real_time_api",
+        "homeassistant.components.solax.config_flow.discover",
         side_effect=ConnectionError,
     ):
         entry_result = await hass.config_entries.flow.async_configure(
@@ -92,7 +103,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
     assert flow["errors"] == {}
 
     with patch(
-        "homeassistant.components.solax.config_flow.real_time_api",
+        "homeassistant.components.solax.config_flow.discover",
         side_effect=Exception,
     ):
         entry_result = await hass.config_entries.flow.async_configure(
