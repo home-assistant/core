@@ -197,6 +197,7 @@ class AiohttpClientMockResponse:
         self.method = method
         self._url = url
         self.status = status
+        self.history = ()
         self._response = response
         self.exc = exc
         self.side_effect = side_effect

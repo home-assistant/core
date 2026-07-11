@@ -1,6 +1,7 @@
 """Helpers to resolve client ID/secret."""
 
 from html.parser import HTMLParser
+from http import HTTPStatus
 from ipaddress import ip_address
 import json
 import logging
@@ -93,7 +94,10 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
 
     The client_id URL returns a JSON document with a redirect_uris array. As we
     advertise client_id_metadata_document_supported in the authorization server
-    metadata, we fall back to this format when no link tags are found.
+    metadata, we fall back to this format when no link tags are found. The spec
+    requires an https client_id fetched directly (200 OK, no redirects) whose
+    client_id round-trips in the document, and absolute redirect URIs matched
+    exactly.
 
     We limit to the first 10kB of the page.
 
@@ -101,11 +105,15 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
     """
     parser = LinkTagParser("redirect_uri")
     body: bytes = b""
+    status: int | None = None
+    redirected = False
     try:
         async with (
             aiohttp.ClientSession() as session,
             session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as resp,
         ):
+            status = resp.status
+            redirected = bool(resp.history)
             async for data in resp.content.iter_chunked(1024):
                 body += data
 
@@ -135,25 +143,56 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
         # relative URLs.
         return [urljoin(url, found) for found in parser.found]
 
-    # No link tags found, try to parse the body as an OAuth Client ID Metadata
-    # Document (draft-ietf-oauth-client-id-metadata-document), since we advertise
-    # client_id_metadata_document_supported in the authorization server metadata.
+    # No link tags found, fall back to an OAuth Client ID Metadata Document
+    # (draft-ietf-oauth-client-id-metadata-document). The url and its document
+    # are client-controlled and fetched unauthenticated, so rejections log at
+    # DEBUG (higher levels would be a log-flood vector).
+    if status != HTTPStatus.OK or redirected or urlparse(url).scheme != "https":
+        _LOGGER.debug(
+            "Ignoring client ID metadata document for %s: status %s, redirected %s,"
+            " or non-https client_id",
+            url,
+            status,
+            redirected,
+        )
+        return []
+
     try:
         document = json.loads(text)
     except ValueError:
+        _LOGGER.debug(
+            "Client ID metadata document at %s is not valid JSON%s",
+            url,
+            " (truncated at 10 kB limit)" if len(body) >= 10240 else "",
+        )
         return []
 
     if not isinstance(document, dict):
+        _LOGGER.debug("Client ID metadata document at %s is not a JSON object", url)
         return []
 
+    if document.get("client_id") != url:
+        _LOGGER.debug(
+            "Client ID metadata document at %s client_id does not match the"
+            " document URL",
+            url,
+        )
+        return []
+
+    # redirect_uris must be absolute URIs (a non-empty scheme, so private-use
+    # schemes like app:/callback stay valid); we return them unmodified for
+    # RFC 6749 exact matching rather than resolving relative references.
     redirect_uris = document.get("redirect_uris")
     if not isinstance(redirect_uris, list) or not all(
-        isinstance(redirect_uri, str) for redirect_uri in redirect_uris
+        isinstance(redirect_uri, str) and urlparse(redirect_uri).scheme
+        for redirect_uri in redirect_uris
     ):
+        _LOGGER.debug(
+            "Client ID metadata document at %s has missing or invalid redirect_uris",
+            url,
+        )
         return []
 
-    # CIMD requires absolute redirect URIs, so unlike the link tag format we
-    # return them as-is for RFC 6749 exact matching without resolving them.
     return redirect_uris
 
 

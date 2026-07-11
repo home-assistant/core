@@ -4,6 +4,7 @@ import asyncio
 import json
 from unittest.mock import patch
 
+import aiohttp
 import pytest
 
 from homeassistant.components.auth import indieauth
@@ -202,7 +203,12 @@ async def test_fetch_redirect_uris_metadata_document_text_plain(
     """Test the metadata document is parsed regardless of content type."""
     mock_session.get(
         "https://example.com/client",
-        text=json.dumps({"redirect_uris": ["https://example.com/callback"]}),
+        text=json.dumps(
+            {
+                "client_id": "https://example.com/client",
+                "redirect_uris": ["https://example.com/callback"],
+            }
+        ),
         headers={"Content-Type": "text/plain"},
     )
     redirect_uris = await indieauth.fetch_redirect_uris(
@@ -240,13 +246,59 @@ async def test_fetch_redirect_uris_link_tag_precedence(
     [
         pytest.param("this is neither json nor html", id="not-json-not-html"),
         pytest.param('["https://example.com/callback"]', id="json-array"),
+        pytest.param("42", id="json-scalar"),
         pytest.param(
-            '{"redirect_uris": "https://example.com/callback"}',
+            json.dumps({"redirect_uris": ["https://example.com/callback"]}),
+            id="missing-client-id",
+        ),
+        pytest.param(
+            json.dumps({"client_id": "https://example.com/client"}),
+            id="missing-redirect-uris",
+        ),
+        pytest.param(
+            json.dumps(
+                {
+                    "client_id": "https://example.com/client",
+                    "redirect_uris": [],
+                }
+            ),
+            id="empty-redirect-uris",
+        ),
+        pytest.param(
+            json.dumps(
+                {
+                    "client_id": "https://other.example/client",
+                    "redirect_uris": ["https://example.com/callback"],
+                }
+            ),
+            id="client-id-mismatch",
+        ),
+        pytest.param(
+            json.dumps(
+                {
+                    "client_id": "https://example.com/client",
+                    "redirect_uris": "https://example.com/callback",
+                }
+            ),
             id="redirect-uris-not-list",
         ),
         pytest.param(
-            '{"redirect_uris": ["https://example.com/callback", 123]}',
+            json.dumps(
+                {
+                    "client_id": "https://example.com/client",
+                    "redirect_uris": ["https://example.com/callback", 123],
+                }
+            ),
             id="redirect-uris-non-string-entry",
+        ),
+        pytest.param(
+            json.dumps(
+                {
+                    "client_id": "https://example.com/client",
+                    "redirect_uris": ["/callback"],
+                }
+            ),
+            id="redirect-uris-relative-entry",
         ),
     ],
 )
@@ -273,7 +325,12 @@ async def test_verify_redirect_uri_metadata_document(
     client_id = "https://example.com/client"
     mock_session.get(
         client_id,
-        text=json.dumps({"redirect_uris": ["https://other.com/callback"]}),
+        text=json.dumps(
+            {
+                "client_id": client_id,
+                "redirect_uris": ["https://other.com/callback"],
+            }
+        ),
         headers={"Content-Type": "application/json"},
     )
 
@@ -286,6 +343,95 @@ async def test_verify_redirect_uri_metadata_document(
     assert not await indieauth.verify_redirect_uri(
         hass, client_id, "https://other.com/not-listed"
     )
+
+
+async def test_fetch_redirect_uris_metadata_document_not_ok(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker
+) -> None:
+    """Test a metadata document not served with 200 OK is ignored."""
+    mock_session.get(
+        "https://example.com/client",
+        text=json.dumps(
+            {
+                "client_id": "https://example.com/client",
+                "redirect_uris": ["https://example.com/callback"],
+            }
+        ),
+        status=404,
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert await indieauth.fetch_redirect_uris(hass, "https://example.com/client") == []
+
+
+async def test_fetch_redirect_uris_metadata_document_http_scheme(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker
+) -> None:
+    """Test a metadata document served over http is ignored."""
+    client_id = "http://example.com/client"
+    mock_session.get(
+        client_id,
+        text=json.dumps(
+            {
+                "client_id": client_id,
+                "redirect_uris": ["https://other.com/callback"],
+            }
+        ),
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert await indieauth.fetch_redirect_uris(hass, client_id) == []
+    assert not await indieauth.verify_redirect_uri(
+        hass, client_id, "https://other.com/callback"
+    )
+
+
+async def test_fetch_redirect_uris_metadata_document_private_use_scheme(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker
+) -> None:
+    """Test a private-use scheme redirect uri is accepted as an absolute URI."""
+    mock_session.get(
+        "https://example.com/client",
+        text=json.dumps(
+            {
+                "client_id": "https://example.com/client",
+                "redirect_uris": ["app:/oauth-callback"],
+            }
+        ),
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert await indieauth.fetch_redirect_uris(hass, "https://example.com/client") == [
+        "app:/oauth-callback"
+    ]
+
+
+async def test_fetch_redirect_uris_metadata_document_oversized(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker
+) -> None:
+    """Test an oversized document truncates past the 10kB cap to invalid JSON."""
+    mock_session.get(
+        "https://example.com/client",
+        text=json.dumps(
+            {
+                "client_id": "https://example.com/client",
+                "redirect_uris": ["https://example.com/callback"],
+                "padding": "x" * 11000,
+            }
+        ),
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert await indieauth.fetch_redirect_uris(hass, "https://example.com/client") == []
+
+
+async def test_fetch_redirect_uris_network_error(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker
+) -> None:
+    """Test a network error yields no redirect uris without raising."""
+    mock_session.get("https://example.com/client", exc=aiohttp.ClientError())
+
+    assert await indieauth.fetch_redirect_uris(hass, "https://example.com/client") == []
 
 
 @pytest.mark.parametrize(
