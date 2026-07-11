@@ -190,8 +190,6 @@ class Control4Cover(Control4Entity, CoverEntity):
     @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set cover position."""
-        position = kwargs.get(ATTR_POSITION)
-        if not isinstance(position, int):
-            return
-        position = max(_MIN_COVER_LEVEL, min(position, _MAX_COVER_LEVEL))
-        await self._create_blind_api_object().set_level_target(level=position)
+        await self._create_blind_api_object().set_level_target(
+            level=kwargs[ATTR_POSITION]
+        )

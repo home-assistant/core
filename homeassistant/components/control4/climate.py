@@ -298,13 +298,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
         c4_climate = self.create_api_object()
-        if hvac_mode in CONTROL4_HVAC_MODES:
-            await c4_climate.set_hvac_mode(CONTROL4_HVAC_MODES[hvac_mode])
-        else:
-            _LOGGER.exception(
-                "Request for unsupported hvac mode received:: %s",
-                hvac_mode,
-            )
+        await c4_climate.set_hvac_mode(CONTROL4_HVAC_MODES[hvac_mode])
 
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:

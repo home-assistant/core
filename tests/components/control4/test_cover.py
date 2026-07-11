@@ -62,17 +62,23 @@ def mock_cover_variables() -> dict:
 @pytest.fixture
 def mock_cover_update_variables(
     mock_cover_variables: dict,
-) -> Generator[AsyncMock]:
-    """Mock update_variables for cover platform."""
+    mock_c4_director: MagicMock,
+) -> None:
+    """Mock the Director API's get_item_variables.
 
-    async def _mock_get_entry_variables(hass: HomeAssistant | None, entry, item_id):
-        return mock_cover_variables.get(item_id)
+    This exercises the real director_get_entry_variables, so its
+    normalization (missing items resolve to {}, never None; the
+    "Undefined" sentinel becomes None) is covered by these tests
+    instead of bypassed.
+    """
 
-    with patch(
-        "homeassistant.components.control4.cover.director_get_entry_variables",
-        new=_mock_get_entry_variables,
-    ) as mock_get:
-        yield mock_get
+    async def _mock_get_item_variables(item_id: int) -> list[dict[str, Any]]:
+        item_data = mock_cover_variables.get(item_id, {})
+        return [{"varName": name, "value": value} for name, value in item_data.items()]
+
+    mock_c4_director.get_item_variables = AsyncMock(
+        side_effect=_mock_get_item_variables
+    )
 
 
 @pytest.fixture
