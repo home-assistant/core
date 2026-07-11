@@ -42,6 +42,17 @@ async def verify_redirect_uri(
         and client_id_parts.netloc == redirect_parts.netloc
     )
 
+    # Deliberate deviations from a strict OAuth/CIMD reading, kept for
+    # compatibility with IndieAuth clients and Home Assistant's own frontend
+    # login (which uses the instance URL as client_id with a same-origin
+    # redirect_uri):
+    # - A same-origin redirect_uri is accepted without registration or a
+    #   document fetch.
+    # - The client_id page may be fetched from private/local addresses;
+    #   local clients are first-class in Home Assistant (see
+    #   _parse_client_id).
+    # - Redirects are followed when fetching the client_id page for link
+    #   tags; a metadata document reached via a redirect is rejected.
     if is_valid:
         return True
 
@@ -156,20 +167,16 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
 
     The client_id URL returns a JSON document with a redirect_uris array. As we
     advertise client_id_metadata_document_supported in the authorization server
-    metadata, we fall back to this format when no link tags are found. The spec
-    requires an https client_id fetched directly (200 OK, no redirects) whose
-    client_id round-trips in the document, and absolute redirect URIs matched
-    exactly.
+    metadata, we fall back to this format when no link tags are found.
 
-    We limit to the first 10kB of the page.
+    We read roughly the first 10kB of the page and a fetch error yields no
+    redirect uris.
 
     We do not implement extracting redirect uris from headers.
     """
-    parser = LinkTagParser("redirect_uri")
     body: bytes = b""
     status: int | None = None
     redirected = False
-    fetch_complete = False
     try:
         async with (
             aiohttp.ClientSession() as session,
@@ -180,67 +187,80 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
             async for data in resp.content.iter_chunked(1024):
                 body += data
 
-                if len(body) > MAX_FETCH_BYTES:
-                    # A chunk can cross the boundary, so clamp to the cap. A
-                    # response of exactly the cap ends the loop instead and
-                    # still counts as complete.
-                    body = body[:MAX_FETCH_BYTES]
+                if len(body) >= MAX_FETCH_BYTES:
                     break
-            else:
-                # The loop ran to completion, so the whole response was read
-                # within the size cap (no break, no exception).
-                fetch_complete = True
 
     except TimeoutError:
         _LOGGER.error("Timeout while looking up redirect_uri %s", url)
+        return []
     except aiohttp.client_exceptions.ClientSSLError:
         _LOGGER.error("SSL error while looking up redirect_uri %s", url)
+        return []
     except aiohttp.client_exceptions.ClientOSError as ex:
         _LOGGER.error("OS error while looking up redirect_uri %s: %s", url, ex.strerror)
+        return []
     except aiohttp.client_exceptions.ClientConnectionError:
         _LOGGER.error(
             "Low level connection error while looking up redirect_uri %s", url
         )
+        return []
     except aiohttp.client_exceptions.ClientError:
         _LOGGER.error("Unknown error while looking up redirect_uri %s", url)
+        return []
 
-    text = body.decode(errors="replace")
-    parser.feed(text)
+    if redirect_uris := _parse_link_tag_redirect_uris(url, body):
+        return redirect_uris
 
-    if parser.found:
-        # Authorization endpoints verifying that a redirect_uri is allowed for use
-        # by a client MUST look for an exact match of the given redirect_uri in the
-        # request against the list of redirect_uris discovered after resolving any
-        # relative URLs.
-        return [urljoin(url, found) for found in parser.found]
+    return _parse_metadata_document_redirect_uris(url, body, status, redirected)
 
-    # No link tags found, fall back to an OAuth Client ID Metadata Document
-    # (draft-ietf-oauth-client-id-metadata-document). The url and its document
-    # are client-controlled and fetched unauthenticated, so rejections log at
-    # DEBUG (higher levels would be a log-flood vector). An incomplete or
-    # truncated read is rejected here: a stranded or capped prefix must not be
+
+def _parse_link_tag_redirect_uris(url: str, body: bytes) -> list[str]:
+    """Find <link rel="redirect_uri"> values in the client_id page body."""
+    parser = LinkTagParser("redirect_uri")
+    parser.feed(body.decode(errors="replace"))
+
+    # Authorization endpoints verifying that a redirect_uri is allowed for use
+    # by a client MUST look for an exact match of the given redirect_uri in the
+    # request against the list of redirect_uris discovered after resolving any
+    # relative URLs.
+    return [urljoin(url, found) for found in parser.found]
+
+
+def _parse_metadata_document_redirect_uris(
+    url: str, body: bytes, status: int | None, redirected: bool
+) -> list[str]:
+    """Parse the client_id page body as an OAuth Client ID Metadata Document.
+
+    Per draft-ietf-oauth-client-id-metadata-document the document only counts
+    when the client_id URL is https with a path and no fragment, the response
+    was a direct 200 (not redirected), the document's client_id round-trips,
+    and every redirect_uris entry is an absolute, fragment-free URI matched
+    exactly. The url and its document are client-controlled and fetched
+    unauthenticated, so rejections log at DEBUG (higher levels would be a
+    log-flood vector).
+    """
+    # A body at the read cap may be truncated; a truncated prefix must not be
     # trusted even if it happens to be parseable.
     if (
-        not fetch_complete
+        len(body) >= MAX_FETCH_BYTES
         or status != HTTPStatus.OK
         or redirected
         or not _is_valid_metadata_client_id(url)
     ):
         _LOGGER.debug(
-            "Not treating %s as a client ID metadata document: fetch complete %s,"
+            "Not treating %s as a client ID metadata document: body length %s,"
             " status %s, redirected %s (client_id must be a fragment-free https"
             " URL with a path)",
             url,
-            fetch_complete,
+            len(body),
             status,
             redirected,
         )
         return []
 
     try:
-        # Strict decode for the JSON path (RFC 8259 requires UTF-8): the
-        # lenient replacement decode above is only for tolerant HTML scanning
-        # and could otherwise mask invalid bytes as U+FFFD inside the document.
+        # Strict decode (RFC 8259 requires UTF-8): the link tag parser's
+        # lenient replacement decode would mask invalid bytes as U+FFFD.
         document = json.loads(body.decode(), parse_constant=_reject_json_constant)
     except UnicodeDecodeError:
         _LOGGER.debug("Client ID metadata document at %s is not valid UTF-8", url)

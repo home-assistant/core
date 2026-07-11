@@ -453,30 +453,6 @@ async def test_fetch_redirect_uris_metadata_document_invalid_client_id(
     assert await indieauth.fetch_redirect_uris(hass, client_id) == []
 
 
-async def test_fetch_redirect_uris_metadata_document_exactly_at_cap(
-    hass: HomeAssistant, mock_session: AiohttpClientMocker
-) -> None:
-    """Test a complete document of exactly the size cap is accepted."""
-    document = {
-        "client_id": "https://example.com/client",
-        "redirect_uris": ["https://other.com/callback"],
-        "padding": "",
-    }
-    document["padding"] = "x" * (10240 - len(json.dumps(document)))
-    text = json.dumps(document)
-    assert len(text) == 10240
-
-    mock_session.get(
-        "https://example.com/client",
-        text=text,
-        headers={"Content-Type": "application/json"},
-    )
-
-    assert await indieauth.fetch_redirect_uris(hass, "https://example.com/client") == [
-        "https://other.com/callback"
-    ]
-
-
 async def test_fetch_redirect_uris_metadata_document_not_ok(
     hass: HomeAssistant, mock_session: AiohttpClientMocker
 ) -> None:
@@ -570,6 +546,28 @@ async def test_fetch_redirect_uris_metadata_document_oversized(
                 "padding": "x" * 11000,
             }
         ),
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert await indieauth.fetch_redirect_uris(hass, "https://example.com/client") == []
+
+
+async def test_fetch_redirect_uris_metadata_document_exactly_at_cap(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker
+) -> None:
+    """Test a document of exactly the read cap is rejected as possibly truncated."""
+    document = {
+        "client_id": "https://example.com/client",
+        "redirect_uris": ["https://other.com/callback"],
+        "padding": "",
+    }
+    document["padding"] = "x" * (10240 - len(json.dumps(document)))
+    text = json.dumps(document)
+    assert len(text) == 10240
+
+    mock_session.get(
+        "https://example.com/client",
+        text=text,
         headers={"Content-Type": "application/json"},
     )
 
