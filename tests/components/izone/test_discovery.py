@@ -325,8 +325,11 @@ async def test_async_stop_discovery_service_clears_stop_listener(
     service = await async_install_discovery_service(hass)
 
     assert service.remove_stop_listener is not None
+    stop_listener = Mock(wraps=service.remove_stop_listener)
+    service.remove_stop_listener = stop_listener
 
     await izone_discovery.async_stop_discovery_service(hass)
 
+    stop_listener.assert_called_once()
     assert service.remove_stop_listener is None
     assert DATA_DISCOVERY_SERVICE not in hass.data
