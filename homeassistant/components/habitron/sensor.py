@@ -572,13 +572,11 @@ EKEY_ID_DESCRIPTION = HbtnSensorEntityDescription(
     value_fn=lambda module, idx: module.sensors[idx].value,
     subscribe_fn=lambda module, idx: module.sensors[idx],
 )
-# The finger sensors bind to ``module.sensors[idx]`` (not ``module.fingers[0]``)
-# because the 10-second poll parser (``_status_ekey`` in habitron_client) writes
-# the finger value to ``sensors[1]``, while the FINGER bus event writes it to
-# ``fingers[0]``. This PR is poll-only (the event receiver / update_entity
-# service is deferred to a later PR), so a sensor bound to ``fingers[0]`` would
-# never update here. Do NOT rebind to ``fingers`` until the library is unified so
-# the FINGER event also writes ``sensors[1]`` (the proper long-term fix).
+# The finger sensors bind to ``module.sensors[idx]`` -- the canonical member for
+# the finger number, which both the 10-second poll parser (``_status_ekey``) and
+# the FINGER bus event write (habitron_client >= 2.0.9). ``module.fingers[0]``
+# instead carries the combined user+finger reading as one atomic event, meant for
+# the access-control event platform in a later PR, not this per-number sensor.
 EKEY_FINGER_DESCRIPTION = HbtnSensorEntityDescription(
     key="ekey_finger",
     translation_key="ekey_finger",
