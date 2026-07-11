@@ -490,7 +490,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
         if self.hvac_mode == HVACMode.HEAT_COOL:
-            if low_temp and high_temp:
+            if low_temp is not None and high_temp is not None:
                 if high_temp - low_temp < self._get_setpoint_deadband():
                     # Ensure there is a minimum gap from the new temp. Pick
                     # the temp that is not changing as the one to move.
@@ -504,6 +504,11 @@ class Control4Climate(Control4Entity, ClimateEntity):
                         low_temp = high_temp - self._get_setpoint_deadband()
                 await self._set_heat_setpoint(low_temp)
                 await self._set_cool_setpoint(high_temp)
+            else:
+                if low_temp is not None:
+                    await self._set_heat_setpoint(low_temp)
+                if high_temp is not None:
+                    await self._set_cool_setpoint(high_temp)
         elif self.hvac_mode == HVACMode.COOL and temp:
             await self._set_cool_setpoint(temp)
         elif self.hvac_mode == HVACMode.HEAT and temp:

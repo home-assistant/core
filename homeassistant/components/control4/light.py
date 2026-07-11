@@ -145,13 +145,16 @@ class Control4Light(Control4Entity, LightEntity):
     def brightness(self) -> int | None:
         """Return brightness (0-255)."""
         attrs = self.extra_state_attributes
+        level = None
         if "LIGHT_LEVEL" in attrs:
-            return value_to_brightness(CONTROL4_BRIGHTNESS_SCALE, attrs["LIGHT_LEVEL"])
-        if "Brightness Percent" in attrs:
-            return value_to_brightness(
-                CONTROL4_BRIGHTNESS_SCALE, attrs["Brightness Percent"]
-            )
-        return None
+            level = attrs["LIGHT_LEVEL"]
+        elif "Brightness Percent" in attrs:
+            level = attrs["Brightness Percent"]
+        if level is None:
+            return None
+        if level <= 0:
+            return 0
+        return value_to_brightness(CONTROL4_BRIGHTNESS_SCALE, level)
 
     @override
     @property

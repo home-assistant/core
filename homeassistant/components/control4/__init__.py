@@ -180,6 +180,10 @@ async def refresh_tokens(hass: HomeAssistant, entry: Control4ConfigEntry) -> Non
     except Exception as err:
         raise ConfigEntryNotReady(err) from err
 
+    cancel_previous_refresh = entry_data.get(CONF_CANCEL_TOKEN_REFRESH_CALLBACK)
+    if cancel_previous_refresh is not None:
+        cancel_previous_refresh()
+
     delay = max(
         director_token_dict["validSeconds"] - SCHEDULE_REFRESH_ADVANCE_SEC,
         SCHEDULE_REFRESH_ADVANCE_SEC,
