@@ -15,7 +15,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mealie import DOMAIN
-from homeassistant.components.mealie.todo import _convert_api_item, _parse_description
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
     ATTR_ITEM,
@@ -35,46 +34,50 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_fixture,
-    load_fixture,
     snapshot_platform,
 )
 from tests.typing import WebSocketGenerator
 
+ENTITY_SUPERMARKET = "todo.mealie_supermarket"
 
-@pytest.mark.parametrize(
-    ("item_index", "expected_summary", "expected_description"),
-    [
-        pytest.param(0, "2 Apples", None, id="non_food_keeps_display"),
-        pytest.param(1, "acorn squash", "1 can", id="food_with_unit"),
-        pytest.param(2, "aubergine", None, id="food_no_quantity"),
-        pytest.param(3, "flour", "1 US cup", id="food_with_quantity_and_unit"),
-    ],
-)
-def test_convert_api_item(
-    item_index: int,
-    expected_summary: str,
-    expected_description: str | None,
+
+async def _get_items(
+    hass_ws_client: WebSocketGenerator, entity_id: str
+) -> list[dict[str, str]]:
+    """Fetch todo items for an entity through the websocket API."""
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "todo/item/list", "entity_id": entity_id})
+    resp = await client.receive_json()
+    assert resp["success"]
+    return resp["result"]["items"]
+
+
+async def test_todo_items_split_name_and_description(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test _convert_api_item splits food name into summary and quantity/unit into description."""
-    items = ShoppingItemsResponse.from_json(
-        load_fixture("get_shopping_items.json", DOMAIN)
-    ).items
+    """Test items expose the name as summary and quantity/unit/note as description."""
+    await setup_integration(hass, mock_config_entry)
 
-    todo = _convert_api_item(items[item_index])
+    items = await _get_items(hass_ws_client, ENTITY_SUPERMARKET)
 
-    assert todo.summary == expected_summary
-    assert todo.description == expected_description
+    assert [(item["summary"], item.get("description")) for item in items] == [
+        ("Apples", "2"),
+        ("acorn squash", "1 can"),
+        ("aubergine", None),
+        ("flour", "1 US cup"),
+    ]
 
 
 @pytest.mark.parametrize(
     ("description", "expected_quantity", "expected_note"),
     [
-        pytest.param(None, 0.0, "", id="none"),
-        pytest.param("", 0.0, "", id="empty"),
+        pytest.param("3 can, organic", 3.0, "organic", id="quantity_unit_note"),
         pytest.param("2", 2.0, "", id="quantity_only"),
         pytest.param("2.5", 2.5, "", id="fractional_quantity"),
         pytest.param("2 Gramm", 2.0, "", id="quantity_and_unit"),
-        pytest.param("2 Gramm, organic", 2.0, "organic", id="quantity_unit_note"),
         pytest.param(", organic", 0.0, "organic", id="note_only_with_comma"),
         pytest.param("buy fresh", 0.0, "buy fresh", id="text_note_no_comma"),
         pytest.param(
@@ -83,42 +86,73 @@ def test_convert_api_item(
         pytest.param("1 can, ripe", 1.0, "ripe", id="quantity_unit_note_short"),
     ],
 )
-def test_parse_description(
-    description: str | None,
-    expected_quantity: float,
-    expected_note: str,
-) -> None:
-    """Test _parse_description extracts quantity and note from a description string."""
-    quantity, note = _parse_description(description)
-
-    assert quantity == expected_quantity
-    assert note == expected_note
-
-
-async def test_update_todo_item_description(
+async def test_update_food_item_description(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    description: str,
+    expected_quantity: float,
+    expected_note: str,
 ) -> None:
-    """Test updating description on a food item updates quantity and note."""
+    """Test editing a food item's description updates its quantity and note."""
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
-        {
-            ATTR_ITEM: "acorn squash",
-            ATTR_RENAME: "acorn squash",
-            ATTR_DESCRIPTION: "3 can, organic",
-        },
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        {ATTR_ITEM: "acorn squash", ATTR_DESCRIPTION: description},
+        target={ATTR_ENTITY_ID: ENTITY_SUPERMARKET},
         blocking=True,
     )
 
     mock_mealie_client.update_shopping_item.assert_called_once()
     _, mutate = mock_mealie_client.update_shopping_item.call_args[0]
-    assert mutate.quantity == 3.0
-    assert mutate.note == "organic"
+    assert mutate.quantity == expected_quantity
+    assert mutate.note == expected_note
+
+
+async def test_update_nonfood_item_description(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test editing a non-food item's description updates quantity but keeps the note."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "Apples", ATTR_DESCRIPTION: "5"},
+        target={ATTR_ENTITY_ID: ENTITY_SUPERMARKET},
+        blocking=True,
+    )
+
+    mock_mealie_client.update_shopping_item.assert_called_once()
+    _, mutate = mock_mealie_client.update_shopping_item.call_args[0]
+    assert mutate.quantity == 5.0
+    assert mutate.note == "Apples"
+
+
+async def test_create_item_with_description(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test creating an item derives the quantity from the description."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "Soda", ATTR_DESCRIPTION: "6"},
+        target={ATTR_ENTITY_ID: ENTITY_SUPERMARKET},
+        blocking=True,
+    )
+
+    mock_mealie_client.add_shopping_item.assert_called_once()
+    (mutate,) = mock_mealie_client.add_shopping_item.call_args[0]
+    assert mutate.note == "Soda"
+    assert mutate.quantity == 6.0
 
 
 async def test_update_todo_item_status_keeps_description(
@@ -128,9 +162,9 @@ async def test_update_todo_item_status_keeps_description(
 ) -> None:
     """Test toggling status does not rewrite quantity/note from the rendered description.
 
-    Uses a food item whose note starts with a digit so that _parse_description would
-    return a different (quantity, note) pair — proving the unchanged-description guard
-    is load-bearing and not just incidentally passing.
+    Uses a food item whose note starts with a digit so that parsing the description
+    back would return a different (quantity, note) pair — proving the
+    unchanged-description guard is load-bearing and not just incidentally passing.
     """
     items_data = json.loads(
         await async_load_fixture(hass, "get_shopping_items.json", DOMAIN)
@@ -149,7 +183,7 @@ async def test_update_todo_item_status_keeps_description(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
         {ATTR_ITEM: "acorn squash", ATTR_STATUS: "completed"},
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        target={ATTR_ENTITY_ID: ENTITY_SUPERMARKET},
         blocking=True,
     )
 
@@ -168,17 +202,17 @@ async def test_update_todo_item_nonfood_status_keeps_quantity(
 ) -> None:
     """Test toggling status on a non-food item does not reset its quantity.
 
-    Non-food items have description=None in the todo layer, but _build_description
-    of the underlying ShoppingItem is non-None when quantity>0; the elif branch must
-    be skipped for non-food items to avoid zeroing out the quantity.
+    A status toggle re-sends the rendered description, which for a non-food item
+    matches its quantity; the unchanged-description guard must keep the quantity
+    and note intact.
     """
     await setup_integration(hass, mock_config_entry)
 
     await hass.services.async_call(
         TODO_DOMAIN,
         TodoServices.UPDATE_ITEM,
-        {ATTR_ITEM: "2 Apples", ATTR_STATUS: "completed"},
-        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        {ATTR_ITEM: "Apples", ATTR_STATUS: "completed"},
+        target={ATTR_ENTITY_ID: ENTITY_SUPERMARKET},
         blocking=True,
     )
 
