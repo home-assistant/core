@@ -38,14 +38,7 @@ from .entity import SHCEntity
 class SHCSensorEntityDescription[_DeviceT: SHCDevice](SensorEntityDescription):
     """Describes a SHC sensor.
 
-    Each description is parametrized on the exact device type(s) it is wired
-    to in async_setup_entry below, so value_fn/attributes_fn never need a
-    cast to access device-specific attributes. Descriptions reused across
-    device_helper buckets that carry different device classes (e.g.
-    temperature on thermostats vs. wallthermostats) get one instance per
-    concrete device type rather than a single instance typed to a union --
-    mixing differently-parametrized descriptions in one list would make the
-    _DeviceT of SHCSensor.__init__ unresolvable for type checkers.
+    Never share one instance across descriptions for different device types.
     """
 
     value_fn: Callable[[_DeviceT], StateType]
