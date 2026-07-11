@@ -23,6 +23,7 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SNOWY_RAINY,
     ATTR_CONDITION_SUNNY,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -58,6 +59,7 @@ async def test_weather_entity(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.freeze_time("2025-09-25 10:00:00")
 async def test_coordinator_requests_forecast_without_warnings(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -68,6 +70,7 @@ async def test_coordinator_requests_forecast_without_warnings(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_meteo_lt_api.get_forecast.assert_called_with("vilnius", include_warnings=False)
 
 
