@@ -112,11 +112,11 @@ async def _setup_with_delivery(
         ),
     ],
 )
+@pytest.mark.usefixtures("freezer")
 async def test_update_interval(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_picnic_api: MagicMock,
-    freezer: FrozenDateTimeFactory,
     status: str,
     eta2: tuple[timedelta, timedelta] | None,
     slot_window: tuple[timedelta, timedelta] | None,
@@ -155,4 +155,32 @@ async def test_update_interval_relaxes_after_delivery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert coordinator.update_interval == DEFAULT_UPDATE_INTERVAL
+
+
+async def test_update_interval_relaxes_when_refresh_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_picnic_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that failed refreshes still relax the interval past the window."""
+    await _setup_with_delivery(
+        hass,
+        mock_config_entry,
+        mock_picnic_api,
+        "CURRENT",
+        (timedelta(minutes=10), timedelta(minutes=30)),
+        None,
+    )
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.update_interval == DELIVERY_UPDATE_INTERVAL
+
+    mock_picnic_api.get_cart.return_value = None
+    freezer.tick(timedelta(hours=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.last_update_success is False
     assert coordinator.update_interval == DEFAULT_UPDATE_INTERVAL

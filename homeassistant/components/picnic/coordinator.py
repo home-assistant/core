@@ -54,6 +54,14 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
     @override
     async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
+        # Recompute the cadence up front from the last known delivery, so
+        # failed refreshes still cross the timing boundaries instead of
+        # keeping one-minute polling active indefinitely
+        if self.data:
+            self.update_interval = self._get_update_interval(
+                self.data.get(NEXT_DELIVERY_DATA) or {}
+            )
+
         try:
             async with asyncio.timeout(10):
                 data = await self.hass.async_add_executor_job(self.fetch_data)
