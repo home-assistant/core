@@ -46,17 +46,17 @@
       },
       "exclude": {
         "data": {
-          "entities": "[%key:component::homekit::options::step::include::data::entities%]"
+          "exclude_targets": "Targets to exclude"
         },
-        "description": "All “{domains}” entities will be included except for the excluded entities and categorized entities.",
-        "title": "Select the entities to be excluded"
+        "description": "All \u201c{domains}\u201d entities will be included except for categorized entities and entities matched by the excluded entities, devices, areas, floors, or labels.",
+        "title": "Select the targets to be excluded"
       },
       "include": {
         "data": {
-          "entities": "Entities"
+          "include_targets": "Targets to include"
         },
-        "description": "Select entities from each domain in “{domains}”. The include will cover the entire domain if you do not select any entities for a given domain.",
-        "title": "Select the entities to be included"
+        "description": "Select entities, devices, areas, floors, or labels to include from \u201c{domains}\u201d. A domain will be included in full if no entity from that domain is selected directly.",
+        "title": "Select the targets to be included"
       },
       "init": {
         "data": {
