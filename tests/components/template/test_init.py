@@ -578,8 +578,41 @@ async def test_migration_1_1(
     template_entity_entry = entity_registry.async_get("sensor.my_template")
     assert template_entity_entry.device_id == device_entry.id
 
-    assert template_config_entry.version == 1
-    assert template_config_entry.minor_version == 2
+    assert template_config_entry.version == 2
+    assert template_config_entry.minor_version == 1
+
+
+async def test_migration_1_2(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration from v1.2 renames the advanced_options section."""
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "sensor",
+            "state": "{{ 'foo' }}",
+            "advanced_options": {"availability": "{{ True }}"},
+        },
+        title="My template",
+        version=1,
+        minor_version=2,
+    )
+    template_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert template_config_entry.state is ConfigEntryState.LOADED
+    assert "advanced_options" not in template_config_entry.options
+    assert template_config_entry.options["additional_options"] == {
+        "availability": "{{ True }}"
+    }
+
+    assert template_config_entry.version == 2
+    assert template_config_entry.minor_version == 1
 
 
 async def test_migration_from_future_version(
@@ -595,7 +628,7 @@ async def test_migration_from_future_version(
             "state": "{{ 'foo' }}",
         },
         title="My template",
-        version=2,
+        version=3,
         minor_version=1,
     )
     config_entry.add_to_hass(hass)
