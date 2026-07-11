@@ -229,7 +229,13 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
         return []
 
     try:
-        document = json.loads(text)
+        # Strict decode for the JSON path (RFC 8259 requires UTF-8): the
+        # lenient replacement decode above is only for tolerant HTML scanning
+        # and could otherwise mask invalid bytes as U+FFFD inside the document.
+        document = json.loads(body.decode())
+    except UnicodeDecodeError:
+        _LOGGER.debug("Client ID metadata document at %s is not valid UTF-8", url)
+        return []
     except ValueError:
         _LOGGER.debug("Client ID metadata document at %s is not valid JSON", url)
         return []

@@ -398,6 +398,22 @@ async def test_verify_redirect_uri_unparsable(hass: HomeAssistant) -> None:
     )
 
 
+async def test_fetch_redirect_uris_metadata_document_invalid_utf8(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker
+) -> None:
+    """Test a metadata document with invalid UTF-8 is rejected."""
+    mock_session.get(
+        "https://example.com/client",
+        content=(
+            b'{"client_id": "https://example.com/client",'
+            b' "redirect_uris": ["https://other.com/callback"], "note": "\xff"}'
+        ),
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert await indieauth.fetch_redirect_uris(hass, "https://example.com/client") == []
+
+
 @pytest.mark.parametrize(
     "client_id",
     [
