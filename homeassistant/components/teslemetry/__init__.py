@@ -648,6 +648,8 @@ def _migrate_devices_to_subentries(
         for entity in er.async_entries_for_device(
             entity_registry, device.id, include_disabled_entities=True
         ):
+            if entity.config_entry_id != entry.entry_id:
+                continue
             entity_registry.async_update_entity(
                 entity.entity_id, config_subentry_id=subentry_id
             )
