@@ -83,10 +83,11 @@ def mock_unifiap() -> Generator[MagicMock]:
 
         def _build_ap_instance(target: str | None) -> MagicMock:
             ap_instance = MagicMock()
-            if target == MOCK_SECOND_HOST:
-                ap_instance.get_clients.return_value = MOCK_SECOND_DEVICE_DATA
-            else:
-                ap_instance.get_clients.return_value = MOCK_DEVICE_DATA
+            ap_instance.get_clients.return_value = (
+                MOCK_SECOND_DEVICE_DATA
+                if target == MOCK_SECOND_HOST
+                else MOCK_DEVICE_DATA
+            )
             return ap_instance
 
         default_ap_instance = _build_ap_instance(MOCK_HOST)

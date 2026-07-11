@@ -114,7 +114,7 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host_configs = _get_host_configs(user_input)
             if not host_configs:
-                errors["base"] = "cannot_connect"
+                errors["base"] = "invalid_config"
             else:
                 entry_data = {CONF_HOSTS: host_configs}
                 self._async_abort_entries_match(entry_data)

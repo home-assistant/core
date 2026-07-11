@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, override
+from typing import override
 
 from unifi_ap import UniFiAP, UniFiAPConnectionException, UniFiAPDataException
 
@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SSH_PORT, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,9 +35,8 @@ class UniFiDirectDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self, hass: HomeAssistant, config_entry: UniFiDirectConfigEntry
     ) -> None:
         """Initialize the coordinator using config entry."""
-        self.host_configs = self._get_host_configs(config_entry)
+        self.host_configs = config_entry.data.get(CONF_HOSTS, [])
         self.hosts = [host_config[CONF_HOST] for host_config in self.host_configs]
-        self.host = self.hosts[0] if self.hosts else config_entry.data.get(CONF_HOST)
         self.aps = [
             UniFiAP(
                 target=host_config[CONF_HOST],
@@ -55,31 +54,6 @@ class UniFiDirectDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             name=f"{DOMAIN} - {', '.join(self.hosts)}",
             update_interval=UPDATE_INTERVAL,
         )
-
-    @staticmethod
-    def _get_host_configs(config_entry: UniFiDirectConfigEntry) -> list[dict[str, Any]]:
-        """Return configured hosts from the config entry."""
-        host_entries = config_entry.data.get(CONF_HOSTS, [])
-
-        host_configs: list[dict[str, Any]] = []
-        for entry in host_entries:
-            if not isinstance(entry, dict):
-                continue
-
-            host = entry.get(CONF_HOST)
-            if not host:
-                continue
-
-            host_configs.append(
-                {
-                    CONF_HOST: str(host),
-                    CONF_USERNAME: entry.get(CONF_USERNAME, ""),
-                    CONF_PASSWORD: entry.get(CONF_PASSWORD, ""),
-                    CONF_PORT: entry.get(CONF_PORT, DEFAULT_SSH_PORT),
-                }
-            )
-
-        return host_configs
 
     @override
     async def _async_update_data(self) -> dict[str, dict]:
