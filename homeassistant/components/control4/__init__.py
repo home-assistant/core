@@ -105,6 +105,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
 async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not unload_ok:
+        return False
+
     entry_data = entry.runtime_data
     websocket = entry_data.get(CONF_WEBSOCKET)
     if websocket is not None:
