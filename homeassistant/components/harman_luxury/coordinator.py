@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 type HarmanLuxuryConfigEntry = ConfigEntry[HarmanLuxuryCoordinator]
 
-_SCAN_INTERVAL = timedelta(seconds=5)
+_SCAN_INTERVAL = timedelta(seconds=10)
 
 
 class HarmanLuxuryCoordinator(DataUpdateCoordinator[HarmanLuxuryState]):

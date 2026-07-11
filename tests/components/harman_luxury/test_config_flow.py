@@ -92,20 +92,20 @@ async def test_ssdp_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_client")
-async def test_ssdp_flow_already_configured(hass: HomeAssistant) -> None:
+async def test_ssdp_flow_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test SSDP discovery aborts and updates the host when already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "5.5.5.5"}, unique_id=TEST_SERIAL
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
+    discovery = replace(SSDP_DISCOVERY, ssdp_location="http://5.5.5.5:16500/desc.xml")
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     # The stale host is updated to the newly discovered one.
-    assert entry.data[CONF_HOST] == TEST_HOST
+    assert mock_config_entry.data[CONF_HOST] == "5.5.5.5"
 
 
 async def test_ssdp_flow_cannot_connect(

@@ -68,17 +68,17 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_client() -> Generator[AsyncMock]:
     """Mock the Harman Luxury client."""
-    client = AsyncMock()
-    client.async_get_info.return_value = DEVICE_INFO
-    client.async_get_state.return_value = PLAYER_STATE
     with (
         patch(
             "homeassistant.components.harman_luxury.HarmanLuxuryClient",
-            return_value=client,
+            autospec=True,
         ) as mock_client,
         patch(
             "homeassistant.components.harman_luxury.config_flow.HarmanLuxuryClient",
             new=mock_client,
         ),
     ):
+        client = mock_client.return_value
+        client.async_get_info.return_value = DEVICE_INFO
+        client.async_get_state.return_value = PLAYER_STATE
         yield client
