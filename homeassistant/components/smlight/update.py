@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, ZWAVE_TYPES
 from .coordinator import SmConfigEntry, SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
 
@@ -77,7 +77,8 @@ async def async_setup_entry(
 
     entities.extend(
         SmUpdateEntity(coordinator, ZB_UPDATE_ENTITY, idx)
-        for idx, _ in enumerate(radios)
+        for idx, radio in enumerate(radios)
+        if radio.zb_type != -1
     )
 
     async_add_entities(entities)
@@ -113,6 +114,14 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         self._firmware: Firmware | None = None
         self._unload: list[Callable] = []
         self.idx = idx
+
+        if (
+            coordinator.data
+            and idx < len(coordinator.data.info.radios)
+            and coordinator.data.info.radios[idx].zb_type in ZWAVE_TYPES
+        ):
+            if description.key == "zigbee_update":
+                self._attr_translation_key = "z_wave_update"
 
     @override
     async def async_added_to_hass(self) -> None:
