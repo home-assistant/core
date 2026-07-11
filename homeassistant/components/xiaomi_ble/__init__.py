@@ -5,7 +5,6 @@ import logging
 from typing import Any, cast
 
 from xiaomi_ble import EncryptionScheme, SensorUpdate, XiaomiBluetoothDeviceData
-from xiaomi_ble.devices import S400_MODELS
 
 from homeassistant.components.bluetooth import (
     DOMAIN as BLUETOOTH_DOMAIN,
@@ -37,10 +36,6 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SE
 
 _LOGGER = logging.getLogger(__name__)
 
-# Marker stored in the config entry's data to remember that the stale S400
-# impedance restore-cache values have already been purged once. See
-# _async_purge_stale_s400_impedance_restore_cache for why this must run
-# only once, rather than on every setup.
 DATA_S400_IMPEDANCE_CACHE_PURGED = "s400_impedance_restore_cache_purged"
 
 
@@ -133,50 +128,43 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     Version 1.2 renames the S400 impedance sensors' unique_ids to match
     the xiaomi-ble library's corrected frequency mapping, preserving
-    entity history instead of disabling a leftover. Only applies to the
-    S400; other scales (V1/V2) never had this mislabeling.
+    entity history instead of disabling a leftover. Only the S400 has
+    ever emitted an "impedance_low" key, so its presence in the entity
+    registry identifies an S400 here -- not the device registry, whose
+    entry may not exist yet this early (e.g. a config entry created just
+    before the upgrade, with no advertisement processed yet). Relying on
+    that would risk deferring to a later restart, by which point the
+    library may have already created correctly named entities, causing a
+    collision when the deferred migration then tries to rename them.
 
     Must rename "impedance_low" -> "impedance_high" before the legacy
     "impedance" -> "impedance_low", to avoid a unique_id collision.
     """
     if entry.version == 1 and entry.minor_version == 1:
         address = entry.unique_id
-        if address is None:
-            hass.config_entries.async_update_entry(entry, minor_version=2)
-            return True
-
-        device_registry = dr.async_get(hass)
-        device_entry = device_registry.async_get_device(
-            identifiers={(BLUETOOTH_DOMAIN, address)}
-        )
-        if device_entry is None:
-            # The device row isn't known yet (it may still be restored
-            # later, e.g. once platform setup processes an advertisement).
-            # Leave minor_version at 1 so this migration is retried on the
-            # next startup instead of risking a silently skipped rename
-            # for a legitimate S400.
-            return True
-
-        if device_entry.model in S400_MODELS:
+        if address is not None:
             entity_registry = er.async_get(hass)
 
             old_low_id = f"{address}-impedance_low"
             new_high_id = f"{address}-impedance_high"
-            if entity_id := entity_registry.async_get_entity_id(
+            low_entity_id = entity_registry.async_get_entity_id(
                 Platform.SENSOR, DOMAIN, old_low_id
-            ):
+            )
+            if low_entity_id:
                 _LOGGER.debug("S400 migration: %s -> %s", old_low_id, new_high_id)
                 entity_registry.async_update_entity(
-                    entity_id, new_unique_id=new_high_id
+                    low_entity_id, new_unique_id=new_high_id
                 )
 
-            old_legacy_id = f"{address}-impedance"
-            new_low_id = f"{address}-impedance_low"
-            if entity_id := entity_registry.async_get_entity_id(
-                Platform.SENSOR, DOMAIN, old_legacy_id
-            ):
-                _LOGGER.debug("S400 migration: %s -> %s", old_legacy_id, new_low_id)
-                entity_registry.async_update_entity(entity_id, new_unique_id=new_low_id)
+                old_legacy_id = f"{address}-impedance"
+                new_low_id = f"{address}-impedance_low"
+                if entity_id := entity_registry.async_get_entity_id(
+                    Platform.SENSOR, DOMAIN, old_legacy_id
+                ):
+                    _LOGGER.debug("S400 migration: %s -> %s", old_legacy_id, new_low_id)
+                    entity_registry.async_update_entity(
+                        entity_id, new_unique_id=new_low_id
+                    )
 
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
@@ -197,53 +185,56 @@ def _async_purge_stale_s400_impedance_restore_cache(
     now correctly means "impedance_low" (50 kHz). Must run exactly once
     per config entry, before live advertisements repopulate the cache
     with correctly labeled data that must not be discarded afterwards.
+    Only the S400 has ever emitted "impedance_low": its presence in the
+    entity registry identifies an S400 here (see async_migrate_entry for
+    why the device registry is not used for this).
     """
     if entry.data.get(DATA_S400_IMPEDANCE_CACHE_PURGED):
         return
 
     address = entry.unique_id
-    if address is None:
-        hass.config_entries.async_update_entry(
-            entry, data=entry.data | {DATA_S400_IMPEDANCE_CACHE_PURGED: True}
+    if address is not None:
+        entity_registry = er.async_get(hass)
+        is_s400 = (
+            entity_registry.async_get_entity_id(
+                Platform.SENSOR, DOMAIN, f"{address}-impedance_low"
+            )
+            is not None
         )
-        return
-
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(
-        identifiers={(BLUETOOTH_DOMAIN, address)}
-    )
-    if device_entry is None:
-        # Device row not yet known: retry on the next setup instead of
-        # marking this done and permanently skipping a legitimate S400.
-        return
-
-    if device_entry.model in S400_MODELS:
-        sensor_restore_data = coordinator.restore_data.get(Platform.SENSOR)
-        if sensor_restore_data is not None:
-            stale_keys = (
-                PassiveBluetoothEntityKey(key="impedance", device_id=None).to_string(),
-                PassiveBluetoothEntityKey(
-                    key="impedance_low", device_id=None
-                ).to_string(),
-            )
-            restore_buckets: tuple[tuple[str, dict[str, Any]], ...] = (
-                ("entity_data", sensor_restore_data["entity_data"]),
-                ("entity_descriptions", sensor_restore_data["entity_descriptions"]),
-                ("entity_names", sensor_restore_data["entity_names"]),
-            )
-            for stale_key in stale_keys:
-                for bucket_name, bucket in restore_buckets:
-                    if bucket.pop(stale_key, None) is not None:
-                        _LOGGER.debug(
-                            "Purged stale S400 impedance restore cache entry: %s.%s",
-                            bucket_name,
-                            stale_key,
-                        )
+        if is_s400:
+            _purge_stale_sensor_restore_keys(coordinator)
 
     hass.config_entries.async_update_entry(
         entry,
         data=entry.data | {DATA_S400_IMPEDANCE_CACHE_PURGED: True},
     )
+
+
+def _purge_stale_sensor_restore_keys(
+    coordinator: XiaomiActiveBluetoothProcessorCoordinator,
+) -> None:
+    """Drop the stale "impedance" and "impedance_low" restore-cache entries."""
+    sensor_restore_data = coordinator.restore_data.get(Platform.SENSOR)
+    if sensor_restore_data is None:
+        return
+
+    stale_keys = (
+        PassiveBluetoothEntityKey(key="impedance", device_id=None).to_string(),
+        PassiveBluetoothEntityKey(key="impedance_low", device_id=None).to_string(),
+    )
+    restore_buckets: tuple[tuple[str, dict[str, Any]], ...] = (
+        ("entity_data", sensor_restore_data["entity_data"]),
+        ("entity_descriptions", sensor_restore_data["entity_descriptions"]),
+        ("entity_names", sensor_restore_data["entity_names"]),
+    )
+    for stale_key in stale_keys:
+        for bucket_name, bucket in restore_buckets:
+            if bucket.pop(stale_key, None) is not None:
+                _LOGGER.debug(
+                    "Purged stale S400 impedance restore cache entry: %s.%s",
+                    bucket_name,
+                    stale_key,
+                )
 
 
 def _async_purge_phantom_s400_impedance_entity(
@@ -271,11 +262,11 @@ def _async_purge_phantom_s400_impedance_entity(
     safe to simply remove it here, every setup, until the underlying
     passive-processor cache eventually stops replaying the stale key.
 
-    Must only run once async_migrate_entry has actually completed the
-    rename for this entry (minor_version >= 2): otherwise, if the device
-    row wasn't known yet during migration and the rename was deferred to
-    a later restart, the legacy "-impedance" entity is still the genuine,
-    not-yet-migrated one -- not a phantom -- and must not be removed.
+    Only the S400 has ever emitted "impedance_low": its presence in the
+    entity registry identifies an S400 here (see async_migrate_entry for
+    why the device registry is not used for this). A co-existing
+    "-impedance" entity found once migration has run (minor_version >= 2)
+    can then only be this phantom, never a legitimate V1/V2 sensor.
     """
     if entry.version != 1 or entry.minor_version < 2:
         return
@@ -284,14 +275,16 @@ def _async_purge_phantom_s400_impedance_entity(
     if address is None:
         return
 
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(
-        identifiers={(BLUETOOTH_DOMAIN, address)}
+    entity_registry = er.async_get(hass)
+    is_s400 = (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{address}-impedance_low"
+        )
+        is not None
     )
-    if device_entry is None or device_entry.model not in S400_MODELS:
+    if not is_s400:
         return
 
-    entity_registry = er.async_get(hass)
     legacy_unique_id = f"{address}-impedance"
     if entity_id := entity_registry.async_get_entity_id(
         Platform.SENSOR, DOMAIN, legacy_unique_id
