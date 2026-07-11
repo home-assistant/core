@@ -69,9 +69,6 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
                 "Timeout while connecting to the Picnic API", retry_after=120
             ) from error
 
-        # Poll faster around the delivery so the position-based ETA,
-        # which the API only serves shortly before arrival, is picked up
-        # while it is still actionable
         self.update_interval = self._get_update_interval(
             data.get(NEXT_DELIVERY_DATA) or {}
         )
@@ -88,7 +85,8 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         on the delivery vehicle's position. With a fixed 30 minute poll
         interval that refinement would usually arrive too late, so poll
         every minute from just before the expected delivery until it has
-        been completed.
+        been completed. Ahead of that fast-polling window, the next poll
+        is scheduled no later than the start of the window.
         """
         eta = next_delivery.get("eta") or {}
         slot = next_delivery.get("slot") or {}
@@ -98,16 +96,17 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         )
         end = dt_util.parse_datetime(str(eta.get("end") or slot.get("window_end")))
 
-        if (
-            start is not None
-            and end is not None
-            and (
-                start - DELIVERY_WINDOW_LEAD_TIME
-                <= dt_util.utcnow()
-                <= end + DELIVERY_WINDOW_LAG_TIME
-            )
-        ):
+        if start is None or end is None:
+            return DEFAULT_UPDATE_INTERVAL
+
+        now = dt_util.utcnow()
+        window_start = start - DELIVERY_WINDOW_LEAD_TIME
+
+        if window_start <= now <= end + DELIVERY_WINDOW_LAG_TIME:
             return DELIVERY_UPDATE_INTERVAL
+
+        if now < window_start:
+            return min(DEFAULT_UPDATE_INTERVAL, window_start - now)
 
         return DEFAULT_UPDATE_INTERVAL
 
