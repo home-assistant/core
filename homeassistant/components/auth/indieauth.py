@@ -2,6 +2,7 @@
 
 from html.parser import HTMLParser
 from ipaddress import ip_address
+import json
 import logging
 from typing import override
 from urllib.parse import ParseResult, urljoin, urlparse
@@ -78,29 +79,37 @@ class LinkTagParser(HTMLParser):
 
 
 async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
-    """Find link tag with redirect_uri values.
+    """Find the redirect_uri values that a client_id advertises.
+
+    We support two formats, checked in this order:
 
     IndieAuth 4.2.2
 
     The client SHOULD publish one or more <link> tags or Link HTTP headers with
     a rel attribute of redirect_uri at the client_id URL.
 
+    OAuth Client ID Metadata Document
+    (draft-ietf-oauth-client-id-metadata-document)
+
+    The client_id URL returns a JSON document with a redirect_uris array. As we
+    advertise client_id_metadata_document_supported in the authorization server
+    metadata, we fall back to this format when no link tags are found.
+
     We limit to the first 10kB of the page.
 
     We do not implement extracting redirect uris from headers.
     """
     parser = LinkTagParser("redirect_uri")
-    chunks = 0
+    body: bytes = b""
     try:
         async with (
             aiohttp.ClientSession() as session,
             session.get(url, timeout=aiohttp.ClientTimeout(total=5)) as resp,
         ):
             async for data in resp.content.iter_chunked(1024):
-                parser.feed(data.decode())
-                chunks += 1
+                body += data
 
-                if chunks == 10:
+                if len(body) >= 10240:
                     break
 
     except TimeoutError:
@@ -116,11 +125,36 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
     except aiohttp.client_exceptions.ClientError:
         _LOGGER.error("Unknown error while looking up redirect_uri %s", url)
 
-    # Authorization endpoints verifying that a redirect_uri is allowed for use
-    # by a client MUST look for an exact match of the given redirect_uri in the
-    # request against the list of redirect_uris discovered after resolving any
-    # relative URLs.
-    return [urljoin(url, found) for found in parser.found]
+    text = body.decode(errors="replace")
+    parser.feed(text)
+
+    if parser.found:
+        # Authorization endpoints verifying that a redirect_uri is allowed for use
+        # by a client MUST look for an exact match of the given redirect_uri in the
+        # request against the list of redirect_uris discovered after resolving any
+        # relative URLs.
+        return [urljoin(url, found) for found in parser.found]
+
+    # No link tags found, try to parse the body as an OAuth Client ID Metadata
+    # Document (draft-ietf-oauth-client-id-metadata-document), since we advertise
+    # client_id_metadata_document_supported in the authorization server metadata.
+    try:
+        document = json.loads(text)
+    except ValueError:
+        return []
+
+    if not isinstance(document, dict):
+        return []
+
+    redirect_uris = document.get("redirect_uris")
+    if not isinstance(redirect_uris, list) or not all(
+        isinstance(redirect_uri, str) for redirect_uri in redirect_uris
+    ):
+        return []
+
+    # CIMD requires absolute redirect URIs, so unlike the link tag format we
+    # return them as-is for RFC 6749 exact matching without resolving them.
+    return redirect_uris
 
 
 def verify_client_id(client_id: str) -> bool:

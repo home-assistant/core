@@ -1,6 +1,7 @@
 """Tests for the client validator."""
 
 import asyncio
+import json
 from unittest.mock import patch
 
 import pytest
@@ -165,6 +166,126 @@ async def test_find_link_tag_max_size(hass: HomeAssistant, mock_session) -> None
     redirect_uris = await indieauth.fetch_redirect_uris(hass, "http://127.0.0.1:8000")
 
     assert redirect_uris == ["http://127.0.0.1:8000/wine"]
+
+
+async def test_fetch_redirect_uris_metadata_document(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker
+) -> None:
+    """Test fetching redirect uris from a client id metadata document."""
+    mock_session.get(
+        "https://example.com/client",
+        text=json.dumps(
+            {
+                "client_id": "https://example.com/client",
+                "redirect_uris": [
+                    "https://example.com/callback",
+                    "https://other.com/callback",
+                ],
+            }
+        ),
+        headers={"Content-Type": "application/json"},
+    )
+    redirect_uris = await indieauth.fetch_redirect_uris(
+        hass, "https://example.com/client"
+    )
+
+    # CIMD redirect uris are absolute and returned as-is (no relative resolution).
+    assert redirect_uris == [
+        "https://example.com/callback",
+        "https://other.com/callback",
+    ]
+
+
+async def test_fetch_redirect_uris_metadata_document_text_plain(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker
+) -> None:
+    """Test the metadata document is parsed regardless of content type."""
+    mock_session.get(
+        "https://example.com/client",
+        text=json.dumps({"redirect_uris": ["https://example.com/callback"]}),
+        headers={"Content-Type": "text/plain"},
+    )
+    redirect_uris = await indieauth.fetch_redirect_uris(
+        hass, "https://example.com/client"
+    )
+
+    assert redirect_uris == ["https://example.com/callback"]
+
+
+async def test_fetch_redirect_uris_link_tag_precedence(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker
+) -> None:
+    """Test link tags take precedence over metadata document parsing."""
+    mock_session.get(
+        "http://127.0.0.1:8000",
+        text="""
+<!doctype html>
+<html>
+  <head>
+    <link rel="redirect_uri" href="hass://oauth2_redirect">
+  </head>
+  <body>
+    {"redirect_uris": ["https://example.com/should-be-ignored"]}
+  </body>
+</html>
+""",
+    )
+    redirect_uris = await indieauth.fetch_redirect_uris(hass, "http://127.0.0.1:8000")
+
+    assert redirect_uris == ["hass://oauth2_redirect"]
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        pytest.param("this is neither json nor html", id="not-json-not-html"),
+        pytest.param('["https://example.com/callback"]', id="json-array"),
+        pytest.param(
+            '{"redirect_uris": "https://example.com/callback"}',
+            id="redirect-uris-not-list",
+        ),
+        pytest.param(
+            '{"redirect_uris": ["https://example.com/callback", 123]}',
+            id="redirect-uris-non-string-entry",
+        ),
+    ],
+)
+async def test_fetch_redirect_uris_metadata_document_invalid(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker, text: str
+) -> None:
+    """Test that invalid metadata documents yield no redirect uris."""
+    mock_session.get(
+        "https://example.com/client",
+        text=text,
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert await indieauth.fetch_redirect_uris(hass, "https://example.com/client") == []
+    assert not await indieauth.verify_redirect_uri(
+        hass, "https://example.com/client", "https://other.com/callback"
+    )
+
+
+async def test_verify_redirect_uri_metadata_document(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker
+) -> None:
+    """Test verifying a cross-origin redirect uri from a metadata document."""
+    client_id = "https://example.com/client"
+    mock_session.get(
+        client_id,
+        text=json.dumps({"redirect_uris": ["https://other.com/callback"]}),
+        headers={"Content-Type": "application/json"},
+    )
+
+    # Cross-origin redirect uri listed in the document is allowed.
+    assert await indieauth.verify_redirect_uri(
+        hass, client_id, "https://other.com/callback"
+    )
+
+    # Cross-origin redirect uri not listed in the document is rejected.
+    assert not await indieauth.verify_redirect_uri(
+        hass, client_id, "https://other.com/not-listed"
+    )
 
 
 @pytest.mark.parametrize(
