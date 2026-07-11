@@ -12,8 +12,15 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
     ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
     ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
     ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
     ATTR_CONDITION_SUNNY,
 )
 from homeassistant.const import Platform
@@ -50,6 +57,19 @@ async def test_weather_entity(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_coordinator_requests_forecast_without_warnings(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meteo_lt_api: AsyncMock,
+) -> None:
+    """Test that the coordinator fetches forecasts with warnings disabled."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_meteo_lt_api.get_forecast.assert_called_with("vilnius", include_warnings=False)
+
+
 @pytest.mark.freeze_time("2025-09-25 10:00:00")
 @pytest.mark.parametrize(
     ("latitude", "longitude", "expected_condition"),
@@ -78,6 +98,67 @@ async def test_condition_clear_maps_day_night(
     """Test that a clear condition code maps to sunny or clear-night based on sun position."""
     hass.config.latitude = latitude
     hass.config.longitude = longitude
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("weather.vilnius")
+    assert state is not None
+    assert state.state == expected_condition
+
+
+@pytest.mark.freeze_time("2025-09-25 10:00:00")
+@pytest.mark.parametrize(
+    ("condition_code", "expected_condition"),
+    [
+        pytest.param("partly-cloudy", ATTR_CONDITION_PARTLYCLOUDY, id="partly-cloudy"),
+        pytest.param(
+            "cloudy-with-sunny-intervals",
+            ATTR_CONDITION_PARTLYCLOUDY,
+            id="cloudy-with-sunny-intervals",
+        ),
+        pytest.param("cloudy", ATTR_CONDITION_CLOUDY, id="cloudy"),
+        pytest.param("thunder", ATTR_CONDITION_LIGHTNING, id="thunder"),
+        pytest.param(
+            "isolated-thunderstorms",
+            ATTR_CONDITION_LIGHTNING_RAINY,
+            id="isolated-thunderstorms",
+        ),
+        pytest.param(
+            "thunderstorms", ATTR_CONDITION_LIGHTNING_RAINY, id="thunderstorms"
+        ),
+        pytest.param(
+            "heavy-rain-with-thunderstorms",
+            ATTR_CONDITION_LIGHTNING_RAINY,
+            id="heavy-rain-with-thunderstorms",
+        ),
+        pytest.param("light-rain", ATTR_CONDITION_RAINY, id="light-rain"),
+        pytest.param("rain", ATTR_CONDITION_RAINY, id="rain"),
+        pytest.param("heavy-rain", ATTR_CONDITION_POURING, id="heavy-rain"),
+        pytest.param("light-sleet", ATTR_CONDITION_SNOWY_RAINY, id="light-sleet"),
+        pytest.param("sleet", ATTR_CONDITION_SNOWY_RAINY, id="sleet"),
+        pytest.param("freezing-rain", ATTR_CONDITION_SNOWY_RAINY, id="freezing-rain"),
+        pytest.param("hail", ATTR_CONDITION_HAIL, id="hail"),
+        pytest.param("light-snow", ATTR_CONDITION_SNOWY, id="light-snow"),
+        pytest.param("snow", ATTR_CONDITION_SNOWY, id="snow"),
+        pytest.param("heavy-snow", ATTR_CONDITION_SNOWY, id="heavy-snow"),
+        pytest.param("fog", ATTR_CONDITION_FOG, id="fog"),
+    ],
+)
+async def test_condition_code_mapping(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meteo_lt_api: AsyncMock,
+    condition_code: str,
+    expected_condition: str,
+) -> None:
+    """Test that each meteo.lt condition code maps to the expected HA condition."""
+    forecast_data = await async_load_json_object_fixture(hass, "forecast.json", DOMAIN)
+    forecast_data["forecastTimestamps"][0]["conditionCode"] = condition_code
+    mock_meteo_lt_api.get_forecast.side_effect = lambda *args, **kwargs: (
+        Forecast.from_dict(forecast_data)
+    )
+
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
