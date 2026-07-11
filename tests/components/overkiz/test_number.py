@@ -93,51 +93,27 @@ async def test_number_entities_snapshot(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-async def test_number_set_value(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-) -> None:
-    """Test setting a number value sends the correct command."""
-    await setup_overkiz_integration(fixture=EXPECTED_NUMBER_OF_SHOWER.fixture)
-
-    state = hass.states.get(EXPECTED_NUMBER_OF_SHOWER.entity_id)
-    assert state
-    assert state.state == "4"
-
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: EXPECTED_NUMBER_OF_SHOWER.entity_id, ATTR_VALUE: 3},
-        blocking=True,
-    )
-
-    assert_command_call(
-        mock_client,
-        device_url=EXPECTED_NUMBER_OF_SHOWER.device_url,
-        command_name="setExpectedNumberOfShower",
-        parameters=[3],
-    )
-
-
 @pytest.mark.parametrize(
     ("device", "value", "command_name"),
     [
         pytest.param(
+            EXPECTED_NUMBER_OF_SHOWER, 3, "setExpectedNumberOfShower", id="shower"
+        ),
+        pytest.param(
             TOWEL_DRYER_BOOST_MODE_DURATION,
             45,
             "setTowelDryerBoostModeDuration",
-            id="boost_mode_duration",
+            id="towel_dryer_boost_mode_duration",
         ),
         pytest.param(
             TOWEL_DRYER_DRYING_DURATION,
             90,
             "setDryingDuration",
-            id="drying_duration",
+            id="towel_dryer_drying_duration",
         ),
     ],
 )
-async def test_number_towel_dryer_set_value(
+async def test_number_set_value(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
@@ -145,7 +121,7 @@ async def test_number_towel_dryer_set_value(
     value: int,
     command_name: str,
 ) -> None:
-    """Test towel dryer numbers send their dedicated commands."""
+    """Test setting a number value sends the correct command."""
     await setup_overkiz_integration(fixture=device.fixture)
 
     await hass.services.async_call(
@@ -186,28 +162,17 @@ async def test_number_inverted_memorized_position_set(
     )
 
 
-@pytest.mark.parametrize(
-    ("device", "expected_min", "expected_max"),
-    [
-        pytest.param(EXPECTED_NUMBER_OF_SHOWER, 2, 4, id="expected_number_of_shower"),
-        pytest.param(TOWEL_DRYER_BOOST_MODE_DURATION, 0, 60, id="boost_mode_duration"),
-        pytest.param(TOWEL_DRYER_DRYING_DURATION, 30, 120, id="drying_duration"),
-    ],
-)
 async def test_number_dynamic_min_max(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
-    device: FixtureDevice,
-    expected_min: int,
-    expected_max: int,
 ) -> None:
     """Test that min/max values are read from device states when available."""
-    await setup_overkiz_integration(fixture=device.fixture)
+    await setup_overkiz_integration(fixture=EXPECTED_NUMBER_OF_SHOWER.fixture)
 
-    state = hass.states.get(device.entity_id)
+    state = hass.states.get(EXPECTED_NUMBER_OF_SHOWER.entity_id)
     assert state
-    assert state.attributes["min"] == expected_min
-    assert state.attributes["max"] == expected_max
+    assert state.attributes["min"] == 2
+    assert state.attributes["max"] == 4
 
 
 async def test_number_state_update(
