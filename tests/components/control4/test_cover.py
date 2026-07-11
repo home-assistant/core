@@ -64,13 +64,7 @@ def mock_cover_update_variables(
     mock_cover_variables: dict,
     mock_c4_director: MagicMock,
 ) -> None:
-    """Mock the Director API's get_item_variables.
-
-    This exercises the real director_get_entry_variables, so its
-    normalization (missing items resolve to {}, never None; the
-    "Undefined" sentinel becomes None) is covered by these tests
-    instead of bypassed.
-    """
+    """Mock the Director API so tests exercise the real Undefined/empty-dict normalization."""
 
     async def _mock_get_item_variables(item_id: int) -> list[dict[str, Any]]:
         item_data = mock_cover_variables.get(item_id, {})

@@ -97,12 +97,7 @@ def mock_c4_director() -> Generator[MagicMock]:
 
 @pytest.fixture(autouse=True)
 def mock_c4_websocket() -> Generator[MagicMock]:
-    """Mock C4Websocket to prevent real WebSocket connections during tests.
-
-    Tracks item callbacks in a real dict and captures the disconnect
-    callback so tests can drive disconnects through the same path the
-    integration uses, instead of poking entity internals directly.
-    """
+    """Mock C4Websocket, tracking callbacks so tests can drive disconnects through the real path."""
     item_callbacks: dict[int, list] = {}
 
     def _add_item_callback(item_id, callback):
