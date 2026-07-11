@@ -164,9 +164,8 @@ class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{name}")},
-            manufacturer=DOMAIN.upper(),
-            model=coordinator.data.get("make"),
+            identifiers={(DOMAIN, name)},
+            manufacturer=coordinator.data.get("make"),
             name=name.upper(),
             entry_type=DeviceEntryType.SERVICE,
         )

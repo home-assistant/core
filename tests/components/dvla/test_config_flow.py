@@ -3,14 +3,8 @@
 from unittest.mock import patch
 
 from aio_dvla_vehicle_enquiry import DVLAError, DVLAInvalidRegistrationError
-import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.dvla.config_flow import (
-    CannotConnect,
-    InvalidRegistration,
-    validate_input,
-)
 from homeassistant.components.dvla.const import CONF_REG_NUMBER, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -27,34 +21,6 @@ async def test_form(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-
-
-async def test_create_entry(hass: HomeAssistant) -> None:
-    """Test creating an entry from user input."""
-    with (
-        patch(
-            "homeassistant.components.dvla.config_flow.validate_input",
-            return_value={"title": "AB12CDE"},
-        ),
-        patch(
-            "homeassistant.components.dvla.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                CONF_REG_NUMBER: "AB12CDE",
-            },
-        )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "AB12CDE"
-    assert result["data"][CONF_REG_NUMBER] == "AB12CDE"
-
-    await hass.async_block_till_done()
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_already_configured(hass: HomeAssistant) -> None:
@@ -81,53 +47,11 @@ async def test_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_unknown_error(hass: HomeAssistant) -> None:
-    """Test unknown error."""
-    with patch(
-        "homeassistant.components.dvla.config_flow.validate_input",
-        side_effect=Exception,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
-                CONF_REG_NUMBER: "AB12CDE",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
-
-
-async def test_validate_input_success(hass: HomeAssistant) -> None:
-    """Test validate_input returns config entry title."""
+async def test_form_success(hass: HomeAssistant) -> None:
+    """Test successful config flow."""
     with patch(
         "homeassistant.components.dvla.config_flow.DVLAClient.async_get_vehicle",
         return_value={"registrationNumber": "AB12CDE"},
-    ):
-        result = await validate_input(hass, {CONF_REG_NUMBER: "AB12CDE"})
-
-    assert result == {"title": "AB12CDE"}
-
-
-async def test_validate_input_cannot_connect(hass: HomeAssistant) -> None:
-    """Test validate_input maps DVLA client failures."""
-    with (
-        patch(
-            "homeassistant.components.dvla.config_flow.DVLAClient.async_get_vehicle",
-            side_effect=DVLAError("boom"),
-        ),
-        pytest.raises(CannotConnect),
-    ):
-        await validate_input(hass, {CONF_REG_NUMBER: "AB12CDE"})
-
-
-async def test_cannot_connect(hass: HomeAssistant) -> None:
-    """Test cannot connect error."""
-    with patch(
-        "homeassistant.components.dvla.config_flow.validate_input",
-        side_effect=CannotConnect,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -135,28 +59,16 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
             data={CONF_REG_NUMBER: "AB12CDE"},
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_validate_input_invalid_registration(hass: HomeAssistant) -> None:
-    """Test validate_input maps invalid registrations."""
-    with (
-        patch(
-            "homeassistant.components.dvla.config_flow.DVLAClient.async_get_vehicle",
-            side_effect=DVLAInvalidRegistrationError("Invalid registration number"),
-        ),
-        pytest.raises(InvalidRegistration),
-    ):
-        await validate_input(hass, {CONF_REG_NUMBER: "INVALID"})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "AB12CDE"
+    assert result["data"] == {CONF_REG_NUMBER: "AB12CDE"}
 
 
 async def test_form_invalid_registration(hass: HomeAssistant) -> None:
-    """Test form shows invalid registration errors."""
+    """Test invalid registration error."""
     with patch(
-        "homeassistant.components.dvla.config_flow.validate_input",
-        side_effect=InvalidRegistration,
+        "homeassistant.components.dvla.config_flow.DVLAClient.async_get_vehicle",
+        side_effect=DVLAInvalidRegistrationError("Invalid registration number"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -166,3 +78,35 @@ async def test_form_invalid_registration(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_registration"}
+
+
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+    """Test connection error."""
+    with patch(
+        "homeassistant.components.dvla.config_flow.DVLAClient.async_get_vehicle",
+        side_effect=DVLAError("DVLA unavailable"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_REG_NUMBER: "AB12CDE"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_unknown_error(hass: HomeAssistant) -> None:
+    """Test unknown error."""
+    with patch(
+        "homeassistant.components.dvla.config_flow.DVLAClient.async_get_vehicle",
+        side_effect=Exception,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_REG_NUMBER: "AB12CDE"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}

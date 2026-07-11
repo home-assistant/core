@@ -1,5 +1,6 @@
 """Tests for the DVLA sensor platform."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
@@ -8,8 +9,9 @@ from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 MOCK_VEHICLE_DATA: dict[str, Any] = {
     "registrationNumber": "AB12CDE",
@@ -175,8 +177,8 @@ async def test_month_of_first_registration_is_string_sensor(
     assert state.state == "2024-05"
 
 
-async def test_sensor_handle_coordinator_update(hass: HomeAssistant) -> None:
-    """Test sensor handles coordinator updates."""
+async def test_sensor_updates_after_scheduled_refresh(hass: HomeAssistant) -> None:
+    """Test sensor updates after a scheduled refresh."""
     updated_vehicle_data = {
         **MOCK_VEHICLE_DATA,
         "registrationNumber": "XY99ZZZ",
@@ -199,8 +201,7 @@ async def test_sensor_handle_coordinator_update(hass: HomeAssistant) -> None:
         state = get_state(hass, "registrationNumber")
         assert state.state == "AB12CDE"
 
-        coordinator = entry.runtime_data["coordinator"]
-        await coordinator.async_request_refresh()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(days=1, seconds=1))
         await hass.async_block_till_done()
 
     state = get_state(hass, "registrationNumber")
@@ -269,4 +270,7 @@ async def test_device_entry_type(hass: HomeAssistant) -> None:
     device = device_registry.async_get_device({(DOMAIN, "AB12CDE")})
 
     assert device is not None
+    assert device.entry_type is DeviceEntryType.SERVICE
+    assert device.manufacturer == "FORD"
+    assert device.model is None
     assert device.entry_type is DeviceEntryType.SERVICE

@@ -33,23 +33,26 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.dvla.coordinator.DVLAClient.async_get_vehicle",
-            return_value=VEHICLE_DATA,
-        ),
-        patch.object(
-            hass.config_entries,
-            "async_forward_entry_setups",
-            return_value=True,
-        ) as mock_forward_entry_setups,
+    with patch(
+        "homeassistant.components.dvla.coordinator.DVLAClient.async_get_vehicle",
+        return_value=VEHICLE_DATA,
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.runtime_data["coordinator"] is not None
-    mock_forward_entry_setups.assert_awaited_once()
+
+    entity_registry = er.async_get(hass)
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry,
+        entry.entry_id,
+    )
+    assert entity_entries
+
+    state = hass.states.get("sensor.ab12cde_registration_number")
+    assert state is not None
+    assert state.state == "AB12CDE"
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
