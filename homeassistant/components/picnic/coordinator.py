@@ -78,15 +78,11 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
 
     @staticmethod
     def _get_update_interval(next_delivery: dict) -> timedelta:
-        """Determine the update interval based on the next delivery.
+        """Determine the polling interval for the given upcoming delivery.
 
-        The default ETA is computed when the delivery routes are planned,
-        while shortly before arrival the API switches to a live ETA based
-        on the delivery vehicle's position. With a fixed 30 minute poll
-        interval that refinement would usually arrive too late, so poll
-        every minute from just before the expected delivery until it has
-        been completed. Ahead of that fast-polling window, the next poll
-        is scheduled no later than the start of the window.
+        Poll every minute around the delivery so the position-based ETA,
+        which the API only serves shortly before arrival, is picked up in
+        time. Ahead of that window, schedule no later than its start.
         """
         eta = next_delivery.get("eta") or {}
         slot = next_delivery.get("slot") or {}

@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_timeout_failed_with_retry(
@@ -34,11 +34,18 @@ async def test_timeout_failed_with_retry(
 
 async def test_update_interval_default_without_current_delivery(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
+    mock_picnic_api: MagicMock,
 ) -> None:
     """Test that the update interval is the default without an undelivered order."""
-    coordinator = init_integration.runtime_data
+    delivery = json.loads(await async_load_fixture(hass, "picnic/delivery.json"))
+    mock_picnic_api.get_deliveries.return_value = [delivery]
 
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
     assert coordinator.update_interval == DEFAULT_UPDATE_INTERVAL
 
 
@@ -48,7 +55,7 @@ async def test_update_interval_around_delivery(
     mock_picnic_api: MagicMock,
 ) -> None:
     """Test that the update interval tightens around the delivery and relaxes after."""
-    delivery = json.loads(load_fixture("picnic/delivery.json"))
+    delivery = json.loads(await async_load_fixture(hass, "picnic/delivery.json"))
     delivery["status"] = "CURRENT"
     del delivery["delivery_time"]
     delivery["eta2"] = {
@@ -76,7 +83,7 @@ async def test_update_interval_default_before_delivery_day(
     mock_picnic_api: MagicMock,
 ) -> None:
     """Test that the update interval stays default while the delivery is far away."""
-    delivery = json.loads(load_fixture("picnic/delivery.json"))
+    delivery = json.loads(await async_load_fixture(hass, "picnic/delivery.json"))
     delivery["status"] = "CURRENT"
     del delivery["delivery_time"]
     delivery["eta2"] = {
@@ -100,7 +107,7 @@ async def test_update_interval_capped_before_delivery_window(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that the next poll is not scheduled past the fast-polling window start."""
-    delivery = json.loads(load_fixture("picnic/delivery.json"))
+    delivery = json.loads(await async_load_fixture(hass, "picnic/delivery.json"))
     delivery["status"] = "CURRENT"
     del delivery["delivery_time"]
     delivery["eta2"] = {
