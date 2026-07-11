@@ -49,7 +49,10 @@ class KarakeepDataUpdateCoordinator(DataUpdateCoordinator[KarakeepStats]):
     @override
     async def _async_setup(self) -> None:
         """Fetch the server version once during setup."""
-        self.version = await self.client.async_get_version()
+        try:
+            self.version = await self.client.async_get_version()
+        except (KarakeepApiError, KarakeepConnectionError) as err:
+            raise UpdateFailed(f"Error communicating with Karakeep: {err}") from err
 
     @override
     async def _async_update_data(self) -> KarakeepStats:

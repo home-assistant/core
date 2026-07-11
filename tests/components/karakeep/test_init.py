@@ -60,6 +60,21 @@ async def test_setup_entry_update_failure(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_setup_entry_version_failure(
+    hass: HomeAssistant,
+    mock_karakeep_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup retries when the version fetch fails."""
+    mock_karakeep_client.async_get_version.side_effect = KarakeepConnectionError(
+        "Cannot connect"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_setup_entry_version_unavailable(
     hass: HomeAssistant,
     mock_karakeep_client: AsyncMock,
