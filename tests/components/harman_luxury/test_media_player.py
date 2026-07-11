@@ -20,8 +20,14 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_STOP,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
+    MediaPlayerEntityFeature,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_OFF,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -143,6 +149,20 @@ async def test_media_play_when_paused(
         blocking=True,
     )
     mock_client.async_control.assert_awaited_once_with("play")
+
+
+async def test_transport_features_are_independent(
+    hass: HomeAssistant, mock_client: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test a source that only allows pause does not advertise play or stop."""
+    mock_client.async_get_state.return_value = replace(
+        PLAYER_STATE, can_play=False, can_pause=True, can_stop=False
+    )
+    await setup_integration(hass, mock_config_entry)
+    features = hass.states.get(ENTITY_ID).attributes[ATTR_SUPPORTED_FEATURES]
+    assert features & MediaPlayerEntityFeature.PAUSE
+    assert not features & MediaPlayerEntityFeature.PLAY
+    assert not features & MediaPlayerEntityFeature.STOP
 
 
 async def test_becomes_unavailable_on_error(

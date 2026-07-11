@@ -93,12 +93,12 @@ class HarmanLuxuryMediaPlayer(
         """Return the supported features."""
         features = self._BASE_FEATURES
         data = self.coordinator.data
+        if data.can_play:
+            features |= MediaPlayerEntityFeature.PLAY
         if data.can_pause:
-            features |= (
-                MediaPlayerEntityFeature.PLAY
-                | MediaPlayerEntityFeature.PAUSE
-                | MediaPlayerEntityFeature.STOP
-            )
+            features |= MediaPlayerEntityFeature.PAUSE
+        if data.can_stop:
+            features |= MediaPlayerEntityFeature.STOP
         if data.can_next:
             features |= MediaPlayerEntityFeature.NEXT_TRACK
         if data.can_previous:

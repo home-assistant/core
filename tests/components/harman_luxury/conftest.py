@@ -38,7 +38,9 @@ PLAYER_STATE = HarmanLuxuryState(
     art_url="http://1.2.3.4/art.jpg",
     duration=228,
     position=42,
+    can_play=True,
     can_pause=True,
+    can_stop=True,
     can_next=True,
     can_previous=True,
 )

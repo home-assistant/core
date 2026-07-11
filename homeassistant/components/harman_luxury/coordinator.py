@@ -61,5 +61,7 @@ class HarmanLuxuryCoordinator(DataUpdateCoordinator[HarmanLuxuryState]):
             state = await self.client.async_get_state()
         except HarmanLuxuryError as err:
             raise UpdateFailed(str(err)) from err
-        self.position_updated_at = dt_util.utcnow()
+        self.position_updated_at = (
+            dt_util.utcnow() if state.position is not None else None
+        )
         return state
