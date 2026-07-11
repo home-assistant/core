@@ -18,7 +18,11 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from . import patch_ufp_method
 from .utils import (
@@ -404,6 +408,15 @@ async def test_public_only_camera(
     assert state.state != STATE_UNAVAILABLE
     # diagnostics have no public equivalent and degrade to None
     assert state.attributes["fps"] is None
+
+    # device identity degrades to name-only; the NVR link is omitted (resolving
+    # the NVR identity publicly is wired with the config-mode setup)
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, public.mac)}
+    )
+    assert device is not None
+    assert device.via_device_id is None
 
     assert (
         await async_get_stream_source(hass, entity_id)

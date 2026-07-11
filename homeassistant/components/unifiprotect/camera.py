@@ -262,16 +262,14 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             super()._async_set_device_info()
             return
         # public-only: the public camera model exposes only ``name`` (no
-        # market_name/type/firmware_version/protect_url — gap #925), so device
-        # identity is limited. The NVR link uses the private bootstrap NVR mac,
-        # always present in the hybrid modes this path ships in; a true
-        # public-only setup resolves the NVR identity at setup instead, wired
-        # with the public-only config mode.
+        # market_name/type/firmware_version/protect_url), so device identity is
+        # limited. The NVR link is omitted — an API-key-only client has no
+        # private bootstrap to read the NVR mac from, and resolving it publicly
+        # is async; the public-only config mode wires it at setup instead.
         public = self._public
         self._attr_device_info = DeviceInfo(
             name=public.name,
             manufacturer=DEFAULT_BRAND,
-            via_device=(DOMAIN, self.data.api.bootstrap.nvr.mac),
             connections={(dr.CONNECTION_NETWORK_MAC, public.mac)},
         )
 
