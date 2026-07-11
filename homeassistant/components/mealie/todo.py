@@ -35,18 +35,66 @@ TODO_STATUS_MAP = {
 TODO_STATUS_MAP_INV = {v: k for k, v in TODO_STATUS_MAP.items()}
 
 
+def _build_description(item: ShoppingItem) -> str | None:
+    """Build a description string from quantity, unit, and note."""
+    parts: list[str] = []
+    if item.quantity:
+        qty = item.quantity
+        parts.append(str(int(qty)) if qty == int(qty) else str(qty))
+    if item.unit and item.unit.name:
+        parts.append(item.unit.name)
+    prefix = " ".join(parts)
+    note = (item.note or "").strip()
+    if prefix and note:
+        return f"{prefix}, {note}"
+    return prefix or note or None
+
+
+def _parse_description(description: str | None) -> tuple[float, str]:
+    """Parse a description string back into (quantity, note).
+
+    Format: "{qty} {unit_name}, {note}" — unit name is ignored on write since
+    we cannot resolve a unit name to a unit_id without an API call. Best-effort:
+    if the first token before a comma is numeric it becomes the quantity; anything
+    after a comma becomes the note; if there is no comma and the first token is not
+    numeric the whole string is treated as the note.
+    """
+    if not description:
+        return 0.0, ""
+
+    prefix_part, found_comma, note_part = description.partition(",")
+    note = note_part.strip() if found_comma else ""
+    prefix_part = prefix_part.strip()
+
+    tokens = prefix_part.split(None, 1)
+    quantity = 0.0
+    if tokens:
+        try:
+            quantity = float(tokens[0])
+        except ValueError:
+            if not found_comma:
+                note = prefix_part
+
+    return quantity, note
+
+
 def _convert_api_item(item: ShoppingItem) -> TodoItem:
     """Convert Mealie shopping list items into a TodoItem."""
-
+    if item.food:
+        summary = item.food.name
+        description = _build_description(item)
+    else:
+        summary = item.display
+        description = None
     return TodoItem(
-        summary=item.display,
+        summary=summary,
         uid=item.item_id,
         status=TODO_STATUS_MAP.get(
             item.checked,
             TodoItemStatus.NEEDS_ACTION,
         ),
         due=None,
-        description=None,
+        description=description,
     )
 
 
@@ -98,6 +146,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
         | TodoListEntityFeature.MOVE_TODO_ITEM
+        | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
 
     _attr_translation_key = "shopping_list"
@@ -182,7 +231,8 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
 
         stripped_item_summary = item.summary.strip() if item.summary else item.summary
 
-        if list_item.display.strip() != stripped_item_summary:
+        current_name = list_item.food.name if list_item.food else list_item.display
+        if current_name.strip() != stripped_item_summary:
             update_shopping_item.note = stripped_item_summary
             update_shopping_item.position = position
             if update_shopping_item.is_food is not None:
@@ -190,6 +240,14 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             update_shopping_item.food_id = None
             update_shopping_item.quantity = 0.0
             update_shopping_item.checked = item.status == TodoItemStatus.COMPLETED
+        elif item.description != _build_description(list_item):
+            # Only parse when the description actually changed; the todo component
+            # re-sends the rendered description on every update, and parsing is lossy.
+            quantity, note = _parse_description(item.description)
+            update_shopping_item.quantity = quantity
+            if list_item.food:
+                update_shopping_item.note = note
+            # For non-food items note == display == summary; only update quantity.
 
         try:
             await self.coordinator.client.update_shopping_item(

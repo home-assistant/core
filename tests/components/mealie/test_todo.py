@@ -3,12 +3,18 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, call, patch
 
-from aiomealie import MealieError, MutateShoppingItem, ShoppingListsResponse
+from aiomealie import (
+    MealieError,
+    MutateShoppingItem,
+    ShoppingItemsResponse,
+    ShoppingListsResponse,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mealie import DOMAIN
+from homeassistant.components.mealie.todo import _convert_api_item, _parse_description
 from homeassistant.components.todo import (
     ATTR_ITEM,
     ATTR_RENAME,
@@ -27,9 +33,115 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_fixture,
+    load_fixture,
     snapshot_platform,
 )
 from tests.typing import WebSocketGenerator
+
+
+@pytest.mark.parametrize(
+    ("item_index", "expected_summary", "expected_description"),
+    [
+        pytest.param(0, "2 Apples", None, id="non_food_keeps_display"),
+        pytest.param(1, "acorn squash", "1 can", id="food_with_unit"),
+        pytest.param(2, "aubergine", None, id="food_no_quantity"),
+        pytest.param(3, "flour", "1 US cup", id="food_with_quantity_and_unit"),
+    ],
+)
+def test_convert_api_item(
+    item_index: int,
+    expected_summary: str,
+    expected_description: str | None,
+) -> None:
+    """Test _convert_api_item splits food name into summary and quantity/unit into description."""
+    items = ShoppingItemsResponse.from_json(
+        load_fixture("get_shopping_items.json", DOMAIN)
+    ).items
+
+    todo = _convert_api_item(items[item_index])
+
+    assert todo.summary == expected_summary
+    assert todo.description == expected_description
+
+
+@pytest.mark.parametrize(
+    ("description", "expected_quantity", "expected_note"),
+    [
+        pytest.param(None, 0.0, "", id="none"),
+        pytest.param("", 0.0, "", id="empty"),
+        pytest.param("2", 2.0, "", id="quantity_only"),
+        pytest.param("2.5", 2.5, "", id="fractional_quantity"),
+        pytest.param("2 Gramm", 2.0, "", id="quantity_and_unit"),
+        pytest.param("2 Gramm, organic", 2.0, "organic", id="quantity_unit_note"),
+        pytest.param(", organic", 0.0, "organic", id="note_only_with_comma"),
+        pytest.param("buy fresh", 0.0, "buy fresh", id="text_note_no_comma"),
+        pytest.param("1 can, ripe", 1.0, "ripe", id="quantity_unit_note_short"),
+    ],
+)
+def test_parse_description(
+    description: str | None,
+    expected_quantity: float,
+    expected_note: str,
+) -> None:
+    """Test _parse_description extracts quantity and note from a description string."""
+    quantity, note = _parse_description(description)
+
+    assert quantity == expected_quantity
+    assert note == expected_note
+
+
+async def test_update_todo_item_description(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test updating description on a food item updates quantity and note."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {
+            ATTR_ITEM: "acorn squash",
+            ATTR_RENAME: "acorn squash",
+            "description": "3 can, organic",
+        },
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.update_shopping_item.assert_called_once()
+    _, mutate = mock_mealie_client.update_shopping_item.call_args[0]
+    assert mutate.quantity == 3.0
+    assert mutate.note == "organic"
+
+
+async def test_update_todo_item_status_keeps_description(
+    hass: HomeAssistant,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test toggling status does not rewrite quantity/note from the rendered description.
+
+    The todo component re-sends the rendered description on every update; parsing it
+    back must be skipped when it is unchanged to avoid clobbering the Mealie item.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ITEM: "acorn squash", ATTR_STATUS: "completed"},
+        target={ATTR_ENTITY_ID: "todo.mealie_supermarket"},
+        blocking=True,
+    )
+
+    mock_mealie_client.update_shopping_item.assert_called_once()
+    _, mutate = mock_mealie_client.update_shopping_item.call_args[0]
+    assert mutate.checked is True
+    assert mutate.quantity == 1.0
+    assert mutate.note == ""
+    assert mutate.unit_id == "7bf539d4-fc78-48bc-b48e-c35ccccec34a"
 
 
 async def test_entities(
