@@ -80,8 +80,7 @@ class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = result["errors"]
 
             if not errors:
-                if user_input[CONF_NAME] is None:
-                    user_input[CONF_NAME] = result["site_name"]
+                user_input[CONF_NAME] = result["site_name"]
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
@@ -95,7 +94,6 @@ class MetOfficeConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Required(
                     CONF_LONGITUDE, default=self.hass.config.longitude
                 ): cv.longitude,
-                vol.Optional(CONF_NAME, default=None): str,
             },
         )
 
