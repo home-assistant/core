@@ -1,5 +1,10 @@
 set_forecast_location:
   fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: metoffice
     latitude:
       required: false
       example: 32.87336
