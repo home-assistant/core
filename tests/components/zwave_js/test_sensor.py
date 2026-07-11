@@ -825,6 +825,79 @@ async def test_unit_change(hass: HomeAssistant, zp3111, client, integration) -> 
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.TEMPERATURE
 
 
+async def test_new_sensor_invalid_energy_production_scale(
+    hass: HomeAssistant, energy_production, client, integration
+) -> None:
+    """Test new-style energy production sensor handles invalid scale."""
+    entity_id = "sensor.node_2_energy_production_power"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "1.23"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
+
+    event = Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": energy_production.node_id,
+            "args": {
+                "commandClassName": "Energy Production",
+                "commandClass": 144,
+                "endpoint": 0,
+                "property": "value",
+                "propertyKey": 0,
+                "propertyKeyName": "0",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Power",
+                    "ccSpecific": {"parameter": 0, "scale": 255},
+                    "unit": None,
+                },
+                "propertyName": "value",
+                "nodeId": energy_production.node_id,
+            },
+        },
+    )
+    energy_production.receive_event(event)
+    await hass.async_block_till_done()
+
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        event = Event(
+            "value updated",
+            {
+                "source": "node",
+                "event": "value updated",
+                "nodeId": energy_production.node_id,
+                "args": {
+                    "commandClassName": "Energy Production",
+                    "commandClass": 144,
+                    "endpoint": 0,
+                    "property": "value",
+                    "propertyKey": 0,
+                    "propertyKeyName": "0",
+                    "newValue": 2.0,
+                    "prevValue": 1.23,
+                    "propertyName": "value",
+                },
+            },
+        )
+        energy_production.receive_event(event)
+        await hass.async_block_till_done()
+
+    mock_schedule_reload.assert_not_called()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "2.0"
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
+
+
 async def test_new_sensor_invalid_scale(
     hass: HomeAssistant, multisensor_6, client, integration
 ) -> None:

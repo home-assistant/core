@@ -25,7 +25,11 @@ from zwave_js_server.const.command_class.multilevel_sensor import (
     CC_SPECIFIC_SENSOR_TYPE,
     TEMPERATURE_SENSORS,
 )
-from zwave_js_server.exceptions import BaseZwaveJSServerError, RssiErrorReceived
+from zwave_js_server.exceptions import (
+    BaseZwaveJSServerError,
+    RssiErrorReceived,
+    UnknownValueData,
+)
 from zwave_js_server.model.controller import Controller
 from zwave_js_server.model.controller.statistics import ControllerStatistics
 from zwave_js_server.model.driver import Driver
@@ -829,16 +833,21 @@ class NewZWaveNumericSensor(ZWaveBaseEntity, SensorEntity):
     @override
     def on_value_update(self) -> None:
         """Handle scale changes for this value on value updated event."""
-        data = NumericSensorDataTemplate().resolve_data(self.info.primary_value)
+        try:
+            data = NumericSensorDataTemplate().resolve_data(self.info.primary_value)
+        except UnknownValueData:
+            data = NumericSensorDataTemplateData()
         if data.entity_description_key or data.unit_of_measurement:
             self.entity_description = get_entity_description(data)
             self._attr_native_unit_of_measurement = data.unit_of_measurement
-        else:
-            if isinstance(self.info, NewZwaveDiscoveryInfo):
-                self.entity_description = cast(
-                    SensorEntityDescription, self.info.entity_description
-                )
-            self.__dict__.pop("__attr_native_unit_of_measurement", None)
+        elif isinstance(self.info, NewZwaveDiscoveryInfo):
+            discovery_description = cast(
+                SensorEntityDescription, self.info.entity_description
+            )
+            self.entity_description = discovery_description
+            self._attr_native_unit_of_measurement = (
+                discovery_description.native_unit_of_measurement
+            )
         self.__dict__.pop("device_class", None)
         self.__dict__.pop("state_class", None)
         self.__dict__.pop("native_unit_of_measurement", None)
