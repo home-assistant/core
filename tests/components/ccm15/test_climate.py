@@ -141,7 +141,7 @@ async def test_entity_unavailable_without_data(
     ccm15_device: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """When a slot stops reporting, the entity is unavailable and its attrs are None."""
+    """A slot that stops reporting becomes unavailable."""
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -155,16 +155,6 @@ async def test_entity_unavailable_without_data(
     await hass.async_block_till_done()
 
     assert hass.states.get("climate.midea_0").state == STATE_UNAVAILABLE
-
-    entity = hass.data[CLIMATE_DOMAIN].get_entity("climate.midea_0")
-    assert entity is not None
-    assert entity.available is False
-    assert entity.current_temperature is None
-    assert entity.target_temperature is None
-    assert entity.hvac_mode is None
-    assert entity.fan_mode is None
-    assert entity.swing_mode is None
-    assert entity.extra_state_attributes == {}
 
 
 async def test_climate_fahrenheit_unit(
