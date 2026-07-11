@@ -348,6 +348,20 @@ async def test_fetch_redirect_uris_link_tag_precedence(
             ),
             id="redirect-uris-empty-fragment-entry",
         ),
+        pytest.param(
+            json.dumps(
+                {
+                    "client_id": "https://example.com/client",
+                    "redirect_uris": ["https://example.com:not-a-port/callback"],
+                }
+            ),
+            id="redirect-uris-invalid-port-entry",
+        ),
+        pytest.param(
+            '{"client_id": "https://example.com/client",'
+            ' "redirect_uris": ["https://example.com/callback"], "x": NaN}',
+            id="json-nan-constant",
+        ),
     ],
 )
 async def test_fetch_redirect_uris_metadata_document_invalid(

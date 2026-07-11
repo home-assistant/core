@@ -102,6 +102,11 @@ class LinkTagParser(HTMLParser):
             self.found.append(href)
 
 
+def _reject_json_constant(constant: str) -> None:
+    """Reject NaN/Infinity/-Infinity, which RFC 8259 does not allow."""
+    raise ValueError(f"Invalid JSON constant: {constant}")
+
+
 def _is_valid_metadata_client_id(url: str) -> bool:
     """Validate a client_id URL for the metadata-document fallback.
 
@@ -111,6 +116,8 @@ def _is_valid_metadata_client_id(url: str) -> bool:
     """
     try:
         parts = urlparse(url)
+        # urlparse defers port validation until the attribute is accessed.
+        _ = parts.port
     except ValueError:
         return False
     return parts.scheme == "https" and bool(parts.path) and "#" not in url
@@ -127,6 +134,8 @@ def _is_valid_metadata_redirect_uri(redirect_uri: str) -> bool:
     """
     try:
         parts = urlparse(redirect_uri)
+        # urlparse defers port validation until the attribute is accessed.
+        _ = parts.port
     except ValueError:
         return False
     return bool(parts.scheme) and "#" not in redirect_uri
@@ -232,7 +241,7 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
         # Strict decode for the JSON path (RFC 8259 requires UTF-8): the
         # lenient replacement decode above is only for tolerant HTML scanning
         # and could otherwise mask invalid bytes as U+FFFD inside the document.
-        document = json.loads(body.decode())
+        document = json.loads(body.decode(), parse_constant=_reject_json_constant)
     except UnicodeDecodeError:
         _LOGGER.debug("Client ID metadata document at %s is not valid UTF-8", url)
         return []
