@@ -122,3 +122,58 @@ async def test_update_interval_capped_before_delivery_window(
 
     coordinator = mock_config_entry.runtime_data
     assert coordinator.update_interval == timedelta(minutes=10)
+
+
+async def test_update_interval_relaxes_after_lag_window(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_picnic_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a still-current order relaxes to the default interval eventually."""
+    delivery = json.loads(await async_load_fixture(hass, "picnic/delivery.json"))
+    delivery["status"] = "CURRENT"
+    del delivery["delivery_time"]
+    delivery["eta2"] = {
+        "start": (dt_util.utcnow() + timedelta(minutes=10)).isoformat(),
+        "end": (dt_util.utcnow() + timedelta(minutes=30)).isoformat(),
+    }
+    mock_picnic_api.get_deliveries.return_value = [delivery]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.update_interval == DELIVERY_UPDATE_INTERVAL
+
+    freezer.tick(timedelta(hours=3))
+    await coordinator.async_refresh()
+
+    assert coordinator.update_interval == DEFAULT_UPDATE_INTERVAL
+
+
+async def test_update_interval_uses_slot_window_without_eta(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_picnic_api: MagicMock,
+) -> None:
+    """Test that the slot window selects the faster interval when no ETA exists."""
+    delivery = json.loads(await async_load_fixture(hass, "picnic/delivery.json"))
+    delivery["status"] = "CURRENT"
+    del delivery["delivery_time"]
+    del delivery["eta2"]
+    delivery["slot"]["window_start"] = (
+        dt_util.utcnow() + timedelta(minutes=10)
+    ).isoformat()
+    delivery["slot"]["window_end"] = (
+        dt_util.utcnow() + timedelta(minutes=70)
+    ).isoformat()
+    mock_picnic_api.get_deliveries.return_value = [delivery]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.update_interval == DELIVERY_UPDATE_INTERVAL
