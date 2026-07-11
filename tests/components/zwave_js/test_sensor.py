@@ -20,13 +20,8 @@ from homeassistant.components.zwave_js.const import (
     ATTR_METER_TYPE_NAME,
     ATTR_VALUE,
     DOMAIN,
-    ENTITY_DESC_KEY_POWER,
     SERVICE_REFRESH_VALUE,
     SERVICE_RESET_METER,
-)
-from homeassistant.components.zwave_js.discovery_data_template import (
-    NumericSensorDataTemplate,
-    NumericSensorDataTemplateData,
 )
 from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_id
 from homeassistant.components.zwave_js.sensor import (
@@ -902,63 +897,122 @@ async def test_new_sensor_restores_discovery_description_on_empty_template(
 ) -> None:
     """Test new-style numeric sensor restores discovery description when template is empty."""
     entity_id = "sensor.smart_switch_6_electric_consumed_a"
-    power_data = NumericSensorDataTemplateData(ENTITY_DESC_KEY_POWER, UnitOfPower.WATT)
-    empty_data = NumericSensorDataTemplateData()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "9.699"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.CURRENT
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfElectricCurrent.AMPERE
 
-    with patch.object(
-        NumericSensorDataTemplate,
-        "resolve_data",
-        side_effect=[power_data, empty_data],
-    ):
-        event = Event(
-            "value updated",
-            {
-                "source": "node",
-                "event": "value updated",
-                "nodeId": aeon_smart_switch_6.node_id,
-                "args": {
-                    "commandClassName": "Meter",
-                    "commandClass": 50,
-                    "endpoint": 0,
-                    "property": "value",
-                    "propertyKey": 66817,
-                    "propertyKeyName": "Electric_A_Consumed",
-                    "newValue": 10.0,
-                    "prevValue": 9.699,
-                    "propertyName": "value",
+    event = Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": aeon_smart_switch_6.node_id,
+            "args": {
+                "commandClassName": "Meter",
+                "commandClass": 50,
+                "endpoint": 0,
+                "property": "value",
+                "propertyKey": 66817,
+                "propertyKeyName": "Electric_A_Consumed",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Electric Consumed [A]",
+                    "ccSpecific": {"meterType": 1, "rateType": 1, "scale": 2},
+                    "unit": "W",
                 },
+                "propertyName": "value",
+                "nodeId": aeon_smart_switch_6.node_id,
             },
-        )
-        aeon_smart_switch_6.receive_event(event)
-        await hass.async_block_till_done()
-        state = hass.states.get(entity_id)
-        assert state
-        assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
+        },
+    )
+    aeon_smart_switch_6.receive_event(event)
+    await hass.async_block_till_done()
 
-        event = Event(
-            "value updated",
-            {
-                "source": "node",
-                "event": "value updated",
-                "nodeId": aeon_smart_switch_6.node_id,
-                "args": {
-                    "commandClassName": "Meter",
-                    "commandClass": 50,
-                    "endpoint": 0,
-                    "property": "value",
-                    "propertyKey": 66817,
-                    "propertyKeyName": "Electric_A_Consumed",
-                    "newValue": 11.0,
-                    "prevValue": 10.0,
-                    "propertyName": "value",
-                },
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": aeon_smart_switch_6.node_id,
+            "args": {
+                "commandClassName": "Meter",
+                "commandClass": 50,
+                "endpoint": 0,
+                "property": "value",
+                "propertyKey": 66817,
+                "propertyKeyName": "Electric_A_Consumed",
+                "newValue": 10.0,
+                "prevValue": 9.699,
+                "propertyName": "value",
             },
-        )
-        aeon_smart_switch_6.receive_event(event)
-        await hass.async_block_till_done()
+        },
+    )
+    aeon_smart_switch_6.receive_event(event)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "10.0"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
+
+    event = Event(
+        "metadata updated",
+        {
+            "source": "node",
+            "event": "metadata updated",
+            "nodeId": aeon_smart_switch_6.node_id,
+            "args": {
+                "commandClassName": "Meter",
+                "commandClass": 50,
+                "endpoint": 0,
+                "property": "value",
+                "propertyKey": 66817,
+                "propertyKeyName": "Electric_A_Consumed",
+                "metadata": {
+                    "type": "number",
+                    "readable": True,
+                    "writeable": False,
+                    "label": "Electric Consumed [A]",
+                    "ccSpecific": {"meterType": 1, "rateType": 1, "scale": -1},
+                    "unit": None,
+                },
+                "propertyName": "value",
+                "nodeId": aeon_smart_switch_6.node_id,
+            },
+        },
+    )
+    aeon_smart_switch_6.receive_event(event)
+    await hass.async_block_till_done()
+
+    event = Event(
+        "value updated",
+        {
+            "source": "node",
+            "event": "value updated",
+            "nodeId": aeon_smart_switch_6.node_id,
+            "args": {
+                "commandClassName": "Meter",
+                "commandClass": 50,
+                "endpoint": 0,
+                "property": "value",
+                "propertyKey": 66817,
+                "propertyKeyName": "Electric_A_Consumed",
+                "newValue": 11.0,
+                "prevValue": 10.0,
+                "propertyName": "value",
+            },
+        },
+    )
+    aeon_smart_switch_6.receive_event(event)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state
+    assert state.state == "11.0"
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.CURRENT
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfElectricCurrent.AMPERE
 
