@@ -480,7 +480,7 @@ class MathExtension(BaseTemplateExtension):
             period = math.floor(offset / range_size)
             position_in_period = offset - (period * range_size)
 
-            if (period < 0) or (period % 2 != 0):
+            if period % 2 != 0:
                 position_in_period = range_size - position_in_period
 
             value_num = in_min_num + position_in_period
