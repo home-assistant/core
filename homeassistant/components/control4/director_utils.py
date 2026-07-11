@@ -20,7 +20,8 @@ async def _get_entry_variables(entry: Control4ConfigEntry, item_id: int) -> dict
 
     result = {}
     for item in data:
-        result[item["varName"]] = item["value"]
+        value = item["value"]
+        result[item["varName"]] = None if value == "Undefined" else value
 
     return result
 

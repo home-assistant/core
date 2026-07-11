@@ -180,7 +180,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Returns current HVAC action."""
-        hvac_state = self._extra_state_attributes.get(ATTR_HVAC_STATE, "").lower()
+        hvac_state = (self._extra_state_attributes.get(ATTR_HVAC_STATE) or "").lower()
         if "cool" in hvac_state:
             return HVACAction.COOLING
         if "heat" in hvac_state:
@@ -275,7 +275,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
-        scale = self._extra_state_attributes.get(ATTR_SCALE, "")
+        scale = self._extra_state_attributes.get(ATTR_SCALE) or ""
         if "f" in scale.lower():
             return UnitOfTemperature.FAHRENHEIT
         return UnitOfTemperature.CELSIUS

@@ -47,16 +47,16 @@ async def async_setup_entry(
                 continue
             item_name = str(item["name"])
             item_id = item["id"]
-            item_area = item["roomName"]
+            item_area = item.get("roomName")
             item_parent_id = item["parentId"]
             item_manufacturer = None
             item_device_name = None
             item_model = None
             for parent_item in items_of_category:
                 if parent_item["id"] == item_parent_id:
-                    item_manufacturer = parent_item["manufacturer"]
-                    item_device_name = parent_item["name"]
-                    item_model = parent_item["model"]
+                    item_manufacturer = parent_item.get("manufacturer")
+                    item_device_name = parent_item.get("name")
+                    item_model = parent_item.get("model")
         except KeyError:
             _LOGGER.exception(
                 "Unknown device properties received from Control4: %s", item
