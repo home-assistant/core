@@ -553,17 +553,17 @@ async def test_listen_start_failure_clears_stale_credentials(
     )
     mock_ring_event_listener_class.return_value.started = False
 
-    with patch.object(
-        hass.config_entries, "async_schedule_reload"
-    ) as mock_schedule_reload:
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert CONF_LISTEN_CREDENTIALS not in mock_entry.data
     assert "Clearing stale Ring listen credentials to force re-registration" in [
         record.message for record in caplog.records if record.levelname == "WARNING"
     ]
-    mock_schedule_reload.assert_called_once_with(mock_entry.entry_id)
+    # The reload is scheduled as a task rather than patched, so by the time
+    # async_block_till_done returns the entry has actually been set up again.
+    assert mock_entry.state is ConfigEntryState.LOADED
+    assert mock_ring_event_listener_class.call_count == 2
 
 
 async def test_listen_start_failure_without_credentials_no_reload(
@@ -589,15 +589,14 @@ async def test_listen_start_failure_without_credentials_no_reload(
     )
     mock_ring_event_listener_class.return_value.started = False
 
-    with patch.object(
-        hass.config_entries, "async_schedule_reload"
-    ) as mock_schedule_reload:
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert CONF_LISTEN_CREDENTIALS not in mock_entry.data
     assert "Clearing stale Ring listen credentials" not in caplog.text
-    mock_schedule_reload.assert_not_called()
+    # No reload should have happened, so the listener was only constructed once.
+    assert mock_entry.state is ConfigEntryState.LOADED
+    assert mock_ring_event_listener_class.call_count == 1
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
