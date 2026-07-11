@@ -95,8 +95,8 @@ def validate_connection_data(data: dict[str, Any]) -> None:
 class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for UniFi Direct."""
 
-    VERSION = 1
-    MINOR_VERSION = 2
+    VERSION = 2
+    MINOR_VERSION = 1
 
     @override
     async def async_step_user(

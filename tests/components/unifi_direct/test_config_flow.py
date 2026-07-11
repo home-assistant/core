@@ -186,8 +186,8 @@ async def test_migrate_single_host_entry_to_multi_host_config(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.version == 1
-    assert config_entry.minor_version == 2
+    assert config_entry.version == 2
+    assert config_entry.minor_version == 1
     assert config_entry.data == {
         CONF_HOSTS: [
             {
