@@ -32,7 +32,7 @@ async def test_setup_entry(
         await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    mock_get_clientsession.assert_called_once_with(hass, False)
+    mock_get_clientsession.assert_called_once_with(hass, True)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     mock_karakeep_client.async_get_stats.assert_awaited_once()
 

@@ -20,7 +20,7 @@
         "data_description": {
           "token": "The API token used to connect to your Karakeep instance.",
           "url": "The URL of your Karakeep instance, including http:// or https://.",
-          "verify_ssl": "Verify the SSL certificate of your Karakeep instance. Disable this option if you are using a self-signed certificate."
+          "verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates."
         },
         "description": "Connect to your Karakeep instance."
       }

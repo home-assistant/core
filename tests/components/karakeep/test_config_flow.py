@@ -78,7 +78,7 @@ async def test_invalid_url(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_URL: TEST_URL,
         CONF_TOKEN: TEST_TOKEN,
-        CONF_VERIFY_SSL: False,
+        CONF_VERIFY_SSL: True,
     }
 
 
@@ -131,7 +131,7 @@ async def test_flow_errors(
     assert result["data"] == {
         CONF_URL: TEST_URL,
         CONF_TOKEN: TEST_TOKEN,
-        CONF_VERIFY_SSL: False,
+        CONF_VERIFY_SSL: True,
     }
 
 

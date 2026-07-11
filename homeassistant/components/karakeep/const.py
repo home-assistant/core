@@ -6,7 +6,7 @@ from homeassistant.const import Platform
 
 DOMAIN = "karakeep"
 
-DEFAULT_VERIFY_SSL = False
+DEFAULT_VERIFY_SSL = True
 UPDATE_INTERVAL = timedelta(seconds=300)
 
 PLATFORMS = [Platform.SENSOR]
