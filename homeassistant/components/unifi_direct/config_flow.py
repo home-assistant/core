@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.helpers import selector
+from homeassistant.helpers import config_validation as cv, selector
 
 from .const import DEFAULT_NAME, DEFAULT_SSH_PORT, DOMAIN
 
@@ -24,17 +24,24 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
                 multiple=True,
                 fields={
                     CONF_HOST: {
-                        "selector": selector.TextSelector(selector.TextSelectorConfig())
+                        "required": True,
+                        "selector": selector.TextSelector(
+                            selector.TextSelectorConfig()
+                        ),
                     },
                     CONF_USERNAME: {
-                        "selector": selector.TextSelector(selector.TextSelectorConfig())
+                        "required": True,
+                        "selector": selector.TextSelector(
+                            selector.TextSelectorConfig()
+                        ),
                     },
                     CONF_PASSWORD: {
+                        "required": True,
                         "selector": selector.TextSelector(
                             selector.TextSelectorConfig(
                                 type=selector.TextSelectorType.PASSWORD
                             )
-                        )
+                        ),
                     },
                     CONF_PORT: {
                         "selector": selector.NumberSelector(
@@ -70,7 +77,7 @@ def _get_host_configs(data: dict[str, Any]) -> list[dict[str, Any]]:
                 CONF_HOST: str(host),
                 CONF_USERNAME: entry.get(CONF_USERNAME, ""),
                 CONF_PASSWORD: entry.get(CONF_PASSWORD, ""),
-                CONF_PORT: entry.get(CONF_PORT, DEFAULT_SSH_PORT),
+                CONF_PORT: cv.port(entry.get(CONF_PORT, DEFAULT_SSH_PORT)),
             }
         )
 
@@ -135,7 +142,7 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_HOST: import_data.get(CONF_HOST),
             CONF_USERNAME: import_data.get(CONF_USERNAME, ""),
             CONF_PASSWORD: import_data.get(CONF_PASSWORD, ""),
-            CONF_PORT: import_data.get(CONF_PORT, DEFAULT_SSH_PORT),
+            CONF_PORT: cv.port(import_data.get(CONF_PORT, DEFAULT_SSH_PORT)),
         }
 
         if not host_config[CONF_HOST]:
