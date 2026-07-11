@@ -49,14 +49,14 @@ COMFORT_ROOM_TEMPERATURE = FixtureDevice(
     "number.maple_residence_terrace_radiator_comfort_room_temperature",
 )
 TOWEL_DRYER_BOOST_MODE_DURATION = FixtureDevice(
-    "setup/cloud_atlantic_cozytouch_towel_dryer.json",
-    "io://1234-5678-9012/5237136#1",
-    "number.bathroom_towel_dryer_boost_mode_duration",
+    "setup/cloud_atlantic_cozytouch.json",
+    "io://1234-5678-5643/5237136#1",
+    "number.my_home_bathroom_towel_dryer_boost_mode_duration",
 )
 TOWEL_DRYER_DRYING_DURATION = FixtureDevice(
-    "setup/cloud_atlantic_cozytouch_towel_dryer.json",
-    "io://1234-5678-9012/5237136#1",
-    "number.bathroom_towel_dryer_drying_duration",
+    "setup/cloud_atlantic_cozytouch.json",
+    "io://1234-5678-5643/5237136#1",
+    "number.my_home_bathroom_towel_dryer_drying_duration",
 )
 
 SNAPSHOT_FIXTURES = [
@@ -64,7 +64,6 @@ SNAPSHOT_FIXTURES = [
     OFFICE_BLINDS_MEMORIZED_POSITION,
     EXPECTED_NUMBER_OF_SHOWER,
     COMFORT_ROOM_TEMPERATURE,
-    TOWEL_DRYER_BOOST_MODE_DURATION,
 ]
 
 
