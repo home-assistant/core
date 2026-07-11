@@ -5,6 +5,7 @@ import logging
 from typing import Any, cast
 
 from xiaomi_ble import EncryptionScheme, SensorUpdate, XiaomiBluetoothDeviceData
+from xiaomi_ble.devices import S400_MODELS
 
 from homeassistant.components.bluetooth import (
     DOMAIN as BLUETOOTH_DOMAIN,
@@ -137,6 +138,15 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     library may have already created correctly named entities, causing a
     collision when the deferred migration then tries to rename them.
 
+    The old parser emitted the generic "impedance" key from one
+    advertisement and "impedance_low" only from a second one, so a
+    device that happened to never receive that second advertisement
+    before the upgrade would have only "impedance", indistinguishable
+    from a V1/V2 scale by that signal alone. The device registry, if
+    already available, is used as a fallback in that narrow case only:
+    unlike relying on it as the primary signal, this can't cause a
+    collision, since it never fires once "impedance_low" exists.
+
     Must rename "impedance_low" -> "impedance_high" before the legacy
     "impedance" -> "impedance_low", to avoid a unique_id collision.
     """
@@ -150,20 +160,32 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             low_entity_id = entity_registry.async_get_entity_id(
                 Platform.SENSOR, DOMAIN, old_low_id
             )
-            if low_entity_id:
-                _LOGGER.debug("S400 migration: %s -> %s", old_low_id, new_high_id)
-                entity_registry.async_update_entity(
-                    low_entity_id, new_unique_id=new_high_id
-                )
+            is_s400 = low_entity_id is not None
 
-                old_legacy_id = f"{address}-impedance"
+            old_legacy_id = f"{address}-impedance"
+            legacy_entity_id = entity_registry.async_get_entity_id(
+                Platform.SENSOR, DOMAIN, old_legacy_id
+            )
+
+            if not is_s400 and legacy_entity_id is not None:
+                device_registry = dr.async_get(hass)
+                device_entry = device_registry.async_get_device(
+                    identifiers={(BLUETOOTH_DOMAIN, address)}
+                )
+                is_s400 = device_entry is not None and device_entry.model in S400_MODELS
+
+            if is_s400:
+                if low_entity_id:
+                    _LOGGER.debug("S400 migration: %s -> %s", old_low_id, new_high_id)
+                    entity_registry.async_update_entity(
+                        low_entity_id, new_unique_id=new_high_id
+                    )
+
                 new_low_id = f"{address}-impedance_low"
-                if entity_id := entity_registry.async_get_entity_id(
-                    Platform.SENSOR, DOMAIN, old_legacy_id
-                ):
+                if legacy_entity_id:
                     _LOGGER.debug("S400 migration: %s -> %s", old_legacy_id, new_low_id)
                     entity_registry.async_update_entity(
-                        entity_id, new_unique_id=new_low_id
+                        legacy_entity_id, new_unique_id=new_low_id
                     )
 
         hass.config_entries.async_update_entry(entry, minor_version=2)
@@ -188,6 +210,16 @@ def _async_purge_stale_s400_impedance_restore_cache(
     Only the S400 has ever emitted "impedance_low": its presence in the
     entity registry identifies an S400 here (see async_migrate_entry for
     why the device registry is not used for this).
+
+    Known limitation: the "done" marker is persisted through the config
+    entry store (saved ~1s after a change), while this in-memory edit to
+    coordinator.restore_data only reaches disk via the bluetooth
+    integration's own passive-processor storage, saved every 15 minutes
+    or at a graceful shutdown. Home Assistant exposes no API to force an
+    immediate, coupled save of both, so a crash in that window can
+    persist the marker without the purge. The next startup would then
+    skip purging and briefly restore the stale value -- self-correcting
+    on the next scale reading, same as the ordinary purge outcome.
     """
     if entry.data.get(DATA_S400_IMPEDANCE_CACHE_PURGED):
         return

@@ -14,16 +14,21 @@ from tests.common import MockConfigEntry
 
 S400_ADDRESS = "04:AE:47:67:C6:7C"
 DATA_S400_IMPEDANCE_CACHE_PURGED = "s400_impedance_restore_cache_purged"
+S400_MODEL = "MJTZC01YM"
+V1V2_MODEL = "XMTZC02HM/XMTZC05HM/NUN4049CN"
 
 
 def _async_setup_device(
-    device_registry: dr.DeviceRegistry, entry: MockConfigEntry
+    device_registry: dr.DeviceRegistry,
+    entry: MockConfigEntry,
+    *,
+    model: str = S400_MODEL,
 ) -> dr.DeviceEntry:
     """Create a device row for the given config entry."""
     return device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={("bluetooth", S400_ADDRESS)},
-        model="MJTZC01YM",
+        model=model,
         name="Body Composition Scale C67C",
     )
 
@@ -108,11 +113,6 @@ def _seed_restore_data(
     return restore_data
 
 
-# ---------------------------------------------------------------------------
-# async_migrate_entry: unique_id renaming
-# ---------------------------------------------------------------------------
-
-
 async def test_migrate_renames_both_legacy_entities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -189,22 +189,17 @@ async def test_migrate_renames_impedance_low_only(
     await hass.async_block_till_done()
 
 
-async def test_migrate_leaves_generic_impedance_alone_without_low_signal(
+async def test_migrate_leaves_generic_impedance_alone_for_v1v2(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a lone 'impedance' entity is left untouched.
-
-    Only the S400 has ever emitted "impedance_low"; a device with a
-    generic "impedance" entity and no "impedance_low" at all is a V1/V2
-    scale's legitimate, still-live sensor and must never be renamed.
-    """
+    """Test a V1/V2 scale's lone 'impedance' entity is left untouched."""
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
     )
     entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry)
+    device = _async_setup_device(device_registry, entry, model=V1V2_MODEL)
     entity_id = _async_add_entity(
         entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
     )
@@ -216,6 +211,77 @@ async def test_migrate_leaves_generic_impedance_alone_without_low_signal(
     assert after is not None
     assert after.unique_id == f"{S400_ADDRESS}-impedance"
     assert after.previous_unique_id is None
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_migrate_renames_generic_impedance_via_device_registry_fallback(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an S400 that only ever has 'impedance' is still renamed.
+
+    The old parser could emit the generic "impedance" key without
+    "impedance_low" if a device never received the second advertisement
+    before the upgrade. The device registry, when already available, is
+    the fallback that catches this case.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
+    )
+    entry.add_to_hass(hass)
+    device = _async_setup_device(device_registry, entry, model=S400_MODEL)
+    entity_id = _async_add_entity(
+        entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    after = entity_registry.async_get(entity_id)
+    assert after is not None
+    assert after.unique_id == f"{S400_ADDRESS}-impedance_low"
+    assert after.previous_unique_id == f"{S400_ADDRESS}-impedance"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_migrate_fallback_noop_when_device_also_unknown(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the device-registry fallback doesn't error with no device row.
+
+    If neither the entity-registry signal nor the device registry can
+    identify this as an S400, the lone "impedance" entity is left alone
+    -- same outcome as the V1/V2 case, just via a different reason.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
+    )
+    entry.add_to_hass(hass)
+    # No device row at all for this address.
+
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{S400_ADDRESS}-impedance",
+        config_entry=entry,
+        original_name="Impedance",
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    after = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{S400_ADDRESS}-impedance"
+    )
+    assert after is not None
+
+    assert entry.minor_version == 2
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -318,12 +384,6 @@ async def test_migrate_already_done_is_noop(
     await hass.async_block_till_done()
 
 
-# ---------------------------------------------------------------------------
-# Restore-cache purge and phantom-entity cleanup, exercised through a full
-# config entry setup against the real bluetooth passive-processor storage.
-# ---------------------------------------------------------------------------
-
-
 async def test_purge_stale_restore_cache_through_full_setup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -382,8 +442,7 @@ async def test_purge_stale_restore_cache_leaves_non_s400_data_untouched(
         domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
     )
     entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry)
-    # A genuine V1/V2 sensor: "impedance" only, never "impedance_low".
+    device = _async_setup_device(device_registry, entry, model=V1V2_MODEL)
     entity_id = _async_add_entity(
         entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
     )
