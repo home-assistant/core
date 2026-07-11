@@ -7,7 +7,7 @@ from typing import Any
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
 from pyControl4.director import C4Director
-from pyControl4.error_handling import BadCredentials, InvalidCategory
+from pyControl4.error_handling import BadCredentials, C4Exception, InvalidCategory
 from pyControl4.websocket import C4Websocket
 
 from homeassistant.const import (
@@ -206,9 +206,15 @@ class C4WebsocketConnectionTracker:
         _LOGGER.info("WebSocket connection to Control4 re-established")
         item_callbacks = self.entry.runtime_data[CONF_WEBSOCKET].item_callbacks
         for item_id, callbacks in item_callbacks.items():
-            item_attributes = await director_get_entry_variables(
-                self.hass, self.entry, item_id
-            )
+            try:
+                item_attributes = await director_get_entry_variables(
+                    self.hass, self.entry, item_id
+                )
+            except TimeoutError, client_exceptions.ClientError, C4Exception:
+                _LOGGER.warning(
+                    "Failed to refresh item %s after WebSocket reconnect", item_id
+                )
+                continue
             message = {
                 "evtName": "OnDataToUI",
                 "iddevice": item_id,
