@@ -433,7 +433,8 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
 
         # The live estimate is cleared again once position data disappears
         self.picnic_mock().get_delivery_position.return_value = {}
-        await self._coordinator.async_refresh()
+        async_fire_time_changed(self.hass, dt_util.utcnow() + timedelta(minutes=31))
+        await self.hass.async_block_till_done(wait_background_tasks=True)
 
         self._assert_sensor(
             "sensor.mock_title_estimated_arrival_of_next_delivery",
