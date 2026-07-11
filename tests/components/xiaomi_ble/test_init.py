@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+from homeassistant.components.bluetooth.passive_update_processor import (
+    PASSIVE_UPDATE_PROCESSOR,
+)
 from homeassistant.components.xiaomi_ble import (
     DATA_S400_IMPEDANCE_CACHE_PURGED,
+    _async_purge_phantom_s400_impedance_entity,
     _async_purge_stale_s400_impedance_restore_cache,
 )
 from homeassistant.components.xiaomi_ble.const import DOMAIN
@@ -267,18 +271,24 @@ async def test_migrate_skipped_when_no_legacy_entity(
     await hass.async_block_till_done()
 
 
-async def test_migrate_skipped_when_no_device_entry(hass: HomeAssistant) -> None:
-    """Test the migration does nothing when the device is not yet known."""
+async def test_migrate_defers_when_no_device_entry(hass: HomeAssistant) -> None:
+    """Test the migration defers to a later restart when device is unknown.
+
+    Marking the migration done without having been able to check the
+    device model would risk permanently skipping a legitimate rename for
+    an S400 whose device row simply wasn't restored yet.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
     )
     entry.add_to_hass(hass)
 
-    # No device registered at all for this address: should not raise.
+    # No device registered at all for this address: should not raise,
+    # and must not advance minor_version so this is retried later.
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.minor_version == 2
+    assert entry.minor_version == 1
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -315,6 +325,33 @@ async def test_migrate_already_done_is_noop(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_purge_phantom_skipped_when_migration_not_complete(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the phantom cleanup never touches a not-yet-migrated entity.
+
+    If async_migrate_entry deferred the rename (e.g. the device row
+    wasn't known yet), minor_version stays at 1 and the legacy
+    "-impedance" entity is still the genuine, not-yet-migrated one -- not
+    a phantom. It must survive even once the device becomes known within
+    the same setup.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
+    )
+    entry.add_to_hass(hass)
+    device = _async_setup_device(device_registry, entry)
+    genuine_entity_id = _async_add_entity(
+        entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
+    )
+
+    _async_purge_phantom_s400_impedance_entity(hass, entry)
+
+    assert entity_registry.async_get(genuine_entity_id) is not None
 
 
 async def test_purge_phantom_removes_orphan_impedance_entity(
@@ -422,6 +459,53 @@ def _stale_s400_restore_data() -> dict:
     }
 
 
+async def test_purge_stale_restore_cache_through_full_setup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the stale cache is purged via a real config entry setup.
+
+    Unlike the tests above, this seeds Bluetooth's own
+    passive-update-processor restore storage (rather than calling the
+    private helper with a fake coordinator) and runs a full config entry
+    setup, to prove the purge actually happens before the sensor
+    platform's processor registration consumes that storage -- not just
+    that the helper's logic is correct in isolation.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
+    )
+    entry.add_to_hass(hass)
+    _async_setup_device(device_registry, entry)
+
+    # Seed the real bluetooth passive-update-processor restore storage,
+    # shaped like a pre-fix S400 cache dump, for this entry.
+    processor_data = hass.data[PASSIVE_UPDATE_PROCESSOR]
+    processor_data.all_restore_data[entry.entry_id] = _stale_s400_restore_data()
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    sensor_data = processor_data.all_restore_data[entry.entry_id][Platform.SENSOR]
+    assert "impedance___" not in sensor_data["entity_data"]
+    assert "impedance_low___" not in sensor_data["entity_data"]
+    # The correctly labeled impedance_high value must survive.
+    assert sensor_data["entity_data"]["impedance_high___"] == 497.6
+
+    # No phantom entity should have been created from the (now purged)
+    # stale "impedance" description.
+    entity_registry = er.async_get(hass)
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{S400_ADDRESS}-impedance"
+        )
+        is None
+    )
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_purge_stale_restore_cache_removes_impedance_keys(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -505,3 +589,30 @@ async def test_purge_stale_restore_cache_skipped_for_non_s400_device(
     assert "impedance_low___" in sensor_data["entity_data"]
     # The marker is still recorded, to avoid re-checking every restart.
     assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True
+
+
+async def test_purge_stale_restore_cache_defers_when_no_device_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test the cache purge defers when the device row is not yet known.
+
+    Marking the purge done without having been able to check the device
+    model would risk permanently skipping a legitimate S400's stale
+    cache entries.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
+    )
+    entry.add_to_hass(hass)
+    # No device registered at all for this address.
+
+    restore_data = _stale_s400_restore_data()
+    coordinator = _FakeCoordinator(restore_data)
+
+    _async_purge_stale_s400_impedance_restore_cache(hass, entry, coordinator)
+
+    sensor_data = restore_data[Platform.SENSOR]
+    assert "impedance___" in sensor_data["entity_data"]
+    assert "impedance_low___" in sensor_data["entity_data"]
+    # Must NOT be marked done, so this is retried on the next setup.
+    assert DATA_S400_IMPEDANCE_CACHE_PURGED not in entry.data
