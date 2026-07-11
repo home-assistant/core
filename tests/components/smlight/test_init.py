@@ -1,6 +1,6 @@
 "Test SMLIGHT SLZB device integration initialization."
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pysmlight import Info
@@ -194,10 +194,28 @@ async def test_device_legacy_firmware(
 async def test_async_execute_command_auth_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_ultima_client: MagicMock,
 ) -> None:
-    """Test async_execute_command handles authentication error."""
-    entry = await setup_integration(hass, mock_config_entry)
-    coordinator = entry.runtime_data.data
+    """Test action handles authentication error."""
+    mock_ultima_client.actions.ambilight.side_effect = SmlightAuthError
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "light.mock_title_ambilight"
 
     with pytest.raises(ConfigEntryAuthFailed):
-        await coordinator.async_execute_command(AsyncMock(side_effect=SmlightAuthError))
+        await hass.services.async_call(
+            "light",
+            "turn_on",
+            {"entity_id": entity_id},
+            blocking=True,
+        )
+
+    progress = [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["handler"] == DOMAIN and flow["context"].get("source") == "reauth"
+    ]
+    assert len(progress) == 1
+    assert progress[0]["step_id"] == "reauth_confirm"
+    assert progress[0]["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
