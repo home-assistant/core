@@ -87,7 +87,7 @@ async def test_refresh_token_sends_software_metadata(
         },
     )
 
-    await implementation._async_refresh_token({"refresh_token": "old_refresh_token"})
+    await implementation.async_refresh_token({"refresh_token": "old_refresh_token"})
 
     token_calls = [
         call for call in aioclient_mock.mock_calls if str(call[1]) == TOKEN_URL

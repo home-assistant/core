@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-from aiohttp import ClientConnectionError
+from aiohttp import ClientConnectionError, ClientError
 from tesla_fleet_api.exceptions import (
     InvalidToken,
     SubscriptionRequired,
@@ -49,7 +49,10 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
-        await async_ensure_client_credential(self.hass)
+        try:
+            await async_ensure_client_credential(self.hass)
+        except ClientError:
+            return self.async_abort(reason="oauth_error")
         return await super().async_step_user()
 
     @override

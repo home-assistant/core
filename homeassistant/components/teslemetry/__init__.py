@@ -86,7 +86,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not any(
         entry.version == 1 for entry in hass.config_entries.async_entries(DOMAIN)
     ):
-        await async_ensure_client_credential(hass)
+        try:
+            await async_ensure_client_credential(hass)
+        except ClientError as err:
+            # Registration is retried when the user starts the config flow, so a
+            # transient failure here must not block integration setup.
+            LOGGER.debug("Deferring Teslemetry client registration: %s", err)
     async_setup_services(hass)
     return True
 

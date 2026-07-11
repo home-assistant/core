@@ -108,6 +108,23 @@ async def test_oauth_flow(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+async def test_registration_failure_aborts(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the flow aborts gracefully when dynamic client registration fails."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(REGISTER_URL, exc=ClientConnectionError())
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_error"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth(
     hass: HomeAssistant,
