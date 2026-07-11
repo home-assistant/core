@@ -42,10 +42,10 @@ async def async_migrate_entry(
                 config_entry, data={CONF_HOSTS: host_configs}, version=2
             )
 
-        _LOGGER.debug(
-            "Migrated UniFi Direct config entry %s to version 2",
-            config_entry.entry_id,
-        )
+            _LOGGER.debug(
+                "Migrated UniFi Direct config entry %s to version 2",
+                config_entry.entry_id,
+            )
 
     return True
 

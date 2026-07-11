@@ -10,21 +10,13 @@
     "step": {
       "reconfigure": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "hosts": "Hosts",
-          "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "hosts": "Hosts"
         },
         "description": "Update the UniFi AP hosts configuration"
       },
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "hosts": "Hosts",
-          "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "hosts": "Hosts"
         }
       }
     }
@@ -33,6 +25,24 @@
     "yaml_import_cannot_connect": {
       "description": "The YAML configuration for UniFi AP at `{host}` could not be imported because the connection failed.\n\nPlease check that `{host}` is reachable, update your `configuration.yaml` if needed, and restart Home Assistant.",
       "title": "YAML configuration import failed: cannot connect"
+    }
+  },
+  "selector": {
+    "hosts": {
+      "fields": {
+        "host": {
+          "name": "[%key:common::config_flow::data::host%]"
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]"
+        },
+        "port": {
+          "name": "[%key:common::config_flow::data::port%]"
+        },
+        "username": {
+          "name": "[%key:common::config_flow::data::username%]"
+        }
+      }
     }
   }
 }

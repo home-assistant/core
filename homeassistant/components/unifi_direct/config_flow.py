@@ -22,6 +22,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOSTS): selector.ObjectSelector(
             selector.ObjectSelectorConfig(
                 multiple=True,
+                translation_key=CONF_HOSTS,
                 fields={
                     CONF_HOST: {
                         "required": True,
