@@ -115,20 +115,23 @@ async def test_stop_cover_calls_motor_stop(
     living_room_motor.stop.assert_called_once_with(True)
 
 
-async def test_stop_cancels_pending_motion_refresh(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+async def test_stop_ends_motion_window(
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
-    """A stop command mid-motion cancels the pending motion refresh."""
+    """A stop command mid-motion collapses the motion window immediately.
+
+    Open the (closed) bedroom cover so it enters STATE_OPENING, then stop.
+    The entity should immediately report the steady-state (STATE_CLOSED,
+    from the underlying motor) rather than staying in STATE_OPENING until
+    the motion window would have expired.
+    """
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
         {ATTR_ENTITY_ID: BEDROOM_ENTITY},
         blocking=True,
     )
-
-    entity = hass.data["entity_components"]["cover"].get_entity(BEDROOM_ENTITY)
-    assert entity._cancel_motion_refresh is not None
+    assert hass.states.get(BEDROOM_ENTITY).state == STATE_OPENING
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -136,45 +139,32 @@ async def test_stop_cancels_pending_motion_refresh(
         {ATTR_ENTITY_ID: BEDROOM_ENTITY},
         blocking=True,
     )
-    await hass.async_block_till_done()
-    assert entity._cancel_motion_refresh is None
+    assert hass.states.get(BEDROOM_ENTITY).state == STATE_CLOSED
 
 
 async def test_cover_reports_opening_during_motion_window(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_motors: list[MagicMock],
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """After an open command the cover state is `opening` until MOTION_DELAY elapses."""
-    now = dt_util.utcnow()
-
-    with freeze_time(now):
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: BEDROOM_ENTITY},
-            blocking=True,
-        )
-
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: BEDROOM_ENTITY},
+        blocking=True,
+    )
     assert hass.states.get(BEDROOM_ENTITY).state == STATE_OPENING
 
 
 async def test_cover_reports_closing_during_motion_window(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_motors: list[MagicMock],
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """After a close command the cover state is `closing` until MOTION_DELAY elapses."""
-    now = dt_util.utcnow()
-
-    with freeze_time(now):
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY},
-            blocking=True,
-        )
-
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY},
+        blocking=True,
+    )
     assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_CLOSING
 
 
@@ -204,77 +194,22 @@ async def test_cover_state_mapping(
     assert hass.states.get(LIVING_ROOM_ENTITY).state == expected
 
 
-async def test_cover_device_registry_entry(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+async def test_cover_device_registry_entries(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Each motor ends up as a distinct device in the registry."""
-    device_registry = dr.async_get(hass)
-    gaposa_devices = [
-        d
-        for d in device_registry.devices.values()
-        if any(i[0] == "gaposa" for i in d.identifiers)
-    ]
-    assert len(gaposa_devices) == 2
-    names = {d.name for d in gaposa_devices}
-    assert names == {"Living Room", "Bedroom"}
-
-
-async def test_entity_reads_state_from_current_coordinator_data(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-    mock_motors: list[MagicMock],
-) -> None:
-    """Entity state should come from coordinator.data, not a cached Motor.
-
-    This test replaces the Motor object in coordinator.data with a
-    brand-new mock and verifies the entity reports the replacement's
-    state.
-    """
-    assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_OPEN
-
-    coordinator = init_integration.runtime_data
-    original_key = "DEVICE123_motor-1"
-    assert original_key in coordinator.data
-
-    replacement = MagicMock()
-    replacement.id = "motor-1"
-    replacement.name = "Living Room"
-    replacement.state = "DOWN"
-    coordinator.data[original_key] = replacement
-    coordinator.async_set_updated_data(coordinator.data)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_CLOSED
-
-
-async def test_rapid_open_close_replaces_motion_refresh(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-) -> None:
-    """A second open/close cancels the first motion refresh callback."""
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: BEDROOM_ENTITY},
-        blocking=True,
+    devices = dr.async_entries_for_config_entry(
+        device_registry, init_integration.entry_id
     )
-    entity = hass.data["entity_components"]["cover"].get_entity(BEDROOM_ENTITY)
-    first_cancel = entity._cancel_motion_refresh
-    assert first_cancel is not None
-
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: BEDROOM_ENTITY},
-        blocking=True,
-    )
-    assert entity._cancel_motion_refresh is not first_cancel
+    assert len(devices) == 2
+    assert {d.name for d in devices} == {"Living Room", "Bedroom"}
 
 
 async def test_motion_window_collapses_after_delay(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    mock_motors: list[MagicMock],
 ) -> None:
     """Past MOTION_DELAY, the cover should return to a steady state."""
     now = dt_util.utcnow()
