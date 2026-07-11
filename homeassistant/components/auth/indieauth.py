@@ -29,7 +29,12 @@ async def verify_redirect_uri(
     except ValueError:
         return False
 
-    redirect_parts = _parse_url(redirect_uri)
+    try:
+        redirect_parts = _parse_url(redirect_uri)
+    except ValueError:
+        # A malformed redirect_uri (e.g. an unbalanced IPv6 bracket) must fail
+        # validation, not raise into the login flow.
+        return False
 
     # Verify redirect url and client url have same scheme and domain.
     is_valid = (
@@ -58,7 +63,20 @@ async def verify_redirect_uri(
     # IndieAuth 4.2.2 allows for redirect_uri to be on different domain
     # but needs to be specified in link tag when fetching `client_id`.
     redirect_uris = await fetch_redirect_uris(hass, client_id)
-    return redirect_uri in redirect_uris
+    if redirect_uri in redirect_uris:
+        return True
+    if redirect_uris:
+        # The client's document/page was fine; the requested redirect_uri just
+        # is not registered. Without this the most common misconfiguration
+        # (typo, trailing slash, scheme mismatch) is undiagnosable server-side.
+        _LOGGER.debug(
+            "redirect_uri %s is not among the advertised redirect uris %s for"
+            " client_id %s",
+            redirect_uri,
+            redirect_uris,
+            client_id,
+        )
+    return False
 
 
 class LinkTagParser(HTMLParser):
@@ -78,12 +96,25 @@ class LinkTagParser(HTMLParser):
 
         attributes: dict[str, str | None] = dict(attrs)
 
-        # Skip href-less tags: urljoin would raise on a None href.
-        if (
-            attributes.get("rel") == self.rel
-            and (href := attributes.get("href")) is not None
-        ):
+        # Skip tags with a missing or empty href: urljoin resolves those to
+        # the client_id URL itself instead of naming a redirect target.
+        if attributes.get("rel") == self.rel and (href := attributes.get("href")):
             self.found.append(href)
+
+
+def _is_valid_metadata_redirect_uri(redirect_uri: str) -> bool:
+    """Validate a client ID metadata document redirect_uris entry.
+
+    Entries must be absolute, fragment-free URIs: a non-empty scheme (so
+    private-use schemes like app:/callback stay valid) and no fragment per
+    RFC 6749 3.1.2. An unparseable entry (e.g. an unbalanced IPv6 bracket)
+    invalidates the entry rather than raising into the login flow.
+    """
+    try:
+        parts = urlparse(redirect_uri)
+    except ValueError:
+        return False
+    return bool(parts.scheme) and not parts.fragment
 
 
 async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
@@ -125,8 +156,10 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
             async for data in resp.content.iter_chunked(1024):
                 body += data
 
-                if len(body) >= MAX_FETCH_BYTES:
-                    # A chunk can cross the boundary, so clamp to the cap.
+                if len(body) > MAX_FETCH_BYTES:
+                    # A chunk can cross the boundary, so clamp to the cap. A
+                    # response of exactly the cap ends the loop instead and
+                    # still counts as complete.
                     body = body[:MAX_FETCH_BYTES]
                     break
             else:
@@ -170,9 +203,10 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
         or urlparse(url).scheme != "https"
     ):
         _LOGGER.debug(
-            "Ignoring client ID metadata document for %s: incomplete or truncated"
-            " response, status %s, redirected %s, or non-https client_id",
+            "Not treating %s as a client ID metadata document: fetch complete %s,"
+            " status %s, redirected %s (client_id must be https)",
             url,
+            fetch_complete,
             status,
             redirected,
         )
@@ -196,15 +230,11 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
         )
         return []
 
-    # redirect_uris must be absolute, fragment-free URIs (a non-empty scheme, so
-    # private-use schemes like app:/callback stay valid, and no fragment per
-    # RFC 6749 3.1.2); we return them unmodified for RFC 6749 exact matching
+    # redirect_uris entries are returned unmodified for RFC 6749 exact matching
     # rather than resolving relative references.
     redirect_uris = document.get("redirect_uris")
     if not isinstance(redirect_uris, list) or not all(
-        isinstance(redirect_uri, str)
-        and (parts := urlparse(redirect_uri)).scheme
-        and not parts.fragment
+        isinstance(redirect_uri, str) and _is_valid_metadata_redirect_uri(redirect_uri)
         for redirect_uri in redirect_uris
     ):
         _LOGGER.debug(

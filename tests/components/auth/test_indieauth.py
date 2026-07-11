@@ -172,7 +172,7 @@ async def test_find_link_tag_max_size(hass: HomeAssistant, mock_session) -> None
 async def test_find_link_tag_without_href(
     hass: HomeAssistant, mock_session: AiohttpClientMocker
 ) -> None:
-    """Test a redirect_uri link tag without an href is skipped."""
+    """Test a redirect_uri link tag without a usable href is skipped."""
     mock_session.get(
         "http://127.0.0.1:8000",
         text="""
@@ -180,6 +180,7 @@ async def test_find_link_tag_without_href(
 <html>
   <head>
     <link rel="redirect_uri">
+    <link rel="redirect_uri" href="">
     <link rel="redirect_uri" href="https://example.com/cb">
   </head>
 </html>
@@ -329,6 +330,15 @@ async def test_fetch_redirect_uris_link_tag_precedence(
             ),
             id="redirect-uris-fragment-entry",
         ),
+        pytest.param(
+            json.dumps(
+                {
+                    "client_id": "https://example.com/client",
+                    "redirect_uris": ["https://["],
+                }
+            ),
+            id="redirect-uris-unparseable-entry",
+        ),
     ],
 )
 async def test_fetch_redirect_uris_metadata_document_invalid(
@@ -370,6 +380,37 @@ async def test_verify_redirect_uri_metadata_document(
     assert not await indieauth.verify_redirect_uri(
         hass, client_id, "https://other.com/not-listed"
     )
+
+
+async def test_verify_redirect_uri_unparseable(hass: HomeAssistant) -> None:
+    """Test an unparseable requested redirect uri is rejected without raising."""
+    assert not await indieauth.verify_redirect_uri(
+        hass, "https://example.com/client", "https://["
+    )
+
+
+async def test_fetch_redirect_uris_metadata_document_exactly_at_cap(
+    hass: HomeAssistant, mock_session: AiohttpClientMocker
+) -> None:
+    """Test a complete document of exactly the size cap is accepted."""
+    document = {
+        "client_id": "https://example.com/client",
+        "redirect_uris": ["https://other.com/callback"],
+        "padding": "",
+    }
+    document["padding"] = "x" * (10240 - len(json.dumps(document)))
+    text = json.dumps(document)
+    assert len(text) == 10240
+
+    mock_session.get(
+        "https://example.com/client",
+        text=text,
+        headers={"Content-Type": "application/json"},
+    )
+
+    assert await indieauth.fetch_redirect_uris(hass, "https://example.com/client") == [
+        "https://other.com/callback"
+    ]
 
 
 async def test_fetch_redirect_uris_metadata_document_not_ok(
