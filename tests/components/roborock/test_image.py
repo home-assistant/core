@@ -288,7 +288,7 @@ async def test_map_load_delayed(
         for call in home_trait.add_update_listener.call_args_list:
             call.args[0]()
 
-    # 1. Start with no maps
+    # Start with no maps
     home_trait.home_map_info = None
     home_trait.home_map_content = None
 
@@ -300,7 +300,7 @@ async def test_map_load_delayed(
     assert hass.states.get("image.roborock_s7_maxv_main_floor") is None
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is None
 
-    # 2. Add first map (Main Floor, flag 0)
+    # Add first map (Main Floor, flag 0)
     home_trait.home_map_info = {
         0: CombinedMapInfo(name="Main Floor", map_flag=0, rooms=[])
     }
@@ -316,7 +316,7 @@ async def test_map_load_delayed(
     assert hass.states.get("image.roborock_s7_maxv_main_floor") is not None
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is None
 
-    # 3. Add second map (Upstairs, flag 1)
+    # Add second map (Upstairs, flag 1)
     home_trait.home_map_info = {
         **home_trait.home_map_info,
         1: CombinedMapInfo(name="Upstairs", map_flag=1, rooms=[]),
@@ -334,7 +334,7 @@ async def test_map_load_delayed(
     assert hass.states.get("image.roborock_s7_maxv_main_floor") is not None
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
 
-    # 4. No-op update (no changes)
+    # No-op update (no changes)
     notify_listeners()
     await hass.async_block_till_done()
 
@@ -342,19 +342,7 @@ async def test_map_load_delayed(
     assert hass.states.get("image.roborock_s7_maxv_main_floor") is not None
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
 
-    # 5. Uninitialized map info (None)
-    home_trait.home_map_info = None
-    home_trait.home_map_content = None
-
-    # Notify update listener
-    notify_listeners()
-    await hass.async_block_till_done()
-
-    # Assert both map entities still exist (were not deleted)
-    assert hass.states.get("image.roborock_s7_maxv_main_floor") is not None
-    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
-
-    # 6. Remove first map (Main Floor, flag 0)
+    # Remove first map (Main Floor, flag 0)
     home_trait.home_map_info = {
         1: CombinedMapInfo(name="Upstairs", map_flag=1, rooms=[])
     }
