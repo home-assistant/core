@@ -9,7 +9,13 @@ from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, intent
-from homeassistant.helpers.llm import IntentTool, LLMContext, Tool, ToolInput
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    IntentTool,
+    LLMContext,
+    Tool,
+    ToolInput,
+)
 from homeassistant.util.json import JsonObjectType
 
 from .const import DOMAIN, TodoServices
@@ -70,11 +76,10 @@ class TodoGetItemsTool(Tool):
             return {"success": False, "error": "To-do list not found"}
         entity_id = result.states[0].entity_id
         service_data: dict[str, Any] = {"entity_id": entity_id}
-        if status := data.get("status"):
-            if status == "all":
-                service_data["status"] = ["needs_action", "completed"]
-            else:
-                service_data["status"] = [status]
+        status = data["status"]
+        # "all" means no status filter, which returns every item.
+        if status != "all":
+            service_data["status"] = status
         service_result = await hass.services.async_call(
             DOMAIN,
             TodoServices.GET_ITEMS,
@@ -90,10 +95,12 @@ class TodoGetItemsTool(Tool):
 
 
 @callback
-def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
+def async_get_tools(
+    hass: HomeAssistant, llm_context: LLMContext, api_id: str
+) -> LLMTools | None:
     """Return the todo LLM tools when a to-do list is exposed."""
-    if not llm_context.assistant:
-        return LLMTools(tools=[])
+    if api_id != LLM_API_ASSIST:
+        return None
 
     entity_registry = er.async_get(hass)
     names: list[str] = []
@@ -104,7 +111,7 @@ def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
         names.extend(intent.async_get_entity_aliases(hass, entity_entry, state=state))
 
     if not names:
-        return LLMTools(tools=[])
+        return None
 
     tools: list[Tool] = [TodoGetItemsTool(names)]
     tools.extend(

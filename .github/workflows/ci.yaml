@@ -116,7 +116,7 @@ jobs:
           # of a new uv cache entry after a version bump.
           echo "key=venv-${CACHE_VERSION}-${HA_SHORT_VERSION}-${HASH_REQUIREMENTS_TEST}-${HASH_REQUIREMENTS}-${HASH_REQUIREMENTS_ALL}-${HASH_PACKAGE_CONSTRAINTS}-${HASH_GEN_REQUIREMENTS}" >> $GITHUB_OUTPUT
       - name: Filter for core changes
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         id: core
         with:
           filters: .core_files.yaml
@@ -131,7 +131,7 @@ jobs:
           echo "Result:"
           cat .integration_paths.yaml
       - name: Filter for integration changes
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         id: integrations
         with:
           filters: .integration_paths.yaml
@@ -281,7 +281,7 @@ jobs:
           echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"
           echo "::add-matcher::.github/workflows/matchers/codespell.json"
       - name: Run prek
-        uses: j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d # v2.0.4
+        uses: j178/prek-action@e98a699c41eb69ab013a45817a0406469a748f8d # v2.0.5
         env:
           PREK_SKIP: no-commit-to-branch,mypy,pylint,gen_requirements_all,hassfest,hassfest-metadata,hassfest-mypy-config,zizmor
           RUFF_OUTPUT_FORMAT: github
@@ -302,7 +302,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run zizmor
-        uses: j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d # v2.0.4
+        uses: j178/prek-action@e98a699c41eb69ab013a45817a0406469a748f8d # v2.0.5
         with:
           extra-args: --all-files zizmor
 

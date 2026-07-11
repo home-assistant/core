@@ -16,7 +16,12 @@ from zwave_js_server.const.command_class.access_control import (
     UserCredentialType,
     UserCredentialUserType,
 )
-from zwave_js_server.model.access_control import SetUserOptions
+from zwave_js_server.exceptions import FailedZWaveCommand
+from zwave_js_server.model.access_control import (
+    AddUserCredential,
+    SetUserOptions,
+    UserCredentialCapability,
+)
 from zwave_js_server.model.node import Node
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -191,6 +196,8 @@ class SetUserReturn(TypedDict):
     """Return type for set_user."""
 
     user_id: int
+    # None unless a credential was written in the same call.
+    credential_slot: int | None
 
 
 class SetCredentialReturn(TypedDict):
@@ -198,6 +205,121 @@ class SetCredentialReturn(TypedDict):
 
     credential_slot: int
     user_id: int
+
+
+async def _validate_credential_data(
+    node: Node,
+    credential_type: UserCredentialType,
+    credential_data: str,
+) -> UserCredentialCapability:
+    """Validate a credential payload against the device capabilities.
+
+    Returns the capability for the credential type so callers can reuse its
+    slot information.
+    """
+    cred_type_str = CREDENTIAL_TYPE_MAP.get(credential_type, str(credential_type))
+    cred_caps = await node.access_control.get_credential_capabilities_cached()
+    type_cap = cred_caps.supported_credential_types.get(credential_type)
+    if type_cap is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="credential_type_not_supported",
+            translation_placeholders={"credential_type": cred_type_str},
+        )
+
+    if not (
+        type_cap.min_credential_length
+        <= len(credential_data)
+        <= type_cap.max_credential_length
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="credential_data_invalid_length",
+            translation_placeholders={
+                "credential_type": cred_type_str,
+                "min_length": str(type_cap.min_credential_length),
+                "max_length": str(type_cap.max_credential_length),
+            },
+        )
+    if credential_type is UserCredentialType.PIN_CODE and not (
+        credential_data.isascii() and credential_data.isdigit()
+    ):
+        # str.isdigit() accepts non-ASCII digit code points (e.g. Arabic-Indic),
+        # which the lock firmware cannot store. Restrict to ASCII 0-9.
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="credential_data_pin_not_digits",
+        )
+
+    return type_cap
+
+
+async def _async_find_available_user_slot(node: Node) -> int:
+    """Return the first unused user slot, raising if the lock is full."""
+    user_caps = await node.access_control.get_user_capabilities_cached()
+    users = await node.access_control.get_users_cached()
+    used_ids = {u.user_id for u in users}
+    user_id = next(
+        (i for i in range(1, user_caps.max_users + 1) if i not in used_ids),
+        None,
+    )
+    if user_id is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_available_user_slots",
+        )
+    return user_id
+
+
+async def _async_find_available_credential_slot(
+    node: Node,
+    credential_type: UserCredentialType,
+    type_cap: UserCredentialCapability,
+) -> int:
+    """Return the first unused slot for a credential type, raising if full."""
+    existing = await node.access_control.get_credentials_by_type_cached(credential_type)
+    used_slots = {c.slot for c in existing}
+    slot = next(
+        (
+            s
+            for s in range(1, type_cap.number_of_credential_slots + 1)
+            if s not in used_slots
+        ),
+        None,
+    )
+    if slot is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_available_credential_slots",
+            translation_placeholders={
+                "credential_type": CREDENTIAL_TYPE_MAP.get(
+                    credential_type, str(credential_type)
+                )
+            },
+        )
+    return slot
+
+
+async def _async_resolve_credential_slot(
+    node: Node,
+    user_id: int,
+    credential_type: UserCredentialType,
+    type_cap: UserCredentialCapability,
+    credential_slot: int | None,
+) -> int:
+    """Resolve the slot a credential should be written to for a user."""
+    # An explicit slot is honored as-is.
+    if credential_slot is not None:
+        return credential_slot
+    # When the lock supports independent user and credentials, find the first
+    # available slot for the credential.
+    user_caps = await node.access_control.get_user_capabilities_cached()
+    if user_caps.supports_users_without_credentials:
+        return await _async_find_available_credential_slot(
+            node, credential_type, type_cap
+        )
+    # Otherwise the credential must live in the user's own slot.
+    return user_id
 
 
 # --- Business logic functions ---
@@ -298,29 +420,16 @@ async def async_set_user(
     user_type: UserCredentialUserType | None = None,
     credential_rule: UserCredentialRule | None = None,
     active: bool | None = None,
+    credential_slot: int | None = None,
+    credential_type: UserCredentialType | None = None,
+    credential_data: str | None = None,
 ) -> SetUserReturn:
-    """Create or update an access-control user. Returns the allocated user_id."""
-    supported = await node.access_control.is_supported()
-    if not supported:
+    """Create or update an access-control user, optionally with a credential."""
+    if not await node.access_control.is_supported():
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="access_control_not_supported",
         )
-
-    # Auto-find first available user slot
-    if user_id is None:
-        user_caps = await node.access_control.get_user_capabilities_cached()
-        users = await node.access_control.get_users_cached()
-        used_ids = {u.user_id for u in users}
-        user_id = next(
-            (i for i in range(1, user_caps.max_users + 1) if i not in used_ids),
-            None,
-        )
-        if user_id is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_available_user_slots",
-            )
 
     options = SetUserOptions(
         active=active,
@@ -329,9 +438,89 @@ async def async_set_user(
         credential_rule=credential_rule,
     )
 
+    # No user_id => create a new user via addUser, which handles locks that require
+    # credentials to be created alongside their user.
+    if user_id is None:
+        return await _async_create_user(
+            node, options, credential_slot, credential_type, credential_data
+        )
+
+    # A user_id => update the existing user via setUser, then write any
+    # credential separately (addUser only creates new users).
     status = await node.access_control.set_user(user_id, options)
     _raise_on_set_user_error(status)
-    return SetUserReturn(user_id=user_id)
+
+    resolved_slot: int | None = None
+    if credential_type is not None and credential_data is not None:
+        type_cap = await _validate_credential_data(
+            node, credential_type, credential_data
+        )
+        resolved_slot = await _async_resolve_credential_slot(
+            node, user_id, credential_type, type_cap, credential_slot
+        )
+        cred_status = await node.access_control.set_credential(
+            user_id, credential_type, resolved_slot, credential_data
+        )
+        _raise_on_set_credential_error(cred_status)
+
+    return SetUserReturn(user_id=user_id, credential_slot=resolved_slot)
+
+
+async def _async_create_user(
+    node: Node,
+    options: SetUserOptions,
+    credential_slot: int | None,
+    credential_type: UserCredentialType | None,
+    credential_data: str | None,
+) -> SetUserReturn:
+    """Create a new user via addUser, optionally bundling a credential."""
+    user_id = await _async_find_available_user_slot(node)
+
+    credential: AddUserCredential | None = None
+    resolved_slot: int | None = None
+    if credential_type is not None and credential_data is not None:
+        type_cap = await _validate_credential_data(
+            node, credential_type, credential_data
+        )
+        resolved_slot = await _async_resolve_credential_slot(
+            node, user_id, credential_type, type_cap, credential_slot
+        )
+        credential = AddUserCredential(
+            credential_type=credential_type,
+            credential_slot=resolved_slot,
+            data=credential_data,
+        )
+    else:
+        user_caps = await node.access_control.get_user_capabilities_cached()
+        if not user_caps.supports_users_without_credentials:
+            # On User Code CC a user cannot exist without its code, so zwave-js
+            # rejects addUser without a credential. Fail early with a clear
+            # error instead of letting the command fail downstream.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="credential_required",
+            )
+
+    result = await node.access_control.add_user(user_id, options, credential)
+    _raise_on_set_user_error(result.user)
+    if (
+        result.credential is not None
+        and result.credential is not SetCredentialResult.OK
+    ):
+        # addUser creates the user before writing the credential, so on User
+        # Credential CC a failed credential write leaves a credential-less user
+        # behind. Roll it back before surfacing the error. (On User Code CC the
+        # user and credential share a slot, so this cannot occur.)
+        try:
+            await node.access_control.delete_user(user_id)
+        except FailedZWaveCommand:
+            _LOGGER.warning(
+                "Could not roll back user %s after its credential failed to add",
+                user_id,
+            )
+        _raise_on_set_credential_error(result.credential)
+
+    return SetUserReturn(user_id=user_id, credential_slot=resolved_slot)
 
 
 async def async_delete_user(node: Node, user_id: int) -> None:
@@ -378,60 +567,12 @@ async def async_set_credential(
             translation_key="access_control_not_supported",
         )
 
-    cred_type_str = CREDENTIAL_TYPE_MAP.get(credential_type, str(credential_type))
-    cred_caps = await node.access_control.get_credential_capabilities_cached()
-    type_cap = cred_caps.supported_credential_types.get(credential_type)
-    if type_cap is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="credential_type_not_supported",
-            translation_placeholders={"credential_type": cred_type_str},
-        )
-
-    # Validate credential_data length and format against device capabilities
-    if not (
-        type_cap.min_credential_length
-        <= len(credential_data)
-        <= type_cap.max_credential_length
-    ):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="credential_data_invalid_length",
-            translation_placeholders={
-                "credential_type": cred_type_str,
-                "min_length": str(type_cap.min_credential_length),
-                "max_length": str(type_cap.max_credential_length),
-            },
-        )
-    if credential_type is UserCredentialType.PIN_CODE and not (
-        credential_data.isascii() and credential_data.isdigit()
-    ):
-        # str.isdigit() accepts non-ASCII digit code points (e.g. Arabic-Indic),
-        # which the lock firmware cannot store. Restrict to ASCII 0-9.
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="credential_data_pin_not_digits",
-        )
+    type_cap = await _validate_credential_data(node, credential_type, credential_data)
 
     if credential_slot is None:
-        existing = await node.access_control.get_credentials_by_type_cached(
-            credential_type
+        credential_slot = await _async_find_available_credential_slot(
+            node, credential_type, type_cap
         )
-        used_slots = {c.slot for c in existing}
-        credential_slot = next(
-            (
-                s
-                for s in range(1, type_cap.number_of_credential_slots + 1)
-                if s not in used_slots
-            ),
-            None,
-        )
-        if credential_slot is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_available_credential_slots",
-                translation_placeholders={"credential_type": cred_type_str},
-            )
 
     status = await node.access_control.set_credential(
         user_id, credential_type, credential_slot, credential_data
@@ -450,7 +591,12 @@ async def async_delete_credential(
     credential_type: UserCredentialType,
     credential_slot: int,
 ) -> None:
-    """Delete a single credential."""
+    """Delete a single credential.
+
+    On User Code CC the credential shares its user's slot, so zwave-js clears
+    the whole slot and deletes the user along with the credential; no special
+    handling is needed here.
+    """
     if not await node.access_control.is_supported():
         raise HomeAssistantError(
             translation_domain=DOMAIN,
