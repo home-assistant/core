@@ -97,6 +97,7 @@ async def async_setup_entry(
     resp = coordinator.data
     serial = resp.serial_number
     version = resp.version
+    model = type(api.inverter).__name__
     entities: list[InverterSensorEntity] = []
     for sensor, (idx, measurement) in api.inverter.sensor_map().items():
         description = SENSOR_DESCRIPTIONS[(measurement.unit, measurement.is_monotonic)]
@@ -109,6 +110,7 @@ async def async_setup_entry(
                 uid,
                 serial,
                 version,
+                model,
                 sensor,
                 description,
             )
@@ -128,6 +130,7 @@ class InverterSensorEntity(CoordinatorEntity, SensorEntity):
         uid: str,
         serial: str,
         version: str,
+        model: str,
         key: str,
         entity_description: SensorEntityDescription,
     ) -> None:
@@ -139,6 +142,7 @@ class InverterSensorEntity(CoordinatorEntity, SensorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},
             manufacturer=MANUFACTURER,
+            model=f"Inverter: {model}",
             name=f"{manufacturer} {serial}",
             sw_version=version,
         )

@@ -1,10 +1,12 @@
 """The solax component."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
+from importlib.metadata import entry_points
 import logging
 
-from solax import InverterResponse, RealTimeAPI, real_time_api
+from solax import InverterResponse, RealTimeAPI, discover
 from solax.inverter import InverterError
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,11 +15,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
+from .const import CONF_SOLAX_INVERTER, SOLAX_ENTRY_POINT_GROUP
 from .coordinator import SolaxDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
 SCAN_INTERVAL = timedelta(seconds=30)
+
+INVERTERS_ENTRY_POINTS = {
+    ep.name: ep.load() for ep in entry_points(group=SOLAX_ENTRY_POINT_GROUP)
+}
 
 
 @dataclass(slots=True)
@@ -36,12 +43,20 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: SolaxConfigEntry) -> bool:
     """Set up the sensors from a ConfigEntry."""
 
+    if inverter_name := entry.data.get(CONF_SOLAX_INVERTER):
+        invset = {INVERTERS_ENTRY_POINTS[inverter_name]}
+    else:
+        invset = set(INVERTERS_ENTRY_POINTS.values())
+
     try:
-        api = await real_time_api(
+        inverter = await discover(
             entry.data[CONF_IP_ADDRESS],
             entry.data[CONF_PORT],
             entry.data[CONF_PASSWORD],
+            inverters=invset,
+            return_when=asyncio.FIRST_COMPLETED,
         )
+        api = RealTimeAPI(inverter)
     except Exception as err:
         raise ConfigEntryNotReady from err
 

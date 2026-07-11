@@ -12,7 +12,8 @@
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "solax.inverters": "Inverter model"
         }
       }
     }
