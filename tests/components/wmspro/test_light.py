@@ -87,7 +87,7 @@ async def test_light_update(
     ("mock_hub_configuration", "mock_hub_status", "target_brightness"),
     [
         ("config_prod_awning_dimmer.json", "status_prod_dimmer.json", 1),
-        ("config_prod_light_switch.json", "status_prod_light_switch.json", 255),
+        ("config_prod_light_switch.json", "status_prod_light_switch.json", None),
     ],
     indirect=["mock_hub_configuration", "mock_hub_status"],
 )
@@ -109,7 +109,7 @@ async def test_light_turn_on_and_off(
     entity = hass.states.get("light.terrasse_licht")
     assert entity is not None
     assert entity.state == STATE_OFF
-    assert entity.attributes.get(ATTR_BRIGHTNESS, None) is None
+    assert entity.attributes.get(ATTR_BRIGHTNESS) is None
 
     with patch(
         "wmspro.destination.Destination.refresh",
@@ -128,7 +128,10 @@ async def test_light_turn_on_and_off(
         entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_ON
-        assert entity.attributes.get(ATTR_BRIGHTNESS, 255) == target_brightness
+        if target_brightness is None:
+            assert entity.attributes.get(ATTR_BRIGHTNESS) is None
+        else:
+            assert entity.attributes.get(ATTR_BRIGHTNESS) == target_brightness
         assert len(mock_hub_status.mock_calls) == before_status
         assert len(mock_action_call.mock_calls) == before_action + 1
 
@@ -149,7 +152,7 @@ async def test_light_turn_on_and_off(
         entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_OFF
-        assert entity.attributes.get(ATTR_BRIGHTNESS, None) is None
+        assert entity.attributes.get(ATTR_BRIGHTNESS) is None
         assert len(mock_hub_status.mock_calls) == before_status
         assert len(mock_action_call.mock_calls) == before_action + 1
 
