@@ -38,10 +38,13 @@
   },
   "exceptions": {
     "auth_failed": {
-      "message": "Authentication failed when communicating with Flow-it VMC: {error}"
+      "message": "Authentication failed when communicating with Flow-it VMC"
     },
     "command_failed": {
-      "message": "Failed to send command to Flow-it VMC: {error}"
+      "message": "Failed to send command to Flow-it VMC"
+    },
+    "update_failed": {
+      "message": "Error communicating with API"
     }
   }
 }

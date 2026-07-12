@@ -111,13 +111,11 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
         except (FlowItCommandError, FlowItError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
 
         await self.coordinator.async_refresh()
