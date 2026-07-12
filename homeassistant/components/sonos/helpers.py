@@ -30,6 +30,8 @@ if TYPE_CHECKING:
 UID_PREFIX = "RINCON_"
 UID_POSTFIX = "01400"
 
+UPNP_ERROR_COMMAND_FAILED = "800"
+
 _LOGGER = logging.getLogger(__name__)
 
 type _SonosEntitiesType = (
@@ -87,7 +89,7 @@ def soco_error[_T: _SonosEntitiesType, **_P, _R](
                     translation_key = "upnp_call_failed"
                     placeholders["error_code"] = str(error_code)
 
-                if str(error_code) == "800":
+                if str(error_code) == UPNP_ERROR_COMMAND_FAILED:
                     translation_key = "upnp_call_failed_music_service_unavailable"
 
                 raise SonosUpdateError(

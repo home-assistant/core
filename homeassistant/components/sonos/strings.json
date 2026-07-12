@@ -149,7 +149,7 @@
       "message": "Error calling {function} on {target} (UPnP error code {error_code}): {error}"
     },
     "upnp_call_failed_music_service_unavailable": {
-      "message": "Error calling {function} on {target} (UPnP error code {error_code}): {error} This may indicate the selected music service is not available on the speaker."
+      "message": "Error calling {function} on {target} (UPnP error code {error_code}): {error}. This may indicate the selected music service is not available on the speaker."
     }
   },
   "issues": {
