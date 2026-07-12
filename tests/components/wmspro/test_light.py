@@ -84,9 +84,12 @@ async def test_light_update(
 
 
 @pytest.mark.parametrize(
-    ("mock_hub_configuration", "mock_hub_status"),
-    [("config_prod_awning_dimmer.json", "status_prod_dimmer.json")],
-    indirect=True,
+    ("mock_hub_configuration", "mock_hub_status", "target_brightness"),
+    [
+        ("config_prod_awning_dimmer.json", "status_prod_dimmer.json", 1),
+        ("config_prod_light_switch.json", "status_prod_light_switch.json", 255),
+    ],
+    indirect=["mock_hub_configuration", "mock_hub_status"],
 )
 async def test_light_turn_on_and_off(
     hass: HomeAssistant,
@@ -95,6 +98,7 @@ async def test_light_turn_on_and_off(
     mock_hub_configuration: AsyncMock,
     mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
+    target_brightness: int,
 ) -> None:
     """Test that a light entity is turned on and off correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
@@ -105,7 +109,7 @@ async def test_light_turn_on_and_off(
     entity = hass.states.get("light.terrasse_licht")
     assert entity is not None
     assert entity.state == STATE_OFF
-    assert entity.attributes[ATTR_BRIGHTNESS] is None
+    assert entity.attributes.get(ATTR_BRIGHTNESS, None) is None
 
     with patch(
         "wmspro.destination.Destination.refresh",
@@ -124,7 +128,7 @@ async def test_light_turn_on_and_off(
         entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_ON
-        assert entity.attributes[ATTR_BRIGHTNESS] >= 1
+        assert entity.attributes.get(ATTR_BRIGHTNESS, 255) == target_brightness
         assert len(mock_hub_status.mock_calls) == before_status
         assert len(mock_action_call.mock_calls) == before_action + 1
 
@@ -145,7 +149,7 @@ async def test_light_turn_on_and_off(
         entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_OFF
-        assert entity.attributes[ATTR_BRIGHTNESS] is None
+        assert entity.attributes.get(ATTR_BRIGHTNESS, None) is None
         assert len(mock_hub_status.mock_calls) == before_status
         assert len(mock_action_call.mock_calls) == before_action + 1
 
