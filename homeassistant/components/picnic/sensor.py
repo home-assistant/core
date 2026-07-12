@@ -29,6 +29,7 @@ from .const import (
     SENSOR_LAST_ORDER_SLOT_START,
     SENSOR_LAST_ORDER_STATUS,
     SENSOR_LAST_ORDER_TOTAL_PRICE,
+    SENSOR_NEXT_DELIVERY_ESTIMATED_ARRIVAL,
     SENSOR_NEXT_DELIVERY_ETA_END,
     SENSOR_NEXT_DELIVERY_ETA_START,
     SENSOR_NEXT_DELIVERY_SLOT_END,
@@ -164,6 +165,17 @@ SENSOR_TYPES: tuple[PicnicSensorEntityDescription, ...] = (
         data_type="next_delivery_data",
         value_fn=lambda next_delivery: dt_util.parse_datetime(
             str(next_delivery.get("eta", {}).get("end"))
+        ),
+    ),
+    PicnicSensorEntityDescription(
+        key=SENSOR_NEXT_DELIVERY_ESTIMATED_ARRIVAL,
+        translation_key=SENSOR_NEXT_DELIVERY_ESTIMATED_ARRIVAL,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        data_type="next_delivery_data",
+        value_fn=lambda next_delivery: (
+            dt_util.utc_from_timestamp(next_delivery["estimated_arrival"] / 1000)
+            if next_delivery.get("estimated_arrival")
+            else None
         ),
     ),
     PicnicSensorEntityDescription(
