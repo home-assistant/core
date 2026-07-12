@@ -96,7 +96,7 @@ class RoborockSensorDescriptionQ10(SensorEntityDescription):
 def _dock_error_value_fn(state: DeviceState) -> str | None:
     if (
         status := state.status.dock_error_status
-    ) is not None and state.status.dock_type != RoborockDockTypeCode.no_dock:
+    ) is not None and state.status.dock_type != RoborockDockTypeCode.o0_dock:
         return status.name
 
     return None
