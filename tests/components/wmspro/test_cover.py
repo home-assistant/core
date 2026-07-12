@@ -93,32 +93,48 @@ async def test_cover_update(
 
 
 @pytest.mark.parametrize(
-    ("mock_hub_configuration", "mock_hub_status", "entity_id"),
+    (
+        "mock_hub_configuration",
+        "mock_hub_status",
+        "entity_id",
+        "num_action",
+        "num_action_list",
+    ),
     [
         (
             "config_prod_awning_dimmer.json",
             "status_prod_awning.json",
             "cover.terrasse_markise",
+            1,
+            0,
         ),
         (
             "config_prod_awning_valance.json",
             "status_prod_valance.json",
             "cover.raum_0_markise_2",
+            1,
+            0,
         ),
         (
             "config_prod_roller_shutter.json",
             "status_prod_roller_shutter.json",
             "cover.wohnbereich_wohnebene_alle",
+            1,
+            0,
         ),
         (
             "config_prod_slat_drive.json",
             "status_prod_slat_drive.json",
             "cover.terrasse_lamellen",
+            1,
+            0,
         ),
         (
             "config_prod_slat_rotate.json",
             "status_prod_slat_rotate.json",
             "cover.zonwering_begane_grond_keuken_alle",
+            2,
+            1,
         ),
     ],
     indirect=["mock_hub_configuration", "mock_hub_status"],
@@ -132,6 +148,8 @@ async def test_cover_open_and_close(
     mock_action_call: AsyncMock,
     mock_action_list_call: AsyncMock,
     entity_id: str,
+    num_action: int,
+    num_action_list: int,
 ) -> None:
     """Test that a cover entity is opened and closed correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
@@ -164,9 +182,10 @@ async def test_cover_open_and_close(
         assert entity.state == STATE_OPEN
         assert entity.attributes[ATTR_CURRENT_POSITION] == 100
         assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + num_action
         assert (
-            len(mock_action_call.mock_calls) == before_action + 1
-            or len(mock_action_list_call.mock_calls) == before_action_list + 1
+            len(mock_action_list_call.mock_calls)
+            == before_action_list + num_action_list
         )
 
     with patch(
@@ -189,9 +208,10 @@ async def test_cover_open_and_close(
         assert entity.state == STATE_CLOSED
         assert entity.attributes[ATTR_CURRENT_POSITION] == 0
         assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + num_action
         assert (
-            len(mock_action_call.mock_calls) == before_action + 1
-            or len(mock_action_list_call.mock_calls) == before_action_list + 1
+            len(mock_action_list_call.mock_calls)
+            == before_action_list + num_action_list
         )
 
 
@@ -380,7 +400,6 @@ async def test_cover_tilt_open_and_close(
     mock_hub_configuration: AsyncMock,
     mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
-    mock_action_list_call: AsyncMock,
     entity_id: str,
 ) -> None:
     """Test that a cover entity is tilted open and closed correctly."""
@@ -401,7 +420,6 @@ async def test_cover_tilt_open_and_close(
     ):
         before_status = len(mock_hub_status.mock_calls)
         before_action = len(mock_action_call.mock_calls)
-        before_action_list = len(mock_action_list_call.mock_calls)
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -414,10 +432,7 @@ async def test_cover_tilt_open_and_close(
         assert entity is not None
         assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 0
         assert len(mock_hub_status.mock_calls) == before_status
-        assert (
-            len(mock_action_call.mock_calls) == before_action + 1
-            or len(mock_action_list_call.mock_calls) == before_action_list + 1
-        )
+        assert len(mock_action_call.mock_calls) == before_action + 1
 
     with patch(
         "wmspro.destination.Destination.refresh",
@@ -425,7 +440,6 @@ async def test_cover_tilt_open_and_close(
     ):
         before_status = len(mock_hub_status.mock_calls)
         before_action = len(mock_action_call.mock_calls)
-        before_action_list = len(mock_action_list_call.mock_calls)
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -438,10 +452,7 @@ async def test_cover_tilt_open_and_close(
         assert entity is not None
         assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 50
         assert len(mock_hub_status.mock_calls) == before_status
-        assert (
-            len(mock_action_call.mock_calls) == before_action + 1
-            or len(mock_action_list_call.mock_calls) == before_action_list + 1
-        )
+        assert len(mock_action_call.mock_calls) == before_action + 1
 
 
 @pytest.mark.parametrize(
@@ -462,7 +473,6 @@ async def test_cover_tilt_to_pos(
     mock_hub_configuration: AsyncMock,
     mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
-    mock_action_list_call: AsyncMock,
     entity_id: str,
 ) -> None:
     """Test that a cover entity is tilted to correct position."""
@@ -483,7 +493,6 @@ async def test_cover_tilt_to_pos(
     ):
         before_status = len(mock_hub_status.mock_calls)
         before_action = len(mock_action_call.mock_calls)
-        before_action_list = len(mock_action_list_call.mock_calls)
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -496,19 +505,24 @@ async def test_cover_tilt_to_pos(
         assert entity is not None
         assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 100
         assert len(mock_hub_status.mock_calls) == before_status
-        assert (
-            len(mock_action_call.mock_calls) == before_action + 1
-            or len(mock_action_list_call.mock_calls) == before_action_list + 1
-        )
+        assert len(mock_action_call.mock_calls) == before_action + 1
 
 
 @pytest.mark.parametrize(
-    ("mock_hub_configuration", "mock_hub_status", "entity_id"),
+    (
+        "mock_hub_configuration",
+        "mock_hub_status",
+        "entity_id",
+        "num_action",
+        "num_action_list",
+    ),
     [
         (
             "config_prod_slat_rotate.json",
             "status_prod_slat_rotate.json",
             "cover.zonwering_begane_grond_keuken_alle",
+            2,
+            1,
         ),
     ],
     indirect=["mock_hub_configuration", "mock_hub_status"],
@@ -522,6 +536,8 @@ async def test_cover_tilt_with_open_and_close_pos(
     mock_action_call: AsyncMock,
     mock_action_list_call: AsyncMock,
     entity_id: str,
+    num_action: int,
+    num_action_list: int,
 ) -> None:
     """Test that a cover entity is tilted to correct position."""
     assert await setup_config_entry(hass, mock_config_entry)
@@ -558,9 +574,10 @@ async def test_cover_tilt_with_open_and_close_pos(
         assert entity.attributes[ATTR_CURRENT_POSITION] == 100
         assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 100
         assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + num_action
         assert (
-            len(mock_action_call.mock_calls) == before_action + 1
-            or len(mock_action_list_call.mock_calls) == before_action_list + 1
+            len(mock_action_list_call.mock_calls)
+            == before_action_list + num_action_list
         )
 
     with patch(
@@ -584,7 +601,8 @@ async def test_cover_tilt_with_open_and_close_pos(
         assert entity.attributes[ATTR_CURRENT_POSITION] == 0
         assert entity.attributes[ATTR_CURRENT_TILT_POSITION] == 0
         assert len(mock_hub_status.mock_calls) == before_status
+        assert len(mock_action_call.mock_calls) == before_action + num_action
         assert (
-            len(mock_action_call.mock_calls) == before_action + 1
-            or len(mock_action_list_call.mock_calls) == before_action_list + 1
+            len(mock_action_list_call.mock_calls)
+            == before_action_list + num_action_list
         )

@@ -62,11 +62,11 @@ async def test_number_update(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "initial_value", "target_value"),
+    ("entity_id", "initial_value", "target_value", "num_action"),
     [
-        ("number.zonwering_begane_grond_keuken_alle_raw_rotation", "0", "80"),
-        ("number.zonwering_begane_grond_keuken_alle_minimum_rotation", "-75", "-50"),
-        ("number.zonwering_begane_grond_keuken_alle_maximum_rotation", "75", "100"),
+        ("number.zonwering_begane_grond_keuken_alle_raw_rotation", "0", "80", 1),
+        ("number.zonwering_begane_grond_keuken_alle_minimum_rotation", "-75", "-50", 0),
+        ("number.zonwering_begane_grond_keuken_alle_maximum_rotation", "75", "100", 0),
     ],
 )
 @pytest.mark.parametrize(
@@ -85,6 +85,7 @@ async def test_number_set_value(
     entity_id: str,
     initial_value: str,
     target_value: str,
+    num_action: int,
 ) -> None:
     """Test that a number entity is created and value set correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
@@ -119,7 +120,7 @@ async def test_number_set_value(
         assert entity is not None
         assert float(entity.state) == float(target_value)
         assert len(mock_hub_status.mock_calls) == before_status
-        assert len(mock_action_call.mock_calls) <= before_action + 1
+        assert len(mock_action_call.mock_calls) == before_action + num_action
 
 
 @pytest.mark.parametrize(
