@@ -168,3 +168,72 @@ async def test_get_library_action(
         return_response=True,
     )
     assert response == snapshot
+
+
+@pytest.mark.parametrize(
+    "media_type",
+    [
+        "artist",
+        "album",
+        "track",
+        "playlist",
+        "audiobook",
+        "podcast",
+        "radio",
+    ],
+)
+async def test_get_library_action_with_username(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    media_type: str,
+) -> None:
+    """Test music assistant get_library action with username."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+
+    # services with an api version < 35 must raise a validation error even if the username is valid
+    music_assistant_client.server_info.schema_version = 30
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_LIBRARY,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_FAVORITE: False,
+                ATTR_MEDIA_TYPE: media_type,
+                ATTR_USERNAME: "user_user",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    # username supported
+    music_assistant_client.server_info.schema_version = 35
+
+    # invalid users
+    for username in ("non_existing_user", "party_guest", "user_disabled"):
+        with pytest.raises(ServiceValidationError):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_GET_LIBRARY,
+                {
+                    ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                    ATTR_FAVORITE: False,
+                    ATTR_MEDIA_TYPE: media_type,
+                    ATTR_USERNAME: username,
+                },
+                blocking=True,
+                return_response=True,
+            )
+    # valid user
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_LIBRARY,
+        {
+            ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+            ATTR_FAVORITE: False,
+            ATTR_MEDIA_TYPE: media_type,
+            ATTR_USERNAME: "user_user",
+        },
+        blocking=True,
+        return_response=True,
+    )
