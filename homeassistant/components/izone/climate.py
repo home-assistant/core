@@ -308,10 +308,10 @@ class ControllerDevice(ClimateEntity):
         """Return current operation ie. heat, cool, idle."""
         if not self._controller.is_on:
             return HVACMode.OFF
-        if (mode := self._controller.mode) == Controller.Mode.FREE_AIR:
+        if (mode := self._controller.mode) is Controller.Mode.FREE_AIR:
             return HVACMode.FAN_ONLY
         for key, value in self._state_to_pizone.items():
-            if value == mode:
+            if value is mode:
                 return key
         raise RuntimeError("Should be unreachable")
 
@@ -345,7 +345,7 @@ class ControllerDevice(ClimateEntity):
     @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if self._controller.mode == Controller.Mode.FREE_AIR:
+        if self._controller.mode is Controller.Mode.FREE_AIR:
             return self._controller.temp_supply
         return self._controller.temp_return
 
@@ -390,7 +390,7 @@ class ControllerDevice(ClimateEntity):
         return self.control_zone_setpoint
 
     @property
-    def supply_temperature(self) -> float:
+    def supply_temperature(self) -> float | None:
         """Return the current supply, or in duct, temperature."""
         return self._controller.temp_supply
 
@@ -488,7 +488,7 @@ class ZoneDevice(ClimateEntity):
         self._controller = controller
         self._zone = zone
 
-        if zone.type != Zone.Type.AUTO:
+        if zone.type is not Zone.Type.AUTO:
             self._state_to_pizone = {
                 HVACMode.OFF: Zone.Mode.CLOSE,
                 HVACMode.FAN_ONLY: Zone.Mode.OPEN,
@@ -555,7 +555,7 @@ class ZoneDevice(ClimateEntity):
     @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
-        if self._zone.mode == Zone.Mode.AUTO:
+        if self._zone.mode is Zone.Mode.AUTO:
             return self._attr_supported_features
         return self._attr_supported_features & ~ClimateEntityFeature.TARGET_TEMPERATURE
 
@@ -565,7 +565,7 @@ class ZoneDevice(ClimateEntity):
         """Return current operation ie. heat, cool, idle."""
         mode = self._zone.mode
         for key, value in self._state_to_pizone.items():
-            if value == mode:
+            if value is mode:
                 return key
         return None
 
@@ -577,7 +577,7 @@ class ZoneDevice(ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._zone.temp_current
 
@@ -585,7 +585,7 @@ class ZoneDevice(ClimateEntity):
     @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self._zone.type != Zone.Type.AUTO:
+        if self._zone.type is not Zone.Type.AUTO:
             return None
         return self._zone.temp_setpoint
 
@@ -628,7 +628,7 @@ class ZoneDevice(ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if self._zone.mode != Zone.Mode.AUTO:
+        if self._zone.mode is not Zone.Mode.AUTO:
             return
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             await self._controller.wrap_and_catch(self._zone.set_temp_setpoint(temp))
@@ -643,12 +643,12 @@ class ZoneDevice(ClimateEntity):
     @property
     def is_on(self) -> bool:
         """Return true if on."""
-        return self._zone.mode != Zone.Mode.CLOSE
+        return self._zone.mode is not Zone.Mode.CLOSE
 
     @override
     async def async_turn_on(self) -> None:
         """Turn device on (open zone)."""
-        if self._zone.type == Zone.Type.AUTO:
+        if self._zone.type is Zone.Type.AUTO:
             await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.AUTO))
         else:
             await self._controller.wrap_and_catch(self._zone.set_mode(Zone.Mode.OPEN))
