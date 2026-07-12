@@ -47,13 +47,13 @@ def mock_getrandbits():
 
 @pytest.mark.usefixtures("steam_api", "entity_registry_enabled_by_default")
 @pytest.mark.freeze_time("2013-12-13 12:13:12")
-async def test_sensors(
+async def test_images(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test setup of the Steam sensor platform."""
+    """Test setup of the Steam image platform."""
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
