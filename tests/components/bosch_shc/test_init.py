@@ -40,7 +40,7 @@ def _make_entry() -> MockConfigEntry:
 
 
 async def test_setup_entry_success(hass: HomeAssistant) -> None:
-    """A successful setup creates the device, forwards platforms, and starts polling."""
+    """A successful setup creates the device and starts polling."""
     entry = _make_entry()
     entry.add_to_hass(hass)
     mock_session = _mock_session()
