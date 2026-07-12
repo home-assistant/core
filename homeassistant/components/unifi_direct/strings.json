@@ -5,7 +5,8 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
-      "cannot_connect": "Could not connect to UniFi AP at {host}."
+      "cannot_connect": "Could not connect to UniFi AP at {host}.",
+      "invalid_config": "Configuration is invalid. Ensure each host is unique and has username and password."
     },
     "step": {
       "reconfigure": {

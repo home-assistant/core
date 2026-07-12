@@ -85,6 +85,12 @@ def _get_host_configs(data: dict[str, Any]) -> list[dict[str, Any]]:
     return host_configs
 
 
+def _has_duplicate_hosts(host_configs: list[dict[str, Any]]) -> bool:
+    """Return if the configured hosts contain duplicates."""
+    hosts = [host_config[CONF_HOST] for host_config in host_configs]
+    return len(hosts) != len(set(hosts))
+
+
 def validate_connection_data(data: dict[str, Any]) -> None:
     """Validate that we can connect to the UniFi AP with the provided configuration."""
     for host_config in _get_host_configs(data):
@@ -118,7 +124,7 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] | None = None
         if user_input is not None:
             host_configs = _get_host_configs(user_input)
-            if not host_configs:
+            if not host_configs or _has_duplicate_hosts(host_configs):
                 errors["base"] = "invalid_config"
             else:
                 entry_data = {CONF_HOSTS: host_configs}
@@ -181,7 +187,7 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] | None = None
         if user_input is not None:
             host_configs = _get_host_configs(user_input)
-            if not host_configs:
+            if not host_configs or _has_duplicate_hosts(host_configs):
                 errors["base"] = "invalid_config"
             else:
                 entry_data = {CONF_HOSTS: host_configs}

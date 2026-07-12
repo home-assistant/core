@@ -164,6 +164,39 @@ async def test_user_flow_entry_exists(
     assert result["reason"] == "already_configured"
 
 
+async def test_user_flow_duplicate_hosts(
+    hass: HomeAssistant, mock_setup_entry, mock_unifiap
+) -> None:
+    """Test config flow rejects duplicate hosts in user input."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOSTS: [
+                {
+                    CONF_HOST: "192.168.1.2",
+                    CONF_USERNAME: "admin",
+                    CONF_PASSWORD: "password",
+                    CONF_PORT: 22,
+                },
+                {
+                    CONF_HOST: "192.168.1.2",
+                    CONF_USERNAME: "admin2",
+                    CONF_PASSWORD: "password2",
+                    CONF_PORT: 2222,
+                },
+            ]
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_config"}
+
+
 async def test_migrate_single_host_entry_to_multi_host_config(
     hass: HomeAssistant, mock_setup_entry, mock_unifiap
 ) -> None:
@@ -363,3 +396,41 @@ async def test_reconfigure_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_flow_duplicate_hosts(
+    hass: HomeAssistant, mock_setup_entry, mock_unifiap, mock_config_entry
+) -> None:
+    """Test reconfigure flow rejects duplicate hosts in user input."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "reconfigure", "entry_id": mock_config_entry.entry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOSTS: [
+                {
+                    CONF_HOST: "192.168.1.100",
+                    CONF_USERNAME: "admin",
+                    CONF_PASSWORD: "password",
+                    CONF_PORT: 22,
+                },
+                {
+                    CONF_HOST: "192.168.1.100",
+                    CONF_USERNAME: "admin2",
+                    CONF_PASSWORD: "password2",
+                    CONF_PORT: 2222,
+                },
+            ]
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_config"}
+    assert mock_config_entry.title == "UniFi AP (192.168.1.2)"
+    assert mock_config_entry.data == MOCK_CONFIG
