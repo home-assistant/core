@@ -25,7 +25,6 @@ def get_mock_vmc(
     json_data["name"] = state_name
     mock_vmc.state = MachineStatusResponse(**json_data)
 
-    # Sync methods need MagicMock, not AsyncMock
     mock_vmc.register_websocket_callback = MagicMock()
     mock_vmc.websocket.start = MagicMock()
 
