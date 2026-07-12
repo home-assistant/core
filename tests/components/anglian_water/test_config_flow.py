@@ -271,3 +271,78 @@ async def test_account_recover_exception(
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
     assert result["data"][CONF_ACCOUNT_NUMBER] == ACCOUNT_NUMBER
     assert result["result"].unique_id == ACCOUNT_NUMBER
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test the reauthentication flow."""
+    mock_config_entry.add_to_hass(hass)
+    mock_anglian_water_authenticator.refresh_token = "new_valid_token"
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "NewSecurePassword456"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == USERNAME
+    assert mock_config_entry.data[CONF_PASSWORD] == "NewSecurePassword456"
+    assert mock_config_entry.data[CONF_ACCESS_TOKEN] == "new_valid_token"
+    assert mock_config_entry.data[CONF_ACCOUNT_NUMBER] == ACCOUNT_NUMBER
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("exception_type", "expected_error"),
+    [
+        (SelfAssertedError, "invalid_auth"),
+        (ConsentRequiredError, "invalid_auth"),
+        (ValueError, "unknown"),
+    ],
+)
+async def test_reauth_flow_recover_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+    exception_type,
+    expected_error,
+) -> None:
+    """Test that the reauth flow can recover from an auth exception."""
+    mock_config_entry.add_to_hass(hass)
+    mock_anglian_water_authenticator.send_login_request.side_effect = exception_type
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "NewSecurePassword456"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+
+    mock_anglian_water_authenticator.send_login_request.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "NewSecurePassword456"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

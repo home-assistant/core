@@ -8,6 +8,7 @@ from pyanglianwater import AnglianWater
 from pyanglianwater.exceptions import (
     ConsentRequiredError,
     ExpiredAccessTokenError,
+    InvalidGrantError,
     UnknownEndpointError,
 )
 
@@ -25,6 +26,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import VolumeConverter
@@ -64,11 +66,9 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.api.update(self.config_entry.data[CONF_ACCOUNT_NUMBER])
             await self._insert_statistics()
-        except (
-            ConsentRequiredError,
-            ExpiredAccessTokenError,
-            UnknownEndpointError,
-        ) as err:
+        except (ExpiredAccessTokenError, InvalidGrantError) as err:
+            raise ConfigEntryAuthFailed from err
+        except (ConsentRequiredError, UnknownEndpointError) as err:
             raise UpdateFailed from err
 
     async def _insert_statistics(self) -> None:
