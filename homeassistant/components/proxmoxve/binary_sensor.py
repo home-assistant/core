@@ -140,14 +140,14 @@ async def async_setup_entry(
         """Add new node binary sensors."""
 
         async_add_entities(
-            ProxmoxNodeBinarySensor(coordinator, description, node_data)
-            for description in NODE_SENSORS
-            for node_data in nodes
+            ProxmoxNodeBinarySensor(coordinator, entity_description, node)
+            for node in nodes
+            for entity_description in NODE_SENSORS
             if is_granted(
                 coordinator.permissions,
-                p_type=description.permission_target,
-                p_id=node_data.node["node"],
-                permission=description.permission,
+                p_type=entity_description.permission_target,
+                p_id=node.node["node"],
+                permission=entity_description.permission,
             )
         )
 

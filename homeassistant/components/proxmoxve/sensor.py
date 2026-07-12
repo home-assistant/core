@@ -63,15 +63,6 @@ class ProxmoxStorageSensorEntityDescription(SensorEntityDescription):
 
 NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
     ProxmoxNodeSensorEntityDescription(
-        key="node_status",
-        translation_key="node_status",
-        value_fn=lambda data: data.node["status"],
-        device_class=SensorDeviceClass.ENUM,
-        options=["online", "offline"],
-        permission=ProxmoxPermission.VMAUDIT,
-        permission_target="vms",
-    ),
-    ProxmoxNodeSensorEntityDescription(
         key="node_cpu",
         translation_key="node_cpu",
         value_fn=lambda data: data.node["cpu"] * 100,
@@ -153,6 +144,15 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ProxmoxNodeSensorEntityDescription(
+        key="node_status",
+        translation_key="node_status",
+        value_fn=lambda data: data.node["status"],
+        device_class=SensorDeviceClass.ENUM,
+        options=["online", "offline"],
+        permission=ProxmoxPermission.VMAUDIT,
+        permission_target="vms",
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_backup_last_backup",
@@ -477,14 +477,14 @@ async def async_setup_entry(
     def _async_add_new_nodes(nodes: list[ProxmoxNodeData]) -> None:
         """Add new node sensors."""
         async_add_entities(
-            ProxmoxNodeSensor(coordinator, description, node_data)
-            for description in NODE_SENSORS
-            for node_data in nodes
+            ProxmoxNodeSensor(coordinator, entity_description, node)
+            for node in nodes
+            for entity_description in NODE_SENSORS
             if is_granted(
                 coordinator.permissions,
-                p_type=description.permission_target,
-                p_id=node_data.node["node"],
-                permission=description.permission,
+                p_type=entity_description.permission_target,
+                p_id=node.node["node"],
+                permission=entity_description.permission,
             )
         )
 
