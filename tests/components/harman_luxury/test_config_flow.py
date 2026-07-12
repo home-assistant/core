@@ -61,7 +61,7 @@ async def test_user_flow_cannot_connect(
 async def test_user_flow_blank_serial(
     hass: HomeAssistant, mock_client: AsyncMock
 ) -> None:
-    """Test the user flow rejects a device that reports no serial."""
+    """Test the user flow recovers from a device that reports no serial."""
     mock_client.async_get_info.return_value = replace(DEVICE_INFO, serial="")
 
     result = await hass.config_entries.flow.async_init(
@@ -72,6 +72,12 @@ async def test_user_flow_blank_serial(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_client.async_get_info.return_value = DEVICE_INFO
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_client")
