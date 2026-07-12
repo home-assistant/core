@@ -4,7 +4,11 @@ from collections.abc import Generator
 from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
-from aiopowerwall import PowerwallAuthenticationError, PowerwallConnectionError
+from aiopowerwall import (
+    PowerwallAuthenticationError,
+    PowerwallConnectionError,
+    PowerwallError,
+)
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 import pytest
@@ -477,3 +481,115 @@ async def test_get_rsa_key_pem_generates_and_caches(hass: HomeAssistant) -> None
     assert first == _TEST_RSA_KEY_PEM
     assert second == _TEST_RSA_KEY_PEM
     mock_get_key.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("local_error", "expected", "cloud_awaits"),
+    [
+        pytest.param(None, {"routed": "local"}, 0, id="local_success"),
+        pytest.param(
+            PowerwallError("boom"), {"routed": "cloud"}, 1, id="cloud_fallback"
+        ),
+    ],
+)
+async def test_energy_site_router_command_routing(
+    hass: HomeAssistant,
+    local_error: Exception | None,
+    expected: dict[str, str],
+    cloud_awaits: int,
+) -> None:
+    """A command routes to the local Powerwall first and falls back to cloud."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            return_value=_TEST_RSA_KEY_PEM,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    router = entry.runtime_data.energysites[0].api
+    assert isinstance(router, EnergySiteRouter)
+
+    local = AsyncMock(side_effect=local_error, return_value={"routed": "local"})
+    cloud = AsyncMock(return_value={"routed": "cloud"})
+    with (
+        patch("aiopowerwall.energysite.PowerwallEnergySite.backup", new=local),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.backup",
+            new=cloud,
+        ),
+    ):
+        result = await router.backup(50)
+
+    assert result == expected
+    local.assert_awaited_once_with(50)
+    assert cloud.await_count == cloud_awaits
+
+
+async def test_stale_cleanup_preserves_foreign_subentry(hass: HomeAssistant) -> None:
+    """Energy stale-subentry cleanup does not remove other subentry types."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    foreign = ConfigSubentry(
+        data=MappingProxyType({"vin": "VIN123"}),
+        subentry_type="vehicle",
+        title="A Vehicle",
+        unique_id="VIN123",
+    )
+    hass.config_entries.async_add_subentry(entry, foreign)
+
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert foreign.subentry_id in entry.subentries
+    assert entry.subentries[foreign.subentry_id].subentry_type == "vehicle"
+
+
+async def test_subentry_reconfigure_entry_not_loaded(hass: HomeAssistant) -> None:
+    """Reconfigure aborts cleanly when the parent entry is not loaded."""
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    # Added but never set up, so runtime_data is absent.
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+
+    result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "entry_not_loaded"
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_subentry_credentials_password_truncated(hass: HomeAssistant) -> None:
+    """A full Wi-Fi password is trimmed to its final five characters."""
+    entry = await _setup_energy_site_subentry(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+
+    client = _mock_powerwall_client()
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
+            new=AsyncMock(return_value=_verified_clients_response()),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.PowerwallClient",
+            return_value=client,
+        ) as mock_client,
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        assert result["step_id"] == "credentials"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_HOST: HOST, CONF_PASSWORD: "long-wifi-password"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert entry.subentries[subentry_id].data[CONF_PASSWORD] == "sword"
+    assert mock_client.call_args.kwargs["gateway_password"] == "sword"

@@ -35,6 +35,7 @@ from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlowResult,
     ConfigSubentryFlow,
     SubentryFlowResult,
@@ -253,6 +254,10 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         """Look up the site's cloud API and start (or resume) key pairing."""
         subentry = self._get_reconfigure_subentry()
         entry = cast(TeslemetryConfigEntry, self._get_entry())
+        # runtime_data (the resolved energy sites) only exists while the entry is
+        # loaded; core clears it on unload, so bail out cleanly if it is not.
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
         energy_data = next(
             (
                 energysite

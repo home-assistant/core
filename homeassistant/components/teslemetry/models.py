@@ -49,7 +49,7 @@ class TeslemetryVehicleData:
 
 @dataclass
 class TeslemetryEnergyData:
-    """Data for a vehicle in the Teslemetry integration."""
+    """Data for an energy site in the Teslemetry integration."""
 
     # Plain cloud EnergySite, or an EnergySiteRouter that tries a paired local
     # Powerwall (aiopowerwall) first and falls back to the cloud EnergySite
