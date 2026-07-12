@@ -363,9 +363,10 @@ async def _async_resolve_vehicle_api(
     # best-effort success rather than raising, so the router never fails over
     # (and thus never re-sends to cloud) on an ambiguous BLE timeout - only a
     # genuine transport failure or a proven-not-applied command reaches cloud.
-    # keepalive_interval holds the idle BLE link under Tesla's supervision timeout.
+    # keepalive_interval=None disables the link keepalive: command-only usage
+    # must not hold the link open and keep the car from sleeping.
     bluetooth_vehicle = parent.vehicles.createBluetooth(
-        vin, device=ble_device, raise_unconfirmed=False, keepalive_interval=20
+        vin, device=ble_device, raise_unconfirmed=False, keepalive_interval=None
     )
     return VehicleRouter(bluetooth_vehicle, cloud_vehicle)
 
@@ -690,8 +691,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Unload Teslemetry Config."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    # Release each routed Bluetooth link so its keepalive task does not outlive
-    # the entry across a reload.
+    # Release any on-demand Bluetooth link a command opened so it is not left
+    # connected across a reload.
     for vehicle in entry.runtime_data.vehicles:
         if isinstance(vehicle.api, VehicleRouter):
             try:
