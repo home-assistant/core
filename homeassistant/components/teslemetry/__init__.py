@@ -651,7 +651,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 remove_config_entry_id=entry.entry_id,
             )
 
-    _remove_stale_subentries(hass, entry, {vehicle.subentry_id for vehicle in vehicles})
+    # Keep pairing subentries for every vehicle still in the account's product
+    # list, even ones this run skipped for lacking access right now, so a
+    # transient subscription/scope change does not drop the persisted BLE
+    # pairing address.
+    present_vins = {product["vin"] for product in products if "vin" in product}
+    present_subentry_ids = {
+        subentry.subentry_id
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_TYPE_VEHICLE
+        and subentry.unique_id in present_vins
+    }
+    _remove_stale_subentries(hass, entry, present_subentry_ids)
 
     entry.runtime_data = TeslemetryData(
         vehicles=vehicles,

@@ -1,6 +1,7 @@
 """Test the Teslemetry Bluetooth routing and subentry pairing flow."""
 
 import asyncio
+from copy import deepcopy
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from bleak.exc import BleakError
@@ -26,6 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import mock_config_entry
+from .const import METADATA
 
 from tests.common import MockConfigEntry
 
@@ -592,6 +594,35 @@ async def test_stale_vehicle_subentry_removed_on_reload(hass: HomeAssistant) -> 
         await hass.async_block_till_done()
 
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+
+
+async def test_vehicle_subentry_retained_without_access(hass: HomeAssistant) -> None:
+    """A vehicle subentry is kept when the vehicle is only temporarily inaccessible.
+
+    The stale-subentry cleanup must key off vehicles still in the account's
+    product list, not the access-filtered active vehicle list; otherwise a
+    transient subscription/scope change would delete the persisted BLE
+    pairing address and force the user to re-pair once access returns.
+    """
+    entry = await _setup_vehicle_subentry(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
+
+    no_access_metadata = deepcopy(METADATA)
+    no_access_metadata["vehicles"][VIN]["access"] = False
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+            return_value=no_access_metadata,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    assert len(subentries) == 1
+    assert subentries[0].subentry_id == subentry_id
 
 
 async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
