@@ -1,7 +1,8 @@
 """Test Music Assistant actions."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
+from music_assistant_models.enums import MediaType
 from music_assistant_models.media_items import SearchResults
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -49,7 +50,14 @@ async def test_search_action(
     )
     assert response == snapshot
 
-    # test search with username
+
+async def test_search_action_with_username(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test music assistant search action."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+
     # services with an api version < 35 must raise a validation error even if the username is valid
     music_assistant_client.server_info.schema_version = 30
     with pytest.raises(ServiceValidationError):
@@ -65,8 +73,41 @@ async def test_search_action(
             return_response=True,
         )
 
-    # tests for servers supporting username
+    # tests for servers supporting the username
+
+    # valid username forwarding
     music_assistant_client.server_info.schema_version = 35
+    with pytest.raises(ValueError):
+        # we get a ValueError as the SearchResults can't be created from our dummy call, but this test
+        # is only there to verify that the username parameter is forwarded to the client.
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEARCH,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_SEARCH_NAME: "test",
+                ATTR_USERNAME: "user_user",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "music/search",
+        search_query="test",
+        media_types=MediaType.ALL,
+        limit=5,
+        library_only=False,
+        user="user_user",
+        require_schema=35,
+    )
+
+    # mock search return for pure username tests
+    music_assistant_client.music.search = AsyncMock(
+        return_value=SearchResults(
+            albums=create_library_albums_from_fixture(),
+        )
+    )
     # valid user ok
     await hass.services.async_call(
         DOMAIN,
@@ -80,42 +121,19 @@ async def test_search_action(
         return_response=True,
     )
     # not valid because of name, disabled or guest
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEARCH,
-            {
-                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-                ATTR_SEARCH_NAME: "test",
-                ATTR_USERNAME: "non_existing_user",
-            },
-            blocking=True,
-            return_response=True,
-        )
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEARCH,
-            {
-                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-                ATTR_SEARCH_NAME: "test",
-                ATTR_USERNAME: "party_guest",
-            },
-            blocking=True,
-            return_response=True,
-        )
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEARCH,
-            {
-                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-                ATTR_SEARCH_NAME: "test",
-                ATTR_USERNAME: "user_disabled",
-            },
-            blocking=True,
-            return_response=True,
-        )
+    for username in ("non_existing_user", "party_guest", "user_disabled"):
+        with pytest.raises(ServiceValidationError):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_SEARCH,
+                {
+                    ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                    ATTR_SEARCH_NAME: "test",
+                    ATTR_USERNAME: username,
+                },
+                blocking=True,
+                return_response=True,
+            )
 
 
 @pytest.mark.parametrize(
