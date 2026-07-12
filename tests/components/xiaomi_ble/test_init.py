@@ -577,12 +577,21 @@ async def test_purge_stale_restore_cache_runs_once(
     await hass.async_block_till_done()
 
 
-async def test_recover_interrupted_migration_completes_both_steps(
+async def test_recover_interrupted_migration_leaves_ambiguous_low_alone(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test recovery when neither rename was persisted."""
+    """Test recovery never touches an "impedance_low" it can't disambiguate.
+
+    A lingering "-impedance" plus an existing "-impedance_low" (with no
+    "-impedance_high" yet) is structurally identical whether the low
+    entity is the original one awaiting promotion, or a fresh, already-
+    correct native entity from a live advertisement received since the
+    interrupted migration -- both have previous_unique_id None. Renaming
+    the wrong one would mislabel real, accurate data, so recovery must
+    leave both entities alone rather than guess.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
     )
@@ -604,13 +613,11 @@ async def test_recover_interrupted_migration_completes_both_steps(
 
     legacy_after = entity_registry.async_get(legacy_entity_id)
     assert legacy_after is not None
-    assert legacy_after.unique_id == f"{S400_ADDRESS}-impedance_low"
+    assert legacy_after.unique_id == f"{S400_ADDRESS}-impedance"
 
     low_after = entity_registry.async_get(low_entity_id)
     assert low_after is not None
-    assert low_after.unique_id == f"{S400_ADDRESS}-impedance_high"
-
-    assert legacy_after.unique_id != low_after.unique_id
+    assert low_after.unique_id == f"{S400_ADDRESS}-impedance_low"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

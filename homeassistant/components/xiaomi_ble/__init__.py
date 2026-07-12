@@ -312,8 +312,16 @@ def _async_recover_interrupted_s400_migration(
     library may have already created native, already-correct
     "impedance_low"/"impedance_high" entities from a live advertisement
     since the interrupted attempt, and renaming into an occupied slot
-    would raise instead of completing setup. In that mixed case,
-    "-impedance" is left as an orphan rather than risk that.
+    would raise instead of completing setup.
+
+    Only recovers the legacy "impedance" -> "impedance_low" step. The
+    other step (an original, un-renamed "impedance_low" awaiting
+    promotion to "impedance_high") is structurally unprovable here: a
+    fresh, already-correct native "impedance_low" entity looks
+    identical (previous_unique_id is None either way). Renaming the
+    wrong one would mislabel real, currently-accurate data, so that
+    step is left alone whenever "impedance_low" already exists, rather
+    than risk corrupting it -- "-impedance" then stays an orphan.
     """
     if entry.version != 1 or entry.minor_version < 2:
         return
@@ -331,29 +339,6 @@ def _async_recover_interrupted_s400_migration(
         return
 
     low_id = f"{address}-impedance_low"
-    high_id = f"{address}-impedance_high"
-    low_entity_id = entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, low_id)
-    low_entity = (
-        entity_registry.async_get(low_entity_id) if low_entity_id is not None else None
-    )
-    high_exists = (
-        entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, high_id)
-        is not None
-    )
-
-    if (
-        low_entity_id is not None
-        and not high_exists
-        and (low_entity is None or low_entity.previous_unique_id != old_legacy_id)
-    ):
-        _LOGGER.debug("S400 migration recovery: %s -> %s", low_id, high_id)
-        entity_registry.async_update_entity(
-            low_entity_id, new_unique_id=high_id, original_name="Impedance High"
-        )
-
-    # The "impedance_low" slot may now be free (just vacated above), or
-    # may already hold a fresh, natively-created entity that never
-    # needed this legacy rename -- only proceed if it's free.
     if entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, low_id) is None:
         _LOGGER.debug("S400 migration recovery: %s -> %s", old_legacy_id, low_id)
         entity_registry.async_update_entity(
