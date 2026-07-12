@@ -1,0 +1,36 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "address_not_found": "No property found for this address. Check your address is within the Gold Coast City Council area.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "address": "Address"
+        },
+        "data_description": {
+          "address": "Your full street address, e.g. 1 Example St, Surfers Paradise QLD 4217"
+        },
+        "description": "Enter your Gold Coast address to find your bin collection schedule."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "landfill": {
+        "name": "General Waste"
+      },
+      "organics": {
+        "name": "Green Organics"
+      },
+      "recycling": {
+        "name": "Recycling"
+      }
+    }
+  }
+}

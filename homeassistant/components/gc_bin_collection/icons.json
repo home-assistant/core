@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "landfill": {
+        "default": "mdi:trash-can"
+      },
+      "organics": {
+        "default": "mdi:leaf"
+      },
+      "recycling": {
+        "default": "mdi:recycle"
+      }
+    }
+  }
+}
