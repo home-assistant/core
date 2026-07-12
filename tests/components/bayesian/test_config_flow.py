@@ -234,6 +234,126 @@ False
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("data", "expected"),
+    [
+        pytest.param(
+            {CONF_ABOVE: 40},
+            {CONF_ABOVE: 40},
+            id="above-only",
+        ),
+        pytest.param(
+            {CONF_BELOW: 60},
+            {CONF_BELOW: 60},
+            id="below-only",
+        ),
+        pytest.param(
+            {CONF_ABOVE: 40, CONF_BELOW: 80},
+            {CONF_ABOVE: 40, CONF_BELOW: 80},
+            id="both-thresholds",
+        ),
+    ],
+)
+async def test_numeric_state_observation_thresholds(
+    hass: HomeAssistant,
+    data: dict[str, float],
+    expected: dict[str, float],
+) -> None:
+    """Test creating numeric-state observations with threshold-only inputs."""
+    with patch(
+        "homeassistant.components.bayesian.async_setup_entry", return_value=True
+    ):
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_NAME: "Office occupied",
+                CONF_PROBABILITY_THRESHOLD: 50,
+                CONF_PRIOR: 15,
+                CONF_DEVICE_CLASS: "occupancy",
+            },
+        )
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.subentries.async_init(
+            (config_entry.entry_id, "observation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {"next_step_id": str(ObservationTypes.NUMERIC_STATE)}
+        )
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_ENTITY_ID: "sensor.office_illuminance_lux",
+                **data,
+                CONF_P_GIVEN_T: 85,
+                CONF_P_GIVEN_F: 45,
+                CONF_NAME: "Office is bright",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["data"] == {
+            CONF_PLATFORM: str(ObservationTypes.NUMERIC_STATE),
+            CONF_ENTITY_ID: "sensor.office_illuminance_lux",
+            CONF_P_GIVEN_T: 0.85,
+            CONF_P_GIVEN_F: 0.45,
+            CONF_NAME: "Office is bright",
+            **expected,
+        }
+
+
+async def test_numeric_state_observation_rejects_state_and_threshold_mix(
+    hass: HomeAssistant,
+) -> None:
+    """Test numeric-state observations reject mixing state and threshold inputs."""
+    with patch(
+        "homeassistant.components.bayesian.async_setup_entry", return_value=True
+    ):
+        config_entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_NAME: "Office occupied",
+                CONF_PROBABILITY_THRESHOLD: 50,
+                CONF_PRIOR: 15,
+                CONF_DEVICE_CLASS: "occupancy",
+            },
+        )
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.subentries.async_init(
+            (config_entry.entry_id, "observation"),
+            context={"source": config_entries.SOURCE_USER},
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {"next_step_id": str(ObservationTypes.NUMERIC_STATE)}
+        )
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"],
+            {
+                CONF_ENTITY_ID: "sensor.office_illuminance_lux",
+                CONF_TO_STATE: "on",
+                CONF_ABOVE: 40,
+                CONF_P_GIVEN_T: 85,
+                CONF_P_GIVEN_F: 45,
+                CONF_NAME: "Office is bright",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"]["base"] == "above_or_below"
+
+
 async def test_single_state_observation(hass: HomeAssistant) -> None:
     """Test a Bayesian sensor with just one state observation added.
 

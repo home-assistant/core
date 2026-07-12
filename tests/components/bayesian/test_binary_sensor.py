@@ -138,6 +138,62 @@ async def test_sensor_numeric_state(
     await _test_sensor_numeric_state(hass, issue_registry)
 
 
+@pytest.mark.parametrize(
+    ("threshold_key", "threshold_value"),
+    [
+        pytest.param("above", 5, id="above-only"),
+        pytest.param("below", 10, id="below-only"),
+    ],
+)
+async def test_sensor_numeric_state_config_entry_single_threshold(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    threshold_key: str,
+    threshold_value: int,
+) -> None:
+    """Test config-entry numeric-state observations with a single threshold."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "Test_Binary",
+            "prior": 0.2,
+            "probability_threshold": 0.5,
+        },
+        subentries_data=[
+            ConfigSubentryData(
+                data={
+                    "platform": "numeric_state",
+                    "entity_id": "sensor.test_monitored",
+                    threshold_key: threshold_value,
+                    "prob_given_true": 0.7,
+                    "prob_given_false": 0.4,
+                    "name": "observation_1",
+                },
+                subentry_type="observation",
+                title="observation_1",
+                unique_id=None,
+            )
+        ],
+        title="Test_Binary",
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.test_monitored", 6)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_binary")
+
+    assert state is not None
+    assert state.attributes.get("occurred_observation_entities") == [
+        "sensor.test_monitored"
+    ]
+    assert abs(state.attributes.get("probability") - 0.304) < 0.01
+
+
 async def test_sensor_numeric_state_config_entry(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:

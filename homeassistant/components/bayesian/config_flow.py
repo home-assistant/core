@@ -2,6 +2,7 @@
 # pylint: disable=home-assistant-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 from collections.abc import Mapping
+from copy import copy
 from enum import StrEnum
 import logging
 from typing import Any, override
@@ -242,6 +243,7 @@ STATE_SUBSCHEMA = vol.Schema(
 
 NUMERIC_STATE_SUBSCHEMA = vol.Schema(
     {
+        **OBSERVATION_BOILERPLATE.schema,
         vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(domain=ALLOWED_NUMERIC_DOMAINS)
         ),
@@ -256,7 +258,8 @@ NUMERIC_STATE_SUBSCHEMA = vol.Schema(
             ),
         ),
     },
-).extend(OBSERVATION_BOILERPLATE.schema)
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 TEMPLATE_SUBSCHEMA = vol.Schema(
@@ -359,6 +362,13 @@ def _validate_observation_subentry(
 
     if user_input[CONF_P_GIVEN_T] == user_input[CONF_P_GIVEN_F]:
         raise SchemaFlowError("equal_probabilities")
+
+    if obs_type == ObservationTypes.NUMERIC_STATE:
+        if CONF_TO_STATE in user_input:
+            raise SchemaFlowError("above_or_below")
+        if CONF_ABOVE not in user_input and CONF_BELOW not in user_input:
+            raise SchemaFlowError("above_or_below")
+
     user_input = _convert_percentages_to_fractions(user_input)
 
     # Save the observation type in the user input as it is needed in binary_sensor.py
@@ -468,6 +478,26 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
 class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     """Handle subentry flow for adding and modifying a topic."""
+
+    @override
+    def add_suggested_values_to_schema(
+        self,
+        data_schema: vol.Schema,
+        suggested_values: Mapping[str, Any] | None,
+    ) -> vol.Schema:
+        """Preserve schema validation options while applying suggested values."""
+        schema = {}
+        for key, val in data_schema.schema.items():
+            new_key = key
+            if (
+                suggested_values
+                and key in suggested_values
+                and isinstance(key, vol.Marker)
+            ):
+                new_key = copy(key)
+                new_key.description = {"suggested_value": suggested_values[key.schema]}
+            schema[new_key] = val
+        return vol.Schema(schema, extra=data_schema.extra)
 
     async def step_common(
         self,
