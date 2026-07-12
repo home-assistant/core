@@ -577,6 +577,39 @@ async def test_purge_stale_restore_cache_runs_once(
     await hass.async_block_till_done()
 
 
+async def test_purge_phantom_never_deletes_unrenamed_legacy_entity(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a legacy entity is never deleted if the rename never landed.
+
+    Simulates a crash between the config entry's fast save (minor_version
+    already 2 on disk) and the entity registry's far slower, debounced
+    save (the unique_id rename never reached disk): "-impedance" is
+    still the genuine, un-renamed entity, not a phantom, even though the
+    device is a real S400. It must survive.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
+    )
+    entry.add_to_hass(hass)
+    device = _async_setup_device(device_registry, entry, model=S400_MODEL)
+    entity_id = _async_add_entity(
+        entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    after = entity_registry.async_get(entity_id)
+    assert after is not None
+    assert after.unique_id == f"{S400_ADDRESS}-impedance"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_purge_phantom_removes_entity_despite_purge_marker(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
