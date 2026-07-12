@@ -322,5 +322,5 @@ def test_controller_device_init_fault_bootstrap() -> None:
 
     device = ControllerDevice(controller)
 
-    assert device._attr_device_info["model"] == "0"
+    assert device.device_info["model"] == "0"
     assert device.zones == {}
