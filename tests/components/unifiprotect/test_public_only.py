@@ -29,7 +29,6 @@ from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
-_RESOLVED_MAC = "aabbccddeeff"
 _UNIFI_MAC = "AABBCCDDEEFF"
 _ALARM_ENTITY_ID = "alarm_control_panel.test_nvr_alarm_manager"
 
@@ -59,14 +58,14 @@ def _public_client() -> Mock:
     meta = Mock()
     meta.version = Version("7.1.83")
     client.get_meta_info = AsyncMock(return_value=meta)
-    client.resolve_nvr_mac = AsyncMock(return_value=_RESOLVED_MAC)
     client.update_public = AsyncMock()
     client.async_disconnect_ws = AsyncMock()
 
     arm_mode = Mock(spec=NvrArmMode)
     arm_mode.status = NvrArmModeStatus.DISABLED
     nvr = Mock(spec=PublicNVR)
-    nvr.mac = None  # older firmware: stamped with the resolved mac at setup
+    # The library backfills the mac during update_public(); it is present here.
+    nvr.mac = _UNIFI_MAC
     nvr.name = "Test NVR"
     nvr.device_type = "UNVR4"  # present on firmware newer than 7.1
     nvr.id = "nvr-id"
@@ -159,12 +158,12 @@ async def test_public_only_auth_failed_triggers_reauth(hass: HomeAssistant) -> N
     assert mock_reauth.called
 
 
-async def test_public_only_resolve_mac_fails_not_ready(hass: HomeAssistant) -> None:
-    """An unresolvable NVR mac leaves the entry in a retry state."""
+async def test_public_only_unresolved_mac_not_ready(hass: HomeAssistant) -> None:
+    """An NVR mac the library could not backfill leaves the entry retrying."""
     entry = _public_only_entry()
     entry.add_to_hass(hass)
     client = _public_client()
-    client.resolve_nvr_mac = AsyncMock(return_value=None)
+    client.public_bootstrap.nvr.mac = None
     with patch(
         "homeassistant.components.unifiprotect.async_create_api_client",
         return_value=client,
@@ -277,8 +276,8 @@ async def test_public_only_prime_client_error_not_ready(hass: HomeAssistant) -> 
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_public_only_no_public_nvr_no_alarm(hass: HomeAssistant) -> None:
-    """No alarm panel is created when the public bootstrap has no NVR."""
+async def test_public_only_no_public_nvr_not_ready(hass: HomeAssistant) -> None:
+    """A missing public NVR (fetch failed) leaves the entry retrying."""
     entry = _public_only_entry()
     entry.add_to_hass(hass)
     client = _public_client()
@@ -290,5 +289,4 @@ async def test_public_only_no_public_nvr_no_alarm(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.LOADED
-    assert not hass.states.async_entity_ids(Platform.ALARM_CONTROL_PANEL)
+    assert entry.state is ConfigEntryState.SETUP_RETRY

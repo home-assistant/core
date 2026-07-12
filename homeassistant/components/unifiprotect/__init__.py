@@ -204,20 +204,17 @@ async def _async_setup_public_only_entry(
             translation_key="public_bootstrap_failed",
         ) from err
 
-    mac = await protect.resolve_nvr_mac()
-    if mac is None:
+    # update_public() backfills the NVR mac from the console fallback on
+    # firmware that omits it, so it is available here for the device identity.
+    nvr = protect.public_bootstrap.nvr
+    if nvr is None or not nvr.mac:
         await data_service.async_stop()
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="public_bootstrap_failed",
         )
-    unifi_mac = _async_unifi_mac_from_hass(mac)
+    unifi_mac = _async_unifi_mac_from_hass(nvr.mac)
     data_service.public_api_nvr_mac = unifi_mac
-    # Firmware 7.1 and older omits the NVR mac; stamp it so websocket updates
-    # dispatch to the entities keyed on it. Transitional pending a library-side
-    # backfill in update_public (uilibs/uiprotect).
-    if (nvr := protect.public_bootstrap.nvr) is not None:
-        nvr.mac = unifi_mac
 
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=unifi_mac)
@@ -225,16 +222,16 @@ async def _async_setup_public_only_entry(
     data_service.async_subscribe_public_events()
 
     # Create the NVR device before forwarding platforms so via_device works.
-    # Model is absent on 7.1 and older; market name and console URL are always
-    # private-only, so they stay unset here.
+    # Model is absent on firmware 7.1 and older; market name and console URL
+    # are always private-only, so they stay unset here.
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, unifi_mac)},
         identifiers={(DOMAIN, unifi_mac)},
         manufacturer=DEFAULT_BRAND,
-        name=nvr.name if nvr is not None else "UniFi Protect",
-        model=nvr.device_type if nvr is not None else None,
+        name=nvr.name,
+        model=nvr.device_type,
         sw_version=str(meta.version),
     )
 
