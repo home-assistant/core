@@ -10,7 +10,7 @@ from homeassistant.components.bosch_shc.const import (
     CONF_SSL_KEY,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -81,6 +81,7 @@ async def test_setup_entry_auth_error_triggers_reauth(hass: HomeAssistant) -> No
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert any(entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 async def test_setup_entry_connection_error_retries(hass: HomeAssistant) -> None:
