@@ -6,7 +6,7 @@ from homeassistant.components.knx.const import (
     KNX_ADDRESS,
 )
 from homeassistant.components.knx.schema import SwitchSchema
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, Platform
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 
 from . import KnxEntityGenerator
@@ -70,6 +70,8 @@ async def test_switch_state(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # StateUpdater initialize state
     await knx.assert_read(_STATE_ADDRESS)
+    # state is unknown until the first GroupValueRead response is received
+    assert hass.states.get("switch.test").state is STATE_UNKNOWN
     await knx.receive_response(_STATE_ADDRESS, True)
     state = hass.states.get("switch.test")
     assert state.state is STATE_ON
