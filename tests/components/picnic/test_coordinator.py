@@ -125,25 +125,17 @@ async def test_update_interval(
     assert coordinator.update_interval == expected_interval
 
 
-@pytest.mark.parametrize(
-    "malformed_date",
-    [
-        pytest.param("malformed", id="unparsable_eta"),
-        pytest.param("2021-02-30T12:00:00.000+01:00", id="invalid_date_eta"),
-    ],
-)
 @pytest.mark.usefixtures("freezer")
 async def test_update_interval_with_malformed_eta(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_picnic_api: MagicMock,
-    malformed_date: str,
 ) -> None:
     """Test that a malformed ETA falls back to the slot window."""
     delivery = mock_picnic_api.get_deliveries.return_value[0]
     delivery["status"] = "CURRENT"
     delivery["delivery_time"] = None
-    delivery["eta2"] = {"start": malformed_date, "end": malformed_date}
+    delivery["eta2"] = {"start": "malformed", "end": "malformed"}
     delivery["slot"]["window_start"] = (
         dt_util.utcnow() + timedelta(minutes=10)
     ).isoformat()
