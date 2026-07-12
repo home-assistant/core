@@ -8,6 +8,7 @@ from typing import Any, override
 from aiohttp import ClientConnectionError
 from bleak.exc import BleakError
 from tesla_fleet_api.exceptions import (
+    BluetoothTransportError,
     InvalidToken,
     NotOnWhitelistFault,
     SubscriptionRequired,
@@ -280,8 +281,14 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         self._pair_task = None
         try:
             task.result()
-        except (BleakError, TeslaFleetError, TimeoutError) as err:
-            LOGGER.debug("Bluetooth pairing failed: %s", err)
+        except (BluetoothTransportError, BleakError) as err:
+            # The link dropped before the key could be confirmed - a transport
+            # failure, not the user failing to approve in time.
+            LOGGER.debug("Bluetooth transport failed during pairing: %s", err)
+            self._pair_error = {"base": "cannot_connect"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except (TeslaFleetError, TimeoutError) as err:
+            LOGGER.debug("Bluetooth pairing timed out: %s", err)
             self._pair_error = {"base": "timeout"}
             return self.async_show_progress_done(next_step_id="instructions")
         return self.async_show_progress_done(next_step_id="pair")

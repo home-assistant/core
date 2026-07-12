@@ -7,13 +7,17 @@ from bleak.exc import BleakError
 import pytest
 from tesla_fleet_api.exceptions import (
     BluetoothCommandFailed,
+    BluetoothTimeout,
+    BluetoothTransportError,
     BluetoothUnconfirmedCommand,
     NotOnWhitelistFault,
+    TeslaFleetError,
 )
 from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 from tesla_fleet_api.teslemetry import Vehicle
 
+from homeassistant.components.teslemetry import _async_get_ble_parent, _ensure_subentry
 from homeassistant.components.teslemetry.const import CONF_VIN, SUBENTRY_TYPE_VEHICLE
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_ADDRESS
@@ -109,6 +113,78 @@ async def test_vehicle_bluetooth_out_of_range(hass: HomeAssistant) -> None:
 
     vehicle = entry.runtime_data.vehicles[0]
     assert not isinstance(vehicle.api, VehicleRouter)
+
+
+@pytest.mark.parametrize(
+    "disconnect_error",
+    [None, BleakError("boom")],
+    ids=["clean", "error_swallowed"],
+)
+async def test_unload_disconnects_bluetooth(
+    hass: HomeAssistant, disconnect_error: Exception | None
+) -> None:
+    """Unloading a routed entry disconnects its Bluetooth backend, errors and all."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    bluetooth_vehicle = AsyncMock()
+    bluetooth_vehicle.disconnect = AsyncMock(side_effect=disconnect_error)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch("homeassistant.components.teslemetry.TeslaBluetooth") as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = (
+            bluetooth_vehicle
+        )
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    bluetooth_vehicle.disconnect.assert_awaited_once()
+
+
+async def test_ble_parent_shared_and_cached(hass: HomeAssistant) -> None:
+    """The BLE parent (holding the private key) is created once and reused."""
+    with patch("homeassistant.components.teslemetry.TeslaBluetooth") as mock_parent:
+        mock_parent.return_value.get_private_key = AsyncMock()
+        first = await _async_get_ble_parent(hass)
+        second = await _async_get_ble_parent(hass)
+
+    assert first is second
+    mock_parent.assert_called_once()
+    mock_parent.return_value.get_private_key.assert_awaited_once()
+
+
+async def test_ensure_subentry_preserves_paired_address(hass: HomeAssistant) -> None:
+    """Re-ensuring a subentry keeps the paired address and applies a new title."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+
+    first = _ensure_subentry(
+        hass, entry, SUBENTRY_TYPE_VEHICLE, VIN, "Old name", {CONF_VIN: VIN}
+    )
+    hass.config_entries.async_update_subentry(
+        entry,
+        entry.subentries[first],
+        data={CONF_VIN: VIN, CONF_ADDRESS: ADDRESS},
+    )
+
+    second = _ensure_subentry(
+        hass, entry, SUBENTRY_TYPE_VEHICLE, VIN, "New name", {CONF_VIN: VIN}
+    )
+
+    assert first == second
+    assert entry.subentries[second].title == "New name"
+    # The paired address added out of band must survive the re-ensure merge.
+    assert entry.subentries[second].data[CONF_ADDRESS] == ADDRESS
 
 
 async def test_router_does_not_fail_over_on_unconfirmed() -> None:
@@ -307,7 +383,7 @@ async def test_subentry_authorize_timeout(hass: HomeAssistant) -> None:
 
     async def _pair() -> None:
         await release.wait()
-        raise BleakError("still not approved")
+        raise BluetoothTimeout
 
     vehicle.pair = AsyncMock(side_effect=_pair)
 
@@ -333,7 +409,7 @@ async def test_subentry_authorize_timeout(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.SHOW_PROGRESS
 
-        # pair() fails -> progress done -> instructions re-shown with timeout
+        # pair() times out -> progress done -> instructions re-shown with timeout
         release.set()
         await hass.async_block_till_done()
         result = await hass.config_entries.subentries.async_configure(result["flow_id"])
@@ -344,6 +420,77 @@ async def test_subentry_authorize_timeout(hass: HomeAssistant) -> None:
     assert CONF_ADDRESS not in entry.subentries[subentry_id].data
     # pair() is a single bounded op; it is never re-sent.
     vehicle.pair.assert_awaited_once()
+
+
+async def test_subentry_authorize_transport_failure(hass: HomeAssistant) -> None:
+    """A BLE transport failure during pairing is reported as cannot_connect."""
+    entry = await _setup_vehicle_subentry(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
+    vehicle = _mock_vehicle(on_whitelist=False)
+    release = asyncio.Event()
+
+    async def _pair() -> None:
+        await release.wait()
+        raise BluetoothTransportError
+
+    vehicle.pair = AsyncMock(side_effect=_pair)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+        release.set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instructions"
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert CONF_ADDRESS not in entry.subentries[subentry_id].data
+
+
+async def test_subentry_handshake_error_aborts(hass: HomeAssistant) -> None:
+    """A handshake failure aborts with cannot_connect; a disconnect error is swallowed."""
+    entry = await _setup_vehicle_subentry(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
+    vehicle = _mock_vehicle()
+    vehicle.handshakeVehicleSecurity = AsyncMock(side_effect=TeslaFleetError())
+    vehicle.disconnect = AsyncMock(side_effect=BleakError("boom"))
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert CONF_ADDRESS not in entry.subentries[subentry_id].data
+    vehicle.disconnect.assert_awaited_once()
 
 
 async def test_subentry_pairing_abandoned(hass: HomeAssistant) -> None:
