@@ -185,7 +185,7 @@ async def test_setup_entry_forwards_all_platforms(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    mock_forward.assert_called_once()
+    mock_forward.assert_awaited_once()
     forwarded_platforms = mock_forward.call_args.args[1]
     assert set(forwarded_platforms) == {
         Platform.BINARY_SENSOR,
