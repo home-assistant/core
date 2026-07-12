@@ -1,6 +1,6 @@
 """Tests for BSB-LAN services."""
 
-from datetime import time
+from datetime import time, timedelta
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -15,7 +15,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 # Test constants
 TEST_DEVICE_MAC = "00:80:41:19:69:90"
@@ -157,6 +157,75 @@ async def test_set_hot_water_schedule(
     for key, expected_schedule in expected_schedules.items():
         actual_schedule = getattr(dhw_schedule, key)
         assert actual_schedule == expected_schedule
+
+
+async def test_set_hot_water_schedule_refreshes_coordinator(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    water_heater_device_entry: dr.DeviceEntry,
+) -> None:
+    """Test setting a schedule refreshes the slow coordinator."""
+    refreshed_schedule = MagicMock()
+    mock_bsblan.hot_water_schedule.return_value = refreshed_schedule
+    mock_bsblan.hot_water_schedule.reset_mock()
+    slow_coordinator = mock_config_entry.runtime_data.slow_coordinator
+    updates = 0
+
+    def _handle_update() -> None:
+        nonlocal updates
+        updates += 1
+
+    slow_coordinator.async_add_listener(_handle_update)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_hot_water_schedule",
+        {
+            "device_id": water_heater_device_entry.id,
+            "monday_slots": [{"start_time": time(6, 0), "end_time": time(8, 0)}],
+        },
+        blocking=True,
+    )
+
+    mock_bsblan.hot_water_schedule.assert_awaited_once_with()
+    assert slow_coordinator.data.dhw_schedule is refreshed_schedule
+    assert updates == 1
+
+
+async def test_set_hot_water_schedule_retries_failed_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    water_heater_device_entry: dr.DeviceEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed post-write refresh is retried on the next interval."""
+    slow_coordinator = mock_config_entry.runtime_data.slow_coordinator
+    old_schedule = slow_coordinator.data.dhw_schedule
+    refreshed_schedule = MagicMock()
+    mock_bsblan.hot_water_schedule.side_effect = [
+        BSBLANError("Invalid response"),
+        refreshed_schedule,
+    ]
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_hot_water_schedule",
+        {
+            "device_id": water_heater_device_entry.id,
+            "monday_slots": [{"start_time": time(6, 0), "end_time": time(8, 0)}],
+        },
+        blocking=True,
+    )
+
+    assert slow_coordinator.data.dhw_schedule is old_schedule
+
+    freezer.tick(delta=timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert slow_coordinator.data.dhw_schedule is refreshed_schedule
 
 
 async def test_invalid_device_id(

@@ -180,36 +180,72 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
             name=f"{DOMAIN}_slow_{config_entry.data[CONF_HOST]}",
             update_interval=SCAN_INTERVAL_SLOW,
         )
+        self._dhw_schedule_refresh_pending = True
+        self._retry_schedule_errors = False
 
     @override
     async def _async_update_data(self) -> BSBLanSlowData:
-        """Fetch slow-changing data from the BSB-LAN device."""
-        try:
-            # Client is already initialized in async_setup_entry
-            # Use include filtering to only fetch parameters we actually use
-            dhw_config = await self.client.hot_water_config(include=DHW_CONFIG_INCLUDE)
-            dhw_schedule = await self.client.hot_water_schedule()
+        """Fetch slow-changing data from the BSB-LAN device.
 
+        Only the DHW config is polled here. The schedule changes rarely and is
+        refreshed separately (on startup and after a write) to avoid extra
+        serial-bus traffic on every interval, so it is carried over from the
+        previous update.
+        """
+        previous = self.data or BSBLanSlowData()
+        dhw_config: HotWaterConfig | None
+        try:
+            dhw_config = await self.client.hot_water_config(include=DHW_CONFIG_INCLUDE)
         except (BSBLANConnectionError, BSBLANAuthError) as err:
-            # If config update fails, keep existing data
             LOGGER.debug(
                 "Failed to fetch DHW config from %s: %s",
                 self.config_entry.data[CONF_HOST],
                 err,
             )
-            if self.data:
-                return self.data
-            # First fetch failed, return empty data
-            return BSBLanSlowData()
-        except BSBLANError, AttributeError:
-            # Device does not support DHW functionality
+            dhw_config = previous.dhw_config
+        except BSBLANError, AttributeError, TimeoutError:
             LOGGER.debug(
                 "DHW (Domestic Hot Water) not available on device at %s",
                 self.config_entry.data[CONF_HOST],
             )
-            return BSBLanSlowData()
+            dhw_config = previous.dhw_config
+
+        dhw_schedule = previous.dhw_schedule
+        if self._dhw_schedule_refresh_pending:
+            refreshed_schedule, retryable = await self._async_fetch_dhw_schedule()
+            if refreshed_schedule is not None:
+                dhw_schedule = refreshed_schedule
+                self._dhw_schedule_refresh_pending = False
+                self._retry_schedule_errors = False
+            elif not retryable and not self._retry_schedule_errors:
+                self._dhw_schedule_refresh_pending = False
 
         return BSBLanSlowData(
             dhw_config=dhw_config,
             dhw_schedule=dhw_schedule,
         )
+
+    async def async_refresh_schedule_after_write(self) -> None:
+        """Refresh slow data after a successful schedule write."""
+        self._dhw_schedule_refresh_pending = True
+        self._retry_schedule_errors = True
+        await self.async_refresh()
+
+    async def _async_fetch_dhw_schedule(
+        self,
+    ) -> tuple[HotWaterSchedule | None, bool]:
+        """Fetch the DHW schedule, returning None if unavailable."""
+        try:
+            return await self.client.hot_water_schedule(), False
+        except BSBLANConnectionError, BSBLANAuthError, TimeoutError:
+            LOGGER.debug(
+                "DHW schedule not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
+            return None, True
+        except BSBLANError, AttributeError:
+            LOGGER.debug(
+                "DHW schedule not available on device at %s",
+                self.config_entry.data[CONF_HOST],
+            )
+            return None, False
