@@ -1155,6 +1155,8 @@ async def _async_check_postgres_dsn(dsn: str) -> dict[str, str]:
             check_result = await PostgresStore.check_config(dsn)
     except TimeoutError:
         return {"base": "timeout"}
+    except ValueError:
+        return {"base": "cannot_connect"}
     if not check_result.ok:
         return {"base": connection_errors.get(check_result.kind, "cannot_connect")}
     return {}
