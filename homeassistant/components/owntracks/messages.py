@@ -8,7 +8,8 @@ from nacl.secret import SecretBox
 
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import SourceType
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
+from homeassistant.components.zone import ZoneEntityStateAttribute
+from homeassistant.const import STATE_HOME, EntityStateAttribute
 from homeassistant.util import decorator, dt as dt_util, slugify
 
 from .const import (
@@ -108,10 +109,10 @@ def _set_gps_from_zone(kwargs, location, zone):
     """
     if zone is not None:
         kwargs["gps"] = (
-            zone.attributes[ATTR_LATITUDE],
-            zone.attributes[ATTR_LONGITUDE],
+            zone.attributes[EntityStateAttribute.LATITUDE],
+            zone.attributes[EntityStateAttribute.LONGITUDE],
         )
-        kwargs["gps_accuracy"] = zone.attributes["radius"]
+        kwargs["gps_accuracy"] = zone.attributes[ZoneEntityStateAttribute.RADIUS]
         kwargs["location_name"] = location
     return kwargs
 

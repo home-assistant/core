@@ -10,14 +10,9 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import cloud, mqtt, webhook
+from homeassistant.components.device_tracker import TrackerEntityStateAttribute
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_WEBHOOK_ID,
-    Platform,
-)
+from homeassistant.const import CONF_WEBHOOK_ID, EntityStateAttribute, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -194,13 +189,14 @@ async def handle_webhook(
     response = [
         {
             "_type": "location",
-            "lat": person.attributes["latitude"],
-            "lon": person.attributes["longitude"],
+            "lat": person.attributes[EntityStateAttribute.LATITUDE],
+            "lon": person.attributes[EntityStateAttribute.LONGITUDE],
             "tid": "".join(p[0] for p in person.name.split(" ")[:2]),
             "tst": int(person.last_updated.timestamp()),
         }
         for person in hass.states.async_all("person")
-        if "latitude" in person.attributes and "longitude" in person.attributes
+        if EntityStateAttribute.LATITUDE in person.attributes
+        and EntityStateAttribute.LONGITUDE in person.attributes
     ]
 
     if message["_type"] == "encrypted" and context.secret:
@@ -297,9 +293,11 @@ class OwnTracksContext:
         device_tracker_state = hass.states.get(f"device_tracker.{dev_id}")
 
         if device_tracker_state is not None:
-            acc = device_tracker_state.attributes.get(ATTR_GPS_ACCURACY)
-            lat = device_tracker_state.attributes.get(ATTR_LATITUDE)
-            lon = device_tracker_state.attributes.get(ATTR_LONGITUDE)
+            acc = device_tracker_state.attributes.get(
+                TrackerEntityStateAttribute.GPS_ACCURACY
+            )
+            lat = device_tracker_state.attributes.get(EntityStateAttribute.LATITUDE)
+            lon = device_tracker_state.attributes.get(EntityStateAttribute.LONGITUDE)
 
             if lat is not None and lon is not None:
                 kwargs["gps"] = (lat, lon)
