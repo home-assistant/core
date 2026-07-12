@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Callable
 from functools import partial
-import os
 from types import MappingProxyType
 from typing import Any, Final, cast
 
@@ -262,6 +261,27 @@ def _setup_vehicle_repairs(
     )
 
 
+def _setup_subentry_removal_reload(
+    hass: HomeAssistant, entry: TeslemetryConfigEntry
+) -> None:
+    """Reload the entry when a subentry is removed to drop its routing.
+
+    A vehicle's Bluetooth routing is resolved once at setup from the subentry's
+    stored address, so removing the subentry (unpairing) only takes effect on
+    the next reload. Only a removal triggers this; data updates from pairing
+    reload themselves, and entry-data updates (e.g. token refreshes) must not.
+    """
+    known = set(entry.subentries)
+
+    async def _handle_update(
+        hass: HomeAssistant, updated_entry: TeslemetryConfigEntry
+    ) -> None:
+        if known - set(updated_entry.subentries):
+            hass.config_entries.async_schedule_reload(updated_entry.entry_id)
+
+    entry.async_on_unload(entry.add_update_listener(_handle_update))
+
+
 def _ensure_subentry(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
@@ -304,11 +324,6 @@ def _remove_stale_subentries(
             hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
 
 
-def _set_key_file_mode(path: str) -> None:
-    """Restrict the private key file to owner-only read/write."""
-    os.chmod(path, 0o600)
-
-
 async def _async_get_ble_parent(hass: HomeAssistant) -> TeslaBluetooth:
     """Return a shared TeslaBluetooth parent with the private key loaded.
 
@@ -325,9 +340,7 @@ async def _async_get_ble_parent(hass: HomeAssistant) -> TeslaBluetooth:
         parent = hass.data.get(BLE_PARENT_KEY)
         if parent is None:
             parent = TeslaBluetooth()  # type: ignore[no-untyped-call]
-            key_path = hass.config.path(VEHICLE_KEY_FILE)
-            await parent.get_private_key(key_path)
-            await hass.async_add_executor_job(_set_key_file_mode, key_path)
+            await parent.get_private_key(hass.config.path(VEHICLE_KEY_FILE))
             hass.data[BLE_PARENT_KEY] = parent
     return parent
 
@@ -680,6 +693,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         {vehicle.vin for vehicle in vehicles},
         vehicle_metadata,
     )
+
+    _setup_subentry_removal_reload(hass, entry)
 
     if stream:
         entry.async_on_unload(stream.close)

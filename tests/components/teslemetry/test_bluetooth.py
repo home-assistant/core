@@ -59,7 +59,6 @@ async def test_vehicle_router_with_bluetooth(hass: HomeAssistant) -> None:
             return_value=MagicMock(),
         ),
         patch("homeassistant.components.teslemetry.TeslaBluetooth") as mock_parent,
-        patch("homeassistant.components.teslemetry._set_key_file_mode"),
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
@@ -345,6 +344,63 @@ async def test_subentry_authorize_timeout(hass: HomeAssistant) -> None:
     assert CONF_ADDRESS not in entry.subentries[subentry_id].data
     # pair() is a single bounded op; it is never re-sent.
     vehicle.pair.assert_awaited_once()
+
+
+async def test_subentry_pairing_abandoned(hass: HomeAssistant) -> None:
+    """Abandoning the flow mid-pairing cancels the pair task and disconnects."""
+    entry = await _setup_vehicle_subentry(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
+    vehicle = _mock_vehicle(on_whitelist=False)
+    cancelled = asyncio.Event()
+
+    async def _pair() -> None:
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+
+    vehicle.pair = AsyncMock(side_effect=_pair)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        # confirm instructions -> authorize runs pair() as a progress task
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+        # abandon the flow while pairing is still running
+        hass.config_entries.subentries.async_abort(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert cancelled.is_set()
+    vehicle.disconnect.assert_awaited_once()
+    assert CONF_ADDRESS not in entry.subentries[subentry_id].data
+
+
+async def test_subentry_removal_reloads(hass: HomeAssistant) -> None:
+    """Removing a vehicle subentry reloads the entry to drop its BLE routing."""
+    entry = await _setup_vehicle_subentry(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        assert hass.config_entries.async_remove_subentry(entry, subentry_id)
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_once_with(entry.entry_id)
 
 
 async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
