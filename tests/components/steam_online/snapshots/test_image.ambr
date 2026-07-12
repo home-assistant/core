@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[image.testaccount1_app_icon-entry]
+# name: test_images[image.testaccount1_app_icon-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount1_app_icon-state]
+# name: test_images[image.testaccount1_app_icon-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
@@ -51,7 +51,7 @@
     'state': '2013-12-13T12:13:12+00:00',
   })
 # ---
-# name: test_sensors[image.testaccount1_avatar-entry]
+# name: test_images[image.testaccount1_avatar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -88,7 +88,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount1_avatar-state]
+# name: test_images[image.testaccount1_avatar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
@@ -103,7 +103,7 @@
     'state': '2013-12-13T12:13:12+00:00',
   })
 # ---
-# name: test_sensors[image.testaccount1_header_capsule-entry]
+# name: test_images[image.testaccount1_header_capsule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -140,7 +140,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount1_header_capsule-state]
+# name: test_images[image.testaccount1_header_capsule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
@@ -155,7 +155,7 @@
     'state': '2013-12-13T12:13:12+00:00',
   })
 # ---
-# name: test_sensors[image.testaccount1_library_capsule-entry]
+# name: test_images[image.testaccount1_library_capsule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -192,7 +192,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount1_library_capsule-state]
+# name: test_images[image.testaccount1_library_capsule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
@@ -207,7 +207,7 @@
     'state': '2013-12-13T12:13:12+00:00',
   })
 # ---
-# name: test_sensors[image.testaccount1_library_hero_capsule-entry]
+# name: test_images[image.testaccount1_library_hero_capsule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -244,7 +244,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount1_library_hero_capsule-state]
+# name: test_images[image.testaccount1_library_hero_capsule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
@@ -259,7 +259,7 @@
     'state': '2013-12-13T12:13:12+00:00',
   })
 # ---
-# name: test_sensors[image.testaccount1_library_logo-entry]
+# name: test_images[image.testaccount1_library_logo-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -296,7 +296,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount1_library_logo-state]
+# name: test_images[image.testaccount1_library_logo-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
@@ -311,7 +311,7 @@
     'state': '2013-12-13T12:13:12+00:00',
   })
 # ---
-# name: test_sensors[image.testaccount1_main_capsule-entry]
+# name: test_images[image.testaccount1_main_capsule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -348,7 +348,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount1_main_capsule-state]
+# name: test_images[image.testaccount1_main_capsule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
@@ -363,7 +363,7 @@
     'state': '2013-12-13T12:13:12+00:00',
   })
 # ---
-# name: test_sensors[image.testaccount1_page_background-entry]
+# name: test_images[image.testaccount1_page_background-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -400,7 +400,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount1_page_background-state]
+# name: test_images[image.testaccount1_page_background-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
@@ -415,7 +415,7 @@
     'state': '2013-12-13T12:13:12+00:00',
   })
 # ---
-# name: test_sensors[image.testaccount1_small_capsule-entry]
+# name: test_images[image.testaccount1_small_capsule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -452,7 +452,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount1_small_capsule-state]
+# name: test_images[image.testaccount1_small_capsule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
@@ -467,7 +467,7 @@
     'state': '2013-12-13T12:13:12+00:00',
   })
 # ---
-# name: test_sensors[image.testaccount1_vertical_capsule-entry]
+# name: test_images[image.testaccount1_vertical_capsule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -504,7 +504,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount1_vertical_capsule-state]
+# name: test_images[image.testaccount1_vertical_capsule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
@@ -519,7 +519,7 @@
     'state': '2013-12-13T12:13:12+00:00',
   })
 # ---
-# name: test_sensors[image.testaccount2_app_icon-entry]
+# name: test_images[image.testaccount2_app_icon-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -556,7 +556,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount2_app_icon-state]
+# name: test_images[image.testaccount2_app_icon-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.testaccount2_app_icon?token=520',
@@ -570,7 +570,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[image.testaccount2_avatar-entry]
+# name: test_images[image.testaccount2_avatar-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -607,7 +607,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount2_avatar-state]
+# name: test_images[image.testaccount2_avatar-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '520',
@@ -622,7 +622,7 @@
     'state': '2013-12-13T12:13:12+00:00',
   })
 # ---
-# name: test_sensors[image.testaccount2_header_capsule-entry]
+# name: test_images[image.testaccount2_header_capsule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -659,7 +659,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount2_header_capsule-state]
+# name: test_images[image.testaccount2_header_capsule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.testaccount2_header_capsule?token=520',
@@ -673,7 +673,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[image.testaccount2_library_capsule-entry]
+# name: test_images[image.testaccount2_library_capsule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -710,7 +710,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount2_library_capsule-state]
+# name: test_images[image.testaccount2_library_capsule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.testaccount2_library_capsule?token=520',
@@ -724,7 +724,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[image.testaccount2_library_hero_capsule-entry]
+# name: test_images[image.testaccount2_library_hero_capsule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -761,7 +761,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount2_library_hero_capsule-state]
+# name: test_images[image.testaccount2_library_hero_capsule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.testaccount2_library_hero_capsule?token=520',
@@ -775,7 +775,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[image.testaccount2_library_logo-entry]
+# name: test_images[image.testaccount2_library_logo-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -812,7 +812,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount2_library_logo-state]
+# name: test_images[image.testaccount2_library_logo-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.testaccount2_library_logo?token=520',
@@ -826,7 +826,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[image.testaccount2_main_capsule-entry]
+# name: test_images[image.testaccount2_main_capsule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -863,7 +863,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount2_main_capsule-state]
+# name: test_images[image.testaccount2_main_capsule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.testaccount2_main_capsule?token=520',
@@ -877,7 +877,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[image.testaccount2_page_background-entry]
+# name: test_images[image.testaccount2_page_background-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -914,7 +914,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount2_page_background-state]
+# name: test_images[image.testaccount2_page_background-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.testaccount2_page_background?token=520',
@@ -928,7 +928,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[image.testaccount2_small_capsule-entry]
+# name: test_images[image.testaccount2_small_capsule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -965,7 +965,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount2_small_capsule-state]
+# name: test_images[image.testaccount2_small_capsule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.testaccount2_small_capsule?token=520',
@@ -979,7 +979,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_sensors[image.testaccount2_vertical_capsule-entry]
+# name: test_images[image.testaccount2_vertical_capsule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1016,7 +1016,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[image.testaccount2_vertical_capsule-state]
+# name: test_images[image.testaccount2_vertical_capsule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.testaccount2_vertical_capsule?token=520',
