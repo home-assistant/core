@@ -263,9 +263,11 @@ def _setup_subentry_removal_reload(
     """Reload the entry when a subentry is removed to drop its routing.
 
     A vehicle's Bluetooth routing is resolved once at setup from the subentry's
-    stored address, so removing the subentry (unpairing) only takes effect on
-    the next reload. Only a removal triggers this; data updates from pairing
-    reload themselves, and entry-data updates (e.g. token refreshes) must not.
+    stored address. Removing the subentry forgets that address and disables
+    local routing (the virtual key stays on the vehicle for re-pairing); this
+    only takes effect on the next reload. Only a removal triggers this; data
+    updates from pairing reload themselves, and entry-data updates (e.g. token
+    refreshes) must not.
     """
     known = set(entry.subentries)
 
