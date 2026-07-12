@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pysmlight import Api2, Info, Sensors
 from pysmlight.const import Settings, SettingsProp
@@ -15,11 +15,21 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, SCAN_FIRMWARE_INTERVAL, SCAN_INTERVAL
+from .const import (
+    ATTR_MANUFACTURER,
+    DOMAIN,
+    LOGGER,
+    SCAN_FIRMWARE_INTERVAL,
+    SCAN_INTERVAL,
+)
 
 
 @dataclass(kw_only=True)
@@ -50,6 +60,17 @@ class SmFwData:
 type SmConfigEntry = ConfigEntry[SmlightData]
 
 
+def base_device_info(info: Info, host: str) -> DeviceInfo:
+    """Return device registry information."""
+    return DeviceInfo(
+        configuration_url=f"http://{host}",
+        connections={(CONNECTION_NETWORK_MAC, str(info.MAC))},
+        manufacturer=ATTR_MANUFACTURER,
+        model=info.model,
+        sw_version=f"core: {info.sw_version} / zigbee: {info.zb_version}",
+    )
+
+
 class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base Coordinator for SMLIGHT."""
 
@@ -71,6 +92,7 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         self.unique_id: str | None = None
         self.legacy_api: int = 0
 
+    @override
     async def _async_setup(self) -> None:
         """Authenticate if needed during initial setup."""
         if await self.client.check_auth_needed():
@@ -92,6 +114,7 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         info = await self.client.get_info()
         self.unique_id = format_mac(info.MAC)
         self.legacy_api = info.legacy_api
+
         if info.legacy_api == 2:
             ir.async_create_issue(
                 self.hass,
@@ -104,6 +127,7 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
                 translation_key="unsupported_firmware",
             )
 
+    @override
     async def _async_update_data(self) -> _DataT:
         try:
             return await self._internal_update_data()
@@ -159,6 +183,7 @@ class SmDataUpdateCoordinator(SmBaseDataUpdateCoordinator[SmData]):
         self.data.sensors.ambilight = AmbilightPayload(**changes)
         self.async_set_updated_data(self.data)
 
+    @override
     async def _internal_update_data(self) -> SmData:
         """Fetch sensor data from the SMLIGHT device."""
         sensors = Sensors()
@@ -184,6 +209,7 @@ class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
         # only one update can run at a time (core or zibgee)
         self.in_progress = False
 
+    @override
     async def _internal_update_data(self) -> SmFwData:
         """Fetch data from the SMLIGHT device."""
         info = await self.client.get_info()

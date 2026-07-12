@@ -1,6 +1,6 @@
 """Support for the Airzone climate."""
 
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aioairzone.common import OperationAction, OperationMode
 from aioairzone.const import (
@@ -191,6 +191,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         self._speeds_reverse = {v: k for k, v in self._speeds.items()}
         self._attr_fan_modes = list(self._speeds_reverse)
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
         params = {
@@ -198,6 +199,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         }
         await self._async_update_hvac_params(params)
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         params = {
@@ -205,6 +207,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         }
         await self._async_update_hvac_params(params)
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         params = {
@@ -212,6 +215,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         }
         await self._async_update_hvac_params(params)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         slave_raise = False
@@ -234,6 +238,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
                 f"Mode can't be changed on slave zone {self.entity_id}"
             )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         params = {}
@@ -248,6 +253,7 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
             await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()

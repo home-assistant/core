@@ -1,7 +1,7 @@
 """Config flow to configure the Bravia TV integration."""
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, cast, override
 from urllib.parse import urlparse
 
 from aiohttp import CookieJar
@@ -105,6 +105,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self._get_reauth_entry(), data=self.device_config
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -215,6 +216,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:

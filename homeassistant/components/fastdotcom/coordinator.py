@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the Fast.com integration."""
 
 from datetime import timedelta
+from typing import override
 
 from fastdotcom import fast_com
 
@@ -26,6 +27,7 @@ class FastdotcomDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float] | N
             update_interval=timedelta(hours=DEFAULT_INTERVAL),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, float] | None:
         """Run an executor job to retrieve Fast.com data."""
         try:

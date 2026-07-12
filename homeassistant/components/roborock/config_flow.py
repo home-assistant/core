@@ -3,7 +3,8 @@
 from collections.abc import Mapping
 from copy import deepcopy
 import logging
-from typing import Any
+from typing import Any, override
+from urllib.parse import urlparse
 
 from roborock.data import UserData
 from roborock.exceptions import (
@@ -31,6 +32,9 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -38,6 +42,7 @@ from . import RoborockConfigEntry
 from .const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
+    CONF_ROBOROCK_SERVER_URL,
     CONF_SHOW_BACKGROUND,
     CONF_SHOW_ROOMS,
     CONF_SHOW_WALLS,
@@ -45,6 +50,8 @@ from .const import (
     DEFAULT_DRAWABLES,
     DOMAIN,
     DRAWABLES,
+    REGION_AUTO,
+    REGION_CUSTOM,
     REGION_OPTIONS,
 )
 
@@ -62,6 +69,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         self._username: str | None = None
         self._client: RoborockApiClient | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -73,8 +81,10 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             region = user_input[CONF_REGION]
             self._username = username
             _LOGGER.debug("Requesting code for Roborock account")
+            if region == REGION_CUSTOM:
+                return await self.async_step_custom_url()
             base_url = None
-            if region != "auto":
+            if region != REGION_AUTO:
                 base_url = f"https://{region}iot.roborock.com"
             self._client = RoborockApiClient(
                 username,
@@ -90,13 +100,51 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_REGION, default="auto"): SelectSelector(
+                    vol.Required(CONF_REGION, default=REGION_AUTO): SelectSelector(
                         SelectSelectorConfig(
                             options=REGION_OPTIONS,
                             mode=SelectSelectorMode.DROPDOWN,
                             translation_key="region",
                         )
                     ),
+                }
+            ),
+            errors=errors,
+        )
+
+    async def async_step_custom_url(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle custom server URL entry."""
+        errors: dict[str, str] = {}
+        assert self._username
+        if user_input is not None:
+            url = user_input[CONF_ROBOROCK_SERVER_URL].strip()
+            parsed = urlparse(url)
+            if parsed.scheme not in ("http", "https") or not parsed.netloc:
+                errors[CONF_ROBOROCK_SERVER_URL] = "invalid_url_format"
+            else:
+                self._client = RoborockApiClient(
+                    self._username,
+                    base_url=url,
+                    session=async_get_clientsession(self.hass),
+                )
+                errors = await self._request_code()
+                if not errors:
+                    return await self.async_step_code()
+
+        return self.async_show_form(
+            step_id="custom_url",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_ROBOROCK_SERVER_URL,
+                        default=(
+                            user_input[CONF_ROBOROCK_SERVER_URL]
+                            if user_input is not None
+                            else "https://usiot.roborock.com"
+                        ),
+                    ): TextSelector(TextSelectorConfig(type=TextSelectorType.URL)),
                 }
             ),
             errors=errors,
@@ -163,6 +211,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -170,9 +219,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         await self._async_handle_discovery_without_unique_id()
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get_device(
-            connections={
-                (dr.CONNECTION_NETWORK_MAC, dr.format_mac(discovery_info.macaddress))
-            }
+            connections={(dr.CONNECTION_NETWORK_MAC, discovery_info.macaddress)}
         )
         if device is not None and any(
             identifier[0] == DOMAIN for identifier in device.identifiers
@@ -219,6 +266,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: RoborockConfigEntry,
     ) -> RoborockOptionsFlowHandler:

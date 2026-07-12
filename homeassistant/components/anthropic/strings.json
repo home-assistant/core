@@ -48,16 +48,16 @@
         "user": "Add AI task"
       },
       "step": {
-        "advanced": {
+        "additional": {
           "data": {
             "chat_model": "[%key:common::generic::model%]",
-            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::prompt_caching%]"
+            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::additional::data::prompt_caching%]"
           },
           "data_description": {
-            "chat_model": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::chat_model%]",
-            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data_description::prompt_caching%]"
+            "chat_model": "[%key:component::anthropic::config_subentries::conversation::step::additional::data_description::chat_model%]",
+            "prompt_caching": "[%key:component::anthropic::config_subentries::conversation::step::additional::data_description::prompt_caching%]"
           },
-          "title": "[%key:component::anthropic::config_subentries::conversation::step::advanced::title%]"
+          "title": "[%key:component::anthropic::config_subentries::conversation::step::additional::title%]"
         },
         "init": {
           "data": {
@@ -115,7 +115,7 @@
         "user": "Add conversation agent"
       },
       "step": {
-        "advanced": {
+        "additional": {
           "data": {
             "chat_model": "[%key:common::generic::model%]",
             "prompt_caching": "Caching strategy"
@@ -124,7 +124,7 @@
             "chat_model": "The model to serve the responses.",
             "prompt_caching": "Optimize your API cost and response times based on your usage."
           },
-          "title": "Advanced settings"
+          "title": "Additional settings"
         },
         "init": {
           "data": {

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -65,15 +65,18 @@ class TimeDateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return f"Time & Date {options[CONF_DISPLAY_OPTIONS]}"
 
+    @override
     def async_config_flow_finished(self, options: Mapping[str, Any]) -> None:
         """Abort if instance already exist."""
         self._async_abort_entries_match(dict(options))
 
     @staticmethod
+    @override
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
         websocket_api.async_register_command(hass, ws_start_preview)

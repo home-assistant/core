@@ -12,9 +12,15 @@ rules:
   docs-actions:
     status: exempt
     comment: No custom actions registered.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: No custom events registered.
@@ -53,7 +59,9 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: done
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices:
+    status: exempt
+    comment: Integration only has static hardware devices, single device per config entry
   entity-category: todo
   entity-device-class: done
   entity-disabled-by-default: todo
@@ -62,9 +70,11 @@ rules:
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: todo
+  stale-devices:
+    status: exempt
+    comment: Integration only has static hardware devices, single device per config entry
 
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done

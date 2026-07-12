@@ -1,8 +1,10 @@
 """Library for working with CalDAV api."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 
 import caldav
+from caldav.lib.error import DAVError
 
 from homeassistant.core import HomeAssistant
 
@@ -26,7 +28,7 @@ async def async_get_calendars(
         for calendar in client.principal().calendars():
             try:
                 supported_components = calendar.get_supported_components()
-            except KeyError:
+            except KeyError, DAVError:
                 needs_warning.append((str(calendar.url), calendar.name, component))
 
                 if component in ASSUMED_COMPONENTS:

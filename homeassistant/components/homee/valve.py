@@ -1,5 +1,7 @@
 """The Homee valve platform."""
 
+from typing import override
+
 from pyHomee.const import AttributeType
 from pyHomee.model import HomeeAttribute, HomeeNode
 
@@ -67,6 +69,7 @@ class HomeeValve(HomeeEntity, ValveEntity):
         self._attr_translation_key = description.key
 
     @property
+    @override
     def supported_features(self) -> ValveEntityFeature:
         """Return the supported features."""
         if self._attribute.editable:
@@ -74,20 +77,24 @@ class HomeeValve(HomeeEntity, ValveEntity):
         return ValveEntityFeature(0)
 
     @property
+    @override
     def current_valve_position(self) -> int | None:
         """Return the current valve position."""
         return int(self._attribute.current_value)
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the valve is closing."""
         return self._attribute.target_value < self._attribute.current_value
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the valve is opening."""
         return self._attribute.target_value > self._attribute.current_value
 
+    @override
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
         await self.async_set_homee_value(position)
