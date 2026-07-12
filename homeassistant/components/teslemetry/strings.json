@@ -68,6 +68,9 @@
         "reconfigure": "Set up Bluetooth control",
         "user": "Add vehicle"
       },
+      "progress": {
+        "pair": "Approve Home Assistant's virtual key on the vehicle's touchscreen. Waiting for the vehicle to accept the key."
+      },
       "step": {
         "instructions": {
           "description": "Tap Continue, then place your key card against the center console card reader of vehicle {vin} to approve Home Assistant's virtual key. This only needs to be done once.",

@@ -1,5 +1,6 @@
 """Test the Teslemetry Bluetooth routing and subentry pairing flow."""
 
+import asyncio
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from bleak.exc import BleakError
@@ -224,6 +225,12 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
     entry = await _setup_vehicle_subentry(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
     vehicle = _mock_vehicle(on_whitelist=False)
+    release = asyncio.Event()
+
+    async def _pair() -> None:
+        await release.wait()
+
+    vehicle.pair = AsyncMock(side_effect=_pair)
 
     with (
         patch(
@@ -244,10 +251,17 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "instructions"
 
-        # confirm instructions -> authorize -> pair() -> handshake ok -> finish
+        # confirm instructions -> authorize runs pair() as a progress task
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
         )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["progress_action"] == "pair"
+
+        # pair() completes -> progress done -> handshake ok -> finish
+        release.set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
@@ -290,7 +304,13 @@ async def test_subentry_authorize_timeout(hass: HomeAssistant) -> None:
     entry = await _setup_vehicle_subentry(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
     vehicle = _mock_vehicle(on_whitelist=False)
-    vehicle.pair = AsyncMock(side_effect=BleakError("still not approved"))
+    release = asyncio.Event()
+
+    async def _pair() -> None:
+        await release.wait()
+        raise BleakError("still not approved")
+
+    vehicle.pair = AsyncMock(side_effect=_pair)
 
     with (
         patch(
@@ -308,9 +328,16 @@ async def test_subentry_authorize_timeout(hass: HomeAssistant) -> None:
         )
         assert result["step_id"] == "instructions"
 
+        # confirm instructions -> authorize runs pair() as a progress task
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
         )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+        # pair() fails -> progress done -> instructions re-shown with timeout
+        release.set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "instructions"

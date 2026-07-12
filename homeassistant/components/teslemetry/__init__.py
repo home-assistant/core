@@ -691,16 +691,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Unload Teslemetry Config."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    # Release any on-demand Bluetooth link a command opened so it is not left
-    # connected across a reload.
-    for vehicle in entry.runtime_data.vehicles:
-        if isinstance(vehicle.api, VehicleRouter):
-            try:
-                await vehicle.api.primary.disconnect()
-            except (BleakError, TeslaFleetError, TimeoutError) as err:
-                LOGGER.debug(
-                    "Error disconnecting Bluetooth for %s: %s", vehicle.vin, err
-                )
+    if unloaded:
+        # Release any on-demand Bluetooth link a command opened so it is not left
+        # connected across a reload. Only once the platforms actually unloaded -
+        # otherwise the entry stays loaded and its backends must keep working.
+        for vehicle in entry.runtime_data.vehicles:
+            if isinstance(vehicle.api, VehicleRouter):
+                try:
+                    await vehicle.api.primary.disconnect()
+                except (BleakError, TeslaFleetError, TimeoutError) as err:
+                    LOGGER.debug(
+                        "Error disconnecting Bluetooth for %s: %s", vehicle.vin, err
+                    )
     return unloaded
 
 

@@ -35,8 +35,6 @@ class TeslemetryData:
 class TeslemetryVehicleData:
     """Data for a vehicle in the Teslemetry integration."""
 
-    # Plain cloud Vehicle, or a VehicleRouter that tries a paired
-    # VehicleBluetooth first and falls back to the cloud Vehicle per command.
     api: Vehicle | VehicleRouter
     config_entry: ConfigEntry
     coordinator: TeslemetryVehicleDataCoordinator

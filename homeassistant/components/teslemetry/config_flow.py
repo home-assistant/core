@@ -1,5 +1,6 @@
 """Config Flow for Teslemetry integration."""
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any, override
@@ -172,6 +173,8 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         self._vin: str | None = None
         self._address: str | None = None
         self._vehicle: VehicleBluetooth | None = None
+        self._pair_task: asyncio.Task[None] | None = None
+        self._pair_error: dict[str, str] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -245,27 +248,43 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         """Ask the user to approve the virtual key on the vehicle touchscreen."""
         if user_input is not None:
             return await self.async_step_authorize()
+        errors = self._pair_error
+        self._pair_error = {}
         return self.async_show_form(
             step_id="instructions",
+            errors=errors,
             description_placeholders={"vin": self._vin or ""},
         )
 
     async def async_step_authorize(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Send the virtual key to the vehicle, then re-check the whitelist."""
-        assert self._vehicle is not None
-        # pair() writes the whitelist op exactly once and confirms completion by
-        # reply or key-state polling, so it is never re-sent (which would
-        # re-prompt the user); a lost confirmation surfaces as a timeout.
+        """Add the virtual key to the vehicle while showing pairing progress."""
+        if self._pair_task is None:
+            assert self._vehicle is not None
+            # pair() writes the whitelist op exactly once and confirms completion
+            # by reply or key-state polling, so it is never re-sent (which would
+            # re-prompt the user). It can take minutes, so run it as a progress
+            # task rather than blocking the flow request.
+            self._pair_task = self.hass.async_create_task(self._vehicle.pair())
+
+        if not self._pair_task.done():
+            return self.async_show_progress(
+                step_id="authorize",
+                progress_action="pair",
+                progress_task=self._pair_task,
+                description_placeholders={"vin": self._vin or ""},
+            )
+
+        task = self._pair_task
+        self._pair_task = None
         try:
-            await self._vehicle.pair()
+            task.result()
         except (BleakError, TeslaFleetError, TimeoutError) as err:
             LOGGER.debug("Bluetooth pairing failed: %s", err)
-            return self.async_show_form(
-                step_id="instructions", errors={"base": "timeout"}
-            )
-        return await self.async_step_pair()
+            self._pair_error = {"base": "timeout"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        return self.async_show_progress_done(next_step_id="pair")
 
     async def _async_finish(self) -> SubentryFlowResult:
         """Persist the paired BLE address and reload the entry."""
@@ -297,6 +316,8 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
     @callback
     @override
     def async_remove(self) -> None:
-        """Release any open BLE link if the flow is abandoned mid-pairing."""
+        """Release resources if the flow is abandoned mid-pairing."""
+        if self._pair_task is not None and not self._pair_task.done():
+            self._pair_task.cancel()
         if self._vehicle is not None:
             self.hass.async_create_task(self._async_disconnect())
