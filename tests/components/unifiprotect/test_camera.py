@@ -665,3 +665,62 @@ async def test_snapshot_low_quality_without_stream(
     assert (
         ufp.api.get_public_api_camera_snapshot.call_args.kwargs["high_quality"] is False
     )
+
+
+async def test_private_enumeration_upgrade_keeps_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    camera_all: ProtectCamera,
+) -> None:
+    """Entities registered by the old private enumeration survive the public one.
+
+    Simulates an upgrade: the registry holds the camera entities exactly as the
+    previous release (private channel enumeration) created them — high enabled,
+    medium/low disabled, one entity_id customized by the user. The
+    public-master enumeration must claim the same registry entries (same
+    unique_ids and entity_ids, no duplicates), and a reload must not move
+    anything either.
+    """
+    seeded: dict[str, str] = {}
+    for channel_id, disabled_by in (
+        (0, None),
+        (1, er.RegistryEntryDisabler.INTEGRATION),
+        (2, er.RegistryEntryDisabler.INTEGRATION),
+    ):
+        entry = entity_registry.async_get_or_create(
+            Platform.CAMERA,
+            DOMAIN,
+            f"{camera_all.mac}_{channel_id}",
+            config_entry=ufp.entry,
+            suggested_object_id=f"my_renamed_cam_{channel_id}",
+            disabled_by=disabled_by,
+        )
+        seeded[entry.unique_id] = entry.entity_id
+
+    await init_entry(hass, ufp, [camera_all], regenerate_ids=False)
+
+    # Same totals as a fresh setup: nothing duplicated, nothing orphaned.
+    assert_entity_counts(hass, Platform.CAMERA, 3, 1)
+    for unique_id, entity_id in seeded.items():
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.unique_id == unique_id
+
+    # The customized (enabled) entity is live and streams from the public API.
+    high_id = seeded[f"{camera_all.mac}_0"]
+    assert hass.states.get(high_id) is not None
+    assert (
+        await async_get_stream_source(hass, high_id)
+        == camera_all.channels[0].rtsps_no_srtp_url
+    )
+
+    await hass.config_entries.async_reload(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.CAMERA, 3, 1)
+    for unique_id, entity_id in seeded.items():
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.unique_id == unique_id
+    assert hass.states.get(high_id) is not None
