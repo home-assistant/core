@@ -615,6 +615,33 @@ async def test_no_discovery_info_number(
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 51,
+                        CONF_DATA_TYPE: DataType.INT16,
+                        CONF_SCALE: 0.001,
+                    }
+                ]
+            },
+            id="max_value_exceeds_data_type_range",
+        ),
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_DATA_TYPE: DataType.UINT16,
+                        CONF_MIN_VALUE: -1,
+                        CONF_MAX_VALUE: 0,
+                    }
+                ]
+            },
+            id="min_value_exceeds_data_type_range",
+        ),
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
                         CONF_NUMBER_STEP: 0,
                     }
                 ]

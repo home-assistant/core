@@ -205,14 +205,42 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
 
 
 def number_min_max_validator(config: dict[str, Any]) -> dict[str, Any]:
-    """Check that min_value does not exceed max_value for a number entity."""
+    """Check min/max are consistent and can be encoded for the number entity."""
+    name = config[CONF_NAME]
     min_value = config[CONF_MIN_VALUE]
     max_value = config[CONF_MAX_VALUE]
     if min_value > max_value:
         raise vol.Invalid(
-            f"{config[CONF_NAME]}: `{CONF_MIN_VALUE}: {min_value}` cannot be"
+            f"{name}: `{CONF_MIN_VALUE}: {min_value}` cannot be"
             f" greater than `{CONF_MAX_VALUE}: {max_value}`"
         )
+
+    data_type = config[CONF_DATA_TYPE]
+    scale = config.get(CONF_SCALE, DEFAULT_SCALE)
+    offset = config.get(CONF_OFFSET, DEFAULT_OFFSET)
+    value_is_int = data_type in (
+        DataType.INT16,
+        DataType.INT32,
+        DataType.INT64,
+        DataType.UINT16,
+        DataType.UINT32,
+        DataType.UINT64,
+    )
+    for limit_key, limit_value in (
+        (CONF_MIN_VALUE, min_value),
+        (CONF_MAX_VALUE, max_value),
+    ):
+        raw: float | int = (limit_value - offset) / scale
+        if value_is_int:
+            raw = round(raw)
+        try:
+            struct.pack(config[CONF_STRUCTURE], raw)
+        except struct.error as err:
+            raise vol.Invalid(
+                f"{name}: `{limit_key}: {limit_value}` cannot be represented with"
+                f" `{CONF_DATA_TYPE}: {data_type}`, `{CONF_SCALE}: {scale}`"
+                f" and `{CONF_OFFSET}: {offset}` --> {err!s}"
+            ) from err
     return config
 
 

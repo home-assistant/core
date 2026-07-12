@@ -116,9 +116,8 @@ class ModbusNumber(ModbusStructEntity, RestoreNumber):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value via Modbus."""
+
         registers = self._convert_to_registers(value, self._scale, self._offset)
-        # write_type: holdings forces write_registers even for a single register,
-        # for devices that don't support the write_register function code.
         if len(registers) == 1 and self._write_type != CALL_TYPE_X_REGISTER_HOLDINGS:
             result = await self._hub.async_pb_call(
                 self._device_address,
