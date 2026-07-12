@@ -235,7 +235,7 @@ def number_min_max_validator(config: dict[str, Any]) -> dict[str, Any]:
             raw = round(raw)
         try:
             struct.pack(config[CONF_STRUCTURE], raw)
-        except struct.error as err:
+        except (OverflowError, struct.error) as err:
             raise vol.Invalid(
                 f"{name}: `{limit_key}: {limit_value}` cannot be represented with"
                 f" `{CONF_DATA_TYPE}: {data_type}`, `{CONF_SCALE}: {scale}`"
