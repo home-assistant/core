@@ -73,42 +73,47 @@ async def _setup_with_delivery(
 @pytest.mark.parametrize(
     ("status", "eta2", "slot_window", "expected_interval"),
     [
-        # No undelivered order
-        ("COMPLETED", None, None, DEFAULT_UPDATE_INTERVAL),
-        # Delivery days away
-        (
+        pytest.param(
+            "COMPLETED",
+            None,
+            None,
+            DEFAULT_UPDATE_INTERVAL,
+            id="no_undelivered_order",
+        ),
+        pytest.param(
             "CURRENT",
             (timedelta(days=2), timedelta(days=2, hours=1)),
             None,
             DEFAULT_UPDATE_INTERVAL,
+            id="delivery_days_away",
         ),
-        # Delivery under way
-        (
+        pytest.param(
             "CURRENT",
             (timedelta(minutes=10), timedelta(minutes=30)),
             None,
             DELIVERY_UPDATE_INTERVAL,
+            id="delivery_under_way",
         ),
-        # Just ahead of the window: next poll capped at the window start
-        (
+        pytest.param(
             "CURRENT",
             (timedelta(minutes=40), timedelta(minutes=60)),
             None,
             timedelta(minutes=10),
+            id="next_poll_capped_at_window_start",
         ),
-        # Long past the window while still current
-        (
+        pytest.param(
             "CURRENT",
             (timedelta(hours=-4), timedelta(hours=-3)),
             None,
             DEFAULT_UPDATE_INTERVAL,
+            id="long_past_window_still_current",
         ),
-        # No ETA yet: the slot window selects the faster interval
-        (
+        pytest.param(
             "CURRENT",
             None,
             (timedelta(minutes=10), timedelta(minutes=70)),
             DELIVERY_UPDATE_INTERVAL,
+            id="slot_window_fallback_without_eta",
         ),
     ],
 )
@@ -153,6 +158,7 @@ async def test_update_interval_relaxes_after_delivery(
     delivery["status"] = "COMPLETED"
     freezer.tick(DELIVERY_UPDATE_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
+    # The scheduled interval refresh runs as a background task
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert coordinator.update_interval == DEFAULT_UPDATE_INTERVAL
@@ -180,6 +186,7 @@ async def test_update_interval_relaxes_when_refresh_fails(
     mock_picnic_api.get_cart.return_value = None
     freezer.tick(timedelta(hours=3))
     async_fire_time_changed(hass)
+    # The scheduled interval refresh runs as a background task
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert coordinator.last_update_success is False

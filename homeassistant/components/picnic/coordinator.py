@@ -59,7 +59,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         # keeping one-minute polling active indefinitely
         if self.data:
             self.update_interval = self._get_update_interval(
-                self.data.get(NEXT_DELIVERY_DATA) or {}
+                self.data.get(NEXT_DELIVERY_DATA)
             )
 
         try:
@@ -77,16 +77,17 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
                 "Timeout while connecting to the Picnic API", retry_after=120
             ) from error
 
-        self.update_interval = self._get_update_interval(
-            data.get(NEXT_DELIVERY_DATA) or {}
-        )
+        self.update_interval = self._get_update_interval(data.get(NEXT_DELIVERY_DATA))
 
         # Return the fetched data
         return data
 
     @staticmethod
-    def _get_update_interval(next_delivery: dict) -> timedelta:
+    def _get_update_interval(next_delivery: dict | None) -> timedelta:
         """Poll faster around the delivery so the live ETA is picked up in time."""
+        if not next_delivery:
+            return DEFAULT_UPDATE_INTERVAL
+
         eta = next_delivery.get("eta")
         slot = next_delivery.get("slot")
 
