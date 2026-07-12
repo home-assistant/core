@@ -91,14 +91,13 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         eta = next_delivery.get("eta")
         slot = next_delivery.get("slot")
 
+        start = end = None
         if eta:
             start = dt_util.parse_datetime(str(eta.get("start")))
             end = dt_util.parse_datetime(str(eta.get("end")))
-        elif slot:
+        if (start is None or end is None) and slot:
             start = dt_util.parse_datetime(str(slot.get("window_start")))
             end = dt_util.parse_datetime(str(slot.get("window_end")))
-        else:
-            return DEFAULT_UPDATE_INTERVAL
 
         if start is None or end is None:
             return DEFAULT_UPDATE_INTERVAL

@@ -37,9 +37,9 @@ def mock_picnic_api():
         client.session.auth_token = "3q29fpwhulzes"
         client.get_cart.return_value = json.loads(load_fixture("picnic/cart.json"))
         client.get_user.return_value = json.loads(load_fixture("picnic/user.json"))
-        client.get_deliveries.return_value = json.loads(
-            load_fixture("picnic/delivery.json")
-        )
+        client.get_deliveries.return_value = [
+            json.loads(load_fixture("picnic/delivery.json"))
+        ]
         client.get_delivery_position.return_value = {}
         yield client
 
