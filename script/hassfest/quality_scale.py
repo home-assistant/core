@@ -1650,7 +1650,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "panel_iframe",
     "peco",
     "pencom",
-    "permobil",
     "persistent_notification",
     "person",
     "philips_js",
