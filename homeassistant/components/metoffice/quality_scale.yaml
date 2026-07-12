@@ -64,20 +64,12 @@ rules:
   dynamic-devices:
     status: exempt
     comment: Single weather entity per config entry, no dynamic device addition.
-  entity-category:
-    status: exempt
-    comment: Weather entities are primary entities and do not require categories.
-  entity-device-class:
-    status: exempt
-    comment: Weather entities have implicit device class from the platform.
-  entity-disabled-by-default:
-    status: exempt
-    comment: Primary weather entity should be enabled by default.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
   entity-translations: todo
   exception-translations: todo
-  icon-translations:
-    status: exempt
-    comment: Weather entities use standard condition-based icons.
+  icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices: todo
