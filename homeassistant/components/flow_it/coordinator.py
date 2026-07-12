@@ -71,10 +71,12 @@ class FlowItCoordinator(DataUpdateCoordinator[FlowItCoordinatorData]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
         except (FlowItConnectionError, FlowItResponseError) as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from err
         else:
             assert self.vmc.state is not None
             return FlowItCoordinatorData(state=self.vmc.state)
