@@ -46,7 +46,7 @@ ifaddr==0.2.0
 Jinja2==3.1.6
 lru-dict==1.4.1
 mutagen==1.48.1
-openai==2.21.0
+openai==2.45.0
 orjson==3.11.9
 packaging>=23.1
 paho-mqtt==2.1.0
