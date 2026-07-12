@@ -8,6 +8,7 @@ from typing import Any, override
 from aiohttp import ClientConnectionError
 from bleak.exc import BleakError
 from tesla_fleet_api.exceptions import (
+    BluetoothTimeout,
     BluetoothTransportError,
     InvalidToken,
     NotOnWhitelistFault,
@@ -287,9 +288,17 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             LOGGER.debug("Bluetooth transport failed during pairing: %s", err)
             self._pair_error = {"base": "cannot_connect"}
             return self.async_show_progress_done(next_step_id="instructions")
-        except (TeslaFleetError, TimeoutError) as err:
+        except (BluetoothTimeout, TimeoutError) as err:
+            # The key was sent but the vehicle never confirmed - the user has not
+            # approved it yet.
             LOGGER.debug("Bluetooth pairing timed out: %s", err)
             self._pair_error = {"base": "timeout"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except TeslaFleetError as err:
+            # The vehicle rejected the key (e.g. whitelist full, denied on the
+            # screen, or valet mode) - not a timeout the user can wait out.
+            LOGGER.error("Bluetooth pairing was rejected: %s", err)
+            self._pair_error = {"base": "pair_failed"}
             return self.async_show_progress_done(next_step_id="instructions")
         return self.async_show_progress_done(next_step_id="pair")
 
@@ -298,12 +307,16 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         assert self._address is not None
         await self._async_disconnect()
         entry = self._get_entry()
-        self.hass.config_entries.async_schedule_reload(entry.entry_id)
-        return self.async_update_and_abort(
+        # Write the address before scheduling the reload: async_schedule_reload
+        # starts an eager task that could otherwise run setup before the update
+        # lands, leaving the reloaded entry cloud-only.
+        result = self.async_update_and_abort(
             entry,
             self._get_reconfigure_subentry(),
             data_updates={CONF_ADDRESS: self._address},
         )
+        self.hass.config_entries.async_schedule_reload(entry.entry_id)
+        return result
 
     async def _async_abort(self, reason: str) -> SubentryFlowResult:
         """Disconnect any open BLE connection and abort the flow."""

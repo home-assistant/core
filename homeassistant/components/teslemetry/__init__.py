@@ -276,8 +276,13 @@ def _setup_subentry_removal_reload(
     async def _handle_update(
         hass: HomeAssistant, updated_entry: TeslemetryConfigEntry
     ) -> None:
-        if known - set(updated_entry.subentries):
+        nonlocal known
+        current = set(updated_entry.subentries)
+        if known - current:
             hass.config_entries.async_schedule_reload(updated_entry.entry_id)
+        # Track the latest set so further updates before the reload runs (e.g. a
+        # token refresh) do not re-schedule it off the same removal.
+        known = current
 
     entry.async_on_unload(entry.add_update_listener(_handle_update))
 

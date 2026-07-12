@@ -266,6 +266,13 @@ async def test_subentry_pairing_already_whitelisted(hass: HomeAssistant) -> None
     entry = await _setup_vehicle_subentry(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
     vehicle = _mock_vehicle(on_whitelist=True)
+    address_stored_at_reload = False
+
+    def _capture_reload(entry_id: str) -> None:
+        nonlocal address_stored_at_reload
+        address_stored_at_reload = (
+            entry.subentries[subentry_id].data.get(CONF_ADDRESS) == ADDRESS
+        )
 
     with (
         patch(
@@ -276,7 +283,9 @@ async def test_subentry_pairing_already_whitelisted(hass: HomeAssistant) -> None
             "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
-        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+        patch.object(
+            hass.config_entries, "async_schedule_reload", side_effect=_capture_reload
+        ) as mock_reload,
     ):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         assert result["type"] is FlowResultType.FORM
@@ -291,6 +300,8 @@ async def test_subentry_pairing_already_whitelisted(hass: HomeAssistant) -> None
     assert result["reason"] == "reconfigure_successful"
     assert entry.subentries[subentry_id].data[CONF_ADDRESS] == ADDRESS
     mock_reload.assert_called_once_with(entry.entry_id)
+    # The address must already be persisted by the time the reload is scheduled.
+    assert address_stored_at_reload
     vehicle.connect.assert_awaited_once()
     vehicle.disconnect.assert_awaited_once()
 
@@ -374,8 +385,23 @@ async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
     vehicle.disconnect.assert_awaited_once()
 
 
-async def test_subentry_authorize_timeout(hass: HomeAssistant) -> None:
-    """The instructions step re-shows with a timeout error if pairing never succeeds."""
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        (BluetoothTimeout, "timeout"),
+        (BluetoothTransportError, "cannot_connect"),
+        (TeslaFleetError, "pair_failed"),
+    ],
+    ids=["timeout", "transport", "rejected"],
+)
+async def test_subentry_authorize_failure(
+    hass: HomeAssistant, error: type[Exception], expected: str
+) -> None:
+    """Each pairing failure surfaces its own error, not a blanket timeout.
+
+    A confirmation timeout, a transport failure, and an explicit key rejection
+    (e.g. whitelist full or valet mode) are reported distinctly.
+    """
     entry = await _setup_vehicle_subentry(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
     vehicle = _mock_vehicle(on_whitelist=False)
@@ -383,7 +409,7 @@ async def test_subentry_authorize_timeout(hass: HomeAssistant) -> None:
 
     async def _pair() -> None:
         await release.wait()
-        raise BluetoothTimeout
+        raise error
 
     vehicle.pair = AsyncMock(side_effect=_pair)
 
@@ -409,59 +435,17 @@ async def test_subentry_authorize_timeout(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.SHOW_PROGRESS
 
-        # pair() times out -> progress done -> instructions re-shown with timeout
+        # pair() fails -> progress done -> instructions re-shown with the error
         release.set()
         await hass.async_block_till_done()
         result = await hass.config_entries.subentries.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "instructions"
-    assert result["errors"] == {"base": "timeout"}
+    assert result["errors"] == {"base": expected}
     assert CONF_ADDRESS not in entry.subentries[subentry_id].data
     # pair() is a single bounded op; it is never re-sent.
     vehicle.pair.assert_awaited_once()
-
-
-async def test_subentry_authorize_transport_failure(hass: HomeAssistant) -> None:
-    """A BLE transport failure during pairing is reported as cannot_connect."""
-    entry = await _setup_vehicle_subentry(hass)
-    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
-    vehicle = _mock_vehicle(on_whitelist=False)
-    release = asyncio.Event()
-
-    async def _pair() -> None:
-        await release.wait()
-        raise BluetoothTransportError
-
-    vehicle.pair = AsyncMock(side_effect=_pair)
-
-    with (
-        patch(
-            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
-            return_value=[_discovered_info()],
-        ),
-        patch(
-            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
-            return_value=_mock_ble_parent(vehicle),
-        ),
-    ):
-        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {}
-        )
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {}
-        )
-        assert result["type"] is FlowResultType.SHOW_PROGRESS
-
-        release.set()
-        await hass.async_block_till_done()
-        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "instructions"
-    assert result["errors"] == {"base": "cannot_connect"}
-    assert CONF_ADDRESS not in entry.subentries[subentry_id].data
 
 
 async def test_subentry_handshake_error_aborts(hass: HomeAssistant) -> None:
@@ -539,12 +523,18 @@ async def test_subentry_pairing_abandoned(hass: HomeAssistant) -> None:
 
 
 async def test_subentry_removal_reloads(hass: HomeAssistant) -> None:
-    """Removing a vehicle subentry reloads the entry to drop its BLE routing."""
+    """Removing a vehicle subentry reloads once; later updates do not re-schedule."""
     entry = await _setup_vehicle_subentry(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
 
     with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
         assert hass.config_entries.async_remove_subentry(entry, subentry_id)
+        await hass.async_block_till_done()
+
+        # A later entry update before the reload runs must not re-schedule it.
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, "marker": True}
+        )
         await hass.async_block_till_done()
 
     mock_reload.assert_called_once_with(entry.entry_id)

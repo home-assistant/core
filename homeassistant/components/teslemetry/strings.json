@@ -62,6 +62,7 @@
       "error": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "device_not_found": "No matching Tesla vehicle was found nearby over Bluetooth. Make sure the vehicle is awake and within range, then try again.",
+        "pair_failed": "The vehicle rejected the key. Make sure it is not in valet mode and does not already have the maximum number of keys, then try again.",
         "timeout": "Timed out waiting for the vehicle to accept the key. Try again after approving the key on the vehicle's touchscreen."
       },
       "initiate_flow": {
