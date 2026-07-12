@@ -1,6 +1,7 @@
 """Test the Teslemetry energy site local Powerwall routing and pairing flow."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
@@ -27,10 +28,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import mock_config_entry
+from .const import METADATA, PRODUCTS
 
 from tests.common import MockConfigEntry
 
 SITE_ID = 123456
+WALL_CONNECTOR_SITE_ID = 555555
 HOST = "192.168.91.1"
 PASSWORD = "abcde"
 PUBLIC_KEY_DER = b"public-key-der"
@@ -593,3 +596,44 @@ async def test_subentry_credentials_password_truncated(hass: HomeAssistant) -> N
     assert result["type"] is FlowResultType.ABORT
     assert entry.subentries[subentry_id].data[CONF_PASSWORD] == "sword"
     assert mock_client.call_args.kwargs["gateway_password"] == "sword"
+
+
+async def test_wall_connector_only_site_has_no_local_control(
+    hass: HomeAssistant,
+) -> None:
+    """A wall-connector-only site gets no local-control subentry, a Powerwall does."""
+    products = deepcopy(PRODUCTS)
+    products["response"].append(
+        {
+            "energy_site_id": WALL_CONNECTOR_SITE_ID,
+            "site_name": "Wall Connector Site",
+            "components": {
+                "battery": False,
+                "solar": False,
+                "grid": True,
+                "wall_connectors": [{"device_id": "wc-1", "din": "WC-DIN-1"}],
+            },
+        }
+    )
+    metadata = deepcopy(METADATA)
+    metadata["energy_sites"][str(WALL_CONNECTOR_SITE_ID)] = {
+        "access": True,
+        "name": "Wall Connector Site",
+    }
+
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    with (
+        patch("tesla_fleet_api.teslemetry.Teslemetry.products", return_value=products),
+        patch("tesla_fleet_api.teslemetry.Teslemetry.metadata", return_value=metadata),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    unique_ids = {
+        subentry.unique_id
+        for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)
+    }
+    assert str(SITE_ID) in unique_ids
+    assert str(WALL_CONNECTOR_SITE_ID) not in unique_ids

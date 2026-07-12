@@ -558,18 +558,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     translation_key="not_ready_api_error",
                 ) from e
 
-            subentry_id = _ensure_subentry(
-                hass,
-                entry,
-                SUBENTRY_TYPE_ENERGY_SITE,
-                str(site_id),
-                product.get("site_name", "Energy Site"),
-                {CONF_SITE_ID: site_id},
-            )
-
-            energy_site_api = await _async_resolve_energy_site_api(
-                hass, entry, subentry_id, energy_site
-            )
+            # Only a Powerwall gateway can pair for local (TEDAPI) control, so
+            # wall-connector-only sites get no local-control subentry or routing.
+            subentry_id: str | None = None
+            energy_site_api: EnergySite | EnergySiteRouter = energy_site
+            if powerwall:
+                subentry_id = _ensure_subentry(
+                    hass,
+                    entry,
+                    SUBENTRY_TYPE_ENERGY_SITE,
+                    str(site_id),
+                    product.get("site_name", "Energy Site"),
+                    {CONF_SITE_ID: site_id},
+                )
+                energy_site_api = await _async_resolve_energy_site_api(
+                    hass, entry, subentry_id, energy_site
+                )
 
             energysites.append(
                 TeslemetryEnergyData(
@@ -641,7 +645,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         hass,
         entry,
         SUBENTRY_TYPE_ENERGY_SITE,
-        {energysite.subentry_id for energysite in energysites},
+        {
+            energysite.subentry_id
+            for energysite in energysites
+            if energysite.subentry_id is not None
+        },
     )
 
     entry.runtime_data = TeslemetryData(
