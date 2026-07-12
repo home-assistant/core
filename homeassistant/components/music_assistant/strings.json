@@ -366,6 +366,10 @@
         "search": {
           "description": "Optional search string to search through this library.",
           "name": "Search"
+        },
+        "username": {
+          "description": "Music Assistant username used for this request. Providing the username will respect the user's configured provider filters.",
+          "name": "Username"
         }
       },
       "name": "Get library items",
