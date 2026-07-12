@@ -20,6 +20,7 @@ from .const import (
     STORAGE_ENABLED,
     STORAGE_SHARED,
     VM_CONTAINER_RUNNING,
+    ProxmoxPermission,
 )
 from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import (
@@ -28,6 +29,7 @@ from .entity import (
     ProxmoxStorageEntity,
     ProxmoxVMEntity,
 )
+from .helpers import is_granted
 
 PARALLEL_UPDATES = 0
 
@@ -51,6 +53,8 @@ class ProxmoxNodeBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class to hold Proxmox node binary sensor description."""
 
     state_fn: Callable[[ProxmoxNodeData], bool | None]
+    permission: ProxmoxPermission = ProxmoxPermission.SYSAUDIT
+    permission_target: str = "nodes"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -67,9 +71,9 @@ NODE_SENSORS: tuple[ProxmoxNodeBinarySensorEntityDescription, ...] = (
         state_fn=lambda data: data.node["status"] == NODE_ONLINE,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
+        permission=ProxmoxPermission.VMAUDIT,  # PVEVMUsers are allowed this node, through "/vms"
+        permission_target="vms",
     ),
-)
-FULL_NODE_SENSORS: tuple[ProxmoxNodeBinarySensorEntityDescription, ...] = (
     ProxmoxNodeBinarySensorEntityDescription(
         key="node_backup_status",
         translation_key="node_backup_status",
@@ -134,21 +138,18 @@ async def async_setup_entry(
 
     def _async_add_new_nodes(nodes: list[ProxmoxNodeData]) -> None:
         """Add new node binary sensors."""
-        entities: list[ProxmoxNodeBinarySensor] = []
 
-        for node_data in nodes:
-            entities.extend(
-                ProxmoxNodeBinarySensor(coordinator, description, node_data)
-                for description in NODE_SENSORS
+        async_add_entities(
+            ProxmoxNodeBinarySensor(coordinator, description, node_data)
+            for description in NODE_SENSORS
+            for node_data in nodes
+            if is_granted(
+                coordinator.permissions,
+                p_type=description.permission_target,
+                p_id=node_data.node["node"],
+                permission=description.permission,
             )
-
-            if node_data.backups:
-                entities.extend(
-                    ProxmoxNodeBinarySensor(coordinator, description, node_data)
-                    for description in FULL_NODE_SENSORS
-                )
-
-        async_add_entities(entities)
+        )
 
     def _async_add_new_vms(
         vms: list[tuple[ProxmoxNodeData, dict[str, Any]]],
