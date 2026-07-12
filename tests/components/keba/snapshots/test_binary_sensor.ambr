@@ -1,0 +1,64 @@
+# serializer version: 1
+# name: test_binary_sensor_states[binary_sensor.kc_p30_charging_state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KC-P30 Charging State',
+      'max_charging_rate': '16',
+      'status': 'charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kc_p30_charging_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.kc_p30_failsafe_mode]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      'failsafe_timeout': '30',
+      'fallback_current': '6',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KC-P30 Failsafe Mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kc_p30_failsafe_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.kc_p30_plug]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KC-P30 Plug',
+      'plug_locked': False,
+      'plugged_on_EV': True,
+      'plugged_on_wallbox': True,
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kc_p30_plug',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.kc_p30_status]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KC-P30 Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kc_p30_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

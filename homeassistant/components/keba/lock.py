@@ -1,40 +1,42 @@
-"""Support for KEBA charging station switch."""
+"""Support for KEBA charging station lock."""
 
 from typing import Any, override
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, KebaHandler
+from . import KebaConfigEntry, KebaHandler
+from .const import DOMAIN
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: KebaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the KEBA charging station platform."""
-    if discovery_info is None:
-        return
-
-    keba: KebaHandler = hass.data[DOMAIN]
+    keba = entry.runtime_data
 
     locks = [KebaLock(keba, "Authentication", "authentication")]
     async_add_entities(locks)
 
 
 class KebaLock(LockEntity):
-    """The entity class for KEBA charging stations switch."""
+    """The entity class for KEBA charging stations lock."""
 
     _attr_should_poll = False
 
     def __init__(self, keba: KebaHandler, name: str, entity_type: str) -> None:
-        """Initialize the KEBA switch."""
+        """Initialize the KEBA lock."""
         self._keba = keba
         self._attr_is_locked = True
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, keba.device_id)},
+            name=keba.device_name,
+            manufacturer="KEBA",
+        )
         self._attr_name = f"{keba.device_name} {name}"
         self._attr_unique_id = f"{keba.device_id}_{entity_type}"
 
@@ -59,4 +61,4 @@ class KebaLock(LockEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Add update callback after being added to hass."""
-        self._keba.add_update_listener(self.update_callback)
+        self.async_on_remove(self._keba.add_update_listener(self.update_callback))

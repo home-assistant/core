@@ -10,23 +10,20 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfElectricCurrent, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, KebaHandler
+from . import KebaConfigEntry, KebaHandler
+from .const import DOMAIN
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: KebaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the KEBA charging station platform."""
-    if discovery_info is None:
-        return
-
-    keba = hass.data[DOMAIN]
+    keba = entry.runtime_data
 
     sensors = [
         KebaSensor(
@@ -100,6 +97,11 @@ class KebaSensor(SensorEntity):
         self._keba = keba
         self.entity_description = description
 
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, keba.device_id)},
+            name=keba.device_name,
+            manufacturer="KEBA",
+        )
         self._attr_name = f"{keba.device_name} {description.name}"
         self._attr_unique_id = f"{keba.device_id}_{entity_type}"
 
@@ -133,4 +135,4 @@ class KebaSensor(SensorEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Add update callback after being added to hass."""
-        self._keba.add_update_listener(self.update_callback)
+        self.async_on_remove(self._keba.add_update_listener(self.update_callback))

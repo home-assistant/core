@@ -1,4 +1,43 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "failsafe": "Enable failsafe mode",
+          "failsafe_fallback": "Failsafe fallback current (A)",
+          "failsafe_persist": "Persist failsafe after reboot",
+          "failsafe_timeout": "Failsafe timeout (s)",
+          "host": "[%key:common::config_flow::data::host%]",
+          "rfid": "RFID tag"
+        },
+        "data_description": {
+          "failsafe": "If enabled, the charging station switches to failsafe mode when it loses contact with Home Assistant.",
+          "failsafe_fallback": "Charging current (A) used in failsafe mode.",
+          "failsafe_persist": "Set to 1 to keep failsafe settings after a reboot of the charging station.",
+          "failsafe_timeout": "Seconds without a 'Set current' action before the failsafe triggers.",
+          "host": "Hostname or IP address of the KEBA charging station.",
+          "rfid": "RFID tag used for authorization (authorize/deauthorize actions)."
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an unknown error occurred. Please correct your YAML configuration and restart Home Assistant, or remove the {domain} key from your configuration and configure the integration via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    }
+  },
   "services": {
     "authorize": {
       "description": "Authorizes a charging process with the predefined RFID tag of the configuration file.",
