@@ -3,10 +3,12 @@
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from solax.inverter import InverterResponse
+import pytest
+from solax.inverter import Inverter, InverterResponse
 from solax.inverters import X1MiniV34
 
 from homeassistant import config_entries
+from homeassistant.components.solax.config_flow import INVERTERS_ENTRY_POINTS
 from homeassistant.components.solax.const import CONF_SOLAX_INVERTER, DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -27,13 +29,39 @@ def __mock_get_data():
     )
 
 
-async def test_form_success(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("user_input_extra", "expected_inverters"),
+    [
+        pytest.param(
+            {CONF_SOLAX_INVERTER: "x1_mini_v34"},
+            {X1MiniV34},
+            id="explicit_inverter",
+        ),
+        pytest.param(
+            {},
+            set(INVERTERS_ENTRY_POINTS.values()),
+            id="auto_discovery",
+        ),
+    ],
+)
+async def test_form_success(
+    hass: HomeAssistant,
+    user_input_extra: dict[str, str],
+    expected_inverters: set[type[Inverter]],
+) -> None:
     """Test successful form."""
     flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert flow["type"] is FlowResultType.FORM
     assert flow["errors"] == {}
+
+    user_input = {
+        CONF_IP_ADDRESS: "192.168.1.87",
+        CONF_PORT: 80,
+        CONF_PASSWORD: "password",
+        **user_input_extra,
+    }
 
     with (
         patch(
@@ -46,13 +74,7 @@ async def test_form_success(hass: HomeAssistant) -> None:
         ) as mock_setup_entry,
     ):
         entry_result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"],
-            {
-                CONF_IP_ADDRESS: "192.168.1.87",
-                CONF_PORT: 80,
-                CONF_PASSWORD: "password",
-                CONF_SOLAX_INVERTER: "x1_mini_v34",
-            },
+            flow["flow_id"], user_input
         )
         await hass.async_block_till_done()
 
@@ -60,17 +82,12 @@ async def test_form_success(hass: HomeAssistant) -> None:
         "192.168.1.87",
         80,
         "password",
-        inverters={X1MiniV34},
+        inverters=expected_inverters,
         return_when=asyncio.FIRST_COMPLETED,
     )
     assert entry_result["type"] is FlowResultType.CREATE_ENTRY
     assert entry_result["title"] == "ABCDEFGHIJ"
-    assert entry_result["data"] == {
-        CONF_IP_ADDRESS: "192.168.1.87",
-        CONF_PORT: 80,
-        CONF_PASSWORD: "password",
-        CONF_SOLAX_INVERTER: "x1_mini_v34",
-    }
+    assert entry_result["data"] == user_input
     assert len(mock_setup_entry.mock_calls) == 1
 
 
