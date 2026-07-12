@@ -1,5 +1,6 @@
 """Tests for BSB-LAN services."""
 
+import asyncio
 from datetime import time, timedelta
 from typing import Any
 from unittest.mock import MagicMock
@@ -191,6 +192,57 @@ async def test_set_hot_water_schedule_refreshes_coordinator(
     mock_bsblan.hot_water_schedule.assert_awaited_once_with()
     assert slow_coordinator.data.dhw_schedule is refreshed_schedule
     assert updates == 1
+
+
+async def test_overlapping_schedule_writes_preserve_latest_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    water_heater_device_entry: dr.DeviceEntry,
+) -> None:
+    """Test an in-flight refresh does not consume a newer refresh request."""
+    first_fetch_started = asyncio.Event()
+    release_first_fetch = asyncio.Event()
+    stale_schedule = MagicMock()
+    refreshed_schedule = MagicMock()
+    fetch_count = 0
+
+    async def _schedule() -> MagicMock:
+        nonlocal fetch_count
+        fetch_count += 1
+        if fetch_count == 1:
+            first_fetch_started.set()
+            await release_first_fetch.wait()
+            return stale_schedule
+        return refreshed_schedule
+
+    mock_bsblan.hot_water_schedule.reset_mock()
+    mock_bsblan.hot_water_schedule.side_effect = _schedule
+    service_data = {
+        "device_id": water_heater_device_entry.id,
+        "monday_slots": [{"start_time": time(6, 0), "end_time": time(8, 0)}],
+    }
+
+    first_write = asyncio.create_task(
+        hass.services.async_call(
+            DOMAIN, "set_hot_water_schedule", service_data, blocking=True
+        )
+    )
+    await first_fetch_started.wait()
+    second_write = asyncio.create_task(
+        hass.services.async_call(
+            DOMAIN, "set_hot_water_schedule", service_data, blocking=True
+        )
+    )
+    await asyncio.sleep(0)
+    release_first_fetch.set()
+    await asyncio.gather(first_write, second_write)
+
+    assert mock_bsblan.hot_water_schedule.await_count == 2
+    assert (
+        mock_config_entry.runtime_data.slow_coordinator.data.dhw_schedule
+        is refreshed_schedule
+    )
 
 
 async def test_set_hot_water_schedule_retries_failed_refresh(
