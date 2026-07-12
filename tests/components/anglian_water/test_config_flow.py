@@ -144,7 +144,7 @@ async def test_already_configured(
     [
         (SelfAssertedError, "invalid_auth"),
         (ValueError, "unknown"),
-        (ConsentRequiredError, "invalid_auth"),
+        (ConsentRequiredError, "consent_required"),
     ],
 )
 async def test_auth_recover_exception(
@@ -307,7 +307,7 @@ async def test_reauth_flow(
     ("exception_type", "expected_error"),
     [
         (SelfAssertedError, "invalid_auth"),
-        (ConsentRequiredError, "invalid_auth"),
+        (ConsentRequiredError, "consent_required"),
         (ValueError, "unknown"),
     ],
 )
@@ -316,8 +316,8 @@ async def test_reauth_flow_recover_exception(
     mock_config_entry: MockConfigEntry,
     mock_anglian_water_authenticator: AsyncMock,
     mock_anglian_water_client: AsyncMock,
-    exception_type,
-    expected_error,
+    exception_type: type[Exception],
+    expected_error: str,
 ) -> None:
     """Test that the reauth flow can recover from an auth exception."""
     mock_config_entry.add_to_hass(hass)
