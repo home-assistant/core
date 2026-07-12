@@ -6,7 +6,6 @@ from contextlib import suppress
 import os
 from typing import TYPE_CHECKING, Any, override
 
-from music_assistant_models.auth import UserRole
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
 from music_assistant_models.enums import (
     EventType,
@@ -63,8 +62,8 @@ from .const import (
 from .entity import MusicAssistantEntity
 from .helpers import (
     async_resolve_mass_username,
+    async_verify_mass_username_availability,
     catch_musicassistant_error,
-    verify_username_availability,
 )
 from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
@@ -468,18 +467,13 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         # the Home Assistant user that made the call (best-effort, never raises).
         user_id = self._context.user_id if self._context is not None else None
         if username is not None or user_id is not None:
-            available_usernames = [
-                user.username
-                for user in await self.mass.auth.list_users()
-                if user.enabled and user.role != UserRole.GUEST
-            ]
             if username is not None:
-                await verify_username_availability(
+                await async_verify_mass_username_availability(
                     mass=self.mass, username=username, raise_on_error=True
                 )
             elif user_id is not None:
                 username = await async_resolve_mass_username(
-                    self.hass, user_id, available_usernames
+                    self.hass, self.mass, user_id
                 )
 
         media_uris: list[str] = []

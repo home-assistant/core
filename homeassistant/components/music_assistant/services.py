@@ -54,7 +54,7 @@ from .const import (
     ATTR_USERNAME,
     DOMAIN,
 )
-from .helpers import get_music_assistant_client, verify_username_availability
+from .helpers import async_verify_mass_username_availability, get_music_assistant_client
 from .schemas import (
     LIBRARY_RESULTS_SCHEMA,
     SEARCH_RESULT_SCHEMA,
@@ -197,7 +197,7 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
                     "version": "2.10",
                 },
             )
-        await verify_username_availability(
+        await async_verify_mass_username_availability(
             mass=mass, username=search_username, raise_on_error=True
         )
     if search_album and search_artist:
