@@ -83,7 +83,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.21.0
 
 # homeassistant.components.switchbot
-PySwitchbot==2.3.0
+PySwitchbot==2.4.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1

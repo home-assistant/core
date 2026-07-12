@@ -55,6 +55,7 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
     ],
     SupportedModels.HYGROMETER.value: [Platform.SENSOR],
+    SupportedModels.HYGROMETER_PRO.value: [Platform.BUTTON, Platform.SENSOR],
     SupportedModels.HYGROMETER_CO2.value: [
         Platform.BUTTON,
         Platform.NUMBER,
@@ -253,6 +254,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.ART_FRAME.value: switchbot.SwitchbotArtFrame,
     SupportedModels.KEYPAD_VISION.value: switchbot.SwitchbotKeypadVision,
     SupportedModels.KEYPAD_VISION_PRO.value: switchbot.SwitchbotKeypadVision,
+    SupportedModels.HYGROMETER_PRO.value: switchbot.SwitchbotMeterPro,
     SupportedModels.HYGROMETER_CO2.value: switchbot.SwitchbotMeterProCO2,
     SupportedModels.LOCK_VISION_PRO.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_VISION.value: switchbot.SwitchbotLock,
@@ -300,6 +302,38 @@ def _migrate_deprecated_air_purifier_type(
     return False
 
 
+def _migrate_hygrometer_pro_sensor_type(
+    hass: HomeAssistant, entry: SwitchbotConfigEntry
+) -> None:
+    """Upgrade a plain "hygrometer" entry to "hygrometer_pro" if it is actually a Meter Pro.
+
+    Meter Pro devices were originally lumped in with the plain Meter/Meter Plus
+    under the "hygrometer" sensor type, before the Meter Pro got its own type to
+    support the sync-datetime button. Existing entries are only upgraded
+    opportunistically from already-cached advertisement data so plain Meter/Meter
+    Plus entries (the vast majority of "hygrometer" entries) are never blocked or
+    delayed by this check.
+    """
+    address: str = entry.data[CONF_ADDRESS]
+    if not (
+        service_info := bluetooth.async_last_service_info(
+            hass, address.upper(), connectable=False
+        )
+    ):
+        return
+    parsed_adv = switchbot.parse_advertisement_data(
+        service_info.device, service_info.advertisement
+    )
+    if (
+        parsed_adv
+        and parsed_adv.data.get("modelName") == switchbot.SwitchbotModel.METER_PRO
+    ):
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_SENSOR_TYPE: SupportedModels.HYGROMETER_PRO.value},
+        )
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Switchbot Devices component."""
     async_setup_services(hass)
@@ -319,6 +353,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
             entry,
             data={**entry.data, CONF_ADDRESS: mac},
         )
+
+    if entry.data.get(CONF_SENSOR_TYPE) == SupportedModels.HYGROMETER.value:
+        _migrate_hygrometer_pro_sensor_type(hass, entry)
 
     # Migrate deprecated air purifier sensor types introduced before pySwitchbot 2.0.0.
     if entry.data.get(CONF_SENSOR_TYPE) in (

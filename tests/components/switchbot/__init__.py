@@ -215,6 +215,26 @@ NOT_SWITCHBOT_INFO = BluetoothServiceInfoBleak(
 )
 
 
+WOMETERTHP_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="WoTHP",
+    manufacturer_data={2409: b"\xb0\xe9\xfez\x8d;\xa4d\x04\x94.\x00\x1a"},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"4\x00d"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="WoTHP",
+        manufacturer_data={2409: b"\xb0\xe9\xfez\x8d;\xa4d\x04\x94.\x00\x1a"},
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"4\x00d"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoTHP"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
 WOMETERTHPC_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="WoTHPc",
     manufacturer_data={
