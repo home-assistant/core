@@ -1457,8 +1457,8 @@ async def test_cancel_announcement(
     """Test cancelling a currently playing announcement."""
     content_id = "http://10.0.0.1:8123/local/sounds/doorbell.mp3"
     sonos_websocket.play_clip.return_value = [
-        {CLIP_ID_KEY: "clip-123", "success": 1},
-        {},
+        {"success": 1},
+        {CLIP_ID_KEY: "clip-123"},
     ]
     await hass.services.async_call(
         MP_DOMAIN,
@@ -1480,6 +1480,37 @@ async def test_cancel_announcement(
         blocking=True,
     )
     sonos_websocket.cancel_clip.assert_called_once_with("clip-123")
+
+
+async def test_cancel_announcement_no_clip_id_from_announce_response(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    sonos_websocket,
+) -> None:
+    """Test cancelling fails when the announce response has no clip ID."""
+    content_id = "http://10.0.0.1:8123/local/sounds/doorbell.mp3"
+    sonos_websocket.play_clip.return_value = [{"success": 1}, None]
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: content_id,
+            ATTR_MEDIA_ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+
+    with pytest.raises(
+        ServiceValidationError, match="No active announcement to cancel"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CANCEL_ANNOUNCEMENT,
+            {ATTR_ENTITY_ID: "media_player.zone_a"},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(
@@ -1510,8 +1541,8 @@ async def test_cancel_announcement_errors(
     """Test error handling when cancelling an announcement."""
     content_id = "http://10.0.0.1:8123/local/sounds/doorbell.mp3"
     sonos_websocket.play_clip.return_value = [
-        {CLIP_ID_KEY: "clip-123", "success": 1},
-        {},
+        {"success": 1},
+        {CLIP_ID_KEY: "clip-123"},
     ]
     await hass.services.async_call(
         MP_DOMAIN,
@@ -1536,6 +1567,7 @@ async def test_cancel_announcement_errors(
             {ATTR_ENTITY_ID: "media_player.zone_a"},
             blocking=True,
         )
+
 
 FAVORITE_TITLES = [
     "66 - Watercolors",

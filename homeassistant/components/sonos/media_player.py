@@ -531,7 +531,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             _LOGGER.debug("Playing %s using websocket audioclip", media_id)
             try:
                 assert self.speaker.websocket
-                response, _ = await self.speaker.websocket.play_clip(
+                response, data = await self.speaker.websocket.play_clip(
                     async_process_play_media_url(self.hass, media_id),
                     volume=volume,
                 )
@@ -542,7 +542,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                     translation_placeholders={"error": str(exc)},
                 ) from exc
             if response.get("success"):
-                self.last_announce_id = response.get(CLIP_ID_KEY)
+                if data:
+                    self.last_announce_id = data.get(CLIP_ID_KEY)
                 return
             if response.get("type") in ANNOUNCE_NOT_SUPPORTED_ERRORS:
                 self.last_announce_id = None
