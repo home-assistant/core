@@ -124,8 +124,12 @@ def mock_proxmox_client():
         node_mock.storage.get.return_value = load_json_array_fixture(
             "nodes/storage.json", DOMAIN
         )
-        node_mock.tasks.get.return_value = load_json_array_fixture(
-            "nodes/tasks.json", DOMAIN
+
+        node_mock.tasks.get.side_effect = lambda **kwargs: (
+            []
+            if "Sys.Audit"
+            not in mock_instance.access.permissions.get.return_value.get("/nodes", {})
+            else load_json_array_fixture("nodes/tasks.json", DOMAIN)
         )
 
         qemu_by_vmid = {vm["vmid"]: vm for vm in qemu_list}

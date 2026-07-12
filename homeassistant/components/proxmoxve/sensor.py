@@ -475,7 +475,7 @@ async def async_setup_entry(
         """Add new node sensors."""
         entities: list[ProxmoxNodeSensor] = []
 
-        for node_data in coordinator.data.values():
+        for node_data in nodes:
             node_info = node_data.node
             entities.extend(
                 ProxmoxNodeSensor(coordinator, description, node_data)

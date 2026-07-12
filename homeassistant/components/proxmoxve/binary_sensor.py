@@ -136,14 +136,13 @@ async def async_setup_entry(
         """Add new node binary sensors."""
         entities: list[ProxmoxNodeBinarySensor] = []
 
-        for node_data in coordinator.data.values():
-            node_info = node_data.node
+        for node_data in nodes:
             entities.extend(
                 ProxmoxNodeBinarySensor(coordinator, description, node_data)
                 for description in NODE_SENSORS
             )
 
-            if "status" in node_info:
+            if node_data.backups:
                 entities.extend(
                     ProxmoxNodeBinarySensor(coordinator, description, node_data)
                     for description in FULL_NODE_SENSORS
