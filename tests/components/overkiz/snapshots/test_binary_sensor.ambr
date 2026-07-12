@@ -101,6 +101,57 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][binary_sensor.my_home_water_heater_energy_demand_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.my_home_water_heater_energy_demand_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Energy demand status',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
+    'original_icon': None,
+    'original_name': 'Energy demand status',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-5643/6713703#1-io:OperatingModeCapabilitiesState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][binary_sensor.my_home_water_heater_energy_demand_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'heat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Water Heater Energy demand status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.my_home_water_heater_energy_demand_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][binary_sensor.maple_residence_living_room_smoke_detector_smoke-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

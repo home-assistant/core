@@ -2242,6 +2242,478 @@
       "widget": "TemperatureSensor",
       "type": 2,
       "uiClass": "TemperatureSensor"
+    },
+    {
+      "creationTime": 1734454147000,
+      "lastUpdateTime": 1734454147000,
+      "label": "Water Heater",
+      "deviceURL": "io://1234-5678-5643/6713703#1",
+      "shortcut": false,
+      "controllableName": "io:AtlanticDomesticHotWaterProductionIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "addLockLevel",
+            "nparams": 2
+          },
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 2
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshManufacturerName",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWaterConsumption",
+            "nparams": 0
+          },
+          {
+            "commandName": "removeLockLevel",
+            "nparams": 1
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "commandName": "setComfortTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setEcoTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setFrostProtectionTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "pairOneWayController",
+            "nparams": 2
+          },
+          {
+            "commandName": "refreshAwayModeDuration",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshBoostModeDuration",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshCurrentOperatingMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDHWCapacity",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDHWError",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDHWMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshOperatingModeCapabilities",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshOperatingTime",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshRateManagement",
+            "nparams": 0
+          },
+          {
+            "commandName": "setAwayModeDuration",
+            "nparams": 1
+          },
+          {
+            "commandName": "setBoostModeDuration",
+            "nparams": 1
+          },
+          {
+            "commandName": "setCurrentOperatingMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDHWMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHaltedTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setRateManagement",
+            "nparams": 1
+          },
+          {
+            "commandName": "unpairAllOneWayControllers",
+            "nparams": 0
+          },
+          {
+            "commandName": "unpairOneWayController",
+            "nparams": 2
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:BoostModeDurationState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ComfortTargetTemperatureState"
+          },
+          {
+            "eventBased": true,
+            "type": "DataState",
+            "qualifiedName": "core:CommandLockLevelsState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:EcoTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:FrostProtectionTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:HaltedTargetTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ManufacturerNameState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "antifreeze",
+              "auto",
+              "away",
+              "eco",
+              "frostprotection",
+              "manual",
+              "max",
+              "normal",
+              "off",
+              "on",
+              "prog",
+              "program",
+              "boost"
+            ],
+            "qualifiedName": "core:OperatingModeState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SecuredPositionTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:VersionState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:WaterConsumptionState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "io:AwayModeDurationState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "io:DHWCapacityState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "io:DHWErrorState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["autoMode", "manualEcoActive", "manualEcoInactive"],
+            "qualifiedName": "io:DHWModeState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "io:ElectricBoosterOperatingTimeState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "io:HeatPumpOperatingTimeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "io:OperatingModeCapabilitiesState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "LSC",
+              "SAAC",
+              "SFC",
+              "UPS",
+              "externalGateway",
+              "localUser",
+              "myself",
+              "rain",
+              "security",
+              "temperature",
+              "timer",
+              "user",
+              "wind"
+            ],
+            "qualifiedName": "io:PriorityLockOriginatorState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "forbidden",
+              "no",
+              "recommended",
+              "unsuitable",
+              "wanted"
+            ],
+            "qualifiedName": "io:RateManagementState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "DomesticHotWaterProduction",
+        "uiProfiles": [
+          "StatefulThermostatWithSensor",
+          "StatefulThermostat",
+          "Thermostat",
+          "WaterConsumption"
+        ],
+        "uiClass": "WaterHeatingSystem",
+        "uiClassifiers": ["generator"],
+        "qualifiedName": "io:AtlanticDomesticHotWaterProductionIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "DHW"
+        },
+        {
+          "name": "core:VersionState",
+          "type": 3,
+          "value": "36383130303820202020"
+        },
+        {
+          "name": "core:PriorityLockTimerState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:CommandLockLevelsState",
+          "type": 3,
+          "value": "[]",
+          "lastUpdateTime": 1758013039000
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "good"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 100.0
+        },
+        {
+          "name": "core:TemperatureState",
+          "type": 2,
+          "value": 26.900000000000034
+        },
+        {
+          "name": "io:RateManagementState",
+          "type": 3,
+          "value": "?"
+        },
+        {
+          "name": "io:OperatingModeCapabilitiesState",
+          "type": 11,
+          "value": {
+            "relaunch": 1,
+            "absence": 1,
+            "rateManagement": 0,
+            "energyDemandStatus": 1
+          }
+        },
+        {
+          "name": "core:OperatingModeState",
+          "type": 11,
+          "value": {
+            "relaunch": "Keep_Current_Value ",
+            "absence": "Keep_Current_Value"
+          }
+        },
+        {
+          "name": "core:WaterConsumptionState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:DHWErrorState",
+          "type": 11,
+          "value": {
+            "code": 0,
+            "family": "W",
+            "type": 0
+          }
+        },
+        {
+          "name": "io:HeatPumpOperatingTimeState",
+          "type": 1,
+          "value": 2052
+        },
+        {
+          "name": "io:ElectricBoosterOperatingTimeState",
+          "type": 1,
+          "value": 121
+        },
+        {
+          "name": "io:DHWModeState",
+          "type": 3,
+          "value": "autoMode"
+        },
+        {
+          "name": "core:TargetTemperatureState",
+          "type": 2,
+          "value": 45.0
+        },
+        {
+          "name": "core:BoostModeDurationState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "io:AwayModeDurationState",
+          "type": 3,
+          "value": "0"
+        },
+        {
+          "name": "core:ManufacturerNameState",
+          "type": 3,
+          "value": "Thermor"
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Atlantic Group"
+        },
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "681008"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "61435d6a-4ba6-4c96-b7b5-105bb31d3b87",
+      "widget": "DomesticHotWaterProduction",
+      "type": 1,
+      "oid": "f8b9db16-0797-41d4-982d-2038c5d503f9",
+      "uiClass": "WaterHeatingSystem"
     }
   ],
   "features": [],
