@@ -127,22 +127,10 @@ def format_discovered_event_class(address: str) -> str:
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old config entries to the current version.
 
-    Version 1.2 renames the S400 impedance sensors' unique_ids to match
-    the xiaomi-ble library's corrected frequency mapping, preserving
-    entity history instead of disabling a leftover.
-
-    Identifies an S400 via the entity registry's "impedance_low" key
-    (only ever emitted by the S400), not the device registry: that entry
-    may not exist yet this early, and deferring on it risks a collision
-    if the library creates correctly named entities before a later
-    retry. Falls back to the device registry only when "impedance_low"
-    is absent but a lone "impedance" entity is -- the old parser could
-    emit that without "impedance_low" from a second advertisement never
-    received before the upgrade -- since that fallback can't reintroduce
-    the collision (it never fires once "impedance_low" exists).
-
-    Must rename "impedance_low" -> "impedance_high" before the legacy
-    "impedance" -> "impedance_low", to avoid a unique_id collision.
+    Version 1.2 swaps the S400 impedance unique IDs while preserving entity
+    history. Detect the model from the S400-only impedance key, falling back to
+    the device registry when only the legacy key exists. Rename low to high
+    first to avoid a unique-ID collision.
     """
     if entry.version == 1 and entry.minor_version == 1:
         address = entry.unique_id
