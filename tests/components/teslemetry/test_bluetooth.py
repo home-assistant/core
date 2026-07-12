@@ -127,6 +127,46 @@ async def test_vehicle_bluetooth_out_of_range(hass: HomeAssistant) -> None:
     assert not isinstance(vehicle.api, VehicleRouter)
 
 
+async def test_vehicle_router_after_cold_cache_active_scan(hass: HomeAssistant) -> None:
+    """A paired vehicle missing from a cold discovery cache is found via one scan.
+
+    async_ble_device_from_address() only reads the passive discovery cache;
+    on a cold Home Assistant start the first advertisement may not have
+    arrived yet even though the car is in range. A bounded active scan and
+    retry must still route it locally instead of permanently falling back to
+    cloud for the entry's whole lifetime.
+    """
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    mock_ble_device = MagicMock(return_value=None)
+
+    async def _active_scan(hass: HomeAssistant) -> None:
+        mock_ble_device.return_value = MagicMock()
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            mock_ble_device,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.async_request_active_scan",
+            AsyncMock(side_effect=_active_scan),
+        ) as mock_active_scan,
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = MagicMock()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    vehicle = entry.runtime_data.vehicles[0]
+    mock_active_scan.assert_awaited_once()
+    assert isinstance(vehicle.api, VehicleRouter)
+
+
 @pytest.mark.parametrize(
     "disconnect_error",
     [None, BleakError("boom")],

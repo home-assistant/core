@@ -24,7 +24,10 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    async_ble_device_from_address,
+    async_request_active_scan,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -333,7 +336,9 @@ async def _async_resolve_vehicle_api(
     subentry_id: str,
     vin: str,
     cloud_vehicle: Vehicle,
-) -> Vehicle | VehicleRouter:
+    *,
+    active_scan_done: bool,
+) -> tuple[Vehicle | VehicleRouter, bool]:
     """Return the API a vehicle's platforms should call.
 
     When the subentry has been paired (its data carries a BLE ``address``) and the
@@ -341,17 +346,29 @@ async def _async_resolve_vehicle_api(
     tries the local VehicleBluetooth first and fails over to cloud per command.
     Otherwise, and for a vehicle out of BLE range at setup, return the plain
     cloud Vehicle unchanged.
+
+    ``active_scan_done`` tracks whether this setup call already requested a
+    bounded active scan; the discovery cache is a passive listener, so on a
+    cold start this can run before the first advertisement even when the car
+    is nearby. Only the first cache miss per setup pays that bounded cost -
+    one sweep sees every nearby advertisement, not just one address - and the
+    caller threads the returned flag into later vehicles so they skip it.
     """
     address = entry.subentries[subentry_id].data.get(CONF_ADDRESS)
     if not address:
-        return cloud_vehicle
+        return cloud_vehicle, active_scan_done
 
     ble_device = async_ble_device_from_address(hass, address, connectable=True)
+    if ble_device is None and not active_scan_done:
+        await async_request_active_scan(hass)
+        active_scan_done = True
+        ble_device = async_ble_device_from_address(hass, address, connectable=True)
+
     if ble_device is None:
         LOGGER.warning(
             "Bluetooth vehicle %s (%s) not in range; using cloud only", vin, address
         )
-        return cloud_vehicle
+        return cloud_vehicle, active_scan_done
 
     parent = await async_get_ble_parent(hass)
     # verify + raise_unconfirmed=False so an ambiguous BLE timeout resolves as a
@@ -365,7 +382,7 @@ async def _async_resolve_vehicle_api(
         raise_unconfirmed=False,
         keepalive_interval=None,
     )
-    return VehicleRouter(bluetooth_vehicle, cloud_vehicle)
+    return VehicleRouter(bluetooth_vehicle, cloud_vehicle), active_scan_done
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
@@ -439,6 +456,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     # Create the stream (created lazily when first vehicle is found)
     stream: TeslemetryStream | None = None
 
+    # Whether this setup already paid for a bounded active scan to cover a
+    # cold discovery cache; see _async_resolve_vehicle_api.
+    active_scan_done = False
+
     # Remember each device identifier we create
     current_devices: set[tuple[str, str]] = set()
 
@@ -503,8 +524,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
             # Route commands through Bluetooth first when the subentry has been
             # paired; otherwise this returns the plain cloud Vehicle.
-            vehicle_api = await _async_resolve_vehicle_api(
-                hass, entry, subentry_id, vin, vehicle
+            vehicle_api, active_scan_done = await _async_resolve_vehicle_api(
+                hass,
+                entry,
+                subentry_id,
+                vin,
+                vehicle,
+                active_scan_done=active_scan_done,
             )
 
             vehicles.append(
