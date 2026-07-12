@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .const import ProxmoxPermission
 from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import (
     ProxmoxContainerEntity,
@@ -25,6 +26,7 @@ from .entity import (
     ProxmoxStorageEntity,
     ProxmoxVMEntity,
 )
+from .helpers import is_granted
 
 PARALLEL_UPDATES = 0
 
@@ -34,6 +36,8 @@ class ProxmoxNodeSensorEntityDescription(SensorEntityDescription):
     """Class to hold Proxmox node sensor description."""
 
     value_fn: Callable[[ProxmoxNodeData], StateType | datetime]
+    permission: ProxmoxPermission = ProxmoxPermission.SYSAUDIT
+    permission_target: str = "nodes"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -64,10 +68,9 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         value_fn=lambda data: data.node["status"],
         device_class=SensorDeviceClass.ENUM,
         options=["online", "offline"],
+        permission=ProxmoxPermission.VMAUDIT,
+        permission_target="vms",
     ),
-)
-
-FULL_NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
     ProxmoxNodeSensorEntityDescription(
         key="node_cpu",
         translation_key="node_cpu",
@@ -473,22 +476,17 @@ async def async_setup_entry(
 
     def _async_add_new_nodes(nodes: list[ProxmoxNodeData]) -> None:
         """Add new node sensors."""
-        entities: list[ProxmoxNodeSensor] = []
-
-        for node_data in nodes:
-            node_info = node_data.node
-            entities.extend(
-                ProxmoxNodeSensor(coordinator, description, node_data)
-                for description in NODE_SENSORS
+        async_add_entities(
+            ProxmoxNodeSensor(coordinator, description, node_data)
+            for description in NODE_SENSORS
+            for node_data in nodes
+            if is_granted(
+                coordinator.permissions,
+                p_type=description.permission_target,
+                p_id=node_data.node["node"],
+                permission=description.permission,
             )
-
-            if "cpu" in node_info:
-                entities.extend(
-                    ProxmoxNodeSensor(coordinator, description, node_data)
-                    for description in FULL_NODE_SENSORS
-                )
-
-        async_add_entities(entities)
+        )
 
     def _async_add_new_vms(
         vms: list[tuple[ProxmoxNodeData, dict[str, Any]]],
