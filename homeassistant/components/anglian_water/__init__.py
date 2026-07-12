@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+from .auth import async_refresh_or_force_login
 from .const import CONF_ACCOUNT_NUMBER, DOMAIN
 from .coordinator import AnglianWaterConfigEntry, AnglianWaterUpdateCoordinator
 
@@ -41,7 +42,7 @@ async def async_setup_entry(
         refresh_token=entry.data[CONF_ACCESS_TOKEN],
     )
     try:
-        await auth.send_refresh_request()
+        await async_refresh_or_force_login(auth)
     except (
         ConsentRequiredError,
         ExpiredAccessTokenError,

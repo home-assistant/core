@@ -3,6 +3,12 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from pyanglianwater.exceptions import (
+    ConsentRequiredError,
+    ExpiredAccessTokenError,
+    InvalidGrantError,
+    UnknownEndpointError,
+)
 from pyanglianwater.meter import SmartMeter
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -15,7 +21,10 @@ from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     statistics_during_period,
 )
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import ACCOUNT_NUMBER
@@ -252,3 +261,72 @@ async def test_coordinator_period_statistics_without_sum(
         get_last_statistics, hass, 1, statistic_id, True, {"sum"}
     )
     assert stats[statistic_id]
+
+
+@pytest.mark.parametrize(
+    "exception_type",
+    [ExpiredAccessTokenError, InvalidGrantError],
+)
+async def test_coordinator_recovers_with_stored_credentials(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+    exception_type: type[Exception],
+) -> None:
+    """Test coordinator falls back to a full login for auth refresh failures."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    mock_anglian_water_authenticator.refresh_token = "new_valid_token"
+    mock_anglian_water_client.update.side_effect = [exception_type, None]
+
+    await coordinator._async_update_data()
+
+    assert mock_anglian_water_authenticator.send_login_request.await_count == 1
+    assert mock_config_entry.data[CONF_ACCESS_TOKEN] == "new_valid_token"
+
+
+@pytest.mark.parametrize(
+    "exception_type",
+    [ExpiredAccessTokenError, InvalidGrantError],
+)
+async def test_coordinator_raises_reauth_when_stored_credentials_fail(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+    exception_type: type[Exception],
+) -> None:
+    """Test coordinator triggers reauth when forced login cannot recover."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    mock_anglian_water_client.update.side_effect = exception_type
+    mock_anglian_water_authenticator.send_login_request.side_effect = (
+        ConsentRequiredError
+    )
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await coordinator._async_update_data()
+
+
+@pytest.mark.parametrize(
+    "exception_type",
+    [ConsentRequiredError, UnknownEndpointError(500, "boom")],
+)
+async def test_coordinator_keeps_transient_errors_as_update_failed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+    exception_type: Exception,
+) -> None:
+    """Test transient coordinator errors do not trigger reauth."""
+    coordinator = AnglianWaterUpdateCoordinator(
+        hass, mock_anglian_water_client, mock_config_entry
+    )
+    mock_anglian_water_client.update.side_effect = exception_type
+
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()

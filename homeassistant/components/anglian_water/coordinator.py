@@ -9,6 +9,7 @@ from pyanglianwater.exceptions import (
     ConsentRequiredError,
     ExpiredAccessTokenError,
     InvalidGrantError,
+    SelfAssertedError,
     UnknownEndpointError,
 )
 
@@ -24,13 +25,14 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfVolume
+from homeassistant.const import CONF_ACCESS_TOKEN, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import VolumeConverter
 
+from .auth import async_force_login
 from .const import CONF_ACCOUNT_NUMBER, DOMAIN
 
 type AnglianWaterConfigEntry = ConfigEntry[AnglianWaterUpdateCoordinator]
@@ -66,8 +68,26 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.api.update(self.config_entry.data[CONF_ACCOUNT_NUMBER])
             await self._insert_statistics()
-        except (ExpiredAccessTokenError, InvalidGrantError) as err:
-            raise ConfigEntryAuthFailed from err
+        except (ExpiredAccessTokenError, InvalidGrantError):
+            try:
+                auth = self.api.api._auth  # noqa: SLF001
+                await async_force_login(auth)
+                self.config_entry.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data={
+                        **self.config_entry.data,
+                        CONF_ACCESS_TOKEN: auth.refresh_token,
+                    },
+                )
+                await self.api.update(self.config_entry.data[CONF_ACCOUNT_NUMBER])
+                await self._insert_statistics()
+            except (
+                ConsentRequiredError,
+                ExpiredAccessTokenError,
+                InvalidGrantError,
+                SelfAssertedError,
+            ) as auth_err:
+                raise ConfigEntryAuthFailed from auth_err
         except (ConsentRequiredError, UnknownEndpointError) as err:
             raise UpdateFailed from err
 
