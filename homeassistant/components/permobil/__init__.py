@@ -17,7 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, _: ConfigEntry) -> bool:
         severity=ir.IssueSeverity.ERROR,
         translation_key="integration_removed",
         translation_placeholders={
-            "entries": "/config/integrations/integration/permobil"
+            "entries": "/config/integrations/integration/permobil",
         },
     )
     return True
