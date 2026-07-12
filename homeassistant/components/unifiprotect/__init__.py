@@ -213,10 +213,9 @@ async def _async_setup_public_only_entry(
         )
     unifi_mac = _async_unifi_mac_from_hass(mac)
     data_service.public_api_nvr_mac = unifi_mac
-    # Stamp the resolved mac onto the cached public NVR so websocket-driven
-    # updates dispatch to the entities keyed on it. Firmware newer than 7.1
-    # already carries it; older firmware omits it. Transitional — the library
-    # is being taught to backfill this during update_public (uilibs/uiprotect).
+    # Firmware 7.1 and older omits the NVR mac; stamp it so websocket updates
+    # dispatch to the entities keyed on it. Transitional pending a library-side
+    # backfill in update_public (uilibs/uiprotect).
     if (nvr := protect.public_bootstrap.nvr) is not None:
         nvr.mac = unifi_mac
 
@@ -226,9 +225,8 @@ async def _async_setup_public_only_entry(
     data_service.async_subscribe_public_events()
 
     # Create the NVR device before forwarding platforms so via_device works.
-    # The public API carries the NVR name always, and the model (``type``) on
-    # firmware newer than 7.1; the market name and console URL remain
-    # private-only (degraded).
+    # Model is absent on 7.1 and older; market name and console URL are always
+    # private-only, so they stay unset here.
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
