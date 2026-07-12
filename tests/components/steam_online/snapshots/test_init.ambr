@@ -19,8 +19,8 @@
     }),
     'labels': set({
     }),
-    'manufacturer': 'Steam',
-    'model': None,
+    'manufacturer': 'Valve',
+    'model': 'Steam',
     'model_id': None,
     'name': 'testaccount1',
     'name_by_user': None,

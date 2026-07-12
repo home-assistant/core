@@ -6,7 +6,6 @@ CONF_ACCOUNT = "account"
 CONF_ACCOUNTS = "accounts"
 
 DATA_KEY_COORDINATOR = "coordinator"
-DEFAULT_NAME = "Steam"
 DOMAIN: Final = "steam_online"
 
 
