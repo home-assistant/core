@@ -181,6 +181,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
             update_interval=SCAN_INTERVAL_SLOW,
         )
         self._dhw_schedule_refresh_pending = True
+        self._dhw_schedule_refresh_generation = 0
         self._retry_schedule_errors = False
 
     @override
@@ -212,12 +213,18 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
 
         dhw_schedule = previous.dhw_schedule
         if self._dhw_schedule_refresh_pending:
+            refresh_generation = self._dhw_schedule_refresh_generation
             refreshed_schedule, retryable = await self._async_fetch_dhw_schedule()
             if refreshed_schedule is not None:
                 dhw_schedule = refreshed_schedule
-                self._dhw_schedule_refresh_pending = False
-                self._retry_schedule_errors = False
-            elif not retryable and not self._retry_schedule_errors:
+                if refresh_generation == self._dhw_schedule_refresh_generation:
+                    self._dhw_schedule_refresh_pending = False
+                    self._retry_schedule_errors = False
+            elif (
+                refresh_generation == self._dhw_schedule_refresh_generation
+                and not retryable
+                and not self._retry_schedule_errors
+            ):
                 self._dhw_schedule_refresh_pending = False
 
         return BSBLanSlowData(
@@ -228,6 +235,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
     async def async_refresh_schedule_after_write(self) -> None:
         """Refresh slow data after a successful schedule write."""
         self._dhw_schedule_refresh_pending = True
+        self._dhw_schedule_refresh_generation += 1
         self._retry_schedule_errors = True
         await self.async_refresh()
 
