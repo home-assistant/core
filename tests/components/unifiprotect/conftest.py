@@ -555,6 +555,22 @@ def mock_ufp_reauth_entry_alt():
     )
 
 
+@pytest.fixture(name="ufp_public_only_entry")
+def mock_ufp_public_only_entry():
+    """Mock a public-API-only (API key, no local user) config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: DEFAULT_HOST,
+            CONF_API_KEY: DEFAULT_API_KEY,
+            "id": DEFAULT_HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+        },
+        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
+    )
+
+
 @pytest.fixture(name="mock_setup")
 def mock_setup_fixture() -> Generator[AsyncMock]:
     """Mock async_setup and async_setup_entry to prevent reload issues in tests."""

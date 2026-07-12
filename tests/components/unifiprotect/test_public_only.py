@@ -156,6 +156,9 @@ async def test_public_only_auth_failed_triggers_reauth(hass: HomeAssistant) -> N
         await hass.async_block_till_done()
 
     assert mock_reauth.called
+    # AUTH_FAILED arrives instead of DISCONNECTED: the stale public data must
+    # not keep rendering as live while the reauth is pending.
+    assert hass.states.get(_ALARM_ENTITY_ID).state == "unavailable"
 
 
 async def test_public_only_unresolved_mac_not_ready(hass: HomeAssistant) -> None:

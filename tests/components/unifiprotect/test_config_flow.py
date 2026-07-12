@@ -2433,3 +2433,125 @@ async def test_api_key_flow_resolve_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_public_only_api_key(
+    hass: HomeAssistant,
+    ufp_public_only_entry: MockConfigEntry,
+    mock_setup: None,
+) -> None:
+    """Reauth on a public-only entry asks only for a new API key."""
+    ufp_public_only_entry.add_to_hass(hass)
+
+    result = await ufp_public_only_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_api_key"
+    assert list(result["data_schema"].schema) == [CONF_API_KEY]
+
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=_meta_info(),
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
+            return_value=MAC_ADDR,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new-api-key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert ufp_public_only_entry.data[CONF_API_KEY] == "new-api-key"
+    # The entry must stay public-only; reauth never flips the mode.
+    assert CONF_USERNAME not in ufp_public_only_entry.data
+
+
+async def test_reauth_public_only_wrong_nvr(
+    hass: HomeAssistant,
+    ufp_public_only_entry: MockConfigEntry,
+    mock_setup: None,
+) -> None:
+    """Reauth aborts when the key resolves a different NVR."""
+    ufp_public_only_entry.add_to_hass(hass)
+
+    result = await ufp_public_only_entry.start_reauth_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=_meta_info(),
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
+            return_value="ffffffffffff",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new-api-key"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_nvr"
+
+
+async def test_reauth_public_only_invalid_key(
+    hass: HomeAssistant,
+    ufp_public_only_entry: MockConfigEntry,
+    mock_setup: None,
+) -> None:
+    """A rejected replacement key re-shows the form with an error."""
+    ufp_public_only_entry.add_to_hass(hass)
+
+    result = await ufp_public_only_entry.start_reauth_flow(hass)
+
+    with patch(
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+        side_effect=NotAuthorized,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "bad-key"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_api_key"
+    assert result["errors"] == {CONF_API_KEY: "invalid_auth"}
+
+
+async def test_reconfigure_full_from_public_only_missing_password(
+    hass: HomeAssistant,
+    ufp_public_only_entry: MockConfigEntry,
+    mock_setup: None,
+) -> None:
+    """Flipping public-only to full access with an empty password fails cleanly."""
+    ufp_public_only_entry.add_to_hass(hass)
+
+    result = await ufp_public_only_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_full"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_full"
+
+    # The entry has no stored password to fall back on: the login must fail
+    # as invalid_auth, not crash on the missing key.
+    with patch(
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
+        side_effect=NotAuthorized,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: DEFAULT_HOST,
+                CONF_PORT: DEFAULT_PORT,
+                CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
+                CONF_USERNAME: "new-user",
+                CONF_PASSWORD: "",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}

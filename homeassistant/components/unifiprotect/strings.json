@@ -91,6 +91,16 @@
         "description": "Your credentials or API key seem to be missing or invalid. Leave password and API key empty to keep your existing credentials. For more information: {local_user_documentation_url}",
         "title": "Reauth UniFi Protect"
       },
+      "reauth_api_key": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::unifiprotect::config::step::api_key::data_description::api_key%]"
+        },
+        "description": "Your API key seems to be missing or invalid. Enter a new API key from your UniFi OS Console. For more information: {api_key_documentation_url}",
+        "title": "Reauth UniFi Protect (API key)"
+      },
       "reconfigure": {
         "title": "Reconfigure UniFi Protect",
         "description": "Choose how to connect to your UniFi Protect console.",

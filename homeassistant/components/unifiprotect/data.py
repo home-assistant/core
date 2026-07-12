@@ -241,13 +241,7 @@ class ProtectData:
                 self._async_signal_public_update(old_obj.mac, None)
             return
         if new_obj.model is ModelType.NVR:
-            # Public-only has no private NVR, so signal the public one (it
-            # carries the resolved mac the alarm panel is keyed on).
-            if self.api.is_public_only:
-                if (nvr := self.api.public_bootstrap.nvr) is not None:
-                    self._async_signal_device_update(cast("ProtectDeviceType", nvr))
-            else:
-                self._async_signal_device_update(self.api.bootstrap.nvr)
+            self._async_signal_nvr_update()
             return
         if isinstance(new_obj, PublicDeviceModel):
             self._async_signal_public_update(new_obj.mac, new_obj)
@@ -285,9 +279,14 @@ class ProtectData:
     def _async_public_ws_state_changed(self, state: WebsocketState) -> None:
         """Handle a change in the public devices websocket state."""
         if state is WebsocketState.AUTH_FAILED:
-            # A revoked API key cannot self-recover; route to reauth. Fires in
+            # A revoked API key cannot self-recover; mark the public data
+            # stale (AUTH_FAILED arrives instead of DISCONNECTED, so entities
+            # would otherwise stay available) and route to reauth. Fires in
             # both modes (the public websocket runs in hybrid too), and is the
             # only reauth trigger in public-only mode.
+            if self.last_public_update_success:
+                self.last_public_update_success = False
+                self._async_process_public_updates()
             self._entry.async_start_reauth(self._hass)
             return
         success = state is WebsocketState.CONNECTED
@@ -297,18 +296,24 @@ class ProtectData:
         self._async_process_public_updates()
 
     @callback
-    def _async_process_public_updates(self) -> None:
-        """Re-signal public-API entities after a public websocket state change."""
-        api = self.api
-        if not api.has_public_bootstrap:
-            return
-        # Refresh the NVR alarm panel too. Public-only has no private NVR, so
-        # signal the public one.
-        if api.is_public_only:
-            if (nvr := api.public_bootstrap.nvr) is not None:
+    def _async_signal_nvr_update(self) -> None:
+        """Signal the NVR entities (the alarm panel reads the public arm mode).
+
+        Public-only has no private NVR, so signal the public one; it carries
+        the resolved mac the alarm panel is keyed on.
+        """
+        if self.api.is_public_only:
+            if (nvr := self.api.public_bootstrap.nvr) is not None:
                 self._async_signal_device_update(cast("ProtectDeviceType", nvr))
         else:
-            self._async_signal_device_update(api.bootstrap.nvr)
+            self._async_signal_device_update(self.api.bootstrap.nvr)
+
+    @callback
+    def _async_process_public_updates(self) -> None:
+        """Re-signal public-API entities after a public websocket state change."""
+        if not self.api.has_public_bootstrap:
+            return
+        self._async_signal_nvr_update()
         # Subscribers recompute from the public bootstrap on ``None``.
         for subscriptions in self._public_subscriptions.values():
             for update_callback in subscriptions:

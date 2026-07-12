@@ -171,6 +171,8 @@ API_KEY_SCHEMA = _build_api_key_schema()
 REAUTH_SCHEMA = _build_schema(
     include_host=False, include_connection=False, credentials_optional=True
 )
+# Reauth flow for public-API-only entries: the API key is the only credential
+REAUTH_API_KEY_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): _PASSWORD_SELECTOR})
 
 
 async def async_local_user_documentation_url(hass: HomeAssistant) -> str:
@@ -347,6 +349,14 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any],
     ) -> tuple[NVR | None, dict[str, str]]:
+        username = user_input.get(CONF_USERNAME, "")
+        password = user_input.get(CONF_PASSWORD, "")
+        if not username or not password:
+            # Entries coming from public-API-only mode have no stored
+            # credentials to fall back on; the client constructor rejects an
+            # incomplete pair, so fail as invalid_auth before building it.
+            return None, {CONF_PASSWORD: "invalid_auth"}
+
         session = async_create_clientsession(
             self.hass, cookie_jar=CookieJar(unsafe=True)
         )
@@ -361,8 +371,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             public_api_session=public_api_session,
             host=host,
             port=port,
-            username=user_input[CONF_USERNAME],
-            password=user_input[CONF_PASSWORD],
+            username=username,
+            password=password,
             api_key=user_input.get(CONF_API_KEY, ""),
             verify_ssl=verify_ssl,
             cache_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
@@ -485,7 +495,53 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
+        if not entry_data.get(CONF_USERNAME):
+            # Public-API-only entry: there is no local user to re-enter, and
+            # re-adding one here would silently flip the mode (that belongs
+            # to reconfigure); only the API key can be renewed.
+            return await self.async_step_reauth_api_key()
         return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_api_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reauth a public-API-only entry with a new API key."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            validate_input = {
+                CONF_HOST: reauth_entry.data[CONF_HOST],
+                CONF_PORT: reauth_entry.data[CONF_PORT],
+                CONF_VERIFY_SSL: reauth_entry.data[CONF_VERIFY_SSL],
+                CONF_API_KEY: user_input[CONF_API_KEY],
+            }
+            mac, errors = await self._async_get_public_nvr_identity(validate_input)
+            if mac and not errors:
+                await self.async_set_unique_id(_async_unifi_mac_from_hass(mac))
+                self._abort_if_unique_id_mismatch(reason="wrong_nvr")
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data={
+                        **reauth_entry.data,
+                        CONF_API_KEY: user_input[CONF_API_KEY],
+                    },
+                )
+
+        self.context["title_placeholders"] = {
+            "name": reauth_entry.title,
+            "ip_address": reauth_entry.data[CONF_HOST],
+        }
+        return self.async_show_form(
+            step_id="reauth_api_key",
+            description_placeholders={
+                "api_key_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
+                )
+            },
+            data_schema=REAUTH_API_KEY_SCHEMA,
+            errors=errors,
+        )
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
