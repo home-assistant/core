@@ -177,6 +177,29 @@ async def test_ble_parent_shared_and_cached(hass: HomeAssistant) -> None:
     mock_parent.return_value.get_private_key.assert_awaited_once()
 
 
+async def test_ble_parent_concurrent_first_init(hass: HomeAssistant) -> None:
+    """Concurrent first-time callers still create and load the key exactly once.
+
+    Without the init lock, callers racing before the parent is cached would
+    each construct their own TeslaBluetooth and generate/overwrite the key.
+    """
+
+    async def _get_private_key(path: str) -> None:
+        await asyncio.sleep(0)
+
+    with patch(
+        "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+    ) as mock_parent:
+        mock_parent.return_value.get_private_key = AsyncMock(
+            side_effect=_get_private_key
+        )
+        parents = await asyncio.gather(*(async_get_ble_parent(hass) for _ in range(5)))
+
+    assert all(parent is parents[0] for parent in parents)
+    mock_parent.assert_called_once()
+    mock_parent.return_value.get_private_key.assert_awaited_once()
+
+
 async def test_ensure_subentry_preserves_paired_address(hass: HomeAssistant) -> None:
     """Re-ensuring a subentry keeps the paired address and applies a new title."""
     entry = mock_config_entry()
@@ -404,7 +427,7 @@ async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
     ids=["timeout", "transport", "rejected"],
 )
 async def test_subentry_authorize_failure(
-    hass: HomeAssistant, error: type[Exception], expected: str
+    hass: HomeAssistant, error: type[TeslaFleetError], expected: str
 ) -> None:
     """Each pairing failure surfaces its own error, not a blanket timeout.
 
@@ -547,6 +570,28 @@ async def test_subentry_removal_reloads(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     mock_reload.assert_called_once_with(entry.entry_id)
+
+
+async def test_stale_vehicle_subentry_removed_on_reload(hass: HomeAssistant) -> None:
+    """A vehicle subentry no longer backed by the account is removed on reload.
+
+    This cleanup deletes the subentry's persisted pairing data (the BLE
+    address), not just a device-registry entry.
+    """
+    entry = await _setup_vehicle_subentry(hass)
+    assert entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.products",
+            return_value={"response": []},
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
 
 
 async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
