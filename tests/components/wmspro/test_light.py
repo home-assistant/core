@@ -42,7 +42,7 @@ async def test_light_device(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) == 2
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "97358")})
     assert device_entry is not None
@@ -67,18 +67,20 @@ async def test_light_update(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) == 2
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get("light.terrasse_licht")
     assert entity is not None
     assert entity == snapshot
+
+    before_status = len(mock_hub_status.mock_calls)
 
     # Move time to next update
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(mock_hub_status.mock_calls) >= 3
+    assert len(mock_hub_status.mock_calls) == before_status + 2
 
 
 @pytest.mark.parametrize(
@@ -98,7 +100,7 @@ async def test_light_turn_on_and_off(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) >= 1
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get("light.terrasse_licht")
     assert entity is not None
@@ -165,7 +167,7 @@ async def test_light_dimm_on_and_off(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) >= 1
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get("light.terrasse_licht")
     assert entity is not None

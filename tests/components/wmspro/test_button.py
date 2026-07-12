@@ -39,7 +39,7 @@ async def test_button_update(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) == 2
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get("button.terrasse_markise_identify")
     assert entity is not None
@@ -64,7 +64,7 @@ async def test_button_press(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) == 2
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     with patch(
         "wmspro.destination.Destination.refresh",
@@ -128,7 +128,7 @@ async def test_button_rotation_reset_press(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) >= 1
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get(range_entity_id)
     assert entity is not None

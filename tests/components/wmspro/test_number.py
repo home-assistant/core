@@ -47,18 +47,20 @@ async def test_number_update(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) == 7
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get(entity_id)
     assert entity is not None
     assert entity == snapshot
+
+    before_status = len(mock_hub_status.mock_calls)
 
     # Move time to next update
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(mock_hub_status.mock_calls) >= 10
+    assert len(mock_hub_status.mock_calls) == before_status + 28
 
 
 @pytest.mark.parametrize(
@@ -91,7 +93,7 @@ async def test_number_set_value(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) == 7
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get(entity_id)
     assert entity is not None
@@ -149,7 +151,7 @@ async def test_number_set_and_restore_value(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) == 7
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get(entity_id)
     assert entity is not None
@@ -191,7 +193,7 @@ async def test_number_update_handles_zero_value(
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration.mock_calls) == 1
-    assert len(mock_hub_status.mock_calls) >= 1
+    assert len(mock_hub_status.mock_calls) == len(mock_hub_configuration.destinations)
 
     entity = hass.states.get(
         "number.zonwering_begane_grond_keuken_alle_minimum_rotation"
