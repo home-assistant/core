@@ -52,7 +52,7 @@ class HarmanLuxuryMediaPlayer(
     _attr_has_entity_name = True
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
-    _attr_volume_step = 0.01
+    _attr_volume_step = 1 / _VOLUME_MAX
 
     _BASE_FEATURES = (
         MediaPlayerEntityFeature.VOLUME_SET
