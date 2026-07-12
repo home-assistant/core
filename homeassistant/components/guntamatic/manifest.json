@@ -14,5 +14,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "silver",
-  "requirements": ["guntamatic==1.9.0"]
+  "requirements": ["guntamatic==1.9.1"]
 }
