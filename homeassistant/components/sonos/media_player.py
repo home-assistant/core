@@ -530,6 +530,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 )
             _LOGGER.debug("Playing %s using websocket audioclip", media_id)
             try:
+                self.last_announce_id = None
                 assert self.speaker.websocket
                 response, data = await self.speaker.websocket.play_clip(
                     async_process_play_media_url(self.hass, media_id),
@@ -546,7 +547,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                     self.last_announce_id = data.get(CLIP_ID_KEY)
                 return
             if response.get("type") in ANNOUNCE_NOT_SUPPORTED_ERRORS:
-                self.last_announce_id = None
                 # If the speaker does not support announce do not raise and
                 # fall through to_play_media to play the clip directly.
                 _LOGGER.debug(
