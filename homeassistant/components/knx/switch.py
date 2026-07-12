@@ -87,9 +87,9 @@ class _KnxSwitch(SwitchEntity, RestoreEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
-        return bool(self._device.state)
+        return self._device.state
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
