@@ -1,6 +1,7 @@
 """Tests for the solax config flow."""
 
-from unittest.mock import patch
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from solax.inverter import InverterResponse
 from solax.inverters import X1MiniV34
@@ -12,8 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-def __mock_discover_success():
-    return X1MiniV34
+def __mock_discover_success() -> MagicMock:
+    return MagicMock(spec=X1MiniV34, get_data=AsyncMock(return_value=__mock_get_data()))
 
 
 def __mock_get_data():
@@ -38,8 +39,7 @@ async def test_form_success(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.solax.config_flow.discover",
             return_value=__mock_discover_success(),
-        ),
-        patch("solax.Inverter.get_data", return_value=__mock_get_data()),
+        ) as mock_discover,
         patch(
             "homeassistant.components.solax.async_setup_entry",
             return_value=True,
@@ -56,6 +56,13 @@ async def test_form_success(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    mock_discover.assert_called_once_with(
+        "192.168.1.87",
+        80,
+        "password",
+        inverters={X1MiniV34},
+        return_when=asyncio.FIRST_COMPLETED,
+    )
     assert entry_result["type"] is FlowResultType.CREATE_ENTRY
     assert entry_result["title"] == "ABCDEFGHIJ"
     assert entry_result["data"] == {
