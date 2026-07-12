@@ -55,6 +55,7 @@
     "energy_site": {
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "The Teslemetry account must be loaded before setting up local control. Try again once it has finished loading.",
         "not_supported": "Energy sites are added automatically from your Teslemetry account and cannot be added manually.",
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
