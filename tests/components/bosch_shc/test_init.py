@@ -171,12 +171,14 @@ async def test_setup_entry_forwards_all_platforms(hass: HomeAssistant) -> None:
     entry = _make_entry()
     entry.add_to_hass(hass)
     mock_session = _mock_session()
+    sentinel_platforms = [Platform.BUTTON, Platform.NUMBER]
 
     with (
         patch(
             "homeassistant.components.bosch_shc.SHCSession",
             return_value=mock_session,
         ),
+        patch("homeassistant.components.bosch_shc.PLATFORMS", sentinel_platforms),
         patch(
             "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
             return_value=None,
@@ -187,9 +189,4 @@ async def test_setup_entry_forwards_all_platforms(hass: HomeAssistant) -> None:
 
     mock_forward.assert_awaited_once()
     forwarded_platforms = mock_forward.call_args.args[1]
-    assert set(forwarded_platforms) == {
-        Platform.BINARY_SENSOR,
-        Platform.COVER,
-        Platform.SENSOR,
-        Platform.SWITCH,
-    }
+    assert list(forwarded_platforms) == sentinel_platforms
