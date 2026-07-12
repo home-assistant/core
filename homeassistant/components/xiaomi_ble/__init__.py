@@ -127,10 +127,10 @@ def format_discovered_event_class(address: str) -> str:
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old config entries to the current version.
 
-    Version 1.2 swaps the S400 impedance unique IDs while preserving entity
-    history. Detect the model from the S400-only impedance key, falling back to
-    the device registry when only the legacy key exists. Rename low to high
-    first to avoid a unique-ID collision.
+    Version 1.2 swaps the S400 impedance unique IDs while preserving
+    entity history. Detect the model from the S400-only impedance key,
+    falling back to the device registry when only the legacy key
+    exists. Rename low to high first to avoid a unique-ID collision.
     """
     if entry.version == 1 and entry.minor_version == 1:
         address = entry.unique_id
@@ -191,9 +191,11 @@ def _async_is_known_s400(
 
     If the entity registry has been cleared some other way (e.g. the
     user deleted the entities) while the restore cache still holds
-    stale data, its own descriptions are checked too, so that data isn't
-    permanently missed. See async_migrate_entry for why the device
-    registry isn't used as the primary signal here.
+    stale data, its own descriptions are checked too. As a last resort,
+    falls back to the device registry model, same as async_migrate_entry
+    -- e.g. a pre-fix S400 whose cache still only has the generic
+    "impedance" key (no "impedance_low"/"_high" anywhere) after its
+    entities were deleted.
     """
     entity_registry = er.async_get(hass)
     if any(
@@ -214,7 +216,10 @@ def _async_is_known_s400(
             ):
                 return True
 
-    return False
+    device_entry = dr.async_get(hass).async_get_device(
+        identifiers={(BLUETOOTH_DOMAIN, address)}
+    )
+    return device_entry is not None and device_entry.model in S400_MODELS
 
 
 def _async_purge_stale_s400_impedance_restore_cache(
