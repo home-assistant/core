@@ -577,24 +577,135 @@ async def test_purge_stale_restore_cache_runs_once(
     await hass.async_block_till_done()
 
 
-async def test_purge_phantom_never_deletes_unrenamed_legacy_entity(
+async def test_recover_interrupted_migration_completes_both_steps(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a legacy entity is never deleted if the rename never landed.
+    """Test a fully-interrupted migration (neither step landed) is finished.
 
-    Simulates a crash between the config entry's fast save (minor_version
-    already 2 on disk) and the entity registry's far slower, debounced
-    save (the unique_id rename never reached disk): "-impedance" is
-    still the genuine, un-renamed entity, not a phantom, even though the
-    device is a real S400. It must survive.
+    Simulates a crash before the config entry's fast save even reached
+    disk with either rename applied: minor_version already reads as 2,
+    but "-impedance" and the original "-impedance_low" are both still
+    present, untouched. The recovery step must finish both renames, in
+    the same order as the original migration, rather than leave them
+    stuck or delete anything.
     """
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
     )
     entry.add_to_hass(hass)
     device = _async_setup_device(device_registry, entry, model=S400_MODEL)
+    legacy_entity_id = _async_add_entity(
+        entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
+    )
+    low_entity_id = _async_add_entity(
+        entity_registry,
+        entry,
+        device.id,
+        f"{S400_ADDRESS}-impedance_low",
+        original_name="Impedance Low",
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    legacy_after = entity_registry.async_get(legacy_entity_id)
+    assert legacy_after is not None
+    assert legacy_after.unique_id == f"{S400_ADDRESS}-impedance_low"
+
+    low_after = entity_registry.async_get(low_entity_id)
+    assert low_after is not None
+    assert low_after.unique_id == f"{S400_ADDRESS}-impedance_high"
+
+    assert legacy_after.unique_id != low_after.unique_id
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_recover_interrupted_migration_completes_remaining_step(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test recovery finishes the second step if only the first landed.
+
+    Simulates a crash after "-impedance_low" -> "-impedance_high" reached
+    disk but before "-impedance" -> "-impedance_low" did: only the
+    second, still-pending step must run.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
+    )
+    entry.add_to_hass(hass)
+    device = _async_setup_device(device_registry, entry, model=S400_MODEL)
+    entity_id = _async_add_entity(
+        entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
+    )
+    # Already-completed first step: previous_unique_id proves it landed.
+    entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{S400_ADDRESS}-impedance_high",
+        config_entry=entry,
+        device_id=device.id,
+        original_name="Impedance High",
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    after = entity_registry.async_get(entity_id)
+    assert after is not None
+    assert after.unique_id == f"{S400_ADDRESS}-impedance_low"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_recover_interrupted_migration_noop_when_already_done(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test recovery does nothing once the migration is genuinely complete."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
+    )
+    entry.add_to_hass(hass)
+    device = _async_setup_device(device_registry, entry, model=S400_MODEL)
+    entity_id = _async_add_entity(
+        entity_registry,
+        entry,
+        device.id,
+        f"{S400_ADDRESS}-impedance_low",
+        original_name="Impedance Low",
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    after = entity_registry.async_get(entity_id)
+    assert after is not None
+    assert after.unique_id == f"{S400_ADDRESS}-impedance_low"
+    assert after.previous_unique_id is None
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_recover_interrupted_migration_skipped_for_v1v2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test recovery never touches a V1/V2 scale's legitimate entity."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
+    )
+    entry.add_to_hass(hass)
+    device = _async_setup_device(device_registry, entry, model=V1V2_MODEL)
     entity_id = _async_add_entity(
         entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
     )

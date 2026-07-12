@@ -184,23 +184,7 @@ def _async_is_known_s400(
     address: str,
     coordinator: XiaomiActiveBluetoothProcessorCoordinator | None = None,
 ) -> bool:
-    """Identify an S400 from any signal still available for this address.
-
-    Only the S400 has ever emitted "impedance_low"/"impedance_high".
-    Checking for either one (not just "impedance_low") matters because a
-    migration that only had "impedance_low" to rename moves it onto
-    "impedance_high", leaving no "impedance_low" entity behind -- relying
-    on that alone would misidentify this device on the very next check
-    that runs after such a migration.
-
-    If the entity registry has been cleared some other way (e.g. the
-    user deleted the entities) while the restore cache still holds
-    stale data, its own descriptions are checked too. As a last resort,
-    falls back to the device registry model, same as async_migrate_entry
-    -- e.g. a pre-fix S400 whose cache still only has the generic
-    "impedance" key (no "impedance_low"/"_high" anywhere) after its
-    entities were deleted.
-    """
+    """Return whether registry, restore data, or model identifies an S400."""
     entity_registry = er.async_get(hass)
     if any(
         entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, f"{address}-{key}")
@@ -291,42 +275,18 @@ def _purge_stale_sensor_restore_keys(
                 )
 
 
-def _async_purge_phantom_s400_impedance_entity(
+def _async_recover_interrupted_s400_migration(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
-    """Remove a phantom legacy S400 impedance entity, if one reappeared.
+    """Finish an S400 unique_id rename left incomplete by a crash.
 
-    The unique_id migration in async_migrate_entry renames the legacy
-    "-impedance" entity away once, for good: after that, this key should
-    never be legitimate again for an S400 device.
-
-    However, Bluetooth passive entities are also restored from a separate
-    cache (homeassistant.components.bluetooth.passive_update_processor's
-    own storage, keyed by config_entry_id), independent from the entity
-    registry. On instances that ran an older version of this integration
-    (before the xiaomi-ble fix), that cache still remembers an entity
-    description for the old generic "impedance" key. Since the entity
-    registry entry for that unique_id was already renamed away, the
-    passive processor recreates a brand new (and empty/phantom) entity for
-    it every time the platform is set up, before any fresh advertisement
-    is even parsed.
-
-    This entity never holds any real history (it's freshly created each
-    time), so unlike the legacy entity handled by the migration, it's
-    safe to simply remove it here, every setup, until the underlying
-    passive-processor cache eventually stops replaying the stale key.
-
-    Deliberately requires strong evidence the rename actually reached
-    the entity registry -- an "-impedance_low"/"-impedance_high" entity
-    already existing -- rather than the weaker device-registry fallback
-    used elsewhere (_async_is_known_s400). The entity registry's own
-    writes are debounced far longer than the config entry store's: a
-    crash between the two can leave minor_version already at 2 while the
-    rename itself never reached disk, in which case "-impedance" is
-    still the genuine, un-renamed entity. Requiring the rename's own
-    result as proof means that entity is left alone (under its old name,
-    until a future setup can retry -- see async_migrate_entry) rather
-    than destroyed as a false phantom.
+    HA never retries async_migrate_entry once minor_version already
+    reads as current, so an attempt interrupted between the config
+    entry's fast save and the entity registry's much slower one (see
+    _async_purge_phantom_s400_impedance_entity) would otherwise never
+    complete. Safe to run on every setup: a lingering legacy
+    "-impedance" entity is the sole trigger, so this never touches an
+    already-consistent or genuinely fresh S400.
     """
     if entry.version != 1 or entry.minor_version < 2:
         return
@@ -336,15 +296,80 @@ def _async_purge_phantom_s400_impedance_entity(
         return
 
     entity_registry = er.async_get(hass)
-    renamed_entity_exists = any(
-        entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, f"{address}-{key}")
+    old_legacy_id = f"{address}-impedance"
+    legacy_entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, old_legacy_id
+    )
+    if legacy_entity_id is None or not _async_is_known_s400(hass, address):
+        return
+
+    old_low_id = f"{address}-impedance_low"
+    new_high_id = f"{address}-impedance_high"
+    low_entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, old_low_id
+    )
+    low_entity = (
+        entity_registry.async_get(low_entity_id) if low_entity_id is not None else None
+    )
+    if low_entity_id is not None and low_entity is not None:
+        if low_entity.previous_unique_id != old_legacy_id:
+            _LOGGER.debug("S400 migration recovery: %s -> %s", old_low_id, new_high_id)
+            entity_registry.async_update_entity(
+                low_entity_id,
+                new_unique_id=new_high_id,
+                original_name="Impedance High",
+            )
+
+    new_low_id = f"{address}-impedance_low"
+    _LOGGER.debug("S400 migration recovery: %s -> %s", old_legacy_id, new_low_id)
+    entity_registry.async_update_entity(
+        legacy_entity_id, new_unique_id=new_low_id, original_name="Impedance Low"
+    )
+
+
+def _async_purge_phantom_s400_impedance_entity(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """Remove a phantom legacy S400 impedance entity, if one reappeared.
+
+    Bluetooth passive entities restore their last known value from their
+    own cache, independent of the entity registry (see
+    _async_purge_stale_s400_impedance_restore_cache), which can recreate
+    an empty "-impedance" entity on instances that had the pre-fix
+    generic sensor. It never holds real history, so it's safe to remove
+    on sight -- but only once _async_recover_interrupted_s400_migration
+    has had a chance to run first, since a lingering "-impedance" entity
+    is otherwise indistinguishable from one whose rename was interrupted
+    by a crash and is still awaiting recovery.
+    """
+    if entry.version != 1 or entry.minor_version < 2:
+        return
+
+    address = entry.unique_id
+    if address is None:
+        return
+
+    entity_registry = er.async_get(hass)
+    legacy_unique_id = f"{address}-impedance"
+
+    high_entity_exists = (
+        entity_registry.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, f"{address}-impedance_high"
+        )
         is not None
-        for key in ("impedance_low", "impedance_high")
+    )
+    low_entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{address}-impedance_low"
+    )
+    low_entity = (
+        entity_registry.async_get(low_entity_id) if low_entity_id is not None else None
+    )
+    renamed_entity_exists = high_entity_exists or (
+        low_entity is not None and low_entity.previous_unique_id == legacy_unique_id
     )
     if not renamed_entity_exists:
         return
 
-    legacy_unique_id = f"{address}-impedance"
     if entity_id := entity_registry.async_get_entity_id(
         Platform.SENSOR, DOMAIN, legacy_unique_id
     ):
@@ -356,6 +381,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Xiaomi BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
+    _async_recover_interrupted_s400_migration(hass, entry)
 
     kwargs = {}
     if bindkey := entry.data.get("bindkey"):
