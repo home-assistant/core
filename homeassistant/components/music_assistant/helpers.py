@@ -4,11 +4,14 @@ from collections.abc import Callable, Coroutine
 import functools
 from typing import TYPE_CHECKING, Any
 
+from music_assistant_models.auth import UserRole
 from music_assistant_models.errors import MusicAssistantError
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+
+from .const import DOMAIN
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
@@ -44,3 +47,26 @@ def get_music_assistant_client(
     if entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError("Entry not loaded")
     return entry.runtime_data.mass
+
+
+async def verify_username_availability(
+    mass: MusicAssistantClient, username: str, raise_on_error: bool = False
+) -> bool:
+    """Verify username availability for service calls.
+
+    This excludes guest users.
+    """
+    users = await mass.auth.list_users()
+    available_usernames = [
+        user.username for user in users if user.enabled and user.role != UserRole.GUEST
+    ]
+    if username not in available_usernames and raise_on_error:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_username",
+            translation_placeholders={
+                "username": username,
+                "available_usernames": ", ".join(available_usernames),
+            },
+        )
+    return username in available_usernames

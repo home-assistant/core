@@ -54,7 +54,7 @@ from .const import (
     ATTR_USERNAME,
     DOMAIN,
 )
-from .helpers import get_music_assistant_client
+from .helpers import get_music_assistant_client, verify_username_availability
 from .schemas import (
     LIBRARY_RESULTS_SCHEMA,
     SEARCH_RESULT_SCHEMA,
@@ -102,6 +102,7 @@ def register_actions(hass: HomeAssistant) -> None:
                 vol.Optional(ATTR_SEARCH_ALBUM): cv.string,
                 vol.Optional(ATTR_LIMIT, default=5): vol.Coerce(int),
                 vol.Optional(ATTR_LIBRARY_ONLY, default=False): cv.boolean,
+                vol.Optional(ATTR_USERNAME): cv.string,
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -184,6 +185,21 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
     search_name = call.data[ATTR_SEARCH_NAME]
     search_artist = call.data.get(ATTR_SEARCH_ARTIST)
     search_album = call.data.get(ATTR_SEARCH_ALBUM)
+    search_username = call.data.get(ATTR_USERNAME)
+    if search_username:
+        assert mass.server_info  # for type checking
+        if mass.server_info.schema_version < 35:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_parameter",
+                translation_placeholders={
+                    "parameter": ATTR_USERNAME,
+                    "version": "2.10",
+                },
+            )
+        await verify_username_availability(
+            mass=mass, username=search_username, raise_on_error=True
+        )
     if search_album and search_artist:
         search_name = f"{search_artist} - {search_album} - {search_name}"
     elif search_album:
@@ -195,6 +211,7 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
         media_types=call.data.get(ATTR_MEDIA_TYPE, MediaType.ALL),
         limit=call.data[ATTR_LIMIT],
         library_only=call.data[ATTR_LIBRARY_ONLY],
+        user=search_username,
     )
     response: ServiceResponse = SEARCH_RESULT_SCHEMA(
         {

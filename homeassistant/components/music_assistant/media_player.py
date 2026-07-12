@@ -6,7 +6,6 @@ from contextlib import suppress
 import os
 from typing import TYPE_CHECKING, Any, override
 
-from music_assistant_models.auth import UserRole
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
 from music_assistant_models.enums import (
     EventType,
@@ -61,7 +60,7 @@ from .const import (
     DOMAIN,
 )
 from .entity import MusicAssistantEntity
-from .helpers import catch_musicassistant_error
+from .helpers import catch_musicassistant_error, verify_username_availability
 from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 
@@ -460,23 +459,10 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         username: str | None = None,
     ) -> None:
         """Send the play_media command to the media player."""
-        # verify username availability
         if username is not None:
-            users = await self.mass.auth.list_users()
-            available_usernames = [
-                user.username
-                for user in users
-                if user.enabled and user.role != UserRole.GUEST
-            ]
-            if username not in available_usernames:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_username",
-                    translation_placeholders={
-                        "username": username,
-                        "available_usernames": ", ".join(available_usernames),
-                    },
-                )
+            await verify_username_availability(
+                mass=self.mass, username=username, raise_on_error=True
+            )
 
         media_uris: list[str] = []
         item: MediaItemType | ItemMapping | None = None
