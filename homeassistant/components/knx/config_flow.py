@@ -979,7 +979,6 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 ],
                 telegram_db_backend=backend,
             )
-            # PostgreSQL needs connection details; collect them in a second step.
             if backend == KNX_TELEGRAM_BACKEND_POSTGRES:
                 return await self.async_step_telegram_store_postgres()
             return self.finish_flow()
@@ -1166,13 +1165,18 @@ def _build_dsn(params: dict[str, Any]) -> str:
     quoted_user = quote(params.get(CONF_KNX_TELEGRAM_DB_USER, ""), safe="")
     quoted_password = quote(params.get(CONF_KNX_TELEGRAM_DB_PASSWORD, ""), safe="")
     host = params.get(CONF_KNX_TELEGRAM_DB_HOST, "localhost")
+    if ":" in host and not host.startswith("["):
+        # IPv6 literals must be bracketed in the URL netloc
+        host = f"[{host}]"
     port = int(params.get(CONF_KNX_TELEGRAM_DB_PORT, 5432))
-    database = params.get(CONF_KNX_TELEGRAM_DB_DATABASE, "knx_telegrams")
+    quoted_database = quote(
+        params.get(CONF_KNX_TELEGRAM_DB_DATABASE, "knx_telegrams"), safe=""
+    )
     tls = params.get(CONF_KNX_TELEGRAM_DB_TLS, False)
 
     netloc = f"{quoted_user}:{quoted_password}@{host}:{port}"
     query = "sslmode=require" if tls else ""
-    return urlunparse(("postgresql", netloc, f"/{database}", "", query, ""))
+    return urlunparse(("postgresql", netloc, f"/{quoted_database}", "", query, ""))
 
 
 def _parse_dsn(dsn: str) -> dict[str, Any]:
@@ -1186,7 +1190,7 @@ def _parse_dsn(dsn: str) -> dict[str, Any]:
             CONF_KNX_TELEGRAM_DB_PASSWORD: unquote(url.password or ""),
             CONF_KNX_TELEGRAM_DB_HOST: url.hostname or "localhost",
             CONF_KNX_TELEGRAM_DB_PORT: url.port or 5432,
-            CONF_KNX_TELEGRAM_DB_DATABASE: url.path.lstrip("/"),
+            CONF_KNX_TELEGRAM_DB_DATABASE: unquote(url.path.lstrip("/")),
             CONF_KNX_TELEGRAM_DB_TLS: "sslmode=require" in url.query,
         }
     except ValueError, AttributeError:

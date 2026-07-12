@@ -58,7 +58,6 @@ CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: Final = "telegram_db_retention_days"
 CONF_KNX_TELEGRAM_DB_LOAD_HOURS: Final = "telegram_db_load_hours"
 CONF_KNX_TELEGRAM_DB_POSTGRES_DSN: Final = "telegram_db_postgres_dsn"
 
-# PostgreSQL telegram store form fields
 CONF_KNX_TELEGRAM_DB_HOST: Final = "host"
 CONF_KNX_TELEGRAM_DB_PORT: Final = "port"
 CONF_KNX_TELEGRAM_DB_USER: Final = "user"

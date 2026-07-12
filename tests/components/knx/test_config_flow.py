@@ -1926,6 +1926,30 @@ async def test_options_telegram_store_postgres_timeout(
             },
             id="percent_encoded_credentials",
         ),
+        pytest.param(
+            "postgresql://u:p@[2001:db8::1]:5432/db",
+            {
+                "user": "u",
+                "password": "p",
+                "host": "2001:db8::1",
+                "port": 5432,
+                "database": "db",
+                "tls": False,
+            },
+            id="ipv6_host",
+        ),
+        pytest.param(
+            "postgresql://u:p@h:5432/db%3Fquery%23hash",
+            {
+                "user": "u",
+                "password": "p",
+                "host": "h",
+                "port": 5432,
+                "database": "db?query#hash",
+                "tls": False,
+            },
+            id="percent_encoded_database",
+        ),
     ],
 )
 def test_parse_dsn(dsn: str, expected: dict) -> None:
@@ -1934,26 +1958,34 @@ def test_parse_dsn(dsn: str, expected: dict) -> None:
 
 
 @pytest.mark.parametrize(
-    ("user", "password"),
+    ("user", "password", "host", "database"),
     [
-        pytest.param("simple", "plain", id="plain"),
-        pytest.param("user@domain", "p@ss", id="at_sign"),
-        pytest.param("user", "p@ss%word", id="percent_sign"),
-        pytest.param("us:er", "p/a:s@s", id="multiple_special_chars"),
+        pytest.param("simple", "plain", "localhost", "knx", id="plain"),
+        pytest.param("user@domain", "p@ss", "localhost", "knx", id="at_sign"),
+        pytest.param("user", "p@ss%word", "localhost", "knx", id="percent_sign"),
+        pytest.param(
+            "us:er", "p/a:s@s", "localhost", "knx", id="multiple_special_chars"
+        ),
+        pytest.param("user", "pass", "2001:db8::1", "knx", id="ipv6_host"),
+        pytest.param(
+            "user", "pass", "localhost", "knx?query#hash", id="database_special_chars"
+        ),
     ],
 )
-def test_dsn_round_trip(user: str, password: str) -> None:
+def test_dsn_round_trip(user: str, password: str, host: str, database: str) -> None:
     """Test _build_dsn -> _parse_dsn -> _build_dsn produces identical DSNs.
 
     Catches double percent-encoding: urlparse returns percent-encoded values,
     so _parse_dsn must decode them before they are fed back into _build_dsn.
+    IPv6 hosts must be bracketed in the netloc for the DSN to stay parseable.
+    Database names with URL delimiters are percent-encoded to prevent truncation.
     """
     params = {
         "user": user,
         "password": password,
-        "host": "localhost",
+        "host": host,
         "port": 5432,
-        "database": "knx",
+        "database": database,
         "tls": False,
     }
     dsn1 = _build_dsn(params)

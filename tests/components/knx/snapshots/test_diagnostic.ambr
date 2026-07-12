@@ -51,6 +51,7 @@
       'state_updater': True,
       'telegram_db_backend': 'sqlite',
       'telegram_db_load_hours': 24,
+      'telegram_db_postgres_dsn': '**REDACTED**',
       'telegram_db_retention_days': 10,
     }),
     'config_store': dict({

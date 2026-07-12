@@ -159,6 +159,26 @@ async def test_store_telegram_history_error_handling(
     assert issue is not None
 
 
+async def test_store_telegram_history_needs_migration_timeout(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test that store initialization is aborted when needs_migration times out."""
+    with patch(
+        "knx_telegram_store.BufferedSqliteStore.needs_migration",
+        side_effect=TimeoutError(),
+    ):
+        await knx.setup_integration()
+
+    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+    assert telegrams_module.store is None
+
+    # Check that the repair issue was created
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+    assert issue is not None
+
+
 async def test_migrate_telegrams_from_json(
     hass: HomeAssistant,
     knx: KNXTestKit,

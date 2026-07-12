@@ -136,7 +136,8 @@ class Telegrams:
         if self._uninitialized_store is None:
             return
         try:
-            needs_migration = await self._uninitialized_store.needs_migration()
+            async with asyncio.timeout(10):
+                needs_migration = await self._uninitialized_store.needs_migration()
             if needs_migration:
                 _LOGGER.warning(
                     "KNX telegram history database schema upgrade/migration is required. "
