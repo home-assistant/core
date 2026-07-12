@@ -1528,7 +1528,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "meteo_france",
     "meteoalarm",
     "meteoclimatic",
-    "metoffice",
     "mfi",
     "microbees",
     "microsoft",
