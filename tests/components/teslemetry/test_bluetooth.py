@@ -197,12 +197,7 @@ async def test_ensure_subentry_preserves_paired_address(hass: HomeAssistant) -> 
 
 
 async def test_router_does_not_fail_over_on_unconfirmed() -> None:
-    """An ambiguous BLE timeout is never replayed on the cloud backend.
-
-    The router the integration builds must surface BluetoothUnconfirmedCommand
-    to the caller instead of failing over, so a non-idempotent command (trunk,
-    honk, media skip) cannot be double-executed.
-    """
+    """An unconfirmed BLE command is never replayed on the cloud backend."""
     bluetooth = AsyncMock()
     bluetooth.actuate_trunk = AsyncMock(side_effect=BluetoothUnconfirmedCommand())
     cloud = AsyncMock()
