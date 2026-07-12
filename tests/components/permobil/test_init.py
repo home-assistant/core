@@ -1,4 +1,4 @@
-"""Tests for the MyPermobil integration."""
+"""Tests for the Permobil integration."""
 
 from homeassistant.components.permobil import DOMAIN
 from homeassistant.config_entries import (
