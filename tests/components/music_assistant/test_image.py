@@ -171,9 +171,10 @@ async def test_party_mode_provider_lifecycle(
         hass, music_assistant_client, EventType.PROVIDERS_UPDATED
     )
 
-    # Device should have config entry association removed
+    # Device should NOT have config entry association removed yet
     device = device_registry.async_get_device({(DOMAIN, "1234_party_instance")})
-    assert device is None or not device.config_entries
+    assert device is not None
+    assert device.config_entries
 
     # 3. Simulate provider replacement with a new instance ID
     music_assistant_client.get_provider.return_value = ProviderInstance(
@@ -188,6 +189,10 @@ async def test_party_mode_provider_lifecycle(
     await trigger_subscription_callback(
         hass, music_assistant_client, EventType.PROVIDERS_UPDATED
     )
+
+    # Now the old device should have config entry association removed
+    device = device_registry.async_get_device({(DOMAIN, "1234_party_instance")})
+    assert device is None or not device.config_entries
 
     # Verify the new device registry entry is created
     new_device = device_registry.async_get_device({(DOMAIN, "1234_new_party_instance")})
