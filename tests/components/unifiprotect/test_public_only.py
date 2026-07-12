@@ -29,9 +29,9 @@ from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
-_RESOLVED_MAC = "e4388332c9b1"
-_UNIFI_MAC = "E4388332C9B1"
-_ALARM_ENTITY_ID = "alarm_control_panel.unifi_protect_alarm_manager"
+_RESOLVED_MAC = "aabbccddeeff"
+_UNIFI_MAC = "AABBCCDDEEFF"
+_ALARM_ENTITY_ID = "alarm_control_panel.test_nvr_alarm_manager"
 
 
 def _public_only_entry() -> MockConfigEntry:
@@ -67,7 +67,8 @@ def _public_client() -> Mock:
     arm_mode.status = NvrArmModeStatus.DISABLED
     nvr = Mock(spec=PublicNVR)
     nvr.mac = None  # older firmware: stamped with the resolved mac at setup
-    nvr.name = "NVR"
+    nvr.name = "Test NVR"
+    nvr.device_type = "UNVR4"  # present on firmware newer than 7.1
     nvr.id = "nvr-id"
     nvr.model = ModelType.NVR
     pb = Mock(spec=PublicBootstrap)
@@ -124,6 +125,9 @@ async def test_public_only_setup(
     device = device_registry.async_get_device(identifiers={(DOMAIN, _UNIFI_MAC)})
     assert device is not None
     assert device.sw_version == "7.1.83"
+    # Name always, model on firmware newer than 7.1.
+    assert device.name == "Test NVR"
+    assert device.model == "UNVR4"
     # Degraded identity: no market name / console url.
     assert device.configuration_url is None
 

@@ -85,15 +85,18 @@ class ProtectNVRAlarmControlPanel(ProtectNVREntity, AlarmControlPanelEntity):
         if not self.data.api.is_public_only:
             super()._async_set_device_info()
             return
-        # public-only: the public API exposes no NVR market name / model /
-        # console URL, and there is no private NVR to read a version from.
+        # public-only: read the NVR name (always) and model (firmware newer
+        # than 7.1) from the public bootstrap; market name and console URL
+        # stay private-only.
+        api = self.data.api
+        nvr = api.public_bootstrap.nvr if api.has_public_bootstrap else None
         mac = self.data.public_api_nvr_mac
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, mac)} if mac else set(),
             identifiers={(DOMAIN, mac)} if mac else set(),
             manufacturer=DEFAULT_BRAND,
-            name="UniFi Protect",
-            model="UniFi Protect",
+            name=nvr.name if nvr is not None else "UniFi Protect",
+            model=nvr.device_type if nvr is not None else None,
         )
 
     @callback

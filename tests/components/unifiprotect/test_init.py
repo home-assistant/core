@@ -8,6 +8,7 @@ from uiprotect import NvrError, ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import NVR, Bootstrap, CloudAccount, Light
 from uiprotect.exceptions import BadRequest, NotAuthorized
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import (
     AUTH_RETRIES,
@@ -641,3 +642,19 @@ async def test_setup_fails_when_api_key_still_missing_after_creation(
         name="Home Assistant (test home)"
     )
     ufp.api.set_api_key.assert_called_once_with("new-api-key-123")  # type: ignore[attr-defined]
+
+
+async def test_hybrid_auth_failed_triggers_reauth(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+) -> None:
+    """A revoked API key on the public websocket starts reauth in hybrid mode too."""
+
+    await init_entry(hass, ufp, [])
+    assert ufp.entry.state is ConfigEntryState.LOADED
+
+    with patch.object(ufp.entry, "async_start_reauth") as mock_reauth:
+        ufp.devices_ws_state_subscription(WebsocketState.AUTH_FAILED)
+        await hass.async_block_till_done()
+
+    assert mock_reauth.called

@@ -32,6 +32,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     AUTH_RETRIES,
     CONF_ALLOW_EA,
+    DEFAULT_BRAND,
     DEVICES_THAT_ADOPT,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
@@ -223,16 +224,17 @@ async def _async_setup_public_only_entry(
     data_service.async_subscribe_public_events()
 
     # Create the NVR device before forwarding platforms so via_device works.
-    # Identity is degraded: the public API exposes no market name / model /
-    # console URL for the NVR.
+    # The public API carries the NVR name always, and the model (``type``) on
+    # firmware newer than 7.1; the market name and console URL remain
+    # private-only (degraded).
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, unifi_mac)},
         identifiers={(DOMAIN, unifi_mac)},
-        manufacturer="Ubiquiti",
-        name="UniFi Protect",
-        model="UniFi Protect",
+        manufacturer=DEFAULT_BRAND,
+        name=nvr.name if nvr is not None else "UniFi Protect",
+        model=nvr.device_type if nvr is not None else None,
         sw_version=str(meta.version),
     )
 

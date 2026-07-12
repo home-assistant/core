@@ -287,8 +287,9 @@ class ProtectData:
         """Handle a change in the public devices websocket state."""
         if state is WebsocketState.AUTH_FAILED:
             # A revoked/invalid API key cannot self-recover on the websocket;
-            # route to reauth. This is the only reauth trigger in public-only
-            # mode, where the API key is the sole credential.
+            # route to reauth. This fires in both modes — the public websocket
+            # runs in hybrid too — and is the only reauth trigger in
+            # public-only mode, where the API key is the sole credential.
             self._entry.async_start_reauth(self._hass)
             return
         success = state is WebsocketState.CONNECTED
