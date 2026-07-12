@@ -26,6 +26,9 @@ VEHICLE_KEY_FILE = "tesla_vehicle.key"
 # hass.data key for the shared TeslaBluetooth parent (holds the private key).
 BLE_PARENT_KEY = f"{DOMAIN}_ble_parent"
 
+# hass.data key for the lock serializing first-time BLE parent/key-file init.
+BLE_PARENT_LOCK_KEY = f"{DOMAIN}_ble_parent_lock"
+
 ENERGY_HISTORY_FIELDS = [
     "solar_energy_exported",
     "generator_energy_exported",

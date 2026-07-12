@@ -7,6 +7,7 @@ from typing import Any, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
+from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
@@ -39,7 +40,7 @@ LEVEL = {OFF: 0, LOW: 1, MEDIUM: 2, HIGH: 3}
 class TeslemetrySelectEntityDescription(SelectEntityDescription):
     """Seat Heater entity description."""
 
-    select_fn: Callable[[Vehicle, int], Awaitable[Any]]
+    select_fn: Callable[[Vehicle | VehicleRouter, int], Awaitable[Any]]
     supported_fn: Callable[[dict], bool] = lambda _: True
     streaming_listener: (
         Callable[
@@ -252,7 +253,7 @@ async def async_setup_entry(
 class TeslemetrySelectEntity(TeslemetryRootEntity, SelectEntity):
     """Parent vehicle select entity class."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     entity_description: TeslemetrySelectEntityDescription
     _climate: bool = False
 

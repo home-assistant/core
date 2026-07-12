@@ -12,7 +12,6 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
-from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.teslemetry import Teslemetry
 
@@ -34,17 +33,8 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CLIENT_ID,
-    CONF_VIN,
-    DOMAIN,
-    LOGGER,
-    SUBENTRY_TYPE_VEHICLE,
-    VEHICLE_KEY_FILE,
-)
-
-# Number of pair() attempts before giving up and re-showing instructions.
-BLE_PAIR_ATTEMPTS = 10
+from . import _async_get_ble_parent
+from .const import CLIENT_ID, CONF_VIN, DOMAIN, LOGGER, SUBENTRY_TYPE_VEHICLE
 
 
 class OAuth2FlowHandler(
@@ -204,7 +194,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            parent = TeslaBluetooth()  # type: ignore[no-untyped-call]
+            parent = await _async_get_ble_parent(self.hass)
             # The advertised BLE name is a hash of the VIN; match on its prefix.
             expected = parent.get_name(self._vin)[:17]
             device = None
@@ -217,7 +207,6 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             if device is None:
                 errors["base"] = "device_not_found"
             else:
-                await parent.get_private_key(self.hass.config.path(VEHICLE_KEY_FILE))
                 self._vehicle = parent.vehicles.createBluetooth(
                     self._vin, device=device
                 )
@@ -225,6 +214,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
                     await self._vehicle.connect()
                 except (BleakError, TeslaFleetError, TimeoutError) as err:
                     LOGGER.error("Failed to connect over Bluetooth: %s", err)
+                    await self._async_disconnect()
                     errors["base"] = "cannot_connect"
                 else:
                     return await self.async_step_pair()
@@ -265,21 +255,22 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Send the virtual key to the vehicle, then re-check the whitelist."""
         assert self._vehicle is not None
-        for attempt in range(BLE_PAIR_ATTEMPTS):
-            LOGGER.debug("Bluetooth pair attempt %s", attempt + 1)
-            try:
-                await self._vehicle.pair()
-            except (BleakError, TeslaFleetError, TimeoutError) as err:
-                LOGGER.debug("Pair attempt failed: %s", err)
-                continue
-            return await self.async_step_pair()
-        return self.async_show_form(step_id="instructions", errors={"base": "timeout"})
+        # pair() writes the whitelist op exactly once and confirms completion by
+        # reply or key-state polling, so it is never re-sent (which would
+        # re-prompt the user); a lost confirmation surfaces as a timeout.
+        try:
+            await self._vehicle.pair()
+        except (BleakError, TeslaFleetError, TimeoutError) as err:
+            LOGGER.debug("Bluetooth pairing failed: %s", err)
+            return self.async_show_form(
+                step_id="instructions", errors={"base": "timeout"}
+            )
+        return await self.async_step_pair()
 
     async def _async_finish(self) -> SubentryFlowResult:
         """Persist the paired BLE address and reload the entry."""
-        assert self._vehicle is not None
         assert self._address is not None
-        await self._vehicle.disconnect()
+        await self._async_disconnect()
         entry = self._get_entry()
         self.hass.config_entries.async_schedule_reload(entry.entry_id)
         return self.async_update_and_abort(
@@ -290,6 +281,22 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
 
     async def _async_abort(self, reason: str) -> SubentryFlowResult:
         """Disconnect any open BLE connection and abort the flow."""
-        if self._vehicle is not None:
-            await self._vehicle.disconnect()
+        await self._async_disconnect()
         return self.async_abort(reason=reason)
+
+    async def _async_disconnect(self) -> None:
+        """Disconnect the BLE link, if any, and drop the reference to it."""
+        vehicle = self._vehicle
+        self._vehicle = None
+        if vehicle is not None:
+            try:
+                await vehicle.disconnect()
+            except (BleakError, TeslaFleetError, TimeoutError) as err:
+                LOGGER.debug("Error disconnecting Bluetooth: %s", err)
+
+    @callback
+    @override
+    def async_remove(self) -> None:
+        """Release any open BLE link if the flow is abandoned mid-pairing."""
+        if self._vehicle is not None:
+            self.hass.async_create_task(self._async_disconnect())

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, override
 
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -75,7 +76,7 @@ async def async_setup_entry(
 class TeslemetryButtonEntity(TeslemetryVehicleStreamEntity, ButtonEntity):
     """Base class for Teslemetry buttons."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     entity_description: TeslemetryButtonEntityDescription
 
     def __init__(

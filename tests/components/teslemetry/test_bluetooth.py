@@ -3,7 +3,12 @@
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from bleak.exc import BleakError
-from tesla_fleet_api.exceptions import NotOnWhitelistFault
+import pytest
+from tesla_fleet_api.exceptions import (
+    BluetoothCommandFailed,
+    BluetoothUnconfirmedCommand,
+    NotOnWhitelistFault,
+)
 from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 from tesla_fleet_api.teslemetry import Vehicle
@@ -53,6 +58,7 @@ async def test_vehicle_router_with_bluetooth(hass: HomeAssistant) -> None:
             return_value=MagicMock(),
         ),
         patch("homeassistant.components.teslemetry.TeslaBluetooth") as mock_parent,
+        patch("homeassistant.components.teslemetry._set_key_file_mode"),
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
@@ -62,10 +68,10 @@ async def test_vehicle_router_with_bluetooth(hass: HomeAssistant) -> None:
 
     vehicle = entry.runtime_data.vehicles[0]
     assert isinstance(vehicle.api, VehicleRouter)
-    # Mutating BLE commands must be verified by state so the router's
-    # BLE->cloud failover cannot double-execute a non-idempotent command.
+    # raise_unconfirmed=False resolves an ambiguous BLE timeout as a best-effort
+    # success so the router never re-sends a non-idempotent command to cloud.
     mock_parent.return_value.vehicles.createBluetooth.assert_called_once_with(
-        VIN, device=ANY, verify_commands=True, keepalive_interval=20
+        VIN, device=ANY, raise_unconfirmed=False, keepalive_interval=20
     )
 
 
@@ -104,6 +110,40 @@ async def test_vehicle_bluetooth_out_of_range(hass: HomeAssistant) -> None:
     assert not isinstance(vehicle.api, VehicleRouter)
 
 
+async def test_router_does_not_fail_over_on_unconfirmed() -> None:
+    """An ambiguous BLE timeout is never replayed on the cloud backend.
+
+    The router the integration builds must surface BluetoothUnconfirmedCommand
+    to the caller instead of failing over, so a non-idempotent command (trunk,
+    honk, media skip) cannot be double-executed.
+    """
+    bluetooth = AsyncMock()
+    bluetooth.actuate_trunk = AsyncMock(side_effect=BluetoothUnconfirmedCommand())
+    cloud = AsyncMock()
+    cloud.actuate_trunk = AsyncMock(return_value={"response": {"result": True}})
+    router = VehicleRouter(bluetooth, cloud)
+
+    with pytest.raises(BluetoothUnconfirmedCommand):
+        await router.actuate_trunk()
+
+    cloud.actuate_trunk.assert_not_called()
+
+
+async def test_router_fails_over_on_command_failed() -> None:
+    """A command proven not to have applied over BLE fails over to the cloud."""
+    bluetooth = AsyncMock()
+    bluetooth.actuate_trunk = AsyncMock(side_effect=BluetoothCommandFailed())
+    cloud = AsyncMock()
+    cloud.actuate_trunk = AsyncMock(return_value={"response": {"result": True}})
+    router = VehicleRouter(bluetooth, cloud)
+
+    result = await router.actuate_trunk()
+
+    assert result == {"response": {"result": True}}
+    bluetooth.actuate_trunk.assert_awaited_once()
+    cloud.actuate_trunk.assert_awaited_once()
+
+
 def _discovered_info() -> MagicMock:
     """Return a fake discovered service info matching the test VIN."""
     info = MagicMock()
@@ -123,6 +163,15 @@ def _mock_vehicle(*, on_whitelist: bool = True) -> AsyncMock:
             side_effect=[NotOnWhitelistFault(), None]
         )
     return vehicle
+
+
+def _mock_ble_parent(vehicle: AsyncMock | None = None) -> MagicMock:
+    """Return a mock shared TeslaBluetooth parent for the pairing flow."""
+    parent = MagicMock()
+    parent.get_name.return_value = TeslaBluetooth().get_name(VIN)
+    if vehicle is not None:
+        parent.vehicles.createBluetooth.return_value = vehicle
+    return parent
 
 
 async def _setup_vehicle_subentry(hass: HomeAssistant) -> MockConfigEntry:
@@ -147,14 +196,11 @@ async def test_subentry_pairing_already_whitelisted(hass: HomeAssistant) -> None
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.config_flow.TeslaBluetooth"
-        ) as mock_parent,
+            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
         patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
     ):
-        mock_parent.return_value.get_name.return_value = TeslaBluetooth().get_name(VIN)
-        mock_parent.return_value.get_private_key = AsyncMock()
-        mock_parent.return_value.vehicles.createBluetooth.return_value = vehicle
-
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "scan"
@@ -184,14 +230,11 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.config_flow.TeslaBluetooth"
-        ) as mock_parent,
+            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
         patch.object(hass.config_entries, "async_schedule_reload"),
     ):
-        mock_parent.return_value.get_name.return_value = TeslaBluetooth().get_name(VIN)
-        mock_parent.return_value.get_private_key = AsyncMock()
-        mock_parent.return_value.vehicles.createBluetooth.return_value = vehicle
-
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         # scan -> connect -> handshake raises NotOnWhitelistFault -> instructions
         result = await hass.config_entries.subentries.async_configure(
@@ -225,13 +268,10 @@ async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.config_flow.TeslaBluetooth"
-        ) as mock_parent,
+            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
     ):
-        mock_parent.return_value.get_name.return_value = TeslaBluetooth().get_name(VIN)
-        mock_parent.return_value.get_private_key = AsyncMock()
-        mock_parent.return_value.vehicles.createBluetooth.return_value = vehicle
-
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
@@ -241,6 +281,7 @@ async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
     assert result["step_id"] == "scan"
     assert result["errors"] == {"base": "cannot_connect"}
     assert CONF_ADDRESS not in entry.subentries[subentry_id].data
+    vehicle.disconnect.assert_awaited_once()
 
 
 async def test_subentry_authorize_timeout(hass: HomeAssistant) -> None:
@@ -256,13 +297,10 @@ async def test_subentry_authorize_timeout(hass: HomeAssistant) -> None:
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.config_flow.TeslaBluetooth"
-        ) as mock_parent,
+            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
     ):
-        mock_parent.return_value.get_name.return_value = TeslaBluetooth().get_name(VIN)
-        mock_parent.return_value.get_private_key = AsyncMock()
-        mock_parent.return_value.vehicles.createBluetooth.return_value = vehicle
-
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
@@ -277,6 +315,8 @@ async def test_subentry_authorize_timeout(hass: HomeAssistant) -> None:
     assert result["step_id"] == "instructions"
     assert result["errors"] == {"base": "timeout"}
     assert CONF_ADDRESS not in entry.subentries[subentry_id].data
+    # pair() is a single bounded op; it is never re-sent.
+    vehicle.pair.assert_awaited_once()
 
 
 async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
@@ -288,6 +328,10 @@ async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
             return_value=[],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
+            return_value=_mock_ble_parent(),
         ),
     ):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)

@@ -5,6 +5,7 @@ from typing import Any, cast, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import CabinOverheatProtectionTemp, Scope
+from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.climate import (
@@ -90,7 +91,7 @@ async def async_setup_entry(
 class TeslemetryClimateEntity(TeslemetryRootEntity, ClimateEntity):
     """Vehicle Climate Control."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     _attr_precision = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
@@ -385,7 +386,7 @@ COP_LEVELS = {
 class TeslemetryCabinOverheatProtectionEntity(TeslemetryRootEntity, ClimateEntity):
     """Vehicle Cabin Overheat Protection."""
 
-    api: Vehicle
+    api: Vehicle | VehicleRouter
     _attr_precision = PRECISION_WHOLE
     _attr_target_temperature_step = 5
     _attr_min_temp = 30

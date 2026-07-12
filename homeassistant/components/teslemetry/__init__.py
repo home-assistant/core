@@ -3,10 +3,12 @@
 import asyncio
 from collections.abc import Callable
 from functools import partial
+import os
 from types import MappingProxyType
 from typing import Any, Final, cast
 
 from aiohttp import ClientError
+from bleak.exc import BleakError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
@@ -50,6 +52,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     BLE_PARENT_KEY,
+    BLE_PARENT_LOCK_KEY,
     CLIENT_ID,
     CONF_VIN,
     DOMAIN,
@@ -301,16 +304,31 @@ def _remove_stale_subentries(
             hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
 
 
+def _set_key_file_mode(path: str) -> None:
+    """Restrict the private key file to owner-only read/write."""
+    os.chmod(path, 0o600)
+
+
 async def _async_get_ble_parent(hass: HomeAssistant) -> TeslaBluetooth:
     """Return a shared TeslaBluetooth parent with the private key loaded.
 
-    Cached on ``hass.data`` so the key file is only read once even when several
-    vehicles are paired over Bluetooth.
+    Cached on ``hass.data`` and guarded by a lock so the key file is created
+    and read exactly once even when vehicle setup and a pairing flow (or
+    several) race to first-time init - two independent parents could otherwise
+    both generate and overwrite the key.
     """
-    if (parent := hass.data.get(BLE_PARENT_KEY)) is None:
-        parent = TeslaBluetooth()  # type: ignore[no-untyped-call]
-        await parent.get_private_key(hass.config.path(VEHICLE_KEY_FILE))
-        hass.data[BLE_PARENT_KEY] = parent
+    parent: TeslaBluetooth | None = hass.data.get(BLE_PARENT_KEY)
+    if parent is not None:
+        return parent
+    lock: asyncio.Lock = hass.data.setdefault(BLE_PARENT_LOCK_KEY, asyncio.Lock())
+    async with lock:
+        parent = hass.data.get(BLE_PARENT_KEY)
+        if parent is None:
+            parent = TeslaBluetooth()  # type: ignore[no-untyped-call]
+            key_path = hass.config.path(VEHICLE_KEY_FILE)
+            await parent.get_private_key(key_path)
+            await hass.async_add_executor_job(_set_key_file_mode, key_path)
+            hass.data[BLE_PARENT_KEY] = parent
     return parent
 
 
@@ -341,11 +359,13 @@ async def _async_resolve_vehicle_api(
         return cloud_vehicle
 
     parent = await _async_get_ble_parent(hass)
-    # verify_commands makes a mutating command confirm by state, so the router's
-    # BLE->cloud failover cannot double-execute a non-idempotent command;
+    # raise_unconfirmed=False resolves a command whose ack was lost as a
+    # best-effort success rather than raising, so the router never fails over
+    # (and thus never re-sends to cloud) on an ambiguous BLE timeout - only a
+    # genuine transport failure or a proven-not-applied command reaches cloud.
     # keepalive_interval holds the idle BLE link under Tesla's supervision timeout.
     bluetooth_vehicle = parent.vehicles.createBluetooth(
-        vin, device=ble_device, verify_commands=True, keepalive_interval=20
+        vin, device=ble_device, raise_unconfirmed=False, keepalive_interval=20
     )
     return VehicleRouter(bluetooth_vehicle, cloud_vehicle)
 
@@ -633,9 +653,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 remove_config_entry_id=entry.entry_id,
             )
 
-    _remove_stale_subentries(
-        hass, entry, {vehicle.subentry_id for vehicle in vehicles}
-    )
+    _remove_stale_subentries(hass, entry, {vehicle.subentry_id for vehicle in vehicles})
 
     entry.runtime_data = TeslemetryData(
         vehicles=vehicles,
@@ -671,7 +689,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Unload Teslemetry Config."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    # Release each routed Bluetooth link so its keepalive task does not outlive
+    # the entry across a reload.
+    for vehicle in entry.runtime_data.vehicles:
+        if isinstance(vehicle.api, VehicleRouter):
+            try:
+                await vehicle.api.primary.disconnect()
+            except (BleakError, TeslaFleetError, TimeoutError) as err:
+                LOGGER.debug(
+                    "Error disconnecting Bluetooth for %s: %s", vehicle.vin, err
+                )
+    return unloaded
 
 
 async def async_migrate_entry(
