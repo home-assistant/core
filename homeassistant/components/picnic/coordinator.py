@@ -93,11 +93,14 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
 
         start = end = None
         if eta:
-            start = dt_util.parse_datetime(str(eta.get("start")))
-            end = dt_util.parse_datetime(str(eta.get("end")))
+            # ValueError: parse_datetime raises for well-formed invalid dates
+            with suppress(ValueError):
+                start = dt_util.parse_datetime(str(eta.get("start")))
+                end = dt_util.parse_datetime(str(eta.get("end")))
         if (start is None or end is None) and slot:
-            start = dt_util.parse_datetime(str(slot.get("window_start")))
-            end = dt_util.parse_datetime(str(slot.get("window_end")))
+            with suppress(ValueError):
+                start = dt_util.parse_datetime(str(slot.get("window_start")))
+                end = dt_util.parse_datetime(str(slot.get("window_end")))
 
         if start is None or end is None:
             return DEFAULT_UPDATE_INTERVAL
