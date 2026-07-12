@@ -6,7 +6,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 from .coordinator import SteamDataUpdateCoordinator
 
 
@@ -30,7 +30,8 @@ class SteamEntity(CoordinatorEntity[SteamDataUpdateCoordinator]):
             configuration_url=coordinator.data[steamid].profileurl,
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, steamid)},
-            manufacturer=DEFAULT_NAME,
+            model="Steam",
+            manufacturer="Valve",
             name=coordinator.data[steamid].personaname,
         )
 
