@@ -292,11 +292,19 @@ def _ensure_subentry(
 def _remove_stale_subentries(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
+    subentry_type: str,
     current_subentry_ids: set[str],
 ) -> None:
-    """Remove subentries that no longer have a matching energy site."""
+    """Remove subentries of the given type with no matching product.
+
+    Filtered by subentry_type so this only prunes its own kind and never
+    touches subentries owned by another feature (e.g. vehicle subentries).
+    """
     for subentry in list(entry.subentries.values()):
-        if subentry.subentry_id not in current_subentry_ids:
+        if (
+            subentry.subentry_type == subentry_type
+            and subentry.subentry_id not in current_subentry_ids
+        ):
             LOGGER.debug("Removing stale subentry %s", subentry.subentry_id)
             hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
 
@@ -559,8 +567,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 {CONF_SITE_ID: site_id},
             )
 
-            # Route commands through a local Powerwall first when the subentry
-            # has been paired; otherwise this returns the plain cloud EnergySite.
             energy_site_api = await _async_resolve_energy_site_api(
                 hass, entry, subentry_id, energy_site
             )
@@ -632,7 +638,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             )
 
     _remove_stale_subentries(
-        hass, entry, {energysite.subentry_id for energysite in energysites}
+        hass,
+        entry,
+        SUBENTRY_TYPE_ENERGY_SITE,
+        {energysite.subentry_id for energysite in energysites},
     )
 
     entry.runtime_data = TeslemetryData(
