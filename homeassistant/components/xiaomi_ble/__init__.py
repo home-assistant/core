@@ -234,18 +234,38 @@ def _async_purge_stale_s400_impedance_restore_cache(
     persist the marker without the purge. The next startup would then
     skip purging and briefly restore the stale value -- self-correcting
     on the next scale reading, same as the ordinary purge outcome.
+
+    Only marks "done" once conclusively classified (confirmed S400, or a
+    known device confirmed as something else): an address with no
+    evidence either way yet (e.g. no device row) is left retryable, so a
+    later setup that finally has enough evidence still gets to purge.
     """
     if entry.data.get(DATA_S400_IMPEDANCE_CACHE_PURGED):
         return
 
     address = entry.unique_id
-    if address is not None and _async_is_known_s400(hass, address, coordinator):
-        _purge_stale_sensor_restore_keys(coordinator)
+    if address is None:
+        hass.config_entries.async_update_entry(
+            entry, data=entry.data | {DATA_S400_IMPEDANCE_CACHE_PURGED: True}
+        )
+        return
 
-    hass.config_entries.async_update_entry(
-        entry,
-        data=entry.data | {DATA_S400_IMPEDANCE_CACHE_PURGED: True},
+    if _async_is_known_s400(hass, address, coordinator):
+        _purge_stale_sensor_restore_keys(coordinator)
+        hass.config_entries.async_update_entry(
+            entry, data=entry.data | {DATA_S400_IMPEDANCE_CACHE_PURGED: True}
+        )
+        return
+
+    device_entry = dr.async_get(hass).async_get_device(
+        identifiers={(BLUETOOTH_DOMAIN, address)}
     )
+    if device_entry is not None and device_entry.model not in S400_MODELS:
+        # Confirmed something else: never going to need purging.
+        hass.config_entries.async_update_entry(
+            entry, data=entry.data | {DATA_S400_IMPEDANCE_CACHE_PURGED: True}
+        )
+    # else: no device row yet, genuinely unknown -- stay retryable.
 
 
 def _purge_stale_sensor_restore_keys(
@@ -287,6 +307,13 @@ def _async_recover_interrupted_s400_migration(
     complete. Safe to run on every setup: a lingering legacy
     "-impedance" entity is the sole trigger, so this never touches an
     already-consistent or genuinely fresh S400.
+
+    Each rename only proceeds if its target unique_id is free: the
+    library may have already created native, already-correct
+    "impedance_low"/"impedance_high" entities from a live advertisement
+    since the interrupted attempt, and renaming into an occupied slot
+    would raise instead of completing setup. In that mixed case,
+    "-impedance" is left as an orphan rather than risk that.
     """
     if entry.version != 1 or entry.minor_version < 2:
         return
@@ -303,28 +330,35 @@ def _async_recover_interrupted_s400_migration(
     if legacy_entity_id is None or not _async_is_known_s400(hass, address):
         return
 
-    old_low_id = f"{address}-impedance_low"
-    new_high_id = f"{address}-impedance_high"
-    low_entity_id = entity_registry.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, old_low_id
-    )
+    low_id = f"{address}-impedance_low"
+    high_id = f"{address}-impedance_high"
+    low_entity_id = entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, low_id)
     low_entity = (
         entity_registry.async_get(low_entity_id) if low_entity_id is not None else None
     )
-    if low_entity_id is not None and low_entity is not None:
-        if low_entity.previous_unique_id != old_legacy_id:
-            _LOGGER.debug("S400 migration recovery: %s -> %s", old_low_id, new_high_id)
-            entity_registry.async_update_entity(
-                low_entity_id,
-                new_unique_id=new_high_id,
-                original_name="Impedance High",
-            )
-
-    new_low_id = f"{address}-impedance_low"
-    _LOGGER.debug("S400 migration recovery: %s -> %s", old_legacy_id, new_low_id)
-    entity_registry.async_update_entity(
-        legacy_entity_id, new_unique_id=new_low_id, original_name="Impedance Low"
+    high_exists = (
+        entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, high_id)
+        is not None
     )
+
+    if (
+        low_entity_id is not None
+        and not high_exists
+        and (low_entity is None or low_entity.previous_unique_id != old_legacy_id)
+    ):
+        _LOGGER.debug("S400 migration recovery: %s -> %s", low_id, high_id)
+        entity_registry.async_update_entity(
+            low_entity_id, new_unique_id=high_id, original_name="Impedance High"
+        )
+
+    # The "impedance_low" slot may now be free (just vacated above), or
+    # may already hold a fresh, natively-created entity that never
+    # needed this legacy rename -- only proceed if it's free.
+    if entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, low_id) is None:
+        _LOGGER.debug("S400 migration recovery: %s -> %s", old_legacy_id, low_id)
+        entity_registry.async_update_entity(
+            legacy_entity_id, new_unique_id=low_id, original_name="Impedance Low"
+        )
 
 
 def _async_purge_phantom_s400_impedance_entity(

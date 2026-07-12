@@ -582,15 +582,7 @@ async def test_recover_interrupted_migration_completes_both_steps(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a fully-interrupted migration (neither step landed) is finished.
-
-    Simulates a crash before the config entry's fast save even reached
-    disk with either rename applied: minor_version already reads as 2,
-    but "-impedance" and the original "-impedance_low" are both still
-    present, untouched. The recovery step must finish both renames, in
-    the same order as the original migration, rather than leave them
-    stuck or delete anything.
-    """
+    """Test recovery when neither rename was persisted."""
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
     )
@@ -643,7 +635,7 @@ async def test_recover_interrupted_migration_completes_remaining_step(
     entity_id = _async_add_entity(
         entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
     )
-    # Already-completed first step: previous_unique_id proves it landed.
+    # Simulate the already-completed first step with the high unique ID.
     entity_registry.async_get_or_create(
         Platform.SENSOR,
         DOMAIN,
