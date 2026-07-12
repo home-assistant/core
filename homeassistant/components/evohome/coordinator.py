@@ -86,6 +86,14 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         """Set up the coordinator.
 
         Fetch the user information, and the configuration of their locations.
+
+        The hierarchy of objects is as follows:
+            Installation (of a User Account)
+            └── 0-many Locations
+                └── 0-1 Gateway (although schema is 0-many)
+                    └── 0-1 Controller (although schema is 0-many)
+                        ├── 1-many Zones (max 16, although schema is 0-many)
+                        └── 0-1 DHW
         """
 
         try:
