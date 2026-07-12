@@ -354,15 +354,10 @@ async def _async_resolve_vehicle_api(
         return cloud_vehicle
 
     parent = await async_get_ble_parent(hass)
-    # confirmation="verify": on an ack+broadcast timeout, a command with a
-    # derivable end state is confirmed by a follow-up state read, which either
-    # proves it applied or raises BluetoothCommandFailed (proven-not-applied)
-    # for the router to fail over on. It is verify-on-timeout only, so there is
-    # no happy-path cost. raise_unconfirmed=False keeps a still-ambiguous
-    # outcome (no verify plan, or the read could not run) a best-effort success
-    # rather than a failover that could double-execute a non-idempotent command.
-    # keepalive_interval=None disables the link keepalive: command-only usage
-    # must not hold the link open and keep the car from sleeping.
+    # verify + raise_unconfirmed=False so an ambiguous BLE timeout resolves as a
+    # verified or best-effort success instead of re-sending to cloud, which
+    # would double-execute a non-idempotent command. keepalive_interval=None so
+    # command-only use does not hold the link open and keep the car awake.
     bluetooth_vehicle = parent.vehicles.createBluetooth(
         vin,
         device=ble_device,
