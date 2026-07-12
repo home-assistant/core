@@ -50,7 +50,7 @@ def get_music_assistant_client(
 
 
 async def async_get_available_mass_usernames(mass: MusicAssistantClient) -> list[str]:
-    """Get available usernames in mass which can be use in HA."""
+    """Get available Music Assistant usernames which can be used in Home Assistant."""
     users = await mass.auth.list_users()
     return [
         user.username for user in users if user.enabled and user.role != UserRole.GUEST

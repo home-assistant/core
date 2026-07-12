@@ -264,7 +264,7 @@
       "message": "The username {username} does not exist. Available usernames are {available_usernames}."
     },
     "unsupported_parameter": {
-      "message": "Your current Music Assistant version has no support for parameter {parameter}. Support is available from {version} (stable) onwards."
+      "message": "Your current Music Assistant version does not support parameter {parameter}. Support is available from {version} (stable) and later."
     }
   },
   "issues": {
@@ -467,7 +467,7 @@
           "name": "Search name"
         },
         "username": {
-          "description": "Music Assistant username used for searching. This pays respect to the configured provider filters of the user.",
+          "description": "Music Assistant username used for searching. Searches respect the user's configured provider filters.",
           "name": "Username"
         }
       },
