@@ -12,6 +12,27 @@ AUTHORIZE_URL = "https://teslemetry.com/connect"
 TOKEN_URL = "https://api.teslemetry.com/oauth/token"
 CLIENT_ID = "homeassistant"
 
+# Config subentry type holding an energy site's local Powerwall pairing config
+SUBENTRY_TYPE_ENERGY_SITE = "energy_site"
+
+# Energy site subentry data key. An energy site subentry also stores CONF_HOST
+# and CONF_PASSWORD (from homeassistant.const) once paired; their presence
+# enables Powerwall-first command routing over the local network.
+CONF_SITE_ID = "site_id"
+
+# File holding the integration's RSA private key used to sign local TEDAPI v1r
+# requests. The matching public key is what gets registered as an authorized
+# client on the energy gateway when pairing.
+POWERWALL_KEY_FILE = "tesla_powerwall.key"
+
+# hass.data key caching the RSA private key PEM shared across energy sites.
+RSA_PARENT_KEY = f"{DOMAIN}_rsa_parent"
+
+# Number of list_authorized_clients() polls, and the delay between them, while
+# waiting for the user to approve the pending key on the Powerwall.
+KEY_PAIRING_POLL_ATTEMPTS = 10
+KEY_PAIRING_POLL_INTERVAL = 2
+
 ENERGY_HISTORY_FIELDS = [
     "solar_energy_exported",
     "generator_energy_exported",

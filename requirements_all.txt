@@ -371,6 +371,9 @@ aiopegelonline==0.1.1
 # homeassistant.components.opnsense
 aiopnsense==1.0.10
 
+# homeassistant.components.teslemetry
+aiopowerwall==0.2.0
+
 # homeassistant.components.ptdevices
 aioptdevices==2026.03.2
 
