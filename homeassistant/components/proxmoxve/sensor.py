@@ -59,6 +59,16 @@ class ProxmoxStorageSensorEntityDescription(SensorEntityDescription):
 
 NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
     ProxmoxNodeSensorEntityDescription(
+        key="node_status",
+        translation_key="node_status",
+        value_fn=lambda data: data.node["status"],
+        device_class=SensorDeviceClass.ENUM,
+        options=["online", "offline"],
+    ),
+)
+
+FULL_NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
+    ProxmoxNodeSensorEntityDescription(
         key="node_cpu",
         translation_key="node_cpu",
         value_fn=lambda data: data.node["cpu"] * 100,
@@ -140,13 +150,6 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-    ),
-    ProxmoxNodeSensorEntityDescription(
-        key="node_status",
-        translation_key="node_status",
-        value_fn=lambda data: data.node["status"],
-        device_class=SensorDeviceClass.ENUM,
-        options=["online", "offline"],
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_backup_last_backup",
@@ -470,11 +473,22 @@ async def async_setup_entry(
 
     def _async_add_new_nodes(nodes: list[ProxmoxNodeData]) -> None:
         """Add new node sensors."""
-        async_add_entities(
-            ProxmoxNodeSensor(coordinator, entity_description, node)
-            for node in nodes
-            for entity_description in NODE_SENSORS
-        )
+        entities: list[ProxmoxNodeSensor] = []
+
+        for node_data in coordinator.data.values():
+            node_info = node_data.node
+            entities.extend(
+                ProxmoxNodeSensor(coordinator, description, node_data)
+                for description in NODE_SENSORS
+            )
+
+            if "cpu" in node_info:
+                entities.extend(
+                    ProxmoxNodeSensor(coordinator, description, node_data)
+                    for description in FULL_NODE_SENSORS
+                )
+
+        async_add_entities(entities)
 
     def _async_add_new_vms(
         vms: list[tuple[ProxmoxNodeData, dict[str, Any]]],

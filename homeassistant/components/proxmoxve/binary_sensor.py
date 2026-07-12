@@ -68,6 +68,8 @@ NODE_SENSORS: tuple[ProxmoxNodeBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+)
+FULL_NODE_SENSORS: tuple[ProxmoxNodeBinarySensorEntityDescription, ...] = (
     ProxmoxNodeBinarySensorEntityDescription(
         key="node_backup_status",
         translation_key="node_backup_status",
@@ -132,11 +134,22 @@ async def async_setup_entry(
 
     def _async_add_new_nodes(nodes: list[ProxmoxNodeData]) -> None:
         """Add new node binary sensors."""
-        async_add_entities(
-            ProxmoxNodeBinarySensor(coordinator, entity_description, node)
-            for node in nodes
-            for entity_description in NODE_SENSORS
-        )
+        entities: list[ProxmoxNodeBinarySensor] = []
+
+        for node_data in coordinator.data.values():
+            node_info = node_data.node
+            entities.extend(
+                ProxmoxNodeBinarySensor(coordinator, description, node_data)
+                for description in NODE_SENSORS
+            )
+
+            if "status" in node_info:
+                entities.extend(
+                    ProxmoxNodeBinarySensor(coordinator, description, node_data)
+                    for description in FULL_NODE_SENSORS
+                )
+
+        async_add_entities(entities)
 
     def _async_add_new_vms(
         vms: list[tuple[ProxmoxNodeData, dict[str, Any]]],
