@@ -6,6 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.components.izone.climate import ControllerDevice
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.entity_registry as er
 
@@ -307,3 +308,19 @@ async def test_setup_entry_only_adds_entities_for_matching_config_entry(
     unique_ids = {entity.unique_id for entity in entry_entities}
 
     assert unique_ids == {"000000001", "000000001_z1"}
+
+
+def test_controller_device_init_fault_bootstrap() -> None:
+    """ControllerDevice survives bootstrap when controller has fault-shaped defaults."""
+    controller = create_mock_controller(
+        ras_mode="zones",
+        sys_type="0",
+        zones_total=0,
+        free_air_enabled=False,
+    )
+    controller.zones = []
+
+    device = ControllerDevice(controller)
+
+    assert device._attr_device_info["model"] == "0"
+    assert device.zones == {}
