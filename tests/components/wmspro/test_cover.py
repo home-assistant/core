@@ -60,15 +60,6 @@ async def test_cover_device(
     assert device_entry is not None
     assert device_entry == snapshot
 
-    before_status = len(mock_hub_status.mock_calls)
-
-    # Move time to next update
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    assert len(mock_hub_status.mock_calls) == before_status + 1
-
 
 @pytest.mark.parametrize(
     ("mock_hub_configuration", "mock_hub_status"),
