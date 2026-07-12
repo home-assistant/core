@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass, field
 
 from tesla_fleet_api.const import Scope
+from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 
@@ -50,9 +51,13 @@ class TeslemetryVehicleData:
 class TeslemetryEnergyData:
     """Data for a vehicle in the Teslemetry integration."""
 
-    api: EnergySite
+    # Plain cloud EnergySite, or an EnergySiteRouter that tries a paired local
+    # Powerwall (aiopowerwall) first and falls back to the cloud EnergySite
+    # per command.
+    api: EnergySite | EnergySiteRouter
     live_coordinator: TeslemetryEnergySiteLiveCoordinator | None
     info_coordinator: TeslemetryEnergySiteInfoCoordinator
     history_coordinator: TeslemetryEnergyHistoryCoordinator | None
     id: int
     device: DeviceInfo
+    subentry_id: str
