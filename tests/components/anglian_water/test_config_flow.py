@@ -316,8 +316,8 @@ async def test_reauth_flow_recover_exception(
     mock_config_entry: MockConfigEntry,
     mock_anglian_water_authenticator: AsyncMock,
     mock_anglian_water_client: AsyncMock,
-    exception_type: type[Exception],
-    expected_error: str,
+    exception_type,
+    expected_error,
 ) -> None:
     """Test that the reauth flow can recover from an auth exception."""
     mock_config_entry.add_to_hass(hass)
