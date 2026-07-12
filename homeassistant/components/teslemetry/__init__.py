@@ -17,7 +17,6 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 from tesla_fleet_api.tesla import VehicleRouter
-from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 from tesla_fleet_api.teslemetry import Teslemetry, Vehicle
 from teslemetry_stream import TeslemetryStream
 
@@ -50,15 +49,12 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    BLE_PARENT_KEY,
-    BLE_PARENT_LOCK_KEY,
     CLIENT_ID,
     CONF_VIN,
     DOMAIN,
     LOGGER,
     SUBENTRY_TYPE_VEHICLE,
     VEHICLE_ISSUE_LEARN_MORE,
-    VEHICLE_KEY_FILE,
 )
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
@@ -67,7 +63,7 @@ from .coordinator import (
     TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
-from .helpers import async_update_device_sw_version, flatten
+from .helpers import async_get_ble_parent, async_update_device_sw_version, flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 from .services import async_setup_services
 
@@ -329,27 +325,6 @@ def _remove_stale_subentries(
             hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
 
 
-async def _async_get_ble_parent(hass: HomeAssistant) -> TeslaBluetooth:
-    """Return a shared TeslaBluetooth parent with the private key loaded.
-
-    Cached on ``hass.data`` and guarded by a lock so the key file is created
-    and read exactly once even when vehicle setup and a pairing flow (or
-    several) race to first-time init - two independent parents could otherwise
-    both generate and overwrite the key.
-    """
-    parent: TeslaBluetooth | None = hass.data.get(BLE_PARENT_KEY)
-    if parent is not None:
-        return parent
-    lock: asyncio.Lock = hass.data.setdefault(BLE_PARENT_LOCK_KEY, asyncio.Lock())
-    async with lock:
-        parent = hass.data.get(BLE_PARENT_KEY)
-        if parent is None:
-            parent = TeslaBluetooth()  # type: ignore[no-untyped-call]
-            await parent.get_private_key(hass.config.path(VEHICLE_KEY_FILE))
-            hass.data[BLE_PARENT_KEY] = parent
-    return parent
-
-
 async def _async_resolve_vehicle_api(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
@@ -376,7 +351,7 @@ async def _async_resolve_vehicle_api(
         )
         return cloud_vehicle
 
-    parent = await _async_get_ble_parent(hass)
+    parent = await async_get_ble_parent(hass)
     # raise_unconfirmed=False resolves a command whose ack was lost as a
     # best-effort success rather than raising, so the router never fails over
     # (and thus never re-sends to cloud) on an ambiguous BLE timeout - only a

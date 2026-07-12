@@ -36,8 +36,8 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import _async_get_ble_parent
 from .const import CLIENT_ID, CONF_VIN, DOMAIN, LOGGER, SUBENTRY_TYPE_VEHICLE
+from .helpers import async_get_ble_parent
 
 
 class OAuth2FlowHandler(
@@ -199,7 +199,7 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            parent = await _async_get_ble_parent(self.hass)
+            parent = await async_get_ble_parent(self.hass)
             # The advertised BLE name is a hash of the VIN; match on its prefix.
             expected = parent.get_name(self._vin)[:17]
             device = None

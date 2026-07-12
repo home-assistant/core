@@ -17,8 +17,9 @@ from tesla_fleet_api.tesla import VehicleRouter
 from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 from tesla_fleet_api.teslemetry import Vehicle
 
-from homeassistant.components.teslemetry import _async_get_ble_parent, _ensure_subentry
+from homeassistant.components.teslemetry import _ensure_subentry
 from homeassistant.components.teslemetry.const import CONF_VIN, SUBENTRY_TYPE_VEHICLE
+from homeassistant.components.teslemetry.helpers import async_get_ble_parent
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
@@ -62,7 +63,9 @@ async def test_vehicle_router_with_bluetooth(hass: HomeAssistant) -> None:
             "homeassistant.components.teslemetry.async_ble_device_from_address",
             return_value=MagicMock(),
         ),
-        patch("homeassistant.components.teslemetry.TeslaBluetooth") as mock_parent,
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
@@ -104,7 +107,9 @@ async def test_vehicle_bluetooth_out_of_range(hass: HomeAssistant) -> None:
             "homeassistant.components.teslemetry.async_ble_device_from_address",
             return_value=None,
         ),
-        patch("homeassistant.components.teslemetry.TeslaBluetooth") as mock_parent,
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
@@ -134,7 +139,9 @@ async def test_unload_disconnects_bluetooth(
             "homeassistant.components.teslemetry.async_ble_device_from_address",
             return_value=MagicMock(),
         ),
-        patch("homeassistant.components.teslemetry.TeslaBluetooth") as mock_parent,
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
@@ -153,10 +160,12 @@ async def test_unload_disconnects_bluetooth(
 
 async def test_ble_parent_shared_and_cached(hass: HomeAssistant) -> None:
     """The BLE parent (holding the private key) is created once and reused."""
-    with patch("homeassistant.components.teslemetry.TeslaBluetooth") as mock_parent:
+    with patch(
+        "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+    ) as mock_parent:
         mock_parent.return_value.get_private_key = AsyncMock()
-        first = await _async_get_ble_parent(hass)
-        second = await _async_get_ble_parent(hass)
+        first = await async_get_ble_parent(hass)
+        second = await async_get_ble_parent(hass)
 
     assert first is second
     mock_parent.assert_called_once()
@@ -280,7 +289,7 @@ async def test_subentry_pairing_already_whitelisted(hass: HomeAssistant) -> None
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
         patch.object(
@@ -324,7 +333,7 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
         patch.object(hass.config_entries, "async_schedule_reload"),
@@ -369,7 +378,7 @@ async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
     ):
@@ -419,7 +428,7 @@ async def test_subentry_authorize_failure(
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
     ):
@@ -462,7 +471,7 @@ async def test_subentry_handshake_error_aborts(hass: HomeAssistant) -> None:
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
     ):
@@ -499,7 +508,7 @@ async def test_subentry_pairing_abandoned(hass: HomeAssistant) -> None:
             return_value=[_discovered_info()],
         ),
         patch(
-            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(vehicle),
         ),
     ):
@@ -551,7 +560,7 @@ async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
             return_value=[],
         ),
         patch(
-            "homeassistant.components.teslemetry.config_flow._async_get_ble_parent",
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
             return_value=_mock_ble_parent(),
         ),
     ):
