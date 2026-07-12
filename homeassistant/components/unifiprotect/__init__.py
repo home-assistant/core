@@ -214,7 +214,9 @@ async def _async_setup_public_only_entry(
     unifi_mac = _async_unifi_mac_from_hass(mac)
     data_service.public_api_nvr_mac = unifi_mac
     # Stamp the resolved mac onto the cached public NVR so websocket-driven
-    # updates dispatch to the entities keyed on it (older firmware omits it).
+    # updates dispatch to the entities keyed on it. Firmware newer than 7.1
+    # already carries it; older firmware omits it. Transitional — the library
+    # is being taught to backfill this during update_public (uilibs/uiprotect).
     if (nvr := protect.public_bootstrap.nvr) is not None:
         nvr.mac = unifi_mac
 
