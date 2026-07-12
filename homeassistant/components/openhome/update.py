@@ -51,7 +51,7 @@ class OpenhomeUpdateEntity(UpdateEntity):
     def __init__(self, device):
         """Initialize a Linn DS update entity."""
         self._device = device
-        self._attr_unique_id = f"{device.uuid()}-update"
+        self._attr_unique_id = f"{device.uuid()}-update"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, device.uuid()),

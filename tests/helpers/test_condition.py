@@ -2134,10 +2134,21 @@ async def test_extract_entities(hass: HomeAssistant) -> None:
                     "entity_id": ["sensor.temperature_9", "sensor.temperature_10"],
                     "below": 110,
                 },
+                {
+                    "condition": "time",
+                    "after": "input_datetime.start",
+                    "before": "sensor.end",
+                },
+                {
+                    "condition": "time",
+                    "after": "08:00:00",
+                },
                 Template("{{ is_state('light.example', 'on') }}", hass),
             ],
         }
     ) == {
+        "input_datetime.start",
+        "sensor.end",
         "sensor.temperature",
         "sensor.temperature_2",
         "sensor.temperature_3",

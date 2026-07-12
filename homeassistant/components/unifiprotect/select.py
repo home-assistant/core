@@ -4,7 +4,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
 import logging
-from typing import Any, override
+from typing import Any, cast, override
 
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import (
@@ -25,10 +25,15 @@ from uiprotect.data import (
     Sensor,
     Viewer,
 )
+from uiprotect.data.public_devices import (
+    PublicCamera,
+    PublicDeviceModel,
+    SensorFeatureCapability,
+)
 from uiprotect.exceptions import GlobalAlarmManagerError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityDescription
@@ -44,6 +49,7 @@ from .entity import (
     ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
+    async_remove_unsupported_sense_entities,
 )
 from .utils import async_get_light_motion_current, async_ufp_instance_command
 
@@ -215,6 +221,16 @@ _HDR_MODE_MAP = {
     "always": PublicHdrMode.ON,
     "off": PublicHdrMode.OFF,
 }
+_HDR_MODE_MAP_INVERSE = {v: k for k, v in _HDR_MODE_MAP.items()}
+
+
+def _get_hdr_mode_public(obj: PublicDeviceModel) -> str | None:
+    """Return the HDR option id from the public camera's ``hdr_type``.
+
+    ``hdr_type`` is non-optional on the public model; ``.get`` still yields
+    ``None`` for any value missing from the map.
+    """
+    return _HDR_MODE_MAP_INVERSE.get(cast(PublicCamera, obj).hdr_type)
 
 
 async def _set_hdr_mode(obj: Camera, mode: str) -> None:
@@ -280,7 +296,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_hdr",
         ufp_options=HDR_MODES,
-        ufp_value="hdr_mode_display",
+        ufp_public_value_fn=_get_hdr_mode_public,
         ufp_set_method_fn=_set_hdr_mode,
         ufp_perm=PermRequired.WRITE,
     ),
@@ -316,6 +332,7 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_enum_type=MountType,
         ufp_value="mount_type",
         ufp_set_method="set_mount_type",
+        ufp_capability=SensorFeatureCapability.OPEN,
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectSelectEntityDescription[Sensor](
@@ -355,6 +372,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up number entities for UniFi Protect integration."""
     data = entry.runtime_data
+    async_remove_unsupported_sense_entities(hass, Platform.SELECT, data, SENSE_SELECTS)
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:

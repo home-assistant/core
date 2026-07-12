@@ -56,7 +56,7 @@ def _async_short_mac(mac: str) -> str:
     return _async_unifi_mac_from_hass(mac)[-6:]
 
 
-async def _async_resolve(hass: HomeAssistant, host: str) -> str | None:
+async def _async_resolve(hass: HomeAssistant, host: str) -> str | int | None:
     """Resolve a hostname to an ip."""
     with contextlib.suppress(OSError):
         return next(
