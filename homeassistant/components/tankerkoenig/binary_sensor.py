@@ -42,7 +42,7 @@ async def async_setup_entry(
 class StationOpenBinarySensorEntity(TankerkoenigCoordinatorEntity, BinarySensorEntity):
     """Shows if a station is open or closed."""
 
-    _attr_device_class = BinarySensorDeviceClass.DOOR
+    _attr_device_class = BinarySensorDeviceClass.OPENING
     _attr_translation_key = "status"
 
     def __init__(

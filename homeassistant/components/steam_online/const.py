@@ -35,3 +35,5 @@ STEAM_API_URL = "https://steamcdn-a.akamaihd.net/steam/apps/"
 STEAM_HEADER_IMAGE_FILE = "header.jpg"
 STEAM_MAIN_IMAGE_FILE = "capsule_616x353.jpg"
 STEAM_ICON_URL = "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/"
+
+SUBENTRY_TYPE_FRIEND = "friend"

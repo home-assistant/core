@@ -129,7 +129,7 @@ async def test_setup_component_with_config(
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth",
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["sensor"]),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["sensor"]),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = fake_post
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
@@ -301,7 +301,7 @@ async def test_setup_with_cloud(
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", []),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
@@ -371,7 +371,7 @@ async def test_setup_with_cloudhook(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", []),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
@@ -427,7 +427,7 @@ async def test_setup_component_with_delay(
             "pyatmo.AbstractAsyncAuth.async_post_api_request",
             side_effect=partial(fake_post_request, hass),
         ) as mock_post_api_request,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["light"]),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["light"]),
     ):
         assert await async_setup_component(
             hass, DOMAIN, {"netatmo": {"client_id": "123", "client_secret": "abc"}}
