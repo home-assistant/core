@@ -3,7 +3,8 @@
     "condition_behavior_name": "Condition passes if",
     "condition_for_name": "For at least",
     "trigger_behavior_name": "Trigger when",
-    "trigger_for_name": "For at least"
+    "trigger_for_name": "For at least",
+    "field_speed_name": "Spedd"
   },
   "conditions": {
     "awning_is_closed": {
@@ -221,7 +222,7 @@
       "fields": {
         "speed": {
           "description": "Speed at which to close the cover.",
-          "name": "Speed"
+          "name": "[%key:component::cover::common::field_speed_name%]"
         }
       },
       "name": "Close cover"
@@ -235,7 +236,7 @@
       "fields": {
         "speed": {
           "description": "Speed at which to open the cover.",
-          "name": "Speed"
+          "name": "[%key:component::cover::common::field_speed_name%]"
         }
       },
       "name": "Open cover"
@@ -253,7 +254,7 @@
         },
         "speed": {
           "description": "Speed at which to move the cover.",
-          "name": "Speed"
+          "name": "[%key:component::cover::common::field_speed_name%]"
         }
       },
       "name": "Set cover position"
