@@ -212,6 +212,9 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             if device is None:
                 errors["base"] = "device_not_found"
             else:
+                # Keep the default keepalive here (unlike command routing): it
+                # holds the link through the on-screen key-approval wait so the
+                # whitelist reply is not lost to a link-supervision drop.
                 self._vehicle = parent.vehicles.createBluetooth(
                     self._vin, device=device
                 )
