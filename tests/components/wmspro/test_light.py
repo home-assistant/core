@@ -98,7 +98,7 @@ async def test_light_turn_on_and_off(
     mock_hub_configuration: AsyncMock,
     mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
-    target_brightness: int,
+    target_brightness: int | None,
 ) -> None:
     """Test that a light entity is turned on and off correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
@@ -128,10 +128,7 @@ async def test_light_turn_on_and_off(
         entity = hass.states.get("light.terrasse_licht")
         assert entity is not None
         assert entity.state == STATE_ON
-        if target_brightness is None:
-            assert entity.attributes.get(ATTR_BRIGHTNESS) is None
-        else:
-            assert entity.attributes.get(ATTR_BRIGHTNESS) == target_brightness
+        assert entity.attributes.get(ATTR_BRIGHTNESS) == target_brightness
         assert len(mock_hub_status.mock_calls) == before_status
         assert len(mock_action_call.mock_calls) == before_action + 1
 
