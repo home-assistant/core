@@ -46,6 +46,12 @@ async def async_migrate_entry(
                 "Migrated UniFi Direct config entry %s to version 2",
                 config_entry.entry_id,
             )
+        else:
+            _LOGGER.error(
+                "Migration of UniFi Direct config entry %s to version 2 failed: no host data",
+                config_entry.entry_id,
+            )
+            return False
 
     return True
 

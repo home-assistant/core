@@ -232,6 +232,35 @@ async def test_migrate_single_host_entry_to_multi_host_config(
     }
 
 
+async def test_migrate_legacy_entry_without_host_fails(
+    hass: HomeAssistant, mock_setup_entry, mock_unifiap
+) -> None:
+    """Test a legacy entry without host data fails migration."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="UniFi AP",
+        data={
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 22,
+        },
+        version=1,
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 1
+    assert config_entry.data == {
+        CONF_USERNAME: "admin",
+        CONF_PASSWORD: "password",
+        CONF_PORT: 22,
+    }
+
+
 async def test_import_flow(hass: HomeAssistant, mock_setup_entry, mock_unifiap) -> None:
     """Test import initiated flow from legacy YAML configuration."""
     result = await hass.config_entries.flow.async_init(
