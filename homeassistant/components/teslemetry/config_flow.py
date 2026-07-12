@@ -22,7 +22,10 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.bluetooth import async_discovered_service_info
+from homeassistant.components.bluetooth import (
+    async_discovered_service_info,
+    async_request_active_scan,
+)
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
@@ -203,6 +206,9 @@ class VehicleSubentryFlowHandler(ConfigSubentryFlow):
             # The advertised BLE name is a hash of the VIN; match on its prefix.
             expected = parent.get_name(self._vin)[:17]
             device = None
+            # The name is only in scan responses, so an AUTO-mode scanner that
+            # has not swept recently may not have it cached yet.
+            await async_request_active_scan(self.hass)
             for info in async_discovered_service_info(self.hass, connectable=True):
                 if info.name and info.name.startswith(expected):
                     device = info.device

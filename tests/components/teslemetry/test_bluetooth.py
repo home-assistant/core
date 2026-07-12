@@ -620,6 +620,52 @@ async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
     assert CONF_ADDRESS not in entry.subentries[subentry_id].data
 
 
+async def test_subentry_scan_finds_device_after_active_scan(
+    hass: HomeAssistant,
+) -> None:
+    """An awake in-range car only in scan responses is found via active scan.
+
+    async_discovered_service_info() is a cache read; a car whose name is
+    still missing from that cache (e.g. an AUTO-mode scanner has not swept
+    recently) must be found once an active scan is requested, not reported
+    as not found.
+    """
+    entry = await _setup_vehicle_subentry(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
+    vehicle = _mock_vehicle()
+    mock_discovered = MagicMock(return_value=[])
+
+    async def _active_scan(hass: HomeAssistant) -> None:
+        mock_discovered.return_value = [_discovered_info()]
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            mock_discovered,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_request_active_scan",
+            AsyncMock(side_effect=_active_scan),
+        ) as mock_active_scan,
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    mock_active_scan.assert_awaited_once()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.subentries[subentry_id].data[CONF_ADDRESS] == ADDRESS
+    vehicle.connect.assert_awaited_once()
+
+
 async def test_subentry_user_step_rejected(hass: HomeAssistant) -> None:
     """Manually adding a vehicle subentry is rejected."""
     entry = await _setup_vehicle_subentry(hass)
