@@ -54,9 +54,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
     @override
     async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
-        # Recompute the cadence up front from the last known delivery, so
-        # failed refreshes still cross the timing boundaries instead of
-        # keeping one-minute polling active indefinitely
+        # Recompute up front so failed refreshes also relax the cadence
         if self.data:
             self.update_interval = self._get_update_interval(
                 self.data.get(NEXT_DELIVERY_DATA)
@@ -93,7 +91,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
 
         start = end = None
         if eta:
-            # ValueError: parse_datetime raises for well-formed invalid dates
+            # ValueError: raised for well-formed but invalid dates
             with suppress(ValueError):
                 start = dt_util.parse_datetime(str(eta.get("start")))
                 end = dt_util.parse_datetime(str(eta.get("end")))

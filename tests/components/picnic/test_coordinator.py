@@ -44,8 +44,7 @@ async def _setup_with_delivery(
     delivery = mock_picnic_api.get_deliveries.return_value[0]
     delivery["status"] = status
     delivery["delivery_time"] = None
-    # eta2 is the route-planning ETA as served by the deliveries API;
-    # the coordinator exposes it as the delivery's "eta"
+    # eta2 is the API's field name for the route-planning ETA
     delivery["eta2"] = eta2 and {
         "start": (dt_util.utcnow() + eta2[0]).isoformat(),
         "end": (dt_util.utcnow() + eta2[1]).isoformat(),
