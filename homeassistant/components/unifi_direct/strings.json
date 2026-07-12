@@ -12,12 +12,13 @@
         "data": {
           "hosts": "Hosts"
         },
-        "description": "Update the UniFi AP hosts configuration"
+        "description": "Configure one or more UniFi APs."
       },
       "user": {
         "data": {
           "hosts": "Hosts"
-        }
+        },
+        "description": "Configure one or more UniFi APs."
       }
     }
   },

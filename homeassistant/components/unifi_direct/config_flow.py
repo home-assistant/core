@@ -130,11 +130,11 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
                 except CannotConnect as err:
                     errors["base"] = "cannot_connect"
                     description_placeholders = {"host": err.host}
-                else:
-                    return self.async_create_entry(
-                        title=f"{DEFAULT_NAME} ({', '.join(host[CONF_HOST] for host in host_configs)})",
-                        data=entry_data,
-                    )
+
+                return self.async_create_entry(
+                    title=f"{DEFAULT_NAME} ({', '.join(host[CONF_HOST] for host in host_configs)})",
+                    data=entry_data,
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -192,12 +192,12 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
                 except CannotConnect as err:
                     errors["base"] = "cannot_connect"
                     description_placeholders = {"host": err.host}
-                else:
-                    self.hass.config_entries.async_update_entry(
-                        config_entry, data=entry_data
-                    )
-                    await self.hass.config_entries.async_reload(config_entry.entry_id)
-                    return self.async_abort(reason="reconfigure_successful")
+
+                self.hass.config_entries.async_update_entry(
+                    config_entry, data=entry_data
+                )
+                await self.hass.config_entries.async_reload(config_entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
 
         # Prepare initial data from current config entry
         initial_data = config_entry.data.copy()
