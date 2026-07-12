@@ -36,7 +36,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DEFAULT_HOST, MAC, MODEL, NAME
+from .const import API_DISCOVERY_BASIC_DEVICE_INFO, DEFAULT_HOST, MAC, MODEL, NAME
 
 from tests.common import MockConfigEntry
 
@@ -65,7 +65,7 @@ async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {MAC}"
+    assert result["title"] == f"M1065-LW - {dr.format_mac(MAC)}"
     assert result["data"] == {
         CONF_PROTOCOL: "http",
         CONF_HOST: "1.2.3.4",
@@ -73,7 +73,7 @@ async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
         CONF_PASSWORD: "pass",
         CONF_PORT: 80,
         CONF_MODEL: "M1065-LW",
-        CONF_NAME: f"M1065-LW - {MAC}",
+        CONF_NAME: f"M1065-LW - {dr.format_mac(MAC)}",
     }
 
 
@@ -147,6 +147,63 @@ async def test_flow_fails_on_api(
 
 
 @pytest.mark.usefixtures("mock_default_requests")
+@pytest.mark.parametrize("param_properties_status_code", [404])
+async def test_flow_aborts_if_no_serial_number(hass: HomeAssistant) -> None:
+    """Test that config flow aborts if property_handler is not initialized and no serial is found."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PROTOCOL: "http",
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_PORT: 80,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_serial_number"
+
+
+@pytest.mark.usefixtures("mock_default_requests")
+@pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_BASIC_DEVICE_INFO])
+async def test_flow_succeeds_with_basic_device_info(
+    hass: HomeAssistant,
+) -> None:
+    """Test that config flow succeeds when basic device info is present (positive path)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PROTOCOL: "http",
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_PORT: 80,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"M1065-LW - {dr.format_mac(MAC)}"
+    assert result["data"][CONF_HOST] == "1.2.3.4"
+    assert result["data"][CONF_MODEL] == "M1065-LW"
+    assert result["data"][CONF_NAME] == f"M1065-LW - {dr.format_mac(MAC)}"
+
+
+@pytest.mark.usefixtures("mock_default_requests")
 async def test_flow_create_entry_multiple_existing_entries_of_same_model(
     hass: HomeAssistant,
 ) -> None:
@@ -181,7 +238,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"M1065-LW - {MAC}"
+    assert result["title"] == f"M1065-LW - {dr.format_mac(MAC)}"
     assert result["data"] == {
         CONF_PROTOCOL: "http",
         CONF_HOST: "1.2.3.4",
@@ -189,10 +246,10 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
         CONF_PASSWORD: "pass",
         CONF_PORT: 80,
         CONF_MODEL: "M1065-LW",
-        CONF_NAME: f"M1065-LW - {MAC}",
+        CONF_NAME: f"M1065-LW - {dr.format_mac(MAC)}",
     }
 
-    assert result["data"][CONF_NAME] == f"M1065-LW - {MAC}"
+    assert result["data"][CONF_NAME] == f"M1065-LW - {dr.format_mac(MAC)}"
 
 
 async def test_reauth_flow_update_configuration(

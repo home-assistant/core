@@ -6,7 +6,133 @@
 
 - Start review comments with a short, one-sentence summary of the suggested fix.
 - Do not comment on code style, formatting or linting issues.
+- Flag comments that over-explain straightforward code, narrate the obvious, or read like AI commentary (multi-sentence justifications for a single line).
 - A Pull Request with a dependency version bump should only contain changes required for the version bump. If the PR includes other changes, request that they are removed from the PR.
+- Check that the PR description is complete and filled in according to the PR template included below. Every section and checklist item from the template must be present, except the `## Breaking change` section which is optional. Nothing from the template should be missing. Even unchecked checkboxes or empty sections must be present. This is an hard requirement.
+
+## Pull Request template
+
+The PR description must follow this template (from `.github/PULL_REQUEST_TEMPLATE.md`):
+
+```markdown
+<!--
+  You are amazing! Thanks for contributing to our project!
+  Please, DO NOT DELETE ANY TEXT from this template! (unless instructed).
+-->
+## Breaking change
+<!--
+  If your PR contains a breaking change for existing users, it is important
+  to tell them what breaks, how to make it work again and why we did this.
+  This piece of text is published with the release notes, so it helps if you
+  write it towards our users, not us.
+  Note: Remove this section if this PR is NOT a breaking change.
+-->
+
+
+## Proposed change
+<!--
+  Describe the big picture of your changes here to communicate to the
+  maintainers why we should accept this pull request. If it fixes a bug
+  or resolves a feature request, be sure to link to that issue in the
+  additional information section.
+-->
+
+
+## Type of change
+<!--
+  What type of change does your PR introduce to Home Assistant?
+  NOTE: Please, check only 1! box!
+  If your PR requires multiple boxes to be checked, you'll most likely need to
+  split it into multiple PRs. This makes things easier and faster to code review.
+-->
+
+- [ ] Dependency upgrade
+- [ ] Bugfix (non-breaking change which fixes an issue)
+- [ ] New integration (thank you!)
+- [ ] New feature (which adds functionality to an existing integration)
+- [ ] Deprecation (breaking change to happen in the future)
+- [ ] Breaking change (fix/feature causing existing functionality to break)
+- [ ] Code quality improvements to existing code or addition of tests
+
+## Additional information
+<!--
+  Details are important, and help maintainers processing your PR.
+  Please be sure to fill out additional details, if applicable.
+-->
+
+- This PR fixes or closes issue: fixes #
+- This PR is related to issue: 
+- Link to documentation pull request: 
+- Link to developer documentation pull request: 
+- Link to frontend pull request: 
+
+## Checklist
+<!--
+  Put an `x` in the boxes that apply. You can also fill these out after
+  creating the PR. If you're unsure about any of them, don't hesitate to ask.
+  We're here to help! This is simply a reminder of what we are going to look
+  for before merging your code.
+
+  AI tools are welcome, but contributors are responsible for *fully*
+  understanding the code before submitting a PR.
+-->
+
+- [ ] I understand the code I am submitting and can explain how it works.
+- [ ] The code change is tested and works locally.
+- [ ] Local tests pass. **Your PR cannot be merged unless tests pass**
+- [ ] There is no commented out code in this PR.
+- [ ] I have followed the [development checklist][dev-checklist]
+- [ ] I have followed the [perfect PR recommendations][perfect-pr]
+- [ ] The code has been formatted using Ruff (`ruff format homeassistant tests`)
+- [ ] Tests have been added to verify that the new code works.
+- [ ] Any generated code has been carefully reviewed for correctness and compliance with project standards.
+
+If user exposed functionality or configuration variables are added/changed:
+
+- [ ] Documentation added/updated for [www.home-assistant.io][docs-repository]
+
+If the code communicates with devices, web services, or third-party tools:
+
+- [ ] The [manifest file][manifest-docs] has all fields filled out correctly.  
+      Updated and included derived files by running: `python3 -m script.hassfest`.
+- [ ] New or updated dependencies have been added to `requirements_all.txt`.  
+      Updated by running `python3 -m script.gen_requirements_all`.
+- [ ] For the updated dependencies a diff between library versions and ideally a link to the changelog/release notes is added to the PR description.
+
+<!--
+  This project is very active and we have a high turnover of pull requests.
+
+  Unfortunately, the number of incoming pull requests is higher than what our
+  reviewers can review and merge so there is a long backlog of pull requests
+  waiting for review. You can help here!
+  
+  By reviewing another pull request, you will help raise the code quality of
+  that pull request and the final review will be faster. This way the general
+  pace of pull request reviews will go up and your wait time will go down.
+  
+  When picking a pull request to review, try to choose one that hasn't yet
+  been reviewed.
+
+  Thanks for helping out!
+-->
+
+To help with the load of incoming pull requests:
+
+- [ ] I have reviewed two other [open pull requests][prs] in this repository.
+
+[prs]: https://github.com/home-assistant/core/pulls?q=is%3Aopen+is%3Apr+-author%3A%40me+-draft%3Atrue+-label%3Awaiting-for-upstream+sort%3Acreated-desc+review%3Anone+-status%3Afailure
+
+<!--
+  Thank you for contributing <3
+
+  Below, some useful links you could explore:
+-->
+[dev-checklist]: https://developers.home-assistant.io/docs/development_checklist/
+[manifest-docs]: https://developers.home-assistant.io/docs/creating_integration_manifest/
+[quality-scale]: https://developers.home-assistant.io/docs/integration_quality_scale_index/
+[docs-repository]: https://github.com/home-assistant/home-assistant.io
+[perfect-pr]: https://developers.home-assistant.io/docs/review-process/#creating-the-perfect-pr
+```
 
 # GitHub Copilot & Claude Code Instructions
 
@@ -23,7 +149,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Development Commands
 
-- When entering a new environment or worktree, run `script/setup` to set up the virtual environment with all development dependencies (pylint, pre-commit hooks, etc.). This is required before committing.
+- When entering a new environment or worktree, run `script/setup` to set up the virtual environment with all development dependencies (pylint, pre-commit hooks, etc.). This is required before committing. If uv reports that no download was found for the required Python version, the environment is running an outdated version of uv; upgrade it with `curl -LsSf https://astral.sh/uv/install.sh | sh` and run `script/setup` again.
 - .vscode/tasks.json contains useful commands used for development.
 - After finishing a code session, run `uv run prek run --all-files` to check for linting and formatting issues.
 
@@ -43,10 +169,14 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 - Avoid using conditions/branching in tests. Instead, either split tests or adjust the test parametrization to cover all cases without branching.
 - If multiple tests share most of their code, use `pytest.mark.parametrize` to merge them into a single parameterized test instead of duplicating the body. Use `pytest.param` with an `id` parameter to name the test cases clearly.
 - We use Syrupy for snapshot testing. Leverage `.ambr` snapshots instead of repetitive and exhaustive generation of test data within Python code itself.
+- Hardcoded `entity_id`s in tests are fine. If the same one is repeated, use a constant.
 
 ## Good practices
 
 - Integrations with Platinum or Gold level in the Integration Quality Scale reflect a high standard of code quality and maintainability. When looking for examples of something, these are good places to start. The level is indicated in the manifest.json of the integration.
 - When reviewing entity actions, do not suggest extra defensive checks for input fields that are already validated by Home Assistant's service/action schemas and entity selection filters. Suggest additional guards only when data bypasses those validators or is transformed into a less-safe form.
 - When validation guarantees a dict key exists, prefer direct key access (`data["key"]`) instead of `.get("key")` so contract violations are surfaced instead of silently masked.
-- Do not add comments that just restate the code on the following line(s) (e.g. `# Check if initialized` above `if self.initialized:`). Comments should only explain why — non-obvious constraints, surprising behavior, or workarounds — never what.
+- Keep comments concise. Prefer one short line stating the non-obvious constraint, or no comment at all.
+- Do not add comments that just restate the code on the following line(s) (e.g. `# Check if initialized` above `if self.initialized:`). Comments should only explain why (non-obvious constraints, surprising behavior, or workarounds), never what. Never add comments that justify a change by referencing what the code looked like before.
+- Do not add section or divider comments (e.g. `# --- XYZ Triggers ---`) inside or outside of functions, since those can easily become stale and be misleading.
+- When catching exceptions, try-clauses should be as small as possible, i.e. avoid wrapping large blocks of code in a try-clause, and avoid catching exceptions from functions that are not expected to raise them.

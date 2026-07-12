@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 import logging
+from typing import override
 
 from lacrosse_view import Sensor
 
@@ -238,6 +239,7 @@ class LaCrosseViewSensor(
         self.index = index
 
     @property
+    @override
     def native_value(self) -> int | float | str | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(
@@ -245,6 +247,7 @@ class LaCrosseViewSensor(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         data = self.coordinator.data[self.index].data

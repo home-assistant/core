@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 import contextlib
 from datetime import datetime
 import logging
-from typing import Any, Concatenate, cast
+from typing import Any, Concatenate, cast, override
 
 from aiohomeconnect.model import EventKey, OptionKey
 from aiohomeconnect.model.error import (
@@ -58,6 +58,7 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
         """Set the value of the entity."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.update_native_value()
@@ -70,6 +71,7 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectApplianceCoordinator]):
         return self.entity_description.key
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available.
 
@@ -107,6 +109,7 @@ class HomeConnectOptionEntity(HomeConnectEntity):
     """Class for entities that represents program options."""
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.bsh_key in self.appliance.options
@@ -123,6 +126,7 @@ class HomeConnectOptionEntity(HomeConnectEntity):
         await super().async_set_option_with_key(self.bsh_key, value)
 
     @property
+    @override
     def bsh_key(self) -> OptionKey:
         """Return the BSH key."""
         return cast(OptionKey, self.entity_description.key)

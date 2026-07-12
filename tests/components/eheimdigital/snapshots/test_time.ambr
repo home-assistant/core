@@ -39,7 +39,7 @@
 # name: test_setup[time.mock_aquarium_mock_classicvario_day_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock classicVARIO Day start time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock classicVARIO Day start time',
     }),
     'context': <ANY>,
     'entity_id': 'time.mock_aquarium_mock_classicvario_day_start_time',
@@ -89,7 +89,7 @@
 # name: test_setup[time.mock_aquarium_mock_classicvario_night_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock classicVARIO Night start time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock classicVARIO Night start time',
     }),
     'context': <ANY>,
     'entity_id': 'time.mock_aquarium_mock_classicvario_night_start_time',
@@ -139,7 +139,7 @@
 # name: test_setup[time.mock_aquarium_mock_filter_day_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock filter Day start time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock filter Day start time',
     }),
     'context': <ANY>,
     'entity_id': 'time.mock_aquarium_mock_filter_day_start_time',
@@ -189,7 +189,7 @@
 # name: test_setup[time.mock_aquarium_mock_filter_night_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock filter Night start time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock filter Night start time',
     }),
     'context': <ANY>,
     'entity_id': 'time.mock_aquarium_mock_filter_night_start_time',
@@ -239,7 +239,7 @@
 # name: test_setup[time.mock_aquarium_mock_heater_day_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Heater Day start time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Heater Day start time',
     }),
     'context': <ANY>,
     'entity_id': 'time.mock_aquarium_mock_heater_day_start_time',
@@ -289,7 +289,7 @@
 # name: test_setup[time.mock_aquarium_mock_heater_night_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Heater Night start time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Heater Night start time',
     }),
     'context': <ANY>,
     'entity_id': 'time.mock_aquarium_mock_heater_night_start_time',
@@ -339,7 +339,7 @@
 # name: test_setup[time.mock_aquarium_mock_reeflex_start_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock reeflex Start time',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock reeflex Start time',
     }),
     'context': <ANY>,
     'entity_id': 'time.mock_aquarium_mock_reeflex_start_time',

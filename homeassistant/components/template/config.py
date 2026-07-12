@@ -18,6 +18,7 @@ from homeassistant.components.blueprint import (
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
@@ -59,6 +60,7 @@ from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
     cover as cover_platform,
+    device_tracker as device_tracker_platform,
     event as event_platform,
     fan as fan_platform,
     image as image_platform,
@@ -199,6 +201,9 @@ CONFIG_SECTION_SCHEMA = vol.All(
             vol.Optional(COVER_DOMAIN): vol.All(
                 cv.ensure_list, [cover_platform.COVER_YAML_SCHEMA]
             ),
+            vol.Optional(DEVICE_TRACKER_DOMAIN): vol.All(
+                cv.ensure_list, [device_tracker_platform.TRACKER_YAML_SCHEMA]
+            ),
             vol.Optional(EVENT_DOMAIN): vol.All(
                 cv.ensure_list, [event_platform.EVENT_YAML_SCHEMA]
             ),
@@ -284,19 +289,35 @@ async def _async_resolve_template_config(
         config = blueprint_inputs.async_substitute()
 
         platforms = [platform for platform in PLATFORMS if platform in config]
+        platform_config: list[ConfigType] | ConfigType
         if len(platforms) > 1:
             raise vol.Invalid("more than one platform defined per blueprint")
         if len(platforms) == 1:
             platform = platforms.pop()
             for prop in (CONF_NAME, CONF_UNIQUE_ID):
                 if prop in config:
-                    config[platform][prop] = config.pop(prop)
+                    platform_config = config[platform]
+                    if isinstance(platform_config, dict):
+                        platform_config[prop] = config.pop(prop)
+                        continue
+
+                    if len(platform_config) > 1:
+                        raise vol.Invalid(
+                            f"more than one {platform} entity defined in blueprint"
+                        )
+                    platform_config[0][prop] = config.pop(prop)
+
             # State based template entities remove CONF_VARIABLES because they pass
             # blueprint inputs to the template entities. Trigger based template entities
             # retain CONF_VARIABLES because the variables are always executed between
             # the trigger and action.
             if CONF_TRIGGERS not in config and CONF_VARIABLES in config:
-                _merge_section_variables(config[platform], config.pop(CONF_VARIABLES))
+                section_variables = config.pop(CONF_VARIABLES)
+                platform_config = config[platform]
+                if isinstance(platform_config, dict):
+                    platform_config = [platform_config]
+                for entity_config in platform_config:
+                    _merge_section_variables(entity_config, section_variables)
 
         raw_config = dict(config)
 
@@ -308,7 +329,6 @@ async def _async_resolve_template_config(
         # variables at the entity level should be merged
         # together at the entity level.
         section_variables = config.pop(CONF_VARIABLES)
-        platform_config: list[ConfigType] | ConfigType
         platforms = [platform for platform in PLATFORMS if platform in config]
         for platform in platforms:
             platform_config = config[platform]

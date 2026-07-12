@@ -5,6 +5,7 @@ from contextlib import suppress
 import copy
 from datetime import timedelta
 import logging
+from typing import override
 
 from python_picnic_api2 import PicnicAPI
 from python_picnic_api2.session import PicnicAuthError
@@ -44,6 +45,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=30),
         )
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
         try:
@@ -150,6 +152,11 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         )
         if "eta2" in next_delivery:
             del next_delivery["eta2"]
+
+        # The position response's eta (unix timestamp in milliseconds) feeds
+        # the estimated arrival sensor; the API only serves it shortly before
+        # the delivery, so that sensor is unknown outside that window
+        next_delivery["estimated_arrival"] = delivery_position.get("eta")
 
         # Determine the total price by adding up the total price of all sub-orders
         total_price = 0
