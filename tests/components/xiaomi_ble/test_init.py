@@ -384,6 +384,75 @@ async def test_migrate_already_done_is_noop(
     await hass.async_block_till_done()
 
 
+async def test_purge_stale_restore_cache_after_low_only_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the cache purge still identifies an S400 after a low-only rename.
+
+    A migration that only had "impedance_low" to rename moves it onto
+    "impedance_high", so by the time the cache purge runs right after,
+    no "impedance_low" entity exists yet. It must still recognize this
+    as an S400 via "impedance_high" instead, or the purge (and its
+    one-time marker) would be skipped for a real S400.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
+    )
+    entry.add_to_hass(hass)
+    device = _async_setup_device(device_registry, entry)
+    _async_add_entity(
+        entity_registry,
+        entry,
+        device.id,
+        f"{S400_ADDRESS}-impedance_low",
+        original_name="Impedance Low",
+    )
+    restore_data = _seed_restore_data(hass, entry)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+    sensor_data = restore_data[Platform.SENSOR]
+    assert "impedance___" not in sensor_data["entity_data"]
+    assert "impedance_low___" not in sensor_data["entity_data"]
+    assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_purge_stale_restore_cache_via_cache_signal_alone(
+    hass: HomeAssistant,
+) -> None:
+    """Test the cache purge still identifies an S400 with no registry entities.
+
+    If the user deleted the S400's entities entirely while stale cache
+    data remained, there is no entity-registry signal left at all. The
+    restore cache's own descriptions must still be enough to identify
+    this as an S400 and purge the stale keys.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
+    )
+    entry.add_to_hass(hass)
+    # No device, no entities: only the restore cache still has S400 data.
+    restore_data = _seed_restore_data(hass, entry)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    sensor_data = restore_data[Platform.SENSOR]
+    assert "impedance___" not in sensor_data["entity_data"]
+    assert "impedance_low___" not in sensor_data["entity_data"]
+    assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_purge_stale_restore_cache_through_full_setup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
