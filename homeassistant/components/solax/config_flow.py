@@ -39,7 +39,7 @@ async def validate_api(data: dict[str, Any]) -> str:
 
     kwargs: dict[str, Any] = {"return_when": asyncio.FIRST_COMPLETED}
     if model := data.get(CONF_MODEL):
-        kwargs["inverters"] = [INVERTER_MODELS[model]]
+        kwargs["inverters"] = [INVERTER_MODELS[model].load()]
 
     inverter = await discover(
         data[CONF_IP_ADDRESS], data[CONF_PORT], data[CONF_PASSWORD], **kwargs

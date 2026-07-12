@@ -6,7 +6,7 @@ import pytest
 from solax.inverter import InverterError, InverterResponse
 from solax.inverters import X1MiniV34
 
-from homeassistant.components.solax.const import DOMAIN, INVERTER_MODELS
+from homeassistant.components.solax.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -39,7 +39,7 @@ def __mock_get_data() -> InverterResponse:
                 CONF_PASSWORD: "password",
                 CONF_MODEL: "x1_mini_v34",
             },
-            [INVERTER_MODELS["x1_mini_v34"]],
+            [X1MiniV34],
             id="model_selected",
         ),
     ],

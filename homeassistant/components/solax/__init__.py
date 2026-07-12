@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolaxConfigEntry) -> boo
 
     kwargs: dict[str, Any] = {"return_when": asyncio.FIRST_COMPLETED}
     if model := entry.data.get(CONF_MODEL):
-        kwargs["inverters"] = [INVERTER_MODELS[model]]
+        kwargs["inverters"] = [INVERTER_MODELS[model].load()]
 
     try:
         inverter = await discover(
