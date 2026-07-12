@@ -60,4 +60,6 @@ class TeslemetryEnergyData:
     history_coordinator: TeslemetryEnergyHistoryCoordinator | None
     id: int
     device: DeviceInfo
-    subentry_id: str
+    # The local-control subentry id, or None for wall-connector-only sites,
+    # which have no Powerwall gateway to pair.
+    subentry_id: str | None
