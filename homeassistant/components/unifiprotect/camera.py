@@ -74,17 +74,11 @@ def _async_camera_entities(
     data: ProtectData,
     ufp_device: UFPCamera | None = None,
 ) -> list[ProtectDeviceEntity]:
-    """Create camera entities from the public API model.
+    """Create camera entities, enumerated public-master from ``PublicCamera``.
 
-    The quality tiers (which mains a camera has and whether it has a package
-    channel) come from the public ``PublicCamera`` model. One entity per
-    *active* RTSPS quality (the first is enabled by default). The package
-    channel is a snapshot-first view and is always exposed (disabled by
-    default), streaming only when its quality is active. When no main quality is
-    active the first main tier is still created so snapshots work, and a repair
-    offers to activate its stream. RTSPS URLs come from the public API (the
-    authoritative per-camera host, so stacked consoles resolve correctly) with
-    SRTP stripped for go2rtc.
+    Stream URLs come from the public API because it carries the authoritative
+    per-camera host (stacked consoles resolve correctly), SRTP-stripped for
+    go2rtc.
     """
     disable_stream = data.disable_stream
     entities: list[ProtectDeviceEntity] = []
