@@ -289,6 +289,9 @@ async def async_setup_entry(  # noqa: C901
         ):
             current_instance_id = current_party_provider.instance_id
 
+        if not current_instance_id:
+            return
+
         if party_mode_state["instance_id"] != current_instance_id:
             old_instance_id = party_mode_state["instance_id"]
             party_mode_state["instance_id"] = current_instance_id
@@ -309,8 +312,7 @@ async def async_setup_entry(  # noqa: C901
                             device.id, remove_config_entry_id=entry.entry_id
                         )
 
-            if current_instance_id:
-                add_party_mode(current_instance_id)
+            add_party_mode(current_instance_id)
 
     entry.async_on_unload(
         mass.subscribe(handle_providers_updated, EventType.PROVIDERS_UPDATED)
