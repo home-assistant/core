@@ -346,3 +346,34 @@ async def test_reauth_flow_recover_exception(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+async def test_reauth_flow_silent_login_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test the reauth flow does not persist a missing token as a login success.
+
+    pyanglianwater's send_login_request() can return normally without ever
+    raising if an internal HTTP/parsing step fails, leaving refresh_token
+    unset. The flow must not treat that as success and overwrite the stored
+    token with None.
+    """
+    mock_config_entry.add_to_hass(hass)
+    mock_anglian_water_authenticator.refresh_token = None
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "NewSecurePassword456"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "unknown"}
+    assert mock_config_entry.data[CONF_ACCESS_TOKEN] == ACCESS_TOKEN

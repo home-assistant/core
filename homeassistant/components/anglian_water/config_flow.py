@@ -180,6 +180,8 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
             validation_response = await validate_credentials(authenticator)
             if isinstance(validation_response, str):
                 errors["base"] = validation_response
+            elif authenticator.refresh_token is None:
+                errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
