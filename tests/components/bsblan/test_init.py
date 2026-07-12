@@ -275,9 +275,11 @@ async def test_coordinator_dhw_config_update_error(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # Mock DHW config methods to fail, but keep state/sensor working
+    mock_bsblan.hot_water_config.reset_mock()
+    mock_bsblan.hot_water_schedule.reset_mock()
+
+    # Mock the DHW config method to fail, but keep state/sensor working
     mock_bsblan.hot_water_config.side_effect = BSBLANConnectionError("Config failed")
-    mock_bsblan.hot_water_schedule.side_effect = BSBLANAuthError("Schedule failed")
 
     # Advance time by 5+ minutes to trigger config update (slow polling)
     freezer.tick(delta=301)  # 5 minutes + 1 second
@@ -289,7 +291,153 @@ async def test_coordinator_dhw_config_update_error(
 
     # Verify the error handling paths were executed
     assert mock_bsblan.hot_water_config.called
-    assert mock_bsblan.hot_water_schedule.called
+    assert not mock_bsblan.hot_water_schedule.called
+
+
+async def test_slow_interval_poll_preserves_cached_schedule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test interval polls keep the cached schedule without re-fetching it.
+
+    The schedule is fetched only off the interval (on startup and after a
+    write). An interval poll must refresh the config while carrying the cached
+    schedule over, without issuing a schedule request.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    slow_coordinator = mock_config_entry.runtime_data.slow_coordinator
+    cached_schedule = slow_coordinator.data.dhw_schedule
+    assert cached_schedule is not None
+
+    # Reset call counts recorded during the startup refresh so we only observe
+    # what the interval poll does.
+    mock_bsblan.hot_water_config.reset_mock()
+    mock_bsblan.hot_water_schedule.reset_mock()
+
+    # Advance time to trigger a slow interval poll.
+    freezer.tick(delta=timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The interval poll refreshes the config but never fetches the schedule.
+    assert mock_bsblan.hot_water_config.called
+    assert not mock_bsblan.hot_water_schedule.called
+
+    # The cached schedule is preserved across the interval poll.
+    assert slow_coordinator.data.dhw_schedule == cached_schedule
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        BSBLANConnectionError("Schedule failed"),
+        BSBLANAuthError("Authentication failed"),
+        TimeoutError,
+    ],
+    ids=["connection-error", "auth-error", "timeout"],
+)
+async def test_slow_interval_poll_retries_missing_schedule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test interval polls retry transient schedule failures until success."""
+    schedule_value = mock_bsblan.hot_water_schedule.return_value
+    fetch_failed = False
+
+    async def _schedule(*args: object, **kwargs: object) -> object:
+        nonlocal fetch_failed
+        if not fetch_failed:
+            fetch_failed = True
+            raise exception
+        return schedule_value
+
+    mock_bsblan.hot_water_schedule.side_effect = _schedule
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    slow_coordinator = mock_config_entry.runtime_data.slow_coordinator
+    # The startup fetch failed, so no schedule is cached yet.
+    assert slow_coordinator.data.dhw_schedule is None
+
+    # The next interval poll retries the schedule fetch, which now succeeds.
+    freezer.tick(delta=timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert slow_coordinator.data.dhw_schedule == schedule_value
+
+    # Once cached, later polls carry the schedule forward without re-fetching.
+    mock_bsblan.hot_water_schedule.reset_mock()
+    freezer.tick(delta=timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert not mock_bsblan.hot_water_schedule.called
+    assert slow_coordinator.data.dhw_schedule == schedule_value
+
+
+async def test_slow_interval_poll_does_not_retry_unsupported_schedule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test interval polls do not retry an unsupported schedule."""
+    mock_bsblan.hot_water_schedule.side_effect = BSBLANError(
+        "No hot water schedule parameters available"
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_bsblan.hot_water_schedule.call_count == 1
+
+    for _ in range(2):
+        freezer.tick(delta=timedelta(minutes=5, seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_bsblan.hot_water_schedule.call_count == 1
+
+
+async def test_slow_interval_poll_stops_retrying_unsupported_schedule(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a pending retry stops when the schedule is unsupported."""
+    mock_bsblan.hot_water_schedule.side_effect = [
+        BSBLANConnectionError("Schedule failed"),
+        BSBLANError("No hot water schedule parameters available"),
+    ]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for _ in range(2):
+        freezer.tick(delta=timedelta(minutes=5, seconds=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_bsblan.hot_water_schedule.call_count == 2
 
 
 async def test_setup_does_not_block_on_slow_fetch(
