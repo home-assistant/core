@@ -32,7 +32,7 @@ def authorization_server_context(
 
 
 async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationServer:
-    """Return authorization server, for the default auth implementation."""
+    """Return the active authorization server."""
     authorization_server = _mcp_context.get(None)
     if authorization_server is None:
         raise RuntimeError("No MCP authorization server set in context")

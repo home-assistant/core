@@ -447,6 +447,8 @@ async def test_authentication_flow(
     mock_mcp_client.return_value.initialize.return_value = response
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert aioclient_mock.mock_calls[-1][1] == URL(expected_token_url)
+    assert aioclient_mock.mock_calls[-1][2]["code_verifier"]
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_API_NAME
     data = result["data"]
