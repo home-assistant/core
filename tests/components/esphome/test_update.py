@@ -10,6 +10,7 @@ from awesomeversion.exceptions import AwesomeVersionCompareException
 import pytest
 
 from homeassistant.components.esphome.dashboard import async_get_dashboard
+from homeassistant.components.esphome.update import KEY_UPDATE_LOCK
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -809,6 +810,98 @@ async def test_attempt_to_update_twice(
 
         with pytest.raises(HomeAssistantError, match="OTA"):
             await update_task
+
+
+async def test_update_dashboard_with_build_queue_skips_global_lock(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mock_dashboard: dict[str, Any],
+) -> None:
+    """Test the global compile lock is skipped when the dashboard has a build queue."""
+    mock_dashboard["configured"] = [
+        {
+            "name": "test",
+            "current_version": "2026.6.0",
+            "configuration": "test.yaml",
+        }
+    ]
+    await async_get_dashboard(hass).async_refresh()
+    await mock_esphome_device(mock_client=mock_client)
+    await hass.async_block_till_done()
+
+    # Hold the global compile lock; the install must not need it
+    lock = hass.data.setdefault(KEY_UPDATE_LOCK, asyncio.Lock())
+    await lock.acquire()
+    with (
+        patch(
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.compile",
+            return_value=True,
+        ) as mock_compile,
+        patch(
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.upload",
+            return_value=True,
+        ),
+    ):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: "update.test_firmware"},
+            blocking=True,
+        )
+    lock.release()
+
+    assert len(mock_compile.mock_calls) == 1
+    assert mock_compile.mock_calls[0][1][0] == "test.yaml"
+
+
+async def test_update_dashboard_without_build_queue_waits_for_global_lock(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    mock_dashboard: dict[str, Any],
+) -> None:
+    """Test the global compile lock still serializes installs on older dashboards."""
+    mock_dashboard["configured"] = [
+        {
+            "name": "test",
+            "current_version": "2026.5.0",
+            "configuration": "test.yaml",
+        }
+    ]
+    await async_get_dashboard(hass).async_refresh()
+    await mock_esphome_device(mock_client=mock_client)
+    await hass.async_block_till_done()
+
+    lock = hass.data.setdefault(KEY_UPDATE_LOCK, asyncio.Lock())
+    await lock.acquire()
+    with (
+        patch(
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.compile",
+            return_value=True,
+        ) as mock_compile,
+        patch(
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.upload",
+            return_value=True,
+        ),
+    ):
+        update_task = hass.async_create_task(
+            hass.services.async_call(
+                UPDATE_DOMAIN,
+                SERVICE_INSTALL,
+                {ATTR_ENTITY_ID: "update.test_firmware"},
+                blocking=True,
+            )
+        )
+        for _ in range(5):
+            await asyncio.sleep(0)
+        # The compile must be blocked on the global lock
+        assert len(mock_compile.mock_calls) == 0
+        lock.release()
+        await update_task
+
+    assert len(mock_compile.mock_calls) == 1
+    assert mock_compile.mock_calls[0][1][0] == "test.yaml"
 
 
 async def test_update_deep_sleep_already_online(

@@ -211,6 +211,9 @@ async def async_setup_entry(
             if not (description := SUPPORTED_STATES.get(state)):
                 continue
 
+            if not device.supports_command(description.command):
+                continue
+
             # Mirror the cover's position inversion.
             if description.key == OverkizState.CORE_MEMORIZED_1_POSITION and (
                 cover_description := (

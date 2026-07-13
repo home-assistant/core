@@ -127,6 +127,9 @@
     "no_config_entry_for_device": {
       "message": "No configuration entry found for device: {device_id}"
     },
+    "not_a_water_heater_device": {
+      "message": "The selected device ({device_name}) is not a water heater. Please select the water heater sub-device."
+    },
     "set_data_error": {
       "message": "An error occurred while sending the data to the BSB-LAN device"
     },

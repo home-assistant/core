@@ -2319,6 +2319,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "fuelprices_dk": {
+      "name": "Fuelprices.dk",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "fujitsu": {
       "name": "Fujitsu",
       "integrations": {
@@ -2756,6 +2762,12 @@
       "name": "Harman Kardon AVR",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "harman_luxury": {
+      "name": "Harman Luxury Audio",
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "harvey": {
@@ -4039,6 +4051,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "lyngdorf": {
+      "name": "Lyngdorf",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "madeco": {
       "name": "Madeco",
       "integration_type": "virtual",
@@ -5320,7 +5338,7 @@
     "permobil": {
       "name": "MyPermobil",
       "integration_type": "device",
-      "config_flow": true,
+      "config_flow": false,
       "iot_class": "cloud_polling"
     },
     "pge": {
@@ -6190,6 +6208,12 @@
       "name": "Seattle City Light (SCL)",
       "integration_type": "virtual",
       "supported_by": "opower"
+    },
+    "scorpiontrack": {
+      "name": "ScorpionTrack",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "scrape": {
       "name": "Scrape",
