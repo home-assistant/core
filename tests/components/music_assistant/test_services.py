@@ -76,7 +76,6 @@ async def test_search_action_with_username(
 
     # tests for servers supporting the username
     music_assistant_client.server_info.schema_version = 35
-    # mock client's send_command for username tests
     music_assistant_client.music.client.send_command = AsyncMock(
         return_value={"albums": []}
     )
