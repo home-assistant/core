@@ -421,21 +421,19 @@ class ControllerDevice(ClimateEntity):
         fan = self._fan_to_pizone[fan_mode]
         await self._controller.set_fan(fan)
 
+    @send_izone_command
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         if hvac_mode == HVACMode.OFF:
-            async with izone_command_context(self):
-                await self._controller.set_on(False)
+            await self._controller.set_on(False)
             return
         if not self._controller.is_on:
-            async with izone_command_context(self):
-                await self._controller.set_on(True)
+            await self._controller.set_on(True)
         if self._controller.free_air:
             return
         mode = self._state_to_pizone[hvac_mode]
-        async with izone_command_context(self):
-            await self._controller.set_mode(mode)
+        await self._controller.set_mode(mode)
 
     @send_izone_command
     @override

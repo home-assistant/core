@@ -466,66 +466,170 @@ async def test_zone_command_error_handling(
     ) is expect_unavailable
 
 
-@pytest.mark.parametrize(
-    ("mock_controller", "start_unavailable"),
-    [
-        pytest.param(
-            create_mock_controller(
-                free_air_enabled=True,
-                free_air=True,
-                is_on=True,
-                zone_ctrl=1,
-                zones_total=1,
-            ),
-            False,
-            id="stays_available",
-        ),
-        pytest.param(
-            create_mock_controller(
-                free_air_enabled=True,
-                free_air=True,
-                is_on=True,
-                zone_ctrl=1,
-                zones_total=1,
-            ),
-            True,
-            id="stays_unavailable",
-        ),
-    ],
+FREE_AIR_CONTROLLER = create_mock_controller(
+    free_air_enabled=True,
+    free_air=True,
+    zone_ctrl=1,
+    zones_total=1,
 )
-async def test_set_hvac_mode_free_air_noop_does_not_change_availability(
+
+
+@pytest.mark.parametrize(
+    "mock_controller",
+    [FREE_AIR_CONTROLLER],
+)
+async def test_set_hvac_mode_free_air_noop_when_on(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_discovery: AsyncMock,
     mock_controller: AsyncMock,
-    start_unavailable: bool,
 ) -> None:
-    """Free-air early return does not send a command or flip availability."""
+    """Free-air fan_only does not send commands when the system is already on."""
     await setup_integration(hass, mock_config_entry)
     await setup_controller(hass, mock_discovery, mock_controller)
 
-    entity_id = CONTROLLER_ENTITY_ID
-    if start_unavailable:
-        mock_controller.set_fan = AsyncMock(side_effect=ConnectionError("disconnected"))
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_FAN_MODE,
-            {"entity_id": entity_id, ATTR_FAN_MODE: FAN_LOW},
-            blocking=True,
-        )
-        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
-
-    expected_state = hass.states.get(entity_id).state
     mock_controller.set_mode = AsyncMock()
     mock_controller.set_on = AsyncMock()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {"entity_id": entity_id, ATTR_HVAC_MODE: HVACMode.FAN_ONLY},
+        {"entity_id": CONTROLLER_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.FAN_ONLY},
         blocking=True,
     )
 
     mock_controller.set_mode.assert_not_called()
     mock_controller.set_on.assert_not_called()
-    assert hass.states.get(entity_id).state == expected_state
+
+
+@pytest.mark.parametrize(
+    "mock_controller",
+    [FREE_AIR_CONTROLLER],
+)
+async def test_set_hvac_mode_free_air_noop_when_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_controller: AsyncMock,
+) -> None:
+    """Free-air fan_only invoked directly does not restore availability."""
+    await setup_integration(hass, mock_config_entry)
+    await setup_controller(hass, mock_discovery, mock_controller)
+
+    mock_controller.set_fan = AsyncMock(side_effect=ConnectionError("disconnected"))
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {"entity_id": CONTROLLER_ENTITY_ID, ATTR_FAN_MODE: FAN_LOW},
+        blocking=True,
+    )
+    assert hass.states.get(CONTROLLER_ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_controller.set_mode = AsyncMock()
+    mock_controller.set_on = AsyncMock()
+
+    entity = hass.data[CLIMATE_DOMAIN].get_entity(CONTROLLER_ENTITY_ID)
+    await entity.async_set_hvac_mode(HVACMode.FAN_ONLY)
+
+    mock_controller.set_mode.assert_not_called()
+    mock_controller.set_on.assert_not_called()
+    assert hass.states.get(CONTROLLER_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    "mock_controller",
+    [
+        create_mock_controller(
+            free_air_enabled=True,
+            free_air=True,
+            is_on=False,
+            zone_ctrl=1,
+            zones_total=1,
+        ),
+    ],
+)
+async def test_set_hvac_mode_free_air_turns_on_when_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_controller: AsyncMock,
+) -> None:
+    """Free-air fan_only turns the system on before skipping the mode change."""
+    await setup_integration(hass, mock_config_entry)
+    await setup_controller(hass, mock_discovery, mock_controller)
+
+    mock_controller.set_on = AsyncMock()
+    mock_controller.set_mode = AsyncMock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": CONTROLLER_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.FAN_ONLY},
+        blocking=True,
+    )
+
+    mock_controller.set_on.assert_called_once_with(True)
+    mock_controller.set_mode.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "mock_controller",
+    [FREE_AIR_CONTROLLER],
+)
+async def test_set_hvac_mode_off_while_free_air(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_controller: AsyncMock,
+) -> None:
+    """Off is sent before the free-air early return."""
+    await setup_integration(hass, mock_config_entry)
+    await setup_controller(hass, mock_discovery, mock_controller)
+
+    mock_controller.set_on = AsyncMock()
+    mock_controller.set_mode = AsyncMock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": CONTROLLER_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.OFF},
+        blocking=True,
+    )
+
+    mock_controller.set_on.assert_called_once_with(False)
+    mock_controller.set_mode.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "mock_controller",
+    [
+        create_mock_controller(
+            is_on=False,
+            zone_ctrl=1,
+            zones_total=1,
+        ),
+    ],
+)
+async def test_set_hvac_mode_connection_error_on_turn_on_skips_set_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_controller: AsyncMock,
+) -> None:
+    """A transport failure turning on does not continue to set_mode."""
+    await setup_integration(hass, mock_config_entry)
+    await setup_controller(hass, mock_discovery, mock_controller)
+
+    mock_controller.set_on = AsyncMock(side_effect=ConnectionError("disconnected"))
+    mock_controller.set_mode = AsyncMock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {"entity_id": CONTROLLER_ENTITY_ID, ATTR_HVAC_MODE: HVACMode.COOL},
+        blocking=True,
+    )
+
+    mock_controller.set_on.assert_called_once_with(True)
+    mock_controller.set_mode.assert_not_called()
+    assert hass.states.get(CONTROLLER_ENTITY_ID).state == STATE_UNAVAILABLE
