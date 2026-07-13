@@ -212,6 +212,31 @@ def test_server_context_modern() -> None:
 
 
 def test_server_context_intermediate() -> None:
-    """Intermediate server profile should allow TLS 1.2."""
+    """Intermediate server profile should follow the Mozilla guidelines."""
     context = server_context_intermediate()
-    assert context.minimum_version <= ssl.TLSVersion.TLSv1_2
+    assert context.minimum_version == ssl.TLSVersion.TLSv1_2
+
+    tls13_ciphers = [
+        cipher["name"]
+        for cipher in context.get_ciphers()
+        if cipher["protocol"] == "TLSv1.3"
+    ]
+    assert sorted(tls13_ciphers) == [
+        "TLS_AES_128_GCM_SHA256",
+        "TLS_AES_256_GCM_SHA384",
+        "TLS_CHACHA20_POLY1305_SHA256",
+    ]
+
+    tls12_ciphers = [
+        cipher["name"]
+        for cipher in context.get_ciphers()
+        if cipher["protocol"] == "TLSv1.2"
+    ]
+    assert tls12_ciphers == [
+        "ECDHE-ECDSA-AES128-GCM-SHA256",
+        "ECDHE-RSA-AES128-GCM-SHA256",
+        "ECDHE-ECDSA-AES256-GCM-SHA384",
+        "ECDHE-RSA-AES256-GCM-SHA384",
+        "ECDHE-ECDSA-CHACHA20-POLY1305",
+        "ECDHE-RSA-CHACHA20-POLY1305",
+    ]
