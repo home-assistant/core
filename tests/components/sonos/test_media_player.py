@@ -50,7 +50,6 @@ from homeassistant.components.sonos.const import (
     SOURCE_LINEIN,
     SOURCE_TV,
 )
-from homeassistant.components.sonos.exception import SonosUpdateError
 from homeassistant.components.sonos.media_player import (
     LONG_SERVICE_TIMEOUT,
     VOLUME_INCREMENT,
@@ -374,7 +373,7 @@ async def test_play_media_error_translation(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     soco_mock.play_uri.side_effect = error
 
-    with pytest.raises(SonosUpdateError) as err:
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
