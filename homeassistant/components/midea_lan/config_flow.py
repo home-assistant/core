@@ -59,7 +59,9 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         # sort and assign supports
         self.supports = dict(sorted(unsorted.items(), key=itemgetter(1)))
 
-        # preset account
+        # Try the preset account first, as this to most data (since most users are registered on a different server,
+        # their credentials may not be sufficient to retrieve the required key.
+        # If this fails, fall back to user-provided credentials.
         self.preset_account = decode_preset_account(1)
         self.preset_password = decode_preset_account(2)
         self.preset_cloud_name: str = DEFAULT_CLOUD
@@ -205,18 +207,18 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_search(
         self,
-        discovery_info: dict[str, Any] | None = None,
+        user_input: dict[str, Any] | None = None,
         error: str | None = None,
     ) -> ConfigFlowResult:
         """Search device with auto mode or ip address."""
         # input is not None, using ip_address to discovery device
-        if discovery_info is not None:
+        if user_input is not None:
             # auto mode, ip_address is None
-            if discovery_info[CONF_IP_ADDRESS].lower() == "auto":
+            if user_input[CONF_IP_ADDRESS].lower() == "auto":
                 ip_address = None
             # ip exist
             else:
-                ip_address = discovery_info[CONF_IP_ADDRESS]
+                ip_address = user_input[CONF_IP_ADDRESS]
             # use midea-local discover() to get devices list with ip_address
             self.devices = await self.hass.async_add_executor_job(
                 lambda: discover(list(self.supports.keys()), ip_address=ip_address),
