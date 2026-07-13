@@ -602,7 +602,6 @@ class ProtectData:
         websocket via ``_async_process_public_updates``, not from here.
         """
         if self.api.is_public_only:
-            # No private connection: nothing to re-signal from the private path.
             return
         self._async_signal_device_update(self.api.bootstrap.nvr)
         for device in self.get_by_types(DEVICES_THAT_ADOPT):
