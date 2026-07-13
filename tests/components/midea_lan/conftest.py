@@ -4,9 +4,17 @@ from collections.abc import Callable, Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from midealocal.const import DeviceType
 import pytest
 
-from .const import TEST_MODEL, TEST_NAME, TEST_SUBTYPE
+from homeassistant.components.midea_lan.const import DOMAIN
+from homeassistant.const import CONF_TYPE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from .const import BASE_DATA, TEST_MODEL, TEST_NAME, TEST_SUBTYPE
+
+from tests.common import MockConfigEntry
 
 
 class DummyDevice:
@@ -75,6 +83,36 @@ class DummyDevice:
         self.calls.append(("close",))
 
 
+def default_ac_device() -> DummyDevice:
+    """Return a default AC device for tests."""
+    return DummyDevice(
+        DeviceType.AC,
+        attributes={
+            "power": True,
+            "mode": 1,
+            "target_temperature": 22.0,
+            "indoor_temperature": 21.0,
+            "fan_speed": 103,
+            "swing_vertical": True,
+            "swing_horizontal": True,
+            "indoor_humidity": 50,
+        },
+    )
+
+
+def entity_entries(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> dict[str, er.RegistryEntry]:
+    """Return entity registry entries for a config entry, keyed by unique id."""
+    entity_registry = er.async_get(hass)
+    return {
+        entity_entry.unique_id: entity_entry
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
+        )
+    }
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Prevent loading the integration during config flow tests."""
@@ -83,3 +121,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         return_value=True,
     ) as mock_entry:
         yield mock_entry
+
+
+@pytest.fixture
+def mock_config_entry() -> Callable[[DummyDevice], MockConfigEntry]:
+    """Return a function that creates a mock config entry for a given device."""
+
+    def _create(device: DummyDevice) -> MockConfigEntry:
+        return MockConfigEntry(
+            domain=DOMAIN,
+            data={**BASE_DATA, CONF_TYPE: device.device_type},
+        )
+
+    return _create

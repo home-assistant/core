@@ -1,6 +1,6 @@
 """Tests for midea_lan climate.py."""
 
-from unittest.mock import patch
+from collections.abc import Callable
 
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
@@ -39,48 +39,14 @@ from homeassistant.components.climate import (
     SWING_VERTICAL,
     HVACMode,
 )
-from homeassistant.components.midea_lan.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_TYPE
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import DummyDevice
-from .const import BASE_DATA
+from . import setup_integration
+from .conftest import DummyDevice, entity_entries
 
 from tests.common import MockConfigEntry, snapshot_platform
-
-
-async def _async_setup_entry(
-    hass: HomeAssistant,
-    device: DummyDevice,
-) -> MockConfigEntry:
-    """Set up a Midea LAN config entry with a fake device."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={**BASE_DATA, CONF_TYPE: device.device_type},
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.midea_lan.device_selector",
-        return_value=device,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-
-    return entry
-
-
-def _entity_entries(
-    hass: HomeAssistant, entry: MockConfigEntry
-) -> dict[str, er.RegistryEntry]:
-    """Return entity registry entries keyed by unique id."""
-    entity_registry = er.async_get(hass)
-    return {
-        entity_entry.unique_id: entity_entry
-        for entity_entry in er.async_entries_for_config_entry(
-            entity_registry, entry.entry_id
-        )
-    }
 
 
 async def _assert_service_calls(
@@ -102,7 +68,10 @@ async def _assert_service_calls(
     assert device.calls == expected_calls
 
 
-async def test_midea_ac_climate_setup_and_services(hass: HomeAssistant) -> None:
+async def test_midea_ac_climate_setup_and_services(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
     """Test AC climate entities are created and service calls reach the device."""
     device = DummyDevice(
         DeviceType.AC,
@@ -122,8 +91,9 @@ async def test_midea_ac_climate_setup_and_services(hass: HomeAssistant) -> None:
             ACAttributes.indoor_humidity: 50,
         },
     )
-    entry = await _async_setup_entry(hass, device)
-    entity_entry = _entity_entries(hass, entry)["123_climate"]
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
 
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
@@ -246,7 +216,10 @@ async def test_midea_ac_climate_setup_and_services(hass: HomeAssistant) -> None:
     )
 
 
-async def test_midea_cc_climate_setup_and_services(hass: HomeAssistant) -> None:
+async def test_midea_cc_climate_setup_and_services(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
     """Test CC climate entities are created and exposed through hass.states."""
     device = DummyDevice(
         DeviceType.CC,
@@ -258,8 +231,9 @@ async def test_midea_cc_climate_setup_and_services(hass: HomeAssistant) -> None:
             CCAttributes.swing: True,
         },
     )
-    entry = await _async_setup_entry(hass, device)
-    entity_entry = _entity_entries(hass, entry)["123_climate"]
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
 
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
@@ -295,7 +269,10 @@ async def test_midea_cc_climate_setup_and_services(hass: HomeAssistant) -> None:
     )
 
 
-async def test_midea_cf_climate_setup_and_services(hass: HomeAssistant) -> None:
+async def test_midea_cf_climate_setup_and_services(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
     """Test CF climate entities are created and control calls are routed."""
     device = DummyDevice(
         DeviceType.CF,
@@ -307,8 +284,9 @@ async def test_midea_cf_climate_setup_and_services(hass: HomeAssistant) -> None:
             CFAttributes.current_temperature: 22,
         },
     )
-    entry = await _async_setup_entry(hass, device)
-    entity_entry = _entity_entries(hass, entry)["123_climate"]
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
 
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
@@ -342,7 +320,10 @@ async def test_midea_cf_climate_setup_and_services(hass: HomeAssistant) -> None:
     )
 
 
-async def test_midea_c3_climate_setup_and_services(hass: HomeAssistant) -> None:
+async def test_midea_c3_climate_setup_and_services(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
     """Test C3 climate entities are created and zone-specific services work."""
     device = DummyDevice(
         DeviceType.C3,
@@ -356,11 +337,12 @@ async def test_midea_c3_climate_setup_and_services(hass: HomeAssistant) -> None:
             C3Attributes.temp_tw_in: [21.5, 22.5],
         },
     )
-    entry = await _async_setup_entry(hass, device)
-    entity_entries = _entity_entries(hass, entry)
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entries_by_unique_id = entity_entries(hass, config_entry)
 
-    zone1 = entity_entries["123_climate_zone1"]
-    zone2 = entity_entries["123_climate_zone2"]
+    zone1 = entries_by_unique_id["123_climate_zone1"]
+    zone2 = entries_by_unique_id["123_climate_zone2"]
     assert zone2.disabled_by == er.RegistryEntryDisabler.INTEGRATION
     assert hass.states.get(zone2.entity_id) is None
 
@@ -410,7 +392,10 @@ async def test_midea_c3_climate_setup_and_services(hass: HomeAssistant) -> None:
     )
 
 
-async def test_midea_fb_climate_setup_and_services(hass: HomeAssistant) -> None:
+async def test_midea_fb_climate_setup_and_services(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
     """Test FB climate entities are created and preset calls are routed."""
     device = DummyDevice(
         DeviceType.FB,
@@ -420,8 +405,9 @@ async def test_midea_fb_climate_setup_and_services(hass: HomeAssistant) -> None:
             FBAttributes.current_temperature: 20,
         },
     )
-    entry = await _async_setup_entry(hass, device)
-    entity_entry = _entity_entries(hass, entry)["123_climate"]
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
 
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
@@ -468,6 +454,7 @@ async def test_midea_fb_climate_setup_and_services(hass: HomeAssistant) -> None:
 )
 async def test_ac_fan_mode_thresholds(
     hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
     fan_speed: int,
     expected_fan_mode: str,
 ) -> None:
@@ -485,8 +472,9 @@ async def test_ac_fan_mode_thresholds(
             ACAttributes.indoor_humidity: 50,
         },
     )
-    entry = await _async_setup_entry(hass, device)
-    entity_entry = _entity_entries(hass, entry)["123_climate"]
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
 
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.attributes[ATTR_FAN_MODE] == expected_fan_mode
@@ -502,6 +490,7 @@ async def test_ac_fan_mode_thresholds(
 )
 async def test_ac_humidity_filtering(
     hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
     humidity: int,
     expected_humidity: float | None,
 ) -> None:
@@ -519,14 +508,18 @@ async def test_ac_humidity_filtering(
             ACAttributes.indoor_humidity: humidity,
         },
     )
-    entry = await _async_setup_entry(hass, device)
-    entity_entry = _entity_entries(hass, entry)["123_climate"]
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
 
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) == expected_humidity
 
 
-async def test_base_set_temperature_without_target_noop(hass: HomeAssistant) -> None:
+async def test_base_set_temperature_without_target_noop(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
     """Test set_temperature without ATTR_TEMPERATURE is ignored."""
     device = DummyDevice(
         DeviceType.AC,
@@ -540,8 +533,9 @@ async def test_base_set_temperature_without_target_noop(hass: HomeAssistant) -> 
             ACAttributes.swing_horizontal: True,
         },
     )
-    entry = await _async_setup_entry(hass, device)
-    entity_entry = _entity_entries(hass, entry)["123_climate"]
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
     entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_entry.entity_id)
 
     device.calls.clear()
@@ -550,7 +544,10 @@ async def test_base_set_temperature_without_target_noop(hass: HomeAssistant) -> 
     assert device.calls == []
 
 
-async def test_ac_set_hvac_mode_off_calls_power_off(hass: HomeAssistant) -> None:
+async def test_ac_set_hvac_mode_off_calls_power_off(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
     """Test AC HVAC off delegates to turn_off."""
     device = DummyDevice(
         DeviceType.AC,
@@ -564,8 +561,9 @@ async def test_ac_set_hvac_mode_off_calls_power_off(hass: HomeAssistant) -> None
             ACAttributes.swing_horizontal: True,
         },
     )
-    entry = await _async_setup_entry(hass, device)
-    entity_entry = _entity_entries(hass, entry)["123_climate"]
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
 
     await _assert_service_calls(
         hass,
@@ -577,7 +575,10 @@ async def test_ac_set_hvac_mode_off_calls_power_off(hass: HomeAssistant) -> None
     )
 
 
-async def test_ac_invalid_mode_maps_to_off_state(hass: HomeAssistant) -> None:
+async def test_ac_invalid_mode_maps_to_off_state(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
     """Test AC invalid protocol mode yields off state."""
     device = DummyDevice(
         DeviceType.AC,
@@ -591,14 +592,18 @@ async def test_ac_invalid_mode_maps_to_off_state(hass: HomeAssistant) -> None:
             ACAttributes.swing_horizontal: True,
         },
     )
-    entry = await _async_setup_entry(hass, device)
-    entity_entry = _entity_entries(hass, entry)["123_climate"]
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
 
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.state == "unknown"
 
 
-async def test_cf_temperature_range_attributes(hass: HomeAssistant) -> None:
+async def test_cf_temperature_range_attributes(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
     """Test CF min/max range attributes are exposed for low/high targets."""
     device = DummyDevice(
         DeviceType.CF,
@@ -610,8 +615,9 @@ async def test_cf_temperature_range_attributes(hass: HomeAssistant) -> None:
             CFAttributes.current_temperature: 22,
         },
     )
-    entry = await _async_setup_entry(hass, device)
-    entity_entry = _entity_entries(hass, entry)["123_climate"]
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
     entity = hass.data[CLIMATE_DOMAIN].get_entity(entity_entry.entity_id)
 
     assert entity is not None
@@ -619,7 +625,10 @@ async def test_cf_temperature_range_attributes(hass: HomeAssistant) -> None:
     assert entity.target_temperature_high == 30.0
 
 
-async def test_c3_temperature_fallback_and_turn_on(hass: HomeAssistant) -> None:
+async def test_c3_temperature_fallback_and_turn_on(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
     """Test C3 fallback temperatures and turn_on path for zone power."""
     device = DummyDevice(
         DeviceType.C3,
@@ -633,8 +642,9 @@ async def test_c3_temperature_fallback_and_turn_on(hass: HomeAssistant) -> None:
             C3Attributes.temp_tw_in: [21.5],
         },
     )
-    entry = await _async_setup_entry(hass, device)
-    zone1 = _entity_entries(hass, entry)["123_climate_zone1"]
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    zone1 = entity_entries(hass, config_entry)["123_climate_zone1"]
     entity = hass.data[CLIMATE_DOMAIN].get_entity(zone1.entity_id)
 
     assert entity is not None
@@ -651,7 +661,10 @@ async def test_c3_temperature_fallback_and_turn_on(hass: HomeAssistant) -> None:
     )
 
 
-async def test_fb_set_hvac_off_calls_turn_off(hass: HomeAssistant) -> None:
+async def test_fb_set_hvac_off_calls_turn_off(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
     """Test FB HVAC off delegates to turn_off."""
     device = DummyDevice(
         DeviceType.FB,
@@ -661,8 +674,9 @@ async def test_fb_set_hvac_off_calls_turn_off(hass: HomeAssistant) -> None:
             FBAttributes.current_temperature: 20,
         },
     )
-    entry = await _async_setup_entry(hass, device)
-    entity_entry = _entity_entries(hass, entry)["123_climate"]
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+    entity_entry = entity_entries(hass, config_entry)["123_climate"]
 
     await _assert_service_calls(
         hass,
@@ -671,40 +685,6 @@ async def test_fb_set_hvac_off_calls_turn_off(hass: HomeAssistant) -> None:
         {"hvac_mode": HVACMode.OFF},
         [("set_attribute", FBAttributes.power, False)],
         device,
-    )
-
-
-@pytest.mark.parametrize(
-    ("device_type", "expected_count"),
-    [
-        pytest.param(DeviceType.AC, 1, id="ac"),
-        pytest.param(DeviceType.CC, 1, id="cc"),
-        pytest.param(DeviceType.CF, 1, id="cf"),
-        pytest.param(DeviceType.C3, 2, id="c3"),
-        pytest.param(DeviceType.FB, 1, id="fb"),
-    ],
-)
-async def test_climate_async_setup_entry(
-    hass: HomeAssistant,
-    device_type: int,
-    expected_count: int,
-) -> None:
-    """Test async_setup_entry creates the expected number of entities."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={**BASE_DATA, CONF_TYPE: device_type},
-    )
-    entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.midea_lan.device_selector",
-        return_value=DummyDevice(device_type),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-
-    entity_registry = er.async_get(hass)
-    assert (
-        len(er.async_entries_for_config_entry(entity_registry, entry.entry_id))
-        == expected_count
     )
 
 
@@ -732,14 +712,70 @@ async def test_climate_async_setup_entry(
             ),
             id="ac",
         ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.CC,
+                attributes={
+                    CCAttributes.power: True,
+                    CCAttributes.mode: 5,
+                    CCAttributes.fan_speed: "high",
+                    CCAttributes.temperature_precision: 0.5,
+                    CCAttributes.swing: True,
+                },
+            ),
+            id="cc",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.CF,
+                attributes={
+                    "power": True,
+                    "mode": 2,
+                    CFAttributes.min_temperature: 16,
+                    CFAttributes.max_temperature: 30,
+                    CFAttributes.current_temperature: 22,
+                },
+            ),
+            id="cf",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.C3,
+                attributes={
+                    C3Attributes.zone_temp_type: [True, False],
+                    C3Attributes.temperature_min: [16, 17],
+                    C3Attributes.temperature_max: [30, 29],
+                    C3Attributes.mode: 1,
+                    C3Attributes.zone1_power: True,
+                    C3Attributes.target_temperature: [22, 23],
+                    C3Attributes.temp_tw_in: [21.5, 22.5],
+                },
+            ),
+            id="c3",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.FB,
+                attributes={
+                    FBAttributes.mode: "comfort",
+                    FBAttributes.power: True,
+                    FBAttributes.current_temperature: 20,
+                },
+            ),
+            id="fb",
+        ),
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_state_snapshot(
     hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     device: DummyDevice,
 ) -> None:
-    """Snapshot climate entities for representative device types."""
-    entry = await _async_setup_entry(hass, device)
-    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+    """Test async_setup_entry creates entities for each device type."""
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
