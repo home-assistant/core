@@ -2,7 +2,6 @@
 
 import base64
 from collections.abc import Generator
-from pathlib import Path
 import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -80,12 +79,17 @@ def mock_rsa_key() -> Generator[None]:
         self: Teslemetry, path: str, key_size: int = 4096
     ) -> rsa.RSAPrivateKey:
         self.rsa_private_key = _TEST_RSA_KEY
-        Path(path).write_bytes(_TEST_RSA_PEM)
         return _TEST_RSA_KEY
 
-    with patch(
-        "homeassistant.components.teslemetry.config_flow.Teslemetry.get_rsa_private_key",
-        _fake_get_rsa_private_key,
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.Teslemetry.get_rsa_private_key",
+            _fake_get_rsa_private_key,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.Path.read_bytes",
+            return_value=_TEST_RSA_PEM,
+        ),
     ):
         yield
 
