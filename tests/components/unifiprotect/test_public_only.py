@@ -73,6 +73,7 @@ def _public_client() -> Mock:
     pb = Mock(spec=PublicBootstrap)
     pb.nvr = nvr
     pb.arm_mode = arm_mode
+    pb.cameras = {}
     client.public_bootstrap = pb
 
     subs: dict[str, object] = {}
@@ -147,17 +148,21 @@ async def test_public_only_only_alarm_platform(hass: HomeAssistant) -> None:
 
 
 async def test_public_only_auth_failed_triggers_reauth(hass: HomeAssistant) -> None:
-    """A revoked API key on the public websocket starts a reauth flow."""
+    """A revoked API key on the public websocket starts a reauth flow.
+
+    The library always emits DISCONNECTED before AUTH_FAILED (uiprotect
+    15.12.2+), so the stale public data is marked unavailable by the regular
+    disconnect path before reauth is triggered.
+    """
     entry, client = await _setup_public_only(hass)
 
     state_cb = client._subs["devices_state"]
     with patch.object(entry, "async_start_reauth") as mock_reauth:
+        state_cb(WebsocketState.DISCONNECTED)
         state_cb(WebsocketState.AUTH_FAILED)
         await hass.async_block_till_done()
 
     assert mock_reauth.called
-    # AUTH_FAILED arrives instead of DISCONNECTED: the stale public data must
-    # not keep rendering as live while the reauth is pending.
     assert hass.states.get(_ALARM_ENTITY_ID).state == "unavailable"
 
 

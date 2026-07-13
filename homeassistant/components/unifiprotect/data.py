@@ -344,14 +344,11 @@ class ProtectData:
     def _async_public_ws_state_changed(self, state: WebsocketState) -> None:
         """Handle a change in the public devices websocket state."""
         if state is WebsocketState.AUTH_FAILED:
-            # A revoked API key cannot self-recover; mark the public data
-            # stale (AUTH_FAILED arrives instead of DISCONNECTED, so entities
-            # would otherwise stay available) and route to reauth. Fires in
-            # both modes (the public websocket runs in hybrid too), and is the
-            # only reauth trigger in public-only mode.
-            if self.last_public_update_success:
-                self.last_public_update_success = False
-                self._async_process_public_updates()
+            # A revoked API key cannot self-recover; route to reauth. The
+            # library always emits DISCONNECTED first (uiprotect 15.12.2+),
+            # so the data is already marked stale by the branch below. Fires
+            # in both modes (the public websocket runs in hybrid too), and is
+            # the only reauth trigger in public-only mode.
             self._entry.async_start_reauth(self._hass)
             return
         success = state is WebsocketState.CONNECTED

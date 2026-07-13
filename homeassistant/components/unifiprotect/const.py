@@ -83,6 +83,7 @@ PLATFORMS = [
 # rest enumerate from the private bootstrap, which is absent in this mode.
 PUBLIC_ONLY_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
+    Platform.CAMERA,
 ]
 
 DISPATCH_ADD = "add_device"

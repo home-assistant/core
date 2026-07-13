@@ -26,6 +26,7 @@ from uiprotect.data import (
     Sensor,
     SmartDetectObjectType,
     StateType,
+    Version,
     VideoMode,
     Viewer,
     WSSubscriptionMessage,
@@ -169,6 +170,13 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.has_public_bootstrap = True
     client.is_public_only = False
 
+    # Only consulted on the public-only setup path (tests that flip
+    # ``is_public_only`` on this client); a valid version and NVR mac let
+    # that path complete instead of requiring per-test setup.
+    meta = Mock()
+    meta.version = Version("7.1.83")
+    client.get_meta_info = AsyncMock(return_value=meta)
+
     # The library owns RTSPS streams on ``PublicCamera.rtsps_streams`` and primes
     # them in ``update_public()``; the integration reads them synchronously. Start
     # with empty collections; the ``update_public`` side effect (see ``mock_entry``)
@@ -179,6 +187,10 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.public_bootstrap.sirens = {}
     client.public_bootstrap.arm_profiles = {}
     client.public_bootstrap.arm_mode = None
+    client.public_bootstrap.nvr = Mock()
+    client.public_bootstrap.nvr.mac = nvr.mac
+    client.public_bootstrap.nvr.name = nvr.name
+    client.public_bootstrap.nvr.device_type = None
 
     # Cameras resolve to their primed public model (see ``update_public`` in
     # ``mock_entry``); other device types opt in via the ``setup_public_*``
