@@ -161,7 +161,7 @@ async def async_setup_entry(
             if description.key in conditions
         ]
 
-        async_add_entities(entities, True, config_subentry_id=subentry.subentry_id)
+        async_add_entities(entities, False, config_subentry_id=subentry.subentry_id)
 
 
 class VolkszaehlerSensor(SensorEntity):
