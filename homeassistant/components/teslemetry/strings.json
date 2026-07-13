@@ -57,12 +57,14 @@
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The Teslemetry account must be loaded before setting up local control. Try again once it has finished loading.",
         "not_supported": "Energy sites are added automatically from your Teslemetry account and cannot be added manually.",
+        "powerwall_unreachable": "There is a problem communicating with your Powerwall. Ensure it has a reliable network connection and try again later.",
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "entry_type": "Energy site",
       "error": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "invalid_password": "[%key:common::config_flow::error::invalid_auth%]",
+        "powerwall_unreachable": "There is a problem communicating with your Powerwall. Ensure it has a reliable network connection and try again later.",
         "timeout": "Timed out waiting for the key to be approved. Try again after flicking the switch on the side of your primary Powerwall off and back on."
       },
       "initiate_flow": {
