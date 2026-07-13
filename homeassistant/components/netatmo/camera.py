@@ -43,6 +43,8 @@ from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 DEFAULT_QUALITY = "high"
 
 
