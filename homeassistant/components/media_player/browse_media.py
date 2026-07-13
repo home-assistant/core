@@ -174,7 +174,7 @@ class SearchMedia:
     """Represent search results."""
 
     version: int = field(default=1)
-    result: list[BrowseMedia]
+    result: Sequence[BrowseMedia]
 
     def as_dict(self, *, parent: bool = True) -> dict[str, Any]:
         """Convert SearchMedia class to browse media dictionary."""
