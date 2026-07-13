@@ -17,10 +17,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     DEGREE,
     EntityCategory,
+    EntityStateAttribute,
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -939,8 +938,8 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
 
         self._attr_extra_state_attributes.update(
             {
-                ATTR_LATITUDE: (area.lat_ne + area.lat_sw) / 2,
-                ATTR_LONGITUDE: (area.lon_ne + area.lon_sw) / 2,
+                EntityStateAttribute.LATITUDE: (area.lat_ne + area.lat_sw) / 2,
+                EntityStateAttribute.LONGITUDE: (area.lon_ne + area.lon_sw) / 2,
             }
         )
         self._attr_device_info = DeviceInfo(
