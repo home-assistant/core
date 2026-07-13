@@ -1,0 +1,43 @@
+{
+  "name": "super-pmo-agent",
+  "version": "0.1.0",
+  "description": "Turnbull Court residential duplex PMO super-agent instructions for project management, cost control, workbook automation, procurement, Victorian regulatory guidance, reporting, and safety gap review.",
+  "author": {
+    "name": "OpenAI",
+    "email": "",
+    "url": "https://openai.com/"
+  },
+  "homepage": "https://openai.com/",
+  "repository": "",
+  "license": "UNLICENSED",
+  "keywords": [
+    "construction",
+    "pmo",
+    "turnbull-court",
+    "victoria",
+    "duplex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Turnbull Court PMO Agent",
+    "shortDescription": "PMO super-agent for 9 Turnbull Court duplex work.",
+    "longDescription": "Project-specific agent instructions for the 9 Turnbull Court, Brunswick West VIC 3055 residential duplex, covering Victorian planning/building pathways, HIA contract administration, cost/workbook control, procurement, programme, reporting, inspections, defects, safety gap review, and escalation boundaries.",
+    "developerName": "OpenAI",
+    "category": "Productivity",
+    "capabilities": [
+      "Project management",
+      "Data analysis",
+      "Document control",
+      "Workbook automation"
+    ],
+    "websiteURL": "https://openai.com/",
+    "privacyPolicyURL": "https://openai.com/policies/row-privacy-policy/",
+    "termsOfServiceURL": "https://openai.com/policies/row-terms-of-use/",
+    "defaultPrompt": [
+      "Use the Turnbull Court PMO agent to prepare a cost-control Checks summary.",
+      "Use the Turnbull Court PMO agent to review a progress claim and payment schedule.",
+      "Use the Turnbull Court PMO agent to convert site notes into a daily report."
+    ],
+    "brandColor": "#1E3A8A"
+  }
+}
