@@ -799,6 +799,45 @@ async def test_rgbicww_ceiling_light_main_services(
         mocked_instance.assert_awaited_once_with(*expected_args)
 
 
+async def test_rgbicww_ceiling_light_main_brightness_and_color_temp(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+) -> None:
+    """Test the main light applies brightness and color temp in a single turn_on."""
+    inject_bluetooth_service_info(hass, RGBICWW_CEILING_LIGHT_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="rgbicww_ceiling_light")
+    entry.add_to_hass(hass)
+    entity_id = "light.test_name_main_light"
+
+    mocked_color_temp = AsyncMock(return_value=True)
+    mocked_brightness = AsyncMock(return_value=True)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.light.switchbot.SwitchbotRgbicwwCeilingLight",
+        set_main_color_temp=mocked_color_temp,
+        set_main_brightness=mocked_brightness,
+        update=AsyncMock(return_value=None),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_BRIGHTNESS: 128,
+                ATTR_COLOR_TEMP_KELVIN: 4000,
+            },
+            blocking=True,
+        )
+
+        # Both attributes in one call must be applied, not just color temp.
+        mocked_color_temp.assert_awaited_once_with(4000)
+        mocked_brightness.assert_awaited_once_with(round(128 / 255 * 100))
+
+
 @pytest.mark.parametrize(*RGBICWW_CEILING_COLOR_PARAMETERS)
 async def test_rgbicww_ceiling_light_color_services(
     hass: HomeAssistant,

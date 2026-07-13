@@ -286,12 +286,11 @@ class SwitchbotRgbicwwCeilingLightMainEntity(SwitchbotEntity, LightEntity):
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
             kelvin = max(2700, min(6500, kwargs[ATTR_COLOR_TEMP_KELVIN]))
             await self._device.set_main_color_temp(kelvin)
-            return
         if ATTR_BRIGHTNESS in kwargs:
             brightness = round(cast(int, kwargs[ATTR_BRIGHTNESS]) / 255 * 100)
             await self._device.set_main_brightness(brightness)
-            return
-        await self._device.turn_on_main()
+        if ATTR_COLOR_TEMP_KELVIN not in kwargs and ATTR_BRIGHTNESS not in kwargs:
+            await self._device.turn_on_main()
 
     @exception_handler
     @override
