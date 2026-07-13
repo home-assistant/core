@@ -40,6 +40,22 @@ EVENT_DESCRIPTIONS: tuple[SwitchbotEventEntityDescription, ...] = (
         counter_key="button_count",
         fire_event="press",
     ),
+    SwitchbotEventEntityDescription(
+        key="on_button",
+        translation_key="on_button",
+        device_class=EventDeviceClass.BUTTON,
+        event_types=["press"],
+        counter_key="on_keystate_counter",
+        fire_event="press",
+    ),
+    SwitchbotEventEntityDescription(
+        key="off_button",
+        translation_key="off_button",
+        device_class=EventDeviceClass.BUTTON,
+        event_types=["press"],
+        counter_key="off_keystate_counter",
+        fire_event="press",
+    ),
 )
 
 
