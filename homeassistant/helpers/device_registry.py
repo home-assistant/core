@@ -475,10 +475,12 @@ class DeviceEntry:
             "area_id": self.area_id,
             "configuration_url": self.configuration_url,
             # config_entries and config_entries_subentries are deprecated and kept for
-            # backwards compatibility, they can be removed in HA Core 2027.8
-            "config_entries": [self.config_entry_id],
+            # backwards compatibility, they can be removed in HA Core 2027.8. They use the
+            # compatibility properties so a restored composite reports its merged entries.
+            "config_entries": list(self.config_entries),
             "config_entries_subentries": {
-                self.config_entry_id: [self.config_subentry_id]
+                entry_id: list(subentries)
+                for entry_id, subentries in self.config_entries_subentries.items()
             },
             "config_entry_id": self.config_entry_id,
             "config_subentry_id": self.config_subentry_id,
@@ -1428,6 +1430,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"Can't link device to unknown config entry {config_entry_id}"
             )
 
+        # Validate before mutating the registry below
+        if (
+            via_device is not None
+            and via_device is not UNDEFINED
+            and via_device_id is not UNDEFINED
+        ):
+            raise HomeAssistantError(
+                "Passing both `via_device` and `via_device_id` is not allowed; "
+                "`via_device` is deprecated, pass `via_device_id` only"
+            )
+
         if translation_key:
             full_translation_key = (
                 f"component.{config_entry.domain}.device.{translation_key}.name"
@@ -1537,11 +1550,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             name = default_name
 
         if via_device is not None and via_device is not UNDEFINED:
-            if via_device_id is not UNDEFINED:
-                raise HomeAssistantError(
-                    "Passing both `via_device` and `via_device_id` is not allowed; "
-                    "`via_device` is deprecated, pass `via_device_id` only"
-                )
             # Resolve the deprecated via_device to a device id. The identifier is not
             # unique across config entries, so prefer a via device in the same config
             # entry, falling back to any config entry (a via device may legitimately
@@ -2388,11 +2396,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Clear config subentry from registry entries."""
         now_time = time.time()
         for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
-            self._async_update_device(
-                device.id,
-                remove_config_entry_id=config_entry_id,
-                remove_config_subentry_id=config_subentry_id,
-            )
+            if device.config_subentry_id != config_subentry_id:
+                continue
+            self.async_remove_device(device.id)
         for deleted_device in list(self.deleted_devices.values()):
             if (
                 deleted_device.config_entry_id != config_entry_id

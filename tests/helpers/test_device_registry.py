@@ -2348,6 +2348,81 @@ async def test_move_to_config_entry_clears_target_entry_tombstone(
     assert device_b.id not in device_registry.deleted_devices
 
 
+async def test_composite_dict_repr_reports_merged_config_entries(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """A composite's dict_repr exposes the merged config entries, not just one split."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "shared")}
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "shared")}
+    )
+    composite = device_registry.async_get_device(identifiers={("test", "shared")})
+
+    entry_ids = {entry_1.entry_id, entry_2.entry_id}
+    assert set(composite.dict_repr["config_entries"]) == entry_ids
+    assert set(composite.dict_repr["config_entries_subentries"]) == entry_ids
+
+
+async def test_get_or_create_via_device_and_via_device_id_raises_cleanly(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Passing both via_device and via_device_id raises without inserting a device."""
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    with pytest.raises(HomeAssistantError, match="not allowed"):
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={("test", "1")},
+            via_device=("test", "via"),
+            via_device_id="via-device-id",
+        )
+
+    assert device_registry.async_get_device(identifiers={("test", "1")}) is None
+    assert len(device_registry.devices) == 0
+
+
+async def test_clear_config_subentry_removes_device_with_pending_move(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Clearing a config subentry removes its device, ignoring a pending move.
+
+    add_config_entry_id records a transient pending move; tearing down the owning
+    subentry must remove the device rather than complete that move.
+    """
+    entry_1 = MockConfigEntry(
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+        ]
+    )
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id,
+        config_subentry_id="mock-subentry-id-1",
+        identifiers={("test", "1")},
+    )
+    device_registry.async_update_device(device.id, add_config_entry_id=entry_2.entry_id)
+
+    device_registry.async_clear_config_subentry(entry_1.entry_id, "mock-subentry-id-1")
+
+    assert device.id not in device_registry.devices
+    assert device_registry.async_get_device(identifiers={("test", "1")}) is None
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_async_get_device_composite_reuses_pre_migration_id(
     hass: HomeAssistant, hass_storage: dict[str, Any]
