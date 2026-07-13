@@ -23,7 +23,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
 from .const import HEALTH, SYSTEM
-from .coordinator import _LOGGER, MikrotikConfigEntry, MikrotikDataUpdateCoordinator
+from .coordinator import _LOGGER, MikrotikConfigEntry
 from .entity import MikrotikEntity
 
 PARALLEL_UPDATES = 0
@@ -168,16 +168,6 @@ class MikrotikSensorEntity(
     """Sensor device."""
 
     entity_description: MikrotikSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: MikrotikDataUpdateCoordinator,
-        description: MikrotikSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, description)
-
-        self._attr_unique_id = f"{self._serial}_{description.key}"
 
     @property
     @override
