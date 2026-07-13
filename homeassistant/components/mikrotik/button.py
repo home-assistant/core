@@ -57,4 +57,7 @@ class MikrotikButtonEntity(MikrotikEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Handle button press action."""
         with mikrotik_config_entry_errors():
-            self.coordinator.api.command(MIKROTIK_SERVICES[self.entity_description.key])
+            await self.hass.async_add_executor_job(
+                self.coordinator.api.command,
+                MIKROTIK_SERVICES[self.entity_description.key],
+            )
