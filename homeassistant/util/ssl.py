@@ -176,8 +176,7 @@ def server_context_modern() -> ssl.SSLContext:
     if hasattr(ssl, "OP_NO_COMPRESSION"):
         context.options |= ssl.OP_NO_COMPRESSION
 
-    # TLS 1.3 cipher suites cannot be configured with set_ciphers()
-    # OpenSSL's defaults are exactly the three suites the modern profile permits
+    # set_ciphers() cannot set TLS 1.3 suites; OpenSSL defaults match this profile
 
     return context
 
