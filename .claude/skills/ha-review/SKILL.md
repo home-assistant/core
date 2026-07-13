@@ -13,6 +13,10 @@ description: Reviews Home Assistant code changes and provides constructive feedb
 - Test coverage
 - Documentation updates if needed
 
+## Quality scale:
+- If the changes include a `quality_scale.yaml` file, run a subagent to verify all the added or modified rules, following the `ha-quality-scale-verify` skill.
+- Include the verification results in the final review comments.
+
 ## Verification:
 - After the review, run parallel subagents for each finding to double-check it.
 - Spawn up to a maximum of 10 parallel subagents at a time.
