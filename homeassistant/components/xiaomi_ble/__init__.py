@@ -275,13 +275,27 @@ def _async_purge_stale_s400_impedance_restore_cache(
 def _purge_stale_sensor_restore_keys(
     coordinator: XiaomiActiveBluetoothProcessorCoordinator,
 ) -> None:
-    """Drop the stale "impedance" and "impedance_low" restore-cache entries."""
+    """Drop the stale "impedance" and "impedance_low" restore-cache entries.
+
+    Only acts if the generic "impedance" key is present in the cache:
+    only the old, buggy library ever wrote it, so its presence is proof
+    this cache holds pre-fix data. A device that never had it (e.g. a
+    fresh S400 from day one) has nothing stale to remove, and its
+    "impedance_low" already holds a real, correctly labeled value that
+    must be left alone.
+    """
     sensor_restore_data = coordinator.restore_data.get(Platform.SENSOR)
     if sensor_restore_data is None:
         return
 
+    legacy_key = PassiveBluetoothEntityKey(key="impedance", device_id=None).to_string()
+    if legacy_key not in sensor_restore_data.get(
+        "entity_data", {}
+    ) and legacy_key not in sensor_restore_data.get("entity_descriptions", {}):
+        return
+
     stale_keys = (
-        PassiveBluetoothEntityKey(key="impedance", device_id=None).to_string(),
+        legacy_key,
         PassiveBluetoothEntityKey(key="impedance_low", device_id=None).to_string(),
     )
     restore_buckets: tuple[tuple[str, dict[str, Any]], ...] = (
@@ -323,6 +337,11 @@ def _async_recover_interrupted_s400_migration(
     real S400's model is already known the moment any of its impedance
     entities exist, so the original migration would already have
     identified and attempted this exact rename in one synchronous pass).
+    This runs before any advertisement can be processed this setup, so
+    there is no independently reachable scenario exercising the "target
+    occupied" branch by itself; it remains as cheap, defensive insurance
+    against a ValueError blocking setup, should that reasoning ever not
+    hold (e.g. a future code change).
     """
     if entry.version != 1 or entry.minor_version < 2:
         return
