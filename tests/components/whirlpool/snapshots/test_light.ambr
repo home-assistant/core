@@ -43,7 +43,7 @@
 # name: test_all_entities[light.dual_cavity_oven_lower_oven_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.ONOFF: 'onoff'>,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual cavity oven Lower oven light',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.ONOFF: 'onoff'>,
@@ -55,7 +55,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[light.dual_cavity_oven_upper_oven_light-entry]
