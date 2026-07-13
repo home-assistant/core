@@ -2,8 +2,7 @@
 
 from typing import Any, override
 
-from infrared_protocols.codes.generic.led.generic_13_key import Generic13KeyCode
-from infrared_protocols.codes.tween_light.led_strip import TweenLightLEDStripCode
+from infrared_protocols.codes.generic.led import Generic13KeyCode, Generic24KeyCode
 
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.components.light import (
@@ -22,7 +21,7 @@ from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DOMAIN, LEDIrDevic
 PARALLEL_UPDATES = 1
 
 CODES = {
-    LEDIrDeviceType.GENERIC_24_KEY: TweenLightLEDStripCode,
+    LEDIrDeviceType.GENERIC_24_KEY: Generic24KeyCode,
     LEDIrDeviceType.GENERIC_13_KEY: Generic13KeyCode,
 }
 

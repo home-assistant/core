@@ -3,8 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from infrared_protocols.codes.generic.led.generic_13_key import Generic13KeyCode
-from infrared_protocols.codes.tween_light.led_strip import TweenLightLEDStripCode
+from infrared_protocols.codes.generic.led import Generic13KeyCode, Generic24KeyCode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -65,133 +64,133 @@ async def test_setup(
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {},
-            [TweenLightLEDStripCode.ON],
+            [Generic24KeyCode.ON],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "flash"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.FLASH],
+            [Generic24KeyCode.ON, Generic24KeyCode.FLASH],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "strobe"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.STROBE],
+            [Generic24KeyCode.ON, Generic24KeyCode.STROBE],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "fade"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.FADE],
+            [Generic24KeyCode.ON, Generic24KeyCode.FADE],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "smooth"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.SMOOTH],
+            [Generic24KeyCode.ON, Generic24KeyCode.SMOOTH],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "red"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.RED],
+            [Generic24KeyCode.ON, Generic24KeyCode.RED],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "green"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.GREEN],
+            [Generic24KeyCode.ON, Generic24KeyCode.GREEN],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "blue"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.BLUE],
+            [Generic24KeyCode.ON, Generic24KeyCode.BLUE],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "white"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.WHITE],
+            [Generic24KeyCode.ON, Generic24KeyCode.WHITE],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "orange_red"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.ORANGE_RED],
+            [Generic24KeyCode.ON, Generic24KeyCode.ORANGE_RED],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "tomato"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.TOMATO],
+            [Generic24KeyCode.ON, Generic24KeyCode.TOMATO],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "light_green"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.LIGHT_GREEN],
+            [Generic24KeyCode.ON, Generic24KeyCode.LIGHT_GREEN],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "sky_blue"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.SKY_BLUE],
+            [Generic24KeyCode.ON, Generic24KeyCode.SKY_BLUE],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "cyan"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.CYAN],
+            [Generic24KeyCode.ON, Generic24KeyCode.CYAN],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "rebecca_purple"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.REBECCA_PURPLE],
+            [Generic24KeyCode.ON, Generic24KeyCode.REBECCA_PURPLE],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "orange"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.ORANGE],
+            [Generic24KeyCode.ON, Generic24KeyCode.ORANGE],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "turquoise"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.TURQUOISE],
+            [Generic24KeyCode.ON, Generic24KeyCode.TURQUOISE],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "purple"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.PURPLE],
+            [Generic24KeyCode.ON, Generic24KeyCode.PURPLE],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "yellow"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.YELLOW],
+            [Generic24KeyCode.ON, Generic24KeyCode.YELLOW],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "dark_cyan"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.DARK_CYAN],
+            [Generic24KeyCode.ON, Generic24KeyCode.DARK_CYAN],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_ON,
             {ATTR_EFFECT: "plum"},
-            [TweenLightLEDStripCode.ON, TweenLightLEDStripCode.PLUM],
+            [Generic24KeyCode.ON, Generic24KeyCode.PLUM],
         ),
         (
             LEDIrDeviceType.GENERIC_24_KEY,
             SERVICE_TURN_OFF,
             {},
-            [TweenLightLEDStripCode.OFF],
+            [Generic24KeyCode.OFF],
         ),
         (LEDIrDeviceType.GENERIC_13_KEY, SERVICE_TURN_ON, {}, [Generic13KeyCode.ON]),
         (LEDIrDeviceType.GENERIC_13_KEY, SERVICE_TURN_OFF, {}, [Generic13KeyCode.OFF]),
@@ -252,7 +251,7 @@ async def test_light_actions(
     device_type: LEDIrDeviceType,
     service: str,
     service_data: dict[str, str],
-    expected_codes: list[TweenLightLEDStripCode | Generic13KeyCode],
+    expected_codes: list[Generic24KeyCode | Generic13KeyCode],
 ) -> None:
     """Test light actions."""
     config_entry = MockConfigEntry(
