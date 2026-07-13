@@ -43,25 +43,13 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import in_zone
 from .const import DOMAIN
+from .helpers import get_in_zones_attribute
 
 _OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
     vol.Required(CONF_ENTITY_ID): cv.entity_ids,
     vol.Required("zone"): cv.entity_ids,
 }
 _CONDITION_SCHEMA = vol.Schema({CONF_OPTIONS: _OPTIONS_SCHEMA_DICT})
-
-
-def _get_in_zones_attribute(state: State) -> str | None:
-    """Return the in_zones attribute for the tracked entity, or None.
-
-    Only person and device_tracker entities report zone membership; each
-    exposes it under its own platform enum. Any other domain returns None.
-    """
-    if state.domain == PERSON_DOMAIN:
-        return PersonEntityStateAttribute.IN_ZONES
-    if state.domain == DEVICE_TRACKER_DOMAIN:
-        return DeviceTrackerEntityStateAttribute.IN_ZONES
-    return None
 
 
 def zone(
@@ -101,7 +89,7 @@ def zone(
 
     # Prefer the in_zones attribute reported by the entity (e.g. person,
     # device_tracker) over recomputing membership from coordinates.
-    if (in_zones_attr := _get_in_zones_attribute(entity)) is not None and (
+    if (in_zones_attr := get_in_zones_attribute(entity)) is not None and (
         in_zones := entity.attributes.get(in_zones_attr)
     ) is not None:
         return zone_ent.entity_id in in_zones
@@ -219,7 +207,7 @@ class _ZoneTargetConditionBase(EntityConditionBase):
 
     def _in_target_zone(self, entity_state: State) -> bool:
         """Check if the entity is currently in the selected zone."""
-        if (in_zones_attr := _get_in_zones_attribute(entity_state)) and (
+        if (in_zones_attr := get_in_zones_attribute(entity_state)) and (
             in_zones := entity_state.attributes.get(in_zones_attr)
         ):
             return self._zone in in_zones
