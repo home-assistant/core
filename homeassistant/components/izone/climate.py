@@ -1,10 +1,10 @@
 """Support for the iZone HVAC."""
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 import logging
-from typing import Any, Concatenate, override
+from typing import Any, override
 
-from pizone import Controller, Zone
+from pizone import Controller, ControllerCommandError, Zone
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -44,8 +44,6 @@ from .const import (
     DOMAIN,
     TIMEOUT_DISCOVERY,
 )
-
-type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,23 +114,6 @@ async def async_setup_entry(
         IZONE_SERVICE_AIRFLOW_SCHEMA,
         "async_set_airflow_max",
     )
-
-
-def _return_on_connection_error[_DeviceT: ControllerDevice | ZoneDevice, **_P, _R, _T](
-    ret: _T = None,  # type: ignore[assignment]
-) -> Callable[[_FuncType[_DeviceT, _P, _R]], _FuncType[_DeviceT, _P, _R | _T]]:
-    def wrap(func: _FuncType[_DeviceT, _P, _R]) -> _FuncType[_DeviceT, _P, _R | _T]:
-        def wrapped_f(self: _DeviceT, *args: _P.args, **kwargs: _P.kwargs) -> _R | _T:
-            if not self.available:
-                return ret
-            try:
-                return func(self, *args, **kwargs)
-            except ConnectionError:
-                return ret
-
-        return wrapped_f
-
-    return wrap
 
 
 class ControllerDevice(ClimateEntity):
@@ -316,7 +297,6 @@ class ControllerDevice(ClimateEntity):
         raise RuntimeError("Should be unreachable")
 
     @property
-    @_return_on_connection_error([])
     @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
@@ -325,14 +305,12 @@ class ControllerDevice(ClimateEntity):
         return [HVACMode.OFF, *self._state_to_pizone]
 
     @property
-    @_return_on_connection_error(PRESET_NONE)
     @override
     def preset_mode(self) -> str:
         """Eco mode is external air."""
         return PRESET_ECO if self._controller.free_air else PRESET_NONE
 
     @property
-    @_return_on_connection_error([PRESET_NONE])
     @override
     def preset_modes(self) -> list[str]:
         """Available preset modes, normal or eco."""
@@ -341,7 +319,6 @@ class ControllerDevice(ClimateEntity):
         return [PRESET_NONE]
 
     @property
-    @_return_on_connection_error()
     @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
@@ -378,7 +355,6 @@ class ControllerDevice(ClimateEntity):
         return zone.target_temperature
 
     @property
-    @_return_on_connection_error()
     @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach.
@@ -407,23 +383,31 @@ class ControllerDevice(ClimateEntity):
         return list(self._fan_to_pizone)
 
     @property
-    @_return_on_connection_error(0.0)
     @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._controller.temp_min
 
     @property
-    @_return_on_connection_error(50.0)
     @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._controller.temp_max
 
     async def wrap_and_catch(self, coro):
-        """Catch any connection errors and set unavailable."""
+        """Await a controller command, handling connection and command errors.
+
+        A rejected command (device reachable) is logged and does not affect
+        availability. A transport failure marks the controller unavailable.
+        """
         try:
             await coro
+        except ControllerCommandError as ex:
+            _LOGGER.warning(
+                "Controller %s rejected command: %s",
+                self._controller.device_uid,
+                ex,
+            )
         except ConnectionError as ex:
             self.set_available(False, ex)
         else:
@@ -551,7 +535,6 @@ class ZoneDevice(ClimateEntity):
         return self._controller.available
 
     @property
-    @_return_on_connection_error(ClimateEntityFeature(0))
     @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
