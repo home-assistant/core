@@ -43,7 +43,7 @@ class WhirlpoolOvenLight(WhirlpoolOvenEntity, LightEntity):
 
     @override
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return whether the light is on."""
         return self._appliance.get_light(self.cavity)
 
