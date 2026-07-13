@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from eurotronic_cometblue_ha import AsyncCometBlue
 
@@ -35,7 +35,7 @@ DESCRIPTIONS = [
         key="offset",
         cometblue_key="tempOffset",
         translation_key="offset",
-        device_class=NumberDeviceClass.TEMPERATURE,
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         set_fn=lambda x: x.set_temperature_async,
@@ -55,7 +55,6 @@ DESCRIPTIONS = [
         native_min_value=MIN_TEMP,
         native_max_value=MAX_TEMP,
         native_step=PRECISION_HALVES,
-        entity_registry_enabled_default=True,
     ),
     CometBlueNumberEntityDescription(
         key="comfort_setpoint",
@@ -68,7 +67,6 @@ DESCRIPTIONS = [
         native_min_value=MIN_TEMP,
         native_max_value=MAX_TEMP,
         native_step=PRECISION_HALVES,
-        entity_registry_enabled_default=True,
     ),
 ]
 
@@ -105,12 +103,14 @@ class CometBlueNumberEntity(CometBlueBluetoothEntity, NumberEntity):
         self._attr_unique_id = f"{coordinator.address}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         return self.coordinator.data.temperatures.get(
             self.entity_description.cometblue_key
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update to the device."""
 
@@ -118,7 +118,8 @@ class CometBlueNumberEntity(CometBlueBluetoothEntity, NumberEntity):
             self.entity_description.set_fn(self.coordinator.device),
             {
                 "values": {
-                    # manual temperature always needs to be set, otherwise TRV will turn OFF
+                    # manual temperature always needs to be set,
+                    # otherwise TRV will turn OFF
                     "manualTemp": self.coordinator.data.temperatures["manualTemp"],
                     self.entity_description.cometblue_key: value,
                 }

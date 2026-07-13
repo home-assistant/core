@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.exceptions import InvalidCommand
 from teslemetry_stream import Signal
 
 from homeassistant.components.media_player import (
@@ -18,10 +19,11 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, assert_entities_alt, reload_platform, setup_platform
-from .const import COMMAND_OK, METADATA_NOSCOPE, VEHICLE_DATA_ALT
+from .const import COMMAND_ERRORS, COMMAND_OK, METADATA_NOSCOPE, VEHICLE_DATA_ALT
 
 
 async def test_media_player(
@@ -142,6 +144,55 @@ async def test_media_player_services(
         )
         state = hass.states.get(entity_id)
         call.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_legacy")
+@pytest.mark.parametrize("response", COMMAND_ERRORS)
+async def test_media_player_command_errors(hass: HomeAssistant, response: dict) -> None:
+    """Tests that vehicle command failures raise HomeAssistantError."""
+
+    await setup_platform(hass, [Platform.MEDIA_PLAYER])
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.adjust_volume",
+            return_value=response,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_VOLUME_SET,
+            {
+                ATTR_ENTITY_ID: "media_player.test_media_player",
+                ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("mock_legacy")
+async def test_media_player_command_exception(hass: HomeAssistant) -> None:
+    """Tests that a command SDK exception raises HomeAssistantError."""
+
+    await setup_platform(hass, [Platform.MEDIA_PLAYER])
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.adjust_volume",
+            side_effect=InvalidCommand,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_VOLUME_SET,
+            {
+                ATTR_ENTITY_ID: "media_player.test_media_player",
+                ATTR_MEDIA_VOLUME_LEVEL: 0.5,
+            },
+            blocking=True,
+        )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

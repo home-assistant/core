@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.calendar import (
     CalendarEntity,
@@ -10,7 +10,6 @@ from homeassistant.components.calendar import (
     CalendarEvent,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -66,10 +65,11 @@ class RachioCalendarEntity(
         self._attr_translation_placeholders = {
             "base": coordinator.base_station[KEY_SERIAL_NUMBER]
         }
-        self._attr_unique_id = f"{coordinator.base_station[KEY_ID]}-calendar"
+        self._attr_unique_id = f"{coordinator.base_station[KEY_ID]}-calendar"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._previous_event: dict[str, Any] | None = None
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         if not (event := self._handle_upcoming_event()):
@@ -114,12 +114,13 @@ class RachioCalendarEntity(
         self._previous_event = event  # Store for future use
         return event
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         if not self.coordinator.data:
-            raise HomeAssistantError("No events scheduled")
+            return []
         schedule = self.coordinator.data
         event_list: list[CalendarEvent] = []
 
@@ -156,6 +157,7 @@ class RachioCalendarEntity(
                 event_list.append(event)
         return event_list
 
+    @override
     async def async_delete_event(
         self,
         uid: str,

@@ -1,12 +1,12 @@
 """Handle intents with scripts."""
 
 import logging
-from typing import Any, TypedDict
+from typing import Any, TypedDict, override
 
 import voluptuous as vol
 
 from homeassistant.components.script import CONF_MODE
-from homeassistant.const import CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
+from homeassistant.const import CONF_ACTION, CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -29,7 +29,6 @@ CONF_INTENTS = "intents"
 CONF_SPEECH = "speech"
 CONF_REPROMPT = "reprompt"
 
-CONF_ACTION = "action"
 CONF_CARD = "card"
 CONF_TITLE = "title"
 CONF_CONTENT = "content"
@@ -171,6 +170,7 @@ class ScriptIntentHandler(intent.IntentHandler):
         self.description = config.get(CONF_DESCRIPTION)
         self.platforms = config.get(CONF_PLATFORMS)
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         speech: _IntentSpeechRepromptData | None = self.config.get(CONF_SPEECH)
@@ -254,7 +254,8 @@ class ScriptIntentHandler(intent.IntentHandler):
             else:
                 action_res = await action.async_run(slots, intent_obj.context)
 
-                # if the action returns a response, make it available to the speech/reprompt templates below
+                # if the action returns a response, make it
+                # available to the speech/reprompt templates below
                 if action_res and action_res.service_response is not None:
                     slots["action_response"] = action_res.service_response
 

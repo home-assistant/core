@@ -192,7 +192,8 @@ async def test_wol_button_absent_for_non_lan_device(
     entry.add_to_hass(hass)
 
     printer_wifi_data = deepcopy(MOCK_MESH_DATA)
-    # initialization logic uses the connection type of the `node_interface_1_uid` pair of the printer
+    # initialization logic uses the connection type of the
+    # `node_interface_1_uid` pair of the printer
     # ni-230 is wifi interface of fritzbox
     printer_node_interface = printer_wifi_data["nodes"][1]["node_interfaces"][0]
     printer_node_interface["type"] = "WLAN"
@@ -294,7 +295,7 @@ async def test_firmware_update_button_deprecation_issue(
     fh_class_mock,
     fs_class_mock,
 ) -> None:
-    """Test deprecation issue is created when legacy firmware update button is enabled."""
+    """Test deprecation issue for legacy firmware update button."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 

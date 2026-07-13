@@ -1911,9 +1911,9 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Smart Socket-16A',
-    'model_id': 'fbvia0apnlnattcy',
-    'name': 'AK1',
+    'model': 'PZ003',
+    'model_id': 'ExGgQmjt0SHMdlDZ',
+    'name': 'Casa1',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -2069,6 +2069,37 @@
     'model': '',
     'model_id': 'z3rpyvznfcch99aa',
     'name': 'PIXI Smart Drinking Fountain',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[addr6y4u8gb43nl8brnz]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'addr6y4u8gb43nl8brnz',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Madimack Elite V3 Pool Heat Pump',
+    'model_id': '8ln34bg8u4y6rdda',
+    'name': 'Madimack Elite V3 Pool Heat Pump',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -4515,7 +4546,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': ' (unsupported)',
+    'model': '',
     'model_id': 'qhxmvae667uap4zh',
     'name': 'DryFix',
     'name_by_user': None,
@@ -4825,7 +4856,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'the Smart Dry Plus™ Connect Dehumidifier  (unsupported)',
+    'model': 'the Smart Dry Plus™ Connect Dehumidifier ',
     'model_id': 'vmxuxszzjwp5smli',
     'name': 'Dehumidifier ',
     'name_by_user': None,
@@ -5703,6 +5734,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[mjhwalv51czt]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'mjhwalv51czt',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'INTELAR IR288 (unsupported)',
+    'model_id': '5vlawhjm',
+    'name': 'INTELAR IR288',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[mpowx36sgqexmtes2gw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -6347,6 +6409,37 @@
     'model': 'X5',
     'model_id': 'nwxr8qcu4seltoro',
     'name': 'X5 Zigbee Gateway',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[ouabwhlarnczogyfqld]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'ouabwhlarnczogyfqld',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'SPM02_WiFi',
+    'model_id': 'fygozcnralhwbauo',
+    'name': 'SPM02_WiFi',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -7439,6 +7532,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[s5ah3novtabe4tfdhb]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        's5ah3novtabe4tfdhb',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart Kettle',
+    'model_id': 'dft4ebatvon3ha5s',
+    'name': 'Smart Kettle',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[sb3zdertrw50bgogkw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -8145,6 +8269,37 @@
     'model': 'WIFI Smoke alarm',
     'model_id': 'kscbebaf3s1eogvt',
     'name': 'WIFI Smoke alarm',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[u8h3bty7qgg]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'u8h3bty7qgg',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'GIEX Watering Timer (unsupported)',
+    'model_id': '7ytb3h8u',
+    'name': 'GIEX Watering Timer',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -9010,9 +9165,9 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'PZ003',
-    'model_id': 'ExGgQmjt0SHMdlDZ',
-    'name': 'Casa1',
+    'model': 'Smart Socket-16A',
+    'model_id': 'fbvia0apnlnattcy',
+    'name': 'AK1',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -9578,6 +9733,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[zxmrfsffcearbajpjfx]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'zxmrfsffcearbajpjfx',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'REGISTER BOOSTER FAN  (unsupported)',
+    'model_id': 'pjabraecffsfrmxz',
+    'name': 'Register booster fan',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[zyutbek7wdm1b4cgzckw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -9633,37 +9819,6 @@
     'model': 'Air Conditioner',
     'model_id': 'wxqdp6ecfkd78zzz',
     'name': 'Mini-Split',
-    'name_by_user': None,
-    'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'sw_version': None,
-    'via_device_id': None,
-  })
-# ---
-# name: test_device_registry[ifiw20mpsqld]
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'tuya',
-        'ifiw20mpsqld',
-      ),
-    }),
-    'labels': set({
-    }),
-    'manufacturer': 'Tuya',
-    'model': 'SPM02_WiFi',
-    'model_id': 'fygozcnralhwbauo',
-    'name': 'SPM02_WiFi',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,

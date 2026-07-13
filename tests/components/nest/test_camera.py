@@ -112,7 +112,8 @@ def make_motion_event(
         timestamp = utcnow()
     return EventMessage.create_event(
         {
-            "eventId": "some-event-id",  # Ignored; we use the resource updated event id below
+            # Ignored; we use the resource updated event id below
+            "eventId": "some-event-id",
             "timestamp": timestamp.isoformat(timespec="seconds"),
             "resourceUpdate": {
                 "name": DEVICE_ID,
@@ -504,7 +505,8 @@ async def test_extending_stream_already_expired(
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.2.streamingToken"
 
-    # The stream will have expired in the past, but 1 minute min refresh interval is applied.
+    # The stream will have expired in the past, but 1 minute min
+    # refresh interval is applied.
     # The stream token is not updated.
     await fire_alarm(hass, now + datetime.timedelta(seconds=170))
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
@@ -728,7 +730,10 @@ async def test_camera_web_rtc_unsupported(
     assert not msg["success"]
     assert msg["error"] == {
         "code": "webrtc_offer_failed",
-        "message": "Camera does not support WebRTC, frontend_stream_types={<StreamType.HLS: 'hls'>}",
+        "message": (
+            "Camera does not support WebRTC,"
+            " frontend_stream_types={<StreamType.HLS: 'hls'>}"
+        ),
     }
 
 

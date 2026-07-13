@@ -1,6 +1,7 @@
 """Button platform for the Pterodactyl integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -88,6 +89,7 @@ class PterodactylButtonEntity(PterodactylEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{self.game_server_data.uuid}_{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         try:
@@ -96,7 +98,9 @@ class PterodactylButtonEntity(PterodactylEntity, ButtonEntity):
             )
         except PterodactylConnectionError as err:
             raise HomeAssistantError(
-                f"Failed to send action '{self.entity_description.key}': Connection error"
+                "Failed to send action"
+                f" '{self.entity_description.key}':"
+                " Connection error"
             ) from err
         except PterodactylAuthorizationError as err:
             raise HomeAssistantError(

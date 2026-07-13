@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from apyhiveapi import Auth
 from apyhiveapi.helper.hive_exceptions import (
@@ -41,6 +41,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
         self.device_registration: bool = False
         self.device_name = "Home Assistant"
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -121,7 +122,8 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                         device_registered = await self.hive_auth.is_device_registered()
                     except HiveApiError as err:
                         _LOGGER.debug(
-                            "Failed to check whether the Hive device is registered during reauthentication: %s",
+                            "Failed to check whether the Hive device"
+                            " is registered during reauthentication: %s",
                             err,
                         )
                         errors["base"] = "no_internet_available"
@@ -156,6 +158,8 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
         schema = vol.Schema(
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             {vol.Optional(CONF_DEVICE_NAME, default=self.device_name): str}
         )
         return self.async_show_form(
@@ -194,6 +198,7 @@ class HiveFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: HiveConfigEntry,
     ) -> HiveOptionsFlowHandler:
@@ -232,7 +237,7 @@ class HiveOptionsFlowHandler(OptionsFlow):
         schema = vol.Schema(
             {
                 # Polling interval is user-configurable, which is no longer allowed
-                # pylint: disable-next=hass-config-flow-polling-field
+                # pylint: disable-next=home-assistant-config-flow-polling-field
                 vol.Optional(CONF_SCAN_INTERVAL, default=self.interval): vol.All(
                     vol.Coerce(int), vol.Range(min=30)
                 )

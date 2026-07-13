@@ -62,7 +62,7 @@ class FritzBoxPhonebook:
         self.prefixes = prefixes
 
     def init_phonebook(self) -> None:
-        """Establish a connection to the FRITZ!Box and check if phonebook_id is valid."""
+        """Connect to the FRITZ!Box and check if phonebook_id is valid."""
         self.fph = FritzPhonebook(
             address=self.host,
             user=self.username,

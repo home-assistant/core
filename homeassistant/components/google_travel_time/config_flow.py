@@ -1,6 +1,6 @@
 """Config flow for Google Maps Travel Time integration."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -67,6 +67,8 @@ RECONFIGURE_SCHEMA = vol.Schema(
 
 CONFIG_SCHEMA = RECONFIGURE_SCHEMA.extend(
     {
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
         vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -166,12 +168,14 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> GoogleOptionsFlow:
         """Get the options flow for this handler."""
         return GoogleOptionsFlow()
 
+    @override
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] | None = None

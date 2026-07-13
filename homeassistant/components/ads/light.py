@@ -1,6 +1,6 @@
 """Support for ADS light sources."""
 
-from typing import Any
+from typing import Any, override
 
 import pyads
 import voluptuous as vol
@@ -106,7 +106,8 @@ class AdsLight(AdsEntity, LightEntity):
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
         self._attr_color_mode = next(iter(self._attr_supported_color_modes))
 
-        # Set color temperature range (static config values take precedence over defaults)
+        # Set color temperature range
+        # (static config values take precedence over defaults)
         if ads_var_color_temp_kelvin is not None:
             self._attr_min_color_temp_kelvin = (
                 min_color_temp_kelvin
@@ -119,6 +120,7 @@ class AdsLight(AdsEntity, LightEntity):
                 else DEFAULT_MAX_KELVIN
             )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
@@ -138,20 +140,24 @@ class AdsLight(AdsEntity, LightEntity):
             )
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of the light (0..255)."""
         return self._state_dict[STATE_KEY_BRIGHTNESS]
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature in Kelvin."""
         return self._state_dict[STATE_KEY_COLOR_TEMP_KELVIN]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the entity is on."""
         return self._state_dict[STATE_KEY_STATE]
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on or set a specific dimmer value."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -169,6 +175,7 @@ class AdsLight(AdsEntity, LightEntity):
                 self._ads_var_color_temp_kelvin, color_temp, pyads.PLCTYPE_UINT
             )
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self._ads_hub.write_by_name(self._ads_var, False, pyads.PLCTYPE_BOOL)

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyrisco.common import Partition
 from pyrisco.local.partition import Partition as LocalPartition
@@ -37,7 +37,9 @@ _LOGGER = logging.getLogger(__name__)
 
 STATES_TO_SUPPORTED_FEATURES = {
     AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
-    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: (
+        AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+    ),
     AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
     AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
 }
@@ -106,6 +108,7 @@ class RiscoAlarm(AlarmControlPanelEntity):
             self._attr_supported_features |= STATES_TO_SUPPORTED_FEATURES[state]
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         if self._partition.triggered:
@@ -129,6 +132,7 @@ class RiscoAlarm(AlarmControlPanelEntity):
         """Validate given code."""
         return code == self._code
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if self._code_disarm_required and not self._validate_code(code):
@@ -136,18 +140,22 @@ class RiscoAlarm(AlarmControlPanelEntity):
             return
         await self._call_alarm_method("disarm")
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self._arm(AlarmControlPanelState.ARMED_HOME, code)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._arm(AlarmControlPanelState.ARMED_AWAY, code)
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         await self._arm(AlarmControlPanelState.ARMED_NIGHT, code)
 
+    @override
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
         await self._arm(AlarmControlPanelState.ARMED_CUSTOM_BYPASS, code)
@@ -195,9 +203,11 @@ class RiscoCloudAlarm(RiscoAlarm, RiscoCloudEntity):
             manufacturer="Risco",
         )
 
+    @override
     def _get_data_from_coordinator(self) -> None:
         self._partition = self.coordinator.data.partitions[self._partition_id]
 
+    @override
     async def _call_alarm_method(self, method: str, *args: Any) -> None:
         alarm = await getattr(self._risco, method)(self._partition_id, *args)
         self._partition = alarm.partitions[self._partition_id]
@@ -231,9 +241,11 @@ class RiscoLocalAlarm(RiscoAlarm):
             manufacturer="Risco",
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self._partition_updates[self._partition_id] = self.async_write_ha_state
 
+    @override
     async def _call_alarm_method(self, method: str, *args: Any) -> None:
         await getattr(self._partition, method)(*args)

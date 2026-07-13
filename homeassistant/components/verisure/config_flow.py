@@ -1,11 +1,12 @@
 """Config flow for Verisure integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from verisure import (
     Error as VerisureError,
     LoginError as VerisureLoginError,
+    RateLimitError as VerisureRateLimitError,
     ResponseError as VerisureResponseError,
     Session as Verisure,
 )
@@ -37,12 +38,14 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: VerisureConfigEntry,
     ) -> VerisureOptionsFlowHandler:
         """Get the options flow for this handler."""
         return VerisureOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -68,6 +71,11 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                         await self.hass.async_add_executor_job(
                             self.verisure.request_mfa
                         )
+                    except VerisureRateLimitError as mfa_ex:
+                        LOGGER.debug(
+                            "Verisure MFA rate limited during set up, %s", mfa_ex
+                        )
+                        errors["base"] = "mfa_rate_limited"
                     except (
                         VerisureLoginError,
                         VerisureError,
@@ -83,6 +91,9 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 else:
                     LOGGER.debug("Could not log in to Verisure, %s", ex)
                     errors["base"] = "invalid_auth"
+            except VerisureRateLimitError as ex:
+                LOGGER.debug("Verisure rate limited during login, %s", ex)
+                errors["base"] = "mfa_rate_limited"
             except (VerisureError, VerisureResponseError) as ex:
                 LOGGER.debug("Unexpected response from Verisure, %s", ex)
                 errors["base"] = "unknown"
@@ -202,6 +213,12 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                         await self.hass.async_add_executor_job(
                             self.verisure.request_mfa
                         )
+                    except VerisureRateLimitError as mfa_ex:
+                        LOGGER.debug(
+                            "Verisure MFA rate limited during reauth set up, %s",
+                            mfa_ex,
+                        )
+                        errors["base"] = "mfa_rate_limited"
                     except (
                         VerisureLoginError,
                         VerisureError,
@@ -217,6 +234,9 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 else:
                     LOGGER.debug("Could not log in to Verisure, %s", ex)
                     errors["base"] = "invalid_auth"
+            except VerisureRateLimitError as ex:
+                LOGGER.debug("Verisure rate limited during reauth login, %s", ex)
+                errors["base"] = "mfa_rate_limited"
             except (VerisureError, VerisureResponseError) as ex:
                 LOGGER.debug("Unexpected response from Verisure, %s", ex)
                 errors["base"] = "unknown"
@@ -253,7 +273,6 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.hass.async_add_executor_job(
                     self.verisure.validate_mfa, user_input[CONF_CODE]
                 )
-                await self.hass.async_add_executor_job(self.verisure.login)
             except VerisureLoginError as ex:
                 LOGGER.debug("Could not log in to Verisure, %s", ex)
                 errors["base"] = "invalid_auth"

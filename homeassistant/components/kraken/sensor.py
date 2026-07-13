@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -240,11 +241,13 @@ class KrakenSensor(
             name=self._device_name,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         self._update_internal_state()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         self._update_internal_state()
         super()._handle_coordinator_update()
@@ -268,6 +271,7 @@ class KrakenSensor(
                     self._available = False
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon."""
         if self._target_asset == "EUR":
@@ -283,6 +287,7 @@ class KrakenSensor(
         return "mdi:cash"
 
     @property
+    @override
     def available(self) -> bool:
         """Could the api be accessed during the last update call."""
         return self._available and self.coordinator.last_update_success
@@ -290,4 +295,5 @@ class KrakenSensor(
 
 def create_device_name(tracked_asset_pair: str) -> str:
     """Create the device name for a given tracked asset pair."""
-    return f"{tracked_asset_pair.split('/', maxsplit=1)[0]} {tracked_asset_pair.split('/')[1]}"
+    parts = tracked_asset_pair.split("/", maxsplit=2)
+    return f"{parts[0]} {parts[1]}"

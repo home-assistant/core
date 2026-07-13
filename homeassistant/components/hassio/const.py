@@ -20,14 +20,17 @@ if TYPE_CHECKING:
         SupervisorInfo,
     )
 
+    from homeassistant.auth.models import User
+
     from .config import HassioConfig
     from .coordinator import (
         HassioAddOnDataUpdateCoordinator,
         HassioMainDataUpdateCoordinator,
         HassioStatsDataUpdateCoordinator,
+        SupervisorIssuesCoordinator,
+        SupervisorJobsCoordinator,
     )
     from .handler import HassIO
-    from .issues import SupervisorIssues
 
 
 DOMAIN = "hassio"
@@ -101,6 +104,9 @@ ADDONS_COORDINATOR: HassKey[HassioAddOnDataUpdateCoordinator] = HassKey(
 STATS_COORDINATOR: HassKey[HassioStatsDataUpdateCoordinator] = HassKey(
     "hassio_stats_coordinator"
 )
+JOBS_COORDINATOR: HassKey[SupervisorJobsCoordinator] = HassKey(
+    "hassio_jobs_coordinator"
+)
 
 
 DATA_COMPONENT: HassKey[HassIO] = HassKey(DOMAIN)
@@ -124,15 +130,15 @@ DATA_ADDONS_LIST: HassKey[list[InstalledAddon]] = HassKey("hassio_addons_list")
 HASSIO_MAIN_UPDATE_INTERVAL = timedelta(minutes=5)
 HASSIO_ADDON_UPDATE_INTERVAL = timedelta(minutes=15)
 HASSIO_STATS_UPDATE_INTERVAL = timedelta(seconds=60)
+HASSIO_ISSUES_UPDATE_INTERVAL = timedelta(minutes=30)
+SUPERVISOR_JOBS_UPDATE_INTERVAL = timedelta(minutes=15)
 
 ATTR_AUTO_UPDATE = "auto_update"
 ATTR_VERSION = "version"
 ATTR_VERSION_LATEST = "version_latest"
 ATTR_CPU_PERCENT = "cpu_percent"
-ATTR_LOCATION = "location"
 ATTR_MEMORY_PERCENT = "memory_percent"
 ATTR_SLUG = "slug"
-ATTR_STATE = "state"
 ATTR_STARTED = "started"
 ATTR_URL = "url"
 ATTR_REPOSITORY = "repository"
@@ -143,8 +149,12 @@ DATA_KEY_OS = "os"
 DATA_KEY_SUPERVISOR = "supervisor"
 DATA_KEY_CORE = "core"
 DATA_KEY_HOST = "host"
-DATA_KEY_SUPERVISOR_ISSUES: HassKey[SupervisorIssues] = HassKey("supervisor_issues")
+DATA_KEY_SUPERVISOR_ISSUES: HassKey[SupervisorIssuesCoordinator] = HassKey(
+    "supervisor_issues"
+)
 DATA_KEY_MOUNTS = "mounts"
+DATA_HASSIO_HOST: HassKey[str] = HassKey("hassio_host")
+DATA_HASSIO_SUPERVISOR_USER: HassKey[User] = HassKey("hassio_supervisor_user")
 
 PLACEHOLDER_KEY_ADDON = "addon"
 PLACEHOLDER_KEY_ADDON_INFO = "addon_info"
@@ -153,6 +163,7 @@ PLACEHOLDER_KEY_ADDON_URL = "addon_url"
 PLACEHOLDER_KEY_REFERENCE = "reference"
 PLACEHOLDER_KEY_COMPONENTS = "components"
 PLACEHOLDER_KEY_FREE_SPACE = "free_space"
+PLACEHOLDER_KEY_REASON = "reason"
 
 ISSUE_KEY_ADDON_BOOT_FAIL = "issue_addon_boot_fail"
 ISSUE_KEY_SYSTEM_DOCKER_CONFIG = "issue_system_docker_config"
@@ -162,6 +173,7 @@ ISSUE_KEY_ADDON_PWNED = "issue_addon_pwned"
 ISSUE_KEY_SYSTEM_FREE_SPACE = "issue_system_free_space"
 ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
 ISSUE_KEY_ADDON_DEPRECATED_ARCH = "issue_addon_deprecated_arch_addon"
+ISSUE_KEY_LEGACY_HOMEASSISTANT_FOLDER = "legacy_homeassistant_folder"
 
 ISSUE_MOUNT_MOUNT_FAILED = "issue_mount_mount_failed"
 
@@ -169,19 +181,6 @@ CORE_CONTAINER = "homeassistant"
 SUPERVISOR_CONTAINER = "hassio_supervisor"
 
 CONTAINER_STATS = "stats"
-CONTAINER_INFO = "info"
-
-# This is a mapping of which endpoint the key in the addon data
-# is obtained from so we know which endpoint to update when the
-# coordinator polls for updates.
-KEY_TO_UPDATE_TYPES: dict[str, set[str]] = {
-    ATTR_VERSION_LATEST: {CONTAINER_INFO},
-    ATTR_MEMORY_PERCENT: {CONTAINER_STATS},
-    ATTR_CPU_PERCENT: {CONTAINER_STATS},
-    ATTR_VERSION: {CONTAINER_INFO},
-    ATTR_STATE: {CONTAINER_INFO},
-}
-
 REQUEST_REFRESH_DELAY = 10
 
 HELP_URLS = {

@@ -18,7 +18,7 @@ async def test_update_uses_stale_data_before_threshold(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that stale data from the last successful update is used if an update failure occurs before the threshold."""
+    """Test stale data is used if update fails before threshold."""
     with mock_weather_response():
         await init_integration(hass)
 
@@ -47,7 +47,7 @@ async def test_update_becomes_unavailable_after_threshold(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that the entity becomes unavailable if an update failure occurs after the threshold."""
+    """Test entity becomes unavailable if update fails after threshold."""
     with mock_weather_response():
         await init_integration(hass)
 
@@ -70,7 +70,7 @@ async def test_update_recovers_after_failure(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that a successful update after repeated failures recovers the entity's state."""
+    """Test successful update after failures recovers entity state."""
     with mock_weather_response():
         await init_integration(hass)
 

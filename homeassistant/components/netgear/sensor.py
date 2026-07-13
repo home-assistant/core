@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -338,16 +338,19 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         self._state = device.get(attribute)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self._device.get(self._attribute) is not None
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @callback
+    @override
     def async_update_device(self) -> None:
         """Update the Netgear device."""
         self._device = self._router.devices[self._mac]
@@ -370,16 +373,22 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
         """Initialize a Netgear device."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.router.serial_number}-{entity_description.key}-{entity_description.index}"
+        self._attr_unique_id = (
+            f"{coordinator.router.serial_number}"
+            f"-{entity_description.key}"
+            f"-{entity_description.index}"
+        )
 
         self._value: StateType | date | datetime | Decimal = None
         self.async_update_device()
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -391,6 +400,7 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
                 await self.coordinator.async_request_refresh()
 
     @callback
+    @override
     def async_update_device(self) -> None:
         """Update the Netgear device."""
         if self.coordinator.data is None:

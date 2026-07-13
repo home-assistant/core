@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from httpx import AsyncClient, HTTPError, HTTPStatusError, Request, Response
 import pytest
 
+from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.components.volvo.const import DOMAIN
 from homeassistant.components.volvo.services import (
     CONF_CONFIG_ENTRY_ID,
@@ -112,9 +113,9 @@ async def test_get_image_url_selected(
 @pytest.mark.parametrize(
     ("entry_id", "translation_key"),
     [
-        ("", "invalid_entry_id"),
-        ("fake_entry_id", "invalid_entry"),
-        ("wrong_entry_id", "entry_not_found"),
+        ("", "service_config_entry_not_found"),
+        ("fake_entry_id", "service_config_entry_wrong_domain"),
+        ("wrong_entry_id", "service_config_entry_not_found"),
     ],
 )
 async def test_invalid_config_entry(
@@ -141,7 +142,7 @@ async def test_invalid_config_entry(
             return_response=True,
         )
 
-    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
     assert exc_info.value.translation_key == translation_key
 
 
@@ -193,7 +194,7 @@ async def test_async_image_does_not_exist(hass: HomeAssistant) -> None:
 
 
 async def test_async_image_non_404_status_error(hass: HomeAssistant) -> None:
-    """Test _async_image_exists raises HomeAssistantError on non-404 HTTP status errors."""
+    """Test _async_image_exists raises HomeAssistantError on non-404 errors."""
     client = AsyncMock(spec=AsyncClient)
     client.stream.side_effect = HTTPStatusError(
         "Internal server error",

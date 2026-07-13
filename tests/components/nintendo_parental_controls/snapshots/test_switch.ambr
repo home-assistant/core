@@ -39,8 +39,8 @@
 # name: test_switch[switch.home_assistant_test_suspend_software-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Home Assistant Test Suspend software',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Assistant Test Suspend software',
     }),
     'context': <ANY>,
     'entity_id': 'switch.home_assistant_test_suspend_software',

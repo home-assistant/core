@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from letpot.models import (
     DeviceFeature,
@@ -112,9 +113,14 @@ class LetPotSensorEntity[_DataT: LetPotDeviceStatus](
         """Initialize LetPot sensor entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{coordinator.device.serial_number}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}"
+            f"_{coordinator.device.serial_number}"
+            f"_{description.key}"
+        )
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the native unit of measurement."""
         return self.entity_description.native_unit_of_measurement_fn(
@@ -122,6 +128,7 @@ class LetPotSensorEntity[_DataT: LetPotDeviceStatus](
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

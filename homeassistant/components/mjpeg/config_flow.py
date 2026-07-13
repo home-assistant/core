@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from http import HTTPStatus
-from typing import Any
+from typing import Any, override
 
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
@@ -57,6 +57,8 @@ def async_get_schema(
 
     if show_name:
         schema = {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Required(CONF_NAME, default=defaults.get(CONF_NAME)): str,
             **schema,
         }
@@ -135,12 +137,14 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> MJPEGOptionsFlowHandler:
         """Get the options flow for this handler."""
         return MJPEGOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,7 +1,8 @@
 """Config flow for Satel Integra."""
+# pylint: disable=home-assistant-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from satel_integra import AsyncSatel
 from satel_integra.exceptions import (
@@ -27,6 +28,7 @@ from homeassistant.helpers import config_validation as cv, selector
 
 from .const import (
     CONF_ARM_HOME_MODE,
+    CONF_ENABLE_TEMPERATURE_SENSOR,
     CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
@@ -61,11 +63,21 @@ CODE_SCHEMA = vol.Schema(
     }
 )
 
+ARM_HOME_MODE_OPTIONS = ["1", "2", "3"]
+
 PARTITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE): vol.In(
-            [1, 2, 3]
+        vol.Required(CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE): vol.All(
+            vol.Coerce(str),
+            selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=ARM_HOME_MODE_OPTIONS,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="arm_home_mode",
+                )
+            ),
+            vol.Coerce(int),
         ),
     }
 )
@@ -86,7 +98,40 @@ ZONE_AND_OUTPUT_SCHEMA = vol.Schema(
     }
 )
 
+ZONE_SCHEMA = ZONE_AND_OUTPUT_SCHEMA.extend(
+    {
+        vol.Required(CONF_ENABLE_TEMPERATURE_SENSOR, default=False): (
+            selector.BooleanSelector()
+        ),
+    }
+)
+
+
 SWITCHABLE_OUTPUT_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
+
+
+async def _async_validate_zone_temperature_sensor(
+    entry: SatelConfigEntry, zone_number: int
+) -> dict[str, str]:
+    """Validate that temperature reading can be fetched for the zone."""
+    errors: dict[str, str] = {}
+
+    try:
+        temperature = await entry.runtime_data.client.controller.read_temperature(
+            zone_number
+        )
+
+        if temperature is None:
+            errors[CONF_ENABLE_TEMPERATURE_SENSOR] = "zone_does_not_report_temperature"
+
+    except Exception:
+        _LOGGER.exception(
+            "Unexpected error while validating temperature sensor support for zone %s",
+            zone_number,
+        )
+        errors["base"] = "unknown"
+
+    return errors
 
 
 class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -98,10 +143,11 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         self.connection_data: dict[str, Any] = {}
 
     VERSION = 2
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: SatelConfigEntry,
     ) -> SatelOptionsFlow:
@@ -110,6 +156,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -121,6 +168,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             SUBENTRY_TYPE_SWITCHABLE_OUTPUT: SwitchableOutputSubentryFlowHandler,
         }
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -277,7 +325,9 @@ class PartitionSubentryFlowHandler(ConfigSubentryFlow):
 
             if not errors:
                 return self.async_create_entry(
-                    title=f"{user_input[CONF_NAME]} ({user_input[CONF_PARTITION_NUMBER]})",
+                    title=(
+                        f"{user_input[CONF_NAME]} ({user_input[CONF_PARTITION_NUMBER]})"
+                    ),
                     data=user_input,
                     unique_id=unique_id,
                 )
@@ -304,7 +354,10 @@ class PartitionSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_PARTITION_NUMBER]})",
+                title=(
+                    f"{user_input[CONF_NAME]}"
+                    f" ({subconfig_entry.data[CONF_PARTITION_NUMBER]})"
+                ),
                 data_updates=user_input,
             )
 
@@ -336,6 +389,15 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
                 if existing_subentry.unique_id == unique_id:
                     errors[CONF_ZONE_NUMBER] = "already_configured"
 
+            if not errors and user_input.get(CONF_ENABLE_TEMPERATURE_SENSOR, False):
+                if self._get_entry().state is not ConfigEntryState.LOADED:
+                    return self.async_abort(reason="entry_not_loaded")
+
+                errors = await _async_validate_zone_temperature_sensor(
+                    self._get_entry(),
+                    user_input[CONF_ZONE_NUMBER],
+                )
+
             if not errors:
                 return self.async_create_entry(
                     title=f"{user_input[CONF_NAME]} ({user_input[CONF_ZONE_NUMBER]})",
@@ -346,13 +408,16 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_ZONE_NUMBER): vol.All(
-                        vol.Coerce(int), vol.Range(min=1)
-                    ),
-                }
-            ).extend(ZONE_AND_OUTPUT_SCHEMA.schema),
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_ZONE_NUMBER): vol.All(
+                            vol.Coerce(int), vol.Range(min=1)
+                        ),
+                    }
+                ).extend(ZONE_SCHEMA.schema),
+                user_input or {},
+            ),
         )
 
     async def async_step_reconfigure(
@@ -360,19 +425,41 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Reconfigure existing zone."""
         subconfig_entry = self._get_reconfigure_subentry()
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            return self.async_update_and_abort(
-                self._get_entry(),
-                subconfig_entry,
-                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_ZONE_NUMBER]})",
-                data_updates=user_input,
-            )
+            if user_input.get(
+                CONF_ENABLE_TEMPERATURE_SENSOR, False
+            ) and not subconfig_entry.data.get(CONF_ENABLE_TEMPERATURE_SENSOR, False):
+                if self._get_entry().state is not ConfigEntryState.LOADED:
+                    return self.async_abort(reason="entry_not_loaded")
+
+                errors = await _async_validate_zone_temperature_sensor(
+                    self._get_entry(),
+                    subconfig_entry.data[CONF_ZONE_NUMBER],
+                )
+
+            if not errors:
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    subconfig_entry,
+                    title=(
+                        f"{user_input[CONF_NAME]}"
+                        f" ({subconfig_entry.data[CONF_ZONE_NUMBER]})"
+                    ),
+                    data_updates=user_input,
+                )
+
+        suggested_values: dict[str, Any] = {
+            **subconfig_entry.data,
+            **(user_input or {}),
+        }
 
         return self.async_show_form(
             step_id="reconfigure",
+            errors=errors,
             data_schema=self.add_suggested_values_to_schema(
-                ZONE_AND_OUTPUT_SCHEMA, subconfig_entry.data
+                ZONE_SCHEMA, suggested_values
             ),
             description_placeholders={
                 CONF_ZONE_NUMBER: subconfig_entry.data[CONF_ZONE_NUMBER]
@@ -425,7 +512,10 @@ class OutputSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_OUTPUT_NUMBER]})",
+                title=(
+                    f"{user_input[CONF_NAME]}"
+                    f" ({subconfig_entry.data[CONF_OUTPUT_NUMBER]})"
+                ),
                 data_updates=user_input,
             )
 
@@ -450,7 +540,10 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            unique_id = f"{SUBENTRY_TYPE_SWITCHABLE_OUTPUT}_{user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]}"
+            unique_id = (
+                f"{SUBENTRY_TYPE_SWITCHABLE_OUTPUT}"
+                f"_{user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]}"
+            )
 
             for existing_subentry in self._get_entry().subentries.values():
                 if existing_subentry.unique_id == unique_id:
@@ -458,7 +551,10 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
 
             if not errors:
                 return self.async_create_entry(
-                    title=f"{user_input[CONF_NAME]} ({user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]})",
+                    title=(
+                        f"{user_input[CONF_NAME]}"
+                        f" ({user_input[CONF_SWITCHABLE_OUTPUT_NUMBER]})"
+                    ),
                     data=user_input,
                     unique_id=unique_id,
                 )
@@ -485,7 +581,10 @@ class SwitchableOutputSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_update_and_abort(
                 self._get_entry(),
                 subconfig_entry,
-                title=f"{user_input[CONF_NAME]} ({subconfig_entry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]})",
+                title=(
+                    f"{user_input[CONF_NAME]}"
+                    f" ({subconfig_entry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]})"
+                ),
                 data_updates=user_input,
             )
 

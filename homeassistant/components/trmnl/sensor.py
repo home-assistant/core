@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from trmnl.models import Device
 
@@ -115,6 +116,7 @@ class TRMNLSensor(TRMNLEntity, SensorEntity):
         self._attr_unique_id = f"{device_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._device)

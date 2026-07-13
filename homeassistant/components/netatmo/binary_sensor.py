@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import Any, Final, cast
+from typing import Any, Final, cast, override
 
 from pyatmo.modules.device_types import DeviceCategory as NetatmoDeviceCategory
 
@@ -37,10 +37,12 @@ from .const import (
     NETATMO_CREATE_OPENING_BINARY_SENSOR,
     NETATMO_CREATE_WEATHER_BINARY_SENSOR,
 )
-from .data_handler import SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
+from .coordinator import SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity, NetatmoWeatherModuleEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 DEFAULT_OPENING_SENSOR_KEY = "opening_sensor"
 
@@ -89,9 +91,9 @@ OPENING_CATEGORY_TO_KEY: Final[dict[str, str | None]] = {
 class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Netatmo binary sensor entity."""
 
-    netatmo_name: str | None = (
-        None  # The name used by Netatmo API for this sensor (exposed feature as attribute) if different than key
-    )
+    # The name used by Netatmo API for this sensor
+    # (exposed feature as attribute) if different than key
+    netatmo_name: str | None = None
     value_fn: Callable[[str], str | bool | None] = lambda x: x
 
 
@@ -286,8 +288,11 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
 
-        # Register publishers for the entity if needed (not already done in parent class - weather and air_care)
-        # We need to keep this here because we have two classes depending on it and we want to avoid adding publishers for all binary sensors
+        # Register publishers for the entity if needed
+        # (not already done in parent class - weather and
+        # air_care). We need to keep this here because we have
+        # two classes depending on it and we want to avoid
+        # adding publishers for all binary sensors
         if self.device.device_category in DEVICE_CATEGORY_BINARY_PUBLISHERS:
             self._publishers.extend(
                 [
@@ -300,12 +305,15 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
             )
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 
-        # Should be the connectivity (reachable) sensor only here as we have update for opening in its class
+        # Should be the connectivity (reachable) sensor only
+        # here as we have update for opening in its class
 
-        # Setting reachable sensor, so we just get it directly (backward compatibility to weather binary sensor)
+        # Setting reachable sensor, so we just get it directly
+        # (backward compatibility to weather binary sensor)
         value = getattr(self.device, self.entity_description.key, None)
 
         if value is None:
@@ -360,6 +368,7 @@ class NetatmoOpeningBinarySensor(NetatmoBinarySensor):
             self._attr_translation_key = translation_key
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
 
