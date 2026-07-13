@@ -26,7 +26,11 @@ from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.camera import async_get_stream_source
 from homeassistant.components.unifiprotect import async_remove_config_entry_device
-from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
+from homeassistant.components.unifiprotect.const import (
+    ATTR_MESSAGE,
+    AUTH_RETRIES,
+    DOMAIN,
+)
 from homeassistant.components.unifiprotect.data import async_get_data_for_nvr_id
 from homeassistant.components.unifiprotect.media_source import async_get_media_source
 from homeassistant.components.unifiprotect.services import SERVICE_ADD_DOORBELL_TEXT
@@ -519,11 +523,15 @@ async def test_public_only_manual_refresh(hass: HomeAssistant) -> None:
 async def test_public_only_manual_refresh_revoked_key_triggers_reauth(
     hass: HomeAssistant,
 ) -> None:
-    """A manual refresh with a revoked key starts reauth instead of no-op."""
+    """Persistent 401s on manual refresh buffer like the private path, then reauth."""
     entry, client = await _setup_public_only(hass)
     client.update_public = AsyncMock(side_effect=NotAuthorized)
 
     with patch.object(entry, "async_start_reauth") as mock_reauth:
+        for _ in range(AUTH_RETRIES):
+            await entry.runtime_data.async_refresh()
+            assert not mock_reauth.called
+
         await entry.runtime_data.async_refresh()
         await hass.async_block_till_done()
 

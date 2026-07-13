@@ -458,12 +458,18 @@ class ProtectData:
             try:
                 await self.api.update_public()
             except NotAuthorized:
-                # A revoked API key cannot self-recover.
-                self._entry.async_start_reauth(self._hass)
+                # Buffer transient 401s like the private path; a persistently
+                # revoked API key cannot self-recover and needs reauth.
+                if self._auth_failures < AUTH_RETRIES:
+                    _LOGGER.exception("Auth error while updating")
+                    self._auth_failures += 1
+                else:
+                    self._entry.async_start_reauth(self._hass)
                 return
             except (TimeoutError, ClientError, ServerDisconnectedError) as err:
                 _LOGGER.debug("Manual public refresh failed: %s", err)
                 return
+            self._auth_failures = 0
             self._async_process_public_updates()
             return
         try:
