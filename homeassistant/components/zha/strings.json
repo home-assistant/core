@@ -89,6 +89,10 @@
         "description": "Your backup has a different IEEE address than your adapter. For your network to function properly, the IEEE address of your adapter should also be changed.\n\nThis is a permanent operation.",
         "title": "Overwrite adapter IEEE address"
       },
+      "confirm_migration": {
+        "description": "Setting up **{name}** will migrate your existing Zigbee network onto it. Your current coordinator will go offline and every device will be unavailable until the migration finishes.\n\nOnly continue if you mean to switch radios. If you did not — for example if this adapter is already used by another integration such as Zigbee2MQTT — go back and ignore this discovery instead.",
+        "title": "Migrate to a different Zigbee radio?"
+      },
       "form_new_network": {
         "title": "Forming new network"
       },
