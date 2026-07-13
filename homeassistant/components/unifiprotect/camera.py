@@ -309,6 +309,15 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
                 if channel_id is not None and channel_id < len(updated_device.channels)
                 else None
             )
+            if channel is None and channel_id is not None:
+                # A tier without its private channel blanks the diagnostics;
+                # log so a camera reconfiguration is distinguishable from a bug.
+                _LOGGER.debug(
+                    "Camera %s has no private channel %s; diagnostic attributes"
+                    " unavailable",
+                    updated_device.display_name,
+                    channel_id,
+                )
             motion_enabled = updated_device.recording_settings.enable_motion_detection
             self._attr_motion_detection_enabled = (
                 motion_enabled if motion_enabled is not None else True
@@ -398,6 +407,9 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         hammering the console. width/height are unused (the public endpoint
         has no resize).
         """
+        # Inlines the library's device-level default (support_full_hd_snapshot
+        # when streaming, low otherwise) since public-only has no private
+        # device object; the resolved value is unchanged.
         high_quality = bool(
             self._stream_source and self._public.feature_flags.support_full_hd_snapshot
         )
