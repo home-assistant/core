@@ -44,8 +44,7 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
             manufacturer=config_entry.data.get(CONF_MANUFACTURER),
             model_id=config_entry.data.get(CONF_MODEL),
         )
-        if self.unique_id:
-            self._attr_device_info[ATTR_IDENTIFIERS] = {(DOMAIN, self.unique_id)}
+        self._attr_device_info[ATTR_IDENTIFIERS] = {(DOMAIN, self._attr_unique_id)}
         if self._mac:
             self._attr_device_info[ATTR_CONNECTIONS] = {
                 (dr.CONNECTION_NETWORK_MAC, self._mac)
@@ -79,10 +78,12 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
 
     def _wake_on_lan(self) -> None:
         """Wake the device via wake on lan."""
-        send_magic_packet(self._mac, ip_address=self._host)  # type: ignore[arg-type]
+        assert self._mac is not None
+        assert self._host is not None
+        send_magic_packet(self._mac, ip_address=self._host)
         # If the ip address changed since we last saw the device
         # broadcast a packet as well
-        send_magic_packet(self._mac)  # type: ignore[arg-type]
+        send_magic_packet(self._mac)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
