@@ -113,8 +113,8 @@ def _mock_powerwall_client(*, connect_error: Exception | None = None) -> MagicMo
 def _verified_clients_response() -> dict:
     """Return a list_authorized_clients response verifying our public key.
 
-    Includes a non-dict entry and a mismatched key to exercise the parsing
-    helpers' defensive branches.
+    Includes a non-dict entry and a mismatched key so the library's typed
+    ``find_authorized_clients`` accessor has noise to skip past.
     """
     return {
         "response": {
@@ -128,17 +128,13 @@ def _verified_clients_response() -> dict:
 
 
 def _unverified_clients_response() -> dict:
-    """Return a list_authorized_clients response with no matching client.
-
-    Nests the client list under an unrecognized wrapper key to exercise the
-    parsing helpers' generic (non-keyed) fallback search.
-    """
-    return {"result": [{"public_key": "some-other-key", "state": 1}]}
+    """Return a list_authorized_clients response with no matching client."""
+    return {"response": {"authorized_clients": [{"public_key": "other", "state": 1}]}}
 
 
 def _empty_clients_response() -> dict:
-    """Return a response with no client list findable anywhere in it."""
-    return {"foo": "bar"}
+    """Return a response whose authorized-clients list is explicitly empty."""
+    return {"response": {"authorized_clients": []}}
 
 
 async def test_energy_site_router_with_powerwall(hass: HomeAssistant) -> None:
@@ -304,6 +300,34 @@ async def test_subentry_pair_timeout(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
     assert result["errors"] == {"base": "timeout"}
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_subentry_null_body_treated_as_unverified(hass: HomeAssistant) -> None:
+    """A bare null (200) authorized-clients body is authoritatively unverified.
+
+    Tesla's undocumented endpoint can answer with JSON ``null``; the library's
+    typed accessor collapses that to an empty client list, so pairing treats it
+    as "not yet verified" and registers the key rather than erroring.
+    """
+    entry = await _setup_energy_site_subentry(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
+            new=AsyncMock(return_value=None),
+        ),
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
+            new=AsyncMock(),
+        ) as mock_add,
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    mock_add.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
