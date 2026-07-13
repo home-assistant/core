@@ -224,7 +224,9 @@ async def test_set_preset_mode_eco(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test the eco preset is exposed, reflected, and sets the mode via set_mode."""
-    mock_devices_response(aioclient_mock, "CoreBreeze 432S")
+    mock_devices_response(
+        aioclient_mock, "CoreBreeze 432S", details_override={"workMode": "eco"}
+    )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
