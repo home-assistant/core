@@ -114,6 +114,9 @@
     "announce_media_error": {
       "message": "Announcing clip {media_id} failed {response}"
     },
+    "announcement_connection_error": {
+      "message": "Failed to reach Sonos speaker for announcement: {error}"
+    },
     "cancel_announcement_error": {
       "message": "Cancelling announcement failed: {response}"
     },
