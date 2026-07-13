@@ -79,7 +79,7 @@
           "title": "Connect to the local gateway"
         },
         "pair": {
-          "description": "Flick the switch on the side of your primary Powerwall off and back on to approve Home Assistant's access, then continue. This only needs to be done once.",
+          "description": "Flick the switch on the side of your primary Powerwall off and back on to approve Home Assistant's access, then continue. This only needs to be done once. Removing this integration later does not revoke this access on the gateway; to revoke it yourself, remove the \"Home Assistant\" client from the gateway's local web UI or the Tesla app.",
           "title": "Approve the local access key"
         }
       }
