@@ -468,6 +468,8 @@ async def test_subentry_reasoning_summary_default_sanitized_on_model_switch(
 @pytest.mark.parametrize(
     ("model", "service_tier_options"),
     [
+        ("gpt-5.6", ["auto", "flex", "default", "priority"]),
+        ("gpt-5.5", ["auto", "flex", "default", "priority"]),
         ("gpt-5.4", ["auto", "flex", "default", "priority"]),
         ("gpt-5.4-pro", ["auto", "flex", "default", "priority"]),
         ("gpt-5.2", ["auto", "flex", "default", "priority"]),
