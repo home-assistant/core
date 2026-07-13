@@ -497,6 +497,40 @@ async def test_purge_stale_restore_cache_through_full_setup(
     await hass.async_block_till_done()
 
 
+async def test_purge_stale_restore_cache_retryable_when_model_unknown(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a device with no model set yet is not treated as confirmed non-S400.
+
+    device_entry.model can be None (not yet populated). Treating that as
+    "confirmed something else" would permanently skip a real S400 whose
+    model just hasn't been recorded yet.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
+    )
+    entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("bluetooth", S400_ADDRESS)},
+        name="Body Composition Scale C67C",
+        # model intentionally omitted / None
+    )
+
+    restore_data = _seed_restore_data(hass, entry, _v1v2_restore_data())
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    sensor_data = restore_data[Platform.SENSOR]
+    assert "impedance___" in sensor_data["entity_data"]
+    assert DATA_S400_IMPEDANCE_CACHE_PURGED not in entry.data
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_purge_stale_restore_cache_leaves_non_s400_data_untouched(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -577,20 +611,18 @@ async def test_purge_stale_restore_cache_runs_once(
     await hass.async_block_till_done()
 
 
-async def test_recover_interrupted_migration_leaves_ambiguous_low_alone(
+async def test_recover_interrupted_migration_completes_both_steps(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test recovery never touches an "impedance_low" it can't disambiguate.
+    """Test recovery when neither rename was persisted.
 
-    A lingering "-impedance" plus an existing "-impedance_low" (with no
-    "-impedance_high" yet) is structurally identical whether the low
-    entity is the original one awaiting promotion, or a fresh, already-
-    correct native entity from a live advertisement received since the
-    interrupted migration -- both have previous_unique_id None. Renaming
-    the wrong one would mislabel real, accurate data, so recovery must
-    leave both entities alone rather than guess.
+    "-impedance" and the original "-impedance_low" (no "-impedance_high"
+    yet) can only coexist post-migration because a crash interrupted
+    this exact rename attempt -- device and entity are always created
+    together, so a real S400 in this state is unambiguous. Both renames
+    must complete, in the same order as the original migration.
     """
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
@@ -613,11 +645,13 @@ async def test_recover_interrupted_migration_leaves_ambiguous_low_alone(
 
     legacy_after = entity_registry.async_get(legacy_entity_id)
     assert legacy_after is not None
-    assert legacy_after.unique_id == f"{S400_ADDRESS}-impedance"
+    assert legacy_after.unique_id == f"{S400_ADDRESS}-impedance_low"
 
     low_after = entity_registry.async_get(low_entity_id)
     assert low_after is not None
-    assert low_after.unique_id == f"{S400_ADDRESS}-impedance_low"
+    assert low_after.unique_id == f"{S400_ADDRESS}-impedance_high"
+
+    assert legacy_after.unique_id != low_after.unique_id
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

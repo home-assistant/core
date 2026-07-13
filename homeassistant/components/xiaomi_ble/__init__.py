@@ -260,7 +260,11 @@ def _async_purge_stale_s400_impedance_restore_cache(
     device_entry = dr.async_get(hass).async_get_device(
         identifiers={(BLUETOOTH_DOMAIN, address)}
     )
-    if device_entry is not None and device_entry.model not in S400_MODELS:
+    if (
+        device_entry is not None
+        and device_entry.model is not None
+        and device_entry.model not in S400_MODELS
+    ):
         # Confirmed something else: never going to need purging.
         hass.config_entries.async_update_entry(
             entry, data=entry.data | {DATA_S400_IMPEDANCE_CACHE_PURGED: True}
@@ -308,20 +312,17 @@ def _async_recover_interrupted_s400_migration(
     "-impedance" entity is the sole trigger, so this never touches an
     already-consistent or genuinely fresh S400.
 
-    Each rename only proceeds if its target unique_id is free: the
-    library may have already created native, already-correct
-    "impedance_low"/"impedance_high" entities from a live advertisement
-    since the interrupted attempt, and renaming into an occupied slot
-    would raise instead of completing setup.
-
-    Only recovers the legacy "impedance" -> "impedance_low" step. The
-    other step (an original, un-renamed "impedance_low" awaiting
-    promotion to "impedance_high") is structurally unprovable here: a
-    fresh, already-correct native "impedance_low" entity looks
-    identical (previous_unique_id is None either way). Renaming the
-    wrong one would mislabel real, currently-accurate data, so that
-    step is left alone whenever "impedance_low" already exists, rather
-    than risk corrupting it -- "-impedance" then stays an orphan.
+    Both renames only proceed if their target unique_id is free, and are
+    otherwise safe to complete unconditionally: Home Assistant creates a
+    device's entities and its device-registry row together,
+    synchronously, within the same advertisement-processing call, so a
+    legacy "-impedance"/original "-impedance_low" pair can only coexist
+    post-migration because a crash interrupted that very rename attempt
+    -- never because a later, independent advertisement created a fresh
+    entity under the same key (V1/V2 never emits "impedance_low", and a
+    real S400's model is already known the moment any of its impedance
+    entities exist, so the original migration would already have
+    identified and attempted this exact rename in one synchronous pass).
     """
     if entry.version != 1 or entry.minor_version < 2:
         return
@@ -339,6 +340,19 @@ def _async_recover_interrupted_s400_migration(
         return
 
     low_id = f"{address}-impedance_low"
+    high_id = f"{address}-impedance_high"
+    low_entity_id = entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, low_id)
+    high_exists = (
+        entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, high_id)
+        is not None
+    )
+
+    if low_entity_id is not None and not high_exists:
+        _LOGGER.debug("S400 migration recovery: %s -> %s", low_id, high_id)
+        entity_registry.async_update_entity(
+            low_entity_id, new_unique_id=high_id, original_name="Impedance High"
+        )
+
     if entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, low_id) is None:
         _LOGGER.debug("S400 migration recovery: %s -> %s", old_legacy_id, low_id)
         entity_registry.async_update_entity(
