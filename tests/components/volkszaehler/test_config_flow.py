@@ -10,7 +10,7 @@ from volkszaehler.exceptions import (
 
 from homeassistant.components.volkszaehler import sensor
 from homeassistant.components.volkszaehler.const import DOMAIN, SUBENTRY_TYPE_CHANNEL
-from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.config_entries import SOURCE_USER, ConfigSubentryData
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -33,9 +33,9 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         CONF_PORT: 80,
     }
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch("volkszaehler.Volkszaehler.get_data", new_callable=AsyncMock):
