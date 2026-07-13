@@ -122,6 +122,17 @@ FAKE_RGBWW_NO_EFFECT_BULB = BulbType(
     white_channels=2,
     white_to_color_ratio=80,
 )
+FAKE_TV_SYNC_BOX = BulbType(
+    bulb_type=BulbClass.RGB,
+    name="ESP27_MHORGB_01",
+    features=Features(
+        color=True, color_tmp=True, effect=True, brightness=True, dual_head=False
+    ),
+    kelvin_range=KelvinRange(2700, 6500),
+    fw_version="1.37.0",
+    white_channels=2,
+    white_to_color_ratio=80,
+)
 FAKE_RGBW_BULB = BulbType(
     bulb_type=BulbClass.RGB,
     name="ESP01_SHRGB_03",

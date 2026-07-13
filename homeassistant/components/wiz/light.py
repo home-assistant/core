@@ -25,9 +25,11 @@ from .entity import WizToggleEntity
 
 RGB_WHITE_CHANNELS_COLOR_MODE = {1: ColorMode.RGBW, 2: ColorMode.RGBWW}
 
-# Pseudo effect reported when the device pushes a state without any color
-# values or scene, e.g. the DMORGB/MHORGB TV ambient light products while
-# they are synced to the TV.
+# TV ambient light products push states without color values or a scene
+# while they are synced to the TV
+TV_SYNC_MODULES = ("DMORGB", "MHORGB")
+
+# Pseudo effect reported for TV sync products while they are syncing
 EFFECT_TV_SYNC = "TV Sync"
 
 # Fallback order when the device state does not indicate an active color mode
@@ -86,6 +88,9 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         super().__init__(wiz_data, name)
         bulb_type: BulbType = self._device.bulbtype
         features: Features = bulb_type.features
+        self._is_tv_sync_product = any(
+            module in (bulb_type.name or "") for module in TV_SYNC_MODULES
+        )
         color_modes = {ColorMode.ONOFF}
         if features.color:
             color_modes.add(RGB_WHITE_CHANNELS_COLOR_MODE[bulb_type.white_channels])
@@ -117,31 +122,34 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         color_modes = self.supported_color_modes
         assert color_modes is not None
 
+        current_mode: ColorMode | None = None
         if ColorMode.COLOR_TEMP in color_modes and (
             color_temp := state.get_colortemp()
         ):
-            self._attr_color_mode = ColorMode.COLOR_TEMP
+            current_mode = ColorMode.COLOR_TEMP
             self._attr_color_temp_kelvin = color_temp
         elif (
             ColorMode.RGBWW in color_modes and (rgbww := state.get_rgbww()) is not None
         ):
-            self._attr_color_mode = ColorMode.RGBWW
+            current_mode = ColorMode.RGBWW
             self._attr_rgbww_color = rgbww
         elif ColorMode.RGBW in color_modes and (rgbw := state.get_rgbw()) is not None:
-            self._attr_color_mode = ColorMode.RGBW
+            current_mode = ColorMode.RGBW
             self._attr_rgbw_color = rgbw
+        if current_mode is not None:
+            self._attr_color_mode = current_mode
 
         self._attr_effect = effect = state.get_scene()
-        if effect is None and self._attr_color_mode is None:
-            # Some devices, e.g. the DMORGB/MHORGB TV ambient light products,
-            # push states that contain neither color values nor a scene. Report
-            # a pseudo effect when the device supports effects, since color
-            # mode validation only allows BRIGHTNESS/ONOFF while an effect is
-            # active. Otherwise fall back to a supported color mode so a color
-            # mode is always reported.
-            if LightEntityFeature.EFFECT in self.supported_features:
+        if effect is None and current_mode is None:
+            # BRIGHTNESS/ONOFF are only valid color modes while an effect is
+            # active, so report a pseudo effect for TV sync products and make
+            # sure a supported color mode is always set for other devices
+            if (
+                self._is_tv_sync_product
+                and LightEntityFeature.EFFECT in self.supported_features
+            ):
                 self._attr_effect = effect = EFFECT_TV_SYNC
-            else:
+            elif self._attr_color_mode is None:
                 self._attr_color_mode = next(
                     mode for mode in COLOR_MODE_FALLBACK_PRIORITY if mode in color_modes
                 )

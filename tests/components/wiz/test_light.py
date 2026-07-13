@@ -32,6 +32,7 @@ from . import (
     FAKE_RGBWW_BULB,
     FAKE_RGBWW_NO_EFFECT_BULB,
     FAKE_TURNABLE_BULB,
+    FAKE_TV_SYNC_BOX,
     _mocked_wizlight,
     async_push_update,
     async_setup_integration,
@@ -256,17 +257,25 @@ def _mocked_wizlight_without_color_state(
     return bulb
 
 
-async def test_rgbww_light_without_color_state(hass: HomeAssistant) -> None:
-    """Test a color light pushing a state without color values or a scene.
+async def test_tv_sync_product_without_color_state(hass: HomeAssistant) -> None:
+    """Test a TV sync product pushing states without color values or a scene.
 
     TV ambient light products (DMORGB/MHORGB) do this while syncing to
     the TV; without a fallback the light would never report a color mode.
     """
-    bulb = _mocked_wizlight_without_color_state(FAKE_RGBWW_BULB, dimming=True)
+    bulb = _mocked_wizlight_without_color_state(FAKE_TV_SYNC_BOX, dimming=True)
     await async_setup_integration(hass, wizlight=bulb)
     entity_id = "light.mock_title"
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == "brightness"
+    assert state.attributes[ATTR_EFFECT] == EFFECT_TV_SYNC
+
+    # A second identical push must keep reporting the pseudo effect
+    await async_push_update(
+        hass, bulb, {"mac": FAKE_MAC, "state": True, "sceneId": 0, "dimming": 100}
+    )
+    state = hass.states.get(entity_id)
     assert state.attributes[ATTR_COLOR_MODE] == "brightness"
     assert state.attributes[ATTR_EFFECT] == EFFECT_TV_SYNC
 
@@ -281,17 +290,57 @@ async def test_rgbww_light_without_color_state(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_RGBWW_COLOR] == (1, 2, 3, 4, 5)
     assert state.attributes[ATTR_EFFECT] is None
 
+    # Returning to a colorless state restores the pseudo effect
+    await async_push_update(
+        hass, bulb, {"mac": FAKE_MAC, "state": True, "sceneId": 0, "dimming": 100}
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_COLOR_MODE] == "brightness"
+    assert state.attributes[ATTR_EFFECT] == EFFECT_TV_SYNC
 
-async def test_rgbww_light_without_color_state_or_brightness(
+
+async def test_tv_sync_product_without_color_state_or_brightness(
     hass: HomeAssistant,
 ) -> None:
-    """Test a color light pushing a state with neither color values nor dimming."""
-    bulb = _mocked_wizlight_without_color_state(FAKE_RGBWW_BULB, dimming=False)
+    """Test a TV sync product pushing a state with neither color values nor dimming."""
+    bulb = _mocked_wizlight_without_color_state(FAKE_TV_SYNC_BOX, dimming=False)
     await async_setup_integration(hass, wizlight=bulb)
     state = hass.states.get("light.mock_title")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_COLOR_MODE] == "onoff"
     assert state.attributes[ATTR_EFFECT] == EFFECT_TV_SYNC
+
+
+async def test_color_light_without_color_state(hass: HomeAssistant) -> None:
+    """Test a regular color light pushing states without color values or a scene.
+
+    Only TV sync products report the pseudo effect; other lights fall back
+    to a supported color mode and keep the last known mode afterwards.
+    """
+    bulb = _mocked_wizlight_without_color_state(FAKE_RGBWW_BULB, dimming=True)
+    await async_setup_integration(hass, wizlight=bulb)
+    entity_id = "light.mock_title"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] is None
+    assert state.attributes[ATTR_EFFECT] is None
+
+    await async_push_update(
+        hass,
+        bulb,
+        {"mac": FAKE_MAC, "state": True, "r": 1, "g": 2, "b": 3, "c": 4, "w": 5},
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_COLOR_MODE] == "rgbww"
+
+    # A colorless push keeps the last known color mode
+    await async_push_update(
+        hass, bulb, {"mac": FAKE_MAC, "state": True, "sceneId": 0, "dimming": 100}
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_COLOR_MODE] == "rgbww"
+    assert state.attributes[ATTR_EFFECT] is None
 
 
 async def test_light_without_color_state_or_effect_support(
