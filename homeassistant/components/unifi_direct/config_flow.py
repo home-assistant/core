@@ -179,7 +179,6 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.hass.config_entries.async_reload(config_entry.entry_id)
                     return self.async_abort(reason="reconfigure_successful")
 
-        # Prepare initial data from current config entry
         initial_data = config_entry.data.copy()
 
         return self.async_show_form(

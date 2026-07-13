@@ -107,7 +107,6 @@ def mock_unifiap() -> Generator[MagicMock]:
         def _set_get_clients_side_effect(side_effect: object | None) -> None:
             side_effect_state["get_clients"] = side_effect
 
-        # Patch the mock to allow setting side_effect from tests
         mock.side_effect = _mock_unifiap
         mock._set_get_clients_side_effect = _set_get_clients_side_effect
         yield mock

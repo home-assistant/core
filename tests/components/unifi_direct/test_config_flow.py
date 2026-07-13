@@ -343,7 +343,6 @@ async def test_reconfigure_flow_success(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    # Reconfigure with a different host
     new_user_input = {
         CONF_HOSTS: [
             {
@@ -406,7 +405,6 @@ async def test_reconfigure_flow_cannot_connect(
     assert result["description_placeholders"] == {"host": "192.168.1.100"}
     assert mock_config_entry.title == "UniFi AP (192.168.1.2)"
 
-    # Fix the connection and retry
     mock_unifiap._set_get_clients_side_effect(None)
 
     result = await hass.config_entries.flow.async_configure(
