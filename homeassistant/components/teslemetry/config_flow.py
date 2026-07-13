@@ -191,14 +191,12 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
     The authorized-client key this flow registers is intentionally left on
     the gateway when the Home Assistant config entry/subentry is later
-    removed: tesla-fleet-api exposes no revoke/delete endpoint, and the same
-    gateway-side authorization can be relied on by other clients (other
-    integrations, other Home Assistant instances, or the Tesla app itself),
-    so removing this integration's config must not silently deauthorize a
-    credential those other consumers may still be using. A user who wants
-    the "Home Assistant" client fully revoked has to remove it manually,
-    independent of Home Assistant, via the gateway's own local web UI
-    (Settings > Access on the gateway's local IP) or the Tesla app.
+    removed. The same gateway-side authorization may be relied on by other
+    consumers that share the credential (such as other integrations), so
+    removing this integration's config must not deauthorize a credential
+    those other consumers may still be using. tesla-fleet-api does expose
+    ``remove_authorized_client``, but it is deliberately not called on
+    removal for that reason.
     """
 
     def __init__(self) -> None:
@@ -254,8 +252,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             return await self.async_step_credentials()
 
         try:
-            # Not revoked on removal by design; see the class docstring for
-            # why, and how a user can manually revoke it on the gateway.
+            # Not revoked on removal by design; see the class docstring.
             await self._energy_site.add_authorized_client(
                 self._public_key_der,
                 description="Home Assistant",
