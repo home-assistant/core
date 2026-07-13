@@ -2650,3 +2650,39 @@ async def test_discovery_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
     }
     assert CONF_USERNAME not in result["data"]
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth_public_only_survives_identity_resolution_failure(
+    hass: HomeAssistant,
+    ufp_public_only_entry: MockConfigEntry,
+    mock_setup: None,
+) -> None:
+    """Reauth succeeds even if NVR identity resolution would fail.
+
+    Reauth validates only the key and version; it must not call
+    ``resolve_nvr_mac`` at all, so a transient failure there (for example the
+    `/api/system` fallback being unreachable) cannot block a valid new key.
+    """
+    ufp_public_only_entry.add_to_hass(hass)
+
+    result = await ufp_public_only_entry.start_reauth_flow(hass)
+
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=_meta_info(),
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
+            side_effect=ClientError("api/system unreachable"),
+        ) as mock_resolve,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_KEY: "new-api-key"}
+        )
+        await hass.async_block_till_done()
+
+    mock_resolve.assert_not_called()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert ufp_public_only_entry.data[CONF_API_KEY] == "new-api-key"

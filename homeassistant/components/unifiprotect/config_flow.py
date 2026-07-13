@@ -488,16 +488,16 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return nvr_data, errors
 
-    async def _async_get_public_nvr_identity(
+    async def _async_validate_public_api_key(
         self,
         user_input: dict[str, Any],
-    ) -> tuple[str | None, dict[str, str]]:
-        """Validate a public-API-only (API-key) connection.
+    ) -> tuple[ProtectApiClient | None, dict[str, str]]:
+        """Validate a public-API-only (API-key) connection's auth and version.
 
-        Returns the resolved NVR mac (the unique id) and any errors. Uses only
-        the public Integration API: the API key is validated and the minimum
-        version checked via ``get_meta_info``, and the NVR identity is resolved
-        via ``resolve_nvr_mac`` (public bootstrap, else the console fallback).
+        Returns the primed client (identity not yet resolved) and any errors.
+        Callers that need the NVR identity should use
+        ``_async_get_public_nvr_identity`` instead; this alone is enough for
+        reauth, which intentionally does not re-check identity.
         """
         public_api_session = async_get_clientsession(self.hass)
         host = user_input[CONF_HOST]
@@ -527,6 +527,21 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         if meta.version < MIN_REQUIRED_PROTECT_V:
             _LOGGER.debug(OUTDATED_LOG_MESSAGE, meta.version, MIN_REQUIRED_PROTECT_V)
             errors["base"] = "protect_version"
+            return None, errors
+
+        return protect, errors
+
+    async def _async_get_public_nvr_identity(
+        self,
+        user_input: dict[str, Any],
+    ) -> tuple[str | None, dict[str, str]]:
+        """Validate a public-API-only (API-key) connection and resolve its NVR.
+
+        Returns the resolved NVR mac (the unique id) and any errors, via
+        ``resolve_nvr_mac`` (public bootstrap, else the console fallback).
+        """
+        protect, errors = await self._async_validate_public_api_key(user_input)
+        if protect is None:
             return None, errors
 
         try:
@@ -589,8 +604,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_API_KEY: user_input[CONF_API_KEY],
             }
             # Identity is pinned by the stored host; like the full-access
-            # reauth, no unique-id re-check (the resolved mac is unused).
-            _, errors = await self._async_get_public_nvr_identity(validate_input)
+            # reauth, no identity resolution or re-check at all.
+            _, errors = await self._async_validate_public_api_key(validate_input)
             if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,

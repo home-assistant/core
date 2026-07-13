@@ -457,6 +457,10 @@ class ProtectData:
             # the public snapshot and re-render its subscribers instead.
             try:
                 await self.api.update_public()
+            except NotAuthorized:
+                # A revoked API key cannot self-recover.
+                self._entry.async_start_reauth(self._hass)
+                return
             except (TimeoutError, ClientError, ServerDisconnectedError) as err:
                 _LOGGER.debug("Manual public refresh failed: %s", err)
                 return

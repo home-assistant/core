@@ -503,3 +503,17 @@ async def test_public_only_manual_refresh(hass: HomeAssistant) -> None:
     # The private update path must not run (it would poison the health flag).
     assert entry.runtime_data.last_update_success is True
     assert hass.states.get(_ALARM_ENTITY_ID).state == "disarmed"
+
+
+async def test_public_only_manual_refresh_revoked_key_triggers_reauth(
+    hass: HomeAssistant,
+) -> None:
+    """A manual refresh with a revoked key starts reauth instead of no-op."""
+    entry, client = await _setup_public_only(hass)
+    client.update_public = AsyncMock(side_effect=NotAuthorized)
+
+    with patch.object(entry, "async_start_reauth") as mock_reauth:
+        await entry.runtime_data.async_refresh()
+        await hass.async_block_till_done()
+
+    assert mock_reauth.called
