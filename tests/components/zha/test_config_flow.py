@@ -986,8 +986,6 @@ async def test_legacy_zeroconf_discovery_already_setup(hass: HomeAssistant) -> N
     )
     await hass.async_block_till_done()
 
-    # An existing network => the discovery warns before migrating to the new radio,
-    # rather than showing the generic "set up" confirmation.
     assert init_result["type"] is FlowResultType.FORM
     assert init_result["step_id"] == "confirm_migration"
 
@@ -996,7 +994,6 @@ async def test_legacy_zeroconf_discovery_already_setup(hass: HomeAssistant) -> N
         user_input={},
     )
 
-    # Confirming still proceeds to the existing migration strategy menu.
     assert confirm_result["type"] is FlowResultType.MENU
     assert confirm_result["step_id"] == "choose_migration_strategy"
 
