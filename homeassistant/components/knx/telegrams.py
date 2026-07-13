@@ -52,6 +52,10 @@ EVICT_EXPIRED_HOUR = 3
 # at risk from a longer interval are those buffered during an ungraceful shutdown.
 FLUSH_INTERVAL_SECONDS = 600
 
+# Timeout for the migration probe and store initialization, so an unreachable
+# database cannot block KNX setup until the driver/OS connection timeout expires.
+STORE_INIT_TIMEOUT = 10
+
 
 class DecodedTelegramPayload(TypedDict):
     """Decoded payload value and metadata."""
@@ -136,7 +140,7 @@ class Telegrams:
         if self._uninitialized_store is None:
             return
         try:
-            async with asyncio.timeout(10):
+            async with asyncio.timeout(STORE_INIT_TIMEOUT):
                 needs_migration = await self._uninitialized_store.needs_migration()
             if needs_migration:
                 _LOGGER.warning(
@@ -149,7 +153,7 @@ class Telegrams:
                     "Initializing KNX telegram storage backend '%s'",
                     self.backend,
                 )
-                async with asyncio.timeout(10):
+                async with asyncio.timeout(STORE_INIT_TIMEOUT):
                     await self._uninitialized_store.initialize()
             _LOGGER.info(
                 "Successfully initialized KNX telegram storage backend '%s'",

@@ -103,6 +103,10 @@ CONF_KEYRING_FILE: Final = "knxkeys_file"
 
 CONF_KNX_TELEGRAM_STORE_SECTION: Final = "telegram_store_section"
 
+# Timeout for the PostgreSQL connection check, so an unreachable host cannot
+# block the options flow until the driver/OS connection timeout expires.
+DSN_CHECK_TIMEOUT = 10
+
 CONF_KNX_TUNNELING_TYPE: Final = "tunneling_type"
 CONF_KNX_TUNNELING_TYPE_LABELS: Final = {
     CONF_KNX_TUNNELING: "UDP (Tunneling v1)",
@@ -1148,10 +1152,9 @@ async def _async_check_postgres_dsn(dsn: str) -> dict[str, str]:
         ConnectionErrorKind.PERMISSION: "permission",
         ConnectionErrorKind.TIMEOUT: "timeout",
         ConnectionErrorKind.MISSING_DEPENDENCY: "missing_dependency",
-        ConnectionErrorKind.MISSING_TIMESCALEDB: "missing_timescaledb",
     }
     try:
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(DSN_CHECK_TIMEOUT):
             check_result = await PostgresStore.check_config(dsn)
     except TimeoutError:
         return {"base": "timeout"}

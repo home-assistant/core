@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from copy import copy
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
@@ -164,9 +165,17 @@ async def test_store_telegram_history_needs_migration_timeout(
     knx: KNXTestKit,
 ) -> None:
     """Test that store initialization is aborted when needs_migration times out."""
-    with patch(
-        "knx_telegram_store.BufferedSqliteStore.needs_migration",
-        side_effect=TimeoutError(),
+
+    async def hanging_probe() -> bool:
+        await asyncio.Event().wait()
+        return False
+
+    with (
+        patch("homeassistant.components.knx.telegrams.STORE_INIT_TIMEOUT", 0.05),
+        patch(
+            "knx_telegram_store.BufferedSqliteStore.needs_migration",
+            side_effect=hanging_probe,
+        ),
     ):
         await knx.setup_integration()
 

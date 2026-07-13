@@ -1,5 +1,6 @@
 """Test the KNX config flow."""
 
+import asyncio
 from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -1744,7 +1745,7 @@ async def _advance_to_postgres_step(
 
 
 async def test_options_telegram_store_postgres(
-    hass: HomeAssistant, knx_setup, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, knx_setup: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test options flow selecting the PostgreSQL telegram store backend."""
     mock_config_entry.add_to_hass(hass)
@@ -1781,7 +1782,7 @@ async def test_options_telegram_store_postgres(
 
 
 async def test_options_telegram_store_postgres_reuses_password(
-    hass: HomeAssistant, knx_setup, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, knx_setup: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the PostgreSQL store reuses the stored password when left blank."""
     existing_dsn = "postgresql://olduser:oldpass@old.host:6543/olddb?sslmode=require"
@@ -1828,15 +1829,15 @@ async def test_options_telegram_store_postgres_reuses_password(
     [
         pytest.param(ConnectionErrorKind.AUTH, "invalid_auth", id="invalid_auth"),
         pytest.param(
-            ConnectionErrorKind.MISSING_TIMESCALEDB,
-            "missing_timescaledb",
-            id="missing_timescaledb",
+            ConnectionErrorKind.HOST_UNREACHABLE,
+            "host_unreachable",
+            id="host_unreachable",
         ),
     ],
 )
 async def test_options_telegram_store_postgres_connection_failure(
     hass: HomeAssistant,
-    knx_setup,
+    knx_setup: AsyncMock,
     mock_config_entry: MockConfigEntry,
     error_kind: ConnectionErrorKind,
     expected_error: str,
@@ -1868,17 +1869,24 @@ async def test_options_telegram_store_postgres_connection_failure(
 
 
 async def test_options_telegram_store_postgres_timeout(
-    hass: HomeAssistant, knx_setup, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, knx_setup: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test options flow surfaces a timeout when the connection check hangs."""
+
+    async def hanging_check(dsn: str) -> None:
+        await asyncio.Event().wait()
+
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     result = await _advance_to_postgres_step(hass, result["flow_id"])
-    with patch(
-        "knx_telegram_store.backends.postgres.PostgresStore.check_config",
-        side_effect=TimeoutError,
+    with (
+        patch("homeassistant.components.knx.config_flow.DSN_CHECK_TIMEOUT", 0.05),
+        patch(
+            "knx_telegram_store.backends.postgres.PostgresStore.check_config",
+            side_effect=hanging_check,
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -1894,6 +1902,33 @@ async def test_options_telegram_store_postgres_timeout(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "telegram_store_postgres"
     assert result["errors"] == {"base": "timeout"}
+
+
+async def test_options_telegram_store_postgres_malformed_dsn(
+    hass: HomeAssistant, knx_setup: AsyncMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test the PostgreSQL step maps a DSN the driver rejects to a form error."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await _advance_to_postgres_step(hass, result["flow_id"])
+    # An unterminated bracketed IPv6 address makes engine creation
+    # raise ValueError before any connection attempt.
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "host": "[::1",
+            "port": 5432,
+            "user": "knx",
+            "password": "s3cret",
+            "database": "knx_telegrams",
+            "tls": False,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "telegram_store_postgres"
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 @pytest.mark.parametrize(
