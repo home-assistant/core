@@ -414,15 +414,16 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     @override
     def available(self) -> bool:
         """If the device hasn't been able to connect, mark as unavailable."""
-        return bool(self._connected)
+        return super().available and bool(self._connected)
 
     @callback
     @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         if not self.device.reachable:
-            if self.available:
+            if self._connected:
                 self._connected = False
+            self.async_write_ha_state()
             return
 
         self._connected = True
@@ -457,6 +458,8 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                     if module.boiler_status is not None:
                         self._boilerstatus = module.boiler_status
                         break
+
+        self.async_write_ha_state()
 
     async def _async_service_set_schedule(self, **kwargs: Any) -> None:
         schedule_name = kwargs.get(ATTR_SCHEDULE_NAME)

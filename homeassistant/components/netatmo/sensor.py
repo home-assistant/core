@@ -669,13 +669,11 @@ class NetatmoBaseSensor(NetatmoModuleEntity, SensorEntity):
         if not self.device.reachable:
             if self.available:
                 self._attr_available = False
-            return
-
-        if (state := getattr(self.device, self.entity_description.key)) is None:
+            self.async_write_ha_state()
             return
 
         self._attr_available = True
-        self._attr_native_value = state
+        self._attr_native_value = getattr(self.device, self.entity_description.key)
 
         self.async_write_ha_state()
 
@@ -700,7 +698,7 @@ class NetatmoWeatherSensor(NetatmoWeatherModuleEntity, NetatmoBaseSensor):
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return (
+        return super().available and (
             self.device.reachable
             or getattr(
                 self.device,
@@ -795,6 +793,7 @@ class NetatmoClimateBatterySensor(NetatmoLegacySensor):
         if not self.device.reachable:
             if self.available:
                 self._attr_available = False
+            self.async_write_ha_state()
             return
 
         self._attr_available = True
@@ -893,10 +892,7 @@ class NetatmoRoomSensor(NetatmoRoomEntity, SensorEntity):
     @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        if (state := getattr(self.device, self.entity_description.key)) is None:
-            return
-
-        self._attr_native_value = state
+        self._attr_native_value = getattr(self.device, self.entity_description.key)
 
         self.async_write_ha_state()
 
@@ -976,6 +972,17 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
         self._signal_name = f"{PUBLIC}-{area.uuid}"
         self._mode = area.mode
         self._show_on_map = area.show_on_map
+        self._publishers = [
+            {
+                "name": PUBLIC,
+                "lat_ne": area.lat_ne,
+                "lon_ne": area.lon_ne,
+                "lat_sw": area.lat_sw,
+                "lon_sw": area.lon_sw,
+                "area_name": area.area_name,
+                SIGNAL_NAME: self._signal_name,
+            }
+        ]
         await self.data_handler.subscribe(
             PUBLIC,
             self._signal_name,
@@ -1001,6 +1008,7 @@ class NetatmoPublicSensor(NetatmoBaseEntity, SensorEntity):
                 )
 
             self._attr_available = False
+            self.async_write_ha_state()
             return
 
         if values := [x for x in data.values() if x is not None]:
