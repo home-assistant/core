@@ -117,9 +117,13 @@ def mock_c4_websocket() -> Generator[MagicMock]:
         mock_ws.add_item_callback = MagicMock(side_effect=_add_item_callback)
         mock_ws.remove_item_callback = MagicMock(side_effect=_remove_item_callback)
         mock_ws.item_callbacks = item_callbacks
+        mock_ws.connect_callback = None
         mock_ws.disconnect_callback = None
 
         def _capture_callbacks(*args, **kwargs):
+            mock_ws.connect_callback = kwargs.get(
+                "connect_callback", args[2] if len(args) > 2 else None
+            )
             mock_ws.disconnect_callback = kwargs.get(
                 "disconnect_callback", args[3] if len(args) > 3 else None
             )

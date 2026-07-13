@@ -257,6 +257,11 @@ class RefreshTokensObject:
         """Refresh tokens; retry with exponential backoff on failure."""
         try:
             await refresh_tokens(self.hass, self.entry)
+        except ConfigEntryAuthFailed:
+            _LOGGER.error(
+                "Control4 credentials are no longer valid; reload the integration"
+                " after updating them"
+            )
         except ConfigEntryNotReady:
             self.retries += 1
             delay = random.uniform(0, min(2**self.retries, RETRY_BACKOFF_MAX_SEC))

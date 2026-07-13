@@ -324,3 +324,62 @@ async def test_cover_unavailable_on_websocket_disconnect(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_cover_update_variables",
+    "init_integration",
+)
+async def test_cover_push_update(
+    hass: HomeAssistant,
+    mock_c4_websocket: MagicMock,
+) -> None:
+    """Cover state updates when a normal OnDataToUI push event arrives."""
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_CURRENT_POSITION] == 50
+
+    callback = mock_c4_websocket.item_callbacks[234][0]
+    await callback(
+        234,
+        {"evtName": "OnDataToUI", "data": {"Level": 80, "Fully Open": True}},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == CoverState.OPEN
+    assert state.attributes[ATTR_CURRENT_POSITION] == 80
+
+
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_cover_update_variables",
+    "init_integration",
+)
+async def test_cover_reconnect_resyncs_state(
+    hass: HomeAssistant,
+    mock_c4_websocket: MagicMock,
+    mock_cover_variables: dict,
+) -> None:
+    """Cover re-fetches and resyncs state after a WebSocket reconnect."""
+    await mock_c4_websocket.disconnect_callback()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_cover_variables[234]["Level"] = 10
+    mock_cover_variables[234]["Fully Closed"] = False
+
+    await mock_c4_websocket.connect_callback()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    assert state.attributes[ATTR_CURRENT_POSITION] == 10

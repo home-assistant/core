@@ -14,25 +14,14 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_DIRECTOR,
-    CONF_DIRECTOR_ALL_ITEMS,
-    CONTROL4_ENTITY_TYPE,
-    Control4ConfigEntry,
-)
+from . import get_items_of_category
+from .const import CONF_DIRECTOR, CONTROL4_ENTITY_TYPE, Control4ConfigEntry
 from .director_utils import director_get_entry_variables
 from .entity import Control4Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-# Substrings commonly found in Control4 proxy identifiers for window coverings
-_COVER_PROXY_SUBSTRINGS = (
-    "shade",
-    "blind",
-    "windowcover",
-    "curtain",
-    "drap",
-)
+CONTROL4_CATEGORY = "blinds_shades"
 
 CONTROL4_LEVEL = "Level"
 CONTROL4_FULLY_CLOSED = "Fully Closed"
@@ -43,13 +32,6 @@ _MIN_COVER_LEVEL = 0
 _MAX_COVER_LEVEL = 100
 
 
-def _is_cover_proxy(proxy_value: str | None) -> bool:
-    if not proxy_value or not isinstance(proxy_value, str):
-        return False
-    p = proxy_value.lower()
-    return any(s in p for s in _COVER_PROXY_SUBSTRINGS)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: Control4ConfigEntry,
@@ -57,19 +39,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up Control4 covers from a config entry."""
     entry_data = entry.runtime_data
-    all_items: list[dict[str, Any]] = entry_data[CONF_DIRECTOR_ALL_ITEMS]
-
-    items_by_id = {item.get("id"): item for item in all_items if "id" in item}
+    items_of_category = await get_items_of_category(hass, entry, CONTROL4_CATEGORY)
 
     entity_list: list[CoverEntity] = []
 
-    for item in all_items:
-        if item.get("type") != CONTROL4_ENTITY_TYPE or not item.get("id"):
-            continue
-        if not _is_cover_proxy(item.get("proxy")):
-            continue
-
+    for item in items_of_category:
         try:
+            if item["type"] != CONTROL4_ENTITY_TYPE:
+                continue
             item_name = str(item["name"])
             item_id = item["id"]
             item_area = item.get("roomName")
@@ -79,11 +56,11 @@ async def async_setup_entry(
             item_device_name = None
             item_model = None
 
-            parent = items_by_id.get(item_parent_id)
-            if parent:
-                item_manufacturer = parent.get("manufacturer")
-                item_device_name = parent.get("name")
-                item_model = parent.get("model")
+            for parent_item in items_of_category:
+                if parent_item["id"] == item_parent_id:
+                    item_manufacturer = parent_item.get("manufacturer")
+                    item_device_name = parent_item.get("name")
+                    item_model = parent_item.get("model")
         except KeyError:
             _LOGGER.exception(
                 "Unknown device properties received from Control4: %s",
