@@ -10,6 +10,7 @@ from uiprotect.data import (
     DeviceState,
     ModelType,
     StateType,
+    WSAction,
 )
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
@@ -731,24 +732,31 @@ async def test_streamless_camera_reenumerated_on_rtsps_prime(
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     camera_all: ProtectCamera,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """A camera primed after enumeration gains its active-quality entities.
 
     A disconnected camera enumerates streamless (only the snapshot fallback).
     When it comes online the library primes its RTSPS streams in the background
     and announces the change with an ``rtsps_streams`` devices-WS frame; the
-    integration must re-enumerate so the now-active tiers get their entities.
+    integration must re-enumerate so the now-active tiers get their entities,
+    without re-adding the live fallback entity, and the existing entity must
+    pick up its now-available stream URL.
     """
     camera_all.state = StateType.DISCONNECTED
     await init_entry(hass, ufp, [camera_all])
 
-    # Streamless: only the snapshot fallback (high) exists.
+    # Streamless: only the snapshot fallback (high) exists, without a stream.
     assert_entity_counts(hass, Platform.CAMERA, 1, 1)
+    high_id = _channel_entity_id(camera_all, 0)
+    assert await async_get_stream_source(hass, high_id) is None
     assert entity_registry.async_get(_channel_entity_id(camera_all, 1)) is None
     assert entity_registry.async_get(_channel_entity_id(camera_all, 2)) is None
 
     # The camera comes online and the library primes its streams, announced by
-    # an rtsps_streams change on the public devices websocket.
+    # an rtsps_streams change on the public devices websocket (sent twice: the
+    # re-enumeration must not attempt to re-add live entities).
+    camera_all.state = StateType.CONNECTED
     public = ufp.api.public_bootstrap.cameras[camera_all.id]
     public.state = DeviceState.CONNECTED
     public.rtsps_streams = public_rtsps_for(camera_all)
@@ -756,10 +764,86 @@ async def test_streamless_camera_reenumerated_on_rtsps_prime(
     msg.changed_data = {"rtsps_streams": public.rtsps_streams}
     ufp.devices_ws_subscription(msg)
     await hass.async_block_till_done()
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
 
-    # The active medium/low tiers now have entities; the existing high entity
-    # is untouched (no duplicate).
+    # The active medium/low tiers now have entities, the existing high entity
+    # streams, and no duplicate-add errors were logged.
     assert_entity_counts(hass, Platform.CAMERA, 3, 1)
     _assert_entity(hass, camera_all, 0, enabled=True)
     _assert_entity(hass, camera_all, 1, enabled=False)
     _assert_entity(hass, camera_all, 2, enabled=False)
+    assert (
+        await async_get_stream_source(hass, high_id)
+        == camera_all.channels[0].rtsps_no_srtp_url
+    )
+    assert "does not generate unique IDs" not in caplog.text
+
+
+async def test_public_only_camera_added_after_setup(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+) -> None:
+    """In public-only mode a camera added later is discovered from its frame.
+
+    There is no private adopt path without a local user, so the public devices
+    websocket ``add`` frame is the only discovery signal.
+    """
+
+    async def _prime_public_only() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_public_only)
+    ufp.api.is_public_only = True
+
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+
+    # A new camera appears on the public devices websocket.
+    for channel in camera.channels:
+        channel._api = ufp.api
+    public = make_public_camera(camera)
+    public.rtsps_streams = public_rtsps_for(camera)
+    ufp.api.public_bootstrap.cameras = {camera.id: public}
+    msg = public_device_ws_message(public)
+    msg.action = WSAction.ADD
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.CAMERA, 1, 1)
+    state = hass.states.get(_channel_entity_id(camera, 0))
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_public_only_streamless_camera_gets_repair(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A streamless public-only camera raises the RTSP repair.
+
+    The fix flow verifies and creates the stream entirely through the public
+    API, so it works without a private session.
+    """
+    for channel in camera.channels:
+        channel._api = ufp.api
+    public = make_public_camera(camera)
+    public.rtsps_streams = None
+
+    async def _prime_public_only() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {camera.id: public}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_public_only)
+    ufp.api.is_public_only = True
+
+    await init_entry(hass, ufp, [])
+
+    assert_entity_counts(hass, Platform.CAMERA, 1, 1)
+    assert (
+        issue_registry.async_get_issue(DOMAIN, f"rtsp_disabled_{camera.id}") is not None
+    )

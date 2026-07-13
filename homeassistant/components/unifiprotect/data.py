@@ -19,6 +19,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     PTZPatrol,
     PublicDeviceModel,
+    WSAction,
     WSSubscriptionMessage,
 )
 from uiprotect.data.public_devices import PublicCamera
@@ -269,7 +270,7 @@ class ProtectData:
                 self._async_signal_device_update(self.api.bootstrap.nvr)
             return
         if isinstance(new_obj, PublicDeviceModel):
-            if new_obj.model is ModelType.CAMERA and not self.api.is_public_only:
+            if new_obj.model is ModelType.CAMERA:
                 self._async_reenumerate_camera_on_public_change(new_obj, message)
             self._async_signal_public_update(new_obj.mac, new_obj)
 
@@ -279,7 +280,7 @@ class ProtectData:
     ) -> None:
         """Re-run camera enumeration when a public frame can add entities.
 
-        Two cases dispatch the private camera to the channels signal:
+        Three cases dispatch the public camera to the channels signal:
 
         - A camera deferred at enumeration because its public mirror had not
           arrived yet (the private channels-update path cannot be relied on to
@@ -288,17 +289,19 @@ class ProtectData:
           after it comes online or is added, announced by an ``rtsps_streams``
           change: the quality tiers that just became active still need their
           entities.
+        - In public-only mode, a newly added camera — there is no private
+          adopt path that could discover it.
 
-        ``async_add_entities`` deduplicates by unique id, so re-enumeration
-        never touches entities that already exist.
+        The platform adds only entities that do not exist yet, so overlapping
+        re-enumerations are safe.
         """
-        if (camera := self.api.bootstrap.cameras.get(new_obj.id)) is None:
-            return
         if new_obj.id in self._pending_camera_ids:
             self._pending_camera_ids.remove(new_obj.id)
-        elif "rtsps_streams" not in message.changed_data:
+        elif "rtsps_streams" not in message.changed_data and not (
+            self.api.is_public_only and message.action is WSAction.ADD
+        ):
             return
-        async_dispatcher_send(self._hass, self.channels_signal, camera)
+        async_dispatcher_send(self._hass, self.channels_signal, new_obj)
 
     @callback
     def _async_process_public_event(

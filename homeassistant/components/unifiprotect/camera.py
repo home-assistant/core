@@ -19,7 +19,11 @@ from uiprotect.data.public_devices import PublicCamera
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_platform,
+    issue_registry as ir,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -51,19 +55,21 @@ _MAIN_QUALITIES = (
 
 @callback
 def _create_rtsp_repair(
-    hass: HomeAssistant, entry: UFPConfigEntry, camera: UFPCamera
+    hass: HomeAssistant, entry: UFPConfigEntry, public: PublicCamera
 ) -> None:
+    # Keyed on the public camera: the fix flow verifies and creates the stream
+    # through the public API, so it works without a private session too.
     ir.async_create_issue(
         hass,
         DOMAIN,
-        f"rtsp_disabled_{camera.id}",
+        f"rtsp_disabled_{public.id}",
         is_fixable=True,
         is_persistent=False,
         learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#camera-streams",
         severity=IssueSeverity.WARNING,
         translation_key="rtsp_disabled",
-        translation_placeholders={"camera": camera.display_name},
-        data={"entry_id": entry.entry_id, "camera_id": camera.id},
+        translation_placeholders={"camera": public.display_name},
+        data={"entry_id": entry.entry_id, "camera_id": public.id},
     )
 
 
@@ -73,6 +79,7 @@ def _async_camera_entities(
     entry: UFPConfigEntry,
     data: ProtectData,
     ufp_device: UFPCamera | None = None,
+    public_device: PublicCamera | None = None,
 ) -> list[ProtectDeviceEntity]:
     """Create camera entities, enumerated public-master from ``PublicCamera``.
 
@@ -86,7 +93,14 @@ def _async_camera_entities(
     # Public-master enumeration: iterate the public camera list; the private
     # camera is paired by shared id (fill) and is None in public-only mode.
     pairs: Iterable[tuple[PublicCamera | None, UFPCamera | None]]
-    if ufp_device is None:
+    if public_device is not None:
+        private = (
+            None
+            if data.api.is_public_only
+            else data.api.bootstrap.cameras.get(public_device.id)
+        )
+        pairs = [(public_device, private)]
+    elif ufp_device is None:
         pairs = data.get_public_cameras()
     else:
         adopted = data.async_get_public_device(ufp_device)
@@ -143,17 +157,16 @@ def _async_camera_entities(
         )
         # no repair when the stream can't be enabled anyway: a disconnected
         # camera is streamless because it is offline, not because it needs one.
-        # public-only (no private object) also gets no repair — the fix flow
-        # needs the private camera, and its streams are configured in Protect.
+        # The fix flow runs entirely on the public API, so public-only cameras
+        # get the repair too; third-party is only knowable with a private fill.
         if (
-            camera is None
-            or disable_stream
-            or camera.is_third_party_camera
-            or camera.state is not StateType.CONNECTED
+            disable_stream
+            or public.state is not DeviceState.CONNECTED
+            or (camera is not None and camera.is_third_party_camera)
         ):
             ir.async_delete_issue(hass, DOMAIN, issue_id)
         else:
-            _create_rtsp_repair(hass, entry, camera)
+            _create_rtsp_repair(hass, entry, public)
     return entities
 
 
@@ -164,13 +177,22 @@ async def async_setup_entry(
 ) -> None:
     """Discover cameras on a UniFi Protect NVR."""
     data = entry.runtime_data
+    platform = entity_platform.async_get_current_platform()
 
     @callback
-    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        # AiPort inherits from Camera but should not create camera entities
-        if not isinstance(device, UFPCamera) or device.model is ModelType.AIPORT:
-            return
-        async_add_entities(_async_camera_entities(hass, entry, data, ufp_device=device))
+    def _add_new_device(device: ProtectAdoptableDeviceModel | PublicCamera) -> None:
+        if isinstance(device, PublicCamera):
+            entities = _async_camera_entities(hass, entry, data, public_device=device)
+        else:
+            # AiPort inherits from Camera but should not create camera entities
+            if not isinstance(device, UFPCamera) or device.model is ModelType.AIPORT:
+                return
+            entities = _async_camera_entities(hass, entry, data, ufp_device=device)
+        # A re-enumeration (deferred mirror, RTSPS prime) overlaps entities
+        # that already exist; the platform errors on live duplicates rather
+        # than deduplicating, so add only the missing ones.
+        live = {e.unique_id for e in platform.entities.values()}
+        async_add_entities([e for e in entities if e.unique_id not in live])
 
     data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
@@ -331,7 +353,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
 
     @callback
     def _async_public_camera_updated(self, obj: PublicDeviceModel | None) -> None:
-        """Handle a public devices websocket update for a public-only camera.
+        """Handle a public devices websocket update for this camera.
 
         ``obj`` is the refreshed public object, or ``None`` for a websocket
         state change or an unmergeable frame, in which case it is re-read from
@@ -345,21 +367,26 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             self._public_missing = False
         else:
             self._public_missing = True
-        self._async_updated_event(cast(ProtectDeviceType, self._public))
+        device = (
+            self._private
+            if self._private is not None
+            else cast(ProtectDeviceType, self._public)
+        )
+        self._async_updated_event(device)
 
     @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        if self._private is None:
-            # public-only: the private websocket never delivers for a camera
-            # absent from the private bootstrap, so drive state from the public
-            # devices websocket instead.
-            self.async_on_remove(
-                self.data.async_subscribe_public(
-                    self._public.mac, self._async_public_camera_updated
-                )
+        # The stream URLs live on the public camera and change outside the
+        # private websocket (a background RTSPS prime announces itself on the
+        # public channel), so every camera tracks its public mirror; in
+        # public-only mode this is also the only state source.
+        self.async_on_remove(
+            self.data.async_subscribe_public(
+                self._public.mac, self._async_public_camera_updated
             )
+        )
 
     @override
     async def async_camera_image(
