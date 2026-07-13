@@ -53,7 +53,7 @@ from .const import (
     NETATMO_CREATE_WEATHER_SENSOR,
     SIGNAL_NAME,
 )
-from .data_handler import (
+from .coordinator import (
     HOME,
     PUBLIC,
     NetatmoConfigEntry,
@@ -70,6 +70,9 @@ from .entity import (
 from .helper import NetatmoArea
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
+
 
 DIRECTION_OPTIONS = [
     "n",

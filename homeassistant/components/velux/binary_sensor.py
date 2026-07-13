@@ -60,7 +60,8 @@ class VeluxRainSensor(
         """Called when the entity is added to Home Assistant."""
         await super().async_added_to_hass()
         # Get initial state as we didn't do it on coordinator initialization to avoid doing it for disabled entities
-        await self.coordinator.async_request_refresh()
+        if self.coordinator.data is None:
+            await self.coordinator.async_request_refresh()
 
     @property
     @override
@@ -69,8 +70,8 @@ class VeluxRainSensor(
         # Velux windows with rain sensors report an opening
         # limitation when rain is detected. So far we've
         # seen 89, 91, 93 (most cases) or 100 (Velux GPU).
-        # It probably makes sense to
-        # assume that any large enough limitation (we use >=89) means rain is detected.
+        # It probably makes sense to assume that any large
+        # enough limitation (we use >=89) means rain is detected.
         # Documentation on this is non-existent AFAIK.
         if self.coordinator.data is None:
             return None

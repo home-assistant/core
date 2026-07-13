@@ -20,7 +20,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
-from .const import COMMAND_ERRORS, COMMAND_OK, METADATA_NOSCOPE, VEHICLE_DATA_ALT
+from .const import (
+    COMMAND_ERRORS,
+    COMMAND_OK,
+    METADATA_NOSCOPE,
+    VEHICLE_DATA_ALT,
+    VEHICLE_DATA_NONE,
+)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -47,6 +53,21 @@ async def test_cover_alt(
     """Tests that the cover entities are correct with alternate values."""
 
     mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    entry = await setup_platform(hass, [Platform.COVER])
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_cover_none(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Tests that polling covers report unknown when coordinator data is null."""
+
+    mock_vehicle_data.return_value = VEHICLE_DATA_NONE
     entry = await setup_platform(hass, [Platform.COVER])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
