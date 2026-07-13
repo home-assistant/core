@@ -48,12 +48,12 @@ def mock_infrared_code_to_command() -> Generator[None]:
     """
     with (
         patch(
-            "infrared_protocols.codes.tween_light.led_strip.TweenLightLEDStripCode.to_command",
+            "infrared_protocols.codes.generic.led.Generic24KeyCode.to_command",
             autospec=True,
             side_effect=lambda self, **kwargs: self,
         ) as mock_to_command,
         patch(
-            "infrared_protocols.codes.generic.led.generic_13_key.Generic13KeyCode.to_command",
+            "infrared_protocols.codes.generic.led.Generic13KeyCode.to_command",
             new=mock_to_command,
         ),
     ):
