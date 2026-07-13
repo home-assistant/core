@@ -843,6 +843,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # the registries are loaded.
                 migrated_at = utcnow().isoformat()
                 split_devices: list[dict[str, Any]] = []
+                composite_splits: dict[str, dict[str, str]] = {}
                 for device in old_data["devices"]:
                     # One target per config entry. config_entries_subentries was a set, so
                     # the old model allowed a device in several subentries of one config
@@ -894,6 +895,21 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         split["split_at"] = migrated_at
                         split["has_composite_identifiers"] = True
                         split_devices.append(split)
+                        composite_splits.setdefault(old_id, {})[config_entry_id] = (
+                            split["id"]
+                        )
+                # Rewrite via_device_id links that pointed at a now-split composite parent
+                # to a live split: the parent's split in the child's own config entry when
+                # there is one, otherwise any of the parent's splits, so the link never
+                # dangles on the removed composite id. A link to an unsplit parent is left
+                # unchanged.
+                for device in split_devices:
+                    if (
+                        splits := composite_splits.get(device["via_device_id"])
+                    ) is not None:
+                        device["via_device_id"] = splits.get(
+                            device["config_entry_id"], next(iter(splits.values()))
+                        )
                 old_data["devices"] = split_devices
                 split_deleted_devices: list[dict[str, Any]] = []
                 for device in old_data["deleted_devices"]:
@@ -1866,6 +1882,41 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
             old_values["identifiers"] = old.identifiers
 
+        # On a move to another config entry, the retained identifiers and connections
+        # (those not being replaced above) were only validated against the old entry;
+        # validate them against the new one so the move can't silently overwrite the
+        # index slot of a device that already has the same identity there.
+        if effective_config_entry_id != old.config_entry_id:
+            if new_identifiers is UNDEFINED and merge_identifiers is UNDEFINED:
+                self._validate_identifiers(
+                    device_id, effective_config_entry_id, old.identifiers, False
+                )
+            if new_connections is UNDEFINED and merge_connections is UNDEFINED:
+                self._validate_connections(
+                    device_id, effective_config_entry_id, old.connections, False
+                )
+
+        # On a move, reflect the new owning config entry's disabled state (as restoring a
+        # deleted device does) unless disabled_by was passed explicitly: disable an
+        # enabled device moved onto a disabled entry, and clear a CONFIG_ENTRY disable
+        # when moved onto an enabled entry. A USER disable is preserved.
+        if (
+            disabled_by is UNDEFINED
+            and target_config_entry_id is not UNDEFINED
+            and target_config_entry_id != old.config_entry_id
+            and (
+                target_entry := self.hass.config_entries.async_get_entry(
+                    target_config_entry_id
+                )
+            )
+            is not None
+        ):
+            if target_entry.disabled_by:
+                if old.disabled_by is None:
+                    disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
+            elif old.disabled_by is DeviceEntryDisabler.CONFIG_ENTRY:
+                disabled_by = None
+
         for attr_name, value in (
             ("area_id", area_id),
             ("configuration_url", configuration_url),
@@ -1910,7 +1961,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         for deleted_device in self.deleted_devices.get_entries(
             added_identifiers, added_connections
         ):
-            if deleted_device.id in self.deleted_devices:
+            # get_entries matches across config entries, but identifiers/connections are
+            # unique per config entry - only remove the tombstone owned by this device's
+            # config entry, so another entry can still restore its device from its own.
+            if (
+                deleted_device.config_entry_id == effective_config_entry_id
+                and deleted_device.id in self.deleted_devices
+            ):
                 del self.deleted_devices[deleted_device.id]
 
         # If its only run time attributes (suggested_area)
