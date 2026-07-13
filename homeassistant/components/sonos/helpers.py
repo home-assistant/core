@@ -80,7 +80,6 @@ def soco_error[_T: _SonosEntitiesType, **_P, _R](
 
                 translation_key = "call_failed"
                 placeholders = {
-                    "function": function,
                     "target": target,
                     "error": str(err),
                 }

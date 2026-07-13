@@ -335,7 +335,6 @@ async def test_play_media_library_content_error(
             OSError("Network down"),
             "call_failed",
             {
-                "function": "SonosMediaPlayerEntity._play_media",
                 "target": "media_player.zone_a",
                 "error": "Network down",
             },
@@ -345,7 +344,6 @@ async def test_play_media_library_content_error(
             SoCoUPnPException("UPnP Error 701 received", "701", ""),
             "upnp_call_failed",
             {
-                "function": "SonosMediaPlayerEntity._play_media",
                 "target": "media_player.zone_a",
                 "error": "UPnP Error 701 received",
                 "error_code": "701",
@@ -356,7 +354,6 @@ async def test_play_media_library_content_error(
             SoCoUPnPException("UPnP Error 800 received", "800", ""),
             "upnp_call_failed_music_service_unavailable",
             {
-                "function": "SonosMediaPlayerEntity._play_media",
                 "target": "media_player.zone_a",
                 "error": "UPnP Error 800 received",
                 "error_code": "800",
