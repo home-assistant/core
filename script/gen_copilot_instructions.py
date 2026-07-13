@@ -26,7 +26,7 @@ COPILOT_SPECIFIC_INSTRUCTIONS = """
 - Do not comment on code style, formatting or linting issues.
 - Flag comments that over-explain straightforward code, narrate the obvious, or read like AI commentary (multi-sentence justifications for a single line).
 - A Pull Request with a dependency version bump should only contain changes required for the version bump. If the PR includes other changes, request that they are removed from the PR.
-- Check that the PR description is complete and filled in according to the PR template included below. Every section and checklist item from the template must be present, except the `## Breaking change` section which is optional. Nothing from the template should be missing. Even unchecked checkboxes or empty sections must be present. This is an hard requirement.
+- Check that the PR description is complete and filled in according to the PR template included below. Every section and checklist item from the template must be present, except the `## Breaking change` section which is optional. No content from the template should be missing, except for HTML comments. Even unchecked checkboxes or empty sections must be present. This is a hard requirement.
 
 ## Pull Request template
 

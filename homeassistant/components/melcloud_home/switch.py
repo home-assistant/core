@@ -21,10 +21,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import async_setup_unit_entities
+from .common import async_setup_unit_entities, unit_ids
 from .const import DOMAIN
 from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
-from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity, unit_ids
+from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWUnitEntity
 
 PARALLEL_UPDATES = 1
 
