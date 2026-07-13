@@ -106,8 +106,6 @@ async def async_migrate_entry(
         ) -> dict[str, Any] | None:
             """Migrate the unique ID to a new format."""
             unique_id = entity_entry.unique_id
-            if unique_id.endswith("-battery"):
-                return {"new_unique_id": unique_id + "_percent"}
             if unique_id.endswith("-weight"):
                 return {"new_unique_id": unique_id[:-7] + "-mass"}
             return None
