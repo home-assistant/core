@@ -686,6 +686,54 @@ async def test_no_discovery_info_number(
             },
             id="coil_write_type",
         ),
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_MIN_VALUE: ".nan",
+                    }
+                ]
+            },
+            id="non_finite_min_value",
+        ),
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_NUMBER_STEP: ".inf",
+                    }
+                ]
+            },
+            id="non_finite_step",
+        ),
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_SCALE: ".inf",
+                    }
+                ]
+            },
+            id="non_finite_scale",
+        ),
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_OFFSET: ".nan",
+                    }
+                ]
+            },
+            id="non_finite_offset",
+        ),
     ],
 )
 async def test_err_config_number(
