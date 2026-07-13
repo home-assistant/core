@@ -2289,6 +2289,65 @@ async def test_async_remove_device_fans_out_to_composite(
     assert device_2.id not in device_registry.devices
 
 
+async def test_clear_config_entry_removes_device_with_pending_move(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Clearing a config entry removes its device, ignoring a pending move.
+
+    add_config_entry_id records a transient pending move; tearing down the owning config
+    entry must remove the device rather than complete that move to the other entry.
+    """
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_registry.async_update_device(device.id, add_config_entry_id=entry_2.entry_id)
+
+    device_registry.async_clear_config_entry(entry_1.entry_id)
+
+    assert device.id not in device_registry.devices
+    assert device_registry.async_get_device(identifiers={("test", "1")}) is None
+
+
+async def test_move_to_config_entry_clears_target_entry_tombstone(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Moving a device into a config entry clears a matching tombstone it holds.
+
+    A retained-identity move adds no new identifiers/connections, so the tombstone the
+    target entry kept for the same identity must still be removed - otherwise the active
+    device and the tombstone share the target entry's per-identity slot.
+    """
+    entry_a = MockConfigEntry()
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry()
+    entry_b.add_to_hass(hass)
+
+    device_a = device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id, identifiers={("test", "shared")}
+    )
+    device_b = device_registry.async_get_or_create(
+        config_entry_id=entry_b.entry_id, identifiers={("test", "shared")}
+    )
+    assert device_a.id != device_b.id
+
+    # Leave a tombstone owned by entry_b with the shared identity
+    device_registry.async_remove_device(device_b.id)
+    assert device_b.id in device_registry.deleted_devices
+
+    # Move device_a into entry_b, retaining its identity
+    device_registry.async_update_device(
+        device_a.id, new_config_entry_id=entry_b.entry_id
+    )
+
+    assert device_registry.async_get(device_a.id).config_entry_id == entry_b.entry_id
+    # The tombstone entry_b held for the same identity is cleared, not left immortal
+    assert device_b.id not in device_registry.deleted_devices
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_async_get_device_composite_reuses_pre_migration_id(
     hass: HomeAssistant, hass_storage: dict[str, Any]

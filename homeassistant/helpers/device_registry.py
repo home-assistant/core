@@ -1923,8 +1923,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # NOTE: Once we solve the broader issue of duplicated devices, we might
         # want to revisit it. Instead of simply removing the duplicated deleted device,
         # we might want to merge the information from it into the non-deleted device.
+        # On a move, the device's whole retained identity newly appears in the target
+        # config entry; added_identifiers/added_connections are empty on a retained-
+        # identity move, so match the target entry's tombstone by the full identity.
+        tombstone_identifiers: set[tuple[str, str]] | None
+        tombstone_connections: set[tuple[str, str]] | None
+        if effective_config_entry_id != old.config_entry_id:
+            tombstone_identifiers = new.identifiers
+            tombstone_connections = new.connections
+        else:
+            tombstone_identifiers = added_identifiers
+            tombstone_connections = added_connections
         for deleted_device in self.deleted_devices.get_entries(
-            added_identifiers, added_connections
+            tombstone_identifiers, tombstone_connections
         ):
             # get_entries matches across config entries, but identifiers/connections are
             # unique per config entry - only remove the tombstone owned by this device's
@@ -2347,7 +2358,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Clear config entry from registry entries."""
         now_time = time.time()
         for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
-            self._async_update_device(device.id, remove_config_entry_id=config_entry_id)
+            self.async_remove_device(device.id)
         # A split device records the composite's former primary config entry; when that
         # config entry is removed, clear the now-dangling reference so a restored
         # composite no longer points at a config entry that no longer exists
