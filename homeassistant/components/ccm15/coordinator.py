@@ -4,7 +4,13 @@ import datetime
 import logging
 from typing import override
 
-from ccm15 import CCM15Device, CCM15DeviceState, CCM15SlaveDevice, TriState
+from ccm15 import (
+    CCM15Device,
+    CCM15DeviceState,
+    CCM15ReturnCode,
+    CCM15SlaveDevice,
+    TriState,
+)
 import httpx
 
 from homeassistant.components.climate import SWING_ON, HVACMode
@@ -62,7 +68,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
 
     async def async_set_state(self, ac_index: int, data) -> None:
         """Set new target states."""
-        if await self._ccm15.async_set_state(ac_index, data):
+        if await self._ccm15.async_set_state(ac_index, data) is CCM15ReturnCode.OK:
             await self.async_request_refresh()
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:

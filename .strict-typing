@@ -242,6 +242,7 @@ homeassistant.components.google.*
 homeassistant.components.google_assistant_sdk.*
 homeassistant.components.google_cloud.*
 homeassistant.components.google_drive.*
+homeassistant.components.google_health.*
 homeassistant.components.google_photos.*
 homeassistant.components.google_sheets.*
 homeassistant.components.google_weather.*
@@ -254,6 +255,7 @@ homeassistant.components.guntamatic.*
 homeassistant.components.habitica.*
 homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
+homeassistant.components.harman_luxury.*
 homeassistant.components.hdfury.*
 homeassistant.components.heos.*
 homeassistant.components.here_travel_time.*
@@ -335,6 +337,7 @@ homeassistant.components.lawn_mower.*
 homeassistant.components.lcn.*
 homeassistant.components.ld2410_ble.*
 homeassistant.components.led_ble.*
+homeassistant.components.led_infrared.*
 homeassistant.components.lektrico.*
 homeassistant.components.letpot.*
 homeassistant.components.lg_infrared.*
@@ -347,6 +350,7 @@ homeassistant.components.light.*
 homeassistant.components.linkplay.*
 homeassistant.components.litejet.*
 homeassistant.components.litterrobot.*
+homeassistant.components.llama_cpp.*
 homeassistant.components.local_ip.*
 homeassistant.components.local_todo.*
 homeassistant.components.lock.*
@@ -378,6 +382,7 @@ homeassistant.components.min_max.*
 homeassistant.components.minecraft_server.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
+homeassistant.components.modbus_connection.*
 homeassistant.components.modem_callerid.*
 homeassistant.components.mold_indicator.*
 homeassistant.components.monzo.*
@@ -393,6 +398,7 @@ homeassistant.components.nam.*
 homeassistant.components.namecheapdns.*
 homeassistant.components.nasweb.*
 homeassistant.components.neato.*
+homeassistant.components.neopool.*
 homeassistant.components.nest.*
 homeassistant.components.netatmo.*
 homeassistant.components.network.*

@@ -1,5 +1,7 @@
 """Tests for the Fronius sensor platform."""
 
+from unittest.mock import patch
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -10,6 +12,7 @@ from homeassistant.components.fronius.coordinator import (
     FroniusPowerFlowUpdateCoordinator,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -269,7 +272,8 @@ async def test_gen24(
         assert state.state == str(expected_state)
 
     mock_responses(aioclient_mock, fixture_set="gen24")
-    config_entry = await setup_fronius_integration(hass, is_logger=False)
+    with patch("homeassistant.components.fronius.PLATFORMS", [Platform.SENSOR]):
+        config_entry = await setup_fronius_integration(hass, is_logger=False)
 
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
@@ -309,9 +313,10 @@ async def test_gen24_storage(
         assert state.state == str(expected_state)
 
     mock_responses(aioclient_mock, fixture_set="gen24_storage")
-    config_entry = await setup_fronius_integration(
-        hass, is_logger=False, unique_id="12345678"
-    )
+    with patch("homeassistant.components.fronius.PLATFORMS", [Platform.SENSOR]):
+        config_entry = await setup_fronius_integration(
+            hass, is_logger=False, unique_id="12345678"
+        )
 
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 73
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
