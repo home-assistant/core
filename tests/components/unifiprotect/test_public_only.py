@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock, patch
 
 from uiprotect.data import (
+    Camera,
     ModelType,
     NvrArmMode,
     NvrArmModeStatus,
@@ -15,6 +16,7 @@ from uiprotect.data.public_devices import PublicNVR
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
+from homeassistant.components.camera import async_get_stream_source
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -26,6 +28,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+
+from .utils import make_public_camera, public_rtsps_for
 
 from tests.common import MockConfigEntry
 
@@ -74,6 +78,11 @@ def _public_client() -> Mock:
     pb.nvr = nvr
     pb.arm_mode = arm_mode
     pb.cameras = {}
+    pb.get = Mock(
+        side_effect=lambda model, obj_id: (
+            pb.cameras.get(obj_id) if model is ModelType.CAMERA else None
+        )
+    )
     client.public_bootstrap = pb
 
     subs: dict[str, object] = {}
@@ -136,14 +145,54 @@ async def test_public_only_setup(
     assert state.state == "disarmed"
 
 
-async def test_public_only_only_alarm_platform(hass: HomeAssistant) -> None:
-    """Only the alarm panel is forwarded in public-only mode."""
+async def test_public_only_only_alarm_and_camera_platforms(
+    hass: HomeAssistant,
+) -> None:
+    """Only the alarm panel and camera are forwarded in public-only mode."""
     await _setup_public_only(hass)
 
-    # No cameras / sensors / etc. — those need the private bootstrap.
-    assert not hass.states.async_entity_ids(Platform.CAMERA)
+    # No sensors / etc. — those still need the private bootstrap.
     assert not hass.states.async_entity_ids(Platform.SENSOR)
     assert not hass.states.async_entity_ids(Platform.BINARY_SENSOR)
+    assert len(hass.states.async_entity_ids(Platform.ALARM_CONTROL_PANEL)) == 1
+
+
+async def test_public_only_camera_end_to_end(
+    hass: HomeAssistant, camera: Camera
+) -> None:
+    """A public-only entry with a camera in the bootstrap creates a working entity.
+
+    Exercises the real public-only setup path (not the generic ``ufp`` fixture
+    used by camera.py's own tests), proving cameras and the alarm panel coexist
+    under ``PUBLIC_ONLY_PLATFORMS``.
+    """
+    client = _public_client()
+    client.base_url = "https://1.1.1.1"
+    for channel in camera.channels:
+        channel._api = client
+    public = make_public_camera(camera)
+    public.rtsps_streams = public_rtsps_for(camera)
+    client.public_bootstrap.cameras = {camera.id: public}
+    client.get_public_api_camera_snapshot = AsyncMock()
+
+    entry = _public_only_entry()
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.unifiprotect.async_create_api_client",
+        return_value=client,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    high_id = f"camera.{camera.name}_high_resolution_channel".replace(" ", "_").lower()
+    state = hass.states.get(high_id)
+    assert state is not None
+    assert state.state != "unavailable"
+    assert (
+        await async_get_stream_source(hass, high_id)
+        == camera.channels[0].rtsps_no_srtp_url
+    )
     assert len(hass.states.async_entity_ids(Platform.ALARM_CONTROL_PANEL)) == 1
 
 
