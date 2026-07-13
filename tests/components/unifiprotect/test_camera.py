@@ -724,3 +724,42 @@ async def test_private_enumeration_upgrade_keeps_entities(
         assert entry is not None
         assert entry.unique_id == unique_id
     assert hass.states.get(high_id) is not None
+
+
+async def test_streamless_camera_reenumerated_on_rtsps_prime(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    camera_all: ProtectCamera,
+) -> None:
+    """A camera primed after enumeration gains its active-quality entities.
+
+    A disconnected camera enumerates streamless (only the snapshot fallback).
+    When it comes online the library primes its RTSPS streams in the background
+    and announces the change with an ``rtsps_streams`` devices-WS frame; the
+    integration must re-enumerate so the now-active tiers get their entities.
+    """
+    camera_all.state = StateType.DISCONNECTED
+    await init_entry(hass, ufp, [camera_all])
+
+    # Streamless: only the snapshot fallback (high) exists.
+    assert_entity_counts(hass, Platform.CAMERA, 1, 1)
+    assert entity_registry.async_get(_channel_entity_id(camera_all, 1)) is None
+    assert entity_registry.async_get(_channel_entity_id(camera_all, 2)) is None
+
+    # The camera comes online and the library primes its streams, announced by
+    # an rtsps_streams change on the public devices websocket.
+    public = ufp.api.public_bootstrap.cameras[camera_all.id]
+    public.state = DeviceState.CONNECTED
+    public.rtsps_streams = public_rtsps_for(camera_all)
+    msg = public_device_ws_message(public)
+    msg.changed_data = {"rtsps_streams": public.rtsps_streams}
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    # The active medium/low tiers now have entities; the existing high entity
+    # is untouched (no duplicate).
+    assert_entity_counts(hass, Platform.CAMERA, 3, 1)
+    _assert_entity(hass, camera_all, 0, enabled=True)
+    _assert_entity(hass, camera_all, 1, enabled=False)
+    _assert_entity(hass, camera_all, 2, enabled=False)

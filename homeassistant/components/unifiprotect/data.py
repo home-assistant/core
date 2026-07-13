@@ -269,17 +269,36 @@ class ProtectData:
                 self._async_signal_device_update(self.api.bootstrap.nvr)
             return
         if isinstance(new_obj, PublicDeviceModel):
-            # A camera deferred at enumeration because its public mirror had
-            # not arrived yet is dispatched here, once it has (the private
-            # channels-update path cannot be relied on to fire again).
-            if (
-                new_obj.model is ModelType.CAMERA
-                and new_obj.id in self._pending_camera_ids
-                and (camera := self.api.bootstrap.cameras.get(new_obj.id)) is not None
-            ):
-                self._pending_camera_ids.remove(new_obj.id)
-                async_dispatcher_send(self._hass, self.channels_signal, camera)
+            if new_obj.model is ModelType.CAMERA and not self.api.is_public_only:
+                self._async_reenumerate_camera_on_public_change(new_obj, message)
             self._async_signal_public_update(new_obj.mac, new_obj)
+
+    @callback
+    def _async_reenumerate_camera_on_public_change(
+        self, new_obj: PublicDeviceModel, message: WSSubscriptionMessage
+    ) -> None:
+        """Re-run camera enumeration when a public frame can add entities.
+
+        Two cases dispatch the private camera to the channels signal:
+
+        - A camera deferred at enumeration because its public mirror had not
+          arrived yet (the private channels-update path cannot be relied on to
+          fire again).
+        - A camera whose RTSPS streams the library primes in the background
+          after it comes online or is added, announced by an ``rtsps_streams``
+          change: the quality tiers that just became active still need their
+          entities.
+
+        ``async_add_entities`` deduplicates by unique id, so re-enumeration
+        never touches entities that already exist.
+        """
+        if (camera := self.api.bootstrap.cameras.get(new_obj.id)) is None:
+            return
+        if new_obj.id in self._pending_camera_ids:
+            self._pending_camera_ids.remove(new_obj.id)
+        elif "rtsps_streams" not in message.changed_data:
+            return
+        async_dispatcher_send(self._hass, self.channels_signal, camera)
 
     @callback
     def _async_process_public_event(
