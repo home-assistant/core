@@ -43,14 +43,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfConductivity,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfVolume,
 )
@@ -214,7 +213,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: device.device_type in BATTERY_POWER_SENSOR,
@@ -224,7 +223,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: (
             device.device_type
@@ -404,7 +403,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="co",
         device_class=SensorDeviceClass.CO,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: (
             device.device_type == ATTR_DEVICE_MULTI_FUNCTIONAL_SENSOR

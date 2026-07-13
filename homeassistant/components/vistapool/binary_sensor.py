@@ -9,7 +9,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VistapoolConfigEntry
@@ -20,6 +21,7 @@ from .const import (
     PATH_HASIO,
     PATH_HASPH,
     PATH_HASRX,
+    SIGNAL_NEW_POOL,
 )
 from .coordinator import VistapoolDataUpdateCoordinator
 from .entity import VistapoolEntity
@@ -162,6 +164,46 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VistapoolBinarySensorEntityDescription, ...] =
 )
 
 
+def _build_binary_sensor_entities(
+    coordinator: VistapoolDataUpdateCoordinator,
+) -> list[BinarySensorEntity]:
+    """Build the binary sensor entities for a single pool."""
+    entities: list[BinarySensorEntity] = []
+    for description in BINARY_SENSOR_DESCRIPTIONS:
+        if description.exists_path is not None:
+            required = (
+                (description.exists_path,)
+                if isinstance(description.exists_path, str)
+                else description.exists_path
+            )
+            if not all(coordinator.get_value(path) for path in required):
+                continue
+        entities.append(VistapoolBinarySensor(coordinator, description))
+
+    if coordinator.get_value(PATH_HASHIDRO):
+        is_electrolysis = coordinator.get_value("hidro.is_electrolysis")
+        entities.append(
+            VistapoolBinarySensor(
+                coordinator,
+                VistapoolBinarySensorEntityDescription(
+                    key="electrolysis_low" if is_electrolysis else "hydrolysis_low",
+                    translation_key=(
+                        "electrolysis_low" if is_electrolysis else "hydrolysis_low"
+                    ),
+                    device_class=BinarySensorDeviceClass.PROBLEM,
+                    value_path="hidro.low",
+                ),
+            )
+        )
+
+    if any(
+        coordinator.get_value(path)
+        for path in (PATH_HASCD, PATH_HASCL, PATH_HASPH, PATH_HASRX)
+    ):
+        entities.append(VistapoolDosingTankBinarySensor(coordinator))
+    return entities
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: VistapoolConfigEntry,
@@ -169,42 +211,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up Vistapool binary sensors for every pool on the account."""
     entities: list[BinarySensorEntity] = []
-
     for coordinator in entry.runtime_data.coordinators.values():
-        for description in BINARY_SENSOR_DESCRIPTIONS:
-            if description.exists_path is not None:
-                required = (
-                    (description.exists_path,)
-                    if isinstance(description.exists_path, str)
-                    else description.exists_path
-                )
-                if not all(coordinator.get_value(path) for path in required):
-                    continue
-            entities.append(VistapoolBinarySensor(coordinator, description))
-
-        if coordinator.get_value(PATH_HASHIDRO):
-            is_electrolysis = coordinator.get_value("hidro.is_electrolysis")
-            entities.append(
-                VistapoolBinarySensor(
-                    coordinator,
-                    VistapoolBinarySensorEntityDescription(
-                        key="electrolysis_low" if is_electrolysis else "hydrolysis_low",
-                        translation_key=(
-                            "electrolysis_low" if is_electrolysis else "hydrolysis_low"
-                        ),
-                        device_class=BinarySensorDeviceClass.PROBLEM,
-                        value_path="hidro.low",
-                    ),
-                )
-            )
-
-        if any(
-            coordinator.get_value(path)
-            for path in (PATH_HASCD, PATH_HASCL, PATH_HASPH, PATH_HASRX)
-        ):
-            entities.append(VistapoolDosingTankBinarySensor(coordinator))
-
+        entities.extend(_build_binary_sensor_entities(coordinator))
     async_add_entities(entities)
+
+    @callback
+    def _async_add_pool(coordinator: VistapoolDataUpdateCoordinator) -> None:
+        async_add_entities(_build_binary_sensor_entities(coordinator))
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"{SIGNAL_NEW_POOL}_{entry.entry_id}", _async_add_pool
+        )
+    )
 
 
 class VistapoolBinarySensor(VistapoolEntity, BinarySensorEntity):

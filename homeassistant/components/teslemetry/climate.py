@@ -3,6 +3,7 @@
 from itertools import chain
 from typing import Any, cast, override
 
+from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import CabinOverheatProtectionTemp, Scope
 from tesla_fleet_api.teslemetry import Vehicle
 
@@ -65,7 +66,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingClimateEntity(
                     vehicle, TeslemetryClimateSide.DRIVER, entry.runtime_data.scopes
                 )
-                if vehicle.poll or vehicle.firmware < "2024.44.25"
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
                 else TeslemetryStreamingClimateEntity(
                     vehicle, TeslemetryClimateSide.DRIVER, entry.runtime_data.scopes
                 )
@@ -75,7 +76,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingCabinOverheatProtectionEntity(
                     vehicle, entry.runtime_data.scopes
                 )
-                if vehicle.poll or vehicle.firmware < "2024.44.25"
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
                 else TeslemetryStreamingCabinOverheatProtectionEntity(
                     vehicle, entry.runtime_data.scopes
                 )
@@ -212,7 +213,7 @@ class TeslemetryVehiclePollingClimateEntity(
         value = self.get("climate_state_is_climate_on")
         if value is None:
             self._attr_hvac_mode = None
-        if value:
+        elif value:
             self._attr_hvac_mode = HVACMode.HEAT_COOL
         else:
             self._attr_hvac_mode = HVACMode.OFF
@@ -530,8 +531,8 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
             self._attr_hvac_mode = (
                 HVACMode(state.state) if state.state in HVAC_MODES else None
             )
-            self._attr_current_temperature = state.attributes.get("temperature")
-            self._attr_target_temperature = state.attributes.get("target_temperature")
+            self._attr_current_temperature = state.attributes.get("current_temperature")
+            self._attr_target_temperature = state.attributes.get("temperature")
 
         self.async_on_remove(
             self.vehicle.stream_vehicle.listen_InsideTemp(

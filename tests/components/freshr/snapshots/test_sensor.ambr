@@ -93,7 +93,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'SN001_co2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_entities[sensor.fresh_r_carbon_dioxide-state]
@@ -102,7 +102,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fresh-r Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'ppm',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fresh_r_carbon_dioxide',
@@ -206,7 +206,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'SN001_hum',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_entities[sensor.fresh_r_humidity-state]
@@ -215,7 +215,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fresh-r Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.fresh_r_humidity',

@@ -20,10 +20,6 @@ CONF_LOCATION_IDX: Final = "location_idx"
 SCAN_INTERVAL_DEFAULT: Final = timedelta(seconds=300)
 SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=60)
 
-ATTR_DURATION: Final = "duration"  # number of minutes, <24h
-ATTR_PERIOD: Final = "period"  # number of days
-ATTR_SETPOINT: Final = "setpoint"
-
 # Support for the refresh_system service is being deprecated
 REFRESH_BREAKS_IN_HA_VERSION: Final = "2027.1.0"
 # Support for the reset service calls/presets is being deprecated
