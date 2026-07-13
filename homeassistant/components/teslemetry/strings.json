@@ -66,8 +66,8 @@
         "timeout": "Timed out waiting for the vehicle to accept the key. Try again after approving the key on the vehicle's touchscreen."
       },
       "initiate_flow": {
-        "reconfigure": "Set up Bluetooth control",
-        "user": "Add vehicle"
+        "reconfigure": "Set up local control",
+        "user": "Add product"
       },
       "progress": {
         "pair": "Approve Home Assistant's virtual key on the vehicle's touchscreen. Waiting for the vehicle to accept the key."
