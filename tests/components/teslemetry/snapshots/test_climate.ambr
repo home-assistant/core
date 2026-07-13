@@ -410,7 +410,7 @@
 # name: test_select_streaming[climate.test_cabin_overheat_protection]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 26,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Cabin overheat protection',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
