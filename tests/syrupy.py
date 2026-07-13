@@ -44,6 +44,17 @@ ANY = _ANY()
 
 __all__ = ["HomeAssistantSnapshotExtension"]
 
+# DeviceEntry attributes that are internal bookkeeping and should not appear in snapshots.
+# Underscore attributes (_cache, _suggested_area and the transient _pending_move /
+# _composite_subentries) are excluded separately. The composite-device migration
+# attributes below can be removed in HA Core 2027.8.
+_INTERNAL_DEVICE_ENTRY_ATTRIBUTES = (
+    "composite_device_id",
+    "composite_primary_config_entry",
+    "has_composite_identifiers",
+    "split_at",
+)
+
 
 class AreaRegistryEntrySnapshot(dict):
     """Tiny wrapper to represent an area registry entry in snapshots."""
@@ -158,13 +169,18 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         cls, data: dr.DeviceEntry
     ) -> SerializableData:
         """Prepare a Home Assistant device registry entry for serialization."""
-        # device_entry_as_dict excludes internal attributes (caches, transient move
-        # state, and the composite-device migration bookkeeping)
+        # Exclude internal attributes (caches, transient move state, and the
+        # composite-device migration bookkeeping) from the snapshot
         serialized = DeviceRegistryEntrySnapshot(
-            dr.device_entry_as_dict(data, retain_collection_types=True)
-            | {
-                "id": ANY,
-            }
+            attr.asdict(
+                data,
+                retain_collection_types=True,
+                filter=lambda attribute, _: (
+                    not attribute.name.startswith("_")
+                    and attribute.name not in _INTERNAL_DEVICE_ENTRY_ATTRIBUTES
+                ),
+            )
+            | {"id": ANY}
         )
         if serialized["via_device_id"] is not None:
             serialized["via_device_id"] = ANY

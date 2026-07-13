@@ -2,7 +2,11 @@
 
 from typing import Any
 
-from homeassistant.components.diagnostics import async_redact_data, entity_entry_as_dict
+from homeassistant.components.diagnostics import (
+    async_redact_data,
+    device_entry_as_dict,
+    entity_entry_as_dict,
+)
 from homeassistant.const import (
     ATTR_CONNECTIONS,
     ATTR_IDENTIFIERS,
@@ -37,7 +41,7 @@ async def async_get_config_entry_diagnostics(
         return data
 
     data["device"] = {
-        **async_redact_data(dr.device_entry_as_dict(hass_device), TO_REDACT_DEV),
+        **async_redact_data(device_entry_as_dict(hass_device), TO_REDACT_DEV),
         "entities": {},
         "tracked_devices": [],
     }

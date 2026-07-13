@@ -572,18 +572,6 @@ class DeviceEntry:
         return self._suggested_area
 
 
-# DeviceEntry attributes that are internal bookkeeping and must not be exposed in the
-# device's diagnostics/snapshot representation. Underscore attributes (_cache,
-# _suggested_area, and the transient _pending_move / _composite_subentries) are excluded
-# separately by device_entry_as_dict. The composite-device migration attributes below can
-# be removed in HA Core 2027.8.
-_INTERNAL_DEVICE_ENTRY_ATTRIBUTES = (
-    "composite_device_id",
-    "composite_primary_config_entry",
-    "has_composite_identifiers",
-    "split_at",
-)
-
 # async_update_device arguments that redefine which identifiers/connections a device is
 # keyed by, or move it to another config entry. They are ambiguous on a synthesized
 # composite (there is no single underlying device to retarget), so the composite shim
@@ -602,29 +590,6 @@ _COMPOSITE_IGNORED_UPDATE_ARGS = (
 # Safety-valve bound on the number of remembered ambiguous-match lookups (see
 # DeviceRegistry._composite_device_queries). Can be removed in HA Core 2027.8.
 _COMPOSITE_QUERY_CACHE_SIZE = 2048
-
-
-def device_entry_as_dict(
-    entry: DeviceEntry, *, retain_collection_types: bool = False
-) -> dict[str, Any]:
-    """Return a device registry entry as a dict, excluding internal attributes.
-
-    attr.asdict(entry) exposes internal bookkeeping (caches, the transient config-entry
-    move state and the composite-device migration attributes). Use this for diagnostics
-    and snapshots so those attributes are not serialized.
-
-    Collections (connections, identifiers) are returned as lists by default, so the
-    result is JSON serializable for diagnostics. Pass retain_collection_types=True to
-    keep them as sets, as used by the snapshot serializer.
-    """
-    return attr.asdict(
-        entry,
-        retain_collection_types=retain_collection_types,
-        filter=lambda attribute, _value: (
-            not attribute.name.startswith("_")
-            and attribute.name not in _INTERNAL_DEVICE_ENTRY_ATTRIBUTES
-        ),
-    )
 
 
 @attr.s(frozen=True, slots=True)

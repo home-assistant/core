@@ -2,7 +2,11 @@
 
 from typing import Any
 
-from homeassistant.components.diagnostics import async_redact_data, entity_entry_as_dict
+from homeassistant.components.diagnostics import (
+    async_redact_data,
+    device_entry_as_dict,
+    entity_entry_as_dict,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -39,7 +43,7 @@ async def async_get_config_entry_diagnostics(
     assert hass_device is not None
 
     data["device"] = {
-        **dr.device_entry_as_dict(hass_device),
+        **device_entry_as_dict(hass_device),
         "entities": {},
     }
 

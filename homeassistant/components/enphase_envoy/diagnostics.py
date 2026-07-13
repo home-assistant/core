@@ -8,7 +8,11 @@ from aiohttp import ClientResponse
 from pyenphase.envoy import Envoy
 from pyenphase.exceptions import EnvoyError
 
-from homeassistant.components.diagnostics import async_redact_data, entity_entry_as_dict
+from homeassistant.components.diagnostics import (
+    async_redact_data,
+    device_entry_as_dict,
+    entity_entry_as_dict,
+)
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -110,7 +114,7 @@ async def async_get_config_entry_diagnostics(
                 state_dict.pop("context", None)
             entity_dict = entity_entry_as_dict(entity)
             entities.append({"entity": entity_dict, "state": state_dict})
-        device_dict = dr.device_entry_as_dict(device)
+        device_dict = device_entry_as_dict(device)
         device_entities.append({"device": device_dict, "entities": entities})
 
     # remove envoy serial
