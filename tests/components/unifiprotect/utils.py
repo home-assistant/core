@@ -6,9 +6,11 @@ from datetime import timedelta
 from unittest.mock import Mock
 
 from uiprotect import EventChange, ProtectApiClient, ProtectEvent
+from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     Bootstrap,
     Camera,
+    ChannelQuality,
     DeviceState,
     Event,
     EventType,
@@ -229,6 +231,21 @@ async def init_entry(
     await hass.async_block_till_done()
 
 
+def public_rtsps_for(camera: Camera) -> RTSPSStreams | None:
+    """Build a camera's primed RTSPS streams from its RTSP-enabled channels.
+
+    Mirrors what the library writes onto ``PublicCamera.rtsps_streams`` during
+    ``update_public()`` — only RTSP-enabled channels carry an active URL, and a
+    camera with none is left streamless (``None``).
+    """
+    urls = {
+        channel.rtsps_quality: channel.rtsps_url
+        for channel in camera.channels
+        if channel.is_rtsp_enabled and channel.rtsps_quality is not None
+    }
+    return RTSPSStreams(**urls) if urls else None
+
+
 def make_public_sensor(
     sensor: Sensor,
     *,
@@ -368,6 +385,9 @@ def make_public_camera(
     public = Mock(spec=PublicCamera)
     public.id = camera.id
     public.mac = camera.mac
+    public.name = camera.name
+    public.display_name = camera.display_name
+    public.type = camera.type
     public.model = ModelType.CAMERA
     public.state = DeviceState[camera.state.name] if state is None else state
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume
@@ -376,6 +396,15 @@ def make_public_camera(
         if hdr_type is None
         else hdr_type
     )
+    public.has_package_camera = camera.feature_flags.has_package_camera
+    public.feature_flags = Mock()
+    public.feature_flags.support_full_hd_snapshot = (
+        camera.feature_flags.support_full_hd_snapshot
+    )
+    qualities = [ChannelQuality.HIGH, ChannelQuality.MEDIUM, ChannelQuality.LOW]
+    if public.has_package_camera:
+        qualities.append(ChannelQuality.PACKAGE)
+    public.hardware_stream_qualities.return_value = qualities
     return public
 
 

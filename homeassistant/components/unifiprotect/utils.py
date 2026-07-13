@@ -11,7 +11,7 @@ from aiohttp import CookieJar
 from uiprotect import ProtectApiClient
 from uiprotect.data import (
     Bootstrap,
-    CameraChannel,
+    ChannelQuality,
     Light,
     LightModeEnableType,
     LightModeType,
@@ -134,14 +134,12 @@ def async_create_api_client(
 
 
 @callback
-def get_camera_base_name(channel: CameraChannel) -> str:
-    """Get base name for cameras channel."""
+def get_camera_base_name(quality: ChannelQuality) -> str:
+    """Get base name for a camera's RTSPS quality channel."""
 
-    camera_name = channel.name
-    if channel.name != "Package Camera":
-        camera_name = f"{channel.name} resolution channel"
-
-    return camera_name
+    if quality is ChannelQuality.PACKAGE:
+        return "Package Camera"
+    return f"{quality.value.title()} resolution channel"
 
 
 def async_ufp_instance_command[_EntityT, **_P](
