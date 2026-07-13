@@ -37,7 +37,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "LED Infrared via Test IR emitter"
+    assert result["title"] == "LED light with 24-key remote via Test IR emitter"
     assert result["data"] == {
         CONF_DEVICE_TYPE: LEDIrDeviceType.GENERIC_24_KEY,
         CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,

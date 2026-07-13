@@ -20,6 +20,11 @@ from homeassistant.helpers.selector import (
 
 from .const import CONF_DEVICE_TYPE, CONF_INFRARED_ENTITY_ID, DOMAIN, LEDIrDeviceType
 
+DEVICE_NAMES = {
+    LEDIrDeviceType.GENERIC_24_KEY: "24-key remote",
+    LEDIrDeviceType.GENERIC_13_KEY: "13-key remote",
+}
+
 
 class LEDIrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for LED Infrared."""
@@ -55,7 +60,7 @@ class LEDIrConfigFlow(ConfigFlow, domain=DOMAIN):
                     else title_entity_id
                 )
                 return self.async_create_entry(
-                    title=f"LED Infrared via {title_entity_name}",
+                    title=f"LED light with {DEVICE_NAMES[LEDIrDeviceType(user_input[CONF_DEVICE_TYPE])]} via {title_entity_name}",
                     data=user_input,
                 )
 
