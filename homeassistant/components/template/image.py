@@ -1,13 +1,17 @@
 """Support for image which integrates with other components."""
 
+import base64
+from dataclasses import dataclass
+from datetime import datetime
 import logging
-from typing import Any, override
+from typing import Any, Self, override
 
 import voluptuous as vol
 
 from homeassistant.components.image import (
     DOMAIN as IMAGE_DOMAIN,
     ENTITY_ID_FORMAT,
+    Image,
     ImageEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -18,6 +22,7 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -91,11 +96,87 @@ async def async_setup_entry(
     )
 
 
-class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity):
+@dataclass(kw_only=True)
+class ImageExtraStoredData(ExtraStoredData):
+    """Holds extra stored data for template image entities."""
+
+    image_last_updated: datetime | None
+    image_url: str | None
+    cached_image: Image | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the image data."""
+        cached_image: Image | dict[str, str] | None = self.cached_image
+        if isinstance(cached_image, Image):
+            cached_image = {
+                "__type": str(type(cached_image)),
+                "content_type": cached_image.content_type,
+                "content": base64.b64encode(cached_image.content).decode("utf-8"),
+            }
+
+        image_last_updated: datetime | dict[str, str] | None = self.image_last_updated
+        if isinstance(image_last_updated, datetime):
+            image_last_updated = {
+                "__type": str(type(image_last_updated)),
+                "isoformat": image_last_updated.isoformat(),
+            }
+
+        return {
+            "image_last_updated": image_last_updated,
+            "image_url": self.image_url,
+            "cached_image": cached_image,
+        }
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored image state from a dict."""
+
+        try:
+            image_last_updated = restored["image_last_updated"]
+        except KeyError:
+            return None
+        try:
+            type_ = image_last_updated["__type"]
+            if type_ == "<class 'datetime.datetime'>":
+                image_last_updated = dt_util.parse_datetime(
+                    image_last_updated["isoformat"]
+                )
+        except TypeError:
+            pass
+        except KeyError:
+            return None
+
+        try:
+            cached_image = restored["cached_image"]
+        except KeyError:
+            return None
+        try:
+            type_ = cached_image["__type"]
+            if type_ == "<class 'homeassistant.components.image.Image'>":
+                cached_image = Image(
+                    content_type=cached_image["content_type"],
+                    content=base64.b64decode(cached_image["content"]),
+                )
+        except TypeError:
+            pass
+        except KeyError:
+            return None
+
+        return cls(
+            image_last_updated=image_last_updated,
+            image_url=restored["image_url"],
+            cached_image=cached_image,
+        )
+
+
+class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
     """Representation of a template image features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
     _attr_image_url: str | None = None
+    _restore_state_extra_data = ImageExtraStoredData
+    _restore_state_properties = ("_cached_image",)
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -117,6 +198,23 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity):
         self._attr_image_last_updated = dt_util.utcnow()
         self._cached_image = None
         self._attr_image_url = result
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> ImageExtraStoredData:
+        """Return image specific state data to be restored."""
+        return ImageExtraStoredData(
+            image_last_updated=self._attr_image_last_updated,
+            image_url=self._attr_image_url,
+            cached_image=self._cached_image,
+        )
+
+    @override
+    def restore_extra_data(self, extra_data: ImageExtraStoredData) -> None:
+        """Restore the extra data."""
+        self._attr_image_last_updated = extra_data.image_last_updated
+        self._attr_image_url = extra_data.image_url
+        self._cached_image = extra_data.cached_image
 
 
 class StateImageEntity(TemplateEntity, AbstractTemplateImage):
