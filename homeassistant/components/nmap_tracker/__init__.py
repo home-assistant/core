@@ -1,4 +1,5 @@
 """The Nmap Tracker integration."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from dataclasses import dataclass
@@ -39,7 +40,9 @@ from .const import (
 
 type NmapTrackerConfigEntry = ConfigEntry[NmapDeviceScanner]
 
-# Some version of nmap will fail with 'Assertion failed: htn.toclock_running == true (Target.cc: stopTimeOutClock: 503)\n'
+# Some version of nmap will fail with
+# 'Assertion failed: htn.toclock_running == true
+# (Target.cc: stopTimeOutClock: 503)\n'
 NMAP_TRANSIENT_FAILURE: Final = "Assertion failed: htn.toclock_running == true"
 MAX_SCAN_ATTEMPTS: Final = 16
 
@@ -113,10 +116,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug(
         "Migrating configuration from version %s.%s", entry.version, entry.minor_version
     )
-
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     if entry.version == 1:
         new_options = {**entry.options}
@@ -258,7 +257,7 @@ class NmapDeviceScanner:
         self._hass.async_create_task(self._async_scan_devices())
 
     def _build_options(self):
-        """Build the command line and strip out last results that do not need to be updated."""
+        """Build the options and strip out last results that don't need updating."""
         options = self._options
         if self.home_interval:
             boundary = dt_util.now() - self.home_interval

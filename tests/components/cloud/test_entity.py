@@ -31,7 +31,7 @@ def cloud_entity(hass: HomeAssistant) -> BaseCloudLLMEntity:
     cloud.llm = MagicMock()
     cloud.is_logged_in = True
     cloud.valid_subscription = True
-    entry = MockConfigEntry(domain="cloud")
+    entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
     entity = BaseCloudLLMEntity(cloud, entry)
     entity.entity_id = "ai_task.cloud_ai_task"
@@ -270,7 +270,7 @@ async def test_async_handle_chat_log_service_sets_structured_output_non_strict(
     entity_registry: er.EntityRegistry,
     mock_cloud_login: None,
 ) -> None:
-    """Ensure structured output requests always disable strict validation via service."""
+    """Ensure structured output disables strict validation."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from arcam.fmj.state import State
 
@@ -15,6 +16,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ArcamFmjConfigEntry
 from .entity import ArcamFmjEntity
+
+# Read-only, coordinator-driven entities; no per-entity I/O to bound.
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -61,6 +65,7 @@ class ArcamFmjBinarySensorEntity(ArcamFmjEntity, BinarySensorEntity):
     entity_description: ArcamFmjBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the binary sensor value."""
         return self.entity_description.value_fn(self.coordinator.state)

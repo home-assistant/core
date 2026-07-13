@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Mapping
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from hyperion import client, const
@@ -44,11 +44,10 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
 
-#  +------------------+ +------------------+ +--------------------+ +--------------------+
-#  |Step: SSDP        | |Step: user        | |Step: import        | |Step: reauth        |
-#  |                  | |                  | |                    | |                    |
-#  |Input: <discovery>| |Input: <host/port>| |Input: <import data>| |Input: <entry_data> |
-#  +------------------+ +------------------+ +--------------------+ +--------------------+
+#  +-----------------+ +-----------------+ +-------------------+ +------------------+
+#  |Step: SSDP       | |Step: user       | |Step: import       | |Step: reauth      |
+#  |Input: <discover>| |Input: host/port | |Input: import data | |Input: entry_data |
+#  +-----------------+ +-----------------+ +-------------------+ +------------------+
 #           v                   v                       v                    v
 #           +-------------------+-----------------------+--------------------+
 # Auth not  |         Auth      |
@@ -70,9 +69,9 @@ _LOGGER.setLevel(logging.DEBUG)
 #           |            +------------------+
 #           |                   |
 #           |                   v
-#           |            +---------------------------+   +--------------------------------+
-#           |            |Step: create_token_external|-->|Step: create_token_external_fail|
-#           |            +---------------------------+   +--------------------------------+
+#           |            +------------------------+  +-----------------------------+
+#           |            |Step: create_token_ext  |->|Step: create_token_ext_fail |
+#           |            +------------------------+  +-----------------------------+
 #           |                   |
 #           |                   v
 #           |            +-----------------------------------+
@@ -152,6 +151,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             return await self._advance_to_auth_step_if_necessary(hyperion_client)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -187,7 +187,8 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         #   },
         #   'ssdp_usn': 'uuid:f9aab089-f85a-55cf-b7c1-222a72faebe9',
         #   'ssdp_ext': '',
-        #   'ssdp_server': 'Raspbian GNU/Linux 10 (buster)/10 UPnP/1.0 Hyperion/2.0.0-alpha.8'}
+        #   'ssdp_server':
+        #       'Raspbian GNU/Linux 10 (buster)/10 UPnP/1.0 Hyperion/2.0.0-alpha.8'}
 
         # SSDP requires user confirmation.
         self._require_confirm = True
@@ -223,6 +224,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             return await self._advance_to_auth_step_if_necessary(hyperion_client)
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -265,7 +267,8 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
         auth_resp: dict[str, Any] | None = None
         async with self._create_client(raw_connection=True) as hyperion_client:
             if hyperion_client:
-                # The Hyperion-py client has a default timeout of 3 minutes on this request.
+                # The Hyperion-py client has a default timeout of
+                # 3 minutes on this request.
                 auth_resp = await hyperion_client.async_request_token(
                     comment=DEFAULT_ORIGIN, id=auth_id
                 )
@@ -422,6 +425,7 @@ class HyperionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> HyperionOptionsFlow:

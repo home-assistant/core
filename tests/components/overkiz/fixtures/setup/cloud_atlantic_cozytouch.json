@@ -1309,6 +1309,239 @@
       "widget": "CumulativeElectricPowerConsumptionSensor"
     },
     {
+      "creationTime": 1776015407000,
+      "lastUpdateTime": 1776015407000,
+      "label": "Yutaki DHW",
+      "deviceURL": "modbus://1234-5678-5643/6381497/1#4",
+      "shortcut": false,
+      "controllableName": "modbus:YutakiV2DHWTComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "refreshBoostMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "globalControlDHW",
+            "nparams": 3
+          },
+          {
+            "commandName": "refreshControlAntiLegionella",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlAntiLegionellaSettingTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlDHW",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshControlDHWSettingTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDHWMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDHWTTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusAntiLegionella",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusAntiLegionellaSettingTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusDHW",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStatusDHWSettingTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "setControlAntiLegionella",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlAntiLegionellaSettingTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlDHW",
+            "nparams": 1
+          },
+          {
+            "commandName": "setControlDHWSettingTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDHWMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetBoostMode",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:DHWTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:AlarmNumberState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:ControlAntiLegionellaSettingTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["run", "stop"],
+            "qualifiedName": "modbus:ControlAntiLegionellaState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:ControlDHWSettingTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["run", "stop"],
+            "qualifiedName": "modbus:ControlDHWState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["high demand", "standard"],
+            "qualifiedName": "modbus:DHWModeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:StatusAntiLegionellaSettingTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["run", "stop"],
+            "qualifiedName": "modbus:StatusAntiLegionellaState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:StatusDHWSettingTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:StatusDHWState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "modbus:VirtualGlobalControlState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["disabled", "enabled"],
+            "qualifiedName": "modbus:YutakiBoostModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["high demand", "off", "standard"],
+            "qualifiedName": "modbus:YutakiDHWVirtualOperatingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["disabled", "enabled"],
+            "qualifiedName": "modbus:YutakiTargetBoostModeState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "HitachiDHW",
+        "uiProfiles": ["DHWTemperature"],
+        "uiClass": "HitachiHeatingSystem",
+        "qualifiedName": "modbus:YutakiV2DHWTComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "modbus:ControlDHWState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "modbus:ControlDHWSettingTemperatureState",
+          "type": 1,
+          "value": 54
+        },
+        {
+          "name": "modbus:ControlAntiLegionellaState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "modbus:ControlAntiLegionellaSettingTemperatureState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "modbus:DHWModeState",
+          "type": 3,
+          "value": "standard"
+        },
+        {
+          "name": "modbus:StatusDHWState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "modbus:StatusDHWSettingTemperatureState",
+          "type": 1,
+          "value": 54
+        },
+        {
+          "name": "modbus:StatusAntiLegionellaState",
+          "type": 3,
+          "value": "stop"
+        },
+        {
+          "name": "modbus:StatusAntiLegionellaSettingTemperatureState",
+          "type": 1,
+          "value": 55
+        },
+        {
+          "name": "core:DHWTemperatureState",
+          "type": 1,
+          "value": 46
+        },
+        {
+          "name": "modbus:YutakiTargetBoostModeState",
+          "type": 3,
+          "value": "no request"
+        },
+        {
+          "name": "modbus:YutakiBoostModeState",
+          "type": 3,
+          "value": "disabled"
+        },
+        {
+          "name": "modbus:AlarmNumberState",
+          "type": 1,
+          "value": 0
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "61435d6a-4ba6-4c96-b7b5-105bb31d3b87",
+      "widget": "HitachiDHW",
+      "type": 1,
+      "oid": "0e9ca3df-ac9e-4f5d-a9ac-0798a1fed947",
+      "uiClass": "HitachiHeatingSystem"
+    },
+    {
       "available": true,
       "controllableName": "io:StackComponent",
       "creationTime": 1634919123000,
@@ -1365,6 +1598,650 @@
       "type": 5,
       "uiClass": "ProtocolGateway",
       "widget": "IOStack"
+    },
+    {
+      "creationTime": 1673778881000,
+      "lastUpdateTime": 1673778881000,
+      "label": "Living room heater",
+      "deviceURL": "modbuslink://1234-5678-5643/1#1",
+      "shortcut": false,
+      "controllableName": "modbuslink:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointMBLComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshAbsenceEndDate",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshAbsenceMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshAbsenceStartDate",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshBoostActivation",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshDateTime",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshErrorCode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshFridayTimeProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshHeatingLevel",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshIdentifier",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshLanguage",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMaximumHeatingTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshMondayTimeProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshOccupancyActivation",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshOnOffState",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshOperatingMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshSaturdayTimeProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshSundayTimeProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshTargetTemperature",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshThursdayTimeProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshTuesdayTimeProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshWednesdayTimeProgram",
+            "nparams": 0
+          },
+          {
+            "commandName": "setAbsenceEndDate",
+            "nparams": 1
+          },
+          {
+            "commandName": "setAbsenceMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setAbsenceStartDate",
+            "nparams": 1
+          },
+          {
+            "commandName": "setBoostActivation",
+            "nparams": 1
+          },
+          {
+            "commandName": "setDateTime",
+            "nparams": 1
+          },
+          {
+            "commandName": "setHeatingLevel",
+            "nparams": 1
+          },
+          {
+            "commandName": "setLanguage",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMaximumHeatingTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setMondayTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOccupancyActivation",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOnOff",
+            "nparams": 1
+          },
+          {
+            "commandName": "setOperatingMode",
+            "nparams": 1
+          },
+          {
+            "commandName": "setSaturdayTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setSundayTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTargetTemperature",
+            "nparams": 1
+          },
+          {
+            "commandName": "setWednesdayTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "setFridayTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setThursdayTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTuesdayTimeProgram",
+            "nparams": 1
+          },
+          {
+            "commandName": "refreshDiagnostic",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshSetpointLoweringTemperatureInProgMode",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStaticStates1",
+            "nparams": 0
+          },
+          {
+            "commandName": "refreshStaticStates2",
+            "nparams": 0
+          },
+          {
+            "commandName": "setSetpointLoweringTemperatureInProgMode",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AbsenceEndDateState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:AbsenceStartDateState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["active", "inactive"],
+            "qualifiedName": "core:BoostActivationState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:DateTimeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ErrorCodeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:FridayTimeProgramState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:IdentifierState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:LanguageState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:MaximumHeatingTargetTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:MondayTimeProgramState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["active", "inactive"],
+            "qualifiedName": "core:OccupancyActivationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:OccupancySensorStatusState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on"],
+            "qualifiedName": "core:OnOffState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "antifreeze",
+              "auto",
+              "away",
+              "eco",
+              "frostprotection",
+              "manual",
+              "max",
+              "normal",
+              "off",
+              "on",
+              "prog",
+              "program",
+              "boost"
+            ],
+            "qualifiedName": "core:OperatingModeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:SaturdayTimeProgramState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:SundayTimeProgramState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "boost",
+              "comfort",
+              "comfort-1",
+              "comfort-2",
+              "eco",
+              "frostprotection",
+              "off",
+              "secured"
+            ],
+            "qualifiedName": "core:TargetHeatingLevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ThursdayTimeProgramState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:TuesdayTimeProgramState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:VersionState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:WednesdayTimeProgramState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["off", "on", "prog"],
+            "qualifiedName": "modbuslink:AbsenceModeState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "modbuslink:SetpointLoweringTemperatureInProgModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["boost", "comfort", "eco"],
+            "qualifiedName": "modbuslink:TargetHeatingLevelState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint",
+        "uiProfiles": [
+          "StatefulHeatingLevel",
+          "HeatingLevel",
+          "StatefulThermostat",
+          "Thermostat",
+          "StatefulSwitchable",
+          "Switchable"
+        ],
+        "uiClass": "HeatingSystem",
+        "uiClassifiers": ["emitter"],
+        "qualifiedName": "modbuslink:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointMBLComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "modbuslink:AbsenceModeState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:MaximumHeatingTargetTemperatureState",
+          "type": 2,
+          "value": 30.0
+        },
+        {
+          "name": "core:IdentifierState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:MondayTimeProgramState",
+          "type": 11,
+          "value": {
+            "monday": [
+              {
+                "start": "06:00",
+                "end": "08:00"
+              },
+              {
+                "start": "18:00",
+                "end": "22:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              }
+            ]
+          }
+        },
+        {
+          "name": "core:TuesdayTimeProgramState",
+          "type": 11,
+          "value": {
+            "tuesday": [
+              {
+                "start": "06:00",
+                "end": "08:00"
+              },
+              {
+                "start": "18:00",
+                "end": "22:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              }
+            ]
+          }
+        },
+        {
+          "name": "core:WednesdayTimeProgramState",
+          "type": 11,
+          "value": {
+            "wednesday": [
+              {
+                "start": "06:00",
+                "end": "08:00"
+              },
+              {
+                "start": "12:00",
+                "end": "14:00"
+              },
+              {
+                "start": "18:00",
+                "end": "22:00"
+              }
+            ]
+          }
+        },
+        {
+          "name": "core:ThursdayTimeProgramState",
+          "type": 11,
+          "value": {
+            "thursday": [
+              {
+                "start": "06:00",
+                "end": "08:00"
+              },
+              {
+                "start": "18:00",
+                "end": "22:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              }
+            ]
+          }
+        },
+        {
+          "name": "core:FridayTimeProgramState",
+          "type": 11,
+          "value": {
+            "friday": [
+              {
+                "start": "06:00",
+                "end": "08:00"
+              },
+              {
+                "start": "18:00",
+                "end": "22:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              }
+            ]
+          }
+        },
+        {
+          "name": "core:SaturdayTimeProgramState",
+          "type": 11,
+          "value": {
+            "saturday": [
+              {
+                "start": "08:00",
+                "end": "22:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              }
+            ]
+          }
+        },
+        {
+          "name": "core:SundayTimeProgramState",
+          "type": 11,
+          "value": {
+            "sunday": [
+              {
+                "start": "08:00",
+                "end": "22:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              },
+              {
+                "start": "00:00",
+                "end": "00:00"
+              }
+            ]
+          }
+        },
+        {
+          "name": "core:TargetTemperatureState",
+          "type": 2,
+          "value": 7.0
+        },
+        {
+          "name": "modbuslink:SetpointLoweringTemperatureInProgModeState",
+          "type": 1,
+          "value": 15
+        },
+        {
+          "name": "core:OperatingModeState",
+          "type": 3,
+          "value": "manual"
+        },
+        {
+          "name": "core:BoostActivationState",
+          "type": 3,
+          "value": "active"
+        },
+        {
+          "name": "core:OccupancyActivationState",
+          "type": 3,
+          "value": "active"
+        },
+        {
+          "name": "modbuslink:TargetHeatingLevelState",
+          "type": 3,
+          "value": "comfort"
+        },
+        {
+          "name": "core:TargetHeatingLevelState",
+          "type": 3,
+          "value": "comfort"
+        },
+        {
+          "name": "core:OnOffState",
+          "type": 3,
+          "value": "off"
+        },
+        {
+          "name": "core:OccupancySensorStatusState",
+          "type": 3,
+          "value": "active"
+        },
+        {
+          "name": "core:VersionState",
+          "type": 1,
+          "value": 67
+        },
+        {
+          "name": "core:AbsenceEndDateState",
+          "type": 11,
+          "value": {
+            "month": 12,
+            "hour": 18,
+            "year": 2023,
+            "weekday": 4,
+            "day": 22,
+            "minute": 32,
+            "second": 39
+          }
+        },
+        {
+          "name": "core:AbsenceStartDateState",
+          "type": 11,
+          "value": {
+            "month": 12,
+            "hour": 20,
+            "year": 2023,
+            "weekday": 6,
+            "day": 17,
+            "minute": 22,
+            "second": 57
+          }
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "widget": "AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint",
+      "type": 1,
+      "uiClass": "HeatingSystem"
+    },
+    {
+      "creationTime": 1673778881000,
+      "lastUpdateTime": 1673778881000,
+      "label": "Living room temperature",
+      "deviceURL": "modbuslink://1234-5678-5643/1#2",
+      "shortcut": false,
+      "controllableName": "modbuslink:TemperatureInCelciusMBLSystemDeviceSensor",
+      "definition": {
+        "commands": [],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TemperatureState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "TemperatureSensor",
+        "uiProfiles": ["Temperature"],
+        "uiClass": "TemperatureSensor",
+        "qualifiedName": "modbuslink:TemperatureInCelciusMBLSystemDeviceSensor",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:TemperatureState",
+          "type": 2,
+          "value": 21.1
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:MeasuredValueType",
+          "type": 3,
+          "value": "core:TemperatureInCelcius"
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "mainSupply"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "widget": "TemperatureSensor",
+      "type": 2,
+      "uiClass": "TemperatureSensor"
     }
   ],
   "features": [],

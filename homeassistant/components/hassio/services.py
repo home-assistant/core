@@ -15,7 +15,7 @@ from aiohasupervisor.models import (
 )
 import voluptuous as vol
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_LOCATION, ATTR_NAME
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -43,7 +43,6 @@ from .const import (
     ATTR_HOMEASSISTANT,
     ATTR_HOMEASSISTANT_EXCLUDE_DATABASE,
     ATTR_INPUT,
-    ATTR_LOCATION,
     ATTR_PASSWORD,
     ATTR_SLUG,
     DOMAIN,
@@ -297,7 +296,8 @@ def async_register_app_services(
         addon_slug = service.data[ATTR_ADDON]
         data: dict | str = service.data[ATTR_INPUT]
 
-        # See explanation for why we make strings into json in async_app_stdin_service_handler
+        # See explanation for why we make strings into json
+        # in async_app_stdin_service_handler
         data = json.dumps(data)
         payload = data.encode(encoding="utf-8")
 

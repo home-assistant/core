@@ -1,6 +1,6 @@
 """Support for locks which integrates with other components."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -129,8 +129,11 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
     _optimistic_entity = True
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self._code_format_template_error: TemplateError | None = None
@@ -187,6 +190,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
             self._attr_code_format = render
             self._code_format_template_error = None
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         # Check if we need to raise for incorrect code format
@@ -205,6 +209,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
             context=self._context,
         )
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         # Check if we need to raise for incorrect code format
@@ -223,6 +228,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
             context=self._context,
         )
 
+    @override
     async def async_open(self, **kwargs: Any) -> None:
         """Open the device."""
         # Check if we need to raise for incorrect code format

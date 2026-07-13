@@ -26,7 +26,8 @@ def _ensure_webhook_access(func):
     @callback
     @wraps(func)
     def with_webhook_access(hass, connection, msg):
-        # Validate that the webhook ID is registered to the user of the websocket connection
+        # Validate that the webhook ID is registered to
+        # the user of the websocket connection
         config_entry = hass.data[DOMAIN][DATA_CONFIG_ENTRIES].get(msg["webhook_id"])
 
         if config_entry is None:

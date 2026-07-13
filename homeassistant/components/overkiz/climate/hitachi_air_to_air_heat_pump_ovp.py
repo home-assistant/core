@@ -1,6 +1,6 @@
 """Support for HitachiAirToAirHeatPump."""
 
-from typing import Any
+from typing import Any, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -65,11 +65,11 @@ SWING_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_SWING_MODES.items()}
 
 OVERKIZ_TO_FAN_MODES: dict[str, str] = {
     OverkizCommandParam.AUTO: FAN_AUTO,
-    OverkizCommandParam.HIGH: FAN_HIGH,  # fallback, state can be exposed as HIGH, new state = hi
+    OverkizCommandParam.HIGH: FAN_HIGH,  # fallback, new = hi
     OverkizCommandParam.HI: FAN_HIGH,
     OverkizCommandParam.LOW: FAN_LOW,
     OverkizCommandParam.LO: FAN_LOW,
-    OverkizCommandParam.MEDIUM: FAN_MEDIUM,  # fallback, state can be exposed as MEDIUM, new state = med
+    OverkizCommandParam.MEDIUM: FAN_MEDIUM,  # fallback, new = med
     OverkizCommandParam.MED: FAN_MEDIUM,
     OverkizCommandParam.SILENT: OverkizCommandParam.SILENT,
 }
@@ -115,16 +115,17 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
             self._attr_device_info["manufacturer"] = "Hitachi"
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if (
-            main_op_state := self.device.states[OverkizState.OVP_MAIN_OPERATION]
+            main_op_state := self.device.states.get(OverkizState.OVP_MAIN_OPERATION)
         ) and main_op_state.value_as_str:
             if main_op_state.value_as_str.lower() == OverkizCommandParam.OFF:
                 return HVACMode.OFF
 
         if (
-            mode_change_state := self.device.states[OverkizState.OVP_MODE_CHANGE]
+            mode_change_state := self.device.states.get(OverkizState.OVP_MODE_CHANGE)
         ) and mode_change_state.value_as_str:
             # The OVP protocol has 'auto cooling' and 'auto heating' values
             # that are equivalent to the HLRRWIFI protocol without spaces
@@ -133,6 +134,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
 
         return HVACMode.OFF
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
@@ -144,60 +146,70 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
             )
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         if (
-            state := self.device.states[OverkizState.OVP_FAN_SPEED]
+            state := self.device.states.get(OverkizState.OVP_FAN_SPEED)
         ) and state.value_as_str:
             return OVERKIZ_TO_FAN_MODES[state.value_as_str]
 
         return None
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         await self._global_control(fan_mode=FAN_MODES_TO_OVERKIZ[fan_mode])
 
     @property
+    @override
     def swing_mode(self) -> str | None:
         """Return the swing setting."""
-        if (state := self.device.states[OverkizState.OVP_SWING]) and state.value_as_str:
+        if (
+            state := self.device.states.get(OverkizState.OVP_SWING)
+        ) and state.value_as_str:
             return OVERKIZ_TO_SWING_MODES[state.value_as_str]
 
         return None
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         await self._global_control(swing_mode=SWING_MODES_TO_OVERKIZ[swing_mode])
 
     @property
+    @override
     def target_temperature(self) -> int | None:
         """Return the target temperature."""
         if (
-            temperature := self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]
+            temperature := self.device.states.get(OverkizState.CORE_TARGET_TEMPERATURE)
         ) and temperature.value_as_int:
             return temperature.value_as_int
 
         return None
 
     @property
+    @override
     def current_temperature(self) -> int | None:
         """Return current temperature."""
         if (
-            state := self.device.states[OverkizState.OVP_ROOM_TEMPERATURE]
+            state := self.device.states.get(OverkizState.OVP_ROOM_TEMPERATURE)
         ) and state.value_as_int:
             return state.value_as_int
 
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         await self._global_control(target_temperature=int(kwargs[ATTR_TEMPERATURE]))
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if (
-            state := self.device.states[OverkizState.CORE_HOLIDAYS_MODE]
+            state := self.device.states.get(OverkizState.CORE_HOLIDAYS_MODE)
         ) and state.value_as_str:
             if state.value_as_str == OverkizCommandParam.ON:
                 return PRESET_HOLIDAY_MODE
@@ -207,6 +219,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
 
         return None
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode == PRESET_HOLIDAY_MODE:
@@ -225,7 +238,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     def auto_manu_mode(self) -> str | None:
         """Return auto/manu mode."""
         if (
-            state := self.device.states[OverkizState.CORE_AUTO_MANU_MODE]
+            state := self.device.states.get(OverkizState.CORE_AUTO_MANU_MODE)
         ) and state.value_as_str:
             return state.value_as_str
         return None
@@ -235,13 +248,14 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     def temperature_change(self) -> int | None:
         """Return temperature change state."""
         if (
-            state := self.device.states[OverkizState.OVP_TEMPERATURE_CHANGE]
+            state := self.device.states.get(OverkizState.OVP_TEMPERATURE_CHANGE)
         ) and state.value_as_int:
             return state.value_as_int
 
         return None
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         if self.hvac_mode == HVACMode.AUTO:
@@ -249,6 +263,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
         return TEMP_MIN
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         if self.hvac_mode == HVACMode.AUTO:
@@ -266,7 +281,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
         """
         if value:
             return value
-        if (state := self.device.states[state_name]) is not None and (
+        if (state := self.device.states.get(state_name)) is not None and (
             value := state.value_as_str
         ) is not None:
             return value
@@ -319,19 +334,23 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
             OverkizCommandParam.STOP,
         )
 
-        # AUTO_MANU parameter is not controlled by HA and is turned "off" when the device is on Holiday mode
+        # AUTO_MANU parameter is not controlled by HA and is
+        # turned "off" when the device is on Holiday mode
         auto_manu_mode = self._control_backfill(
             None, OverkizState.CORE_AUTO_MANU_MODE, OverkizCommandParam.MANU
         )
         if self.preset_mode == PRESET_HOLIDAY_MODE:
             auto_manu_mode = OverkizCommandParam.OFF
 
-        # In all the hvac modes except AUTO, the temperature command parameter is the target temperature
+        # In all the hvac modes except AUTO, the temperature
+        # command parameter is the target temperature
         temperature_command = None
         target_temperature = target_temperature or self.target_temperature
         if hvac_mode == OverkizCommandParam.AUTO:
-            # In hvac mode AUTO, the temperature command parameter is a temperature_change
-            # which is the delta between a pivot temperature (25) and the target temperature
+            # In hvac mode AUTO, the temperature command
+            # parameter is a temperature_change which is the
+            # delta between a pivot temperature (25) and the
+            # target temperature
             temperature_change = 0
 
             if target_temperature:

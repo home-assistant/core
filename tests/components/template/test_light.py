@@ -8,6 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import light, template
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
@@ -15,6 +16,7 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
+    ATTR_XY_COLOR,
     ColorMode,
     LightEntityFeature,
 )
@@ -52,7 +54,6 @@ TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
 TEST_LIGHT = TemplatePlatformSetup(
     light.DOMAIN,
-    "lights",
     "test_light",
     make_test_trigger(
         TEST_STATE_ENTITY_ID,
@@ -68,7 +69,10 @@ ON_OFF_ACTIONS = {
 }
 
 
-BRIGHTNESS_DATA = {"brightness": "{{ brightness }}"}
+BRIGHTNESS_DATA = {
+    "brightness": "{{ brightness }}",
+    "brightness_pct": "{{ brightness_pct }}",
+}
 SET_LEVEL_ACTION = make_test_action("set_level", BRIGHTNESS_DATA)
 ON_OFF_SET_LEVEL_ACTIONS = {
     **ON_OFF_ACTIONS,
@@ -129,6 +133,18 @@ ON_OFF_RGBWW_ACTIONS = {
     **RGBWW_ACTION,
 }
 
+XY_ACTION = make_test_action(
+    "set_xy",
+    {
+        "x": "{{ x }}",
+        "y": "{{ y }}",
+    },
+)
+ON_OFF_XY_ACTIONS = {
+    **ON_OFF_ACTIONS,
+    **XY_ACTION,
+}
+
 SET_EFFECT_ACTION = make_test_action("set_effect", {"effect": "{{ effect }}"})
 
 TRANSITION_DATA = {"transition": "{{ transition }}"}
@@ -153,6 +169,7 @@ ALL_COLOR_ACTIONS = {
     **RGB_ACTION,
     **RGBW_ACTION,
     **RGBWW_ACTION,
+    **XY_ACTION,
 }
 
 
@@ -341,19 +358,6 @@ async def setup_light_with_transition_template(
         "{{ 1==1 }}",
         ON_OFF_ACTIONS,
     )
-
-
-@pytest.mark.parametrize(
-    ("count", "state_template", "style", "extra_config"),
-    [(1, "{{ states('sensor.test_state') }}", ConfigurationStyle.LEGACY, {})],
-)
-@pytest.mark.usefixtures("setup_state_light")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("light")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
 
 
 @pytest.mark.parametrize(
@@ -684,9 +688,13 @@ async def test_off_action_optimistic(
     "style",
     [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
+@pytest.mark.parametrize(
+    ("brightness", "brightness_pct"),
+    [(2, 1), (255, 100), (124, 49), (1, 0), (254, 100)],
+)
 @pytest.mark.usefixtures("setup_state_light")
 async def test_level_action_no_template(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant, brightness: int, brightness_pct: int, calls: list[ServiceCall]
 ) -> None:
     """Test setting brightness with optimistic template."""
     state = hass.states.get(TEST_LIGHT.entity_id)
@@ -696,14 +704,14 @@ async def test_level_action_no_template(
         hass,
         calls,
         SERVICE_TURN_ON,
-        {ATTR_BRIGHTNESS: 124},
-        {ATTR_BRIGHTNESS: 124},
+        {ATTR_BRIGHTNESS: brightness},
+        {ATTR_BRIGHTNESS: brightness, ATTR_BRIGHTNESS_PCT: brightness_pct},
         "set_level",
     )
 
     state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.state == STATE_ON
-    assert state.attributes["brightness"] == 124
+    assert state.attributes["brightness"] == brightness
     assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
@@ -935,6 +943,14 @@ async def test_entity_picture_template(hass: HomeAssistant) -> None:
             {"r": 160, "g": 78, "b": 192, "cw": 25, "ww": 50},
             ColorMode.RGBWW,
         ),
+        (
+            ON_OFF_XY_ACTIONS,
+            ATTR_XY_COLOR,
+            (0.2, 0.5),
+            "set_xy",
+            {"x": 0.2, "y": 0.5},
+            ColorMode.XY,
+        ),
     ],
 )
 @pytest.mark.usefixtures("setup_single_action_light")
@@ -1135,6 +1151,44 @@ async def test_rgbww_template(
     assert state.attributes["supported_features"] == 0
 
 
+@pytest.mark.parametrize(
+    ("count", "extra_config", "attribute"), [(1, ON_OFF_XY_ACTIONS, "xy")]
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("expected_color", "attribute_template", "expected_color_mode"),
+    [
+        ((0.2, 0.5), "{{(0.2, 0.5)}}", ColorMode.XY),
+        ((0.2, 0.5), "(0.2, 0.5)", ColorMode.XY),
+        ((0.2, 0.5), "{{[0.2, 0.5]}}", ColorMode.XY),
+        (None, "{{(1.1, 0.5)}}", ColorMode.XY),
+        (None, "{{(0.5, 1.1)}}", ColorMode.XY),
+        (None, "{{(-0.1, 0.5)}}", ColorMode.XY),
+        (None, "{{(0.5, -0.1)}}", ColorMode.XY),
+        (None, "{{x - 12}}", ColorMode.XY),
+        (None, "", ColorMode.XY),
+        (None, "{{ none }}", ColorMode.XY),
+        (None, "{{('one','two')}}", ColorMode.XY),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_light")
+async def test_xy_template(
+    hass: HomeAssistant,
+    expected_color: tuple[float, float] | None,
+    expected_color_mode: ColorMode,
+) -> None:
+    """Test the xy template."""
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, STATE_ON)
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes.get("xy_color") == expected_color
+    assert state.state == STATE_ON
+    assert state.attributes["color_mode"] == expected_color_mode
+    assert state.attributes["supported_color_modes"] == [ColorMode.XY]
+    assert state.attributes["supported_features"] == 0
+
+
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     ("config", "style"),
@@ -1165,6 +1219,15 @@ async def test_all_colors_mode_no_template(
     state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.attributes.get("hs_color") is None
 
+    supported_color_modes = [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+        ColorMode.RGB,
+        ColorMode.RGBW,
+        ColorMode.RGBWW,
+        ColorMode.XY,
+    ]
+
     await _call_and_assert_action(
         hass,
         calls,
@@ -1178,13 +1241,7 @@ async def test_all_colors_mode_no_template(
     assert state.attributes["color_mode"] == ColorMode.HS
     assert state.attributes["color_temp_kelvin"] is None
     assert state.attributes["hs_color"] == (40, 50)
-    assert state.attributes["supported_color_modes"] == [
-        ColorMode.COLOR_TEMP,
-        ColorMode.HS,
-        ColorMode.RGB,
-        ColorMode.RGBW,
-        ColorMode.RGBWW,
-    ]
+    assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == 0
 
     await _call_and_assert_action(
@@ -1200,13 +1257,7 @@ async def test_all_colors_mode_no_template(
     assert state.attributes["color_mode"] == ColorMode.COLOR_TEMP
     assert state.attributes["color_temp_kelvin"] == 8130
     assert "hs_color" in state.attributes  # Color temp represented as hs_color
-    assert state.attributes["supported_color_modes"] == [
-        ColorMode.COLOR_TEMP,
-        ColorMode.HS,
-        ColorMode.RGB,
-        ColorMode.RGBW,
-        ColorMode.RGBWW,
-    ]
+    assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == 0
 
     await _call_and_assert_action(
@@ -1222,13 +1273,7 @@ async def test_all_colors_mode_no_template(
     assert state.attributes["color_mode"] == ColorMode.RGB
     assert state.attributes["color_temp_kelvin"] is None
     assert state.attributes["rgb_color"] == (160, 78, 192)
-    assert state.attributes["supported_color_modes"] == [
-        ColorMode.COLOR_TEMP,
-        ColorMode.HS,
-        ColorMode.RGB,
-        ColorMode.RGBW,
-        ColorMode.RGBWW,
-    ]
+    assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == 0
 
     await _call_and_assert_action(
@@ -1244,13 +1289,7 @@ async def test_all_colors_mode_no_template(
     assert state.attributes["color_mode"] == ColorMode.RGBW
     assert state.attributes["color_temp_kelvin"] is None
     assert state.attributes["rgbw_color"] == (160, 78, 192, 25)
-    assert state.attributes["supported_color_modes"] == [
-        ColorMode.COLOR_TEMP,
-        ColorMode.HS,
-        ColorMode.RGB,
-        ColorMode.RGBW,
-        ColorMode.RGBWW,
-    ]
+    assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == 0
 
     await _call_and_assert_action(
@@ -1266,13 +1305,7 @@ async def test_all_colors_mode_no_template(
     assert state.attributes["color_mode"] == ColorMode.RGBWW
     assert state.attributes["color_temp_kelvin"] is None
     assert state.attributes["rgbww_color"] == (160, 78, 192, 25, 55)
-    assert state.attributes["supported_color_modes"] == [
-        ColorMode.COLOR_TEMP,
-        ColorMode.HS,
-        ColorMode.RGB,
-        ColorMode.RGBW,
-        ColorMode.RGBWW,
-    ]
+    assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == 0
 
     await _call_and_assert_action(
@@ -1288,13 +1321,7 @@ async def test_all_colors_mode_no_template(
     assert state.attributes["color_mode"] == ColorMode.HS
     assert state.attributes["color_temp_kelvin"] is None
     assert state.attributes["hs_color"] == (10, 20)
-    assert state.attributes["supported_color_modes"] == [
-        ColorMode.COLOR_TEMP,
-        ColorMode.HS,
-        ColorMode.RGB,
-        ColorMode.RGBW,
-        ColorMode.RGBWW,
-    ]
+    assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == 0
 
     await _call_and_assert_action(
@@ -1310,13 +1337,22 @@ async def test_all_colors_mode_no_template(
     assert state.attributes["color_mode"] == ColorMode.COLOR_TEMP
     assert state.attributes["color_temp_kelvin"] == 4273
     assert "hs_color" in state.attributes  # Color temp represented as hs_color
-    assert state.attributes["supported_color_modes"] == [
-        ColorMode.COLOR_TEMP,
-        ColorMode.HS,
-        ColorMode.RGB,
-        ColorMode.RGBW,
-        ColorMode.RGBWW,
-    ]
+    assert state.attributes["supported_color_modes"] == supported_color_modes
+    assert state.attributes["supported_features"] == 0
+
+    await _call_and_assert_action(
+        hass,
+        calls,
+        SERVICE_TURN_ON,
+        {ATTR_XY_COLOR: (0.2, 0.5)},
+        {"x": 0.2, "y": 0.5},
+        "set_xy",
+    )
+
+    state = hass.states.get(TEST_LIGHT.entity_id)
+    assert state.attributes["color_mode"] == ColorMode.XY
+    assert state.attributes["xy_color"] == (0.2, 0.5)
+    assert state.attributes["supported_color_modes"] == supported_color_modes
     assert state.attributes["supported_features"] == 0
 
 

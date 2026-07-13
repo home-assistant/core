@@ -1,8 +1,9 @@
 """Support for interfacing with Monoprice 6 zone home audio controller."""
 
 import logging
+from typing import override
 
-from serial import SerialException
+from serialx import SerialException
 
 from homeassistant import core
 from homeassistant.components.media_player import (
@@ -129,11 +130,13 @@ class MonopriceZone(MediaPlayerEntity):
         self._attr_source = self._source_id_name.get(idx)
 
     @property
+    @override
     def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
+        """Return if the entity should be enabled when first added."""
         return self._zone_id < 20 or self._update_success
 
     @property
+    @override
     def media_title(self):
         """Return the current source as medial title."""
         return self.source
@@ -147,6 +150,7 @@ class MonopriceZone(MediaPlayerEntity):
         if self._snapshot:
             self._monoprice.restore_zone(self._snapshot)
 
+    @override
     def select_source(self, source: str) -> None:
         """Set input source."""
         if source not in self._source_name_id:
@@ -154,18 +158,22 @@ class MonopriceZone(MediaPlayerEntity):
         idx = self._source_name_id[source]
         self._monoprice.set_source(self._zone_id, idx)
 
+    @override
     def turn_on(self) -> None:
         """Turn the media player on."""
         self._monoprice.set_power(self._zone_id, True)
 
+    @override
     def turn_off(self) -> None:
         """Turn the media player off."""
         self._monoprice.set_power(self._zone_id, False)
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         self._monoprice.set_mute(self._zone_id, mute)
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._monoprice.set_volume(self._zone_id, round(volume * MAX_VOLUME))

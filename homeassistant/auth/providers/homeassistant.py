@@ -4,7 +4,7 @@ import asyncio
 import base64
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import bcrypt
 import voluptuous as vol
@@ -120,9 +120,10 @@ class Data:
             if self.normalize_username(username, force_normalize=True) != username:
                 logging.getLogger(__name__).warning(
                     (
-                        "Home Assistant auth provider is running in legacy mode "
-                        "because we detected usernames that are normalized (lowercase and without spaces)."
-                        " Please change the username: '%s'."
+                        "Home Assistant auth provider is running in"
+                        " legacy mode because we detected usernames"
+                        " that are normalized (lowercase and without"
+                        " spaces). Please change the username: '%s'."
                     ),
                     username,
                 )
@@ -139,7 +140,9 @@ class Data:
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="homeassistant_provider_not_normalized_usernames",
                 translation_placeholders={
-                    "usernames": f'- "{'"\n- "'.join(sorted(not_normalized_usernames))}"'
+                    "usernames": (
+                        f'- "{'"\n- "'.join(sorted(not_normalized_usernames))}"'
+                    )
                 },
                 learn_more_url="homeassistant://config/users",
             )
@@ -299,6 +302,7 @@ class HassAuthProvider(AuthProvider):
         self.data: Data | None = None
         self._init_lock = asyncio.Lock()
 
+    @override
     async def async_initialize(self) -> None:
         """Initialize the auth provider."""
         async with self._init_lock:
@@ -309,6 +313,7 @@ class HassAuthProvider(AuthProvider):
             await data.async_load()
             self.data = data
 
+    @override
     async def async_login_flow(self, context: AuthFlowContext | None) -> HassLoginFlow:
         """Return a flow to login."""
         return HassLoginFlow(self)
@@ -366,6 +371,7 @@ class HassAuthProvider(AuthProvider):
         )
         await self.data.async_save()
 
+    @override
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
     ) -> Credentials:
@@ -384,6 +390,7 @@ class HassAuthProvider(AuthProvider):
         # Create new credentials.
         return self.async_create_credentials({"username": username})
 
+    @override
     async def async_user_meta_for_credentials(
         self, credentials: Credentials
     ) -> UserMeta:
@@ -407,6 +414,7 @@ class HassAuthProvider(AuthProvider):
 class HassLoginFlow(LoginFlow[HassAuthProvider]):
     """Handler for the login flow."""
 
+    @override
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
     ) -> AuthFlowResult:

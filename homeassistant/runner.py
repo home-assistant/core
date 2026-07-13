@@ -18,7 +18,7 @@ import threading
 import time
 from time import monotonic
 import traceback
-from typing import Any
+from typing import Any, override
 
 import packaging.tags
 
@@ -90,7 +90,8 @@ def _report_existing_instance(lock_file_path: Path, config_dir: str) -> None:
             if content := f.read().strip():
                 existing_info = json.loads(content)
                 start_dt = datetime.fromtimestamp(existing_info["start_ts"])
-                # Format with timezone abbreviation if available, otherwise add local time indicator
+                # Format with timezone abbreviation if available,
+                # otherwise add local time indicator
                 if tz_abbr := start_dt.strftime("%Z"):
                     start_time = start_dt.strftime(f"%Y-%m-%d %H:%M:%S {tz_abbr}")
                 else:
@@ -144,7 +145,8 @@ def ensure_single_execution(config_dir: str) -> Generator[SingleExecutionLock]:
         # If we got the lock (no exception), write our instance info
         _write_lock_info(lock_file)
 
-        # Yield the context - lock will be released when the with statement closes the file
+        # Yield the context - lock will be released when the
+        # with statement closes the file
         # IMPORTANT: We don't unlink the file to avoid races where multiple processes
         # could create different lock files
         yield lock_context
@@ -171,7 +173,7 @@ class RuntimeConfig:
     safe_mode: bool = False
 
 
-class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[name-defined,misc]
+class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
     """Event loop policy for Home Assistant."""
 
     def __init__(self, debug: bool) -> None:
@@ -182,8 +184,9 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):  # type: ignore[name-
     @property
     def loop_name(self) -> str:
         """Return name of the loop."""
-        return self._loop_factory.__name__  # type: ignore[no-any-return]
+        return self._loop_factory.__name__  # type: ignore[attr-defined,no-any-return]
 
+    @override
     def new_event_loop(self) -> asyncio.AbstractEventLoop:
         """Get the event loop."""
         loop: asyncio.AbstractEventLoop = super().new_event_loop()
@@ -216,7 +219,7 @@ def _async_loop_exception_handler(
     if exception := context.get("exception"):
         kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
         if isinstance(exception, OSError) and exception.errno == errno.EMFILE:
-            # Too many open files – something is leaking them, and it's likely
+            # Too many open files - something is leaking them, and it's likely
             # to be quite unrecoverable if the event loop can't pump messages
             # (e.g. unable to accept a socket).
             fatal_error = str(exception)

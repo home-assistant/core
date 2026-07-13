@@ -357,7 +357,7 @@ async def test_vd_capability_select_source(
     """Test media player select source command using Samsung VD capability."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("media_player.tv_samsung_8_series_49")
+    state = hass.states.get("media_player.theater_tv_samsung_8_series_49")
     assert state is not None
     assert MediaPlayerEntityFeature.SELECT_SOURCE in MediaPlayerEntityFeature(
         state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -367,7 +367,7 @@ async def test_vd_capability_select_source(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
         {
-            ATTR_ENTITY_ID: "media_player.tv_samsung_8_series_49",
+            ATTR_ENTITY_ID: "media_player.theater_tv_samsung_8_series_49",
             ATTR_INPUT_SOURCE: "hdmi1",
         },
         blocking=True,
@@ -398,7 +398,7 @@ async def test_select_source_legacy_raw_id(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
         {
-            ATTR_ENTITY_ID: "media_player.tv_samsung_8_series_49",
+            ATTR_ENTITY_ID: "media_player.theater_tv_samsung_8_series_49",
             ATTR_INPUT_SOURCE: "HDMI1",
         },
         blocking=True,
@@ -421,7 +421,7 @@ async def test_vd_capability_source_update(
     """Test source state update using Samsung VD capability."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("media_player.tv_samsung_8_series_49")
+    state = hass.states.get("media_player.theater_tv_samsung_8_series_49")
     assert state is not None
     assert MediaPlayerEntityFeature.SELECT_SOURCE in MediaPlayerEntityFeature(
         state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -438,7 +438,7 @@ async def test_vd_capability_source_update(
         "dtv",
     )
 
-    state = hass.states.get("media_player.tv_samsung_8_series_49")
+    state = hass.states.get("media_player.theater_tv_samsung_8_series_49")
     assert state is not None
     assert state.attributes[ATTR_INPUT_SOURCE] == "digital_tv"
 
@@ -529,7 +529,7 @@ async def test_select_sound_mode(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOUND_MODE,
         {
-            ATTR_ENTITY_ID: "media_player.soundbar_living",
+            ATTR_ENTITY_ID: "media_player.theater_soundbar_living",
             ATTR_SOUND_MODE: "surround",
         },
         blocking=True,
@@ -545,7 +545,7 @@ async def test_select_sound_mode(
         ],
     )
     assert (
-        hass.states.get("media_player.soundbar_living").attributes["sound_mode"]
+        hass.states.get("media_player.theater_soundbar_living").attributes["sound_mode"]
         == "surround"
     )
 

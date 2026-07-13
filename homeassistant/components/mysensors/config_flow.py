@@ -1,7 +1,7 @@
 """Config flow for MySensors."""
 
 import os
-from typing import Any
+from typing import Any, override
 
 from awesomeversion import (
     AwesomeVersion,
@@ -96,7 +96,8 @@ def _is_same_device(
 ) -> bool:
     """Check if another ConfigDevice is actually the same as user_input.
 
-    This function only compares addresses and tcp ports, so it is possible to fool it with tricks like port forwarding.
+    This function only compares addresses and tcp ports, so it is possible
+    to fool it with tricks like port forwarding.
     """
     if entry.data[CONF_DEVICE] != user_input[CONF_DEVICE]:
         return False
@@ -123,6 +124,7 @@ class MySensorsConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Set up config flow."""
         self._gw_type: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

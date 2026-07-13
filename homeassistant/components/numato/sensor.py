@@ -5,13 +5,12 @@ import logging
 from numato_gpio import NumatoGpioError
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_SENSORS
+from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME, CONF_SENSORS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
-    CONF_DEVICES,
     CONF_DST_RANGE,
     CONF_DST_UNIT,
     CONF_PORTS,

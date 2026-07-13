@@ -45,11 +45,9 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 
 
 @pytest.mark.parametrize(("info_data"), [INFO_DATA, LEGACY_INFO_DATA])
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
-    hass: HomeAssistant,
-    mock_lunatone_info: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    info_data: InfoData,
+    hass: HomeAssistant, mock_lunatone_info: AsyncMock, info_data: InfoData
 ) -> None:
     """Test full user flow."""
     mock_lunatone_info.set_data(info_data)
@@ -120,10 +118,10 @@ async def test_device_already_configured(
         (aiohttp.ClientConnectionError(), "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_step_fail_with_error(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     expected_error: str,
 ) -> None:
@@ -227,10 +225,10 @@ async def test_zeroconf_flow_abort_with_error(
     assert result["step_id"] == "discovery_confirm"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow."""
@@ -257,10 +255,10 @@ async def test_reconfigure(
         (aiohttp.ClientConnectionError(), "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_fail_with_error(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     expected_error: str,

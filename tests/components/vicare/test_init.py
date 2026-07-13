@@ -3,6 +3,7 @@
 from unittest.mock import Mock, patch
 
 from aiohttp import ClientError
+import pytest
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
@@ -28,10 +29,8 @@ from .conftest import Fixture, MockPyViCare
 from tests.common import MockConfigEntry
 
 
-async def test_migrate_entry_v1_1_to_v2_1(
-    hass: HomeAssistant,
-    mock_setup_entry: None,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_migrate_entry_v1_1_to_v2_1(hass: HomeAssistant) -> None:
     """Test migration of config entry from v1.1 through to v2.1."""
     mock_token = {
         "access_token": "mock-access-token",
@@ -70,10 +69,8 @@ async def test_migrate_entry_v1_1_to_v2_1(
     assert config_entry.data["token"]["refresh_token"] == "mock-refresh-token"
 
 
-async def test_migrate_entry_v1_2_to_v2_1(
-    hass: HomeAssistant,
-    mock_setup_entry: None,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_migrate_entry_v1_2_to_v2_1(hass: HomeAssistant) -> None:
     """Test migration of config entry from v1.2 to v2.1."""
     mock_token = {
         "access_token": "mock-access-token",
@@ -110,10 +107,8 @@ async def test_migrate_entry_v1_2_to_v2_1(
     assert config_entry.data["token"]["refresh_token"] == "mock-refresh-token"
 
 
-async def test_migrate_entry_token_failure(
-    hass: HomeAssistant,
-    mock_setup_entry: None,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_migrate_entry_token_failure(hass: HomeAssistant) -> None:
     """Test migration completes even when token cannot be obtained."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -144,10 +139,8 @@ async def test_migrate_entry_token_failure(
     assert config_entry.data["token"] == {}
 
 
-async def test_migrate_entry_creates_repair_issue(
-    hass: HomeAssistant,
-    mock_setup_entry: None,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_migrate_entry_creates_repair_issue(hass: HomeAssistant) -> None:
     """Test migration creates a repair issue for redirect URI update."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -179,10 +172,8 @@ async def test_migrate_entry_creates_repair_issue(
     assert issue.severity == ir.IssueSeverity.WARNING
 
 
-async def test_migrate_entry_v1_3_stamp_bump(
-    hass: HomeAssistant,
-    mock_setup_entry: None,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_migrate_entry_v1_3_stamp_bump(hass: HomeAssistant) -> None:
     """Test pre-merge v1.3 entries are promoted to v2.1 without re-running migration."""
     token = {
         "access_token": "a",

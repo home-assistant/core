@@ -48,7 +48,8 @@ SCHEMA_WEBSOCKET_EVENT = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# Endpoints needed for ingress can't require admin because add-ons can set `panel_admin: false`
+# Endpoints needed for ingress can't require admin because
+# add-ons can set `panel_admin: false`
 RE_ADDONS_INFO_ENDPOINT = r"/addons/[^/]+/info"
 WS_ADDONS_INFO_ENDPOINT = re.compile(r"^" + RE_ADDONS_INFO_ENDPOINT + r"$")
 WS_NO_ADMIN_ENDPOINTS = re.compile(
@@ -133,8 +134,9 @@ async def websocket_supervisor_api(
     payload = msg.get(ATTR_DATA, {})
 
     if command == "/ingress/session":
-        # Send user ID on session creation, so the supervisor can correlate session tokens with users
-        # for every request that is authenticated with the given ingress session token.
+        # Send user ID on session creation, so the supervisor can
+        # correlate session tokens with users for every request that
+        # is authenticated with the given ingress session token.
         payload[ATTR_SESSION_DATA_USER_ID] = connection.user.id
 
     try:

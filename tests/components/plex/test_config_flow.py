@@ -283,7 +283,7 @@ async def test_adding_last_unconfigured_server(
     plextv_resources_two_servers,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test automatically adding last unconfigured server when multiple servers on account."""
+    """Test auto-adding last unconfigured server with multiple."""
     MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -551,7 +551,7 @@ async def test_manual_config(hass: HomeAssistant, mock_plex_calls) -> None:
 
     # Automatic setup
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.MENU
@@ -568,7 +568,7 @@ async def test_manual_config(hass: HomeAssistant, mock_plex_calls) -> None:
 
     # Manual setup
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.MENU
@@ -667,7 +667,7 @@ async def test_manual_config_with_token(
     """Test creating via manual configuration with only token."""
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
+        DOMAIN,
         context={"source": SOURCE_USER},
     )
 
@@ -783,7 +783,7 @@ async def test_reauth_multiple_servers_available(
     plextv_resources_two_servers: str,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test setup and reauthorization of a Plex token when multiple servers are available."""
+    """Test Plex token reauthorization with multiple servers."""
     requests_mock.get(
         "https://plex.tv/api/v2/resources",
         text=plextv_resources_two_servers,

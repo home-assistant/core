@@ -1,7 +1,7 @@
 """Support for ISY number entities."""
 
 from dataclasses import replace
-from typing import Any
+from typing import Any, override
 
 from pyisy.constants import (
     ATTR_ACTION,
@@ -89,7 +89,6 @@ async def async_setup_entry(
             key=node.address,
             name=node.name,
             entity_registry_enabled_default=var_id in node.name,
-            native_unit_of_measurement=None,
             native_step=step,
             native_min_value=-min_max,
             native_max_value=min_max,
@@ -140,6 +139,7 @@ class ISYAuxControlNumberEntity(ISYAuxControlEntity, NumberEntity):
     _attr_mode = NumberMode.SLIDER
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the state of the variable."""
         node_prop: NodeProperty = self._node.aux_properties[self._control]
@@ -153,6 +153,7 @@ class ISYAuxControlNumberEntity(ISYAuxControlEntity, NumberEntity):
             return ranged_value_to_percentage(ON_RANGE, node_prop.value)
         return int(node_prop.value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         node_prop: NodeProperty = self._node.aux_properties[self._control]
@@ -195,12 +196,14 @@ class ISYVariableNumberEntity(NumberEntity):
         self.entity_description = description
         self._change_handler: EventListener | None = None
 
-        # Two entities are created for each variable, one for current value and one for initial.
-        # Initial value entities are disabled by default
+        # Two entities are created for each variable, one for
+        # current value and one for initial. Initial value
+        # entities are disabled by default
         self._init_entity = init_entity
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node change events."""
         self._change_handler = self._node.status_events.subscribe(self.async_on_update)
@@ -211,6 +214,7 @@ class ISYVariableNumberEntity(NumberEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the state of the variable."""
         return convert_isy_value_to_hass(
@@ -220,12 +224,14 @@ class ISYVariableNumberEntity(NumberEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Get the state attributes for the device."""
         return {
             "last_edited": self._node.last_edited,
         }
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if not await self._node.set_value(value, init=self._init_entity):
@@ -252,6 +258,7 @@ class ISYBacklightNumberEntity(ISYAuxControlEntity, RestoreNumber):
         self._memory_change_handler: EventListener | None = None
         self._attr_native_value = 0
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Load the last known state when added to hass."""
         await super().async_added_to_hass()
@@ -282,6 +289,7 @@ class ISYBacklightNumberEntity(ISYAuxControlEntity, RestoreNumber):
         self._attr_native_value = value
         self.async_write_ha_state()
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
 

@@ -54,7 +54,8 @@ def _validate_brand(
             if sub_integration not in integrations:
                 config.add_error(
                     "brand",
-                    f"{brand.path.name}: References unknown integration {sub_integration}",
+                    f"{brand.path.name}: References unknown"
+                    f" integration {sub_integration}",
                 )
 
     if brand.domain in integrations and (

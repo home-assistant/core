@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from copy import deepcopy
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysiaalarm import (
     InvalidAccountFormatError,
@@ -29,7 +29,7 @@ from .const import (
     DOMAIN,
     TITLE,
 )
-from .hub import SIAConfigEntry, SIAHub
+from .hub import SIAConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,6 +92,7 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: SIAConfigEntry,
     ) -> SIAOptionsFlowHandler:
@@ -103,6 +104,7 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
         self._data: dict[str, Any] = {}
         self._options: Mapping[str, Any] = {CONF_ACCOUNTS: {}}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -132,7 +134,7 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_handle_data_and_route(
         self, user_input: dict[str, Any]
     ) -> ConfigFlowResult:
-        """Handle the user_input, check if configured and route to the right next step or create entry."""
+        """Handle user_input, check if configured and route to the right next step."""
         self._update_data(user_input)
 
         self._async_abort_entries_match({CONF_PORT: self._data[CONF_PORT]})
@@ -148,7 +150,8 @@ class SIAConfigFlow(ConfigFlow, domain=DOMAIN):
     def _update_data(self, user_input: dict[str, Any]) -> None:
         """Parse the user_input and store in data and options attributes.
 
-        If there is a port in the input or no data, assume it is fully new and overwrite.
+        If there is a port in the input or no data, assume
+        it is fully new and overwrite.
         Add the default options and overwrite the zones in options.
         """
         if not self._data or user_input.get(CONF_PORT):
@@ -177,17 +180,15 @@ class SIAOptionsFlowHandler(OptionsFlow):
     def __init__(self, config_entry: SIAConfigEntry) -> None:
         """Initialize SIA options flow."""
         self.options = deepcopy(dict(config_entry.options))
-        self.hub: SIAHub | None = None
-        self.accounts_todo: list = []
+        self.accounts_todo: list[str] = []
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the SIA options."""
-        self.hub = self.config_entry.runtime_data
-        assert self.hub is not None
-        assert self.hub.sia_accounts is not None
-        self.accounts_todo = [a.account_id for a in self.hub.sia_accounts]
+        self.accounts_todo = [
+            a[CONF_ACCOUNT] for a in self.config_entry.data[CONF_ACCOUNTS]
+        ]
         return await self.async_step_options()
 
     async def async_step_options(

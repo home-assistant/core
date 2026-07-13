@@ -9,7 +9,7 @@ from io import SEEK_END, BytesIO
 import logging
 import math
 from threading import Event
-from typing import Any, Self, cast
+from typing import Any, Self, cast, override
 
 import av
 import av.audio
@@ -185,7 +185,11 @@ class StreamMuxer:
             # https://github.com/home-assistant/core/pull/39970
             # "cmaf" flag replaces several of the movflags used,
             # but too recent to use for now
-            "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer+delay_moov",
+            "movflags": (
+                "frag_custom+empty_moov+default_base_moof"
+                "+frag_discont+negative_cts_offsets"
+                "+skip_trailer+delay_moov"
+            ),
             # Sometimes the first segment begins with negative timestamps,
             # and this setting just
             # adjusts the timestamps in the output from that segment to start
@@ -199,7 +203,12 @@ class StreamMuxer:
             # Fragment durations may exceed the 15% allowed variance but it seems ok
             **(
                 {
-                    "movflags": "empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer+delay_moov",
+                    "movflags": (
+                        "empty_moov+default_base_moof"
+                        "+frag_discont"
+                        "+negative_cts_offsets"
+                        "+skip_trailer+delay_moov"
+                    ),
                     # Create a fragment every TARGET_PART_DURATION. The data from
                     # each fragment is stored in a "Part" that can be combined with
                     # the data from all the other "Part"s, plus an init section,
@@ -433,10 +442,12 @@ class PeekIterator(Iterator[av.Packet]):
         # A pointer to either _iterator or _buffer
         self._next = self._iterator.__next__
 
+    @override
     def __iter__(self) -> Self:
         """Return an iterator."""
         return self
 
+    @override
     def __next__(self) -> av.Packet:
         """Return and consume the next item available."""
         return self._next()
@@ -662,7 +673,8 @@ def stream_worker(
     except av.FFmpegError as ex:
         container.close()
         raise StreamWorkerError(
-            f"Error demuxing stream while finding first packet ({redact_av_error_string(ex)})"
+            "Error demuxing stream while finding first packet"
+            f" ({redact_av_error_string(ex)})"
         ) from ex
 
     muxer = StreamMuxer(

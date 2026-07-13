@@ -1,6 +1,7 @@
 """The Homee alarm control panel platform."""
 
 from dataclasses import dataclass
+from typing import override
 
 from pyHomee.const import AttributeChangedBy, AttributeType
 from pyHomee.model import HomeeAttribute, HomeeNode
@@ -33,7 +34,6 @@ class HomeeAlarmControlPanelEntityDescription(AlarmControlPanelEntityDescription
 ALARM_DESCRIPTIONS = {
     AttributeType.HOMEE_MODE: HomeeAlarmControlPanelEntityDescription(
         key="homee_mode",
-        code_arm_required=False,
         state_list=[
             AlarmControlPanelState.ARMED_HOME,
             AlarmControlPanelState.ARMED_NIGHT,
@@ -105,11 +105,13 @@ class HomeeAlarmPanel(HomeeEntity, AlarmControlPanelEntity):
         self._attr_translation_key = description.key
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState:
         """Return current state."""
         return self.entity_description.state_list[int(self._attribute.current_value)]
 
     @property
+    @override
     def changed_by(self) -> str:
         """Return by whom or what the entity was last changed."""
         changed_by_name = get_name_for_enum(
@@ -124,6 +126,7 @@ class HomeeAlarmPanel(HomeeEntity, AlarmControlPanelEntity):
                 self.entity_description.state_list.index(state)
             )
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         # Since disarm is always present in the UI, we raise an error.
@@ -132,18 +135,22 @@ class HomeeAlarmPanel(HomeeEntity, AlarmControlPanelEntity):
             translation_key="disarm_not_supported",
         )
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self._async_set_alarm_state(AlarmControlPanelState.ARMED_HOME)
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         await self._async_set_alarm_state(AlarmControlPanelState.ARMED_NIGHT)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._async_set_alarm_state(AlarmControlPanelState.ARMED_AWAY)
 
+    @override
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
         await self._async_set_alarm_state(AlarmControlPanelState.ARMED_VACATION)

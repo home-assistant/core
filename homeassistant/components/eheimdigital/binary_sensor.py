@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.reeflex import EheimDigitalReeflexUV
@@ -56,7 +56,7 @@ async def async_setup_entry(
     entry: EheimDigitalConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the callbacks for the coordinator so binary sensors can be added as devices are found."""
+    """Set up callbacks to add binary sensors as devices are found."""
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
@@ -97,5 +97,6 @@ class EheimDigitalBinarySensor[_DeviceT: EheimDigitalDevice](
         self.entity_description = description
         self._attr_unique_id = f"{self._device_address}_{description.key}"
 
+    @override
     def _async_update_attrs(self) -> None:
         self._attr_is_on = self.entity_description.value_fn(self._device)

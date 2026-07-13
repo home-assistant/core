@@ -1,6 +1,6 @@
 """Support for Atlantic Electrical Towel Dryer."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -22,7 +22,8 @@ PRESET_PROG = "prog"
 
 OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
     OverkizCommandParam.EXTERNAL: HVACMode.HEAT,  # manu
-    OverkizCommandParam.INTERNAL: HVACMode.AUTO,  # prog (schedule, user program) - mapped as preset
+    # prog (schedule, user program) - mapped as preset
+    OverkizCommandParam.INTERNAL: HVACMode.AUTO,
     OverkizCommandParam.AUTO: HVACMode.AUTO,  # auto (intelligent, user behavior)
     OverkizCommandParam.STANDBY: HVACMode.OFF,  # off
 }
@@ -63,7 +64,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
         # Not all AtlanticElectricalTowelDryer models support temporary presets,
         # thus we check if the command is available and then extend the presets
-        if self.executor.has_command(OverkizCommand.SET_TOWEL_DRYER_TEMPORARY_STATE):
+        if self.device.supports_command(OverkizCommand.SET_TOWEL_DRYER_TEMPORARY_STATE):
             # Extend preset modes with supported temporary presets, avoiding duplicates
             self._attr_preset_modes += [
                 mode
@@ -72,15 +73,19 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
             ]
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if OverkizState.CORE_OPERATING_MODE in self.device.states:
             return OVERKIZ_TO_HVAC_MODE[
-                cast(str, self.executor.select_state(OverkizState.CORE_OPERATING_MODE))
+                cast(
+                    str, self.device.states.get_value(OverkizState.CORE_OPERATING_MODE)
+                )
             ]
 
         return HVACMode.OFF
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.executor.async_execute_command(
@@ -89,6 +94,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
         )
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         state = (
@@ -97,18 +103,22 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
             else OverkizState.CORE_TARGET_TEMPERATURE
         )
 
-        return cast(float, self.executor.select_state(state))
+        return cast(float, self.device.states.get_value(state))
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
-            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+            temperature := self.temperature_device.states.get(
+                OverkizState.CORE_TEMPERATURE
+            )
         ):
             return cast(float, temperature.value)
 
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
@@ -123,11 +133,14 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
             )
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if (
             OverkizState.CORE_OPERATING_MODE in self.device.states
-            and cast(str, self.executor.select_state(OverkizState.CORE_OPERATING_MODE))
+            and cast(
+                str, self.device.states.get_value(OverkizState.CORE_OPERATING_MODE)
+            )
             == OverkizCommandParam.INTERNAL
         ):
             return PRESET_PROG
@@ -136,7 +149,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
             return OVERKIZ_TO_PRESET_MODE[
                 cast(
                     str,
-                    self.executor.select_state(
+                    self.device.states.get_value(
                         OverkizState.IO_TOWEL_DRYER_TEMPORARY_STATE
                     ),
                 )
@@ -144,11 +157,14 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
         return PRESET_NONE
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        # If the preset mode is set to prog, we need to set the operating mode to internal
+        # If the preset mode is set to prog, we need to set
+        # the operating mode to internal
         if preset_mode == PRESET_PROG:
-            # If currently in a temporary preset (drying or boost), turn it off before turn on prog
+            # If currently in a temporary preset (drying or
+            # boost), turn it off before turn on prog
             if self.preset_mode in (PRESET_DRYING, PRESET_BOOST):
                 await self.executor.async_execute_command(
                     OverkizCommand.SET_TOWEL_DRYER_TEMPORARY_STATE,
@@ -160,7 +176,8 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
                 OverkizCommandParam.INTERNAL,
             )
 
-        # If the preset mode is set from prog to none, we need to set the operating mode to external
+        # If the preset mode is set from prog to none, we need
+        # to set the operating mode to external
         # This will set the towel dryer to auto (intelligent mode)
         elif preset_mode == PRESET_NONE and self.preset_mode == PRESET_PROG:
             await self.executor.async_execute_command(

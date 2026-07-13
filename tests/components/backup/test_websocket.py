@@ -271,8 +271,8 @@ async def test_details_get_backup_returns_none(
         )
         assert await client.receive_json() == snapshot
     assert (
-        "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
-        in caplog.text
+        "Detected that integration 'test' returns None from"
+        " BackupAgent.async_get_backup." in caplog.text
     )
 
 
@@ -798,8 +798,8 @@ async def test_restore_remote_agent_get_backup_returns_none(
     assert await client.receive_json() == snapshot
     assert len(restart_calls) == 0
     assert (
-        "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
-        in caplog.text
+        "Detected that integration 'test' returns None from"
+        " BackupAgent.async_get_backup." in caplog.text
     )
 
 
@@ -4139,6 +4139,6 @@ async def test_can_decrypt_on_download_get_backup_returns_none(
     )
     assert await client.receive_json() == snapshot
     assert (
-        "Detected that integration 'test' returns None from BackupAgent.async_get_backup."
-        in caplog.text
+        "Detected that integration 'test' returns None from"
+        " BackupAgent.async_get_backup." in caplog.text
     )

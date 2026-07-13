@@ -1,7 +1,7 @@
 """Support for SwitchBee entity."""
 
 import logging
-from typing import cast
+from typing import cast, override
 
 from switchbee import SWITCHBEE_BRAND
 from switchbee.device import DeviceType, SwitchBeeBaseDevice
@@ -48,7 +48,7 @@ class SwitchBeeDeviceEntity[_DeviceTypeT: SwitchBeeBaseDevice](
         super().__init__(device, coordinator)
         self._is_online: bool = True
         identifier = (
-            device.id if device.type == DeviceType.Thermostat else device.unit_id
+            device.id if device.type is DeviceType.Thermostat else device.unit_id
         )
         self._attr_device_info = DeviceInfo(
             name=device.zone,
@@ -68,12 +68,16 @@ class SwitchBeeDeviceEntity[_DeviceTypeT: SwitchBeeBaseDevice](
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._is_online and super().available
 
     def _check_if_became_offline(self) -> None:
-        """Check if the device was online (now offline), log message and mark it as Unavailable."""
+        """Check if the device was online (now offline).
+
+        Log message and mark it as unavailable.
+        """
 
         if self._is_online:
             _LOGGER.warning(

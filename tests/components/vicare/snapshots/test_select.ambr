@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'efficient_with_min_comfort',
         'efficient',
         'off',
@@ -45,8 +45,8 @@
 # name: test_all_entities[select.model0_dhw_operating_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 DHW operating mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'model0 DHW operating mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'efficient_with_min_comfort',
         'efficient',
         'off',

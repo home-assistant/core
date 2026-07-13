@@ -1,6 +1,6 @@
 """Support for media players through the SmartThings cloud API."""
 
-from typing import Any
+from typing import Any, override
 
 from pysmartthings import Attribute, Capability, Category, Command, SmartThings
 
@@ -50,6 +50,7 @@ DEVICE_CLASS_MAP: dict[Category | str, MediaPlayerDeviceClass] = {
     Category.SPEAKER: MediaPlayerDeviceClass.SPEAKER,
     Category.TELEVISION: MediaPlayerDeviceClass.TV,
     Category.RECEIVER: MediaPlayerDeviceClass.RECEIVER,
+    Category.PROJECTOR: MediaPlayerDeviceClass.PROJECTOR,
 }
 
 VALUE_TO_STATE = {
@@ -123,6 +124,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         if self._supports_samsung_network_audio_sound_mode():
             self._attr_sound_mode_list = NETWORK_AUDIO_SOUND_MODES
 
+    @override
     def _update_attr(self) -> None:
         """Update the attributes."""
         self._build_source_map()
@@ -200,6 +202,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             flags |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         return flags
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the media player off."""
         await self.execute_device_command(
@@ -207,6 +210,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             Command.OFF,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the media player on."""
         await self.execute_device_command(
@@ -214,6 +218,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             Command.ON,
         )
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute volume."""
         await self.execute_device_command(
@@ -222,6 +227,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             argument="muted" if mute else "unmuted",
         )
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
         await self.execute_device_command(
@@ -230,6 +236,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             argument=int(volume * 100),
         )
 
+    @override
     async def async_volume_up(self) -> None:
         """Increase volume."""
         await self.execute_device_command(
@@ -237,6 +244,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             Command.VOLUME_UP,
         )
 
+    @override
     async def async_volume_down(self) -> None:
         """Decrease volume."""
         await self.execute_device_command(
@@ -244,6 +252,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             Command.VOLUME_DOWN,
         )
 
+    @override
     async def async_media_play(self) -> None:
         """Play media."""
         await self.execute_device_command(
@@ -251,6 +260,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             Command.PLAY,
         )
 
+    @override
     async def async_media_pause(self) -> None:
         """Pause media."""
         await self.execute_device_command(
@@ -258,6 +268,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             Command.PAUSE,
         )
 
+    @override
     async def async_media_stop(self) -> None:
         """Stop media."""
         await self.execute_device_command(
@@ -265,6 +276,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             Command.STOP,
         )
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Previous track."""
         await self.execute_device_command(
@@ -272,6 +284,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             Command.REWIND,
         )
 
+    @override
     async def async_media_next_track(self) -> None:
         """Next track."""
         await self.execute_device_command(
@@ -279,6 +292,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             Command.FAST_FORWARD,
         )
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select source."""
         smartthings_source = self._source_to_smartthings_id.get(source, source)
@@ -295,6 +309,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
                 argument=smartthings_source,
             )
 
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Set shuffle mode."""
         await self.execute_device_command(
@@ -303,6 +318,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             argument="enabled" if shuffle else "disabled",
         )
 
+    @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         await self.execute_device_command(
@@ -311,6 +327,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             argument=HA_REPEAT_MODE_TO_SMARTTHINGS[repeat],
         )
 
+    @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         await self.execute_device_command(
@@ -325,6 +342,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Title of current playing media."""
         if (
@@ -340,6 +358,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         return track_data.get("title", None)
 
     @property
+    @override
     def media_artist(self) -> str | None:
         """Artist of current playing media."""
         if (
@@ -355,6 +374,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         return track_data.get("artist")
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """State of the media player."""
         if self.supports_capability(Capability.SWITCH):
@@ -388,6 +408,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         ]
 
     @property
+    @override
     def is_volume_muted(self) -> bool:
         """Returns if the volume is muted."""
         return (
@@ -395,11 +416,13 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         )
 
     @property
+    @override
     def volume_level(self) -> float:
         """Volume level."""
         return self.get_attribute_value(Capability.AUDIO_VOLUME, Attribute.VOLUME) / 100
 
     @property
+    @override
     def source(self) -> str | None:
         """Input source."""
         if self.supports_capability(Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE):
@@ -421,6 +444,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         return MEDIA_SOURCE_ID_TO_HA_KEY.get(raw, raw)
 
     @property
+    @override
     def source_list(self) -> list[str] | None:
         """List of input sources."""
         if not self._source_to_smartthings_id:
@@ -428,6 +452,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         return list(self._source_to_smartthings_id)
 
     @property
+    @override
     def shuffle(self) -> bool | None:
         """Returns if shuffle mode is set."""
         if self.supports_capability(Capability.MEDIA_PLAYBACK_SHUFFLE):
@@ -440,6 +465,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         return None
 
     @property
+    @override
     def repeat(self) -> RepeatMode | None:
         """Returns if repeat mode is set."""
         if self.supports_capability(Capability.MEDIA_PLAYBACK_REPEAT):

@@ -1,7 +1,7 @@
 """Support for QVR Pro streams."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyqvrpro.client import QVRResponseError
 
@@ -72,25 +72,30 @@ class QVRProCamera(Camera):
         super().__init__()
 
     @property
+    @override
     def name(self):
         """Return the name of the entity."""
         return self._name
 
     @property
+    @override
     def model(self):
         """Return the model of the entity."""
         return self._model
 
     @property
+    @override
     def brand(self):
         """Return the brand of the entity."""
         return self._brand
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Get the state attributes."""
         return {"qvr_guid": self.guid}
 
+    @override
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -98,12 +103,14 @@ class QVRProCamera(Camera):
         try:
             return self._client.get_snapshot(self.guid)
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except QVRResponseError as ex:
             _LOGGER.error("Error getting image: %s", ex)
             self._client.connect()
 
         return self._client.get_snapshot(self.guid)
 
+    @override
     async def stream_source(self):
         """Get stream source."""
         return self._stream_source

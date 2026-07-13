@@ -1,6 +1,6 @@
 """Generic Hue Entity Model."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aiohue.v2.controllers.base import BaseResourcesController
 from aiohue.v2.controllers.events import EventType
@@ -68,6 +68,7 @@ class HueBaseEntity(Entity):  # pylint: disable=home-assistant-enforce-class-mod
         self._ignore_availability = None
         self._last_state = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         self._check_availability()
@@ -100,6 +101,7 @@ class HueBaseEntity(Entity):  # pylint: disable=home-assistant-enforce-class-mod
             )
 
     @property
+    @override
     def available(self) -> bool:
         """Return entity availability."""
         # entities without a device attached should be always available
@@ -124,7 +126,8 @@ class HueBaseEntity(Entity):  # pylint: disable=home-assistant-enforce-class-mod
     def _handle_event(self, event_type: EventType, resource: HueResource) -> None:
         """Handle status event for this resource (or it's parent)."""
         if event_type == EventType.RESOURCE_DELETED:
-            # cleanup entities that are not strictly device-bound and have the bridge as parent
+            # cleanup entities that are not strictly device-bound
+            # and have the bridge as parent
             if self.device is None and resource.id == self.resource.id:
                 ent_reg = er.async_get(self.hass)
                 ent_reg.async_remove(self.entity_id)
@@ -141,7 +144,8 @@ class HueBaseEntity(Entity):  # pylint: disable=home-assistant-enforce-class-mod
         # return if we already processed this entity
         if self._ignore_availability is not None:
             return
-        # only do the availability check for entities connected to a device (with `on` feature)
+        # only do the availability check for entities connected to
+        # a device (with `on` feature)
         if self.device is None or not hasattr(self.resource, "on"):
             self._ignore_availability = False
             return
@@ -192,7 +196,8 @@ class HueBaseEntity(Entity):  # pylint: disable=home-assistant-enforce-class-mod
                     self.device.product_data.model_id,
                     self.device.product_data.software_version,
                 )
-                # set attribute to false because we only want to log once per light/device.
-                # a user must opt-in to ignore availability through integration options
+                # set attribute to false because we only want to log
+                # once per light/device. a user must opt-in to
+                # ignore availability through integration options
                 self._ignore_availability = False
         self._last_state = cur_state

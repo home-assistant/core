@@ -1,6 +1,7 @@
 """Binary sensors on Zigbee Home Automation networks."""
 
 import functools
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -52,6 +53,7 @@ class BinarySensor(ZHAEntity, BinarySensorEntity):
             )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the switch is on based on the state machine."""
         return self.entity_data.entity.is_on

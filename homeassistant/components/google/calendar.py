@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import dataclasses
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from gcal_sync.api import Range, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
@@ -364,6 +364,7 @@ class GoogleCalendarEntity(
             )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool]:
         """Return the device state attributes."""
         return {"offset_reached": self.offset_reached}
@@ -377,6 +378,7 @@ class GoogleCalendarEntity(
         return False
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         (event, _) = self._event_with_offset()
@@ -406,6 +408,7 @@ class GoogleCalendarEntity(
             return True
         return event.transparency == OPAQUE
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -419,6 +422,7 @@ class GoogleCalendarEntity(
             "google.calendar-refresh",
         )
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
@@ -448,6 +452,7 @@ class GoogleCalendarEntity(
             return event, offset_value
         return None, None
 
+    @override
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
         dtstart = kwargs[EVENT_START]
@@ -487,6 +492,7 @@ class GoogleCalendarEntity(
             raise HomeAssistantError(f"Error while creating event: {err!s}") from err
         await self.coordinator.async_refresh()
 
+    @override
     async def async_delete_event(
         self,
         uid: str,
@@ -510,7 +516,8 @@ class GoogleCalendarEntity(
 def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
     rrule: str | None = None
-    # Home Assistant expects a single RRULE: and all other rule types are unsupported or ignored
+    # Home Assistant expects a single RRULE: and all other
+    # rule types are unsupported or ignored
     if (
         len(event.recurrence) == 1
         and (raw_rule := event.recurrence[0])
@@ -537,18 +544,18 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
 
     if EVENT_IN in call.data:
         if EVENT_IN_DAYS in call.data[EVENT_IN]:
-            now = datetime.now().date()
+            today = dt_util.now().date()
 
-            start_in = now + timedelta(days=call.data[EVENT_IN][EVENT_IN_DAYS])
+            start_in = today + timedelta(days=call.data[EVENT_IN][EVENT_IN_DAYS])
             end_in = start_in + timedelta(days=1)
 
             start = DateOrDatetime(date=start_in)
             end = DateOrDatetime(date=end_in)
 
         elif EVENT_IN_WEEKS in call.data[EVENT_IN]:
-            now = datetime.now().date()
+            today = dt_util.now().date()
 
-            start_in = now + timedelta(weeks=call.data[EVENT_IN][EVENT_IN_WEEKS])
+            start_in = today + timedelta(weeks=call.data[EVENT_IN][EVENT_IN_WEEKS])
             end_in = start_in + timedelta(days=1)
 
             start = DateOrDatetime(date=start_in)
