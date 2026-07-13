@@ -144,7 +144,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Initialize the media player entity."""
         super().__init__(speaker, config_entry)
         self._attr_unique_id = self.soco.uid
-        self.last_announce_id: str | None = None
 
     @property
     @override
@@ -530,7 +529,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 )
             _LOGGER.debug("Playing %s using websocket audioclip", media_id)
             try:
-                self.last_announce_id = None
+                self.speaker.last_announce_id = None
                 assert self.speaker.websocket
                 response, data = await self.speaker.websocket.play_clip(
                     async_process_play_media_url(self.hass, media_id),
@@ -544,7 +543,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 ) from exc
             if response.get("success"):
                 if data:
-                    self.last_announce_id = data.get(CLIP_ID_KEY)
+                    self.speaker.last_announce_id = data.get(CLIP_ID_KEY)
                 return
             if response.get("type") in ANNOUNCE_NOT_SUPPORTED_ERRORS:
                 # If the speaker does not support announce do not raise and
@@ -828,37 +827,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             }
             for track in queue
         ]
-
-    async def async_cancel_announcement(self) -> None:
-        """Cancel the current announcement audio clip."""
-        if self.last_announce_id is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="cancel_announcement_no_id",
-            )
-        if not self.speaker.websocket:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="announcement_connection_error",
-                translation_placeholders={"error": "websocket not available"},
-            )
-        try:
-            response, _ = await self.speaker.websocket.cancel_clip(
-                self.last_announce_id
-            )
-        except SonosWebsocketError as exc:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="announcement_connection_error",
-                translation_placeholders={"error": str(exc)},
-            ) from exc
-        if not response.get("success"):
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cancel_announcement_error",
-                translation_placeholders={"response": str(response)},
-            )
-        self.last_announce_id = None
 
     @property
     @override

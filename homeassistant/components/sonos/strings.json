@@ -18,6 +18,11 @@
         "name": "Microphone"
       }
     },
+    "button": {
+      "cancel_announcement": {
+        "name": "Cancel announcement"
+      }
+    },
     "number": {
       "audio_delay": {
         "name": "Audio delay"
@@ -163,10 +168,6 @@
     }
   },
   "services": {
-    "cancel_announcement": {
-      "description": "Cancels the currently playing announcement audio clip.",
-      "name": "Cancel announcement"
-    },
     "clear_sleep_timer": {
       "description": "Clears a Sonos timer.",
       "name": "Clear timer"

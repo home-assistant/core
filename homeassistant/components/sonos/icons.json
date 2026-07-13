@@ -5,6 +5,11 @@
         "default": "mdi:microphone"
       }
     },
+    "button": {
+      "cancel_announcement": {
+        "default": "mdi:cancel"
+      }
+    },
     "sensor": {
       "audio_input_format": {
         "default": "mdi:import"
@@ -44,9 +49,6 @@
     }
   },
   "services": {
-    "cancel_announcement": {
-      "service": "mdi:cancel"
-    },
     "clear_sleep_timer": {
       "service": "mdi:alarm-off"
     },
