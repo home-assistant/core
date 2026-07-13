@@ -163,7 +163,6 @@ class MideaClimate(MideaEntity, ClimateEntity):
     )
     _attr_max_temp = TEMPERATURE_MAX
     _attr_min_temp = TEMPERATURE_MIN
-    _attr_name = None
     _attr_target_temperature_high = TEMPERATURE_MAX
     _attr_target_temperature_low = TEMPERATURE_MIN
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
