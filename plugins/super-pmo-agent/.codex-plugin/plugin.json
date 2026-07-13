@@ -1,0 +1,46 @@
+{
+  "name": "super-pmo-agent",
+  "version": "0.2.0",
+  "description": "Config-backed Turnbull Court residential duplex PMO super-agent for project management, cost control, workbook automation, procurement, Victorian regulatory guidance, reporting, and safety gap review.",
+  "author": {
+    "name": "OpenAI",
+    "email": "",
+    "url": "https://openai.com/"
+  },
+  "homepage": "https://openai.com/",
+  "repository": "",
+  "license": "UNLICENSED",
+  "keywords": [
+    "construction",
+    "pmo",
+    "turnbull-court",
+    "victoria",
+    "duplex",
+    "rescode",
+    "hia",
+    "workbook-automation"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Turnbull Court PMO Agent",
+    "shortDescription": "Config-backed PMO super-agent for 9 Turnbull Court duplex work.",
+    "longDescription": "Project-specific, config-backed agent instructions for the 9 Turnbull Court, Brunswick West VIC 3055 residential duplex, covering Victorian planning/building pathways, HIA contract administration, cost/workbook control, procurement, programme, reporting, inspections, defects, safety gap review, and escalation boundaries.",
+    "developerName": "OpenAI",
+    "category": "Productivity",
+    "capabilities": [
+      "Project management",
+      "Data analysis",
+      "Document control",
+      "Workbook automation"
+    ],
+    "websiteURL": "https://openai.com/",
+    "privacyPolicyURL": "https://openai.com/policies/row-privacy-policy/",
+    "termsOfServiceURL": "https://openai.com/policies/row-terms-of-use/",
+    "defaultPrompt": [
+      "Prepare a 9TC cost Checks summary.",
+      "Review a 9TC progress claim.",
+      "Draft a 9TC daily site report."
+    ],
+    "brandColor": "#1E3A8A"
+  }
+}

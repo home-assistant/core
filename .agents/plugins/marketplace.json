@@ -1,0 +1,20 @@
+{
+  "name": "core-local-plugins",
+  "interface": {
+    "displayName": "Core Local Plugins"
+  },
+  "plugins": [
+    {
+      "name": "super-pmo-agent",
+      "source": {
+        "source": "local",
+        "path": "./plugins/super-pmo-agent"
+      },
+      "policy": {
+        "installation": "INSTALLED_BY_DEFAULT",
+        "authentication": "ON_USE"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
