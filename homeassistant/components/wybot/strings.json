@@ -50,6 +50,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "dock_charging": {
+        "name": "Charging"
+      },
+      "robot_charging": {
+        "name": "Charging"
+      }
+    },
     "sensor": {
       "data_source": {
         "name": "Data source",
