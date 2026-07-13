@@ -26,8 +26,9 @@ from homeassistant.components.http.config import (
     default_server_port,
 )
 from homeassistant.components.http.const import ENV_SETUP_PORT
-from homeassistant.const import HASSIO_USER_NAME
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.network import NoURLAvailableError
@@ -1585,6 +1586,36 @@ async def test_stable_config_ssl_peer_cert_failure_fails_setup(
 
     with patch("ssl.SSLContext.load_cert_chain"):
         assert await async_setup_component(hass, DOMAIN, {}) is False
+
+
+async def test_bound_sockets_released_on_stop_before_start(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_create_server_sockets: Mock,
+) -> None:
+    """Bound sockets are released on stop even if the server never started.
+
+    If setup fails after binding (or recovery mode tears Home Assistant down
+    before serving starts), the stop event must release the sockets so a
+    follow-up boot in the same process can bind the address again.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 9876})
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(("127.0.0.1", 0))
+    mock_create_server_sockets.side_effect = [[sock]]
+
+    with patch.object(
+        http.HomeAssistantHTTP,
+        "async_initialize",
+        side_effect=HomeAssistantError("Setup failed after binding"),
+    ):
+        assert not await async_setup_component(hass, DOMAIN, {})
+
+    assert sock.fileno() != -1
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert sock.fileno() == -1
 
 
 async def test_stable_config_bind_failure_runs_without_server(

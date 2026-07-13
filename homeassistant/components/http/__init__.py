@@ -272,6 +272,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 err,
             )
 
+    async def stop_server(event: Event) -> None:
+        """Stop the server."""
+        await server.stop()
+
+    # Register the stop listener right away, not only once serving starts:
+    # sockets are already bound, and if the remainder of startup fails the
+    # recovery-mode teardown (which fires the stop event) must release them,
+    # or the recovery boot cannot bind the same address again.
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
+
     if CONF_SERVER_HOST in conf and is_hassio(hass):
         issue_id = "server_host_deprecated_hassio"
         ir.async_create_issue(
@@ -296,14 +306,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         use_x_frame_options=conf[CONF_USE_X_FRAME_OPTIONS],
     )
 
-    async def stop_server(event: Event) -> None:
-        """Stop the server."""
-        await server.stop()
-
     async def start_server(*_: Any) -> None:
         """Start the server."""
         with async_start_setup(hass, integration="http", phase=SetupPhases.SETUP):
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
             await server.start()
 
     async_when_setup_or_start(hass, "frontend", start_server)
