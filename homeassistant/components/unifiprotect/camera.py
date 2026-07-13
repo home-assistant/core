@@ -111,6 +111,10 @@ def _async_camera_entities(
         # deferred and picked up when enumeration re-runs.
         if public is None:
             if camera is not None:
+                _LOGGER.debug(
+                    "Deferring camera %s until its public mirror arrives",
+                    camera.display_name,
+                )
                 data.async_add_pending_camera_id(camera.id)
             continue
 
@@ -118,6 +122,10 @@ def _async_camera_entities(
         # skipped rather than built private-less — the adopt dispatch creates
         # it with its private fill, which would otherwise collide on unique_id.
         if camera is None and not data.api.is_public_only:
+            _LOGGER.debug(
+                "Deferring camera %s until its private object is adopted",
+                public.display_name,
+            )
             continue
 
         streams = data.get_rtsps_streams(public.id)
@@ -125,6 +133,16 @@ def _async_camera_entities(
         tiers = public.hardware_stream_qualities()
         main_qualities = [q for q in _MAIN_QUALITIES if q in tiers]
         has_package = ChannelQuality.PACKAGE in tiers
+        if not main_qualities:
+            # The library guarantees the three main tiers; a camera without any
+            # is a broken contract — surface it loudly, but do not let one
+            # camera abort enumeration for the rest.
+            _LOGGER.warning(
+                "Camera %s reports no main stream tiers (%s); skipping",
+                public.display_name,
+                tiers,
+            )
+            continue
 
         # Active stream tiers come from the public ``rtsps_streams`` object.
         active = set(streams.get_active_stream_qualities()) if streams else set()
@@ -311,9 +329,10 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
                 if channel_id is not None and channel_id < len(updated_device.channels)
                 else None
             )
-            if channel is None and channel_id is not None:
+            if channel is None:
                 # A tier without its private channel blanks the diagnostics;
-                # log so a camera reconfiguration is distinguishable from a bug.
+                # log so a camera reconfiguration (or a quality that maps to no
+                # channel) is distinguishable from a bug.
                 _LOGGER.debug(
                     "Camera %s has no private channel %s; diagnostic attributes"
                     " unavailable",

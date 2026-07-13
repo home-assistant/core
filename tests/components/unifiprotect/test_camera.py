@@ -7,6 +7,7 @@ import pytest
 from uiprotect.data import (
     AiPort,
     Camera as ProtectCamera,
+    ChannelQuality,
     DeviceState,
     ModelType,
     StateType,
@@ -872,3 +873,38 @@ async def test_stream_capability_published_on_prime(
     state = hass.states.get(high_id)
     assert state
     assert state.attributes["supported_features"] == CameraEntityFeature.STREAM
+
+
+async def test_camera_without_main_tiers_skipped_with_warning(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A camera violating the main-tier contract is skipped loudly, not fatally."""
+    for channel in camera.channels:
+        channel._api = ufp.api
+    healthy = make_public_camera(camera)
+    healthy.rtsps_streams = public_rtsps_for(camera)
+    broken = make_public_camera(camera)
+    broken.id = "broken-camera"
+    broken.mac = "FFEEDDCCBBAA"
+    broken.display_name = "Broken"
+    broken.rtsps_streams = None
+    broken.hardware_stream_qualities.return_value = [ChannelQuality.PACKAGE]
+
+    async def _prime_public_only() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {camera.id: healthy, broken.id: broken}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_public_only)
+    ufp.api.is_public_only = True
+
+    await init_entry(hass, ufp, [])
+
+    # The healthy camera enumerates; the broken one is skipped with a warning
+    # instead of aborting the platform setup.
+    assert "reports no main stream tiers" in caplog.text
+    assert_entity_counts(hass, Platform.CAMERA, 1, 1)
+    assert hass.states.get(_channel_entity_id(camera, 0)) is not None
