@@ -149,7 +149,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
                 and LightEntityFeature.EFFECT in self.supported_features
             ):
                 self._attr_effect = effect = EFFECT_TV_SYNC
-            elif self._attr_color_mode is None:
+            elif self._attr_color_mode not in color_modes:
                 self._attr_color_mode = next(
                     mode for mode in COLOR_MODE_FALLBACK_PRIORITY if mode in color_modes
                 )

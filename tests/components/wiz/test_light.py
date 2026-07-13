@@ -342,6 +342,23 @@ async def test_color_light_without_color_state(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_COLOR_MODE] == "rgbww"
     assert state.attributes[ATTR_EFFECT] is None
 
+    # While a scene is active BRIGHTNESS is reported
+    await async_push_update(
+        hass, bulb, {"mac": FAKE_MAC, "state": True, "sceneId": 1, "dimming": 100}
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_COLOR_MODE] == "brightness"
+    assert state.attributes[ATTR_EFFECT] == "Ocean"
+
+    # A colorless push after a scene must not retain the unsupported
+    # BRIGHTNESS mode
+    await async_push_update(
+        hass, bulb, {"mac": FAKE_MAC, "state": True, "sceneId": 0, "dimming": 100}
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
+    assert state.attributes[ATTR_EFFECT] is None
+
 
 async def test_light_without_color_state_or_effect_support(
     hass: HomeAssistant,
