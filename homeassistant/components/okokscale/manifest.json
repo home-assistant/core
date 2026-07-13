@@ -3,6 +3,7 @@
   "name": "OKOK Scale",
   "bluetooth": [
     {
+      "connectable": false,
       "manufacturer_id": 4554
     },
     {
@@ -11,9 +12,13 @@
       "manufacturer_id": 61695
     },
     {
+      "connectable": false,
       "manufacturer_id": 8394
     },
-    { "local_name": "80:F4:16:*" }
+    {
+      "connectable": false,
+      "local_name": "80:F4:16:*"
+    }
   ],
   "codeowners": ["@rrooggiieerr"],
   "config_flow": true,
