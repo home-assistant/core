@@ -57,6 +57,25 @@ def test_create_server_sockets_unresolvable_host() -> None:
         create_server_sockets(["name-does-not-resolve.invalid"], 8123)
 
 
+def test_create_server_sockets_unencodable_host() -> None:
+    """Test a host name the IDNA codec cannot encode raises OSError.
+
+    getaddrinfo() raises UnicodeError (a ValueError) for such host names,
+    e.g. a label longer than 63 characters; it must be normalized to OSError
+    so callers only need to handle one error type.
+    """
+    with (
+        patch(
+            "socket.getaddrinfo",
+            side_effect=UnicodeError(
+                "encoding with 'idna' codec failed (UnicodeError: label too long)"
+            ),
+        ),
+        pytest.raises(OSError, match="error while resolving host"),
+    ):
+        create_server_sockets([f"{'x' * 64}.example"], 8123)
+
+
 def test_create_server_sockets_dual_stack(
     unused_tcp_port_factory: Callable[[], int],
 ) -> None:

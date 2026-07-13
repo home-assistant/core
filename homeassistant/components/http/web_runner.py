@@ -26,13 +26,19 @@ def create_server_sockets(hosts: list[str], port: int) -> list[socket.socket]:
     # Resolve all hosts up front so an unresolvable one fails the whole
     # configuration before any socket is bound. Dict keys de-duplicate
     # while keeping resolution order.
-    addr_infos = {
-        info: None
-        for host in hosts
-        for info in socket.getaddrinfo(
-            host, port, type=socket.SOCK_STREAM, flags=socket.AI_PASSIVE
-        )
-    }
+    try:
+        addr_infos = {
+            info: None
+            for host in hosts
+            for info in socket.getaddrinfo(
+                host, port, type=socket.SOCK_STREAM, flags=socket.AI_PASSIVE
+            )
+        }
+    except UnicodeError as err:
+        # getaddrinfo() raises UnicodeError for hosts the IDNA codec cannot
+        # encode (e.g. a label longer than 63 characters); normalize to
+        # OSError so callers only need to handle one error type.
+        raise OSError(f"error while resolving host: {err}") from err
     reuse_address = os.name == "posix" and sys.platform != "cygwin"
 
     sockets: list[socket.socket] = []
