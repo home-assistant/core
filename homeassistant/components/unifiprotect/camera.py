@@ -297,11 +297,11 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         if self._private is not None:
             super()._async_set_device_info()
             return
-        # public-only: the public camera model exposes only ``name`` (no
-        # market_name/type/firmware_version/protect_url), so device identity is
-        # limited. The NVR link is omitted — an API-key-only client has no
-        # private bootstrap to read the NVR mac from, and resolving it publicly
-        # is async; the public-only config mode wires it at setup instead.
+        # public-only: no market_name/firmware_version/protect_url, and
+        # ``type`` only on newer firmware, so device identity is limited. The
+        # NVR link is omitted — an API-key-only client has no private
+        # bootstrap to read the NVR mac from, and resolving it publicly is
+        # async; the public-only config mode wires it at setup instead.
         public = self._public
         self._attr_device_info = DeviceInfo(
             name=public.display_name,

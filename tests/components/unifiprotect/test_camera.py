@@ -1015,3 +1015,52 @@ async def test_hybrid_camera_lost_public_mirror_logs(
     await hass.async_block_till_done()
 
     assert "has no public mirror" in caplog.text
+
+
+async def test_public_only_camera_added_during_gap(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera_all: ProtectCamera
+) -> None:
+    """A camera added while the websocket was down enumerates on reconnect.
+
+    The resync snapshot is applied silently and no add frame ever arrives for
+    a camera that appeared during the gap, so the reconnect refresh must
+    dispatch it for enumeration itself.
+    """
+    for channel in camera_all.channels:
+        channel._api = ufp.api
+    first = make_public_camera(camera_all)
+    first.rtsps_streams = public_rtsps_for(camera_all)
+
+    async def _prime_one() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {camera_all.id: first}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_one)
+    ufp.api.is_public_only = True
+
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.CAMERA, 3, 1)
+
+    # A second camera appears during the gap; the reconnect resync includes it.
+    second = make_public_camera(camera_all)
+    second.id = "gap-camera"
+    second.mac = "FFEEDDCCBB01"
+    second.name = "Gap Camera"
+    second.display_name = "Gap Camera"
+    second.rtsps_streams = first.rtsps_streams
+
+    async def _prime_two() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {camera_all.id: first, second.id: second}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_two)
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    # Three tiers each for both cameras; no duplicates for the first one.
+    assert_entity_counts(hass, Platform.CAMERA, 6, 2)
+    assert hass.states.get("camera.gap_camera_high_resolution_channel") is not None
