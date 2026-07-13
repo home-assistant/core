@@ -48,7 +48,7 @@ async def test_battery_status_sensor_states(
     await setup_integration(hass, mock_ptdevices_config_entry)
 
     # Make sure the battery status is "normal"
-    assert (state := hass.states.get("binary_sensor.home_battery_status"))
+    assert (state := hass.states.get("binary_sensor.home_battery"))
     assert state.state == STATE_OFF
 
     # Set the new battery status to low
@@ -61,7 +61,7 @@ async def test_battery_status_sensor_states(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Make sure the battery status is on (low)
-    assert (state := hass.states.get("binary_sensor.home_battery_status"))
+    assert (state := hass.states.get("binary_sensor.home_battery"))
     assert state.state == STATE_ON
 
 
@@ -78,7 +78,7 @@ async def test_add_remove_binary_sensor(
     await setup_integration(hass, mock_ptdevices_config_entry)
 
     # Make sure the battery status exists
-    assert (state := hass.states.get("binary_sensor.home_battery_status"))
+    assert (state := hass.states.get("binary_sensor.home_battery"))
     assert state.state != STATE_UNKNOWN
 
     # Remove the battery_status
@@ -91,5 +91,5 @@ async def test_add_remove_binary_sensor(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Make sure the battery_status is no longer present
-    assert (state := hass.states.get("binary_sensor.home_battery_status"))
+    assert (state := hass.states.get("binary_sensor.home_battery"))
     assert state.state == STATE_UNKNOWN
