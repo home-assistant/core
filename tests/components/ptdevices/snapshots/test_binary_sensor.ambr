@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[binary_sensor.home_battery_status-entry]
+# name: test_all_entities[binary_sensor.home_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.home_battery_status',
+    'entity_id': 'binary_sensor.home_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Battery status',
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Battery status',
+    'original_name': 'Battery',
     'platform': 'ptdevices',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,14 +36,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.home_battery_status-state]
+# name: test_all_entities[binary_sensor.home_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Home Battery status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home Battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.home_battery_status',
+    'entity_id': 'binary_sensor.home_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -90,8 +90,8 @@
 # name: test_all_entities[binary_sensor.home_external_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Home External power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Home External power',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_external_power',
