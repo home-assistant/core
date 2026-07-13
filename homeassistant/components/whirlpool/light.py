@@ -41,8 +41,8 @@ class WhirlpoolOvenLight(WhirlpoolOvenEntity, LightEntity):
         """Initialize the oven light."""
         super().__init__(appliance, cavity, "oven_light", "-light")
 
-    @override
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return whether the light is on."""
         return self._appliance.get_light(self.cavity)
