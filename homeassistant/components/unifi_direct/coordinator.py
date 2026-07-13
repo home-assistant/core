@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for UniFi AP Direct."""
 
+import asyncio
 from datetime import timedelta
 import logging
 from typing import override
@@ -60,16 +61,29 @@ class UniFiDirectDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         """Fetch data from the UniFi APs."""
         combined_clients: dict[str, dict] = {}
         failed_hosts: list[str] = []
+        host_jobs = [
+            (host_config[CONF_HOST], self.hass.async_add_executor_job(ap.get_clients))
+            for host_config, ap in zip(self.host_configs, self.aps, strict=True)
+        ]
 
-        for host_config, ap in zip(self.host_configs, self.aps, strict=True):
-            host = host_config[CONF_HOST]
-            try:
-                clients = await self.hass.async_add_executor_job(ap.get_clients)
-            except UniFiAPConnectionException, UniFiAPDataException:
+        results = await asyncio.gather(
+            *(job for _, job in host_jobs), return_exceptions=True
+        )
+
+        for (host, _), result in zip(host_jobs, results, strict=True):
+            if isinstance(result, (UniFiAPConnectionException, UniFiAPDataException)):
                 failed_hosts.append(host)
                 continue
+            if isinstance(result, BaseException):
+                raise UpdateFailed(
+                    f"Unexpected error while fetching data from UniFi AP {host}"
+                ) from result
+            if not isinstance(result, dict):
+                raise UpdateFailed(
+                    f"Unexpected client payload while fetching data from UniFi AP {host}"
+                )
 
-            for mac, client_data in clients.items():
+            for mac, client_data in result.items():
                 combined_clients.setdefault(mac, client_data)
 
         if failed_hosts:
