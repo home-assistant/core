@@ -4139,6 +4139,150 @@ async def test_migration_remaps_via_device_id_to_split(
     assert child_c.via_device_id in {parent_a.id, parent_b.id}
 
 
+@pytest.mark.parametrize("load_registries", [False])
+@pytest.mark.parametrize(
+    ("composite_disabled_by", "expected_split_disabled_by"),
+    [
+        pytest.param(None, dr.DeviceEntryDisabler.CONFIG_ENTRY, id="enabled_composite"),
+        pytest.param(
+            dr.DeviceEntryDisabler.USER, dr.DeviceEntryDisabler.USER, id="user_disabled"
+        ),
+    ],
+)
+async def test_migration_split_disabled_by_follows_config_entry(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    composite_disabled_by: dr.DeviceEntryDisabler | None,
+    expected_split_disabled_by: dr.DeviceEntryDisabler,
+) -> None:
+    """A split's disabled_by follows its single owning config entry's disabled state.
+
+    A composite spanning an enabled and a disabled config entry copies its disabled_by to
+    both splits; the split owned by the disabled entry is then reconciled to CONFIG_ENTRY
+    (a USER disable is preserved), while the split owned by the enabled entry is unchanged.
+    """
+    entry_enabled = MockConfigEntry(domain="dom_a")
+    entry_enabled.add_to_hass(hass)
+    entry_disabled = MockConfigEntry(
+        domain="dom_b", disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    entry_disabled.add_to_hass(hass)
+
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 12,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": [
+                        entry_enabled.entry_id,
+                        entry_disabled.entry_id,
+                    ],
+                    "config_entries_subentries": {
+                        entry_enabled.entry_id: [None],
+                        entry_disabled.entry_id: [None],
+                    },
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": composite_disabled_by,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "composite00000000000000000000",
+                    "identifiers": [["dom_a", "x"], ["dom_b", "x"]],
+                    "labels": [],
+                    "manufacturer": None,
+                    "model": None,
+                    "name": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "primary_config_entry": entry_enabled.entry_id,
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                }
+            ],
+            "deleted_devices": [],
+        },
+    }
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    split_enabled = registry.async_get_device(identifiers={("dom_a", "x")})
+    split_disabled = registry.async_get_device(identifiers={("dom_b", "x")})
+    assert split_enabled is not None
+    assert split_disabled is not None
+    assert split_enabled.config_entry_id == entry_enabled.entry_id
+    assert split_disabled.config_entry_id == entry_disabled.entry_id
+    # The split owned by the enabled entry keeps the composite's disabled_by
+    assert split_enabled.disabled_by is composite_disabled_by
+    # The split owned by the disabled entry follows that entry (USER preserved)
+    assert split_disabled.disabled_by is expected_split_disabled_by
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_disabled_by_not_reconciled_without_composite_split(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """disabled_by is reconciled only when the migration splits a composite device.
+
+    A 1.12 -> 1.13 migration that splits no composite leaves the store flag unset, so a
+    device whose disabled_by does not match its config entry is not touched on load.
+    """
+    entry = MockConfigEntry(
+        domain="dom_a", disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    entry.add_to_hass(hass)
+
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 12,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": [entry.entry_id],
+                    "config_entries_subentries": {entry.entry_id: [None]},
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": "device000000000000000000000000",
+                    "identifiers": [["dom_a", "x"]],
+                    "labels": [],
+                    "manufacturer": None,
+                    "model": None,
+                    "name": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "primary_config_entry": entry.entry_id,
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                }
+            ],
+            "deleted_devices": [],
+        },
+    }
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    assert registry._store.migrated_composite_devices is False
+    device = registry.async_get_device(identifiers={("dom_a", "x")})
+    assert device is not None
+    # The reconcile is gated on a composite split, so disabled_by is left as stored
+    assert device.disabled_by is None
+
+
 async def test_cleanup_device_registry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

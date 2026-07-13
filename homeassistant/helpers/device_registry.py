@@ -707,6 +707,8 @@ class DeletedDeviceEntry:
 class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
+    migrated_composite_devices: bool = False
+
     @override
     async def _async_migrate_func(  # noqa: C901
         self,
@@ -844,6 +846,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         split_devices.append(device)
                         continue
                     old_id = device["id"]
+                    self.migrated_composite_devices = True
                     composite_primary = device.get("primary_config_entry")
                     for config_entry_id, subentry_id in pairs:
                         split = copy.deepcopy(device)
@@ -1110,6 +1113,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
     devices: ActiveDeviceRegistryItems
     deleted_devices: DeviceRegistryItems[DeletedDeviceEntry]
+    _store: DeviceRegistryStore
     _device_data: dict[str, DeviceEntry]
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -2338,6 +2342,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.devices = devices
         self.deleted_devices = deleted_devices
         self._device_data = devices.data
+
+        if self._store.migrated_composite_devices:
+            # The migration split composite devices into one device per config entry; each
+            # split copied the composite's disabled_by, which does not reflect its single
+            # owning config entry (a split owned by a disabled entry must be CONFIG_ENTRY
+            # disabled). Config entries load concurrently, so wait for them, then reconcile.
+            # Can be removed in HA Core 2027.8.
+            await self.hass.config_entries.async_wait_initialized()
+            for config_entry in self.hass.config_entries.async_entries():
+                if config_entry.disabled_by:
+                    async_config_entry_disabled_by_changed(self, config_entry)
 
         self._loaded_event.set()
 
