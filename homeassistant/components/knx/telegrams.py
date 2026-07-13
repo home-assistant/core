@@ -52,6 +52,11 @@ EVICT_EXPIRED_HOUR = 3
 # at risk from a longer interval are those buffered during an ungraceful shutdown.
 FLUSH_INTERVAL_SECONDS = 600
 
+# The buffer drops the oldest telegrams when full. Size it to cover a full
+# flush interval at ~50 telegrams/s, the maximum rate of a KNX TP line, so
+# nothing is dropped while the database is healthy.
+MAX_BUFFER_TELEGRAMS = FLUSH_INTERVAL_SECONDS * 50
+
 # Timeout for the migration probe and store initialization, so an unreachable
 # database cannot block KNX setup until the driver/OS connection timeout expires.
 STORE_INIT_TIMEOUT = 10
@@ -112,6 +117,7 @@ class Telegrams:
                 self.dsn,
                 retention_days=self.retention_days,
                 flush_interval=FLUSH_INTERVAL_SECONDS,
+                max_buffer_size=MAX_BUFFER_TELEGRAMS,
             )
         else:
             full_path = hass.config.path(STORAGE_DIR, KNX_TELEGRAM_DB_PATH_SQLITE)
@@ -120,6 +126,7 @@ class Telegrams:
                 full_path,
                 retention_days=self.retention_days,
                 flush_interval=FLUSH_INTERVAL_SECONDS,
+                max_buffer_size=MAX_BUFFER_TELEGRAMS,
             )
 
         self._xknx_telegram_cb_handle = (
