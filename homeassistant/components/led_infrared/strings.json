@@ -1,0 +1,73 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This device has already been configured with this infrared entity.",
+      "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
+    },
+    "error": {
+      "missing_infrared_entity": "Select an infrared emitter."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device_type": "[%key:common::generic::device_type%]",
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+        },
+        "data_description": {
+          "device_type": "The type of remote control used for the LED light bulb, lamp, or controller.",
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+        },
+        "description": "Select the device type and an infrared emitter. You can identify the correct device based on the remote control used. Please refer to the [documentation]({docs_url}).",
+        "title": "Set up LED Infrared device"
+      }
+    }
+  },
+  "entity": {
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "blue": "Color: Blue",
+              "cyan": "Color: Cyan",
+              "dark_cyan": "Color: Dark cyan",
+              "fade": "Fade",
+              "flash": "Flash",
+              "green": "Color: Green",
+              "light_green": "Color: Light green",
+              "mode_1": "Mode 1",
+              "mode_2": "Mode 2",
+              "mode_3": "Mode 3",
+              "mode_4": "Mode 4",
+              "mode_5": "Mode 5",
+              "mode_6": "Mode 6",
+              "mode_7": "Mode 7",
+              "mode_8": "Mode 8",
+              "orange": "Color: Orange",
+              "orange_red": "Color: Orange red",
+              "plum": "Color: Plum",
+              "purple": "Color: Purple",
+              "rebecca_purple": "Color: Rebecca purple",
+              "red": "Color: Red",
+              "sky_blue": "Color: Sky blue",
+              "smooth": "Smooth",
+              "strobe": "Strobe",
+              "tomato": "Color: Tomato",
+              "turquoise": "Color: Turquoise",
+              "white": "Color: White",
+              "yellow": "Color: Yellow"
+            }
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "device_type": {
+      "options": {
+        "generic_13_key": "13-key remote control",
+        "generic_24_key": "24-key remote control"
+      }
+    }
+  }
+}
