@@ -274,6 +274,7 @@ async def test_subentry_unsupported_model(
         ("gpt-5.4-pro", ["medium", "high", "xhigh"]),
         ("gpt-5.5", ["none", "low", "medium", "high", "xhigh"]),
         ("gpt-5.5-pro", ["medium", "high", "xhigh"]),
+        ("gpt-5.6", ["none", "low", "medium", "high", "xhigh", "max"]),
     ],
 )
 async def test_subentry_reasoning_effort_list(
@@ -823,7 +824,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_MAX_TOKENS: 1000,
                 },
                 {
-                    CONF_REASONING_EFFORT: "high",
+                    CONF_REASONING_EFFORT: "max",
                     CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                     CONF_CODE_INTERPRETER: False,
                     CONF_VERBOSITY: "high",
@@ -843,7 +844,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_STORE_RESPONSES: False,
-                CONF_REASONING_EFFORT: "high",
+                CONF_REASONING_EFFORT: "max",
                 CONF_REASONING_SUMMARY: RECOMMENDED_REASONING_SUMMARY,
                 CONF_CODE_INTERPRETER: False,
                 CONF_VERBOSITY: "high",

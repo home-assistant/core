@@ -237,6 +237,7 @@
       "options": {
         "high": "[%key:common::state::high%]",
         "low": "[%key:common::state::low%]",
+        "max": "Max",
         "medium": "[%key:common::state::medium%]",
         "minimal": "Minimal",
         "none": "None",
