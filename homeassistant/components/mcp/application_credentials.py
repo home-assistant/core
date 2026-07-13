@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 import contextvars
+from typing import override
 
 from homeassistant.components.application_credentials import (
     AuthorizationServer,
@@ -60,6 +61,7 @@ class MCPAuthImplementation(config_entry_oauth2_flow.LocalOAuth2ImplementationWi
         self._name = credential.name
 
     @property
+    @override
     def name(self) -> str:
         """Name of the implementation."""
         return self._name or self.client_id
