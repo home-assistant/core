@@ -3,9 +3,7 @@ rules:
   action-setup:
     status: exempt
     comment: There are no custom actions
-  appropriate-polling:
-    status: exempt
-    comment: This integration does not poll.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -47,7 +45,7 @@ rules:
   entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: todo
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: This integration does not require authentication.

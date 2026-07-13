@@ -143,6 +143,7 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         api.actions.ambilight = AsyncMock(return_value=True)
         api.cmds = AsyncMock(spec_set=CmdWrapper)
         api.set_toggle = AsyncMock()
+        api.set_ble_proxy = AsyncMock(return_value=True)
         api.sse = MagicMock(spec_set=sseClient)
 
         yield api
