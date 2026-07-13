@@ -154,6 +154,16 @@ SENSOR_TYPES: dict[str, SwitchBotSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM25,
     ),
+    "on_keystate": SwitchBotSensorEntityDescription(
+        key="on_keystate",
+        translation_key="on_keystate",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "off_keystate": SwitchBotSensorEntityDescription(
+        key="off_keystate",
+        translation_key="off_keystate",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 

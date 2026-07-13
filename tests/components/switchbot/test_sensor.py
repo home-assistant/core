@@ -761,7 +761,7 @@ async def test_climate_panel_sensor(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all("sensor")) == 4
+    assert len(hass.states.async_all("sensor")) == 6
     assert len(hass.states.async_all("binary_sensor")) == 2
 
     temperature_sensor = hass.states.get("sensor.test_name_temperature")
@@ -789,6 +789,22 @@ async def test_climate_panel_sensor(hass: HomeAssistant) -> None:
     assert battery_sensor.state == "95"
     assert battery_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Battery"
     assert battery_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    on_keystate_sensor = hass.states.get("sensor.test_name_on_button_keystate")
+    on_keystate_sensor_attrs = on_keystate_sensor.attributes
+    assert on_keystate_sensor.state == "0"
+    assert (
+        on_keystate_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name ON button keystate"
+    )
+    assert on_keystate_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
+
+    off_keystate_sensor = hass.states.get("sensor.test_name_off_button_keystate")
+    off_keystate_sensor_attrs = off_keystate_sensor.attributes
+    assert off_keystate_sensor.state == "0"
+    assert (
+        off_keystate_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name OFF button keystate"
+    )
+    assert off_keystate_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
     light_sensor = hass.states.get("binary_sensor.test_name_light")
     light_sensor_attrs = light_sensor.attributes

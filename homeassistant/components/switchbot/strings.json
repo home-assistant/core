@@ -350,6 +350,12 @@
       "light_level": {
         "name": "Light level"
       },
+      "off_keystate": {
+        "name": "OFF button keystate"
+      },
+      "on_keystate": {
+        "name": "ON button keystate"
+      },
       "water_level": {
         "name": "Water level",
         "state": {
