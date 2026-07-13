@@ -15,14 +15,18 @@ from uiprotect.data import (
     SmartDetectObjectType,
 )
 from uiprotect.data.nvr import UOSDisk
-from uiprotect.data.public_devices import PublicDeviceModel, PublicSensor
+from uiprotect.data.public_devices import (
+    PublicDeviceModel,
+    PublicSensor,
+    SensorFeatureCapability,
+)
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -37,6 +41,7 @@ from .entity import (
     ProtectIsOnEntity,
     ProtectNVREntity,
     async_all_device_entities,
+    async_remove_unsupported_sense_entities,
 )
 
 _KEY_DOOR = "door"
@@ -47,6 +52,26 @@ def _async_motion_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
     # Mirrors Sensor.is_motion_sensor_enabled over the public API.
     sensor = cast(PublicSensor, obj)
     return sensor.mount_type is not MountType.LEAK and sensor.motion_settings.is_enabled
+
+
+def _async_contact_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
+    # Mirrors Sensor.is_contact_sensor_enabled over the public API.
+    return cast(PublicSensor, obj).is_contact_sensor_enabled
+
+
+def _async_leak_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
+    # Leak-mounted (UP Sense), or the capability map advertises water_leak with a
+    # leak channel enabled — the USL family detects leaks without a leak mount.
+    # Settings alone are not a valid gate: sensors without the capability report
+    # inert default leak settings.
+    sensor = cast(PublicSensor, obj)
+    return sensor.is_leak_sensor_enabled or (
+        sensor.supports(SensorFeatureCapability.WATER_LEAK)
+        and (
+            sensor.leak_settings.is_internal_enabled
+            or sensor.leak_settings.is_external_enabled
+        )
+    )
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -315,8 +340,9 @@ MOUNTABLE_SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key=_KEY_DOOR,
         translation_key="contact",
         device_class=BinarySensorDeviceClass.DOOR,
-        ufp_value="is_opened",
-        ufp_enabled="is_contact_sensor_enabled",
+        ufp_public_value="is_opened",
+        ufp_public_enabled_fn=_async_contact_sensor_enabled_public,
+        ufp_capability=SensorFeatureCapability.OPEN,
     ),
 )
 
@@ -324,8 +350,9 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="leak",
         device_class=BinarySensorDeviceClass.MOISTURE,
-        ufp_value="is_leak_detected",
-        ufp_enabled="is_leak_sensor_enabled",
+        ufp_public_value="is_leak_detected",
+        ufp_public_enabled_fn=_async_leak_sensor_enabled_public,
+        ufp_capability=SensorFeatureCapability.WATER_LEAK,
     ),
     ProtectBinaryEntityDescription(
         key="battery_low",
@@ -338,11 +365,13 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_public_value="is_motion_detected",
         ufp_public_enabled_fn=_async_motion_sensor_enabled_public,
+        ufp_capability=SensorFeatureCapability.MOTION,
     ),
     ProtectBinaryEntityDescription(
         key="tampering",
         device_class=BinarySensorDeviceClass.TAMPER,
-        ufp_value="is_tampering_detected",
+        ufp_public_value="is_tampering_detected",
+        ufp_capability=SensorFeatureCapability.TAMPER,
     ),
     ProtectBinaryEntityDescription(
         key="status_light",
@@ -356,6 +385,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="motion_detection_enabled",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="motion_settings.is_enabled",
+        ufp_capability=SensorFeatureCapability.MOTION,
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -568,8 +598,13 @@ class MountableProtectDeviceBinarySensor(ProtectDeviceBinarySensor):
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         # UP Sense can be any of the 3 contact sensor device classes
+        mount_type = (
+            cast(PublicSensor, public).mount_type
+            if (public := self._ufp_public_obj) is not None
+            else self.device.mount_type
+        )
         self._attr_device_class = MOUNT_DEVICE_CLASS_MAP.get(
-            self.device.mount_type, BinarySensorDeviceClass.DOOR
+            mount_type, BinarySensorDeviceClass.DOOR
         )
 
 
@@ -733,6 +768,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensors for UniFi Protect integration."""
     data = entry.runtime_data
+    async_remove_unsupported_sense_entities(
+        hass, Platform.BINARY_SENSOR, data, (*SENSE_SENSORS, *MOUNTABLE_SENSE_SENSORS)
+    )
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:

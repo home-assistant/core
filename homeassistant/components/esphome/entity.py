@@ -12,6 +12,7 @@ from aioesphomeapi import (
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
     EntityState,
+    build_device_unique_id,
 )
 import voluptuous as vol
 
@@ -31,12 +32,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 # Import config flow so that it's added to the registry
-from .entry_data import (
-    DeviceEntityKey,
-    ESPHomeConfigEntry,
-    RuntimeEntryData,
-    build_device_unique_id,
-)
+from .entry_data import DeviceEntityKey, ESPHomeConfigEntry, RuntimeEntryData
 from .enum_mapper import EsphomeEnumMapper
 
 _LOGGER = logging.getLogger(__name__)
