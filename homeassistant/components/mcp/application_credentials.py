@@ -32,14 +32,13 @@ def authorization_server_context(
 
 async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationServer:
     """Return authorization server, for the default auth implementation."""
-    if _mcp_context.get() is None:
+    authorization_server = _mcp_context.get(None)
+    if authorization_server is None:
         raise RuntimeError("No MCP authorization server set in context")
-    return _mcp_context.get()
+    return authorization_server
 
 
-class MCPAuthImplementation(
-    config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce
-):
+class MCPAuthImplementation(config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce):
     """OAuth2 implementation for MCP servers, with PKCE required by the MCP OAuth profile."""
 
     def __init__(
@@ -81,6 +80,4 @@ async def async_get_auth_implementation(
     `LocalOAuth2ImplementationWithPkce`.
     """
     authorization_server = await async_get_authorization_server(hass)
-    return MCPAuthImplementation(
-        hass, auth_domain, credential, authorization_server
-    )
+    return MCPAuthImplementation(hass, auth_domain, credential, authorization_server)
