@@ -5,10 +5,10 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "unknown_device_type": "This isn't a supported energieleser product. Please check that the device is a stromleser, gasleser, wasserleser, or wärmeleser."
+      "unknown_device_type": "This isn't a supported energieleser product. Please check that the device is a stromleser, gasleser, wasserleser, or wärmeleser.",
+      "wrong_device": "The device at this IP address does not match the originally configured device."
     },
     "error": {
-      "another_device": "The device at this IP address does not match the originally configured device.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "unknown_device_type": "This isn't a supported energieleser product. Please check that the device is a stromleser, gasleser, wasserleser, or wärmeleser."

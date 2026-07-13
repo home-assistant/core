@@ -352,8 +352,8 @@ async def test_reconfigure_flow_another_device(
         user_input={CONF_HOST: "192.168.1.105"},
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "another_device"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -394,3 +394,13 @@ async def test_reconfigure_flow_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
+
+    # Recover
+    mock_energieleser_client.get_device.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "192.168.1.102"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

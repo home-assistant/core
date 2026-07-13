@@ -162,13 +162,12 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
             except EnergieleserError:
                 errors["base"] = "unknown"
             else:
-                if device.device_id != entry.data[CONF_DEVICE_ID]:
-                    errors["base"] = "another_device"
-                else:
-                    return self.async_update_reload_and_abort(
-                        entry,
-                        data_updates={CONF_HOST: host},
-                    )
+                await self.async_set_unique_id(device.device_id)
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_HOST: host},
+                )
 
         return self.async_show_form(
             step_id="reconfigure",
