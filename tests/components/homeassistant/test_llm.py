@@ -66,7 +66,7 @@ async def test_prompt_no_entities(hass: HomeAssistant) -> None:
     """Test the platform contributes the no-entities prompt when nothing is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
-    assert result.prompt == llm.NO_ENTITIES_PROMPT
+    assert result.prompt == ha_llm.NO_ENTITIES_PROMPT
 
 
 async def test_get_live_context_no_exposed_entities(hass: HomeAssistant) -> None:
@@ -79,7 +79,7 @@ async def test_get_live_context_no_exposed_entities(hass: HomeAssistant) -> None
     response = await tool.async_call(
         hass, llm.ToolInput("GetLiveContext", {}), llm_context
     )
-    assert response == {"success": False, "error": llm.NO_ENTITIES_PROMPT}
+    assert response == {"success": False, "error": ha_llm.NO_ENTITIES_PROMPT}
 
 
 async def test_get_live_context_tool(hass: HomeAssistant) -> None:
