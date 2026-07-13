@@ -8054,6 +8054,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "wybot": {
+      "name": "WyBot",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "wyoming": {
       "name": "Wyoming Protocol",
       "integration_type": "service",

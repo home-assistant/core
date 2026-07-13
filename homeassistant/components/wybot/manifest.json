@@ -1,0 +1,13 @@
+{
+  "domain": "wybot",
+  "name": "WyBot",
+  "codeowners": ["@bassrock"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/wybot",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["wybot"],
+  "quality_scale": "silver",
+  "requirements": ["pywybot==1.1.0"]
+}
