@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_climate_state_snapshot[ac][climate.dummy_thermostat-entry]
+# name: test_climate_state_snapshot[ac][climate.bedroom_ac_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -47,7 +47,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.dummy_thermostat',
+    'entity_id': 'climate.bedroom_ac_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -70,7 +70,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_state_snapshot[ac][climate.dummy_thermostat-state]
+# name: test_climate_state_snapshot[ac][climate.bedroom_ac_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 50.0,
@@ -84,7 +84,7 @@
         'full',
         'auto',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dummy Thermostat',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Thermostat',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.AUTO: 'auto'>,
@@ -116,7 +116,7 @@
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 22.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.dummy_thermostat',
+    'entity_id': 'climate.bedroom_ac_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

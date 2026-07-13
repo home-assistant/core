@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from .const import TEST_MODEL, TEST_NAME, TEST_SUBTYPE
+
 
 class DummyDevice:
     """Shared fake Midea device for tests."""
@@ -20,9 +22,9 @@ class DummyDevice:
         """Initialize fake device."""
         self.device_type = device_type
         self.device_id = 123
-        self.name = "Dummy"
-        self.model = "M1"
-        self.subtype = 7
+        self.name = TEST_NAME
+        self.model = TEST_MODEL
+        self.subtype = TEST_SUBTYPE
         self.available = available
         self.attributes = attributes or {}
         self._callbacks: list[Callable] = []
