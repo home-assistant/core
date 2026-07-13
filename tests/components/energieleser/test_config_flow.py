@@ -341,8 +341,7 @@ async def test_reconfigure_flow_another_device(
     """Test reconfiguration flow with a different device."""
     mock_stromleser_config_entry.add_to_hass(hass)
 
-    # Return a different device than the configured one
-    mock_energieleser_client.get_device.return_value = mock_gasleser_device
+mock_energieleser_client.get_device.return_value = mock_gasleser_device
 
     result = await mock_stromleser_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -395,8 +394,7 @@ async def test_reconfigure_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
-    # Recover
-    mock_energieleser_client.get_device.side_effect = None
+mock_energieleser_client.get_device.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_HOST: "192.168.1.102"},
