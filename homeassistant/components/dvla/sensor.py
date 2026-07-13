@@ -20,7 +20,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import CONF_REG_NUMBER, DOMAIN
 from .coordinator import DVLACoordinator
 
-# Fallback/Overrides for icons and units
 ENTITY_METADATA: dict[str, dict[str, Any]] = {
     "registrationNumber": {"icon": "mdi:ocr", "title": "Registration Number"},
     "taxStatus": {"icon": "mdi:cash-clock", "title": "Tax Status"},
