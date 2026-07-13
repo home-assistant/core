@@ -216,11 +216,12 @@ async def test_all_number(
 
 
 @pytest.mark.parametrize(
-    ("value", "register_words", "do_config"),
+    ("value", "register_words", "expected_writer", "do_config"),
     [
         (
             31,
             [31],
+            ("write_register", {"value": 31}),
             {
                 CONF_NUMBERS: [
                     {
@@ -235,6 +236,10 @@ async def test_all_number(
         (
             32,
             struct.unpack(">HH", struct.pack(">i", 32)),
+            (
+                "write_registers",
+                {"values": list(struct.unpack(">HH", struct.pack(">i", 32)))},
+            ),
             {
                 CONF_NUMBERS: [
                     {
@@ -249,6 +254,10 @@ async def test_all_number(
         (
             33.5,
             struct.unpack(">HH", struct.pack(">f", 33.5)),
+            (
+                "write_registers",
+                {"values": list(struct.unpack(">HH", struct.pack(">f", 33.5)))},
+            ),
             {
                 CONF_NUMBERS: [
                     {
@@ -264,6 +273,7 @@ async def test_all_number(
             # raw = (value - offset) / scale = (25.0 - 5) / 0.1 = 200
             25.0,
             [200],
+            ("write_register", {"value": 200}),
             {
                 CONF_NUMBERS: [
                     {
@@ -282,6 +292,14 @@ async def test_all_number(
             # word swap reverses that order before writing.
             32,
             list(reversed(struct.unpack(">HH", struct.pack(">i", 32)))),
+            (
+                "write_registers",
+                {
+                    "values": list(
+                        reversed(struct.unpack(">HH", struct.pack(">i", 32)))
+                    )
+                },
+            ),
             {
                 CONF_NUMBERS: [
                     {
@@ -299,7 +317,7 @@ async def test_all_number(
 async def test_service_number_set_value(
     hass: HomeAssistant,
     value: float,
-    register_words: list[int],
+    expected_writer: tuple[str, dict[str, int | list[int]]],
     mock_modbus_ha: mock.AsyncMock,
 ) -> None:
     """Test set_value."""
@@ -314,14 +332,10 @@ async def test_service_number_set_value(
         blocking=True,
     )
     await hass.async_block_till_done()
-    if len(register_words) == 1:
-        mock_modbus_ha.write_register.assert_called_with(
-            51, value=register_words[0], device_id=10
-        )
-    else:
-        mock_modbus_ha.write_registers.assert_called_with(
-            51, values=list(register_words), device_id=10
-        )
+    method_name, kwargs = expected_writer
+    getattr(mock_modbus_ha, method_name).assert_called_with(
+        51, device_id=10, **kwargs
+    )
 
 
 @pytest.mark.parametrize(
