@@ -227,8 +227,8 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
             new=AsyncMock(
                 side_effect=[
-                    TeslaFleetError(),
-                    TeslaFleetError(),
+                    _empty_clients_response(),
+                    _unverified_clients_response(),
                     _verified_clients_response(),
                 ]
             ),
@@ -247,7 +247,7 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
         ),
         patch.object(hass.config_entries, "async_schedule_reload"),
     ):
-        # reconfigure -> list_authorized_clients raises -> add_authorized_client -> pair
+        # reconfigure -> key absent -> add_authorized_client -> pair
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "pair"

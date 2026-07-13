@@ -69,6 +69,16 @@ class PowerwallUnreachableError(Exception):
     """
 
 
+class PowerwallLookupError(Exception):
+    """Signal that the authorized-client lookup failed for a non-retryable reason.
+
+    Distinct from the key simply being absent: the gateway did not return a
+    usable client list, so the caller must abort (or keep the user on a
+    retryable form) rather than mistake the failure for an unregistered key and
+    re-register it, which would reset an already pending or verified key.
+    """
+
+
 def _is_gateway_unreachable(err: TeslaFleetError | ClientResponseError) -> bool:
     """Return whether err is a 502 Bad Gateway from an energy gateway command.
 
@@ -273,6 +283,8 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             client = await self._find_authorized_client()
         except PowerwallUnreachableError:
             return self.async_abort(reason="powerwall_unreachable")
+        except PowerwallLookupError:
+            return self.async_abort(reason="cannot_connect")
         if client is not None:
             # The key is already registered on the gateway. If it is verified,
             # move on to credentials; if it is still pending, resume approval
@@ -317,6 +329,10 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 return self.async_show_form(
                     step_id="pair", errors={"base": "powerwall_unreachable"}
                 )
+            except PowerwallLookupError:
+                return self.async_show_form(
+                    step_id="pair", errors={"base": "cannot_connect"}
+                )
             if verified:
                 return await self.async_step_credentials()
             await asyncio.sleep(KEY_PAIRING_POLL_INTERVAL)
@@ -327,26 +343,24 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         """Return our RSA key's authorized-client entry on the gateway, or None.
 
         Parsing lives in the library's typed ``find_authorized_clients`` accessor
-        (envelope unwrap, null-body handling, ``state`` typing); an explicitly
-        empty client list authoritatively means "not registered".
+        (envelope unwrap, null-body handling, ``state`` typing). ``None`` is
+        returned only when the gateway answers successfully but our key is not
+        among the authorized clients (an explicitly empty list authoritatively
+        means "not registered").
 
-        A 502 (gateway unreachable) raises ``PowerwallUnreachableError`` so the
-        caller can retry; any other failure, or the key simply not being present,
-        resolves to ``None`` (treated as an unregistered, unverified key).
+        A 502 (gateway unreachable) raises ``PowerwallUnreachableError``; any
+        other lookup failure raises ``PowerwallLookupError``. Neither is
+        collapsed into ``None`` so the caller never mistakes a failed lookup for
+        an absent key and re-registers it.
         """
         assert self._energy_site is not None
         try:
             result = await self._energy_site.find_authorized_clients()
-        except ClientResponseError as err:
+        except (ClientResponseError, TeslaFleetError) as err:
             if _is_gateway_unreachable(err):
                 raise PowerwallUnreachableError from err
             LOGGER.debug("find_authorized_clients failed: %s", err)
-            return None
-        except TeslaFleetError as err:
-            if _is_gateway_unreachable(err):
-                raise PowerwallUnreachableError from err
-            LOGGER.debug("find_authorized_clients failed: %s", err)
-            return None
+            raise PowerwallLookupError from err
         return next(
             (
                 client
