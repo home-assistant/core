@@ -56,7 +56,6 @@ class EnergieleserCoordinator(DataUpdateCoordinator[EnergieleserDevice]):
                 translation_key="unknown_device",
                 translation_placeholders={
                     "device_id": self.device_id,
-                    "error": str(err),
                 },
             ) from err
         except EnergieleserConnectionError as err:
@@ -65,7 +64,6 @@ class EnergieleserCoordinator(DataUpdateCoordinator[EnergieleserDevice]):
                 translation_key="connection_error",
                 translation_placeholders={
                     "device_id": self.device_id,
-                    "error": str(err),
                 },
             ) from err
         except EnergieleserError as err:
@@ -74,7 +72,6 @@ class EnergieleserCoordinator(DataUpdateCoordinator[EnergieleserDevice]):
                 translation_key="communication_error",
                 translation_placeholders={
                     "device_id": self.device_id,
-                    "error": str(err),
                 },
             ) from err
         return device
