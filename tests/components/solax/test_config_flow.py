@@ -1,10 +1,11 @@
 """Tests for the solax config flow."""
 
+import asyncio
 from unittest.mock import patch
 
 import pytest
-from solax.inverter import InverterResponse
-from solax.inverters import X1MiniV34
+from solax.inverter import Inverter, InverterResponse
+from solax.inverters import X1Boost, X1MiniV34
 
 from homeassistant import config_entries
 from homeassistant.components.solax.const import DOMAIN
@@ -12,8 +13,27 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_MODEL, CONF_PASSWORD, CONF
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+CONNECTION_INPUT: dict[str, str | int] = {
+    CONF_IP_ADDRESS: "192.168.1.87",
+    CONF_PORT: 80,
+    CONF_PASSWORD: "password",
+}
 
-def __mock_get_data():
+
+def _build_inverter(inverter_cls: type[Inverter]) -> Inverter:
+    """Build a real inverter instance to use as a discover() return value."""
+    return next(
+        iter(
+            inverter_cls.build_all_variants(
+                CONNECTION_INPUT[CONF_IP_ADDRESS],
+                CONNECTION_INPUT[CONF_PORT],
+                CONNECTION_INPUT[CONF_PASSWORD],
+            )
+        )
+    )
+
+
+def __mock_get_data() -> InverterResponse:
     return InverterResponse(
         data=None,
         dongle_serial_number="ABCDEFGHIJ",
@@ -24,41 +44,36 @@ def __mock_get_data():
 
 
 @pytest.mark.parametrize(
-    ("user_input", "expected_inverters"),
+    ("discovered_inverter_classes", "steps", "expected_model"),
     [
+        pytest.param({X1MiniV34}, [CONNECTION_INPUT], "x1_mini_v34", id="single_match"),
         pytest.param(
-            {CONF_IP_ADDRESS: "192.168.1.87", CONF_PORT: 80, CONF_PASSWORD: "password"},
-            None,
-            id="auto_detect",
-        ),
-        pytest.param(
-            {
-                CONF_IP_ADDRESS: "192.168.1.87",
-                CONF_PORT: 80,
-                CONF_PASSWORD: "password",
-                CONF_MODEL: "x1_mini_v34",
-            },
-            [X1MiniV34],
-            id="model_selected",
+            {X1MiniV34, X1Boost},
+            [CONNECTION_INPUT, {CONF_MODEL: "x1_mini_v34"}],
+            "x1_mini_v34",
+            id="multiple_matches",
         ),
     ],
 )
 async def test_form_success(
     hass: HomeAssistant,
-    user_input: dict[str, str | int],
-    expected_inverters: list[type] | None,
+    discovered_inverter_classes: set[type[Inverter]],
+    steps: list[dict[str, str | int]],
+    expected_model: str,
 ) -> None:
-    """Test successful form."""
+    """Test successful discovery and entry creation, with/without a model choice."""
     flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert flow["type"] is FlowResultType.FORM
-    assert flow["errors"] == {}
+    assert flow["errors"] is None
+
+    discovered = {_build_inverter(cls) for cls in discovered_inverter_classes}
 
     with (
         patch(
             "homeassistant.components.solax.config_flow.discover",
-            return_value=X1MiniV34,
+            return_value=discovered,
         ) as mock_discover,
         patch("solax.RealTimeAPI.get_data", return_value=__mock_get_data()),
         patch(
@@ -66,55 +81,119 @@ async def test_form_success(
             return_value=True,
         ) as mock_setup_entry,
     ):
-        entry_result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], user_input
-        )
+        result = flow
+        for step_input in steps:
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], step_input
+            )
         await hass.async_block_till_done()
 
-    assert entry_result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry_result["title"] == "ABCDEFGHIJ"
-    assert entry_result["data"] == user_input
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "ABCDEFGHIJ"
+    assert result["data"] == {**CONNECTION_INPUT, CONF_MODEL: expected_model}
     assert len(mock_setup_entry.mock_calls) == 1
-    assert mock_discover.call_args.kwargs.get("inverters") == expected_inverters
+    assert mock_discover.call_count == 1
+    assert mock_discover.call_args.kwargs == {"return_when": asyncio.ALL_COMPLETED}
 
 
-async def test_form_connect_error(hass: HomeAssistant) -> None:
-    """Test cannot connect form."""
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        pytest.param(ConnectionError, "cannot_connect", id="cannot_connect"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+async def test_form_discover_error(
+    hass: HomeAssistant, side_effect: type[Exception], expected_error: str
+) -> None:
+    """Test discovery failures redisplay the user step with an error."""
     flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert flow["type"] is FlowResultType.FORM
-    assert flow["errors"] == {}
+    assert flow["errors"] is None
 
     with patch(
-        "homeassistant.components.solax.config_flow.discover",
-        side_effect=ConnectionError,
+        "homeassistant.components.solax.config_flow.discover", side_effect=side_effect
     ):
-        entry_result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"],
-            {CONF_IP_ADDRESS: "192.168.1.87", CONF_PORT: 80, CONF_PASSWORD: "password"},
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], CONNECTION_INPUT
         )
 
-    assert entry_result["type"] is FlowResultType.FORM
-    assert entry_result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": expected_error}
 
 
-async def test_form_unknown_error(hass: HomeAssistant) -> None:
-    """Test unknown error form."""
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        pytest.param(ConnectionError, "cannot_connect", id="cannot_connect"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("discovered_inverter_classes", "steps", "expected_step_id"),
+    [
+        pytest.param({X1MiniV34}, [CONNECTION_INPUT], "user", id="single_match"),
+        pytest.param(
+            {X1MiniV34, X1Boost},
+            [CONNECTION_INPUT, {CONF_MODEL: "x1_mini_v34"}],
+            "select_model",
+            id="multiple_matches",
+        ),
+    ],
+)
+async def test_form_finalize_error(
+    hass: HomeAssistant,
+    discovered_inverter_classes: set[type[Inverter]],
+    steps: list[dict[str, str | int]],
+    expected_step_id: str,
+    side_effect: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test serial-number fetch failures redisplay the current step with an error."""
     flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert flow["type"] is FlowResultType.FORM
-    assert flow["errors"] == {}
+    discovered = {_build_inverter(cls) for cls in discovered_inverter_classes}
+
+    with (
+        patch(
+            "homeassistant.components.solax.config_flow.discover",
+            return_value=discovered,
+        ),
+        patch("solax.RealTimeAPI.get_data", side_effect=side_effect),
+    ):
+        result = flow
+        for step_input in steps:
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], step_input
+            )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == expected_step_id
+    assert result["errors"] == {"base": expected_error}
+
+
+async def test_form_select_model_step_options(hass: HomeAssistant) -> None:
+    """Test the select_model step only lists the discovered inverter models."""
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    discovered = {_build_inverter(X1MiniV34), _build_inverter(X1Boost)}
 
     with patch(
         "homeassistant.components.solax.config_flow.discover",
-        side_effect=Exception,
+        return_value=discovered,
     ):
-        entry_result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"],
-            {CONF_IP_ADDRESS: "192.168.1.87", CONF_PORT: 80, CONF_PASSWORD: "password"},
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], CONNECTION_INPUT
         )
 
-    assert entry_result["type"] is FlowResultType.FORM
-    assert entry_result["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_model"
+    assert result["data_schema"].schema[CONF_MODEL].config["options"] == [
+        "x1_boost",
+        "x1_mini_v34",
+    ]
