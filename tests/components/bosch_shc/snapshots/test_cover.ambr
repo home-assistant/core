@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[cover.cover-entry]
+# name: test_entities[entities][cover.cover-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[cover.cover-state]
+# name: test_entities[entities][cover.cover-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 50,
@@ -53,7 +53,7 @@
     'state': 'open',
   })
 # ---
-# name: test_entities[cover.cover_2-entry]
+# name: test_entities[entities][cover.cover_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -90,7 +90,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[cover.cover_2-state]
+# name: test_entities[entities][cover.cover_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
