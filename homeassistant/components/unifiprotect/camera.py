@@ -149,10 +149,6 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, data.channels_signal, _add_new_device)
     )
 
-    # Clean up any erroneously created RTSP issues for AI Ports
-    for device in data.get_by_types({ModelType.AIPORT}):
-        ir.async_delete_issue(hass, DOMAIN, f"rtsp_disabled_{device.id}")
-
     async_add_entities(_async_camera_entities(hass, entry, data))
 
 

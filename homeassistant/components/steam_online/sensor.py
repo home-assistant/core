@@ -13,14 +13,14 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    CONF_ACCOUNTS,
     STEAM_API_URL,
     STEAM_HEADER_IMAGE_FILE,
     STEAM_ICON_URL,
     STEAM_MAIN_IMAGE_FILE,
     STEAM_STATUSES,
+    SUBENTRY_TYPE_FRIEND,
 )
-from .coordinator import PlayerData, SteamConfigEntry, SteamDataUpdateCoordinator
+from .coordinator import PlayerData, SteamConfigEntry
 from .entity import SteamEntity
 
 PARALLEL_UPDATES = 1
@@ -37,7 +37,6 @@ class SteamSensorEntityDescription(SensorEntityDescription):
     """Steam sensor description."""
 
     value_fn: Callable[[PlayerData], StateType]
-    name_fn: Callable[[PlayerData], str]
     entity_picture_fn: Callable[[PlayerData], str] | None = None
 
 
@@ -46,8 +45,8 @@ SENSOR_DESCRIPTIONS: tuple[SteamSensorEntityDescription, ...] = (
         key=SteamSensor.ACCOUNT,
         translation_key=SteamSensor.ACCOUNT,
         value_fn=lambda x: STEAM_STATUSES[x.personastate],
-        name_fn=lambda x: x.personaname,
         entity_picture_fn=lambda x: x.avatarfull,
+        name=None,
     ),
 )
 
@@ -61,27 +60,27 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        SteamSensorEntity(coordinator, steamid, description)
-        for steamid in entry.options[CONF_ACCOUNTS]
+        SteamSensorEntity(coordinator, entry.unique_id, description)
         for description in SENSOR_DESCRIPTIONS
-        if steamid in coordinator.data
+        if entry.unique_id is not None and entry.unique_id in coordinator.data
     )
+
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_FRIEND):
+        async_add_entities(
+            [
+                SteamSensorEntity(coordinator, subentry.unique_id, description)
+                for description in SENSOR_DESCRIPTIONS
+                if subentry.unique_id is not None
+                and subentry.unique_id in coordinator.data
+            ],
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 class SteamSensorEntity(SteamEntity, SensorEntity):
     """Representation of a Steam sensor entity."""
 
     entity_description: SteamSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: SteamDataUpdateCoordinator,
-        steamid: str,
-        description: SteamSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, steamid, description)
-        self._attr_name = self.entity_description.name_fn(coordinator.data[steamid])
 
     @property
     @override
