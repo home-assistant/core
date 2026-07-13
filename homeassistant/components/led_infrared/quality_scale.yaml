@@ -1,0 +1,120 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This integration does not poll.
+  brands: done
+  common-modules:
+    status: exempt
+    comment: This integration has only one platform
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data:
+    status: exempt
+    comment: |
+      This integration does not store runtime data.
+  test-before-configure:
+    status: exempt
+    comment: |
+      This integration only proxies commands through an existing infrared
+      entity, so there is no separate connection to validate during config flow.
+  test-before-setup:
+    status: exempt
+    comment: |
+      This integration only proxies commands through an existing infrared
+      entity, so there is no separate connection to validate during setup.
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      This integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration does not require authentication.
+  test-coverage: todo
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration does not support discovery.
+  discovery:
+    status: exempt
+    comment: |
+      This integration is configured manually via config flow.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Each config entry creates a single device.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      No entities should be disabled by default
+  entity-translations: done
+  exception-translations:
+    status: exempt
+    comment: |
+      This integration does not raise exceptions.
+  icon-translations: done
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration has no repairs.
+  stale-devices:
+    status: exempt
+    comment: |
+      Each config entry manages exactly one device.
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: |
+      This integration depends on infrared_protocols which provides only code
+      definitions with no I/O, so async dependency does not apply.
+  inject-websession:
+    status: exempt
+    comment: |
+      This integration does not do HTTP requests.
+  strict-typing: done
