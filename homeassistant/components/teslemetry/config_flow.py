@@ -26,7 +26,7 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import Teslemetry
-from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
+from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, TeslemetryEnergySite
 import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
@@ -270,11 +270,16 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         self._public_key_b64 = keyholder.rsa_public_der_pkcs1_b64
 
         try:
-            verified = await self._key_is_verified()
+            client = await self._find_authorized_client()
         except PowerwallUnreachableError:
             return self.async_abort(reason="powerwall_unreachable")
-        if verified:
-            return await self.async_step_credentials()
+        if client is not None:
+            # The key is already registered on the gateway. If it is verified,
+            # move on to credentials; if it is still pending, resume approval
+            # without re-registering it (re-adding would reset a pending key).
+            if client.state == AuthorizedClientState.VERIFIED:
+                return await self.async_step_credentials()
+            return await self.async_step_pair()
 
         try:
             # Not revoked on removal by design; see the class docstring.
@@ -287,7 +292,8 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         except ClientResponseError as err:
             if _is_gateway_unreachable(err):
                 return self.async_abort(reason="powerwall_unreachable")
-            raise
+            LOGGER.error("Add authorized client failed: %s", err)
+            return self.async_abort(reason="cannot_connect")
         except TeslaFleetError as err:
             if _is_gateway_unreachable(err):
                 return self.async_abort(reason="powerwall_unreachable")
@@ -317,12 +323,16 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(step_id="pair", errors={"base": "timeout"})
 
-    async def _key_is_verified(self) -> bool:
-        """Report whether our public key is registered and VERIFIED on the gateway.
+    async def _find_authorized_client(self) -> AuthorizedClient | None:
+        """Return our RSA key's authorized-client entry on the gateway, or None.
 
         Parsing lives in the library's typed ``find_authorized_clients`` accessor
         (envelope unwrap, null-body handling, ``state`` typing); an explicitly
-        empty client list authoritatively means "not verified".
+        empty client list authoritatively means "not registered".
+
+        A 502 (gateway unreachable) raises ``PowerwallUnreachableError`` so the
+        caller can retry; any other failure, or the key simply not being present,
+        resolves to ``None`` (treated as an unregistered, unverified key).
         """
         assert self._energy_site is not None
         try:
@@ -330,17 +340,26 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         except ClientResponseError as err:
             if _is_gateway_unreachable(err):
                 raise PowerwallUnreachableError from err
-            raise
+            LOGGER.debug("find_authorized_clients failed: %s", err)
+            return None
         except TeslaFleetError as err:
             if _is_gateway_unreachable(err):
                 raise PowerwallUnreachableError from err
             LOGGER.debug("find_authorized_clients failed: %s", err)
-            return False
-        return any(
-            client.public_key == self._public_key_b64
-            and client.state == AuthorizedClientState.VERIFIED
-            for client in result.clients
+            return None
+        return next(
+            (
+                client
+                for client in result.clients
+                if client.public_key == self._public_key_b64
+            ),
+            None,
         )
+
+    async def _key_is_verified(self) -> bool:
+        """Report whether our public key is registered and VERIFIED on the gateway."""
+        client = await self._find_authorized_client()
+        return client is not None and client.state == AuthorizedClientState.VERIFIED
 
     async def async_step_credentials(
         self, user_input: dict[str, Any] | None = None
