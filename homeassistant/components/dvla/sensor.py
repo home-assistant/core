@@ -109,7 +109,7 @@ ENTITY_DESCRIPTIONS: dict[str, str] = {
     "engineCapacity": "Engine capacity",
     "co2Emissions": "CO2 emissions",
     "fuelType": "Fuel type",
-    "colour": "Colour",
+    "colour": "Color",
     "typeApproval": "Type approval",
     "revenueWeight": "Revenue weight",
     "dateOfLastV5CIssued": "Date of last V5C issued",

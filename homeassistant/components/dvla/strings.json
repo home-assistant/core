@@ -11,7 +11,7 @@
     "step": {
       "user": {
         "data": {
-          "reg_number": "Registration Number"
+          "reg_number": "Registration number"
         },
         "data_description": {
           "reg_number": "The vehicle registration number to look up, for example AB12CDE."
