@@ -37,7 +37,7 @@ from .const import (
     SERVICE_SET_PERSONS_HOME,
     WEBHOOK_PUSH_TYPE,
 )
-from .data_handler import EVENT, HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
+from .coordinator import EVENT, HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
 from .helper import device_type_to_str
 

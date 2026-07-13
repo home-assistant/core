@@ -12,7 +12,6 @@ from .coordinator import (
     WallConnectorConfigEntry,
     WallConnectorCoordinator,
     WallConnectorData,
-    get_poll_interval,
 )
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -45,14 +44,7 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     return True
-
-
-async def update_listener(hass: HomeAssistant, entry: WallConnectorConfigEntry) -> None:
-    """Handle options update."""
-    entry.runtime_data.update_coordinator.update_interval = get_poll_interval(entry)
 
 
 async def async_unload_entry(

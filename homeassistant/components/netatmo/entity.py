@@ -20,7 +20,7 @@ from .const import (
     DOMAIN,
     SIGNAL_NAME,
 )
-from .data_handler import PUBLIC, NetatmoDataHandler, NetatmoDevice, NetatmoRoom
+from .coordinator import PUBLIC, NetatmoDataHandler, NetatmoDevice, NetatmoRoom
 
 
 class NetatmoBaseEntity(Entity):

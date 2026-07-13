@@ -289,10 +289,14 @@ class TeslemetryVehiclePollingSelectEntity(
     def _async_update_attrs(self) -> None:
         """Handle updated data from the coordinator."""
         self._climate = bool(self.get("climate_state_is_climate_on"))
-        if not isinstance(self._value, int):
-            self._attr_current_option = None
+        value = self._value
+        # Defensive clamp: Tesla could report a level outside the modeled
+        # range, so map it to the nearest known option rather than erroring.
+        if isinstance(value, int):
+            options = self.entity_description.options
+            self._attr_current_option = options[max(0, min(value, len(options) - 1))]
         else:
-            self._attr_current_option = self.entity_description.options[self._value]
+            self._attr_current_option = None
 
 
 class TeslemetryStreamingSelectEntity(
@@ -336,10 +340,13 @@ class TeslemetryStreamingSelectEntity(
 
     def _value_callback(self, value: int | None) -> None:
         """Update the value of the entity."""
-        if value is None:
-            self._attr_current_option = None
+        # Defensive clamp: Tesla could report a level outside the modeled
+        # range, so map it to the nearest known option rather than erroring.
+        if isinstance(value, int):
+            options = self.entity_description.options
+            self._attr_current_option = options[max(0, min(value, len(options) - 1))]
         else:
-            self._attr_current_option = self.entity_description.options[value]
+            self._attr_current_option = None
         self.async_write_ha_state()
 
     def _climate_callback(self, value: bool | None) -> None:

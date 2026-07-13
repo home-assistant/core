@@ -16,7 +16,7 @@ from .const import (
     MANUFACTURER,
     NETATMO_CREATE_SELECT,
 )
-from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoHome
+from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoHome
 from .entity import NetatmoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)

@@ -50,7 +50,7 @@ from .const import (
     SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
     SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
 )
-from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoRoom
+from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoRoom
 from .entity import NetatmoRoomEntity
 from .helper import device_type_to_str
 

@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
-from ipaddress import IPv4Network, IPv6Network, ip_network
+from ipaddress import ip_network
 import logging
 import os
 from typing import Any, Final, TypedDict, cast, override
@@ -87,7 +87,7 @@ class ConfData(TypedDict, total=False):
     ssl_key: str
     cors_allowed_origins: list[str]
     use_x_forwarded_for: bool
-    trusted_proxies: list[IPv4Network | IPv6Network]
+    trusted_proxies: list[str]
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str

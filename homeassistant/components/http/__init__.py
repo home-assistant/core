@@ -207,7 +207,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     cors_origins = conf[CONF_CORS_ORIGINS]
     use_x_forwarded_for = conf.get(CONF_USE_X_FORWARDED_FOR, False)
     use_x_frame_options = conf[CONF_USE_X_FRAME_OPTIONS]
-    trusted_proxies = conf.get(CONF_TRUSTED_PROXIES) or []
+    # The loaded config stores trusted proxies as strings (JSON-serializable);
+    # the forwarded middleware needs IPv4Network/IPv6Network objects.
+    trusted_proxies = [
+        ip_network(proxy) for proxy in conf.get(CONF_TRUSTED_PROXIES) or []
+    ]
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
@@ -471,7 +475,7 @@ class HomeAssistantHTTP:
         async def redirect(request: web.Request) -> web.StreamResponse:
             """Redirect to location."""
             # Should be instance of aiohttp.web_exceptions._HTTPMove.
-            raise redirect_exc(redirect_to)  # type: ignore[arg-type,misc]
+            raise redirect_exc(redirect_to)  # type: ignore[arg-type,call-arg]
 
         self.app[KEY_ALLOW_CONFIGURED_CORS](
             self.app.router.add_route("GET", url, redirect)
