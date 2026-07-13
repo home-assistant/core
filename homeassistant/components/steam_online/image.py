@@ -141,8 +141,6 @@ async def async_setup_entry(
     )
 
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_FRIEND):
-        if TYPE_CHECKING:
-            assert subentry.unique_id
         async_add_entities(
             [
                 SteamImageEntity(hass, coordinator, subentry.unique_id, description)
