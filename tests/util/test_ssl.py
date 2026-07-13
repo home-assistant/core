@@ -194,10 +194,24 @@ def test_client_context_default_no_alpn() -> None:
     assert default_ctx is client_context(SSLCipherList.PYTHON_DEFAULT, SSL_ALPN_NONE)
 
 
-def test_server_context_modern_requires_tls_1_3() -> None:
+def test_server_context_modern() -> None:
     """Modern server profile should only allow TLS 1.3 per Mozilla guidelines."""
-    modern = server_context_modern()
-    assert modern.minimum_version == ssl.TLSVersion.TLSv1_3
+    context = server_context_modern()
+    assert context.minimum_version == ssl.TLSVersion.TLSv1_3
 
-    intermediate = server_context_intermediate()
-    assert intermediate.minimum_version <= ssl.TLSVersion.TLSv1_2
+    tls13_ciphers = [
+        cipher["name"]
+        for cipher in context.get_ciphers()
+        if cipher["protocol"] == "TLSv1.3"
+    ]
+    assert sorted(tls13_ciphers) == [
+        "TLS_AES_128_GCM_SHA256",
+        "TLS_AES_256_GCM_SHA384",
+        "TLS_CHACHA20_POLY1305_SHA256",
+    ]
+
+
+def test_server_context_intermediate() -> None:
+    """Intermediate server profile should allow TLS 1.2."""
+    context = server_context_intermediate()
+    assert context.minimum_version <= ssl.TLSVersion.TLSv1_2

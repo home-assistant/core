@@ -191,7 +191,7 @@ def server_context_modern() -> ssl.SSLContext:
     """Return an SSL context following the Mozilla recommendations.
 
     TLS configuration follows the best-practice guidelines specified here:
-    https://wiki.mozilla.org/Security/Server_Side_TLS
+    https://docs.tlsref.org/server-side-tls.html
     Modern guidelines are followed.
     """
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
@@ -201,7 +201,8 @@ def server_context_modern() -> ssl.SSLContext:
     if hasattr(ssl, "OP_NO_COMPRESSION"):
         context.options |= ssl.OP_NO_COMPRESSION
 
-    context.set_ciphers(SSL_CIPHER_LISTS[SSLCipherList.MODERN])
+    # TLS 1.3 cipher suites cannot be configured with set_ciphers()
+    # OpenSSL's defaults are exactly the three suites the modern profile permits
 
     return context
 
