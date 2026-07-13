@@ -72,9 +72,9 @@ class UniFiDirectDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             for mac, client_data in clients.items():
                 combined_clients.setdefault(mac, client_data)
 
-        if combined_clients:
-            return combined_clients
+        if failed_hosts:
+            raise UpdateFailed(
+                f"Failed to fetch data from UniFi APs: {', '.join(failed_hosts)}"
+            )
 
-        raise UpdateFailed(
-            f"Failed to fetch data from UniFi APs: {', '.join(failed_hosts)}"
-        )
+        return combined_clients
