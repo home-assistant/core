@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[binary_sensor.contact-entry]
+# name: test_entities[entities][binary_sensor.contact-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.contact-state]
+# name: test_entities[entities][binary_sensor.contact-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
@@ -50,7 +50,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.contact_2-entry]
+# name: test_entities[entities][binary_sensor.contact_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -87,7 +87,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.contact_2-state]
+# name: test_entities[entities][binary_sensor.contact_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
@@ -101,7 +101,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.contact_2_battery-entry]
+# name: test_entities[entities][binary_sensor.contact_2_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -138,7 +138,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.contact_2_battery-state]
+# name: test_entities[entities][binary_sensor.contact_2_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
@@ -152,7 +152,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.contact_battery-entry]
+# name: test_entities[entities][binary_sensor.contact_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -189,7 +189,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.contact_battery-state]
+# name: test_entities[entities][binary_sensor.contact_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
@@ -203,7 +203,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.motion_battery-entry]
+# name: test_entities[entities][binary_sensor.motion_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -240,7 +240,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.motion_battery-state]
+# name: test_entities[entities][binary_sensor.motion_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
@@ -254,7 +254,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.smoke_battery-entry]
+# name: test_entities[entities][binary_sensor.smoke_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -291,7 +291,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.smoke_battery-state]
+# name: test_entities[entities][binary_sensor.smoke_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
@@ -305,7 +305,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.thermostat_battery-entry]
+# name: test_entities[entities][binary_sensor.thermostat_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -342,7 +342,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.thermostat_battery-state]
+# name: test_entities[entities][binary_sensor.thermostat_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
@@ -356,7 +356,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.twinguard_battery-entry]
+# name: test_entities[entities][binary_sensor.twinguard_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -393,7 +393,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.twinguard_battery-state]
+# name: test_entities[entities][binary_sensor.twinguard_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
@@ -407,7 +407,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.universal_switch_battery-entry]
+# name: test_entities[entities][binary_sensor.universal_switch_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -444,7 +444,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.universal_switch_battery-state]
+# name: test_entities[entities][binary_sensor.universal_switch_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
@@ -458,7 +458,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.wall_thermostat_battery-entry]
+# name: test_entities[entities][binary_sensor.wall_thermostat_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -495,7 +495,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.wall_thermostat_battery-state]
+# name: test_entities[entities][binary_sensor.wall_thermostat_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
@@ -509,7 +509,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[binary_sensor.water_leakage_detector_battery-entry]
+# name: test_entities[entities][binary_sensor.water_leakage_detector_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -546,7 +546,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[binary_sensor.water_leakage_detector_battery-state]
+# name: test_entities[entities][binary_sensor.water_leakage_detector_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
