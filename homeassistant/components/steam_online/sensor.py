@@ -4,7 +4,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -119,11 +119,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Steam platform."""
     coordinator = entry.runtime_data
-
+    if TYPE_CHECKING:
+        assert entry.unique_id
     async_add_entities(
         SteamSensorEntity(coordinator, entry.unique_id, description)
         for description in SENSOR_DESCRIPTIONS
-        if entry.unique_id is not None and entry.unique_id in coordinator.data
+        if entry.unique_id in coordinator.data
     )
 
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_FRIEND):
@@ -131,8 +132,7 @@ async def async_setup_entry(
             [
                 SteamSensorEntity(coordinator, subentry.unique_id, description)
                 for description in SENSOR_DESCRIPTIONS
-                if subentry.unique_id is not None
-                and subentry.unique_id in coordinator.data
+                if subentry.unique_id in coordinator.data
             ],
             config_subentry_id=subentry.subentry_id,
         )
