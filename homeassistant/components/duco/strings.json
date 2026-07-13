@@ -73,6 +73,9 @@
       }
     },
     "sensor": {
+      "diagnostic_status": {
+        "name": "{component}"
+      },
       "filter_remaining": {
         "name": "Filter remaining"
       },
