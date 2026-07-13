@@ -184,9 +184,15 @@ REAUTH_API_KEY_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): _PASSWORD_SELECT
 
 
 async def async_local_user_documentation_url(hass: HomeAssistant) -> str:
-    """Get the documentation url for creating a local user."""
+    """Get the documentation url for the full-access (local user) mode."""
     integration = await async_get_integration(hass, DOMAIN)
-    return f"{integration.documentation}#local-user"
+    return f"{integration.documentation}#full-access"
+
+
+async def async_api_key_documentation_url(hass: HomeAssistant) -> str:
+    """Get the documentation url for the API-key-only mode."""
+    integration = await async_get_integration(hass, DOMAIN)
+    return f"{integration.documentation}#api-key-only"
 
 
 def _host_is_direct_connect(host: str) -> bool:
@@ -323,7 +329,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 **placeholders,
                 "api_key_documentation_url": (
-                    await async_local_user_documentation_url(self.hass)
+                    await async_api_key_documentation_url(self.hass)
                 ),
             },
             data_schema=self.add_suggested_values_to_schema(
@@ -550,7 +556,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="api_key",
             description_placeholders={
                 "api_key_documentation_url": (
-                    await async_local_user_documentation_url(self.hass)
+                    await async_api_key_documentation_url(self.hass)
                 )
             },
             data_schema=self.add_suggested_values_to_schema(API_KEY_SCHEMA, user_input),
@@ -602,7 +608,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_api_key",
             description_placeholders={
                 "api_key_documentation_url": (
-                    await async_local_user_documentation_url(self.hass)
+                    await async_api_key_documentation_url(self.hass)
                 )
             },
             data_schema=REAUTH_API_KEY_SCHEMA,
@@ -701,7 +707,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure_api_key",
             description_placeholders={
                 "api_key_documentation_url": (
-                    await async_local_user_documentation_url(self.hass)
+                    await async_api_key_documentation_url(self.hass)
                 )
             },
             data_schema=self.add_suggested_values_to_schema(API_KEY_SCHEMA, form_data),

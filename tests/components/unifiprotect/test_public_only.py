@@ -34,7 +34,6 @@ from homeassistant.components.unifiprotect.views import ThumbnailProxyView
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
     CONF_API_KEY,
     CONF_HOST,
     CONF_PORT,
@@ -87,6 +86,7 @@ class _PublicOnlyClientMock(Mock):
 def _public_client() -> Mock:
     """Build a mock public-only ProtectApiClient for setup."""
     client = _PublicOnlyClientMock()
+    # pylint: disable=attribute-defined-outside-init
     client.is_public_only = True
     client.has_public_bootstrap = True
 
@@ -187,9 +187,9 @@ async def test_public_only_only_alarm_and_camera_platforms(
     await _setup_public_only(hass)
 
     # No sensors / etc. — those still need the private bootstrap.
-    assert not hass.states.async_entity_ids(Platform.SENSOR)
-    assert not hass.states.async_entity_ids(Platform.BINARY_SENSOR)
-    assert len(hass.states.async_entity_ids(Platform.ALARM_CONTROL_PANEL)) == 1
+    assert not hass.states.async_entity_ids(Platform.SENSOR.value)
+    assert not hass.states.async_entity_ids(Platform.BINARY_SENSOR.value)
+    assert len(hass.states.async_entity_ids(Platform.ALARM_CONTROL_PANEL.value)) == 1
 
 
 async def test_public_only_camera_end_to_end(
@@ -202,6 +202,7 @@ async def test_public_only_camera_end_to_end(
     under ``PUBLIC_ONLY_PLATFORMS``.
     """
     client = _public_client()
+    # pylint: disable=attribute-defined-outside-init
     client.base_url = "https://1.1.1.1"
     # The stream-building test helper reads the private ``rtsps_url`` property,
     # which needs a client with a bootstrap; keep that off the public client.
@@ -231,7 +232,7 @@ async def test_public_only_camera_end_to_end(
         await async_get_stream_source(hass, high_id)
         == camera.channels[0].rtsps_no_srtp_url
     )
-    assert len(hass.states.async_entity_ids(Platform.ALARM_CONTROL_PANEL)) == 1
+    assert len(hass.states.async_entity_ids(Platform.ALARM_CONTROL_PANEL.value)) == 1
 
 
 async def test_public_only_auth_failed_triggers_reauth(hass: HomeAssistant) -> None:
@@ -332,6 +333,7 @@ async def test_public_only_rejected_key_exhausts_to_reauth(
     entry = _public_only_entry()
     entry.add_to_hass(hass)
     client = _public_client()
+    # pylint: disable-next=attribute-defined-outside-init
     client.update_public = AsyncMock(side_effect=NotAuthorized)
     with (
         patch(

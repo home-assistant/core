@@ -15,13 +15,59 @@
     },
     "flow_title": "{name} ({ip_address})",
     "step": {
-      "user": {
-        "title": "UniFi Protect setup",
-        "description": "Choose how to connect to your UniFi Protect console. The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user.",
+      "api_key": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "API key from your UniFi OS Console. Only the public Integration API is used; some entities that require a local user are unavailable in this mode.",
+          "host": "Hostname or IP address of your UniFi Protect device.",
+          "port": "Port of your UniFi Protect device.",
+          "verify_ssl": "Verify SSL certificate of the UniFi Protect device."
+        },
+        "description": "Connect using only an API key, without a local user. The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user. For more information: {api_key_documentation_url}",
+        "title": "UniFi Protect setup (API key)"
+      },
+      "discovery_api_key": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::unifiprotect::config::step::api_key::data_description::api_key%]",
+          "port": "[%key:component::unifiprotect::config::step::api_key::data_description::port%]"
+        },
+        "description": "Connect to {name} ({ip_address}) using only an API key. The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user. For more information: {api_key_documentation_url}",
+        "title": "UniFi Protect discovered (API key)"
+      },
+      "discovery_confirm": {
+        "description": "How do you want to connect to {name} ({ip_address})? The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user.",
         "menu_options": {
-          "full": "Local user and API key (full access)",
-          "api_key": "API key only (limited feature set)"
-        }
+          "discovery_api_key": "API key only (limited feature set)",
+          "discovery_full": "Local user and API key (full access)"
+        },
+        "title": "UniFi Protect discovered"
+      },
+      "discovery_full": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::unifiprotect::config::step::full::data_description::api_key%]",
+          "password": "[%key:component::unifiprotect::config::step::full::data_description::password%]",
+          "port": "[%key:component::unifiprotect::config::step::full::data_description::port%]",
+          "username": "[%key:component::unifiprotect::config::step::full::data_description::username%]",
+          "verify_ssl": "[%key:component::unifiprotect::config::step::full::data_description::verify_ssl%]"
+        },
+        "description": "Do you want to set up {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud users will not work. For more information: {local_user_documentation_url}",
+        "title": "UniFi Protect discovered (local user)"
       },
       "full": {
         "data": {
@@ -43,21 +89,15 @@
         "description": "You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud users will not work. For more information: {local_user_documentation_url}",
         "title": "UniFi Protect setup (local user)"
       },
-      "api_key": {
+      "reauth_api_key": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "host": "Hostname or IP address of your UniFi Protect device.",
-          "port": "Port of your UniFi Protect device.",
-          "verify_ssl": "Verify SSL certificate of the UniFi Protect device.",
-          "api_key": "API key from your UniFi OS Console. Only the public Integration API is used; some entities that require a local user are unavailable in this mode."
+          "api_key": "[%key:component::unifiprotect::config::step::api_key::data_description::api_key%]"
         },
-        "description": "Connect using only an API key, without a local user. The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user. For more information: {api_key_documentation_url}",
-        "title": "UniFi Protect setup (API key)"
+        "description": "Your API key seems to be missing or invalid. Enter a new API key from your UniFi OS Console. For more information: {api_key_documentation_url}",
+        "title": "Reauth UniFi Protect (API key)"
       },
       "reauth_confirm": {
         "data": {
@@ -73,23 +113,29 @@
         "description": "Your credentials or API key seem to be missing or invalid. Leave password and API key empty to keep your existing credentials. For more information: {local_user_documentation_url}",
         "title": "Reauth UniFi Protect"
       },
-      "reauth_api_key": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "api_key": "[%key:component::unifiprotect::config::step::api_key::data_description::api_key%]"
-        },
-        "description": "Your API key seems to be missing or invalid. Enter a new API key from your UniFi OS Console. For more information: {api_key_documentation_url}",
-        "title": "Reauth UniFi Protect (API key)"
-      },
       "reconfigure": {
-        "title": "Reconfigure UniFi Protect",
         "description": "[%key:component::unifiprotect::config::step::user::description%]",
         "menu_options": {
-          "reconfigure_full": "Local user and API key (full access)",
-          "reconfigure_api_key": "API key only (limited feature set)"
-        }
+          "reconfigure_api_key": "API key only (limited feature set)",
+          "reconfigure_full": "Local user and API key (full access)"
+        },
+        "title": "Reconfigure UniFi Protect"
+      },
+      "reconfigure_api_key": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::unifiprotect::config::step::api_key::data_description::api_key%]",
+          "host": "[%key:component::unifiprotect::config::step::api_key::data_description::host%]",
+          "port": "[%key:component::unifiprotect::config::step::api_key::data_description::port%]",
+          "verify_ssl": "[%key:component::unifiprotect::config::step::api_key::data_description::verify_ssl%]"
+        },
+        "description": "Switch to (or update) API-key-only mode. Switching from a local user removes the stored credentials. The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user. For more information: {api_key_documentation_url}",
+        "title": "Reconfigure UniFi Protect (API key)"
       },
       "reconfigure_full": {
         "data": {
@@ -111,59 +157,13 @@
         "description": "Update the configuration for your UniFi Protect device. Leave password and API key empty to keep your existing credentials. For more information: {local_user_documentation_url}",
         "title": "Reconfigure UniFi Protect (local user)"
       },
-      "reconfigure_api_key": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
-        },
-        "data_description": {
-          "host": "[%key:component::unifiprotect::config::step::api_key::data_description::host%]",
-          "port": "[%key:component::unifiprotect::config::step::api_key::data_description::port%]",
-          "verify_ssl": "[%key:component::unifiprotect::config::step::api_key::data_description::verify_ssl%]",
-          "api_key": "[%key:component::unifiprotect::config::step::api_key::data_description::api_key%]"
-        },
-        "description": "Switch to (or update) API-key-only mode. Switching from a local user removes the stored credentials. The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user. For more information: {api_key_documentation_url}",
-        "title": "Reconfigure UniFi Protect (API key)"
-      },
-      "discovery_full": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
-        },
-        "data_description": {
-          "api_key": "[%key:component::unifiprotect::config::step::full::data_description::api_key%]",
-          "password": "[%key:component::unifiprotect::config::step::full::data_description::password%]",
-          "port": "[%key:component::unifiprotect::config::step::full::data_description::port%]",
-          "username": "[%key:component::unifiprotect::config::step::full::data_description::username%]",
-          "verify_ssl": "[%key:component::unifiprotect::config::step::full::data_description::verify_ssl%]"
-        },
-        "description": "Do you want to set up {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud users will not work. For more information: {local_user_documentation_url}",
-        "title": "UniFi Protect discovered (local user)"
-      },
-      "discovery_confirm": {
-        "title": "UniFi Protect discovered",
-        "description": "How do you want to connect to {name} ({ip_address})? The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user.",
+      "user": {
+        "description": "Choose how to connect to your UniFi Protect console. The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user.",
         "menu_options": {
-          "discovery_full": "Local user and API key (full access)",
-          "discovery_api_key": "API key only (limited feature set)"
-        }
-      },
-      "discovery_api_key": {
-        "data": {
-          "port": "[%key:common::config_flow::data::port%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "API key only (limited feature set)",
+          "full": "Local user and API key (full access)"
         },
-        "data_description": {
-          "port": "[%key:component::unifiprotect::config::step::api_key::data_description::port%]",
-          "api_key": "[%key:component::unifiprotect::config::step::api_key::data_description::api_key%]"
-        },
-        "description": "Connect to {name} ({ip_address}) using only an API key. The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user. For more information: {api_key_documentation_url}",
-        "title": "UniFi Protect discovered (API key)"
+        "title": "UniFi Protect setup"
       }
     }
   },

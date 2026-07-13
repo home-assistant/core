@@ -282,10 +282,6 @@ async def _async_setup_entry(
 
     # The bootstrap is primed above (a failed prime aborts setup and HA retries),
     # so the public events websocket can be subscribed here.
-    # Registry migrations are mode-independent; an entry flipped from full
-    # access must not skip them.
-    await async_migrate_data(hass, entry)
-
     data_service.async_subscribe_public_events()
 
     # Load PTZ patrol data before loading platforms
