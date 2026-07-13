@@ -1,0 +1,110 @@
+{
+  "project": {
+    "code": "9TC",
+    "name": "9 Turnbull Court Residential Duplex",
+    "address": "9 Turnbull Court, Brunswick West VIC 3055",
+    "jurisdiction": "Victoria, Australia",
+    "development_type": "Residential duplex"
+  },
+  "activation": {
+    "skill": "super-pmo-agent",
+    "primary_triggers": [
+      "duplex",
+      "planning permit",
+      "ResCode",
+      "Clause 55",
+      "HIA",
+      "progress claim",
+      "payment schedule",
+      "variation",
+      "building permit",
+      "defects",
+      "practical completion",
+      "subdivision",
+      "BOQ",
+      "budget tracking",
+      "invoice import",
+      "Excel automation",
+      "Google Sheets",
+      "Power Query",
+      "SWMS"
+    ],
+    "do_not_use_for": [
+      "unrelated coding",
+      "general Home Assistant development work",
+      "non-Turnbull Court tasks unless explicitly changing this project assistant configuration"
+    ]
+  },
+  "control_workbook": {
+    "cloud_primary": true,
+    "platform": "Google Sheets",
+    "url": "https://docs.google.com/spreadsheets/d/1AqJyWhA2O7INZaDpohqQZ2o9UYZ6Pz3Xt3ckICPmVhA/edit?gid=898645173#gid=898645173",
+    "active_from": "2026-06-14",
+    "locale": "en_AU",
+    "timezone": "Australia/Sydney",
+    "local_excel_backup": "2. Project Administration/9TC_PMO_HUB_v10_1_GMAIL_INVOICE_IMPORT_20260613.xlsm",
+    "preserve": [
+      "formulas",
+      "data validation",
+      "conditional formatting",
+      "named ranges",
+      "query connections",
+      "locale",
+      "timezone"
+    ]
+  },
+  "reference_files": {
+    "current_boq": "9TC_BOQ_v6_Combined.xlsx",
+    "comparison_boq": "9TC_BOQ_Hebel_v5 (1).xlsx",
+    "historical_master": "9TC_Master_PMO_Workbook.xlsx",
+    "ifc_package": "1. Drawings/260609_FULL PACKAGE/"
+  },
+  "budget_controls": {
+    "currency": "AUD",
+    "contract_sum": {
+      "amount": 1850000,
+      "gst_basis": "unconfirmed",
+      "source_note": "Current Google Sheets master workbook"
+    },
+    "approved_control_budget": {
+      "amount": 1950000,
+      "gst_basis": "ex GST",
+      "source_note": "Historical 9TC_Master_PMO_Workbook.xlsx"
+    },
+    "current_detailed_estimate": {
+      "amount_approx": 1654344,
+      "gst_basis": "unconfirmed",
+      "source_note": "Current detailed budget"
+    },
+    "publish_dashboard_totals_only_after_reconciliation": true,
+    "required_reconciliation_chain": [
+      "BOQ",
+      "budget",
+      "quote",
+      "award",
+      "commitment",
+      "invoice",
+      "variation",
+      "forecast final cost",
+      "EAC"
+    ]
+  },
+  "deliverable_sections": [
+    "Status",
+    "Sources reviewed",
+    "Key findings",
+    "Actions / Owner / Due date",
+    "Assumptions and limitations",
+    "Next control point",
+    "Checks"
+  ],
+  "checks_required": [
+    "unresolved document conflicts",
+    "missing approvals",
+    "procurement risks",
+    "programme risks",
+    "cost/data gaps",
+    "safety limitations",
+    "data assumptions"
+  ]
+}
