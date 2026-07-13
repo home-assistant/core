@@ -80,8 +80,8 @@ async def test_default_prompt(
 
 
 @pytest.mark.parametrize(
-    ("web_search", "expected_model_suffix"),
-    [(True, ":online"), (False, "")],
+    ("web_search", "expected_server_tools"),
+    [(True, [{"type": "openrouter:web_search"}]), (False, None)],
     ids=["web_search_enabled", "web_search_disabled"],
 )
 async def test_web_search(
@@ -90,7 +90,7 @@ async def test_web_search(
     mock_openai_client: AsyncMock,
     mock_chat_log: MockChatLog,  # noqa: F811
     web_search: bool,
-    expected_model_suffix: str,
+    expected_server_tools: dict[str, str] | None,
 ) -> None:
     """Test that web search adds :online suffix to model."""
     await setup_integration(hass, mock_config_entry)
@@ -103,8 +103,7 @@ async def test_web_search(
     )
 
     call = mock_openai_client.chat.completions.create.call_args_list[0][1]
-    expected_model = f"openai/gpt-3.5-turbo{expected_model_suffix}"
-    assert call["model"] == expected_model
+    assert call["extra_body"].get("tools") == expected_server_tools
 
 
 async def test_empty_api_response(

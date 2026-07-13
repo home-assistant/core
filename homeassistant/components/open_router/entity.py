@@ -234,10 +234,11 @@ class OpenRouterEntity(Entity):
         """Generate an answer for the chat log."""
 
         model = self.model
-        if self.subentry.data.get(CONF_WEB_SEARCH):
-            model = f"{model}:online"
 
         extra_body: dict[str, Any] = {"require_parameters": True}
+
+        if self.subentry.data.get(CONF_WEB_SEARCH):
+            extra_body["tools"] = [{"type": "openrouter:web_search"}]
 
         model_args = {
             "model": model,
