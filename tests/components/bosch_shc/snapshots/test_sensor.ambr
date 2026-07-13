@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[sensor.light_switch_energy-entry]
+# name: test_entities[entities][sensor.light_switch_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -41,7 +41,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_entities[sensor.light_switch_energy-state]
+# name: test_entities[entities][sensor.light_switch_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
@@ -57,7 +57,7 @@
     'state': '0.9',
   })
 # ---
-# name: test_entities[sensor.light_switch_power-entry]
+# name: test_entities[entities][sensor.light_switch_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -97,7 +97,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_entities[sensor.light_switch_power-state]
+# name: test_entities[entities][sensor.light_switch_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
@@ -112,7 +112,7 @@
     'state': '6.0',
   })
 # ---
-# name: test_entities[sensor.smart_plug_compact_communication_quality-entry]
+# name: test_entities[entities][sensor.smart_plug_compact_communication_quality-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -149,7 +149,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.smart_plug_compact_communication_quality-state]
+# name: test_entities[entities][sensor.smart_plug_compact_communication_quality-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Plug Compact Communication quality',
@@ -162,7 +162,7 @@
     'state': 'GOOD',
   })
 # ---
-# name: test_entities[sensor.smart_plug_compact_energy-entry]
+# name: test_entities[entities][sensor.smart_plug_compact_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -204,7 +204,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_entities[sensor.smart_plug_compact_energy-state]
+# name: test_entities[entities][sensor.smart_plug_compact_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
@@ -220,7 +220,7 @@
     'state': '1.5',
   })
 # ---
-# name: test_entities[sensor.smart_plug_compact_power-entry]
+# name: test_entities[entities][sensor.smart_plug_compact_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -260,7 +260,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_entities[sensor.smart_plug_compact_power-state]
+# name: test_entities[entities][sensor.smart_plug_compact_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
@@ -275,7 +275,7 @@
     'state': '8.0',
   })
 # ---
-# name: test_entities[sensor.smart_plug_energy-entry]
+# name: test_entities[entities][sensor.smart_plug_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -317,7 +317,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_entities[sensor.smart_plug_energy-state]
+# name: test_entities[entities][sensor.smart_plug_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
@@ -333,7 +333,7 @@
     'state': '3.0',
   })
 # ---
-# name: test_entities[sensor.smart_plug_power-entry]
+# name: test_entities[entities][sensor.smart_plug_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -373,7 +373,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_entities[sensor.smart_plug_power-state]
+# name: test_entities[entities][sensor.smart_plug_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
@@ -388,7 +388,7 @@
     'state': '12.5',
   })
 # ---
-# name: test_entities[sensor.thermostat_temperature-entry]
+# name: test_entities[entities][sensor.thermostat_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -430,7 +430,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor.thermostat_temperature-state]
+# name: test_entities[entities][sensor.thermostat_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -446,7 +446,7 @@
     'state': '21.5',
   })
 # ---
-# name: test_entities[sensor.thermostat_valvetappet-entry]
+# name: test_entities[entities][sensor.thermostat_valvetappet-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -485,7 +485,7 @@
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
-# name: test_entities[sensor.thermostat_valvetappet-state]
+# name: test_entities[entities][sensor.thermostat_valvetappet-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Thermostat Valvetappet',
@@ -501,7 +501,7 @@
     'state': '42',
   })
 # ---
-# name: test_entities[sensor.twinguard_air_quality-entry]
+# name: test_entities[entities][sensor.twinguard_air_quality-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -538,7 +538,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.twinguard_air_quality-state]
+# name: test_entities[entities][sensor.twinguard_air_quality-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Twinguard Air quality',
@@ -552,7 +552,7 @@
     'state': 'GOOD',
   })
 # ---
-# name: test_entities[sensor.twinguard_humidity-entry]
+# name: test_entities[entities][sensor.twinguard_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -589,7 +589,7 @@
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
-# name: test_entities[sensor.twinguard_humidity-state]
+# name: test_entities[entities][sensor.twinguard_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
@@ -604,7 +604,7 @@
     'state': '50.0',
   })
 # ---
-# name: test_entities[sensor.twinguard_humidity_rating-entry]
+# name: test_entities[entities][sensor.twinguard_humidity_rating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -641,7 +641,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.twinguard_humidity_rating-state]
+# name: test_entities[entities][sensor.twinguard_humidity_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Twinguard Humidity rating',
@@ -654,7 +654,7 @@
     'state': 'GOOD',
   })
 # ---
-# name: test_entities[sensor.twinguard_purity-entry]
+# name: test_entities[entities][sensor.twinguard_purity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -691,7 +691,7 @@
     'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
-# name: test_entities[sensor.twinguard_purity-state]
+# name: test_entities[entities][sensor.twinguard_purity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Twinguard Purity',
@@ -705,7 +705,7 @@
     'state': '500.0',
   })
 # ---
-# name: test_entities[sensor.twinguard_purity_rating-entry]
+# name: test_entities[entities][sensor.twinguard_purity_rating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -742,7 +742,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.twinguard_purity_rating-state]
+# name: test_entities[entities][sensor.twinguard_purity_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Twinguard Purity rating',
@@ -755,7 +755,7 @@
     'state': 'GOOD',
   })
 # ---
-# name: test_entities[sensor.twinguard_temperature-entry]
+# name: test_entities[entities][sensor.twinguard_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -797,7 +797,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor.twinguard_temperature-state]
+# name: test_entities[entities][sensor.twinguard_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
@@ -813,7 +813,7 @@
     'state': '22.0',
   })
 # ---
-# name: test_entities[sensor.twinguard_temperature_rating-entry]
+# name: test_entities[entities][sensor.twinguard_temperature_rating-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -850,7 +850,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[sensor.twinguard_temperature_rating-state]
+# name: test_entities[entities][sensor.twinguard_temperature_rating-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Twinguard Temperature rating',
@@ -863,7 +863,7 @@
     'state': 'GOOD',
   })
 # ---
-# name: test_entities[sensor.wall_thermostat_humidity-entry]
+# name: test_entities[entities][sensor.wall_thermostat_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -900,7 +900,7 @@
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
-# name: test_entities[sensor.wall_thermostat_humidity-state]
+# name: test_entities[entities][sensor.wall_thermostat_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
@@ -915,7 +915,7 @@
     'state': '45.0',
   })
 # ---
-# name: test_entities[sensor.wall_thermostat_temperature-entry]
+# name: test_entities[entities][sensor.wall_thermostat_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -957,7 +957,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor.wall_thermostat_temperature-state]
+# name: test_entities[entities][sensor.wall_thermostat_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
