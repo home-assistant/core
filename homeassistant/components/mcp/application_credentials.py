@@ -72,14 +72,6 @@ async def async_get_auth_implementation(
     auth_domain: str,
     credential: ClientCredential,
 ) -> config_entry_oauth2_flow.AbstractOAuth2Implementation:
-    """Return an MCP-spec OAuth2 implementation with PKCE enabled.
-
-    The MCP OAuth 2.1 profile mandates PKCE S256 on the authorization
-    code flow. The default `application_credentials.AuthImplementation`
-    extends `LocalOAuth2Implementation` (no PKCE), so spec-strict MCP
-    servers reject authorize requests with `invalid_request: code_challenge`.
-    Override here so the `mcp` integration always uses
-    `LocalOAuth2ImplementationWithPkce`.
-    """
+    """Return the OAuth2 implementation for the active MCP authorization server."""
     authorization_server = await async_get_authorization_server(hass)
     return MCPAuthImplementation(hass, auth_domain, credential, authorization_server)
