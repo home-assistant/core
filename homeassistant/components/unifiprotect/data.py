@@ -104,9 +104,6 @@ class ProtectData:
         self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
         # PTZ patrol cache: camera_id -> list of patrols
         self.ptz_patrols: dict[str, list[PTZPatrol]] = {}
-        # Resolved NVR mac in public-API-only mode (no private bootstrap to read
-        # it from); set during setup and used to route NVR websocket updates.
-        self.public_api_nvr_mac: str | None = None
 
     @property
     def disable_stream(self) -> bool:

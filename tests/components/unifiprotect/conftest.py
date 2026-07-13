@@ -190,7 +190,9 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.public_bootstrap.nvr = Mock()
     client.public_bootstrap.nvr.mac = nvr.mac
     client.public_bootstrap.nvr.name = nvr.name
+    client.public_bootstrap.nvr.display_name = nvr.name
     client.public_bootstrap.nvr.device_type = None
+    client.public_bootstrap.nvr.type = None
 
     # Cameras resolve to their primed public model (see ``update_public`` in
     # ``mock_entry``); other device types opt in via the ``setup_public_*``

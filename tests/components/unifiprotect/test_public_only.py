@@ -71,7 +71,9 @@ def _public_client() -> Mock:
     # The library backfills the mac during update_public(); it is present here.
     nvr.mac = _UNIFI_MAC
     nvr.name = "Test NVR"
+    nvr.display_name = "Test NVR"
     nvr.device_type = "UNVR4"  # present on firmware newer than 7.1
+    nvr.type = "UNVR4"
     nvr.id = "nvr-id"
     nvr.model = ModelType.NVR
     pb = Mock(spec=PublicBootstrap)

@@ -214,7 +214,6 @@ async def _async_setup_public_only_entry(
             translation_key="public_bootstrap_failed",
         )
     unifi_mac = _async_unifi_mac_from_hass(nvr.mac)
-    data_service.public_api_nvr_mac = unifi_mac
 
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=unifi_mac)
@@ -222,7 +221,7 @@ async def _async_setup_public_only_entry(
     data_service.async_subscribe_public_events()
 
     # Create the NVR device before forwarding platforms so via_device works.
-    # Model is absent on firmware 7.1 and older; market name and console URL
+    # ``type`` is only present on newer firmware; market name and console URL
     # are always private-only, so they stay unset here.
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -230,8 +229,8 @@ async def _async_setup_public_only_entry(
         connections={(dr.CONNECTION_NETWORK_MAC, unifi_mac)},
         identifiers={(DOMAIN, unifi_mac)},
         manufacturer=DEFAULT_BRAND,
-        name=nvr.name,
-        model=nvr.device_type,
+        name=nvr.display_name,
+        model=nvr.type,
         sw_version=str(meta.version),
     )
 
