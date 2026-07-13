@@ -1,799 +1,1064 @@
-"""Tests for the Xiaomi BLE integration __init__ module."""
+"""Test Xiaomi BLE sensors."""
 
-from __future__ import annotations
+from datetime import timedelta
+import time
 
-from homeassistant.components.bluetooth.passive_update_processor import (
-    PASSIVE_UPDATE_PROCESSOR,
+from homeassistant.components.bluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
-from homeassistant.components.xiaomi_ble.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.components.sensor import ATTR_STATE_CLASS
+from homeassistant.components.xiaomi_ble.const import CONF_SLEEPY_DEVICE, DOMAIN
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from . import (
+    HHCCJCY10_SERVICE_INFO,
+    MISCALE_S400_PACKET2_SERVICE_INFO,
+    MISCALE_S400_SERVICE_INFO,
+    MISCALE_V1_SERVICE_INFO,
+    MISCALE_V2_SERVICE_INFO,
+    MMC_T201_1_SERVICE_INFO,
+    make_advertisement,
+)
 
-S400_ADDRESS = "04:AE:47:67:C6:7C"
-DATA_S400_IMPEDANCE_CACHE_PURGED = "s400_impedance_restore_cache_purged"
-S400_MODEL = "MJTZC01YM"
-V1V2_MODEL = "XMTZC02HM/XMTZC05HM/NUN4049CN"
-
-
-def _async_setup_device(
-    device_registry: dr.DeviceRegistry,
-    entry: MockConfigEntry,
-    *,
-    model: str = S400_MODEL,
-) -> dr.DeviceEntry:
-    """Create a device row for the given config entry."""
-    return device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={("bluetooth", S400_ADDRESS)},
-        model=model,
-        name="Body Composition Scale C67C",
-    )
+from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.components.bluetooth import (
+    inject_bluetooth_service_info_bleak,
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
 
 
-def _async_add_entity(
-    entity_registry: er.EntityRegistry,
-    entry: MockConfigEntry,
-    device_id: str,
-    unique_id: str,
-    *,
-    original_name: str = "Impedance",
-    disabled_by: er.RegistryEntryDisabler | None = None,
-) -> str:
-    """Create a sensor entity with the given unique_id and return its entity_id."""
-    entry_entity = entity_registry.async_get_or_create(
-        Platform.SENSOR,
-        DOMAIN,
-        unique_id,
-        config_entry=entry,
-        device_id=device_id,
-        original_name=original_name,
-    )
-    if disabled_by is not None:
-        entry_entity = entity_registry.async_update_entity(
-            entry_entity.entity_id, disabled_by=disabled_by
-        )
-    return entry_entity.entity_id
-
-
-def _stale_s400_restore_data() -> dict:
-    """Build restore_data shaped like a pre-fix S400 cache dump."""
-    return {
-        Platform.SENSOR: {
-            "entity_data": {
-                "impedance___": 535.3,
-                "impedance_low___": 479.3,
-                "impedance_high___": 497.6,
-                "mass___": 74.2,
-            },
-            "entity_descriptions": {
-                "impedance___": {"key": "impedance_ohm"},
-                "impedance_low___": {"key": "impedance_low"},
-                "impedance_high___": {"key": "impedance_high"},
-                "mass___": {"key": "mass_kg"},
-            },
-            "entity_names": {},
-            "devices": {},
-        }
-    }
-
-
-def _v1v2_restore_data() -> dict:
-    """Build restore_data shaped like a real V1/V2 cache dump.
-
-    Unlike the S400, a V1/V2 scale's library parser never emits
-    "impedance_low"/"impedance_high" at all -- only the generic
-    "impedance" key -- so its restore cache never contains those.
-    """
-    return {
-        Platform.SENSOR: {
-            "entity_data": {
-                "impedance___": 428.0,
-                "mass___": 68.5,
-            },
-            "entity_descriptions": {
-                "impedance___": {"key": "impedance_ohm"},
-                "mass___": {"key": "mass_kg"},
-            },
-            "entity_names": {},
-            "devices": {},
-        }
-    }
-
-
-def _seed_restore_data(
-    hass: HomeAssistant, entry: MockConfigEntry, data: dict | None = None
-) -> dict:
-    """Seed the real bluetooth passive-update-processor storage for entry."""
-    processor_data = hass.data[PASSIVE_UPDATE_PROCESSOR]
-    restore_data = data if data is not None else _stale_s400_restore_data()
-    processor_data.all_restore_data[entry.entry_id] = restore_data
-    return restore_data
-
-
-async def test_migrate_renames_both_legacy_entities(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test both legacy entities are renamed without a unique-ID collision."""
+async def test_sensors(hass: HomeAssistant) -> None:
+    """Test setting up creates the sensors."""
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
+        domain=DOMAIN,
+        unique_id="00:81:F9:DD:6F:C1",
     )
     entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry)
-    legacy_entity_id = _async_add_entity(
-        entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
-    )
-    low_entity_id = _async_add_entity(
-        entity_registry,
-        entry,
-        device.id,
-        f"{S400_ADDRESS}-impedance_low",
-        original_name="Impedance Low",
-    )
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    legacy_after = entity_registry.async_get(legacy_entity_id)
-    assert legacy_after is not None
-    assert legacy_after.unique_id == f"{S400_ADDRESS}-impedance_low"
-    assert legacy_after.previous_unique_id == f"{S400_ADDRESS}-impedance"
-    assert legacy_after.disabled_by is None
-
-    low_after = entity_registry.async_get(low_entity_id)
-    assert low_after is not None
-    assert low_after.unique_id == f"{S400_ADDRESS}-impedance_high"
-    assert low_after.previous_unique_id == f"{S400_ADDRESS}-impedance_low"
-
-    assert legacy_after.entity_id != low_after.entity_id
-    assert legacy_after.unique_id != low_after.unique_id
-
-    assert entry.minor_version == 2
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(hass, MMC_T201_1_SERVICE_INFO)
     await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 2
 
-
-async def test_migrate_renames_impedance_low_only(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test 'impedance_low' alone is renamed to 'impedance_high'."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
-    )
-    entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry)
-    entity_id = _async_add_entity(
-        entity_registry,
-        entry,
-        device.id,
-        f"{S400_ADDRESS}-impedance_low",
-        original_name="Impedance Low",
-    )
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    after = entity_registry.async_get(entity_id)
-    assert after is not None
-    assert after.unique_id == f"{S400_ADDRESS}-impedance_high"
-    assert after.previous_unique_id == f"{S400_ADDRESS}-impedance_low"
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_migrate_leaves_generic_impedance_alone_for_v1v2(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test a V1/V2 scale's lone 'impedance' entity is left untouched."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
-    )
-    entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry, model=V1V2_MODEL)
-    entity_id = _async_add_entity(
-        entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
-    )
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    after = entity_registry.async_get(entity_id)
-    assert after is not None
-    assert after.unique_id == f"{S400_ADDRESS}-impedance"
-    assert after.previous_unique_id is None
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_migrate_renames_generic_impedance_via_device_registry_fallback(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test an S400 that only ever has 'impedance' is still renamed.
-
-    The old parser could emit the generic "impedance" key without
-    "impedance_low" if a device never received the second advertisement
-    before the upgrade. The device registry, when already available, is
-    the fallback that catches this case.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
-    )
-    entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry, model=S400_MODEL)
-    entity_id = _async_add_entity(
-        entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
-    )
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    after = entity_registry.async_get(entity_id)
-    assert after is not None
-    assert after.unique_id == f"{S400_ADDRESS}-impedance_low"
-    assert after.previous_unique_id == f"{S400_ADDRESS}-impedance"
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_migrate_fallback_noop_when_device_also_unknown(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the device-registry fallback doesn't error with no device row.
-
-    If neither the entity-registry signal nor the device registry can
-    identify this as an S400, the lone "impedance" entity is left alone
-    -- same outcome as the V1/V2 case, just via a different reason.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
-    )
-    entry.add_to_hass(hass)
-    # No device row at all for this address.
-
-    entity_registry.async_get_or_create(
-        Platform.SENSOR,
-        DOMAIN,
-        f"{S400_ADDRESS}-impedance",
-        config_entry=entry,
-        original_name="Impedance",
-    )
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    after = entity_registry.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, f"{S400_ADDRESS}-impedance"
-    )
-    assert after is not None
-
-    assert entry.minor_version == 2
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_migrate_preserves_user_disabled_reason(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test a user-disabled legacy entity keeps its disable reason when renamed."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
-    )
-    entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry)
-    _async_add_entity(
-        entity_registry,
-        entry,
-        device.id,
-        f"{S400_ADDRESS}-impedance_low",
-        original_name="Impedance Low",
-    )
-    entity_id = _async_add_entity(
-        entity_registry,
-        entry,
-        device.id,
-        f"{S400_ADDRESS}-impedance",
-        disabled_by=er.RegistryEntryDisabler.USER,
-    )
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    after = entity_registry.async_get(entity_id)
-    assert after is not None
-    assert after.unique_id == f"{S400_ADDRESS}-impedance_low"
-    assert after.previous_unique_id == f"{S400_ADDRESS}-impedance"
-    assert after.disabled_by is er.RegistryEntryDisabler.USER
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_migrate_skipped_when_no_legacy_entity(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test the migration still completes when there is nothing to rename."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
-    )
-    entry.add_to_hass(hass)
-    _async_setup_device(device_registry, entry)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.minor_version == 2
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_migrate_already_done_is_noop(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test setup does not re-run the migration for an already-migrated entry.
-
-    This is also the regression case for a fresh S400 that had no
-    entities at its very first migration pass (which immediately bumped
-    minor_version to 2) and only got its correctly-named entities from a
-    live advertisement afterwards: a later restart must never attempt to
-    rename them again.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
-    )
-    entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry)
-    entity_id = _async_add_entity(
-        entity_registry,
-        entry,
-        device.id,
-        f"{S400_ADDRESS}-impedance_low",
-        original_name="Impedance Low",
-    )
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    after = entity_registry.async_get(entity_id)
-    assert after is not None
-    assert after.unique_id == f"{S400_ADDRESS}-impedance_low"
-    assert after.previous_unique_id is None
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_purge_stale_restore_cache_after_low_only_migration(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the cache purge still identifies an S400 after a low-only rename.
-
-    A migration that only had "impedance_low" to rename moves it onto
-    "impedance_high", so by the time the cache purge runs right after,
-    no "impedance_low" entity exists yet. It must still recognize this
-    as an S400 via "impedance_high" instead, or the purge (and its
-    one-time marker) would be skipped for a real S400.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
-    )
-    entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry)
-    _async_add_entity(
-        entity_registry,
-        entry,
-        device.id,
-        f"{S400_ADDRESS}-impedance_low",
-        original_name="Impedance Low",
-    )
-    restore_data = _seed_restore_data(hass, entry)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.minor_version == 2
-    sensor_data = restore_data[Platform.SENSOR]
-    assert "impedance___" not in sensor_data["entity_data"]
-    assert "impedance_low___" not in sensor_data["entity_data"]
-    assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_purge_stale_restore_cache_via_cache_signal_alone(
-    hass: HomeAssistant,
-) -> None:
-    """Test the cache purge still identifies an S400 with no registry entities.
-
-    If the user deleted the S400's entities entirely while stale cache
-    data remained, there is no entity-registry signal left at all. The
-    restore cache's own descriptions must still be enough to identify
-    this as an S400 and purge the stale keys.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
-    )
-    entry.add_to_hass(hass)
-    # No device, no entities: only the restore cache still has S400 data.
-    restore_data = _seed_restore_data(hass, entry)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    sensor_data = restore_data[Platform.SENSOR]
-    assert "impedance___" not in sensor_data["entity_data"]
-    assert "impedance_low___" not in sensor_data["entity_data"]
-    assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_purge_stale_restore_cache_through_full_setup(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the stale cache is purged and no phantom entity survives setup."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
-    )
-    entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry)
-    _async_add_entity(
-        entity_registry,
-        entry,
-        device.id,
-        f"{S400_ADDRESS}-impedance_low",
-        original_name="Impedance Low",
-    )
-    restore_data = _seed_restore_data(hass, entry)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    sensor_data = restore_data[Platform.SENSOR]
-    assert "impedance___" not in sensor_data["entity_data"]
-    assert "impedance_low___" not in sensor_data["entity_data"]
-    # The correctly labeled impedance_high value must survive.
-    assert sensor_data["entity_data"]["impedance_high___"] == 497.6
-
-    assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True
-
-    # No phantom entity should have been created from the (now purged)
-    # stale "impedance" description.
+    temp_sensor = hass.states.get("sensor.baby_thermometer_6fc1_temperature")
+    temp_sensor_attribtes = temp_sensor.attributes
+    assert temp_sensor.state == "36.8719980616822"
     assert (
-        entity_registry.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, f"{S400_ADDRESS}-impedance"
-        )
-        is None
+        temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Baby Thermometer 6FC1 Temperature"
     )
+    assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+    assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
 
-async def test_purge_stale_restore_cache_retryable_when_model_unknown(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test a device with no model set yet is not treated as confirmed non-S400.
-
-    device_entry.model can be None (not yet populated). Treating that as
-    "confirmed something else" would permanently skip a real S400 whose
-    model just hasn't been recorded yet.
-    """
+async def test_xiaomi_formaldeyhde(hass: HomeAssistant) -> None:
+    """Make sure that formldehyde sensors are correctly mapped."""
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
+        domain=DOMAIN,
+        unique_id="C4:7C:8D:6A:3E:7A",
     )
     entry.add_to_hass(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={("bluetooth", S400_ADDRESS)},
-        name="Body Composition Scale C67C",
-        # model intentionally omitted / None
-    )
-
-    restore_data = _seed_restore_data(hass, entry, _v1v2_restore_data())
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    sensor_data = restore_data[Platform.SENSOR]
-    assert "impedance___" in sensor_data["entity_data"]
-    assert DATA_S400_IMPEDANCE_CACHE_PURGED not in entry.data
+    assert len(hass.states.async_all()) == 0
+
+    # WARNING: This test data is synthetic, rather than captured from a real device
+    # obj type is 0x1010, payload len is 0x2 and payload is 0xf400
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A", b"q \x5d\x01iz>j\x8d|\xc4\r\x10\x10\x02\xf4\x00"
+        ),
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+
+    sensor = hass.states.get("sensor.smart_flower_pot_3e7a_formaldehyde")
+    sensor_attr = sensor.attributes
+    assert sensor.state == "2.44"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Smart Flower Pot 3E7A Formaldehyde"
+    assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "mg/m³"
+    assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
 
-async def test_purge_stale_restore_cache_leaves_non_s400_data_untouched(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test a V1/V2 scale's legitimate cached 'impedance' value is untouched.
-
-    Without an "impedance_low" entity to prove this is an S400, the cache
-    purge (and the phantom cleanup) must leave a device's data alone.
-    """
+async def test_xiaomi_consumable(hass: HomeAssistant) -> None:
+    """Make sure that consumable sensors are correctly mapped."""
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
+        domain=DOMAIN,
+        unique_id="C4:7C:8D:6A:3E:7A",
     )
     entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry, model=V1V2_MODEL)
-    entity_id = _async_add_entity(
-        entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
-    )
-    restore_data = _seed_restore_data(hass, entry, _v1v2_restore_data())
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    sensor_data = restore_data[Platform.SENSOR]
-    assert "impedance___" in sensor_data["entity_data"]
+    assert len(hass.states.async_all()) == 0
 
-    # The marker is still recorded, to avoid re-checking every restart.
-    assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True
+    # WARNING: This test data is synthetic, rather than captured from a real device
+    # obj type is 0x1310, payload len is 0x2 and payload is 0x6000
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A", b"q \x5d\x01iz>j\x8d|\xc4\r\x13\x10\x02\x60\x00"
+        ),
+    )
 
-    # The genuine V1/V2 entity must survive, untouched.
-    after = entity_registry.async_get(entity_id)
-    assert after is not None
-    assert after.unique_id == f"{S400_ADDRESS}-impedance"
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+
+    sensor = hass.states.get("sensor.smart_flower_pot_3e7a_consumable")
+    sensor_attr = sensor.attributes
+    assert sensor.state == "96"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Smart Flower Pot 3E7A Consumable"
+    assert sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
 
-async def test_purge_stale_restore_cache_runs_once(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the purge does not run again once the marker is already set.
+async def test_xiaomi_score(hass: HomeAssistant) -> None:
+    """Make sure that score sensors are correctly mapped."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="ED:DE:34:3F:48:0C",
+        data={"bindkey": "1330b99cded13258acc391627e9771f7"},
+    )
+    entry.add_to_hass(hass)
 
-    Once real, correctly labeled data has repopulated the cache, a
-    second purge pass must not discard it.
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "ED:DE:34:3F:48:0C",
+            b"\x48\x58\x06\x08\xc9H\x0e\xf1\x12\x81\x07\x973\xfc\x14\x00\x00VD\xdbA",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 2
+
+    sensor = hass.states.get("sensor.smart_toothbrush_480c_score")
+
+    sensor_attr = sensor.attributes
+    assert sensor.state == "83"
+    assert sensor_attr[ATTR_FRIENDLY_NAME] == "Smart Toothbrush 480C Score"
+    assert sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_xiaomi_battery_voltage(hass: HomeAssistant) -> None:
+    """Make sure that battery voltage sensors are correctly mapped."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="C4:7C:8D:6A:3E:7A",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # WARNING: This test data is synthetic, rather than captured from a real device
+    # obj type is 0x0a10, payload len is 0x2 and payload is 0x6400
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A", b"q \x5d\x01iz>j\x8d|\xc4\r\x0a\x10\x02\x64\x00"
+        ),
+    )
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 2
+
+    volt_sensor = hass.states.get("sensor.smart_flower_pot_3e7a_voltage")
+    volt_sensor_attr = volt_sensor.attributes
+    assert volt_sensor.state == "3.1"
+    assert volt_sensor_attr[ATTR_FRIENDLY_NAME] == "Smart Flower Pot 3E7A Voltage"
+    assert volt_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "V"
+    assert volt_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    bat_sensor = hass.states.get("sensor.smart_flower_pot_3e7a_battery")
+    bat_sensor_attr = bat_sensor.attributes
+    assert bat_sensor.state == "100"
+    assert bat_sensor_attr[ATTR_FRIENDLY_NAME] == "Smart Flower Pot 3E7A Battery"
+    assert bat_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert bat_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_xiaomi_hhccjcy01(hass: HomeAssistant) -> None:
+    """Test HHCCJCY01 multiple advertisements.
+
+    This device has multiple advertisements before all sensors are visible.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=S400_ADDRESS,
-        version=1,
-        minor_version=2,
-        data={DATA_S400_IMPEDANCE_CACHE_PURGED: True},
+        unique_id="C4:7C:8D:6A:3E:7A",
     )
     entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry)
-    _async_add_entity(
-        entity_registry,
-        entry,
-        device.id,
-        f"{S400_ADDRESS}-impedance_low",
-        original_name="Impedance Low",
-    )
-    restore_data = _seed_restore_data(hass, entry)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Marker was already set: these (here deliberately still-stale-looking)
-    # entries must be left alone, since real data may look identical in
-    # shape to what a fresh advertisement would have written.
-    sensor_data = restore_data[Platform.SENSOR]
-    assert "impedance___" in sensor_data["entity_data"]
-    assert "impedance_low___" in sensor_data["entity_data"]
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A", b"q \x98\x00fz>j\x8d|\xc4\r\x07\x10\x03\x00\x00\x00"
+        ),
+    )
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A", b"q \x98\x00hz>j\x8d|\xc4\r\t\x10\x02W\x02"
+        ),
+    )
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A", b"q \x98\x00Gz>j\x8d|\xc4\r\x08\x10\x01@"
+        ),
+    )
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A", b"q \x98\x00iz>j\x8d|\xc4\r\x04\x10\x02\xf4\x00"
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 5
+
+    illum_sensor = hass.states.get("sensor.plant_sensor_3e7a_illuminance")
+    illum_sensor_attr = illum_sensor.attributes
+    assert illum_sensor.state == "0"
+    assert illum_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Illuminance"
+    assert illum_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "lx"
+    assert illum_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    cond_sensor = hass.states.get("sensor.plant_sensor_3e7a_conductivity")
+    cond_sensor_attribtes = cond_sensor.attributes
+    assert cond_sensor.state == "599"
+    assert cond_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Conductivity"
+    assert cond_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "μS/cm"
+    assert cond_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
+
+    moist_sensor = hass.states.get("sensor.plant_sensor_3e7a_moisture")
+    moist_sensor_attribtes = moist_sensor.attributes
+    assert moist_sensor.state == "64"
+    assert moist_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Moisture"
+    assert moist_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert moist_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
+
+    temp_sensor = hass.states.get("sensor.plant_sensor_3e7a_temperature")
+    temp_sensor_attribtes = temp_sensor.attributes
+    assert temp_sensor.state == "24.4"
+    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Temperature"
+    assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+    assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
+
+    batt_sensor = hass.states.get("sensor.plant_sensor_3e7a_battery")
+    batt_sensor_attribtes = batt_sensor.attributes
+    assert batt_sensor.state == "5"
+    assert batt_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Battery"
+    assert batt_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert batt_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
 
-async def test_recover_interrupted_migration_completes_both_steps(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test recovery when neither rename was persisted.
+async def test_xiaomi_hhccjcy01_not_connectable(hass: HomeAssistant) -> None:
+    """Test HHCCJCY01 when sensors are not connectable.
 
-    "-impedance" and the original "-impedance_low" (no "-impedance_high"
-    yet) can only coexist post-migration because a crash interrupted
-    this exact rename attempt -- device and entity are always created
-    together, so a real S400 in this state is unambiguous. Both renames
-    must complete, in the same order as the original migration.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
-    )
-    entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry, model=S400_MODEL)
-    legacy_entity_id = _async_add_entity(
-        entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
-    )
-    low_entity_id = _async_add_entity(
-        entity_registry,
-        entry,
-        device.id,
-        f"{S400_ADDRESS}-impedance_low",
-        original_name="Impedance Low",
-    )
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    legacy_after = entity_registry.async_get(legacy_entity_id)
-    assert legacy_after is not None
-    assert legacy_after.unique_id == f"{S400_ADDRESS}-impedance_low"
-
-    low_after = entity_registry.async_get(low_entity_id)
-    assert low_after is not None
-    assert low_after.unique_id == f"{S400_ADDRESS}-impedance_high"
-
-    assert legacy_after.unique_id != low_after.unique_id
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_recover_interrupted_migration_completes_remaining_step(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test recovery finishes the second step if only the first landed.
-
-    Simulates a crash after "-impedance_low" -> "-impedance_high" reached
-    disk but before "-impedance" -> "-impedance_low" did: only the
-    second, still-pending step must run.
-    """
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
-    )
-    entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry, model=S400_MODEL)
-    entity_id = _async_add_entity(
-        entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
-    )
-    # Simulate the already-completed first step with the high unique ID.
-    entity_registry.async_get_or_create(
-        Platform.SENSOR,
-        DOMAIN,
-        f"{S400_ADDRESS}-impedance_high",
-        config_entry=entry,
-        device_id=device.id,
-        original_name="Impedance High",
-    )
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    after = entity_registry.async_get(entity_id)
-    assert after is not None
-    assert after.unique_id == f"{S400_ADDRESS}-impedance_low"
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_recover_interrupted_migration_noop_when_already_done(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test recovery does nothing once the migration is genuinely complete."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
-    )
-    entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry, model=S400_MODEL)
-    entity_id = _async_add_entity(
-        entity_registry,
-        entry,
-        device.id,
-        f"{S400_ADDRESS}-impedance_low",
-        original_name="Impedance Low",
-    )
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    after = entity_registry.async_get(entity_id)
-    assert after is not None
-    assert after.unique_id == f"{S400_ADDRESS}-impedance_low"
-    assert after.previous_unique_id is None
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_recover_interrupted_migration_skipped_for_v1v2(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test recovery never touches a V1/V2 scale's legitimate entity."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
-    )
-    entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry, model=V1V2_MODEL)
-    entity_id = _async_add_entity(
-        entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
-    )
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    after = entity_registry.async_get(entity_id)
-    assert after is not None
-    assert after.unique_id == f"{S400_ADDRESS}-impedance"
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-
-async def test_purge_phantom_removes_entity_despite_purge_marker(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the phantom-entity safety net still catches a stale description.
-
-    This is the defense-in-depth path: the primary defense is the cache
-    purge running before the sensor platform consumes restore_data, but
-    if that step is skipped (marker already set) and a stale description
-    is present regardless, the resulting phantom entity must still be
-    removed rather than linger in the UI.
+    This device has multiple advertisements before all sensors are
+    visible but not connectable.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=S400_ADDRESS,
-        version=1,
-        minor_version=2,
-        data={DATA_S400_IMPEDANCE_CACHE_PURGED: True},
+        unique_id="C4:7C:8D:6A:3E:7A",
     )
     entry.add_to_hass(hass)
-    device = _async_setup_device(device_registry, entry)
-    _async_add_entity(
-        entity_registry,
-        entry,
-        device.id,
-        f"{S400_ADDRESS}-impedance_low",
-        original_name="Impedance Low",
-    )
-    _seed_restore_data(hass, entry)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A",
+            b"q \x98\x00fz>j\x8d|\xc4\r\x07\x10\x03\x00\x00\x00",
+            connectable=False,
+        ),
+    )
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A",
+            b"q \x98\x00hz>j\x8d|\xc4\r\t\x10\x02W\x02",
+            connectable=False,
+        ),
+    )
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A",
+            b"q \x98\x00Gz>j\x8d|\xc4\r\x08\x10\x01@",
+            connectable=False,
+        ),
+    )
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A",
+            b"q \x98\x00iz>j\x8d|\xc4\r\x04\x10\x02\xf4\x00",
+            connectable=False,
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 4
+
+    illum_sensor = hass.states.get("sensor.plant_sensor_3e7a_illuminance")
+    illum_sensor_attr = illum_sensor.attributes
+    assert illum_sensor.state == "0"
+    assert illum_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Illuminance"
+    assert illum_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "lx"
+    assert illum_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    cond_sensor = hass.states.get("sensor.plant_sensor_3e7a_conductivity")
+    cond_sensor_attribtes = cond_sensor.attributes
+    assert cond_sensor.state == "599"
+    assert cond_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Conductivity"
+    assert cond_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "μS/cm"
+    assert cond_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
+
+    moist_sensor = hass.states.get("sensor.plant_sensor_3e7a_moisture")
+    moist_sensor_attribtes = moist_sensor.attributes
+    assert moist_sensor.state == "64"
+    assert moist_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Moisture"
+    assert moist_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert moist_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
+
+    temp_sensor = hass.states.get("sensor.plant_sensor_3e7a_temperature")
+    temp_sensor_attribtes = temp_sensor.attributes
+    assert temp_sensor.state == "24.4"
+    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Temperature"
+    assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+    assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
+
+    # No battery sensor since its not connectable
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_xiaomi_hhccjcy01_only_some_sources_connectable(
+    hass: HomeAssistant,
+) -> None:
+    """Test HHCCJCY01 partial sources.
+
+    This device has multiple advertisements before all sensors are visible
+    and some sources are connectable.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="C4:7C:8D:6A:3E:7A",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A",
+            b"q \x98\x00fz>j\x8d|\xc4\r\x07\x10\x03\x00\x00\x00",
+            connectable=True,
+        ),
+    )
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A",
+            b"q \x98\x00hz>j\x8d|\xc4\r\t\x10\x02W\x02",
+            connectable=False,
+        ),
+    )
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A",
+            b"q \x98\x00Gz>j\x8d|\xc4\r\x08\x10\x01@",
+            connectable=False,
+        ),
+    )
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "C4:7C:8D:6A:3E:7A",
+            b"q \x98\x00iz>j\x8d|\xc4\r\x04\x10\x02\xf4\x00",
+            connectable=False,
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 5
+
+    illum_sensor = hass.states.get("sensor.plant_sensor_3e7a_illuminance")
+    illum_sensor_attr = illum_sensor.attributes
+    assert illum_sensor.state == "0"
+    assert illum_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Illuminance"
+    assert illum_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "lx"
+    assert illum_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    cond_sensor = hass.states.get("sensor.plant_sensor_3e7a_conductivity")
+    cond_sensor_attribtes = cond_sensor.attributes
+    assert cond_sensor.state == "599"
+    assert cond_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Conductivity"
+    assert cond_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "μS/cm"
+    assert cond_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
+
+    moist_sensor = hass.states.get("sensor.plant_sensor_3e7a_moisture")
+    moist_sensor_attribtes = moist_sensor.attributes
+    assert moist_sensor.state == "64"
+    assert moist_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Moisture"
+    assert moist_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert moist_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
+
+    temp_sensor = hass.states.get("sensor.plant_sensor_3e7a_temperature")
+    temp_sensor_attribtes = temp_sensor.attributes
+    assert temp_sensor.state == "24.4"
+    assert temp_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Temperature"
+    assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+    assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
+
+    batt_sensor = hass.states.get("sensor.plant_sensor_3e7a_battery")
+    batt_sensor_attribtes = batt_sensor.attributes
+    assert batt_sensor.state == "5"
+    assert batt_sensor_attribtes[ATTR_FRIENDLY_NAME] == "Plant Sensor 3E7A Battery"
+    assert batt_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert batt_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_xiaomi_xmosb01xs(hass: HomeAssistant) -> None:
+    """Test XMOSB01XS multiple advertisements.
+
+    This device has multiple advertisements before all sensors are visible.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="DC:8E:95:23:07:B7",
+        data={"bindkey": "272b1c920ef435417c49228b8ab9a563"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "DC:8E:95:23:07:B7",
+            (
+                b"\x58\x59\x83\x46\x91\xb7\x07\x23\x95\x8e\xdc\xc7\x17\x61\xc1"
+                b"\x24\x03\x00\x25\x44\xb0\x65"
+            ),
+            connectable=False,
+        ),
+    )
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "DC:8E:95:23:07:B7",
+            b"\x10\x59\x83\x46\x90\xb7\x07\x23\x95\x8e\xdc",
+            connectable=False,
+        ),
+    )
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "DC:8E:95:23:07:B7",
+            b"\x48\x59\x83\x46\x9d\x34\x45\xec\xab\xda\x93\xf9\x24\x03\x00\x9e\x01\x6d\x3d",
+            connectable=False,
+        ),
+    )
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "DC:8E:95:23:07:B7",
+            (
+                b"\x58\x59\x83\x46\xa9\xb7\x07\x23\x95\x8e\xdc\xc6\x59\xa2\xdc\xc5"
+                b"\x24\x03\x00\xa0\x4d\x0d\x45"
+            ),
+            connectable=False,
+        ),
+    )
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "DC:8E:95:23:07:B7",
+            (
+                b"\x58\x59\x83\x46\xa4\xb7\x07\x23\x95\x8e\xdc\x77\x2a\xe2\x5c\x11"
+                b"\x24\x03\x00\xab\x87\x7b\xd7"
+            ),
+            connectable=False,
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 4
+
+    occupancy_sensor = hass.states.get("binary_sensor.occupancy_sensor_07b7_occupancy")
+    occupancy_sensor_attribtes = occupancy_sensor.attributes
+    assert occupancy_sensor.state == STATE_ON
     assert (
-        entity_registry.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, f"{S400_ADDRESS}-impedance"
-        )
-        is None
+        occupancy_sensor_attribtes[ATTR_FRIENDLY_NAME]
+        == "Occupancy Sensor 07B7 Occupancy"
+    )
+
+    illum_sensor = hass.states.get("sensor.occupancy_sensor_07b7_illuminance")
+    illum_sensor_attr = illum_sensor.attributes
+    assert illum_sensor.state == "111.0"
+    assert illum_sensor_attr[ATTR_FRIENDLY_NAME] == "Occupancy Sensor 07B7 Illuminance"
+    assert illum_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "lx"
+    assert illum_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    illum_sensor = hass.states.get("sensor.occupancy_sensor_07b7_duration_detected")
+    illum_sensor_attr = illum_sensor.attributes
+    assert illum_sensor.state == "2"
+    assert (
+        illum_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Occupancy Sensor 07B7 Duration detected"
+    )
+    assert illum_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "min"
+    assert illum_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    illum_sensor = hass.states.get("sensor.occupancy_sensor_07b7_duration_cleared")
+    illum_sensor_attr = illum_sensor.attributes
+    assert illum_sensor.state == "2"
+    assert (
+        illum_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Occupancy Sensor 07B7 Duration cleared"
+    )
+    assert illum_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "min"
+    assert illum_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.data[CONF_SLEEPY_DEVICE] is True
+
+
+async def test_xiaomi_cgdk2_bind_key(hass: HomeAssistant) -> None:
+    """Test CGDK2 bind key.
+
+    This device has encryption so we need to retrieve its bind key
+    from the config entry.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="58:2D:34:12:20:89",
+        data={"bindkey": "a3bfe9853dd85a620debe3620caaa351"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "58:2D:34:12:20:89",
+            b"XXo\x06\x07\x89 \x124-X_\x17m\xd5O\x02\x00\x00/\xa4S\xfa",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+
+    temp_sensor = hass.states.get("sensor.temperature_humidity_sensor_2089_temperature")
+    temp_sensor_attribtes = temp_sensor.attributes
+    assert temp_sensor.state == "22.6"
+    assert (
+        temp_sensor_attribtes[ATTR_FRIENDLY_NAME]
+        == "Temperature/Humidity Sensor 2089 Temperature"
+    )
+    assert temp_sensor_attribtes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+    assert temp_sensor_attribtes[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_hhccjcy10_uuid(hass: HomeAssistant) -> None:
+    """Test HHCCJCY10 UUID.
+
+    This device uses a different UUID compared to the other Xiaomi sensors.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="DC:23:4D:E5:5B:FC",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info_bleak(hass, HHCCJCY10_SERVICE_INFO)
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 5
+
+    temp_sensor = hass.states.get("sensor.plant_sensor_5bfc_temperature")
+    temp_sensor_attr = temp_sensor.attributes
+    assert temp_sensor.state == "11.0"
+    assert temp_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 5BFC Temperature"
+    assert temp_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+    assert temp_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    illu_sensor = hass.states.get("sensor.plant_sensor_5bfc_illuminance")
+    illu_sensor_attr = illu_sensor.attributes
+    assert illu_sensor.state == "79012"
+    assert illu_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 5BFC Illuminance"
+    assert illu_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "lx"
+    assert illu_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    cond_sensor = hass.states.get("sensor.plant_sensor_5bfc_conductivity")
+    cond_sensor_attr = cond_sensor.attributes
+    assert cond_sensor.state == "91"
+    assert cond_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 5BFC Conductivity"
+    assert cond_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "μS/cm"
+    assert cond_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    moist_sensor = hass.states.get("sensor.plant_sensor_5bfc_moisture")
+    moist_sensor_attr = moist_sensor.attributes
+    assert moist_sensor.state == "14"
+    assert moist_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 5BFC Moisture"
+    assert moist_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert moist_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    bat_sensor = hass.states.get("sensor.plant_sensor_5bfc_battery")
+    bat_sensor_attr = bat_sensor.attributes
+    assert bat_sensor.state == "40"
+    assert bat_sensor_attr[ATTR_FRIENDLY_NAME] == "Plant Sensor 5BFC Battery"
+    assert bat_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "%"
+    assert bat_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_miscale_v1_uuid(hass: HomeAssistant) -> None:
+    """Test MiScale V1 UUID.
+
+    This device uses a different UUID compared to the other Xiaomi sensors.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="50:FB:19:1B:B5:DC",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info_bleak(hass, MISCALE_V1_SERVICE_INFO)
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 3
+
+    mass_non_stabilized_sensor = hass.states.get(
+        "sensor.mi_smart_scale_b5dc_weight_non_stabilized"
+    )
+    mass_non_stabilized_sensor_attr = mass_non_stabilized_sensor.attributes
+    assert mass_non_stabilized_sensor.state == "86.55"
+    assert (
+        mass_non_stabilized_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Mi Smart Scale (B5DC) Weight non-stabilized"
+    )
+    assert mass_non_stabilized_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
+    assert mass_non_stabilized_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    mass_sensor = hass.states.get("sensor.mi_smart_scale_b5dc_weight")
+    mass_sensor_attr = mass_sensor.attributes
+    assert mass_sensor.state == "86.55"
+    assert mass_sensor_attr[ATTR_FRIENDLY_NAME] == "Mi Smart Scale (B5DC) Weight"
+    assert mass_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
+    assert mass_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_miscale_v2_uuid(hass: HomeAssistant) -> None:
+    """Test MiScale V2 UUID.
+
+    This device uses a different UUID compared to the other Xiaomi sensors.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="50:FB:19:1B:B5:DC",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    inject_bluetooth_service_info_bleak(hass, MISCALE_V2_SERVICE_INFO)
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 4
+
+    mass_non_stabilized_sensor = hass.states.get(
+        "sensor.mi_body_composition_scale_b5dc_weight_non_stabilized"
+    )
+    mass_non_stabilized_sensor_attr = mass_non_stabilized_sensor.attributes
+    assert mass_non_stabilized_sensor.state == "85.15"
+    assert (
+        mass_non_stabilized_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Mi Body Composition Scale (B5DC) Weight non-stabilized"
+    )
+    assert mass_non_stabilized_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
+    assert mass_non_stabilized_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    mass_sensor = hass.states.get("sensor.mi_body_composition_scale_b5dc_weight")
+    mass_sensor_attr = mass_sensor.attributes
+    assert mass_sensor.state == "85.15"
+    assert (
+        mass_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Mi Body Composition Scale (B5DC) Weight"
+    )
+    assert mass_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
+    assert mass_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    impedance_sensor = hass.states.get(
+        "sensor.mi_body_composition_scale_b5dc_impedance"
+    )
+    impedance_sensor_attr = impedance_sensor.attributes
+    assert impedance_sensor.state == "428"
+    assert (
+        impedance_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Mi Body Composition Scale (B5DC) Impedance"
+    )
+    assert impedance_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "ohm"
+    assert impedance_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_miscale_s400_packet1(hass: HomeAssistant) -> None:
+    """Test MiScale S400 first packet: mass + impedance_low + heart_rate + profile_id + stabilized."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="8C:D0:B2:F6:BE:EF",
+        data={"bindkey": "0728974d657a4b60964c1b1677f35f7c"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(hass, MISCALE_S400_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 5
+
+    stabilized_sensor = hass.states.get(
+        "binary_sensor.body_composition_scale_beef_stabilized"
+    )
+    assert stabilized_sensor is not None
+    assert stabilized_sensor.state == STATE_OFF
+    assert (
+        stabilized_sensor.attributes[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Stabilized"
+    )
+
+    impedance_low_sensor = hass.states.get(
+        "sensor.body_composition_scale_beef_impedance_low"
+    )
+    impedance_low_sensor_attr = impedance_low_sensor.attributes
+    assert impedance_low_sensor.state == "543.2"
+    assert (
+        impedance_low_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Impedance Low"
+    )
+    assert impedance_low_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "ohm"
+    assert impedance_low_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    mass_sensor = hass.states.get("sensor.body_composition_scale_beef_weight")
+    mass_sensor_attr = mass_sensor.attributes
+    assert mass_sensor.state == "69.9"
+    assert mass_sensor_attr[ATTR_FRIENDLY_NAME] == "Body Composition Scale BEEF Weight"
+    assert mass_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "kg"
+    assert mass_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    heart_rate_sensor = hass.states.get("sensor.body_composition_scale_beef_heart_rate")
+    heart_rate_sensor_attr = heart_rate_sensor.attributes
+    assert heart_rate_sensor.state == "92"
+    assert (
+        heart_rate_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Heart Rate"
+    )
+    assert heart_rate_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "bpm"
+
+    profile_id_sensor = hass.states.get("sensor.body_composition_scale_beef_profile_id")
+    profile_id_sensor_attr = profile_id_sensor.attributes
+    assert profile_id_sensor.state == "1"
+    assert (
+        profile_id_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Profile ID"
     )
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_miscale_s400_packet2(hass: HomeAssistant) -> None:
+    """Test MiScale S400 second packet: impedance_high + profile_id + stabilized."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="8C:D0:B2:F6:BE:EF",
+        data={"bindkey": "0728974d657a4b60964c1b1677f35f7c"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(hass, MISCALE_S400_PACKET2_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 3
+
+    stabilized_sensor = hass.states.get(
+        "binary_sensor.body_composition_scale_beef_stabilized"
+    )
+    assert stabilized_sensor is not None
+    assert stabilized_sensor.state == STATE_ON
+    assert (
+        stabilized_sensor.attributes[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Stabilized"
+    )
+
+    impedance_high_sensor = hass.states.get(
+        "sensor.body_composition_scale_beef_impedance_high"
+    )
+    impedance_high_sensor_attr = impedance_high_sensor.attributes
+    assert impedance_high_sensor.state == "497.6"
+    assert (
+        impedance_high_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Impedance High"
+    )
+    assert impedance_high_sensor_attr[ATTR_UNIT_OF_MEASUREMENT] == "ohm"
+    assert impedance_high_sensor_attr[ATTR_STATE_CLASS] == "measurement"
+
+    profile_id_sensor = hass.states.get("sensor.body_composition_scale_beef_profile_id")
+    profile_id_sensor_attr = profile_id_sensor.attributes
+    assert profile_id_sensor.state == "1"
+    assert (
+        profile_id_sensor_attr[ATTR_FRIENDLY_NAME]
+        == "Body Composition Scale BEEF Profile ID"
+    )
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_unavailable(hass: HomeAssistant) -> None:
+    """Test normal device goes to unavailable after 60 minutes."""
+    start_monotonic = time.monotonic()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="58:2D:34:12:20:89",
+        data={"bindkey": "a3bfe9853dd85a620debe3620caaa351"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            "58:2D:34:12:20:89",
+            b"XXo\x06\x07\x89 \x124-X_\x17m\xd5O\x02\x00\x00/\xa4S\xfa",
+        ),
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1
+
+    temp_sensor = hass.states.get("sensor.temperature_humidity_sensor_2089_temperature")
+    assert temp_sensor.state == "22.6"
+
+    # Fastforward time without BLE advertisements
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1),
+        )
+        await hass.async_block_till_done()
+
+    temp_sensor = hass.states.get("sensor.temperature_humidity_sensor_2089_temperature")
+
+    # Sleepy devices should keep their state over time
+    assert temp_sensor.state == STATE_UNAVAILABLE
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_sleepy_device(hass: HomeAssistant) -> None:
+    """Test sleepy devices stay available."""
+    start_monotonic = time.monotonic()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="50:FB:19:1B:B5:DC",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(hass, MISCALE_V1_SERVICE_INFO)
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 3
+
+    mass_non_stabilized_sensor = hass.states.get(
+        "sensor.mi_smart_scale_b5dc_weight_non_stabilized"
+    )
+    assert mass_non_stabilized_sensor.state == "86.55"
+
+    # Fastforward time without BLE advertisements
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1),
+        )
+        await hass.async_block_till_done()
+
+    mass_non_stabilized_sensor = hass.states.get(
+        "sensor.mi_smart_scale_b5dc_weight_non_stabilized"
+    )
+
+    # Sleepy devices should keep their state over time
+    assert mass_non_stabilized_sensor.state == "86.55"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
+    """Test sleepy devices stay available."""
+    start_monotonic = time.monotonic()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="50:FB:19:1B:B5:DC",
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info_bleak(hass, MISCALE_V1_SERVICE_INFO)
+
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 3
+
+    mass_non_stabilized_sensor = hass.states.get(
+        "sensor.mi_smart_scale_b5dc_weight_non_stabilized"
+    )
+    assert mass_non_stabilized_sensor.state == "86.55"
+
+    # Fastforward time without BLE advertisements
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1),
+        )
+        await hass.async_block_till_done()
+
+    mass_non_stabilized_sensor = hass.states.get(
+        "sensor.mi_smart_scale_b5dc_weight_non_stabilized"
+    )
+
+    # Sleepy devices should keep their state over time
+    assert mass_non_stabilized_sensor.state == "86.55"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    mass_non_stabilized_sensor = hass.states.get(
+        "sensor.mi_smart_scale_b5dc_weight_non_stabilized"
+    )
+
+    # Sleepy devices should keep their state over time and restore it
+    assert mass_non_stabilized_sensor.state == "86.55"
+
+    assert entry.data[CONF_SLEEPY_DEVICE] is True
