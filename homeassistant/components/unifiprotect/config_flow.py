@@ -322,6 +322,11 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
                 mac, errors = await self._async_get_public_nvr_identity(attempt)
                 if mac and not errors:
+                    # Store the resolved NVR mac as the unique id (like the
+                    # manual API-key flow) so the entry's identity does not
+                    # depend on the provisional discovery hardware address.
+                    await self.async_set_unique_id(_async_unifi_mac_from_hass(mac))
+                    self._abort_if_unique_id_configured()
                     return self._async_create_entry(placeholders["name"], attempt)
 
         return self.async_show_form(

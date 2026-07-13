@@ -2649,7 +2649,49 @@ async def test_discovery_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
         "id": DEVICE_HOSTNAME,
     }
     assert CONF_USERNAME not in result["data"]
+    # The unique id is the resolved NVR mac, not the discovery hardware address,
+    # so a later reconfigure never mistakes the console for a different NVR.
+    assert result["result"].unique_id == _async_unifi_mac_from_hass(nvr.mac)
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_discovery_api_key_flow_already_configured(
+    hass: HomeAssistant, nvr: NVR
+) -> None:
+    """A discovered API-key setup aborts if the console is already configured."""
+    existing = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.1.1.1", CONF_API_KEY: "old", "id": "1.1.1.1"},
+        version=2,
+        unique_id=_async_unifi_mac_from_hass(nvr.mac),
+    )
+    existing.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=UNIFI_DISCOVERY_DICT,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery_api_key"}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=_meta_info(),
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
+            return_value=nvr.mac,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"api_key": "test-api-key"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_reauth_public_only_survives_identity_resolution_failure(
