@@ -1,11 +1,7 @@
 """Support for consuming values for the Volkszaehler API."""
 
-from datetime import timedelta
-import logging
 from typing import override
 
-from volkszaehler import Volkszaehler
-from volkszaehler.exceptions import VolkszaehlerApiConnectionError
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -14,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -26,16 +22,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
 
+from . import VolkszaehlerConfigEntry, VolkszaehlerData
 from .const import (
     DEFAULT_HOST,
     DEFAULT_NAME,
@@ -43,10 +37,6 @@ from .const import (
     DOMAIN,
     SUBENTRY_TYPE_CHANNEL,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -151,26 +141,14 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VolkszaehlerConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Volkszaehler sensors from a config entry."""
     conditions = SENSOR_KEYS
 
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL):
-        vz_api = VolkszaehlerData(
-            Volkszaehler(
-                async_get_clientsession(hass),
-                subentry.data[CONF_UUID],
-                host=entry.data[CONF_HOST],
-                port=entry.data[CONF_PORT],
-            )
-        )
-
-        await vz_api.async_update()
-
-        if vz_api.api.data is None:
-            raise PlatformNotReady
+        vz_api = entry.runtime_data[subentry.subentry_id]
 
         entities = [
             VolkszaehlerSensor(
@@ -217,23 +195,3 @@ class VolkszaehlerSensor(SensorEntity):
             self._attr_native_value = round(
                 getattr(self.vz_api.api, self.entity_description.key), 2
             )
-
-
-class VolkszaehlerData:
-    """The class for handling the data retrieval from the Volkszaehler API."""
-
-    def __init__(self, api: Volkszaehler) -> None:
-        """Initialize the data object."""
-        self.api = api
-        self.available = True
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self) -> None:
-        """Get the latest data from the Volkszaehler REST API."""
-
-        try:
-            await self.api.get_data()
-            self.available = True
-        except VolkszaehlerApiConnectionError:
-            _LOGGER.error("Unable to fetch data from the Volkszaehler API")
-            self.available = False
