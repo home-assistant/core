@@ -54,7 +54,9 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info: todo
+  discovery-update-info:
+    status: exempt
+    comment: This integration uses Bluetooth and addresses don't change.
   discovery: done
   docs-data-update: todo
   docs-examples: todo
