@@ -4,6 +4,7 @@ import logging
 import re
 
 from aiohttp import ClientSession
+from switchbee import SWITCHBEE_BRAND
 from switchbee.api import CentralUnitPolling, CentralUnitWsRPC, is_wsrpc_api
 from switchbee.api.central_unit import SwitchBeeError
 
@@ -64,6 +65,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchBeeConfigEntry) ->
     await coordinator.async_config_entry_first_refresh()
     entry.async_on_unload(entry.add_update_listener(update_listener))
     entry.runtime_data = coordinator
+
+    # Register the central unit so the per-zone devices' via_device resolves and
+    # the hub's MAC is recorded as a connection.
+    assert api.mac is not None
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, f"{api.name} ({api.unique_id})")},
+        connections={(dr.CONNECTION_NETWORK_MAC, api.mac)},
+        manufacturer=SWITCHBEE_BRAND,
+        name=api.name,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
