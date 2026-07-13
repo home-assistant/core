@@ -45,8 +45,8 @@
       <TrackerEntityStateAttribute.GPS_ACCURACY: 'gps_accuracy'>: 1.5,
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 47.0748,
-      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 15.4376,
+      <EntityStateAttribute.LATITUDE: 'latitude'>: 47.0748,
+      <EntityStateAttribute.LONGITUDE: 'longitude'>: 15.4376,
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),

@@ -7,10 +7,14 @@ import logging
 from typing import cast, override
 
 from uiprotect.data import Camera, Chime, Light, ModelType, ProtectAdoptableDeviceModel
-from uiprotect.data.public_devices import PublicDeviceModel, PublicLight
+from uiprotect.data.public_devices import (
+    PublicDeviceModel,
+    PublicLight,
+    SensorFeatureCapability,
+)
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, Platform, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -22,6 +26,7 @@ from .entity import (
     ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
+    async_remove_unsupported_sense_entities,
 )
 from .utils import async_ufp_instance_command
 
@@ -85,8 +90,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_max=100,
         ufp_step=1,
         ufp_required_field="has_mic",
-        ufp_value="mic_volume",
-        ufp_enabled="feature_flags.has_mic",
+        ufp_public_value="mic_volume",
         ufp_set_method="set_mic_volume_public",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -196,8 +200,9 @@ SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_min=0,
         ufp_max=100,
         ufp_step=1,
-        ufp_value="motion_settings.sensitivity",
-        ufp_set_method="set_motion_sensitivity",
+        ufp_public_value="motion_settings.sensitivity",
+        ufp_set_method="set_motion_sensitivity_public",
+        ufp_capability=SensorFeatureCapability.MOTION,
         ufp_perm=PermRequired.WRITE,
     ),
 )
@@ -276,6 +281,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up number entities for UniFi Protect integration."""
     data = entry.runtime_data
+    async_remove_unsupported_sense_entities(hass, Platform.NUMBER, data, SENSE_NUMBERS)
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
