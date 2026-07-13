@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[switch.camera_360-entry]
+# name: test_entities[entities][switch.camera_360-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[switch.camera_360-state]
+# name: test_entities[entities][switch.camera_360-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
@@ -50,7 +50,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[switch.camera_eyes-entry]
+# name: test_entities[entities][switch.camera_eyes-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -87,7 +87,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[switch.camera_eyes-state]
+# name: test_entities[entities][switch.camera_eyes-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
@@ -101,7 +101,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[switch.light_switch-entry]
+# name: test_entities[entities][switch.light_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -138,7 +138,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[switch.light_switch-state]
+# name: test_entities[entities][switch.light_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
@@ -152,7 +152,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[switch.smart_plug-entry]
+# name: test_entities[entities][switch.smart_plug-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -189,7 +189,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[switch.smart_plug-state]
+# name: test_entities[entities][switch.smart_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
@@ -203,7 +203,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[switch.smart_plug_compact-entry]
+# name: test_entities[entities][switch.smart_plug_compact-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -240,7 +240,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[switch.smart_plug_compact-state]
+# name: test_entities[entities][switch.smart_plug_compact-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
@@ -254,7 +254,7 @@
     'state': 'off',
   })
 # ---
-# name: test_entities[switch.smart_plug_routing-entry]
+# name: test_entities[entities][switch.smart_plug_routing-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -291,7 +291,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[switch.smart_plug_routing-state]
+# name: test_entities[entities][switch.smart_plug_routing-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Plug Routing',

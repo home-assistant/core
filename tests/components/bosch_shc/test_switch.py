@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from boschshcpy import (
     SHCCamera360,
@@ -29,7 +30,7 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import setup_integration
 
-from tests.common import async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 SMART_PLUG_ON = SHCSmartPlug.PowerSwitchService.State.ON
 SMART_PLUG_OFF = SHCSmartPlug.PowerSwitchService.State.OFF
@@ -41,6 +42,19 @@ PRIVACY_ENABLED = SHCCamera360.PrivacyModeService.State.ENABLED
 SMART_PLUG_ENTITY_ID = "switch.smart_plug"
 SMART_PLUG_ROUTING_ENTITY_ID = "switch.smart_plug_routing"
 CAMERA_EYES_ENTITY_ID = "switch.camera_eyes"
+
+
+@pytest.fixture(autouse=True)
+def platforms() -> Generator[None]:
+    """Restrict bosch_shc setup to the switch platform.
+
+    Several device_helper buckets used here (smart_plugs, light_switches_bsm,
+    smart_plugs_compact) are also read by the sensor platform, which would
+    otherwise build power/energy sensors against these plain SimpleNamespace
+    doubles and log AttributeError noise for attributes they don't define.
+    """
+    with patch("homeassistant.components.bosch_shc.PLATFORMS", [Platform.SWITCH]):
+        yield
 
 
 def _base_device(device_id: str, name: str, **extra: Any) -> SimpleNamespace:
@@ -102,67 +116,102 @@ def _camera_360_device(
     return _base_device(device_id, "Camera 360", privacymode=privacymode)
 
 
+@pytest.mark.parametrize(
+    "device_buckets",
+    [
+        pytest.param(
+            {
+                "smart_plugs": [_smart_plug_device()],
+                "light_switches_bsm": [_light_switch_device()],
+                "smart_plugs_compact": [_smart_plug_compact_device()],
+                "camera_eyes": [_camera_eyes_device()],
+                "camera_360": [_camera_360_device()],
+            },
+            id="entities",
+        )
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
 async def test_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Snapshot every switch entity the platform can create, across all 5 buckets."""
-    entry = await setup_integration(
-        hass,
-        [Platform.SWITCH],
-        smart_plugs=[_smart_plug_device()],
-        light_switches_bsm=[_light_switch_device()],
-        smart_plugs_compact=[_smart_plug_compact_device()],
-        camera_eyes=[_camera_eyes_device()],
-        camera_360=[_camera_360_device()],
-    )
+    await setup_integration(hass, mock_config_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_setup_no_devices_adds_nothing(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_session")
+async def test_setup_no_devices_adds_nothing(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """No devices in any bucket means no switch entities are created."""
-    await setup_integration(hass, [Platform.SWITCH])
+    await setup_integration(hass, mock_config_entry)
 
     assert hass.states.async_all(SWITCH_DOMAIN) == []
 
 
 @pytest.mark.parametrize(
-    ("switchstate", "expected_ha_state"),
+    ("device_buckets", "expected_ha_state"),
     [
-        pytest.param(SMART_PLUG_ON, STATE_ON, id="on"),
-        pytest.param(SMART_PLUG_OFF, STATE_OFF, id="off"),
+        pytest.param(
+            {"smart_plugs": [_smart_plug_device(switchstate=SMART_PLUG_ON)]},
+            STATE_ON,
+            id="on",
+        ),
+        pytest.param(
+            {"smart_plugs": [_smart_plug_device(switchstate=SMART_PLUG_OFF)]},
+            STATE_OFF,
+            id="off",
+        ),
     ],
+    indirect=["device_buckets"],
 )
+@pytest.mark.usefixtures("mock_session")
 async def test_smart_plug_is_on(
     hass: HomeAssistant,
-    switchstate: SHCSmartPlug.PowerSwitchService.State,
+    mock_config_entry: MockConfigEntry,
     expected_ha_state: str,
 ) -> None:
     """The switch reflects the device's switchstate."""
-    device = _smart_plug_device(switchstate=switchstate)
-    await setup_integration(hass, [Platform.SWITCH], smart_plugs=[device])
+    await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(SMART_PLUG_ENTITY_ID).state == expected_ha_state
+    assert (state := hass.states.get(SMART_PLUG_ENTITY_ID)) is not None
+    assert state.state == expected_ha_state
 
 
 @pytest.mark.parametrize(
-    ("service", "initial_switchstate", "expected_switchstate"),
+    ("device_buckets", "service", "expected_switchstate"),
     [
-        pytest.param(SERVICE_TURN_ON, SMART_PLUG_OFF, True, id="turn_on"),
-        pytest.param(SERVICE_TURN_OFF, SMART_PLUG_ON, False, id="turn_off"),
+        pytest.param(
+            {"smart_plugs": [_smart_plug_device(switchstate=SMART_PLUG_OFF)]},
+            SERVICE_TURN_ON,
+            True,
+            id="turn_on",
+        ),
+        pytest.param(
+            {"smart_plugs": [_smart_plug_device(switchstate=SMART_PLUG_ON)]},
+            SERVICE_TURN_OFF,
+            False,
+            id="turn_off",
+        ),
     ],
+    indirect=["device_buckets"],
 )
 async def test_turn_on_off_sets_on_key(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
     service: str,
-    initial_switchstate: SHCSmartPlug.PowerSwitchService.State,
     expected_switchstate: bool,
 ) -> None:
     """turn_on/turn_off set the description's on_key attribute to True/False."""
-    device = _smart_plug_device(switchstate=initial_switchstate)
-    await setup_integration(hass, [Platform.SWITCH], smart_plugs=[device])
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smart_plugs[0]
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -174,12 +223,19 @@ async def test_turn_on_off_sets_on_key(
     assert device.switchstate is expected_switchstate
 
 
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"camera_eyes": [_camera_eyes_device()]}],
+    indirect=True,
+)
 async def test_camera_eyes_update_entity_calls_device_update(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
 ) -> None:
     """The should_poll=True camera_eyes switch calls device.update() on its next scheduled poll."""
-    device = _camera_eyes_device()
-    await setup_integration(hass, [Platform.SWITCH], camera_eyes=[device])
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.camera_eyes[0]
 
     async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -188,26 +244,47 @@ async def test_camera_eyes_update_entity_calls_device_update(
 
 
 @pytest.mark.parametrize(
-    ("routing", "expected_ha_state"),
+    ("device_buckets", "expected_ha_state"),
     [
-        pytest.param("ENABLED", STATE_ON, id="enabled"),
-        pytest.param("DISABLED", STATE_OFF, id="disabled"),
+        pytest.param(
+            {"smart_plugs": [_smart_plug_device(routing="ENABLED")]},
+            STATE_ON,
+            id="enabled",
+        ),
+        pytest.param(
+            {"smart_plugs": [_smart_plug_device(routing="DISABLED")]},
+            STATE_OFF,
+            id="disabled",
+        ),
     ],
+    indirect=["device_buckets"],
 )
+@pytest.mark.usefixtures("mock_session")
 async def test_routing_switch_is_on(
-    hass: HomeAssistant, routing: str, expected_ha_state: str
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    expected_ha_state: str,
 ) -> None:
     """The routing switch reflects the device's routing.name."""
-    device = _smart_plug_device(routing=routing)
-    await setup_integration(hass, [Platform.SWITCH], smart_plugs=[device])
+    await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(SMART_PLUG_ROUTING_ENTITY_ID).state == expected_ha_state
+    assert (state := hass.states.get(SMART_PLUG_ROUTING_ENTITY_ID)) is not None
+    assert state.state == expected_ha_state
 
 
-async def test_routing_switch_turn_on_and_off(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"smart_plugs": [_smart_plug_device()]}],
+    indirect=True,
+)
+async def test_routing_switch_turn_on_and_off(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+) -> None:
     """turn_on/turn_off on the routing switch set device.routing to a bool."""
-    device = _smart_plug_device()
-    await setup_integration(hass, [Platform.SWITCH], smart_plugs=[device])
+    await setup_integration(hass, mock_config_entry)
+    device = mock_session.device_helper.smart_plugs[0]
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
