@@ -1059,6 +1059,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "001E0C*",
     },
     {
+        "domain": "stiebel_eltron",
+        "hostname": "servicewelt*",
+    },
+    {
         "domain": "sunricher_dali",
         "registered_devices": True,
     },

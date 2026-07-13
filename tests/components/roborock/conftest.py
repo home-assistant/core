@@ -168,6 +168,46 @@ def create_b01_q7_trait() -> Mock:
     return b01_trait
 
 
+def attach_update_listeners(trait: Mock) -> Callable[[], None]:
+    """Give a mock Q10 trait working add_update_listener support.
+
+    Returns a callback that notifies all currently registered listeners,
+    mimicking a push update from the device.
+    """
+    listeners: list[Callable[[], None]] = []
+
+    def add_update_listener(cb: Callable[[], None]) -> Callable[[], None]:
+        listeners.append(cb)
+        return lambda: listeners.remove(cb)
+
+    trait.add_update_listener = Mock(side_effect=add_update_listener)
+
+    def notify() -> None:
+        for cb in listeners:
+            cb()
+
+    return notify
+
+
+def make_q10_switch_trait(
+    on_change: Callable[[bool], None] | None = None,
+) -> AsyncMock:
+    """Create a mock Q10 switch-like trait (is_on / enable / disable)."""
+    trait = AsyncMock()
+    trait.is_on = True
+    notify = attach_update_listeners(trait)
+
+    def _set(value: bool) -> None:
+        trait.is_on = value
+        if on_change is not None:
+            on_change(value)
+        notify()
+
+    trait.enable = AsyncMock(side_effect=lambda: _set(True))
+    trait.disable = AsyncMock(side_effect=lambda: _set(False))
+    return trait
+
+
 def create_b01_q10_trait() -> Mock:
     """Create B01 Q10 trait for Q10 devices.
 
@@ -188,32 +228,27 @@ def create_b01_q10_trait() -> Mock:
     q10_trait.vacuum = AsyncMock()
     q10_trait.command = AsyncMock()
     q10_trait.refresh = AsyncMock()
-    q10_trait.do_not_disturb = AsyncMock()
-    q10_trait.do_not_disturb.is_on = True
-    _dnd_listeners: list[Callable[[], None]] = []
+    q10_trait.do_not_disturb = make_q10_switch_trait(
+        on_change=lambda value: setattr(q10_trait.status, "not_disturb", value)
+    )
+    q10_trait.child_lock = make_q10_switch_trait()
+    q10_trait.dust_collection = make_q10_switch_trait()
+    # The button light trait is write-only (enable/disable, no is_on)
+    q10_trait.button_light = Mock(spec=["enable", "disable"])
+    q10_trait.button_light.enable = AsyncMock()
+    q10_trait.button_light.disable = AsyncMock()
 
-    def _dnd_add_update_listener(cb: Callable[[], None]) -> Callable[[], None]:
-        _dnd_listeners.append(cb)
-        return lambda: _dnd_listeners.remove(cb)
+    q10_trait.volume = AsyncMock()
+    q10_trait.volume.volume = 50
+    volume_notify = attach_update_listeners(q10_trait.volume)
 
-    q10_trait.do_not_disturb.add_update_listener = Mock(
-        side_effect=_dnd_add_update_listener
-    )
-    q10_trait.do_not_disturb.enable = AsyncMock(
-        side_effect=lambda: (
-            setattr(q10_trait.do_not_disturb, "is_on", True),
-            setattr(q10_trait.status, "not_disturb", True),
-            [cb() for cb in _dnd_listeners],
-        )
-    )
-    q10_trait.do_not_disturb.disable = AsyncMock(
-        side_effect=lambda: (
-            setattr(q10_trait.do_not_disturb, "is_on", False),
-            setattr(q10_trait.status, "not_disturb", False),
-            [cb() for cb in _dnd_listeners],
-        )
-    )
+    async def _set_volume(volume: int) -> None:
+        q10_trait.volume.volume = volume
+        volume_notify()
+
+    q10_trait.volume.set_volume = AsyncMock(side_effect=_set_volume)
     q10_trait.map = Mock()
+    q10_trait.map.image_content = b"\x89PNG-q10"
     q10_trait.map.rooms = [
         Q10Room(id=9, raw_name="rr_bedroom", pixel_value=36, pixel_count=100),
         Q10Room(id=10, raw_name="rr_living_room", pixel_value=40, pixel_count=200),
