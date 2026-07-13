@@ -67,12 +67,8 @@ class KiwiLock(LockEntity):
         self._state = LockState.LOCKED
 
         address = kiwi_lock.get("address")
-        address.update(
-            {
-                EntityStateAttribute.LATITUDE: address.pop("lat", None),
-                EntityStateAttribute.LONGITUDE: address.pop("lng", None),
-            }
-        )
+        latitude = address.pop("lat", None)
+        longitude = address.pop("lng", None)
 
         self._device_attrs = {
             ATTR_ID: self.lock_id,
@@ -80,6 +76,8 @@ class KiwiLock(LockEntity):
             ATTR_PERMISSION: kiwi_lock.get("highest_permission"),
             ATTR_CAN_INVITE: kiwi_lock.get("can_invite"),
             **address,
+            EntityStateAttribute.LATITUDE: latitude,
+            EntityStateAttribute.LONGITUDE: longitude,
         }
 
     @property
