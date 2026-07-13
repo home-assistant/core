@@ -14,6 +14,8 @@
           "avatarhash": "fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb",
           "lastlogoff": 1775409487,
           "personastate": 1,
+          "primaryclanid": "1234567890123456",
+          "timecreated": 1273953511,
           "realname": "John Dough",
           "personastateflags": 0,
           "gameextrainfo": "The Witcher: Enhanced Edition",
@@ -31,6 +33,7 @@
           "avatarhash": "fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb",
           "lastlogoff": 1775409487,
           "personastate": 2,
+          "timecreated": 1303243041,
           "personastateflags": 0
         }
       ]
