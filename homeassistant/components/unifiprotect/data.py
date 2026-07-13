@@ -729,12 +729,18 @@ def async_get_ufp_entries(hass: HomeAssistant) -> list[UFPConfigEntry]:
 
 @callback
 def async_get_data_for_nvr_id(hass: HomeAssistant, nvr_id: str) -> ProtectData | None:
-    """Find the ProtectData instance for the NVR id."""
+    """Find the ProtectData instance for the NVR id.
+
+    Public-only entries are skipped: they have no private bootstrap to read
+    the id from, and the event-media consumers of this lookup are
+    private-API-backed anyway.
+    """
     return next(
         iter(
             entry.runtime_data
             for entry in async_get_ufp_entries(hass)
-            if entry.runtime_data.api.bootstrap.nvr.id == nvr_id
+            if not entry.runtime_data.api.is_public_only
+            and entry.runtime_data.api.bootstrap.nvr.id == nvr_id
         ),
         None,
     )

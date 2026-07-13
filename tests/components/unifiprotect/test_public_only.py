@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, Mock, patch
 
+from aiohttp import web
+import pytest
 from uiprotect.data import (
     Camera,
     ModelType,
@@ -13,13 +15,18 @@ from uiprotect.data import (
     Version,
 )
 from uiprotect.data.public_devices import PublicNVR
-from uiprotect.exceptions import ClientError, NotAuthorized
+from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.camera import async_get_stream_source
-from homeassistant.components.unifiprotect.const import DOMAIN
+from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
+from homeassistant.components.unifiprotect.data import async_get_data_for_nvr_id
+from homeassistant.components.unifiprotect.media_source import async_get_media_source
+from homeassistant.components.unifiprotect.services import SERVICE_ADD_DOORBELL_TEXT
+from homeassistant.components.unifiprotect.views import ThumbnailProxyView
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
+    ATTR_DEVICE_ID,
     CONF_API_KEY,
     CONF_HOST,
     CONF_PORT,
@@ -27,11 +34,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from .utils import make_public_camera, public_rtsps_for
 
 from tests.common import MockConfigEntry
+from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 _UNIFI_MAC = "AABBCCDDEEFF"
 _ALARM_ENTITY_ID = "alarm_control_panel.test_nvr_alarm_manager"
@@ -53,9 +63,22 @@ def _public_only_entry() -> MockConfigEntry:
     )
 
 
+class _PublicOnlyClientMock(Mock):
+    """Mock client mirroring the real public-only contract.
+
+    Reading ``bootstrap`` on an API-key-only client raises ``BadRequest`` in
+    the library; mirroring that here makes every accidental private-bootstrap
+    read in a public-only code path fail loudly in tests.
+    """
+
+    @property
+    def bootstrap(self) -> None:
+        raise BadRequest("Client not initialized, run `update` first")
+
+
 def _public_client() -> Mock:
     """Build a mock public-only ProtectApiClient for setup."""
-    client = Mock()
+    client = _PublicOnlyClientMock()
     client.is_public_only = True
     client.has_public_bootstrap = True
 
@@ -170,8 +193,11 @@ async def test_public_only_camera_end_to_end(
     """
     client = _public_client()
     client.base_url = "https://1.1.1.1"
+    # The stream-building test helper reads the private ``rtsps_url`` property,
+    # which needs a client with a bootstrap; keep that off the public client.
+    channel_api = Mock()
     for channel in camera.channels:
-        channel._api = client
+        channel._api = channel_api
     public = make_public_camera(camera)
     public.rtsps_streams = public_rtsps_for(camera)
     client.public_bootstrap.cameras = {camera.id: public}
@@ -349,3 +375,64 @@ async def test_public_only_no_public_nvr_not_ready(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_public_only_entry_skipped_by_media_and_nvr_lookup(
+    hass: HomeAssistant,
+) -> None:
+    """A public-only entry must not break the private-bootstrap consumers.
+
+    The media source map and the nvr-id lookup (thumbnail/video views) iterate
+    every loaded entry and read the private bootstrap; a public-only entry has
+    none and must be skipped, not raise.
+    """
+    await _setup_public_only(hass)
+
+    source = await async_get_media_source(hass)
+    assert source.data_sources == {}
+    assert async_get_data_for_nvr_id(hass, "nvr-id") is None
+
+
+async def test_public_only_diagnostics(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Diagnostics for a public-only entry dump the public cache."""
+    entry, client = await _setup_public_only(hass)
+    client.public_bootstrap.nvr.unifi_dict = Mock(return_value={"name": "Test NVR"})
+
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
+
+    assert "bootstrap" not in diag
+    # anonymize_data scrambles values; assert the structure, not the content
+    assert "name" in diag["public_bootstrap"]["nvr"]
+    assert diag["public_bootstrap"]["cameras"] == []
+    assert diag["public_bootstrap"]["arm_mode"] is True
+
+
+async def test_public_only_action_rejected(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Actions require full access; a public-only device raises cleanly."""
+    await _setup_public_only(hass)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, _UNIFI_MAC)})
+    assert device is not None
+
+    with pytest.raises(HomeAssistantError, match="requires full access"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_DOORBELL_TEXT,
+            {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
+            blocking=True,
+        )
+
+
+async def test_public_only_entry_id_view_lookup_404(hass: HomeAssistant) -> None:
+    """The media proxy views reject a public-only entry id with a 404."""
+    entry, _client = await _setup_public_only(hass)
+
+    view = ThumbnailProxyView(hass)
+    result = view._get_data_or_404(entry.entry_id)
+    assert isinstance(result, web.Response)
+    assert result.status == 404

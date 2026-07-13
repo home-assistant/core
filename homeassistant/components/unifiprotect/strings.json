@@ -797,6 +797,9 @@
     "public_bootstrap_failed": {
       "message": "Could not load the public API bootstrap for camera streams"
     },
+    "public_only_no_actions": {
+      "message": "This action requires full access (local user); the entry is set up with an API key only."
+    },
     "relay_not_available": {
       "message": "Relay is no longer available"
     },
