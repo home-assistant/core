@@ -298,6 +298,18 @@ async def test_tv_sync_product_without_color_state(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_COLOR_MODE] == "brightness"
     assert state.attributes[ATTR_EFFECT] == EFFECT_TV_SYNC
 
+    # Reproducing a captured state must not send the pseudo effect to the
+    # device, where it is not a real scene
+    bulb.turn_on.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: EFFECT_TV_SYNC, ATTR_BRIGHTNESS: 128},
+        blocking=True,
+    )
+    pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
+    assert pilot.pilot_params == {"dimming": 50}
+
 
 async def test_tv_sync_product_without_color_state_or_brightness(
     hass: HomeAssistant,
@@ -351,12 +363,12 @@ async def test_color_light_without_color_state(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_EFFECT] == "Ocean"
 
     # A colorless push after a scene must not retain the unsupported
-    # BRIGHTNESS mode
+    # BRIGHTNESS mode but restore the last supported color mode
     await async_push_update(
         hass, bulb, {"mac": FAKE_MAC, "state": True, "sceneId": 0, "dimming": 100}
     )
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
+    assert state.attributes[ATTR_COLOR_MODE] == "rgbww"
     assert state.attributes[ATTR_EFFECT] is None
 
 

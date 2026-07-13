@@ -59,7 +59,11 @@ def _async_pilot_builder(**kwargs: Any) -> PilotBuilder:
         )
 
     if ATTR_EFFECT in kwargs:
-        scene_id = get_id_from_scene_name(kwargs[ATTR_EFFECT])
+        effect = kwargs[ATTR_EFFECT]
+        if effect == EFFECT_TV_SYNC:
+            # The pseudo effect is not a real scene and cannot be sent
+            return PilotBuilder(brightness=brightness)
+        scene_id = get_id_from_scene_name(effect)
         if scene_id == 1000:  # rhythm
             return PilotBuilder()
         return PilotBuilder(brightness=brightness, scene=scene_id)
@@ -82,6 +86,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
 
     _attr_name = None
     _fixed_color_mode: ColorMode | None = None
+    _last_color_mode: ColorMode | None = None
 
     def __init__(self, wiz_data: WizData, name: str) -> None:
         """Initialize an WiZLight."""
@@ -138,6 +143,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             self._attr_rgbw_color = rgbw
         if current_mode is not None:
             self._attr_color_mode = current_mode
+            self._last_color_mode = current_mode
 
         self._attr_effect = effect = state.get_scene()
         if effect is None and current_mode is None:
@@ -150,7 +156,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             ):
                 self._attr_effect = effect = EFFECT_TV_SYNC
             elif self._attr_color_mode not in color_modes:
-                self._attr_color_mode = next(
+                self._attr_color_mode = self._last_color_mode or next(
                     mode for mode in COLOR_MODE_FALLBACK_PRIORITY if mode in color_modes
                 )
         if effect is not None:
