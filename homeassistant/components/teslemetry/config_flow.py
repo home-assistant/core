@@ -84,9 +84,10 @@ def _is_gateway_unreachable(err: TeslaFleetError | ClientResponseError) -> bool:
 
     A bodyless 502 surfaces from tesla-fleet-api as ``ResponseError`` (a
     ``TeslaFleetError`` carrying ``status``); a 502 with a JSON body instead
-    surfaces as ``aiohttp.ClientResponseError``. Both expose ``status``.
+    surfaces as ``aiohttp.ClientResponseError``. ``status`` is looked up with
+    ``getattr`` since a bare ``TeslaFleetError`` is not guaranteed to carry one.
     """
-    return err.status == HTTPStatus.BAD_GATEWAY
+    return getattr(err, "status", None) == HTTPStatus.BAD_GATEWAY
 
 
 class OAuth2FlowHandler(
