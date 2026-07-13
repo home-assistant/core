@@ -29,14 +29,21 @@
       "secondary_boiler_state": false
     },
     "dev_class": "heater_central",
+    "dhw_mode": "eco",
+    "dhw_modes": [
+      "comfort",
+      "eco"
+    ],
     "location": "a57efe5f145f498c9be62a9b63626fbf",
     "max_dhw_temperature": {
+      "current": 46.3,
       "lower_bound": 35.0,
       "resolution": 0.01,
       "setpoint": 53.0,
       "upper_bound": 60.0
     },
     "maximum_boiler_temperature": {
+      "current": 29.1,
       "lower_bound": 0.0,
       "resolution": 1.0,
       "setpoint": 60.0,
@@ -60,7 +67,10 @@
   },
   "3cb70739631c4d17a86b8b12e8a5161b": {
     "active_preset": "home",
-    "available_schedules": ["standaard", "off"],
+    "available_schedules": [
+      "standaard",
+      "off"
+    ],
     "climate_mode": "auto",
     "control_state": "heating",
     "dev_class": "thermostat",
@@ -69,7 +79,13 @@
     "location": "c784ee9fdab44e1395b8dee7d7a497d5",
     "model": "ThermoTouch",
     "name": "Anna",
-    "preset_modes": ["no_frost", "home", "away", "asleep", "vacation"],
+    "preset_modes": [
+      "no_frost",
+      "home",
+      "away",
+      "asleep",
+      "vacation"
+    ],
     "select_schedule": "standaard",
     "sensors": {
       "cooling_activation_outdoor_temperature": 21.0,
