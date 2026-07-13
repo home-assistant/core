@@ -22,7 +22,7 @@
     "select_dhw_mode": "eco",
     "sensors": {
       "intended_boiler_temperature": 17.5,
-      "water_temperature": 43.0
+      "water_temperature": 19.0
     },
     "switches": {
       "dhw_cm_switch": false
