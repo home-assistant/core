@@ -52,10 +52,11 @@ class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
                         user_input[CONF_USERNAME],
                         user_input[CONF_PASSWORD],
                     )
+                    # According to the docs the grid operator can assign multiple users for the
+                    # same gateway. So we use the combination of smgwID and username as unique id
                     await self.async_set_unique_id(
                         f"{local_api.gatewayInfo.smgwID}-{user_input[CONF_USERNAME]}"
                     )
-                    self._abort_if_unique_id_configured()
                 except (OSError, aiohttp.ClientError) as e:
                     # The smgw unfortunately does not reply with invalid auth it just times out
                     # So after we checked that connection is possible we assume Invalid auth if something happens
@@ -71,6 +72,7 @@ class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title="Smartmeter Gateway", data=user_input
                 )

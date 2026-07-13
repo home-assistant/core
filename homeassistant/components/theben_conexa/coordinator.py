@@ -14,7 +14,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,22 +80,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
     async def _async_update_data(self) -> dict[str, ConexaSMGW.MeterValue]:
         """Fetch data from API endpoint."""
 
-        _LOGGER.debug("Fetching data from API")
-        vals = await self._api.getLatestValues()
-
-        if _LOGGER.isEnabledFor(logging.DEBUG) and vals:
-            now_utc = dt_util.utcnow()
-            meter_timestamp: str = next(iter(vals.values())).utcTimestamp
-            meter_datetime = dt_util.parse_datetime(meter_timestamp)
-            if meter_datetime is None:
-                _LOGGER.warning("Could not parse meter timestamp: %s", meter_timestamp)
-                return vals
-            age = (now_utc - meter_datetime).total_seconds()
-            _LOGGER.debug(
-                "Data fetched at %s: %s (data age %s sec)", now_utc, vals, age
-            )
-
-        return vals
+        return await self._api.getLatestValues()
 
     async def _scheduled_update(self, now: datetime) -> None:
         """Triggered exactly at the time pattern specified in async_init."""
