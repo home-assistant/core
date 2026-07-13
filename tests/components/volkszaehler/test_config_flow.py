@@ -1,6 +1,6 @@
 """Test config flow for Volkszaehler integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from volkszaehler.exceptions import (
@@ -25,23 +25,27 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
-async def test_create_entry(hass: HomeAssistant) -> None:
+async def test_create_entry(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_api: AsyncMock,
+) -> None:
     """Test that the config flow creates an entry."""
-    user_input = {
-        CONF_UUID: "test-uuid",
-        CONF_HOST: "localhost",
-        CONF_PORT: 80,
-    }
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
 
-    with patch("volkszaehler.Volkszaehler.get_data", new_callable=AsyncMock):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input
-        )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_UUID: "test-uuid",
+            CONF_HOST: "localhost",
+            CONF_PORT: 80,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "localhost"
     assert result["data"] == {
         CONF_HOST: "localhost",
@@ -56,6 +60,9 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert subentry.unique_id == "test-uuid"
     assert subentry.data == {CONF_UUID: "test-uuid"}
 
+    assert mock_api.get_data.call_count == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
@@ -66,7 +73,10 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     ],
 )
 async def test_user_errors(
-    hass: HomeAssistant, side_effect: type[Exception], expected_error: str
+    hass: HomeAssistant,
+    mock_api: AsyncMock,
+    side_effect: type[Exception],
+    expected_error: str,
 ) -> None:
     """Test error handling in the config flow user step."""
     user_input = {
@@ -77,20 +87,20 @@ async def test_user_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
-    with patch("volkszaehler.Volkszaehler.get_data", side_effect=side_effect):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input
-        )
-    assert result["type"] == FlowResultType.FORM
+    mock_api.get_data.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == expected_error
 
-    with patch("volkszaehler.Volkszaehler.get_data", new_callable=AsyncMock):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input
-        )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    mock_api.get_data.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "localhost"
     assert result["data"] == {
         CONF_HOST: "localhost",
@@ -101,6 +111,7 @@ async def test_user_errors(
 async def test_create_subentry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_api: AsyncMock,
 ) -> None:
     """Test that the subentry flow creates an additional channel."""
     mock_config_entry.add_to_hass(hass)
@@ -109,20 +120,21 @@ async def test_create_subentry(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_CHANNEL),
         context={"source": SOURCE_USER},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
-    with patch("volkszaehler.Volkszaehler.get_data", new_callable=AsyncMock):
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"], {CONF_UUID: "new-uuid"}
-        )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_UUID: "new-uuid"}
+    )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "new-uuid"
     assert result["data"] == {CONF_UUID: "new-uuid"}
     assert len(mock_config_entry.subentries) == 2
 
+    assert mock_api.get_data.call_count == 1
 
-async def test_import(hass: HomeAssistant) -> None:
+
+async def test_import(hass: HomeAssistant, mock_api: AsyncMock) -> None:
     """Test that we can import a config entry."""
     import_data = {
         CONF_UUID: "import-uuid",
@@ -131,8 +143,7 @@ async def test_import(hass: HomeAssistant) -> None:
         CONF_PLATFORM: "volkszaehler",
         CONF_MONITORED_CONDITIONS: ["consumption"],
     }
-    with patch("volkszaehler.Volkszaehler.get_data", new_callable=AsyncMock):
-        await async_setup_component(hass, "sensor", {"sensor": import_data})
+    await async_setup_component(hass, "sensor", {"sensor": import_data})
 
     await hass.async_block_till_done()
 
@@ -146,14 +157,17 @@ async def test_import(hass: HomeAssistant) -> None:
     assert entry.title == "importhost"
     assert len(entry.subentries) == 1
     subentry = next(iter(entry.subentries.values()))
-    assert subentry.subentry_type == SUBENTRY_TYPE_CHANNEL
+    assert subentry.subentry_type is SUBENTRY_TYPE_CHANNEL
     assert subentry.title == "2.8.0"
     assert subentry.data == {CONF_UUID: "import-uuid"}
+
+    assert mock_api.get_data.call_count == 2
 
 
 async def test_import_once(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_api: AsyncMock,
 ) -> None:
     """Test that we import a config entry only once."""
     mock_config_entry.add_to_hass(hass)
@@ -164,8 +178,7 @@ async def test_import_once(
         CONF_PORT: 80,
         CONF_PLATFORM: "volkszaehler",
     }
-    with patch("volkszaehler.Volkszaehler.get_data", new_callable=AsyncMock):
-        await async_setup_component(hass, "sensor", {"sensor": import_data})
+    await async_setup_component(hass, "sensor", {"sensor": import_data})
 
     await hass.async_block_till_done()
 
@@ -174,30 +187,33 @@ async def test_import_once(
     assert entries[0].entry_id == mock_config_entry.entry_id
     assert len(entries[0].subentries) == 1
 
+    assert mock_api.get_data.call_count == 1
 
-async def test_import_add_second_subentry_same_host(hass: HomeAssistant) -> None:
+
+async def test_import_add_second_subentry_same_host(
+    hass: HomeAssistant, mock_api: AsyncMock
+) -> None:
     """Test that import adds a second channel to the existing entry on same host."""
-    with patch("volkszaehler.Volkszaehler.get_data", new_callable=AsyncMock):
-        await async_setup_component(
-            hass,
-            "sensor",
-            {
-                "sensor": [
-                    {
-                        CONF_UUID: "import-uuid-1",
-                        CONF_HOST: "importhost",
-                        CONF_PORT: 8080,
-                        CONF_PLATFORM: "volkszaehler",
-                    },
-                    {
-                        CONF_UUID: "import-uuid-2",
-                        CONF_HOST: "importhost",
-                        CONF_PORT: 8080,
-                        CONF_PLATFORM: "volkszaehler",
-                    },
-                ]
-            },
-        )
+    await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    CONF_UUID: "import-uuid-1",
+                    CONF_HOST: "importhost",
+                    CONF_PORT: 8080,
+                    CONF_PLATFORM: "volkszaehler",
+                },
+                {
+                    CONF_UUID: "import-uuid-2",
+                    CONF_HOST: "importhost",
+                    CONF_PORT: 8080,
+                    CONF_PLATFORM: "volkszaehler",
+                },
+            ]
+        },
+    )
 
     await hass.async_block_till_done()
 
@@ -205,29 +221,32 @@ async def test_import_add_second_subentry_same_host(hass: HomeAssistant) -> None
     assert len(entries) == 1
     assert len(entries[0].subentries) == 2
 
+    assert mock_api.get_data.call_count == 3
 
-async def test_import_validation_error(hass: HomeAssistant) -> None:
+
+async def test_import_validation_error(
+    hass: HomeAssistant, mock_api: AsyncMock
+) -> None:
     """Test that import aborts when input validation fails."""
-    with patch(
-        "volkszaehler.Volkszaehler.get_data",
-        side_effect=VolkszaehlerApiConnectionError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": "import"},
-            data={
-                CONF_UUID: "import-uuid",
-                CONF_HOST: "importhost",
-                CONF_PORT: 80,
-            },
-        )
+    mock_api.get_data.side_effect = VolkszaehlerApiConnectionError
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "import"},
+        data={
+            CONF_UUID: "import-uuid",
+            CONF_HOST: "importhost",
+            CONF_PORT: 80,
+        },
+    )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
 async def test_user_duplicate_uuid_from_entry_unique_id(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: AsyncMock,
 ) -> None:
     """Test user flow duplicate UUID detection from an entry unique_id."""
     mock_config_entry.add_to_hass(hass)
@@ -237,18 +256,19 @@ async def test_user_duplicate_uuid_from_entry_unique_id(
     )
     assert result["type"] == FlowResultType.FORM
 
-    with patch("volkszaehler.Volkszaehler.get_data", new_callable=AsyncMock):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_UUID: "existing-uuid",
-                CONF_HOST: "new-host",
-                CONF_PORT: 80,
-            },
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_UUID: "existing-uuid",
+            CONF_HOST: "new-host",
+            CONF_PORT: 80,
+        },
+    )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+    assert mock_api.get_data.call_count == 1
 
 
 async def test_subentry_duplicate_uuid(
@@ -257,34 +277,25 @@ async def test_subentry_duplicate_uuid(
     """Test that subentry flow aborts for duplicate UUID."""
     mock_config_entry.add_to_hass(hass)
 
-    existing = MockConfigEntry(
-        domain=DOMAIN,
-        title="other",
-        data={
-            CONF_HOST: "other-host",
-            CONF_PORT: 80,
-        },
-        unique_id="duplicate-subentry-uuid",
-    )
-    existing.add_to_hass(hass)
-
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_CHANNEL),
         context={"source": SOURCE_USER},
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_UUID: "duplicate-subentry-uuid"},
+        {CONF_UUID: "existing-uuid"},
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
 async def test_subentry_validation_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: AsyncMock,
 ) -> None:
     """Test that subentry flow returns form error on validation failure."""
     mock_config_entry.add_to_hass(hass)
@@ -295,14 +306,11 @@ async def test_subentry_validation_error(
     )
     assert result["type"] == FlowResultType.FORM
 
-    with patch(
-        "volkszaehler.Volkszaehler.get_data",
-        side_effect=VolkszaehlerApiConnectionError,
-    ):
-        result = await hass.config_entries.subentries.async_configure(
-            result["flow_id"],
-            {CONF_UUID: "new-uuid"},
-        )
+    mock_api.get_data.side_effect = VolkszaehlerApiConnectionError
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_UUID: "new-uuid"},
+    )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
