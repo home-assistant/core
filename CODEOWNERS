@@ -1375,8 +1375,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/peco/ @IceBotYT
 /homeassistant/components/pegel_online/ @mib1185
 /tests/components/pegel_online/ @mib1185
-/homeassistant/components/permobil/ @IsakNyberg
-/tests/components/permobil/ @IsakNyberg
 /homeassistant/components/persistent_notification/ @home-assistant/core
 /tests/components/persistent_notification/ @home-assistant/core
 /homeassistant/components/pglab/ @pglab-electronics
@@ -1735,8 +1733,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/starline/ @anonym-tsk
 /homeassistant/components/statistics/ @ThomDietrich @gjohansson-ST
 /tests/components/statistics/ @ThomDietrich @gjohansson-ST
-/homeassistant/components/steam_online/ @tkdrob
-/tests/components/steam_online/ @tkdrob
+/homeassistant/components/steam_online/ @tr4nt0r @tkdrob
+/tests/components/steam_online/ @tr4nt0r @tkdrob
 /homeassistant/components/steamist/ @bdraco
 /tests/components/steamist/ @bdraco
 /homeassistant/components/stiebel_eltron/ @fucm @ThyMYthOS
