@@ -19,8 +19,8 @@
         "title": "UniFi Protect setup",
         "description": "Choose how to connect to your UniFi Protect console.",
         "menu_options": {
-          "full": "Local user (full access)",
-          "api_key": "API key only (limited, public API)"
+          "full": "Local user and API key (full access)",
+          "api_key": "API key only (limited feature set)"
         }
       },
       "full": {
@@ -59,24 +59,6 @@
         "description": "Connect using only an API key, without a local user. A limited set of entities is available. For more information: {api_key_documentation_url}",
         "title": "UniFi Protect setup (API key)"
       },
-      "discovery_confirm": {
-        "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
-        },
-        "data_description": {
-          "api_key": "[%key:component::unifiprotect::config::step::full::data_description::api_key%]",
-          "password": "[%key:component::unifiprotect::config::step::full::data_description::password%]",
-          "port": "[%key:component::unifiprotect::config::step::full::data_description::port%]",
-          "username": "[%key:component::unifiprotect::config::step::full::data_description::username%]",
-          "verify_ssl": "[%key:component::unifiprotect::config::step::full::data_description::verify_ssl%]"
-        },
-        "description": "Do you want to set up {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud users will not work. For more information: {local_user_documentation_url}",
-        "title": "UniFi Protect discovered"
-      },
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
@@ -105,8 +87,8 @@
         "title": "Reconfigure UniFi Protect",
         "description": "Choose how to connect to your UniFi Protect console.",
         "menu_options": {
-          "reconfigure_full": "Local user (full access)",
-          "reconfigure_api_key": "API key only (limited, public API)"
+          "reconfigure_full": "Local user and API key (full access)",
+          "reconfigure_api_key": "API key only (limited feature set)"
         }
       },
       "reconfigure_full": {
@@ -144,6 +126,44 @@
         },
         "description": "Switch to (or update) API-key-only mode. Switching from a local user removes the stored credentials; a limited set of entities is available. For more information: {api_key_documentation_url}",
         "title": "Reconfigure UniFi Protect (API key)"
+      },
+      "discovery_full": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::unifiprotect::config::step::full::data_description::api_key%]",
+          "password": "[%key:component::unifiprotect::config::step::full::data_description::password%]",
+          "port": "[%key:component::unifiprotect::config::step::full::data_description::port%]",
+          "username": "[%key:component::unifiprotect::config::step::full::data_description::username%]",
+          "verify_ssl": "[%key:component::unifiprotect::config::step::full::data_description::verify_ssl%]"
+        },
+        "description": "Do you want to set up {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud users will not work. For more information: {local_user_documentation_url}",
+        "title": "UniFi Protect discovered (local user)"
+      },
+      "discovery_confirm": {
+        "title": "UniFi Protect discovered",
+        "description": "How do you want to connect to {name} ({ip_address})?",
+        "menu_options": {
+          "discovery_full": "Local user and API key (full access)",
+          "discovery_api_key": "API key only (limited feature set)"
+        }
+      },
+      "discovery_api_key": {
+        "data": {
+          "port": "[%key:common::config_flow::data::port%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "port": "[%key:component::unifiprotect::config::step::api_key::data_description::port%]",
+          "api_key": "[%key:component::unifiprotect::config::step::api_key::data_description::api_key%]"
+        },
+        "description": "Connect to {name} ({ip_address}) using only an API key. A limited set of entities is available. For more information: {api_key_documentation_url}",
+        "title": "UniFi Protect discovered (API key)"
       }
     }
   },

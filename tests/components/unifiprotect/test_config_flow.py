@@ -606,8 +606,13 @@ async def test_discovered_by_unifi_discovery_direct_connect(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery_full"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_full"
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
         "ip_address": DEVICE_IP_ADDRESS,
@@ -811,8 +816,13 @@ async def test_discovered_by_unifi_discovery(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery_full"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_full"
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
         "ip_address": DEVICE_IP_ADDRESS,
@@ -880,8 +890,13 @@ async def test_discovered_by_unifi_discovery_partial(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery_full"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_full"
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
         "ip_address": DEVICE_IP_ADDRESS,
@@ -963,8 +978,13 @@ async def test_discovery_name_resolution(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery_full"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_full"
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"]["name"] == expected_name
 
@@ -1104,8 +1124,13 @@ async def test_discovered_by_unifi_discovery_dc_different_interface_resolver_fai
         )
         await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery_full"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_full"
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
         "ip_address": "127.0.0.2",
@@ -1254,8 +1279,13 @@ async def test_discovery_with_both_ignored_and_normal_entry(
     await hass.async_block_till_done()
 
     # Flow continues to discovery step since no match found
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery_full"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_full"
 
     # Complete the flow
     bootstrap.nvr = nvr
@@ -1308,8 +1338,13 @@ async def test_discovery_confirm_fallback_to_ip(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery_full"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_full"
 
     bootstrap.nvr = nvr
     # First call (direct connect) fails, second call (IP) succeeds
@@ -1358,8 +1393,13 @@ async def test_discovery_confirm_with_api_key_error(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery_full"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_full"
 
     # Both attempts fail to test form_data preservation with API key
     mock_api_bootstrap.side_effect = NvrError("Connection failed")
@@ -1375,7 +1415,7 @@ async def test_discovery_confirm_with_api_key_error(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
+    assert result["step_id"] == "discovery_full"
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Now provide working connection to complete the flow
@@ -2555,3 +2595,51 @@ async def test_reconfigure_full_from_public_only_missing_password(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+
+async def test_discovery_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
+    """A discovered console can be set up with only an API key."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data=UNIFI_DISCOVERY_DICT,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discovery_api_key"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_api_key"
+
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=_meta_info(),
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
+            return_value=nvr.mac,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"api_key": "test-api-key"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # Direct-connect domain preferred (verified SSL), no local credentials.
+    assert result["data"] == {
+        "host": DIRECT_CONNECT_DOMAIN,
+        "port": 443,
+        "verify_ssl": True,
+        "api_key": "test-api-key",
+        "id": DEVICE_HOSTNAME,
+    }
+    assert CONF_USERNAME not in result["data"]
+    assert len(mock_setup_entry.mock_calls) == 1

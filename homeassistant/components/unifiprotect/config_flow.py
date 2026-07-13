@@ -167,6 +167,13 @@ RECONFIGURE_SCHEMA = _build_schema(credentials_optional=True)
 DISCOVERY_SCHEMA = _build_schema(include_host=False)
 # Public-API-only (API key, no local user) flow
 API_KEY_SCHEMA = _build_api_key_schema()
+# Discovery variant: host comes from discovery, ssl from the candidate order
+DISCOVERY_API_KEY_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): _PORT_SELECTOR,
+        vol.Required(CONF_API_KEY): _PASSWORD_SELECTOR,
+    }
+)
 # Reauth flow: only credentials, connection settings preserved
 REAUTH_SCHEMA = _build_schema(
     include_host=False, include_connection=False, credentials_optional=True
@@ -260,10 +267,74 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="already_configured")
         return await self.async_step_discovery_confirm()
 
+    @callback
+    def _async_discovery_placeholders(self) -> dict[str, str]:
+        """Build the title/description placeholders for the discovered console."""
+        discovery_info = self._discovered_device
+        return {
+            "name": discovery_info.get("name")
+            or discovery_info.get("hostname")
+            or discovery_info.get("product_name")
+            or f"NVR {_async_short_mac(discovery_info['hw_addr'])}",
+            "ip_address": discovery_info["source_ip"],
+        }
+
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm discovery."""
+        """Let the user pick the connection mode for a discovered console."""
+        placeholders = self._async_discovery_placeholders()
+        self.context["title_placeholders"] = placeholders
+        return self.async_show_menu(
+            step_id="discovery_confirm",
+            menu_options=["discovery_full", "discovery_api_key"],
+            description_placeholders=placeholders,
+        )
+
+    async def async_step_discovery_api_key(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Set up a discovered console with only an API key."""
+        errors: dict[str, str] = {}
+        discovery_info = self._discovered_device
+        placeholders = self._async_discovery_placeholders()
+
+        if user_input is not None:
+            # Prefer the direct-connect domain (verified SSL), fall back to
+            # the discovered source IP — mirroring the full-access flow.
+            candidates: list[tuple[str, bool]] = []
+            if discovery_info["direct_connect_domain"]:
+                candidates.append((discovery_info["direct_connect_domain"], True))
+            candidates.append((discovery_info["source_ip"], False))
+            for host, verify_ssl in candidates:
+                attempt = {
+                    CONF_HOST: host,
+                    CONF_PORT: user_input.get(CONF_PORT, DEFAULT_PORT),
+                    CONF_VERIFY_SSL: verify_ssl,
+                    CONF_API_KEY: user_input[CONF_API_KEY],
+                }
+                mac, errors = await self._async_get_public_nvr_identity(attempt)
+                if mac and not errors:
+                    return self._async_create_entry(placeholders["name"], attempt)
+
+        return self.async_show_form(
+            step_id="discovery_api_key",
+            description_placeholders={
+                **placeholders,
+                "api_key_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
+                ),
+            },
+            data_schema=self.add_suggested_values_to_schema(
+                DISCOVERY_API_KEY_SCHEMA, user_input
+            ),
+            errors=errors,
+        )
+
+    async def async_step_discovery_full(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Set up a discovered console with a local user (full access)."""
         errors: dict[str, str] = {}
         discovery_info = self._discovered_device
 
@@ -301,16 +372,10 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             if CONF_API_KEY in user_input:
                 form_data[CONF_API_KEY] = user_input[CONF_API_KEY]
 
-        placeholders = {
-            "name": discovery_info.get("name")
-            or discovery_info.get("hostname")
-            or discovery_info.get("product_name")
-            or f"NVR {_async_short_mac(discovery_info['hw_addr'])}",
-            "ip_address": discovery_info["source_ip"],
-        }
+        placeholders = self._async_discovery_placeholders()
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
-            step_id="discovery_confirm",
+            step_id="discovery_full",
             description_placeholders={
                 **placeholders,
                 "local_user_documentation_url": (
