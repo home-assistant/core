@@ -1,6 +1,0 @@
-# serializer version: 1
-# name: test_has_services
-  list([
-    'token_lifetime',
-  ])
-# ---
