@@ -9,11 +9,11 @@ import voluptuous as vol
 from homeassistant.auth import EVENT_USER_REMOVED
 from homeassistant.components import persistent_notification, websocket_api
 from homeassistant.components.device_tracker import (
-    ATTR_IN_ZONES,
-    ATTR_SOURCE_TYPE,
-    ATTR_TRACKING_TYPE,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
+    DeviceTrackerEntityCapabilityAttribute,
+    DeviceTrackerEntityStateAttribute,
     SourceType,
+    TrackerEntityStateAttribute,
     TrackingType,
 )
 from homeassistant.components.zone import ENTITY_ID_HOME
@@ -475,7 +475,15 @@ class Person(
         """Register device trackers."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
-            self._parse_source_state(state)
+            self._parse_source_state(
+                state,
+                latitude=state.attributes.get(EntityStateAttribute.LATITUDE),
+                longitude=state.attributes.get(EntityStateAttribute.LONGITUDE),
+                gps_accuracy=state.attributes.get(
+                    PersonEntityStateAttribute.GPS_ACCURACY
+                ),
+                in_zones=state.attributes.get(PersonEntityStateAttribute.IN_ZONES),
+            )
 
         if self.hass.is_running:
             # Update person now if hass is already running.
@@ -534,10 +542,15 @@ class Person(
                 continue
 
             if state.attributes.get(
-                ATTR_TRACKING_TYPE
-            ) == TrackingType.CONNECTION and state.attributes.get(ATTR_IN_ZONES):
+                DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE
+            ) == TrackingType.CONNECTION and state.attributes.get(
+                DeviceTrackerEntityStateAttribute.IN_ZONES
+            ):
                 latest_connected = _get_latest(latest_connected, state)
-            elif state.attributes.get(ATTR_SOURCE_TYPE) == SourceType.GPS:
+            elif (
+                state.attributes.get(DeviceTrackerEntityStateAttribute.SOURCE_TYPE)
+                == SourceType.GPS
+            ):
                 latest_gps = _get_latest(latest_gps, state)
             elif state.state == STATE_HOME:
                 # Legacy scanner without tracking type
@@ -551,7 +564,17 @@ class Person(
         latest = latest_connected or latest_legacy_home or latest_gps or latest_not_home
 
         if latest:
-            self._parse_source_state(latest)
+            self._parse_source_state(
+                latest,
+                latitude=latest.attributes.get(EntityStateAttribute.LATITUDE),
+                longitude=latest.attributes.get(EntityStateAttribute.LONGITUDE),
+                gps_accuracy=latest.attributes.get(
+                    TrackerEntityStateAttribute.GPS_ACCURACY
+                ),
+                in_zones=latest.attributes.get(
+                    DeviceTrackerEntityStateAttribute.IN_ZONES
+                ),
+            )
         else:
             self._attr_state = None
             self._source = None
@@ -564,17 +587,28 @@ class Person(
         self.async_write_ha_state()
 
     @callback
-    def _parse_source_state(self, state: State) -> None:
-        """Parse source state and set person attributes.
+    def _parse_source_state(
+        self,
+        state: State,
+        *,
+        latitude: float | None,
+        longitude: float | None,
+        gps_accuracy: int | None,
+        in_zones: list[str] | None,
+    ) -> None:
+        """Set person attributes from a source state.
 
-        This is a device tracker state or the restored person state.
+        The coordinates are read by the caller using the enum matching the
+        source, which is either a device tracker or the restored person state.
+        An absent ``in_zones`` (``None``) means the source does not report zone
+        membership.
         """
         self._attr_state = state.state
         self._source = state.entity_id
-        self._latitude = state.attributes.get(ATTR_LATITUDE)
-        self._longitude = state.attributes.get(ATTR_LONGITUDE)
-        self._gps_accuracy = state.attributes.get(ATTR_GPS_ACCURACY)
-        self._in_zones = state.attributes.get(ATTR_IN_ZONES, [])
+        self._latitude = latitude
+        self._longitude = longitude
+        self._gps_accuracy = gps_accuracy
+        self._in_zones = in_zones or []
 
         # A legacy scanner (one that doesn't report in_zones) reports "home"
         # without coordinates. Use the home zone's coordinates for backwards
@@ -582,14 +616,14 @@ class Person(
         # trackers report in_zones and keep their own (possibly absent)
         # coordinates.
         if (
-            ATTR_IN_ZONES not in state.attributes
+            in_zones is None
             and state.state == STATE_HOME
             and self._latitude is None
             and self._longitude is None
             and (home_zone := self.hass.states.get(ENTITY_ID_HOME)) is not None
         ):
-            self._latitude = home_zone.attributes.get(ATTR_LATITUDE)
-            self._longitude = home_zone.attributes.get(ATTR_LONGITUDE)
+            self._latitude = home_zone.attributes.get(EntityStateAttribute.LATITUDE)
+            self._longitude = home_zone.attributes.get(EntityStateAttribute.LONGITUDE)
 
     @callback
     def _update_extra_state_attributes(self) -> None:
