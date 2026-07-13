@@ -16,7 +16,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC, STATE_UNAVAILABLE, Pl
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import fire_hub_connection
+from . import device_identifiers, fire_hub_connection, fire_hub_update
 from .conftest import SERIAL, STORED_IP
 
 from tests.common import MockConfigEntry
@@ -324,3 +324,81 @@ async def test_zone_removed_during_disconnect_stays_unavailable_on_reconnect(
 
     await fire_hub_connection(hass, mock_nobo_hub, True)
     assert hass.states.get(entity).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_removed_zone_removes_device(
+    hass: HomeAssistant,
+    mock_nobo_hub: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Removing a zone on the hub removes its device but keeps the hub device."""
+    entry_id = mock_config_entry.entry_id
+    assert (DOMAIN, f"{SERIAL}:1") in device_identifiers(device_registry, entry_id)
+
+    del mock_nobo_hub.zones["1"]
+    await fire_hub_update(hass, mock_nobo_hub)
+
+    identifiers = device_identifiers(device_registry, entry_id)
+    assert (DOMAIN, f"{SERIAL}:1") not in identifiers
+    assert (DOMAIN, SERIAL) in identifiers
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_removed_component_removes_device(
+    hass: HomeAssistant,
+    mock_nobo_hub: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Removing a temperature-sensor component on the hub removes its device."""
+    entry_id = mock_config_entry.entry_id
+    assert (DOMAIN, "200000059091") in device_identifiers(device_registry, entry_id)
+
+    del mock_nobo_hub.components["200000059091"]
+    await fire_hub_update(hass, mock_nobo_hub)
+
+    assert (DOMAIN, "200000059091") not in device_identifiers(device_registry, entry_id)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_disconnected_hub_does_not_remove_devices(
+    hass: HomeAssistant,
+    mock_nobo_hub: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Devices are retained when topology looks empty because the hub is disconnected."""
+    entry_id = mock_config_entry.entry_id
+    before = device_identifiers(device_registry, entry_id)
+
+    mock_nobo_hub.connected = False
+    mock_nobo_hub.zones.clear()
+    mock_nobo_hub.components.clear()
+    await fire_hub_update(hass, mock_nobo_hub)
+
+    assert device_identifiers(device_registry, entry_id) == before
+
+
+@pytest.mark.usefixtures("mock_nobo_class")
+async def test_stale_device_pruned_at_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A device for a zone removed while Home Assistant was down is pruned at setup."""
+    mock_config_entry.add_to_hass(hass)
+    stale_device = (DOMAIN, f"{SERIAL}:99")
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={stale_device},
+    )
+    entry_id = mock_config_entry.entry_id
+    assert stale_device in device_identifiers(device_registry, entry_id)
+
+    assert await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    assert stale_device not in device_identifiers(device_registry, entry_id)

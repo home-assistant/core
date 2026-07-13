@@ -3,7 +3,17 @@
 from unittest.mock import MagicMock
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+
+def device_identifiers(
+    device_registry: dr.DeviceRegistry, entry_id: str
+) -> set[tuple[str, str]]:
+    """Return the identifiers of all devices for the config entry."""
+    identifiers: set[tuple[str, str]] = set()
+    for device in dr.async_entries_for_config_entry(device_registry, entry_id):
+        identifiers |= device.identifiers
+    return identifiers
 
 
 def entity_unique_ids(entity_registry: er.EntityRegistry, entry_id: str) -> set[str]:

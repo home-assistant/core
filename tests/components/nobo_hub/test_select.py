@@ -12,7 +12,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -158,10 +158,10 @@ async def test_zone_removed_marks_week_profile_unavailable(
     hass: HomeAssistant,
     mock_nobo_hub: MagicMock,
 ) -> None:
-    """A zone removed via the Nobø app must not crash and goes unavailable."""
+    """A zone removed via the Nobø app must not crash and removes the entity."""
     mock_nobo_hub.zones.pop("1")
     await fire_hub_update(hass, mock_nobo_hub)
-    assert hass.states.get(PROFILE_ENTITY).state == STATE_UNAVAILABLE
+    assert hass.states.get(PROFILE_ENTITY) is None
 
 
 @pytest.mark.usefixtures("init_integration")
