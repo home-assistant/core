@@ -158,9 +158,6 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_PORT: cv.port(import_data.get(CONF_PORT, DEFAULT_SSH_PORT)),
         }
 
-        if not host_config[CONF_HOST]:
-            return self.async_abort(reason="cannot_connect")
-
         entry_data = {CONF_HOSTS: [host_config]}
         self._async_abort_entries_match(entry_data)
 

@@ -57,6 +57,7 @@ async def test_device_tracker_deduplicates_multiple_ap_clients(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="UniFi AP (192.168.1.2, 192.168.1.3)",
+        version=2,
         data={
             CONF_HOSTS: [
                 {
