@@ -111,6 +111,17 @@ FAKE_RGBWW_BULB = BulbType(
     white_channels=2,
     white_to_color_ratio=80,
 )
+FAKE_RGBWW_NO_EFFECT_BULB = BulbType(
+    bulb_type=BulbClass.RGB,
+    name="ESP01_SHRGB_03",
+    features=Features(
+        color=True, color_tmp=True, effect=False, brightness=True, dual_head=False
+    ),
+    kelvin_range=KelvinRange(2700, 6500),
+    fw_version="1.0.0",
+    white_channels=2,
+    white_to_color_ratio=80,
+)
 FAKE_RGBW_BULB = BulbType(
     bulb_type=BulbClass.RGB,
     name="ESP01_SHRGB_03",

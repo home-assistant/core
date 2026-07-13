@@ -25,6 +25,20 @@ from .entity import WizToggleEntity
 
 RGB_WHITE_CHANNELS_COLOR_MODE = {1: ColorMode.RGBW, 2: ColorMode.RGBWW}
 
+# Pseudo effect reported when the device pushes a state without any color
+# values or scene, e.g. the DMORGB/MHORGB TV ambient light products while
+# they are synced to the TV.
+EFFECT_TV_SYNC = "TV Sync"
+
+# Fallback order when the device state does not indicate an active color mode
+COLOR_MODE_FALLBACK_PRIORITY = (
+    ColorMode.COLOR_TEMP,
+    ColorMode.RGBWW,
+    ColorMode.RGBW,
+    ColorMode.BRIGHTNESS,
+    ColorMode.ONOFF,
+)
+
 
 def _async_pilot_builder(**kwargs: Any) -> PilotBuilder:
     """Create the PilotBuilder for turn on."""
@@ -118,6 +132,19 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             self._attr_rgbw_color = rgbw
 
         self._attr_effect = effect = state.get_scene()
+        if effect is None and self._attr_color_mode is None:
+            # Some devices, e.g. the DMORGB/MHORGB TV ambient light products,
+            # push states that contain neither color values nor a scene. Report
+            # a pseudo effect when the device supports effects, since color
+            # mode validation only allows BRIGHTNESS/ONOFF while an effect is
+            # active. Otherwise fall back to a supported color mode so a color
+            # mode is always reported.
+            if LightEntityFeature.EFFECT in self.supported_features:
+                self._attr_effect = effect = EFFECT_TV_SYNC
+            else:
+                self._attr_color_mode = next(
+                    mode for mode in COLOR_MODE_FALLBACK_PRIORITY if mode in color_modes
+                )
         if effect is not None:
             if brightness is not None:
                 self._attr_color_mode = ColorMode.BRIGHTNESS

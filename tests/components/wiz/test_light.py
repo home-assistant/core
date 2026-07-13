@@ -1,6 +1,9 @@
 """Tests for light platform."""
 
-from pywizlight import PilotBuilder
+from unittest.mock import AsyncMock
+
+from pywizlight import PilotBuilder, PilotParser, wizlight
+from pywizlight.bulblibrary import BulbType
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -11,6 +14,7 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
+from homeassistant.components.wiz.light import EFFECT_TV_SYNC
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -26,7 +30,9 @@ from . import (
     FAKE_OLD_FIRMWARE_DIMMABLE_BULB,
     FAKE_RGBW_BULB,
     FAKE_RGBWW_BULB,
+    FAKE_RGBWW_NO_EFFECT_BULB,
     FAKE_TURNABLE_BULB,
+    _mocked_wizlight,
     async_push_update,
     async_setup_integration,
 )
@@ -234,3 +240,72 @@ async def test_old_firmware_dimmable_light(hass: HomeAssistant) -> None:
     )
     pilot: PilotBuilder = bulb.turn_on.mock_calls[0][1][0]
     assert pilot.pilot_params == {"dimming": 100}
+
+
+def _mocked_wizlight_without_color_state(
+    bulb_type: BulbType, dimming: bool
+) -> wizlight:
+    """Mock a color bulb whose state has neither color values nor a scene."""
+    bulb = _mocked_wizlight(None, None, bulb_type)
+    params = {"mac": FAKE_MAC, "state": True, "sceneId": 0}
+    if dimming:
+        params["dimming"] = 100
+    state = PilotParser(params)
+    bulb.state = state
+    bulb.updateState = AsyncMock(return_value=state)
+    return bulb
+
+
+async def test_rgbww_light_without_color_state(hass: HomeAssistant) -> None:
+    """Test a color light pushing a state without color values or a scene.
+
+    TV ambient light products (DMORGB/MHORGB) do this while syncing to
+    the TV; without a fallback the light would never report a color mode.
+    """
+    bulb = _mocked_wizlight_without_color_state(FAKE_RGBWW_BULB, dimming=True)
+    await async_setup_integration(hass, wizlight=bulb)
+    entity_id = "light.mock_title"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == "brightness"
+    assert state.attributes[ATTR_EFFECT] == EFFECT_TV_SYNC
+
+    # A push update with color values clears the pseudo effect
+    await async_push_update(
+        hass,
+        bulb,
+        {"mac": FAKE_MAC, "state": True, "r": 1, "g": 2, "b": 3, "c": 4, "w": 5},
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_COLOR_MODE] == "rgbww"
+    assert state.attributes[ATTR_RGBWW_COLOR] == (1, 2, 3, 4, 5)
+    assert state.attributes[ATTR_EFFECT] is None
+
+
+async def test_rgbww_light_without_color_state_or_brightness(
+    hass: HomeAssistant,
+) -> None:
+    """Test a color light pushing a state with neither color values nor dimming."""
+    bulb = _mocked_wizlight_without_color_state(FAKE_RGBWW_BULB, dimming=False)
+    await async_setup_integration(hass, wizlight=bulb)
+    state = hass.states.get("light.mock_title")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == "onoff"
+    assert state.attributes[ATTR_EFFECT] == EFFECT_TV_SYNC
+
+
+async def test_light_without_color_state_or_effect_support(
+    hass: HomeAssistant,
+) -> None:
+    """Test a colorless state on a color light that does not support effects.
+
+    The pseudo effect is not allowed here, so the light must fall back to
+    one of its supported color modes.
+    """
+    bulb = _mocked_wizlight_without_color_state(FAKE_RGBWW_NO_EFFECT_BULB, dimming=True)
+    await async_setup_integration(hass, wizlight=bulb)
+    state = hass.states.get("light.mock_title")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] is None
+    assert ATTR_EFFECT not in state.attributes
