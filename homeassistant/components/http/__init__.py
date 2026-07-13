@@ -62,6 +62,7 @@ from .ban import setup_bans
 from .config import (
     _DEFAULT_CONFIG,
     ConfData,
+    HTTPConfigStore,
     async_get_and_load_store,
     async_load_config,
     default_server_port,
@@ -173,6 +174,70 @@ class ApiConfig:
         self.use_ssl = use_ssl
 
 
+async def _async_fallback_config(
+    hass: HomeAssistant,
+    store: HTTPConfigStore,
+    conf: ConfData,
+    err: HomeAssistantError | OSError,
+) -> ConfData | None:
+    """Return the next config to try after ``conf`` could not be applied.
+
+    Implements the fallback chain pending -> stable -> default config, where
+    the last step is only taken in recovery mode. Raises when setup should
+    fail instead, which activates recovery mode on a real boot. Returns None
+    when there is nothing left to fall back to and Home Assistant should run
+    without a TCP listener.
+    """
+    if store.revert_deadline is not None:
+        # An unconfirmed pending config is under trial and cannot even be
+        # applied, so it is known to be bad: revert to the stable config
+        # right away and continue this same start with it, instead of
+        # waiting out the trial window and restarting.
+        _LOGGER.error(
+            "The new HTTP configuration could not be applied, reverting to "
+            "the previous configuration: %s",
+            err,
+        )
+        await store.async_abort_trial()
+        return store.stable
+
+    if not hass.config.recovery_mode:
+        # Fail setup so recovery mode can take over with a reachable
+        # configuration. An unusable SSL configuration already carries a
+        # descriptive HomeAssistantError.
+        if isinstance(err, HomeAssistantError):
+            raise err
+        raise HomeAssistantError(
+            f"Failed to create HTTP server at port {conf[CONF_SERVER_PORT]}: {err}"
+        ) from err
+
+    if conf is _DEFAULT_CONFIG:
+        # Nothing left to fall back to; run without a TCP listener (the
+        # Supervisor Unix socket may still be served).
+        _LOGGER.error(
+            "Failed to create HTTP server at port %d: %s",
+            conf[CONF_SERVER_PORT],
+            err,
+        )
+        return None
+
+    if CONF_SSL_PEER_CERTIFICATE in conf:
+        # With peer certificate verification configured, connections must
+        # never be accepted without a verified client certificate. Do not
+        # fall back to a config without it, even though that leaves recovery
+        # mode without an HTTP server.
+        raise err
+
+    # The config cannot be applied in recovery mode; fall back to the
+    # default config so the recovery UI stays reachable.
+    _LOGGER.error(
+        "The HTTP configuration could not be applied in recovery mode, "
+        "falling back to the default configuration: %s",
+        err,
+    )
+    return _DEFAULT_CONFIG
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
     # Late import to ensure isal is updated before
@@ -225,75 +290,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     server = _make_server(conf)
-    try:
-        await server.async_bind()
-    except (HomeAssistantError, OSError) as err:
-        store = await async_get_and_load_store(hass)
-        if store.revert_deadline is not None:
-            # An unconfirmed pending config is under trial and cannot even be
-            # applied, so it is known to be bad: revert to the stable config
-            # right away and continue this same start with it, instead of
-            # waiting out the trial window and restarting.
-            _LOGGER.error(
-                "The new HTTP configuration could not be applied, reverting to "
-                "the previous configuration: %s",
-                err,
-            )
-            await store.async_abort_trial()
-            conf = store.stable
+    trial_reverted = False
+    while True:
+        try:
+            await server.async_bind()
+        except (HomeAssistantError, OSError) as err:
+            store = await async_get_and_load_store(hass)
+            trial_reverted = store.revert_deadline is not None
+            if (
+                fallback_conf := await _async_fallback_config(hass, store, conf, err)
+            ) is None:
+                break
+            conf = fallback_conf
             server = _make_server(conf)
-            try:
-                await server.async_bind()
-            except OSError as stable_err:
-                # The stable config is unusable as well; fail setup so
-                # recovery mode can take over (the pending config is already
-                # cleared and persisted, so it is not trialed again).
-                raise HomeAssistantError(
-                    f"Failed to create HTTP server at port"
-                    f" {conf[CONF_SERVER_PORT]}: {stable_err}"
-                ) from stable_err
+            continue
+        if trial_reverted:
             _LOGGER.warning(
                 "The previous HTTP configuration has been restored (server port %d)",
                 conf[CONF_SERVER_PORT],
             )
-        elif hass.config.recovery_mode:
-            if CONF_SSL_PEER_CERTIFICATE in conf:
-                # With peer certificate verification configured, connections
-                # must never be accepted without a verified client
-                # certificate. Do not fall back to a config without it, even
-                # though that leaves recovery mode without an HTTP server.
-                raise
-            # The stable config cannot be applied in recovery mode; fall back
-            # to the default config so the recovery UI stays reachable.
-            _LOGGER.error(
-                "The HTTP configuration could not be applied in recovery mode, "
-                "falling back to the default configuration: %s",
-                err,
-            )
-            conf = _DEFAULT_CONFIG
-            server = _make_server(conf)
-            try:
-                await server.async_bind()
-            except OSError as default_err:
-                # Nothing left to fall back to; run without a TCP listener
-                # (the Supervisor Unix socket may still be served).
-                _LOGGER.error(
-                    "Failed to create HTTP server at port %d: %s",
-                    conf[CONF_SERVER_PORT],
-                    default_err,
-                )
-        elif isinstance(err, HomeAssistantError):
-            # Unusable SSL configuration on the stable config; failing setup
-            # activates recovery mode, which retries with an emergency
-            # self-signed certificate.
-            raise
-        else:
-            # The stable config cannot be bound (e.g. its port is taken by
-            # another service); fail setup so recovery mode can take over
-            # with a reachable configuration.
-            raise HomeAssistantError(
-                f"Failed to create HTTP server at port {conf[CONF_SERVER_PORT]}: {err}"
-            ) from err
+        break
 
     async def stop_server(event: Event) -> None:
         """Stop the server."""
