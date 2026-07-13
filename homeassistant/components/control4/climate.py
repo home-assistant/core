@@ -214,9 +214,8 @@ class Control4Climate(Control4Entity, ClimateEntity):
         for mode in c4modes:
             if mode in HVAC_MODES and HVAC_MODES[mode] not in active_modes:
                 active_modes.append(HVAC_MODES[mode])
-        current_mode = self.hvac_mode or HVACMode.OFF
-        if current_mode not in active_modes:
-            active_modes.append(current_mode)
+        if len(active_modes) == 0:
+            active_modes.append(HVACMode.OFF)
         return active_modes
 
     def _get_heat_setpoint(self) -> float | None:
