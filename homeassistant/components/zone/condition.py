@@ -5,14 +5,15 @@ from typing import Any, Unpack, cast, override
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    ATTR_IN_ZONES,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
+    DeviceTrackerEntityStateAttribute,
 )
-from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
+from homeassistant.components.person import (
+    DOMAIN as PERSON_DOMAIN,
+    PersonEntityStateAttribute,
+)
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_ENTITY_ID,
     CONF_FOR,
     CONF_OPTIONS,
@@ -20,6 +21,7 @@ from homeassistant.const import (
     CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ConditionErrorContainer, ConditionErrorMessage
@@ -48,7 +50,18 @@ _OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
 }
 _CONDITION_SCHEMA = vol.Schema({CONF_OPTIONS: _OPTIONS_SCHEMA_DICT})
 
-_IN_ZONES_DOMAINS = {DEVICE_TRACKER_DOMAIN, PERSON_DOMAIN}
+
+def _get_in_zones_attribute(state: State) -> str | None:
+    """Return the in_zones attribute for the tracked entity, or None.
+
+    Only person and device_tracker entities report zone membership; each
+    exposes it under its own platform enum. Any other domain returns None.
+    """
+    if state.domain == PERSON_DOMAIN:
+        return PersonEntityStateAttribute.IN_ZONES
+    if state.domain == DEVICE_TRACKER_DOMAIN:
+        return DeviceTrackerEntityStateAttribute.IN_ZONES
+    return None
 
 
 def zone(
@@ -88,14 +101,13 @@ def zone(
 
     # Prefer the in_zones attribute reported by the entity (e.g. person,
     # device_tracker) over recomputing membership from coordinates.
-    if (
-        entity.domain in _IN_ZONES_DOMAINS
-        and (in_zones := entity.attributes.get(ATTR_IN_ZONES)) is not None
-    ):
+    if (in_zones_attr := _get_in_zones_attribute(entity)) is not None and (
+        in_zones := entity.attributes.get(in_zones_attr)
+    ) is not None:
         return zone_ent.entity_id in in_zones
 
-    latitude = entity.attributes.get(ATTR_LATITUDE)
-    longitude = entity.attributes.get(ATTR_LONGITUDE)
+    latitude = entity.attributes.get(EntityStateAttribute.LATITUDE)
+    longitude = entity.attributes.get(EntityStateAttribute.LONGITUDE)
 
     if latitude is None:
         raise ConditionErrorMessage(
@@ -178,8 +190,10 @@ class ZoneCondition(Condition):
 
 
 _DOMAIN_SPECS: dict[str, DomainSpec] = {
-    "person": DomainSpec(value_source=ATTR_IN_ZONES),
-    "device_tracker": DomainSpec(value_source=ATTR_IN_ZONES),
+    PERSON_DOMAIN: DomainSpec(value_source=PersonEntityStateAttribute.IN_ZONES),
+    DEVICE_TRACKER_DOMAIN: DomainSpec(
+        value_source=DeviceTrackerEntityStateAttribute.IN_ZONES
+    ),
 }
 
 _ZONE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
@@ -205,8 +219,11 @@ class _ZoneTargetConditionBase(EntityConditionBase):
 
     def _in_target_zone(self, entity_state: State) -> bool:
         """Check if the entity is currently in the selected zone."""
-        in_zones = entity_state.attributes.get(ATTR_IN_ZONES) or ()
-        return self._zone in in_zones
+        if (in_zones_attr := _get_in_zones_attribute(entity_state)) and (
+            in_zones := entity_state.attributes.get(in_zones_attr)
+        ):
+            return self._zone in in_zones
+        return False
 
 
 class InZoneCondition(_ZoneTargetConditionBase):
