@@ -215,6 +215,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             use_tls=self.use_tls,
             timeout=60.0,
             pool_maxsize=30,
+            redact_debug_log=True,
         )
 
         if not self.connection:
@@ -245,7 +246,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             {
                 **vars(info),
                 "NewDeviceLog": "***omitted***",
+                "device_log": "***omitted***",
                 "NewSerialNumber": "***omitted***",
+                "serial_number": "***omitted***",
             },
         )
 
