@@ -503,9 +503,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         ):
             site_id = product["energy_site_id"]
 
-            powerwall = (
-                product["components"]["battery"] or product["components"]["solar"]
-            )
+            battery = product["components"]["battery"]
+            powerwall = battery or product["components"]["solar"]
             wall_connector = "wall_connectors" in product["components"]
             if not powerwall and not wall_connector:
                 LOGGER.debug(
@@ -558,11 +557,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     translation_key="not_ready_api_error",
                 ) from e
 
-            # Only a Powerwall gateway can pair for local (TEDAPI) control, so
-            # wall-connector-only sites get no local-control subentry or routing.
+            # Only a battery/Powerwall gateway can pair for local (TEDAPI)
+            # command control; solar-only and wall-connector-only sites get no
+            # local-control subentry or routing.
             subentry_id: str | None = None
             energy_site_api: EnergySite | EnergySiteRouter = energy_site
-            if powerwall:
+            if battery:
                 subentry_id = _ensure_subentry(
                     hass,
                     entry,
