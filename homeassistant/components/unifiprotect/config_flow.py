@@ -147,15 +147,16 @@ def _build_schema(
     return vol.Schema(schema)
 
 
-def _build_api_key_schema(*, include_host: bool = True) -> vol.Schema:
+def _build_api_key_schema() -> vol.Schema:
     """Build the schema for the public-API-only (API-key) connection mode."""
-    schema: dict[vol.Marker, selector.Selector] = {}
-    if include_host:
-        schema[vol.Required(CONF_HOST)] = _TEXT_SELECTOR
-    schema[vol.Required(CONF_PORT, default=DEFAULT_PORT)] = _PORT_SELECTOR
-    schema[vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)] = _BOOL_SELECTOR
-    schema[vol.Required(CONF_API_KEY)] = _PASSWORD_SELECTOR
-    return vol.Schema(schema)
+    return vol.Schema(
+        {
+            vol.Required(CONF_HOST): _TEXT_SELECTOR,
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): _PORT_SELECTOR,
+            vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): _BOOL_SELECTOR,
+            vol.Required(CONF_API_KEY): _PASSWORD_SELECTOR,
+        }
+    )
 
 
 # Schemas for different flow contexts
@@ -512,7 +513,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(ex)
             errors[CONF_API_KEY] = "invalid_auth"
             return None, errors
-        except ClientError as ex:
+        except (TimeoutError, ClientError) as ex:
             _LOGGER.error(ex)
             errors["base"] = "cannot_connect"
             return None, errors
@@ -524,7 +525,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             mac = await protect.resolve_nvr_mac()
-        except ClientError as ex:
+        except (TimeoutError, ClientError) as ex:
             _LOGGER.error(ex)
             errors["base"] = "cannot_connect"
             return None, errors
@@ -679,14 +680,16 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                 # Build fresh data without username/password: their absence is
                 # the public-only signal, and the merge convention (empty =
                 # keep) could otherwise not remove them.
+                new_data = {
+                    **_normalize_port(user_input),
+                    CONF_ID: reconfigure_entry.data.get(CONF_ID, user_input[CONF_HOST]),
+                }
+                # The dropped local user leaves a cached session token behind.
+                await _async_clear_session_if_credentials_changed(
+                    self.hass, reconfigure_entry, new_data
+                )
                 return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    data={
-                        **_normalize_port(user_input),
-                        CONF_ID: reconfigure_entry.data.get(
-                            CONF_ID, user_input[CONF_HOST]
-                        ),
-                    },
+                    reconfigure_entry, data=new_data
                 )
 
         form_data = {

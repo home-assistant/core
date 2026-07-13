@@ -16,10 +16,16 @@ from uiprotect.data import (
     Version,
 )
 from uiprotect.data.public_devices import PublicNVR
-from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
+from uiprotect.exceptions import (
+    BadRequest,
+    ClientError,
+    NotAuthorized,
+    PublicOnlyModeError,
+)
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.camera import async_get_stream_source
+from homeassistant.components.unifiprotect import async_remove_config_entry_device
 from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
 from homeassistant.components.unifiprotect.data import async_get_data_for_nvr_id
 from homeassistant.components.unifiprotect.media_source import async_get_media_source
@@ -28,6 +34,7 @@ from homeassistant.components.unifiprotect.views import ThumbnailProxyView
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
     CONF_API_KEY,
     CONF_HOST,
     CONF_PORT,
@@ -87,6 +94,8 @@ def _public_client() -> Mock:
     meta.version = Version("7.1.83")
     client.get_meta_info = AsyncMock(return_value=meta)
     client.update_public = AsyncMock()
+    client.update = AsyncMock(side_effect=PublicOnlyModeError("public-only"))
+    client.get_bootstrap = AsyncMock(side_effect=PublicOnlyModeError("public-only"))
     client.async_disconnect_ws = AsyncMock()
 
     arm_mode = Mock(spec=NvrArmMode)
@@ -276,8 +285,8 @@ def _mutate_no_public_nvr(client: Mock) -> None:
         ),
         pytest.param(
             _mutate_prime_unauthorized,
-            ConfigEntryState.SETUP_ERROR,
-            id="rejected_key_aborts_to_reauth",
+            ConfigEntryState.SETUP_RETRY,
+            id="rejected_key_buffered_like_private",
         ),
         pytest.param(
             _mutate_old_version,
@@ -314,6 +323,27 @@ async def test_public_only_setup_failures(
         await hass.async_block_till_done()
 
     assert entry.state is expected_state
+
+
+async def test_public_only_rejected_key_exhausts_to_reauth(
+    hass: HomeAssistant,
+) -> None:
+    """Persistent 401s exhaust the retry buffer and abort to reauth."""
+    entry = _public_only_entry()
+    entry.add_to_hass(hass)
+    client = _public_client()
+    client.update_public = AsyncMock(side_effect=NotAuthorized)
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.async_create_api_client",
+            return_value=client,
+        ),
+        patch("homeassistant.components.unifiprotect.AUTH_RETRIES", 0),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_public_only_sets_unique_id_when_missing(hass: HomeAssistant) -> None:
@@ -389,14 +419,24 @@ async def test_public_only_diagnostics(
     """Diagnostics for a public-only entry dump the public cache."""
     entry, client = await _setup_public_only(hass)
     client.public_bootstrap.nvr.unifi_dict = Mock(return_value={"name": "Test NVR"})
+    camera = Mock()
+    camera.unifi_dict = Mock(
+        return_value={
+            "name": "Cam",
+            "rtspsStreams": {"high": "rtsps://10.0.0.2:7441/secret?enableSrtp"},
+        }
+    )
+    client.public_bootstrap.cameras = {"cam-id": camera}
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
     assert "bootstrap" not in diag
     # anonymize_data scrambles values; assert the structure, not the content
     assert "name" in diag["public_bootstrap"]["nvr"]
-    assert diag["public_bootstrap"]["cameras"] == []
     assert diag["public_bootstrap"]["arm_mode"] is True
+    # the stream URLs carry the console host and a secret alias — never leak
+    dumped_camera = diag["public_bootstrap"]["cameras"][0]
+    assert dumped_camera["rtspsStreams"] == "**REDACTED**"
 
 
 async def test_public_only_action_rejected(
@@ -425,3 +465,39 @@ async def test_public_only_entry_id_view_lookup_404(hass: HomeAssistant) -> None
     result = view._get_data_or_404(entry.entry_id)
     assert isinstance(result, web.Response)
     assert result.status == 404
+
+
+async def test_public_only_device_removal(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Device removal works without a private bootstrap.
+
+    The NVR (a live device) must refuse removal; a stale device unknown to
+    the public cache must allow it.
+    """
+    entry, _client = await _setup_public_only(hass)
+
+    nvr_device = device_registry.async_get_device(identifiers={(DOMAIN, _UNIFI_MAC)})
+    assert nvr_device is not None
+    assert not await async_remove_config_entry_device(hass, entry, nvr_device)
+
+    stale = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "FFEEDDCCBB99")},
+    )
+    assert await async_remove_config_entry_device(hass, entry, stale)
+
+
+async def test_public_only_manual_refresh(hass: HomeAssistant) -> None:
+    """A manual refresh (update_entity action) runs publicly and stays healthy."""
+    entry, client = await _setup_public_only(hass)
+    client.update_public.reset_mock()
+
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    client.update_public.assert_awaited_once()
+    # The private update path must not run (it would poison the health flag).
+    assert entry.runtime_data.last_update_success is True
+    assert hass.states.get(_ALARM_ENTITY_ID).state == "disarmed"

@@ -4,9 +4,14 @@ from typing import Any, cast
 
 from uiprotect.test_util.anonymize import anonymize_data
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
 from .data import UFPConfigEntry
+
+# anonymize_data covers the private-tree keys; the public camera payload
+# carries the stream URLs (host + secret alias) under its own key.
+TO_REDACT = {"rtspsStreams"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -22,7 +27,11 @@ async def async_get_config_entry_diagnostics(
         public = {
             "nvr": anonymize_data(pb.nvr.unifi_dict()) if pb.nvr is not None else None,
             "cameras": [
-                anonymize_data(camera.unifi_dict()) for camera in pb.cameras.values()
+                async_redact_data(
+                    cast(dict[str, Any], anonymize_data(camera.unifi_dict())),
+                    TO_REDACT,
+                )
+                for camera in pb.cameras.values()
             ],
             "arm_mode": pb.arm_mode is not None,
         }

@@ -169,10 +169,14 @@ async def _async_setup_public_only_entry(
     try:
         meta = await protect.get_meta_info()
     except NotAuthorized as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="api_key_required",
-        ) from err
+        # Buffer spurious 401s (console updating) like the private path.
+        data_service.auth_retries += 1
+        if data_service.auth_retries > AUTH_RETRIES:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_key_required",
+            ) from err
+        raise ConfigEntryNotReady from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
         raise ConfigEntryNotReady from err
 
@@ -192,10 +196,14 @@ async def _async_setup_public_only_entry(
         await protect.update_public()
     except NotAuthorized as err:
         await data_service.async_stop()
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="api_key_required",
-        ) from err
+        # Buffer spurious 401s (console updating) like the private path.
+        data_service.auth_retries += 1
+        if data_service.auth_retries > AUTH_RETRIES:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_key_required",
+            ) from err
+        raise ConfigEntryNotReady from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
         await data_service.async_stop()
         raise ConfigEntryNotReady(
@@ -217,6 +225,10 @@ async def _async_setup_public_only_entry(
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=unifi_mac)
 
+    # Registry migrations are mode-independent; an entry flipped from full
+    # access must not skip them.
+    await async_migrate_data(hass, entry)
+
     data_service.async_subscribe_public_events()
 
     # Register the NVR device up front: it must exist even when no entity
@@ -229,7 +241,7 @@ async def _async_setup_public_only_entry(
         connections={(dr.CONNECTION_NETWORK_MAC, unifi_mac)},
         identifiers={(DOMAIN, unifi_mac)},
         manufacturer=DEFAULT_BRAND,
-        name=nvr.display_name,
+        name=nvr.display_name or None,
         model=nvr.type,
         sw_version=str(meta.version),
     )
@@ -243,7 +255,7 @@ async def _async_setup_entry(
     data_service: ProtectData,
     bootstrap: Bootstrap,
 ) -> None:
-    await async_migrate_data(hass, entry, data_service.api, bootstrap)
+    await async_migrate_data(hass, entry)
     data_service.async_setup()
 
     # Prime the public bootstrap (subscribe-then-prime, per library docs). Camera
@@ -270,6 +282,10 @@ async def _async_setup_entry(
 
     # The bootstrap is primed above (a failed prime aborts setup and HA retries),
     # so the public events websocket can be subscribed here.
+    # Registry migrations are mode-independent; an entry flipped from full
+    # access must not skip them.
+    await async_migrate_data(hass, entry)
+
     data_service.async_subscribe_public_events()
 
     # Load PTZ patrol data before loading platforms
@@ -284,7 +300,7 @@ async def _async_setup_entry(
         connections={(dr.CONNECTION_NETWORK_MAC, nvr.mac)},
         identifiers={(DOMAIN, nvr.mac)},
         manufacturer="Ubiquiti",
-        name=nvr.display_name,
+        name=nvr.display_name or None,
         model=nvr.type,
         sw_version=str(nvr.version),
         configuration_url=nvr.api.base_url,
@@ -335,6 +351,16 @@ async def async_remove_config_entry_device(
         if connection[0] == dr.CONNECTION_NETWORK_MAC
     }
     api = config_entry.runtime_data.api
+    if api.is_public_only:
+        # No private bootstrap: judge against the public cache instead.
+        pb = api.public_bootstrap
+        if (
+            pb.nvr is not None
+            and pb.nvr.mac
+            and (_async_unifi_mac_from_hass(pb.nvr.mac) in unifi_macs)
+        ):
+            return False
+        return not any(camera.mac in unifi_macs for camera in pb.cameras.values())
     if api.bootstrap.nvr.mac in unifi_macs:
         return False
     for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT):

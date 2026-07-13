@@ -59,8 +59,17 @@ type UFPConfigEntry = ConfigEntry[ProtectData]
 def async_last_update_was_successful(
     hass: HomeAssistant, entry: UFPConfigEntry
 ) -> bool:
-    """Check if the last update was successful for a config entry."""
-    return hasattr(entry, "runtime_data") and entry.runtime_data.last_update_success
+    """Check if the last update was successful for a config entry.
+
+    Public-only entries have no private poll; their health is the public
+    websocket (otherwise the discovery host self-heal could never trigger).
+    """
+    if not hasattr(entry, "runtime_data"):
+        return False
+    data = entry.runtime_data
+    if data.api.is_public_only:
+        return data.last_public_update_success
+    return data.last_update_success
 
 
 @callback
@@ -257,9 +266,10 @@ class ProtectData:
         """Process a message from the public devices websocket.
 
         DEVICES_WS_SUBSCRIBED_MODELS is an empty set, which the API client treats
-        as "all models", so messages are not pre-filtered. NVR messages signal the
-        private NVR so alarm entities pick up the new arm state. Every other
-        public device inherits ``PublicDeviceModel`` and is dispatched by mac.
+        as "all models", so messages are not pre-filtered. NVR messages signal
+        the mode's NVR object so alarm entities pick up the new arm state.
+        Every other public device inherits ``PublicDeviceModel`` and is
+        dispatched by mac.
         Frames without a merged object dispatch ``None`` and subscribers re-read
         the public bootstrap: on a delete the library has already removed the
         object (it reads as missing and entities go unavailable), while a frame
@@ -442,6 +452,16 @@ class ProtectData:
 
     async def async_refresh(self) -> None:
         """Update the data."""
+        if self.api.is_public_only:
+            # The private ``update()`` cannot run without a session; refresh
+            # the public snapshot and re-render its subscribers instead.
+            try:
+                await self.api.update_public()
+            except (TimeoutError, ClientError, ServerDisconnectedError) as err:
+                _LOGGER.debug("Manual public refresh failed: %s", err)
+                return
+            self._async_process_public_updates()
+            return
         try:
             await self.api.update()
         except NotAuthorized as ex:
