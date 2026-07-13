@@ -77,6 +77,7 @@ SENSOR_DESCRIPTIONS = {
         key=OKOKScaleSensorDeviceClass.IMPEDANCE,
         native_unit_of_measurement="Ω",
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key="impedance",
     ),
 }
 

@@ -21,5 +21,12 @@
         "description": "[%key:component::bluetooth::config::step::user::description%]"
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "impedance": {
+        "name": "Impedance"
+      }
+    }
   }
 }
