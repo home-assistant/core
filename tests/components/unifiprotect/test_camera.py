@@ -393,12 +393,7 @@ async def test_aiport_no_camera_entities(
 async def test_public_only_camera(
     hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ) -> None:
-    """A camera present only in the public bootstrap builds a working entity.
-
-    Mirrors public-only mode (no private fill): the entity is built from the
-    public object, streams from the public API, and tracks the public devices
-    websocket for availability. Recording/diagnostic state degrades.
-    """
+    """A public-only camera builds a working entity with degraded diagnostics."""
     # This camera is intentionally kept out of the private bootstrap; wire the
     # channel api so its public RTSPS URLs resolve, as add_device would.
     for channel in camera.channels:
@@ -847,3 +842,33 @@ async def test_public_only_streamless_camera_gets_repair(
     assert (
         issue_registry.async_get_issue(DOMAIN, f"rtsp_disabled_{camera.id}") is not None
     )
+
+
+async def test_stream_capability_published_on_prime(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera_all: ProtectCamera
+) -> None:
+    """Gaining a stream publishes the STREAM capability when nothing else changes."""
+    camera_all.channels = [c.model_copy() for c in camera_all.channels]
+    for channel in camera_all.channels:
+        channel.is_rtsp_enabled = False
+
+    await init_entry(hass, ufp, [camera_all])
+
+    high_id = _channel_entity_id(camera_all, 0)
+    state = hass.states.get(high_id)
+    assert state
+    assert state.attributes["supported_features"] == CameraEntityFeature(0)
+
+    # The library primes the streams; availability, recording, and motion are
+    # unchanged, so the capability flip is the only observable difference.
+    camera_all.channels[0].is_rtsp_enabled = True
+    public = ufp.api.public_bootstrap.cameras[camera_all.id]
+    public.rtsps_streams = public_rtsps_for(camera_all)
+    msg = public_device_ws_message(public)
+    msg.changed_data = {"rtsps_streams": public.rtsps_streams}
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(high_id)
+    assert state
+    assert state.attributes["supported_features"] == CameraEntityFeature.STREAM

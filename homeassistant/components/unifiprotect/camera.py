@@ -214,6 +214,8 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         "_attr_available",
         "_attr_is_recording",
         "_attr_motion_detection_enabled",
+        # flips with the stream source (an RTSPS prime can be the only change)
+        "_attr_supported_features",
     )
 
     def __init__(
