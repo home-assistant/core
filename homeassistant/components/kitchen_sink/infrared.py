@@ -2,8 +2,6 @@
 
 from typing import override
 
-from infrared_protocols.commands import Command as InfraredCommand
-
 from homeassistant.components import persistent_notification
 from homeassistant.components.infrared import (
     InfraredEmitterEntity,
@@ -19,6 +17,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from infrared_protocols.commands import Command as InfraredCommand
 
 from . import DOMAIN
 

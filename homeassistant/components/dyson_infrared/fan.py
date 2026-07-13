@@ -3,7 +3,7 @@
 import asyncio
 from typing import Any
 
-from infrared_protocols.codes.dyson.cool import DysonCoolStateBuilder
+from infrared_protocols.codes.dyson.cool import DysonCoolCode
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
@@ -57,9 +57,8 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
         """Return true if the fan is on."""
         return self._attr_is_on or False
 
-    async def _async_send_dyson_action(self, action: str) -> None:
-        builder = DysonCoolStateBuilder(action=action)
-        command = builder.to_command()
+    async def _async_send_dyson_action(self, code: DysonCoolCode) -> None:
+        command = code.to_command()
         await self._send_command(command)
 
     async def async_turn_on(
@@ -72,13 +71,13 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
         if percentage is not None:
             await self.async_set_percentage(percentage)
             return
-        await self._async_send_dyson_action("on")
+        await self._async_send_dyson_action(DysonCoolCode.ON)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        await self._async_send_dyson_action("off")
+        await self._async_send_dyson_action(DysonCoolCode.OFF)
         self._attr_is_on = False
         self.async_write_ha_state()
 
@@ -92,9 +91,13 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
             return
         step_size = 100 / self._attr_speed_count
         steps = round(abs(percentage - current_percentage) / step_size)
-        action = "speed_up" if percentage > current_percentage else "speed_down"
+        code = (
+            DysonCoolCode.SPEED_UP
+            if percentage > current_percentage
+            else DysonCoolCode.SPEED_DOWN
+        )
         for _ in range(steps):
-            await self._async_send_dyson_action(action)
+            await self._async_send_dyson_action(code)
             await asyncio.sleep(0.2)
 
         self._attr_percentage = percentage
@@ -103,6 +106,6 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set the oscillation state of the fan."""
-        await self._async_send_dyson_action("swing")
+        await self._async_send_dyson_action(DysonCoolCode.SWING)
         self._attr_oscillating = oscillating
         self.async_write_ha_state()

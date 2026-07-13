@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, call, patch
 
+from infrared_protocols.codes.dyson.cool import DysonCoolCode
 import pytest
 
 from homeassistant.components.dyson_infrared.const import (
@@ -54,18 +55,14 @@ async def test_is_on(fan_entity: DysonInfraredFan) -> None:
 async def test_async_send_dyson_action(fan_entity: DysonInfraredFan) -> None:
     """Test sending a Dyson action builds and sends the command."""
     with (
-        patch(
-            "homeassistant.components.dyson_infrared.fan.DysonCoolStateBuilder"
-        ) as mock_builder,
+        patch.object(
+            DysonCoolCode.ON, "to_command", return_value="mocked_command"
+        ) as mock_to_command,
         patch.object(fan_entity, "_send_command") as mock_send_command,
     ):
-        mock_builder_instance = mock_builder.return_value
-        mock_builder_instance.to_command.return_value = "mocked_command"
+        await fan_entity._async_send_dyson_action(DysonCoolCode.ON)
 
-        await fan_entity._async_send_dyson_action("on")
-
-        mock_builder.assert_called_once_with(action="on")
-        mock_builder_instance.to_command.assert_called_once()
+        mock_to_command.assert_called_once()
         mock_send_command.assert_called_once_with("mocked_command")
 
 
@@ -77,7 +74,7 @@ async def test_async_turn_on(fan_entity: DysonInfraredFan) -> None:
     ):
         await fan_entity.async_turn_on()
 
-        mock_send_action.assert_called_once_with("on")
+        mock_send_action.assert_called_once_with(DysonCoolCode.ON)
         assert fan_entity.is_on is True
         mock_write_state.assert_called_once()
 
@@ -99,7 +96,7 @@ async def test_async_turn_off(fan_entity: DysonInfraredFan) -> None:
     ):
         await fan_entity.async_turn_off()
 
-        mock_send_action.assert_called_once_with("off")
+        mock_send_action.assert_called_once_with(DysonCoolCode.OFF)
         assert fan_entity.is_on is False
         mock_write_state.assert_called_once()
 
@@ -138,7 +135,7 @@ async def test_async_set_percentage_speed_up(fan_entity: DysonInfraredFan) -> No
         await fan_entity.async_set_percentage(80)
 
         assert mock_send_action.call_count == 4
-        mock_send_action.assert_has_calls([call("speed_up")] * 4)
+        mock_send_action.assert_has_calls([call(DysonCoolCode.SPEED_UP)] * 4)
         assert mock_sleep.call_count == 4
 
         assert fan_entity._attr_percentage == 80
@@ -158,7 +155,7 @@ async def test_async_set_percentage_speed_down(fan_entity: DysonInfraredFan) -> 
     ):
         await fan_entity.async_set_percentage(30)
         assert mock_send_action.call_count == 6
-        mock_send_action.assert_has_calls([call("speed_down")] * 6)
+        mock_send_action.assert_has_calls([call(DysonCoolCode.SPEED_DOWN)] * 6)
         assert mock_sleep.call_count == 6
 
         assert fan_entity._attr_percentage == 30

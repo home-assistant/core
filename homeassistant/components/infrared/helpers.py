@@ -5,7 +5,6 @@ from collections.abc import Callable
 import logging
 from typing import override
 
-from infrared_protocols.commands import Command as InfraredCommand
 import voluptuous as vol
 
 from homeassistant.const import STATE_UNAVAILABLE
@@ -21,6 +20,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change_event
+from infrared_protocols.commands import Command as InfraredCommand
 
 from .const import DATA_COMPONENT, DOMAIN
 from .entity import (
