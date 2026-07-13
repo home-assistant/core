@@ -292,6 +292,7 @@ async def async_test_home_assistant(
             )
         },
     )
+    hass.config_entries._initialized.set()
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,
         hass.config_entries._async_shutdown,
