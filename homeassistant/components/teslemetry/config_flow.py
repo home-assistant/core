@@ -404,6 +404,12 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             None,
         )
 
+    async def _key_is_verified(self) -> bool:
+        """Report whether our public key is registered and VERIFIED on the gateway."""
+        client = await self._find_authorized_client()
+        LOGGER.debug("Powerwall keys: %s", client)
+        return client is not None and client.state == AuthorizedClientState.VERIFIED
+
     async def async_step_credentials(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
