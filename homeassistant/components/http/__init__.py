@@ -626,7 +626,15 @@ class HomeAssistantHTTP:
                 )
 
             context.verify_mode = ssl.CERT_REQUIRED
-            context.load_verify_locations(self.ssl_peer_certificate)
+            try:
+                context.load_verify_locations(self.ssl_peer_certificate)
+            except OSError as error:
+                # Raise HomeAssistantError so the caller can tell an unusable
+                # SSL configuration apart from a socket bind failure (OSError).
+                raise HomeAssistantError(
+                    f"Could not use SSL peer certificate from"
+                    f" {self.ssl_peer_certificate}: {error}"
+                ) from error
 
         return context
 

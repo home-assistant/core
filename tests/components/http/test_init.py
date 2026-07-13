@@ -1510,6 +1510,80 @@ async def test_pending_config_reverted_in_place_on_ssl_failure(
     assert len(restart_calls) == 0
 
 
+async def test_pending_config_reverted_in_place_on_ssl_peer_cert_failure(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """A pending config whose SSL peer certificate is unusable reverts in place."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    stable = dict(HTTP_STORAGE_SCHEMA({"server_port": 9876}))
+    pending = dict(
+        HTTP_STORAGE_SCHEMA(
+            {
+                "server_port": 9999,
+                "ssl_certificate": str(cert_path),
+                "ssl_key": str(key_path),
+            }
+        )
+    )
+    # The peer certificate vanished after the config was stored.
+    pending["ssl_peer_certificate"] = "/nonexistent/peer.pem"
+    hass_storage[DOMAIN] = {
+        "version": 2,
+        "key": DOMAIN,
+        "data": {"stable": stable, "pending": pending, "yaml_migration_done": True},
+    }
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    with patch("ssl.SSLContext.load_cert_chain"):
+        assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert hass_storage["http"]["data"]["pending"] is None
+    assert hass.config.api is not None
+    assert hass.config.api.port == 9876
+    assert hass.config.api.use_ssl is False
+    assert len(restart_calls) == 0
+
+
+async def test_stable_config_ssl_peer_cert_failure_fails_setup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    tmp_path: Path,
+) -> None:
+    """A stable config whose SSL peer certificate is unusable fails setup.
+
+    An unusable stable SSL configuration must fail setup (activating recovery
+    mode on a real boot) instead of being mistaken for a bind failure and
+    running without an HTTP server.
+    """
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+    stable = dict(
+        HTTP_STORAGE_SCHEMA(
+            {
+                "server_port": 9876,
+                "ssl_certificate": str(cert_path),
+                "ssl_key": str(key_path),
+            }
+        )
+    )
+    stable["ssl_peer_certificate"] = "/nonexistent/peer.pem"
+    hass_storage[DOMAIN] = {
+        "version": 2,
+        "key": DOMAIN,
+        "data": {"stable": stable, "pending": None, "yaml_migration_done": True},
+    }
+
+    with patch("ssl.SSLContext.load_cert_chain"):
+        assert await async_setup_component(hass, DOMAIN, {}) is False
+
+
 async def test_stable_config_bind_failure_runs_without_server(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
