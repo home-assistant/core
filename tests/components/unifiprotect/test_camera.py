@@ -429,6 +429,8 @@ async def test_public_only_camera(
     )
     assert device is not None
     assert device.via_device_id is None
+    assert device.name == camera.display_name
+    assert device.model == camera.type
 
     assert (
         await async_get_stream_source(hass, entity_id)
@@ -908,3 +910,48 @@ async def test_camera_without_main_tiers_skipped_with_warning(
     assert "reports no main stream tiers" in caplog.text
     assert_entity_counts(hass, Platform.CAMERA, 1, 1)
     assert hass.states.get(_channel_entity_id(camera, 0)) is not None
+
+
+async def test_public_only_camera_deleted_during_gap(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+) -> None:
+    """A camera deleted while the websocket was down reads as unavailable.
+
+    The library resyncs its public bootstrap on reconnect but applies the
+    snapshot silently; the integration must re-read behind a fresh snapshot
+    rather than resurrect the entity from the pre-disconnect cache.
+    """
+    for channel in camera.channels:
+        channel._api = ufp.api
+    public = make_public_camera(camera)
+    public.rtsps_streams = public_rtsps_for(camera)
+
+    async def _prime_public_only() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {camera.id: public}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_public_only)
+    ufp.api.is_public_only = True
+
+    await init_entry(hass, ufp, [])
+    entity_id = _channel_entity_id(camera, 0)
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    # The websocket drops; the camera is deleted during the gap, so the
+    # reconnect resync returns a snapshot without it.
+    async def _prime_empty() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_empty)
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    # Not resurrected from the stale cache: the fresh snapshot has no camera.
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

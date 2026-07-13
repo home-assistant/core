@@ -304,7 +304,8 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         # is async; the public-only config mode wires it at setup instead.
         public = self._public
         self._attr_device_info = DeviceInfo(
-            name=public.name,
+            name=public.display_name,
+            model=public.type,
             manufacturer=DEFAULT_BRAND,
             connections={(dr.CONNECTION_NETWORK_MAC, public.mac)},
         )
@@ -417,6 +418,9 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
                 self._public.mac, self._async_public_camera_updated
             )
         )
+        # A public update or delete can land between entity construction and
+        # this subscription; re-read so the entity does not start stale.
+        self._async_public_camera_updated(None)
 
     @override
     async def async_camera_image(

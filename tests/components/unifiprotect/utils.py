@@ -387,6 +387,7 @@ def make_public_camera(
     public.mac = camera.mac
     public.name = camera.name
     public.display_name = camera.display_name
+    public.type = camera.type
     public.model = ModelType.CAMERA
     public.state = DeviceState[camera.state.name] if state is None else state
     public.mic_volume = camera.mic_volume if mic_volume is None else mic_volume

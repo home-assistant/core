@@ -340,6 +340,28 @@ class ProtectData:
             return
         self.last_public_update_success = success
         self._async_process_public_updates()
+        if success:
+            # The library resyncs its public bootstrap on reconnect, but the
+            # resync applies silently and races this callback, so the re-read
+            # above may see the pre-disconnect cache. Refresh again behind a
+            # guaranteed-fresh snapshot (``update_public`` is serialized) so a
+            # change from the disconnect gap cannot stay stale.
+            self._entry.async_create_background_task(
+                self._hass,
+                self._async_resignal_after_public_resync(),
+                "unifiprotect public reconnect refresh",
+            )
+
+    async def _async_resignal_after_public_resync(self) -> None:
+        """Re-signal public entities once a fresh public snapshot is applied."""
+        try:
+            await self.api.update_public()
+        except (TimeoutError, ClientError) as err:
+            # A revoked key routes to reauth via the websocket AUTH_FAILED
+            # path; transport errors retry on the next reconnect.
+            _LOGGER.debug("Public refresh after reconnect failed: %s", err)
+            return
+        self._async_process_public_updates()
 
     @callback
     def _async_process_public_updates(self) -> None:
