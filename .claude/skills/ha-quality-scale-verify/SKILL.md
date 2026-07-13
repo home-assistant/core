@@ -28,7 +28,7 @@ Examine the integration's codebase at `homeassistant/components/<integration dom
 - Configuration files and service definitions as needed
 
 Additional sources:
-- Integration docs: WebFetch `https://raw.githubusercontent.com/home-assistant/home-assistant.io/refs/heads/current/source/_integrations/<integration domain>.markdown`
+- Integration docs: Fetch `https://raw.githubusercontent.com/home-assistant/home-assistant.io/refs/heads/current/source/_integrations/<integration domain>.markdown`
 - PyPI package info: `https://pypi.org/pypi/<package>/json`
 
 ## 4. Verification process
