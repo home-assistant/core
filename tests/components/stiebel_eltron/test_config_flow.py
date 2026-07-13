@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from modbus_connection import ModbusError
 from pystiebeleltron import ControllerModel, StiebelEltronModbusError
 import pytest
 
@@ -41,16 +42,28 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert result["data"] == USER_INPUT
 
 
+@pytest.mark.parametrize(
+    ("failing_fixture", "side_effect"),
+    [
+        pytest.param(
+            "mock_get_controller_model", StiebelEltronModbusError, id="model_read"
+        ),
+        pytest.param("mock_connect_tcp", ModbusError, id="connect"),
+    ],
+)
 async def test_form_cannot_connect(
     hass: HomeAssistant,
-    mock_get_controller_model: MagicMock,
+    request: pytest.FixtureRequest,
+    failing_fixture: str,
+    side_effect: type[Exception],
 ) -> None:
-    """Test we handle cannot connect error."""
+    """Test we handle a cannot connect error while opening or reading the device."""
+    failing_mock = request.getfixturevalue(failing_fixture)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_get_controller_model.side_effect = StiebelEltronModbusError
+    failing_mock.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -60,7 +73,7 @@ async def test_form_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_get_controller_model.side_effect = None
+    failing_mock.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

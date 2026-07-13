@@ -5,6 +5,7 @@ from enum import StrEnum
 import logging
 from typing import Final
 
+from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
 from homeassistant.util.signal_type import SignalType
 
 LOGGER: Final = logging.getLogger(__package__)
@@ -50,11 +51,18 @@ class DeviceTrackerEntityStateAttribute(StrEnum):
     IN_ZONES = "in_zones"
 
 
-class TrackerEntityStateAttribute(StrEnum):
+class TrackerEntityStateAttribute(
+    StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "LATITUDE": ("EntityStateAttribute.LATITUDE", "2027.2.0"),
+        "LONGITUDE": ("EntityStateAttribute.LONGITUDE", "2027.2.0"),
+    },
+):
     """State attributes set by TrackerEntity."""
 
-    LATITUDE = "latitude"
-    LONGITUDE = "longitude"
+    LATITUDE = "latitude"  # Deprecated, replaced with EntityStateAttribute.LATITUDE
+    LONGITUDE = "longitude"  # Deprecated, replaced with EntityStateAttribute.LONGITUDE
     GPS_ACCURACY = "gps_accuracy"
 
 
