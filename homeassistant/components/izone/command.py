@@ -8,6 +8,8 @@ from typing import Any, Concatenate, Protocol
 
 from pizone import ControllerCommandError
 
+from homeassistant.exceptions import HomeAssistantError
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -28,7 +30,8 @@ async def izone_command_context(availability_device: _IzoneAvailabilityDevice):
 
     A rejected command is logged and re-raised so multi-step sequences stop.
     Availability is restored only by the library reconnect listener, not on
-    command success. A transport failure marks the controller unavailable.
+    command success. A transport failure marks the controller unavailable
+    and fails the service call.
     """
     try:
         yield
@@ -41,6 +44,9 @@ async def izone_command_context(availability_device: _IzoneAvailabilityDevice):
         raise
     except ConnectionError as ex:
         availability_device.set_available(False, ex)
+        raise HomeAssistantError(
+            f"Unable to connect to controller {availability_device.device_uid}",
+        ) from ex
 
 
 def send_izone_command[_EntityT: _IzoneCommandEntity, **_P](
