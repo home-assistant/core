@@ -581,10 +581,10 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_VERIFY_SSL: reauth_entry.data[CONF_VERIFY_SSL],
                 CONF_API_KEY: user_input[CONF_API_KEY],
             }
+            # Identity is pinned by the stored host; like the full-access
+            # reauth, no unique-id re-check (the resolved mac is unused).
             mac, errors = await self._async_get_public_nvr_identity(validate_input)
             if mac and not errors:
-                await self.async_set_unique_id(_async_unifi_mac_from_hass(mac))
-                self._abort_if_unique_id_mismatch(reason="wrong_nvr")
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data={

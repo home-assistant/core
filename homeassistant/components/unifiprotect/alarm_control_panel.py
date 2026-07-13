@@ -55,7 +55,7 @@ async def async_setup_entry(
         return
 
     # In public-API-only mode there is no private bootstrap; the NVR device is
-    # the public one, carrying the mac resolved at setup.
+    # the public one, whose mac the library backfills during priming.
     if api.is_public_only:
         public_nvr = api.public_bootstrap.nvr
         if public_nvr is None:

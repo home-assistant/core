@@ -214,9 +214,9 @@ class ProtectData:
         self.last_public_update_success = True
         self._async_update_change(True, force_update=True)
         api = self.api
-        # Subscribe to the public devices websocket unconditionally so that
-        # it is active before update_public() primes the cache.
-        # Per library docs: subscribe first, then call update_public().
+        # Subscribe to the public devices websocket in both modes; frames
+        # arriving while update_public() primes are buffered and replayed by
+        # the library, so the subscribe/prime order is not load-bearing.
         self._unsubs = [
             api.subscribe_devices_websocket(
                 self._async_process_public_devices_ws_message

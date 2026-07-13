@@ -2510,12 +2510,16 @@ async def test_reauth_public_only_api_key(
     assert CONF_USERNAME not in ufp_public_only_entry.data
 
 
-async def test_reauth_public_only_wrong_nvr(
+async def test_reauth_public_only_keeps_identity(
     hass: HomeAssistant,
     ufp_public_only_entry: MockConfigEntry,
     mock_setup: None,
 ) -> None:
-    """Reauth aborts when the key resolves a different NVR."""
+    """Reauth never re-checks identity: the stored host pins the console.
+
+    Mirrors the full-access reauth; a resolved mac differing from the entry's
+    unique_id (e.g. discovery hw_addr vs NVR mac) must not lock the user out.
+    """
     ufp_public_only_entry.add_to_hass(hass)
 
     result = await ufp_public_only_entry.start_reauth_flow(hass)
@@ -2533,9 +2537,12 @@ async def test_reauth_public_only_wrong_nvr(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_API_KEY: "new-api-key"}
         )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "wrong_nvr"
+    assert result["reason"] == "reauth_successful"
+    assert ufp_public_only_entry.data[CONF_API_KEY] == "new-api-key"
+    assert ufp_public_only_entry.unique_id == _async_unifi_mac_from_hass(MAC_ADDR)
 
 
 async def test_reauth_public_only_invalid_key(

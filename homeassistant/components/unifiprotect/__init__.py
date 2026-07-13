@@ -186,7 +186,6 @@ async def _async_setup_public_only_entry(
             },
         )
 
-    # Subscribe the public websockets before priming (per library docs).
     data_service.async_setup()
 
     try:
@@ -220,9 +219,10 @@ async def _async_setup_public_only_entry(
 
     data_service.async_subscribe_public_events()
 
-    # Create the NVR device before forwarding platforms so via_device works.
-    # ``type`` is only present on newer firmware; market name and console URL
-    # are always private-only, so they stay unset here.
+    # Register the NVR device up front: it must exist even when no entity
+    # attaches (old firmware without the alarm manager), and it carries the
+    # firmware version, which no public-only entity provides. ``type`` is only
+    # present on newer firmware; market name and console URL are private-only.
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
