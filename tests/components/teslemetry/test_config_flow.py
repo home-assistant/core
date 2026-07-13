@@ -715,6 +715,49 @@ async def test_energy_subentry_pair_poll_powerwall_unreachable(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(TeslaFleetError(), id="tesla_fleet_error"),
+        pytest.param(_NON_502_CLIENT_RESPONSE_ERROR, id="client_response_error"),
+    ],
+)
+async def test_energy_subentry_pair_poll_generic_error(
+    hass: HomeAssistant,
+    error: Exception,
+) -> None:
+    """A non-502 error while polling for approval re-shows the pair form as retryable."""
+    entry = await setup_platform(hass)
+    subentry_id = _energy_subentry_id(entry)
+    empty = AuthorizedClients(clients=[], raw=None)
+
+    with (
+        patch.object(
+            TeslemetryEnergySite,
+            "find_authorized_clients",
+            AsyncMock(side_effect=[empty, error]),
+        ),
+        patch.object(
+            TeslemetryEnergySite,
+            "add_authorized_client",
+            AsyncMock(return_value={}),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "pair"
+        assert not result["errors"]
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
 async def test_energy_subentry_empty_client_list_proceeds(
     hass: HomeAssistant,
 ) -> None:
@@ -749,14 +792,15 @@ async def test_energy_subentry_empty_client_list_proceeds(
         pytest.param(_NON_502_CLIENT_RESPONSE_ERROR, id="client_response_error"),
     ],
 )
-async def test_energy_subentry_verify_generic_error_registers(
+async def test_energy_subentry_verify_generic_error_aborts(
     hass: HomeAssistant,
     error: Exception,
 ) -> None:
-    """A non-502 error while listing clients is treated as unverified, not a crash.
+    """A non-502 error while listing clients aborts instead of re-registering.
 
-    The flow can no longer read the gateway's client list, so it falls through to
-    registering the key and advancing to pairing rather than re-raising.
+    The flow can no longer read the gateway's client list, so it must not mistake
+    the failure for an absent key and re-register (which would reset an already
+    pending or verified key); it aborts with cannot_connect instead.
     """
     entry = await setup_platform(hass)
     subentry_id = _energy_subentry_id(entry)
@@ -772,10 +816,9 @@ async def test_energy_subentry_verify_generic_error_registers(
     ):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "pair"
-    assert not result["errors"]
-    add_client.assert_awaited_once()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    add_client.assert_not_awaited()
 
 
 @pytest.mark.usefixtures("mock_rsa_key")

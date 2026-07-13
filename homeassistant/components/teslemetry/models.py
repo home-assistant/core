@@ -51,15 +51,12 @@ class TeslemetryVehicleData:
 class TeslemetryEnergyData:
     """Data for an energy site in the Teslemetry integration."""
 
-    # Plain cloud EnergySite, or an EnergySiteRouter that tries a paired local
-    # Powerwall (aiopowerwall) first and falls back to the cloud EnergySite
-    # per command.
     api: EnergySite | EnergySiteRouter
     live_coordinator: TeslemetryEnergySiteLiveCoordinator | None
     info_coordinator: TeslemetryEnergySiteInfoCoordinator
     history_coordinator: TeslemetryEnergyHistoryCoordinator | None
     id: int
     device: DeviceInfo
-    # The local-control subentry id, or None for wall-connector-only sites,
-    # which have no Powerwall gateway to pair.
+    # The local-control subentry id, or None for sites without a battery
+    # (solar-only or wall-connector-only), which have no Powerwall to pair.
     subentry_id: str | None
