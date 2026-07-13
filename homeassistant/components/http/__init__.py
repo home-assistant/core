@@ -238,7 +238,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 "the previous configuration: %s",
                 err,
             )
-            await store.async_abort_trial(str(err))
+            await store.async_abort_trial()
             conf = store.stable
             server = _make_server(conf)
             try:

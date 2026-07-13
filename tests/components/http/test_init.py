@@ -22,8 +22,6 @@ from homeassistant.components.http.config import (
     _DEFAULT_CONFIG,
     AUTO_REVERT_DELAY,
     HTTP_STORAGE_SCHEMA,
-    ISSUE_PENDING_NOT_CONFIRMED,
-    ISSUE_PENDING_REVERTED,
     async_get_and_load_store,
     default_server_port,
 )
@@ -1429,11 +1427,6 @@ async def test_pending_config_auto_reverts_to_stable(
         "yaml_migration_done": True,
     }
     assert len(restart_calls) == 1
-    # A repair issue informs the user the change was rolled back.
-    assert (
-        ir.async_get(hass).async_get_issue(DOMAIN, ISSUE_PENDING_NOT_CONFIRMED)
-        is not None
-    )
 
 
 @pytest.mark.parametrize(
@@ -1485,8 +1478,6 @@ async def test_pending_config_reverted_in_place_on_bind_failure(
     store = await async_get_and_load_store(hass)
     assert store.revert_deadline is None
     assert "could not be applied, reverting" in caplog.text
-    # A repair issue informs the user the change was rolled back.
-    assert ir.async_get(hass).async_get_issue(DOMAIN, ISSUE_PENDING_REVERTED)
     stable_sock.close()
 
 
@@ -1517,7 +1508,6 @@ async def test_pending_config_reverted_in_place_on_ssl_failure(
     assert hass.config.api.port == 9876
     assert hass.config.api.use_ssl is False
     assert len(restart_calls) == 0
-    assert ir.async_get(hass).async_get_issue(DOMAIN, ISSUE_PENDING_REVERTED)
 
 
 async def test_stable_config_bind_failure_runs_without_server(
@@ -1551,44 +1541,6 @@ async def test_stable_config_bind_failure_runs_without_server(
         "pending": None,
         "yaml_migration_done": True,
     }
-    assert ir.async_get(hass).async_get_issue(DOMAIN, ISSUE_PENDING_REVERTED) is None
-
-
-async def test_revert_issue_cleared_when_config_changed(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    hass_storage: dict[str, Any],
-    mock_create_server_sockets: Mock,
-) -> None:
-    """The revert repair issue is dismissed once the user changes the config."""
-    hass_storage[DOMAIN] = _stable_http_storage(
-        {"server_port": 9876}, pending={"server_port": 80}
-    )
-
-    async_mock_service(hass, "homeassistant", "restart")
-
-    stable_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    stable_sock.bind(("127.0.0.1", 0))
-    mock_create_server_sockets.side_effect = [
-        OSError(errno.EADDRINUSE, "Address already in use"),
-        [stable_sock],
-    ]
-
-    assert await async_setup_component(hass, DOMAIN, {})
-    await async_setup_component(hass, "websocket_api", {})
-    await hass.async_block_till_done()
-
-    assert ir.async_get(hass).async_get_issue(DOMAIN, ISSUE_PENDING_REVERTED)
-
-    ws_client = await hass_ws_client(hass)
-    await ws_client.send_json_auto_id(
-        {"type": "http/config/configure", "config": {"server_port": 8124}}
-    )
-    response = await ws_client.receive_json()
-    assert response["success"]
-
-    assert ir.async_get(hass).async_get_issue(DOMAIN, ISSUE_PENDING_REVERTED) is None
-    stable_sock.close()
 
 
 async def test_pending_config_promote_cancels_revert(
