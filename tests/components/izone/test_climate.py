@@ -2,10 +2,18 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pizone import ControllerCommandError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.climate import ClimateEntityFeature
+from homeassistant.components.climate import (
+    ATTR_FAN_MODE,
+    DOMAIN as CLIMATE_DOMAIN,
+    FAN_LOW,
+    SERVICE_SET_FAN_MODE,
+    ClimateEntityFeature,
+)
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
@@ -347,3 +355,45 @@ async def test_controller_device_init_fault_bootstrap(
     device_entry = device_registry.async_get(entity_entry.device_id)
     assert device_entry is not None
     assert device_entry.model == "0"
+
+
+@pytest.mark.parametrize(
+    ("command_error", "expect_unavailable"),
+    [
+        pytest.param(
+            ControllerCommandError("rejected"),
+            False,
+            id="command_error_stays_available",
+        ),
+        pytest.param(
+            ConnectionError("disconnected"),
+            True,
+            id="connection_error_marks_unavailable",
+        ),
+    ],
+)
+async def test_controller_command_error_handling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_controller: AsyncMock,
+    command_error: Exception,
+    expect_unavailable: bool,
+) -> None:
+    """A rejected command keeps availability; a transport failure clears it."""
+    await setup_integration(hass, mock_config_entry)
+    await setup_controller(hass, mock_discovery, mock_controller)
+
+    entity_id = "climate.izone_controller_000000001"
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+    mock_controller.set_fan = AsyncMock(side_effect=command_error)
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {"entity_id": entity_id, ATTR_FAN_MODE: FAN_LOW},
+        blocking=True,
+    )
+
+    is_unavailable = hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert is_unavailable is expect_unavailable
