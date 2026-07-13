@@ -830,12 +830,12 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 for device in old_data["devices"]:
                     # One target per config entry. config_entries_subentries was a set, so
                     # the old model allowed a device in several subentries of one config
-                    # entry, but the single-owner model keeps one. The multi-subentry
-                    # devices seen in the wild come from the buggy 2025.7.0b0-b1 subentry
-                    # migration (it left a device in both None and its real subentry), so
-                    # prefer a real subentry over the main entry (None). Collapsing rather
-                    # than splitting avoids duplicate devices which, sharing identifiers
-                    # and connections within one config entry, would collide in the
+                    # entry, but the single-owner model keeps one. Multi-subentry devices
+                    # created by core integrations all come from broken subentry migrators
+                    # (which left a device in both None and its real subentry), so prefer
+                    # a real subentry over the main entry (None). Collapsing rather than
+                    # splitting avoids duplicate devices which, sharing identifiers and
+                    # connections within one config entry, would collide in the
                     # per-config-entry identifier/connection index.
                     pairs = [
                         (
