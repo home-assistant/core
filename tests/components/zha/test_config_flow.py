@@ -986,49 +986,17 @@ async def test_legacy_zeroconf_discovery_already_setup(hass: HomeAssistant) -> N
     )
     await hass.async_block_till_done()
 
+    # An existing network => the discovery warns before migrating to the new radio,
+    # rather than showing the generic "set up" confirmation.
+    assert init_result["type"] is FlowResultType.FORM
+    assert init_result["step_id"] == "confirm_migration"
+
     confirm_result = await hass.config_entries.flow.async_configure(
         init_result["flow_id"],
         user_input={},
     )
 
-    # When we have an existing config entry, we migrate
-    assert confirm_result["type"] is FlowResultType.MENU
-    assert confirm_result["step_id"] == "choose_migration_strategy"
-
-
-async def test_zeroconf_discovery_migration_warns_before_rehoming(
-    hass: HomeAssistant,
-) -> None:
-    """Test a discovery warns before migrating an existing network to a new radio."""
-    MockConfigEntry(
-        domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}}
-    ).add_to_hass(hass)
-
-    service_info = ZeroconfServiceInfo(
-        ip_address=ip_address("192.168.1.200"),
-        ip_addresses=[ip_address("192.168.1.200")],
-        hostname="_tube_zb_gw._tcp.local.",
-        name="mock_name",
-        port=6053,
-        properties={"name": "tube_123456"},
-        type="mock_type",
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
-    )
-    await hass.async_block_till_done()
-
-    # A different radio while a network already exists => explicit migration warning
-    # instead of the generic "set up" confirmation, so a working coordinator is not
-    # re-homed by accident.
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm_migration"
-
     # Confirming still proceeds to the existing migration strategy menu.
-    confirm_result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
     assert confirm_result["type"] is FlowResultType.MENU
     assert confirm_result["step_id"] == "choose_migration_strategy"
 

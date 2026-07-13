@@ -865,9 +865,8 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         )
 
         # ZHA is single-instance: confirming a discovery while a network already
-        # exists migrates it onto the discovered radio (see `_async_create_radio_entry`).
-        # Warn explicitly so a working coordinator is not re-homed by accident, e.g.
-        # onto a radio already used by another integration such as Zigbee2MQTT.
+        # exists switches ZHA to the discovered radio. Warn before re-homing a
+        # working coordinator (e.g. one already used by another integration).
         if zha_config_entries:
             return self.async_show_form(
                 step_id="confirm_migration",

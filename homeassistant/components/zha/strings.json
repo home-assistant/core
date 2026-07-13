@@ -90,7 +90,7 @@
         "title": "Overwrite adapter IEEE address"
       },
       "confirm_migration": {
-        "description": "Setting up **{name}** will migrate your existing Zigbee network onto it. Your current coordinator will go offline and every device will be unavailable until the migration finishes.\n\nOnly continue if you mean to switch radios. If you did not — for example if this adapter is already used by another integration such as Zigbee2MQTT — go back and ignore this discovery instead.",
+        "description": "Setting up **{name}** will change ZHA to use it instead of your current Zigbee radio. Your current coordinator will go offline and your devices may become unavailable.\n\nOnly continue if you mean to switch radios. If you did not — for example if this adapter is already used by another integration such as Zigbee2MQTT — go back and ignore this discovery instead.",
         "title": "Migrate to a different Zigbee radio?"
       },
       "form_new_network": {
