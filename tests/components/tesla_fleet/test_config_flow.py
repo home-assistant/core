@@ -19,12 +19,12 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.tesla_fleet.config_flow import OAuth2FlowHandler
 from homeassistant.components.tesla_fleet.const import (
     AUTHORIZE_URL,
-    CONF_DOMAIN,
     DOMAIN,
     SCOPES,
     TOKEN_URL,
 )
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow

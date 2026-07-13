@@ -1,7 +1,7 @@
 """Data update coordinator for the LoJack integration."""
 
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from lojack_api import ApiError, AuthenticationError, LoJackClient
 from lojack_api.device import Vehicle
@@ -53,6 +53,7 @@ class LoJackCoordinator(DataUpdateCoordinator[Location]):
             config_entry=entry,
         )
 
+    @override
     async def _async_update_data(self) -> Location:
         """Fetch location data for this vehicle."""
         try:

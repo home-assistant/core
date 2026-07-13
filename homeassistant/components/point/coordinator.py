@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from pypoint import PointSession
 
@@ -43,6 +43,7 @@ class PointDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
         self.new_device_callbacks: list[Callable[[str], None]] = []
         self.data: dict[str, dict[str, Any]] = {}
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         if not await self.point.update():
             raise UpdateFailed("Failed to fetch data from Point")

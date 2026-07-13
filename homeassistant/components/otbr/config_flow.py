@@ -2,7 +2,7 @@
 
 from contextlib import suppress
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 import aiohttp
 import python_otbr_api
@@ -154,6 +154,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return border_agent_id
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -185,6 +186,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -213,7 +215,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     or current_url.port == config["port"]
                 ):
                     # Reload the entry since OTBR has restarted
-                    if current_entry.state == ConfigEntryState.LOADED:
+                    if current_entry.state is ConfigEntryState.LOADED:
                         assert current_entry.unique_id is not None
                         await self.hass.config_entries.async_reload(
                             current_entry.entry_id

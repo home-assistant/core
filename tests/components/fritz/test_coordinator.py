@@ -5,6 +5,7 @@ from copy import deepcopy
 from typing import cast
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from fritzconnection.core.exceptions import (
     FritzActionError,
     FritzConnectionException,
@@ -18,12 +19,15 @@ from homeassistant.components.fritz.const import (
     DEFAULT_CONF_FEATURE_DEVICE_TRACKING,
     DEFAULT_SSL,
     DOMAIN,
+    SCAN_INTERVAL,
 )
 from homeassistant.components.fritz.coordinator import (
+    FRITZ_DATA_KEY,
     AvmWrapper,
     ClassSetupMissing,
     FritzBoxTools,
     FritzConnectionCached,
+    FritzData,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -35,12 +39,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import FritzConnectionMock, FritzServiceMock
-from .const import MOCK_SERIAL_NUMBER, MOCK_STATUS_DEVICE_INFO_DATA, MOCK_USER_DATA
+from .const import (
+    MOCK_HOST_FRITZBOX,
+    MOCK_HOST_PRINTER,
+    MOCK_SERIAL_NUMBER,
+    MOCK_STATUS_DEVICE_INFO_DATA,
+    MOCK_USER_DATA,
+)
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture(name="mock_config_entry")
@@ -81,6 +91,8 @@ async def fixture_fritz_tools(
         password=mock_config_entry.data["password"],
         port=mock_config_entry.data["port"],
     )
+
+    hass.data.setdefault(FRITZ_DATA_KEY, FritzData())
 
     await coordinator.async_setup()
     return coordinator
@@ -471,31 +483,44 @@ async def test_trigger_methods(
 ) -> None:
     """Test trigger methods delegate to correct underlying calls."""
 
+    # test async_trigger_firmware_update
     fritz_tools.connection.call_action = MagicMock(
         return_value={"NewX_AVM-DE_UpdateState": True}
     )
+    assert await fritz_tools.async_trigger_firmware_update() is True
+
+    # test async_trigger_reboot
     fritz_tools.connection.reboot = MagicMock()
-    fritz_tools.connection.reconnect = MagicMock()
+    await fritz_tools.async_trigger_reboot()
+    fritz_tools.connection.reboot.assert_called_once()
+
+    # test async_trigger_set_guest_password
     fritz_tools.fritz_guest_wifi.set_password = MagicMock()
+    await fritz_tools.async_trigger_set_guest_password("new-password", 20)
+    fritz_tools.fritz_guest_wifi.set_password.assert_called_once_with(
+        "new-password", 20
+    )
+
+    # test async_trigger_reconnect
+    fritz_tools.connection.call_action = MagicMock(
+        side_effect=FritzConnectionException(
+            "UPnPError:\nerrorCode: 707\nerrorDescription: DisconnectInProgress"
+        )
+    )
+    await fritz_tools.async_trigger_reconnect()
+    fritz_tools.connection.call_action.assert_called_with(
+        "WANPPPConnection1", "ForceTermination"
+    )
+
+    # test async_trigger_dial
     fritz_tools.fritz_call.dial = MagicMock()
     fritz_tools.fritz_call.hangup = MagicMock()
-
-    assert await fritz_tools.async_trigger_firmware_update() is True
-    await fritz_tools.async_trigger_reboot()
-    await fritz_tools.async_trigger_reconnect()
-    await fritz_tools.async_trigger_set_guest_password("new-password", 20)
-
     with patch(
         "homeassistant.components.fritz.coordinator.asyncio.sleep",
         new=AsyncMock(),
     ) as sleep_mock:
         await fritz_tools.async_trigger_dial("012345", 1)
 
-    fritz_tools.connection.reboot.assert_called_once()
-    fritz_tools.connection.reconnect.assert_called_once()
-    fritz_tools.fritz_guest_wifi.set_password.assert_called_once_with(
-        "new-password", 20
-    )
     fritz_tools.fritz_call.dial.assert_called_once_with("012345")
     sleep_mock.assert_awaited_once_with(1)
     fritz_tools.fritz_call.hangup.assert_called_once()
@@ -565,6 +590,70 @@ async def test_avmwrapper_passthrough_methods(
     )
     assert await wrapper.async_set_allow_wan_access("192.168.178.2", True) == {}
     assert await wrapper.async_wake_on_lan("AA:BB:CC:DD:EE:FF") == {}
+
+
+async def test_async_trigger_cleanup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    fc_class_mock,
+    fh_class_mock,
+    fs_class_mock,
+) -> None:
+    """Test the cleanup of orphan devices."""
+
+    fh_class_mock.get_hosts_attributes.return_value = [
+        MOCK_HOST_PRINTER,
+        MOCK_HOST_FRITZBOX,
+    ]
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.state is ConfigEntryState.LOADED
+
+    # Verify the printer is registered as tracked device
+    assert device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22")}
+    )
+    assert entity_registry.async_get("device_tracker.printer")
+    assert entity_registry.async_get("switch.printer_internet_access")
+
+    # remove printer from host list
+    fh_class_mock.get_hosts_attributes.return_value = [MOCK_HOST_FRITZBOX]
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Verify the printer was removed from tracked devices
+    assert (
+        device_registry.async_get_device(
+            connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22")}
+        )
+        is None
+    )
+    assert entity_registry.async_get("device_tracker.printer") is None
+    assert entity_registry.async_get("switch.printer_internet_access") is None
+
+    # add printer again
+    fh_class_mock.get_hosts_attributes.return_value = [
+        MOCK_HOST_PRINTER,
+        MOCK_HOST_FRITZBOX,
+    ]
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Verify the printer is registered again as tracked device
+    assert device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:00:11:22")}
+    )
+    assert entity_registry.async_get("device_tracker.printer")
+    assert entity_registry.async_get("switch.printer_internet_access")
 
 
 async def test_async_trigger_cleanup_preserves_fritz_device(

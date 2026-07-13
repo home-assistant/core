@@ -53,6 +53,11 @@
       }
     }
   },
+  "exceptions": {
+    "device_not_advertising": {
+      "message": "{local_name} ({address}) is not advertising yet: {reason}"
+    }
+  },
   "options": {
     "step": {
       "device_options": {

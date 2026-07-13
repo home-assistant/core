@@ -2,13 +2,16 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from aiohttp import ClientError, ClientResponseError
 from data_grand_lyon_ha import (
     DataGrandLyonClient,
+    TclParkAndRide,
     TclPassage,
     VelovStation,
     filter_tcl_passages_by_lines_stops,
+    find_tcl_park_and_ride_by_id,
     find_velov_stations_by_ids,
     sort_tcl_passages_by_time,
 )
@@ -20,27 +23,31 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     CONF_LINE,
+    CONF_PARK_ID,
     CONF_STATION_ID,
     CONF_STOP_ID,
     DOMAIN,
     LOGGER,
+    SUBENTRY_TYPE_PARK_AND_RIDE,
     SUBENTRY_TYPE_STOP,
     SUBENTRY_TYPE_VELOV_STATION,
 )
 
-type DataGrandLyonConfigEntry = ConfigEntry[DataGrandLyonCoordinator]
-
 
 @dataclass
-class DataGrandLyonCoordinatorData:
-    """Data returned by the coordinator."""
+class DataGrandLyonData:
+    """Runtime data for the Data Grand Lyon integration."""
 
-    stops: dict[str, list[TclPassage]]
-    velov_stations: dict[str, VelovStation]
+    tcl_coordinator: DataGrandLyonTclCoordinator
+    velov_coordinator: DataGrandLyonVelovCoordinator
+    park_and_ride_coordinator: DataGrandLyonParkAndRideCoordinator
 
 
-class DataGrandLyonCoordinator(DataUpdateCoordinator[DataGrandLyonCoordinatorData]):
-    """Coordinator for the Data Grand Lyon integration."""
+type DataGrandLyonConfigEntry = ConfigEntry[DataGrandLyonData]
+
+
+class DataGrandLyonTclCoordinator(DataUpdateCoordinator[dict[str, list[TclPassage]]]):
+    """Coordinator for TCL transit passages."""
 
     config_entry: DataGrandLyonConfigEntry
 
@@ -56,82 +63,177 @@ class DataGrandLyonCoordinator(DataUpdateCoordinator[DataGrandLyonCoordinatorDat
             hass,
             LOGGER,
             config_entry=entry,
-            name=DOMAIN,
+            name=f"{DOMAIN}_tcl",
             update_interval=timedelta(minutes=5),
         )
 
-    async def _async_update_data(self) -> DataGrandLyonCoordinatorData:
-        """Fetch data for all monitored stops and Vélo'v stations."""
+    @override
+    async def _async_update_data(self) -> dict[str, list[TclPassage]]:
+        """Fetch data for all monitored stops."""
         stop_subentries = list(
             self.config_entry.get_subentries_of_type(SUBENTRY_TYPE_STOP)
         )
+        if not stop_subentries:
+            return {}
+
+        try:
+            all_passages = await self.client.get_tcl_passages()
+        except ClientResponseError as err:
+            if err.status in (401, 403):
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_failed",
+                ) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_tcl",
+            ) from err
+        except (ClientError, TimeoutError) as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_tcl",
+            ) from err
+
+        lines_stops = [
+            (subentry.data[CONF_LINE], subentry.data[CONF_STOP_ID])
+            for subentry in stop_subentries
+        ]
+        grouped = filter_tcl_passages_by_lines_stops(all_passages, lines_stops)
+        stops: dict[str, list[TclPassage]] = {}
+        for subentry in stop_subentries:
+            key = (subentry.data[CONF_LINE], subentry.data[CONF_STOP_ID])
+            sorted_passages = sort_tcl_passages_by_time(grouped[key])
+            if sorted_passages:
+                stops[subentry.subentry_id] = sorted_passages
+            else:
+                LOGGER.warning(
+                    "No TCL passages found for subentry %s",
+                    subentry.subentry_id,
+                )
+        return stops
+
+
+class DataGrandLyonVelovCoordinator(DataUpdateCoordinator[dict[str, VelovStation]]):
+    """Coordinator for Vélo'v stations."""
+
+    config_entry: DataGrandLyonConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: DataGrandLyonConfigEntry,
+        client: DataGrandLyonClient,
+    ) -> None:
+        """Initialize the coordinator."""
+        self.client = client
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN}_velov",
+            update_interval=timedelta(minutes=5),
+        )
+
+    @override
+    async def _async_update_data(self) -> dict[str, VelovStation]:
+        """Fetch data for all monitored Vélo'v stations."""
         velov_subentries = list(
             self.config_entry.get_subentries_of_type(SUBENTRY_TYPE_VELOV_STATION)
         )
+        if not velov_subentries:
+            return {}
 
-        has_stops = bool(stop_subentries)
-        has_velov = bool(velov_subentries)
-        stops: dict[str, list[TclPassage]] = {}
-        velov_stations: dict[str, VelovStation] = {}
-        tcl_success = not has_stops
-        velov_success = not has_velov
-
-        if has_stops:
-            try:
-                all_passages = await self.client.get_tcl_passages()
-            except ClientResponseError as err:
-                if err.status in (401, 403):
-                    raise ConfigEntryAuthFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="auth_failed",
-                    ) from err
-                LOGGER.warning("Error fetching TCL passages: %s", err)
-            except (ClientError, TimeoutError) as err:
-                LOGGER.warning("Error fetching TCL passages: %s", err)
-            else:
-                tcl_success = True
-                lines_stops = [
-                    (subentry.data[CONF_LINE], subentry.data[CONF_STOP_ID])
-                    for subentry in stop_subentries
-                ]
-                grouped = filter_tcl_passages_by_lines_stops(all_passages, lines_stops)
-                for subentry in stop_subentries:
-                    key = (subentry.data[CONF_LINE], subentry.data[CONF_STOP_ID])
-                    stops[subentry.subentry_id] = sort_tcl_passages_by_time(
-                        grouped[key]
-                    )
-
-        if has_velov:
-            try:
-                all_stations = await self.client.get_velov_stations()
-            except ClientResponseError as err:
-                if err.status in (401, 403):
-                    raise ConfigEntryAuthFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="auth_failed",
-                    ) from err
-                LOGGER.warning("Error fetching Vélo'v stations: %s", err)
-            except (ClientError, TimeoutError) as err:
-                LOGGER.warning("Error fetching Vélo'v stations: %s", err)
-            else:
-                velov_success = True
-                station_ids = [
-                    subentry.data[CONF_STATION_ID] for subentry in velov_subentries
-                ]
-                found = find_velov_stations_by_ids(all_stations, station_ids)
-                for subentry in velov_subentries:
-                    station = found[subentry.data[CONF_STATION_ID]]
-                    if station is not None:
-                        velov_stations[subentry.subentry_id] = station
-                    else:
-                        LOGGER.warning(
-                            "Vélo'v station not found for subentry %s",
-                            subentry.subentry_id,
-                        )
-
-        if not tcl_success and not velov_success:
+        try:
+            all_stations = await self.client.get_velov_stations()
+        except ClientResponseError as err:
+            if err.status in (401, 403):
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_failed",
+                ) from err
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="update_failed_all",
-            )
-        return DataGrandLyonCoordinatorData(stops=stops, velov_stations=velov_stations)
+                translation_key="update_failed_velov",
+            ) from err
+        except (ClientError, TimeoutError) as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_velov",
+            ) from err
+
+        station_ids = [subentry.data[CONF_STATION_ID] for subentry in velov_subentries]
+        found = find_velov_stations_by_ids(all_stations, station_ids)
+        velov_stations: dict[str, VelovStation] = {}
+        for subentry in velov_subentries:
+            station = found[subentry.data[CONF_STATION_ID]]
+            if station is not None:
+                velov_stations[subentry.subentry_id] = station
+            else:
+                LOGGER.warning(
+                    "Vélo'v station not found for subentry %s",
+                    subentry.subentry_id,
+                )
+        return velov_stations
+
+
+class DataGrandLyonParkAndRideCoordinator(
+    DataUpdateCoordinator[dict[str, TclParkAndRide]]
+):
+    """Coordinator for TCL park-and-ride (P+R) facilities."""
+
+    config_entry: DataGrandLyonConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: DataGrandLyonConfigEntry,
+        client: DataGrandLyonClient,
+    ) -> None:
+        """Initialize the coordinator."""
+        self.client = client
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=f"{DOMAIN}_park_and_ride",
+            update_interval=timedelta(minutes=5),
+        )
+
+    @override
+    async def _async_update_data(self) -> dict[str, TclParkAndRide]:
+        """Fetch data for all monitored park-and-ride facilities."""
+        park_subentries = list(
+            self.config_entry.get_subentries_of_type(SUBENTRY_TYPE_PARK_AND_RIDE)
+        )
+        if not park_subentries:
+            return {}
+
+        try:
+            all_parks = await self.client.get_tcl_park_and_rides()
+        except ClientResponseError as err:
+            if err.status in (401, 403):
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_failed",
+                ) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_park_and_ride",
+            ) from err
+        except (ClientError, TimeoutError) as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_park_and_ride",
+            ) from err
+
+        parks: dict[str, TclParkAndRide] = {}
+        for subentry in park_subentries:
+            park = find_tcl_park_and_ride_by_id(all_parks, subentry.data[CONF_PARK_ID])
+            if park is not None:
+                parks[subentry.subentry_id] = park
+            else:
+                LOGGER.warning(
+                    "Park-and-ride not found for subentry %s",
+                    subentry.subentry_id,
+                )
+        return parks

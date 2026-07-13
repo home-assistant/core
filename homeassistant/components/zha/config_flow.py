@@ -2,12 +2,11 @@
 
 from abc import abstractmethod
 import asyncio
-import collections
 from contextlib import suppress
 from enum import StrEnum
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from zha.application.const import RadioType
@@ -45,7 +44,13 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_BAUDRATE, CONF_FLOW_CONTROL, CONF_RADIO_TYPE, DOMAIN
+from .const import (
+    CONF_BAUDRATE,
+    CONF_FLOW_CONTROL,
+    CONF_RADIO_TYPE,
+    DOMAIN,
+    LEGACY_ZEROCONF_PORT,
+)
 from .helpers import get_config_entry_unique_id, get_zha_gateway
 from .radio_manager import (
     DEVICE_SCHEMA,
@@ -88,7 +93,6 @@ UPLOADED_BACKUP_FILE = "uploaded_backup_file"
 
 REPAIR_MY_URL = "https://my.home-assistant.io/redirect/repairs/"
 
-LEGACY_ZEROCONF_PORT = 6638
 LEGACY_ZEROCONF_ESPHOME_API_PORT = 6053
 
 ZEROCONF_SERVICE_TYPE = "_zigbee-coordinator._tcp.local."
@@ -146,7 +150,11 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         # re-raise it in a dedicated step
         self._progress_error: AbortFlow | None = None
 
-    @property
+    # mypy doesn't recognize @override on a property with a setter
+    # (https://github.com/python/mypy/issues/15900); unused-ignore is needed
+    # because the explicit-override check is not enabled yet.
+    @property  # type: ignore[explicit-override, unused-ignore]
+    @override
     def hass(self) -> HomeAssistant:
         """Return hass."""
         return self._hass
@@ -644,23 +652,10 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose an automatic backup."""
-        if self.show_advanced_options:
-            # Always show the PAN IDs when in advanced mode
-            choices = [
-                _format_backup_choice(backup, pan_ids=True)
-                for backup in self._radio_mgr.backups
-            ]
-        else:
-            # Only show the PAN IDs for multiple backups taken on the same day
-            num_backups_on_date = collections.Counter(
-                backup.backup_time.date() for backup in self._radio_mgr.backups
-            )
-            choices = [
-                _format_backup_choice(
-                    backup, pan_ids=(num_backups_on_date[backup.backup_time.date()] > 1)
-                )
-                for backup in self._radio_mgr.backups
-            ]
+        choices = [
+            _format_backup_choice(backup, pan_ids=True)
+            for backup in self._radio_mgr.backups
+        ]
 
         if user_input is not None:
             index = choices.index(user_input[CHOOSE_AUTOMATIC_BACKUP])
@@ -759,6 +754,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 5
+    MINOR_VERSION = 2
 
     async def _set_unique_id_and_update_ignored_flow(
         self, unique_id: str, device_path: str
@@ -779,12 +775,14 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
         return ZhaOptionsFlowHandler(config_entry)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -871,6 +869,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
         vid = discovery_info.vid
@@ -907,6 +906,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_confirm()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -1002,6 +1002,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
+    @override
     async def _async_create_radio_entry(self) -> ConfigFlowResult:
         """Create a config entry with the current flow state."""
 
@@ -1098,6 +1099,7 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
         self._migration_intent = OptionsMigrationIntent.MIGRATE
         return await self.async_step_choose_serial_port()
 
+    @override
     async def async_step_maybe_reset_old_radio(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -1109,6 +1111,7 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
 
         return await super().async_step_maybe_reset_old_radio(user_input)
 
+    @override
     async def _async_create_radio_entry(self):
         """Re-implementation of the base flow's final step to update the config."""
 
@@ -1124,6 +1127,7 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
 
         return self.async_abort(reason="reconfigure_successful")
 
+    @override
     def async_remove(self):
         """Maybe reload ZHA if the flow is aborted."""
         if self.config_entry.state not in (

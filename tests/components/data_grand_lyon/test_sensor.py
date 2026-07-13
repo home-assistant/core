@@ -22,7 +22,12 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigSubentryData,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -89,7 +94,7 @@ async def test_stop_sensor_no_data(
     mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
-    """Test that sensors with no departure data return unknown."""
+    """Test that sensors are unavailable when no departure data is found."""
     mock_tcl_client.get_tcl_passages.return_value = []
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -97,7 +102,7 @@ async def test_stop_sensor_no_data(
 
     state = hass.states.get("sensor.c3_stop_100_next_departure_1")
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_stop_sensor_aware_datetime_passthrough(
@@ -135,15 +140,13 @@ async def test_coordinator_stop_fetch_error(
     mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
-    """Test coordinator handles stop fetch errors gracefully."""
+    """Test coordinator raises UpdateFailed on stop fetch error."""
     mock_tcl_client.get_tcl_passages.side_effect = ClientConnectionError("API down")
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.c3_stop_100_next_departure_1")
-    assert state is not None
-    assert state.state == "unknown"
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_coordinator_stop_http_error(
@@ -151,7 +154,7 @@ async def test_coordinator_stop_http_error(
     mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
-    """Test coordinator handles non-auth HTTP errors for stops."""
+    """Test coordinator raises UpdateFailed on non-auth HTTP errors for stops."""
     mock_tcl_client.get_tcl_passages.side_effect = ClientResponseError(
         Mock(), (), status=500
     )
@@ -159,9 +162,7 @@ async def test_coordinator_stop_http_error(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.c3_stop_100_next_departure_1")
-    assert state is not None
-    assert state.state == "unknown"
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_coordinator_velov_auth_error(
@@ -188,7 +189,7 @@ async def test_coordinator_velov_http_error(
     mock_velov_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
-    """Test coordinator handles non-auth HTTP errors for Vélo'v."""
+    """Test coordinator raises UpdateFailed on non-auth HTTP errors for Vélo'v."""
     mock_tcl_client.get_velov_stations.side_effect = ClientResponseError(
         Mock(), (), status=500
     )
@@ -196,9 +197,7 @@ async def test_coordinator_velov_http_error(
     await hass.config_entries.async_setup(mock_velov_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.velo_v_1001_available_bikes")
-    assert state is not None
-    assert state.state == "unavailable"
+    assert mock_velov_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_coordinator_all_fetch_errors(
@@ -294,7 +293,7 @@ async def test_velov_sensor_no_data(
 
     state = hass.states.get("sensor.velo_v_1001_available_bikes")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_coordinator_velov_fetch_error(
@@ -302,22 +301,20 @@ async def test_coordinator_velov_fetch_error(
     mock_velov_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
-    """Test coordinator handles Vélo'v fetch errors gracefully."""
+    """Test coordinator raises UpdateFailed on Vélo'v fetch error."""
     mock_tcl_client.get_velov_stations.side_effect = ClientConnectionError("API down")
     mock_velov_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_velov_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.velo_v_1001_available_bikes")
-    assert state is not None
-    assert state.state == "unavailable"
+    assert mock_velov_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_coordinator_mixed_partial_failure(
     hass: HomeAssistant,
     mock_tcl_client: AsyncMock,
 ) -> None:
-    """Test coordinator succeeds when stop fails but Vélo'v succeeds."""
+    """Test that when one coordinator fails at setup, the entry retries."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Data Grand Lyon",
@@ -346,6 +343,122 @@ async def test_coordinator_mixed_partial_failure(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.velo_v_1001_available_bikes")
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+# Park-and-ride sensor tests
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_park_and_ride_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_park_and_ride_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test all park-and-ride sensor entities (state, attributes, registry)."""
+    with patch("homeassistant.components.data_grand_lyon.PLATFORMS", [Platform.SENSOR]):
+        mock_park_and_ride_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_park_and_ride_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_park_and_ride_config_entry.entry_id
+    )
+
+
+async def test_park_and_ride_sensor_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_park_and_ride_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test that diagnostic park-and-ride sensors are disabled by default."""
+    mock_park_and_ride_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_park_and_ride_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    for unique_id in ("park_and_ride_P+R Gorge de Loup-accessible_spaces",):
+        entry = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        assert entry is not None, unique_id
+        reg_entry = entity_registry.async_get(entry)
+        assert reg_entry is not None, unique_id
+        assert reg_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    for unique_id in (
+        "park_and_ride_P+R Gorge de Loup-available_spaces",
+        "park_and_ride_P+R Gorge de Loup-capacity",
+    ):
+        entry = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+        assert entry is not None, unique_id
+        reg_entry = entity_registry.async_get(entry)
+        assert reg_entry is not None, unique_id
+        assert reg_entry.disabled_by is None
+
+
+async def test_park_and_ride_sensor_no_data(
+    hass: HomeAssistant,
+    mock_park_and_ride_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test that park-and-ride sensors are unavailable when facility not found."""
+    mock_tcl_client.get_tcl_park_and_rides.return_value = []
+    mock_park_and_ride_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_park_and_ride_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.gorge_de_loup_available_parking_spaces")
     assert state is not None
-    assert state.state != "unavailable"
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_coordinator_park_and_ride_auth_error(
+    hass: HomeAssistant,
+    mock_park_and_ride_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test coordinator triggers reauth on park-and-ride auth failure."""
+    mock_tcl_client.get_tcl_park_and_rides.side_effect = ClientResponseError(
+        Mock(), (), status=401
+    )
+    mock_park_and_ride_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_park_and_ride_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_park_and_ride_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert any(flow["context"].get("source") == SOURCE_REAUTH for flow in flows)
+
+
+async def test_coordinator_park_and_ride_http_error(
+    hass: HomeAssistant,
+    mock_park_and_ride_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test coordinator raises UpdateFailed on non-auth HTTP errors for P+R."""
+    mock_tcl_client.get_tcl_park_and_rides.side_effect = ClientResponseError(
+        Mock(), (), status=500
+    )
+    mock_park_and_ride_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_park_and_ride_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_park_and_ride_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_park_and_ride_fetch_error(
+    hass: HomeAssistant,
+    mock_park_and_ride_config_entry: MockConfigEntry,
+    mock_tcl_client: AsyncMock,
+) -> None:
+    """Test coordinator raises UpdateFailed on park-and-ride fetch error."""
+    mock_tcl_client.get_tcl_park_and_rides.side_effect = ClientConnectionError(
+        "API down"
+    )
+    mock_park_and_ride_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_park_and_ride_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_park_and_ride_config_entry.state is ConfigEntryState.SETUP_RETRY

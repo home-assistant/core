@@ -1074,7 +1074,9 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
 
         @ha.callback
         def _async_fire_mqtt_message(topic, payload, qos, retain, properties=None):
-            async_fire_mqtt_message(hass, topic, payload or b"", qos, retain)
+            async_fire_mqtt_message(
+                hass, topic, payload or b"", qos, retain, properties=properties
+            )
             mid = get_mid()
             hass.loop.call_soon(
                 mock_client.on_publish, Mock(), 0, mid, MockMqttReasonCode(), None
@@ -1972,6 +1974,15 @@ async def mock_enable_bluetooth(
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
     with (
+        # Simulate the Bluetooth management API being unavailable, as it is on
+        # CI and most dev machines. Letting the real setup() run would attempt
+        # real socket I/O on Linux hosts that do have BlueZ available, and
+        # mocking it as successful would enable the advertising side channel,
+        # changing the scanner code path the existing tests were written for.
+        patch(
+            "habluetooth.channels.bluez.MGMTBluetoothCtl.setup",
+            AsyncMock(side_effect=OSError),
+        ),
         patch("habluetooth.util.recover_adapter"),
         patch("bluetooth_auto_recovery.recover_adapter"),
         patch("bluetooth_adapters.systems.platform.system", return_value="Linux"),
@@ -2058,7 +2069,7 @@ async def hassio_stubs(
 ) -> None:
     """Create mock hassio http client."""
     with patch(
-        "homeassistant.components.hassio.issues.SupervisorIssues.setup",
+        "homeassistant.components.hassio.coordinator.SupervisorIssuesCoordinator.async_refresh",
     ):
         await async_setup_component(hass, "hassio", {})
 
@@ -2252,5 +2263,5 @@ def disable_http_server() -> Generator[None]:
     This prevents the HTTP server from starting in tests that setup
     integrations which depend on the HTTP component.
     """
-    with patch("homeassistant.components.http.start_http_server_and_save_config"):
+    with patch("homeassistant.components.http.HomeAssistantHTTP.start"):
         yield

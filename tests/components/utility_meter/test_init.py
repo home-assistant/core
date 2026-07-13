@@ -28,12 +28,20 @@ from homeassistant.const import (
     UnitOfEnergy,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, mock_restore_cache
+from tests.common import (
+    MockConfigEntry,
+    assert_platform_setup_creates_issue,
+    mock_restore_cache,
+)
 
 
 @pytest.fixture
@@ -114,6 +122,26 @@ def track_entity_registry_actions(hass: HomeAssistant, entity_id: str) -> list[s
     async_track_entity_registry_updated_event(hass, entity_id, add_event)
 
     return events
+
+
+@pytest.mark.parametrize(
+    "platform_domain",
+    ["select", "sensor"],
+)
+async def test_platform_config_creates_issue(
+    hass: HomeAssistant,
+    platform_domain: str,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid platform config creates issue and logs a warning."""
+    await assert_platform_setup_creates_issue(
+        hass,
+        platform_domain,
+        DOMAIN,
+        issue_registry,
+        caplog,
+    )
 
 
 async def test_restore_state(hass: HomeAssistant) -> None:

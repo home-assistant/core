@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
 import math
-from typing import Any, Self
+from typing import Any, Self, override
 
 from cronsim import CronSim
 import voluptuous as vol
@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
+    DOMAIN as SENSOR_DOMAIN,
     RestoreSensor,
     SensorDeviceClass,
     SensorExtraStoredData,
@@ -46,6 +47,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.event import (
     async_track_point_in_time,
@@ -75,6 +77,7 @@ from .const import (
     DAILY,
     DATA_TARIFF_SENSORS,
     DATA_UTILITY,
+    DOMAIN,
     HOURLY,
     MONTHLY,
     QUARTER_HOURLY,
@@ -212,9 +215,13 @@ async def async_setup_platform(
 ) -> None:
     """Set up the utility meter sensor."""
     if discovery_info is None:
-        _LOGGER.error(
-            "This platform is not available to configure "
-            "from 'sensor:' in configuration.yaml"
+        async_create_platform_config_not_supported_issue(
+            hass,
+            DOMAIN,
+            SENSOR_DOMAIN,
+            yaml_config_under_integration_supported=True,
+            learn_more_url="https://www.home-assistant.io/integrations/utility_meter/",
+            logger=_LOGGER,
         )
         return
 
@@ -293,6 +300,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
     status: str
     input_device_class: SensorDeviceClass | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the utility sensor data."""
         data = super().as_dict()
@@ -308,6 +316,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
         return data
 
     @classmethod
+    @override
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored sensor state from a dict."""
         extra = SensorExtraStoredData.from_dict(restored)
@@ -607,6 +616,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._attr_native_value = Decimal(str(value))
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -687,6 +697,7 @@ class UtilityMeterSensor(RestoreSensor):
             self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, async_track_time_zone)
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._collecting:
@@ -694,6 +705,7 @@ class UtilityMeterSensor(RestoreSensor):
         self._collecting = None
 
     @property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         if self._input_device_class is not None:
@@ -706,6 +718,7 @@ class UtilityMeterSensor(RestoreSensor):
         return None
 
     @property
+    @override
     def state_class(self) -> SensorStateClass:
         """Return the state class of the sensor."""
         if self._sensor_net_consumption:
@@ -721,6 +734,7 @@ class UtilityMeterSensor(RestoreSensor):
         return SensorStateClass.TOTAL_INCREASING
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         state_attr = {
@@ -743,6 +757,7 @@ class UtilityMeterSensor(RestoreSensor):
         return state_attr
 
     @property
+    @override
     def extra_restore_state_data(self) -> UtilitySensorExtraStoredData:
         """Return sensor specific state data to be restored."""
         return UtilitySensorExtraStoredData(
@@ -755,6 +770,7 @@ class UtilityMeterSensor(RestoreSensor):
             self._input_device_class,
         )
 
+    @override
     async def async_get_last_sensor_data(self) -> UtilitySensorExtraStoredData | None:
         """Restore Utility Meter Sensor Extra Stored Data."""
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:

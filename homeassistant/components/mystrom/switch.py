@@ -1,7 +1,7 @@
 """Support for myStrom switches/plugs."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pymystrom.exceptions import MyStromConnectionError
 
@@ -47,6 +47,7 @@ class MyStromSwitch(SwitchEntity):
             configuration_url=self.plug.uri,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         try:
@@ -55,6 +56,7 @@ class MyStromSwitch(SwitchEntity):
         except MyStromConnectionError:
             _LOGGER.error("No route to myStrom plug")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:

@@ -113,16 +113,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
     except RainbirdApiException as err:
         raise ConfigEntryNotReady from err
 
+    # Rain Bird devices can only handle a single request at a time. This shared
+    # lock ensures that the background coordinators do not poll the device
+    # concurrently.
+    device_lock = asyncio.Lock()
     data = RainbirdData(
         controller,
         model_info,
-        coordinator=RainbirdUpdateCoordinator(hass, entry, controller, model_info),
-        schedule_coordinator=RainbirdScheduleUpdateCoordinator(hass, entry, controller),
+        coordinator=RainbirdUpdateCoordinator(
+            hass, entry, controller, model_info, device_lock
+        ),
+        schedule_coordinator=RainbirdScheduleUpdateCoordinator(
+            hass, entry, controller, device_lock
+        ),
     )
     await data.coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.async_on_unload(entry.add_update_listener(async_update_listener))
 
     return True
 
@@ -265,3 +275,10 @@ def _async_fix_device_id(
 async def async_unload_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_update_listener(
+    hass: HomeAssistant, entry: RainbirdConfigEntry
+) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)

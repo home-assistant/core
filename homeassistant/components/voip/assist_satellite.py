@@ -1,5 +1,4 @@
 """Assist satellite entity for VoIP integration."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from datetime import timedelta
@@ -10,11 +9,11 @@ import logging
 from pathlib import Path
 import socket
 import time
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final, override
 import wave
 
 from voip_utils import SIP_PORT, RtpDatagramProtocol
-from voip_utils.sip import SipDatagramProtocol, SipEndpoint, get_sip_endpoint
+from voip_utils.sip import SipEndpoint, get_sip_endpoint
 
 from homeassistant.components import intent, tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
@@ -27,11 +26,11 @@ from homeassistant.components.assist_satellite import (
 )
 from homeassistant.components.intent import TimerEventType, TimerInfo
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import VoipConfigEntry
 from .const import (
     CHANNELS,
     CONF_SIP_PORT,
@@ -43,9 +42,6 @@ from .const import (
 )
 from .devices import VoIPDevice
 from .entity import VoIPEntity
-
-if TYPE_CHECKING:
-    from . import DomainData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,11 +69,11 @@ _TONE_FILENAMES: dict[Tones, str] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VoipConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up VoIP Assist satellite entity."""
-    domain_data: DomainData = hass.data[DOMAIN]
+    domain_data = config_entry.runtime_data.domain_data
 
     @callback
     def async_add_device(device: VoIPDevice) -> None:
@@ -110,7 +106,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self,
         hass: HomeAssistant,
         voip_device: VoIPDevice,
-        config_entry: ConfigEntry,
+        config_entry: VoipConfigEntry,
         tones=Tones.LISTENING | Tones.PROCESSING | Tones.ERROR,
     ) -> None:
         """Initialize an Assist satellite."""
@@ -142,16 +138,19 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._run_pipeline_after_announce: bool = False
 
     @property
+    @override
     def pipeline_entity_id(self) -> str | None:
         """Return the entity ID of the pipeline to use for the next conversation."""
         return self.voip_device.get_pipeline_entity_id(self.hass)
 
     @property
+    @override
     def vad_sensitivity_entity_id(self) -> str | None:
         """Return the VAD sensitivity entity ID for next conversation."""
         return self.voip_device.get_vad_sensitivity_entity_id(self.hass)
 
     @property
+    @override
     def tts_options(self) -> dict[str, Any] | None:
         """Options passed for text-to-speech."""
         return {
@@ -161,6 +160,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
         }
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -173,6 +173,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -180,6 +181,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self.voip_device.protocol = None
 
     @callback
+    @override
     def async_get_configuration(
         self,
     ) -> AssistSatelliteConfiguration:
@@ -209,12 +211,14 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             self.hass, announce_message(), "voip_announce_timer"
         )
 
+    @override
     async def async_set_configuration(
         self, config: AssistSatelliteConfiguration
     ) -> None:
         """Set the current satellite configuration."""
         raise NotImplementedError
 
+    @override
     async def async_announce(self, announcement: AssistSatelliteAnnouncement) -> None:
         """Announce media on the satellite.
 
@@ -269,7 +273,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._announcement = announcement
 
         # Make the call
-        sip_protocol: SipDatagramProtocol = self.hass.data[DOMAIN].protocol
+        sip_protocol = self.config_entry.runtime_data.domain_data.protocol
         _LOGGER.debug("Outgoing call to contact %s", self.voip_device.contact)
         call_info = sip_protocol.outgoing_call(
             source=source_endpoint,
@@ -352,6 +356,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 raise
             _LOGGER.debug("Check hangup cancelled")
 
+    @override
     async def async_start_conversation(
         self, start_announcement: AssistSatelliteAnnouncement
     ) -> None:
@@ -509,6 +514,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         while not self._audio_queue.empty():
             self._audio_queue.get_nowait()
 
+    @override
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
         if event.type == PipelineEventType.STT_END:
