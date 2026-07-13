@@ -8,7 +8,6 @@ from datetime import datetime
 from enum import StrEnum
 from functools import lru_cache
 import logging
-import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, Unpack, override
 
 import attr
@@ -64,8 +63,6 @@ CONNECTION_BLUETOOTH = "bluetooth"
 CONNECTION_NETWORK_MAC = "mac"
 CONNECTION_UPNP = "upnp"
 CONNECTION_ZIGBEE = "zigbee"
-
-ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
 # suggested_area can be removed when suggested_area is removed from DeviceEntry.
 # pending_move can be removed once add_config_entry_id and remove_config_entry_id
@@ -598,8 +595,8 @@ _COMPOSITE_QUERY_CACHE_SIZE = 2048
 class DeletedDeviceEntry:
     """Deleted Device Registry Entry."""
 
-    # config_entry_id is None for orphaned deleted devices, i.e. devices whose owning
-    # config entry has been removed
+    # config_entry_id may be None only for legacy config-entry-less deleted devices from
+    # older stores; a deleted device is otherwise dropped when its config entry is removed
     config_entry_id: str | None = attr.ib()
     config_subentry_id: str | None = attr.ib()
 
@@ -614,7 +611,6 @@ class DeletedDeviceEntry:
     labels: set[str] = attr.ib()
     modified_at: datetime = attr.ib()
     name_by_user: str | None = attr.ib()
-    orphaned_timestamp: float | None = attr.ib()
     # Composite lineage copied from the active split so it survives removal and restore,
     # keeping a restored split resolvable by the pre-migration composite device id. Can be
     # removed in HA Core 2027.8.
@@ -627,7 +623,7 @@ class DeletedDeviceEntry:
     def config_entries(self) -> set[str]:
         """Return the config entries this device belonged to.
 
-        Deprecated compatibility shim; empty for orphaned deleted devices.
+        Deprecated compatibility shim; empty for legacy config-entry-less deleted devices.
         """
         return {self.config_entry_id} if self.config_entry_id is not None else set()
 
@@ -635,7 +631,7 @@ class DeletedDeviceEntry:
     def config_entries_subentries(self) -> dict[str, set[str | None]]:
         """Return the config subentries this device belonged to.
 
-        Deprecated compatibility shim; empty for orphaned deleted devices.
+        Deprecated compatibility shim; empty for legacy config-entry-less deleted devices.
         """
         if self.config_entry_id is None:
             return {}
@@ -712,7 +708,6 @@ class DeletedDeviceEntry:
                     "split_at": self.split_at,
                     "modified_at": self.modified_at,
                     "name_by_user": self.name_by_user,
-                    "orphaned_timestamp": self.orphaned_timestamp,
                 }
             )
         )
@@ -752,8 +747,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     # via_device_id was originally introduced as hub_device_id
                     device.setdefault("via_device_id", device.get("hub_device_id"))
                 old_data.setdefault("deleted_devices", [])
-                for device in old_data["deleted_devices"]:
-                    device.setdefault("orphaned_timestamp", None)
             if old_minor_version < 3:
                 # Version 1.3 adds hw_version
                 for device in old_data["devices"]:
@@ -915,13 +908,13 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                             "config_entries_subentries"
                         ].items()
                     ]
-                    if len(pairs) <= 1:
-                        # Unlike active devices, config_entry_id=None is a valid
-                        # (orphaned) state for a deleted device, so a deleted device with
-                        # no config entries is kept rather than dropped.
-                        config_entry_id, subentry_id = (
-                            pairs[0] if pairs else (None, None)
-                        )
+                    if not pairs:
+                        # Drop a deleted device with no config entry, like an active one -
+                        # orphaned deleted devices (whose owning config entry is gone) are
+                        # no longer kept.
+                        continue
+                    if len(pairs) == 1:
+                        config_entry_id, subentry_id = pairs[0]
                         device["config_entry_id"] = config_entry_id
                         device["config_subentry_id"] = subentry_id
                         split_deleted_devices.append(device)
@@ -1530,16 +1523,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 identifiers=identifiers,
                 config_entry_id=config_entry_id,
             )
-            if deleted_device is None:
-                # Fall back to an orphaned tombstone (its owning config entry was removed,
-                # so it is keyed under config_entry_id=None) - re-adding an integration
-                # should restore the device id, area, labels and name rather than create a
-                # fresh device.
-                deleted_device = self.deleted_devices.get_entry(
-                    connections=connections,
-                    identifiers=identifiers,
-                    config_entry_id=None,
-                )
             if deleted_device is None:
                 area_id: str | None = None
                 if (
@@ -2272,7 +2255,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             labels=device.labels,
             modified_at=utcnow(),
             name_by_user=device.name_by_user,
-            orphaned_timestamp=None,
             composite_device_id=device.composite_device_id,
             composite_primary_config_entry=device.composite_primary_config_entry,
             split_at=device.split_at,
@@ -2383,7 +2365,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     labels=set(device["labels"]),
                     modified_at=datetime.fromisoformat(device["modified_at"]),
                     name_by_user=device["name_by_user"],
-                    orphaned_timestamp=device["orphaned_timestamp"],
                     # .get for composite lineage: absent in pre-1.13 stores and in beta
                     # 1.13 stores written before the tombstone gained these fields.
                     composite_device_id=device.get("composite_device_id"),
@@ -2437,7 +2418,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     @callback
     def async_clear_config_entry(self, config_entry_id: str) -> None:
         """Clear config entry from registry entries."""
-        now_time = time.time()
         for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
             self.async_remove_device(device.id)
         # A split device records the composite's former primary config entry; when that
@@ -2452,14 +2432,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         for deleted_device in list(self.deleted_devices.values()):
             if deleted_device.config_entry_id != config_entry_id:
                 continue
-            # The deleted device's owning config entry is being removed, mark it as
-            # orphaned by clearing its config entry and adding a timestamp
-            self.deleted_devices[deleted_device.id] = attr.evolve(
-                deleted_device,
-                config_entry_id=None,
-                config_subentry_id=None,
-                orphaned_timestamp=now_time,
-            )
+            # The deleted device's owning config entry is being removed; drop the tombstone
+            # rather than keep it without an owner.
+            del self.deleted_devices[deleted_device.id]
             self.async_schedule_save()
 
     @callback
@@ -2467,7 +2442,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self, config_entry_id: str, config_subentry_id: str
     ) -> None:
         """Clear config subentry from registry entries."""
-        now_time = time.time()
         for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
             if device.config_subentry_id != config_subentry_id:
                 continue
@@ -2478,33 +2452,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 or deleted_device.config_subentry_id != config_subentry_id
             ):
                 continue
-            # The deleted device's owning config subentry is being removed, mark it as
-            # orphaned by clearing its config entry and adding a timestamp
-            self.deleted_devices[deleted_device.id] = attr.evolve(
-                deleted_device,
-                config_entry_id=None,
-                config_subentry_id=None,
-                orphaned_timestamp=now_time,
-            )
+            # The deleted device's owning config subentry is being removed; drop the
+            # tombstone rather than keep it without an owner.
+            del self.deleted_devices[deleted_device.id]
             self.async_schedule_save()
-
-    @callback
-    def async_purge_expired_orphaned_devices(self) -> None:
-        """Purge expired orphaned devices from the registry.
-
-        We need to purge these periodically to avoid the database
-        growing without bound.
-        """
-        now_time = time.time()
-        for deleted_device in list(self.deleted_devices.values()):
-            if deleted_device.orphaned_timestamp is None:
-                continue
-
-            if (
-                deleted_device.orphaned_timestamp + ORPHANED_DEVICE_KEEP_SECONDS
-                < now_time
-            ):
-                del self.deleted_devices[deleted_device.id]
 
     @callback
     def async_clear_area_id(self, area_id: str) -> None:
@@ -2640,10 +2591,6 @@ def async_cleanup(
             dev_reg._async_update_device(  # noqa: SLF001
                 device.id, remove_config_entry_id=device.config_entry_id
             )
-
-    # Periodic purge of orphaned devices to avoid the registry
-    # growing without bounds when there are lots of deleted devices
-    dev_reg.async_purge_expired_orphaned_devices()
 
 
 @callback

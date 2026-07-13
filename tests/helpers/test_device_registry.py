@@ -4,7 +4,6 @@ from collections.abc import Callable, Iterable
 from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime
 from functools import partial
-import time
 from typing import Any
 from unittest.mock import ANY, patch
 
@@ -340,7 +339,6 @@ async def test_loading_from_storage(
                     "labels": {"label1", "label2"},
                     "modified_at": modified_at,
                     "name_by_user": "Test Friendly Name",
-                    "orphaned_timestamp": None,
                 }
             ],
         },
@@ -364,7 +362,6 @@ async def test_loading_from_storage(
         labels={"label1", "label2"},
         modified_at=datetime.fromisoformat(modified_at),
         name_by_user="Test Friendly Name",
-        orphaned_timestamp=None,
     )
 
     entry = registry.async_get_or_create(
@@ -594,7 +591,6 @@ async def test_migration_from_1_1(
                     "split_at": None,
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
-                    "orphaned_timestamp": None,
                 }
             ],
         },
@@ -2432,39 +2428,34 @@ async def test_add_current_config_entry_is_noop(
     assert device.id not in device_registry.devices
 
 
-async def test_reregister_restores_orphaned_tombstone(
+async def test_clear_config_entry_drops_deleted_devices(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Re-adding an integration restores an orphaned tombstone.
+    """Clearing a config entry drops its deleted devices instead of orphaning them.
 
-    async_clear_config_entry orphans deleted devices (config_entry_id=None) and keeps them
-    for 30 days; a later async_get_or_create under a new config entry must restore that
-    tombstone (id, labels, name) rather than create a fresh device.
+    Restoring a removed config entry (keeping the device) is a separate future feature; for
+    now a re-added integration gets a fresh device.
     """
     entry = MockConfigEntry()
     entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id, identifiers={("test", "1")}, name="Original"
+        config_entry_id=entry.entry_id, identifiers={("test", "1")}
     )
-    device_registry.async_update_device(
-        device.id, name_by_user="Custom", labels={"label1"}
-    )
+    device_registry.async_remove_device(device.id)
+    assert device.id in device_registry.deleted_devices
 
-    # Removing the config entry orphans the tombstone (config_entry_id=None)
     device_registry.async_clear_config_entry(entry.entry_id)
-    assert device_registry.deleted_devices[device.id].config_entry_id is None
 
-    # Re-add the integration under a new config entry and re-register the device
+    # The tombstone is dropped, not kept as an orphan
+    assert device.id not in device_registry.deleted_devices
+
+    # Re-adding under a new config entry creates a fresh device
     new_entry = MockConfigEntry()
     new_entry.add_to_hass(hass)
-    restored = device_registry.async_get_or_create(
+    fresh = device_registry.async_get_or_create(
         config_entry_id=new_entry.entry_id, identifiers={("test", "1")}
     )
-
-    assert restored.id == device.id
-    assert restored.config_entry_id == new_entry.entry_id
-    assert restored.name_by_user == "Custom"
-    assert restored.labels == {"label1"}
+    assert fresh.id != device.id
 
 
 async def test_clear_config_subentry_removes_device_with_pending_move(
@@ -2919,7 +2910,7 @@ async def test_removing_config_entries(
 async def test_deleted_device_removing_config_entries(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test clearing a config entry orphans its deleted devices."""
+    """Test clearing a config entry drops its deleted devices."""
     config_entry_1 = MockConfigEntry()
     config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry()
@@ -2943,17 +2934,12 @@ async def test_deleted_device_removing_config_entries(
 
     device_registry.async_clear_config_entry(config_entry_1.entry_id)
 
-    # Deleted devices are kept but orphaned (config entry cleared) so they can be purged
-    assert len(device_registry.deleted_devices) == 2
-    assert device_registry.deleted_devices[entry.id].config_entry_id is None
-    assert (
-        device_registry.deleted_devices[entry2.id].config_entry_id
-        == config_entry_2.entry_id
-    )
+    # Its deleted device is dropped; the other config entry's is kept
+    assert entry.id not in device_registry.deleted_devices
+    assert entry2.id in device_registry.deleted_devices
 
     device_registry.async_clear_config_entry(config_entry_2.entry_id)
-    assert len(device_registry.deleted_devices) == 2
-    assert device_registry.deleted_devices[entry2.id].config_entry_id is None
+    assert len(device_registry.deleted_devices) == 0
 
 
 async def test_removing_config_subentries(
@@ -3052,9 +3038,9 @@ async def test_deleted_device_removing_config_subentries(
         config_entry.entry_id, "mock-subentry-id-1"
     )
 
-    # Only the deleted device on the cleared subentry is orphaned
-    assert len(device_registry.deleted_devices) == 2
-    assert device_registry.deleted_devices[entry.id].config_entry_id is None
+    # Only the deleted device on the cleared subentry is dropped
+    assert entry.id not in device_registry.deleted_devices
+    assert entry2.id in device_registry.deleted_devices
     assert (
         device_registry.deleted_devices[entry2.id].config_entry_id
         == config_entry.entry_id
@@ -4472,43 +4458,6 @@ async def test_cleanup_device_registry(
     assert device_registry.async_get_device(identifiers={("hue", "d2")}) is not None
     assert device_registry.async_get_device(identifiers={("hue", "d3")}) is not None
     assert device_registry.async_get_device(identifiers={("something", "d4")}) is None
-
-
-async def test_cleanup_device_registry_removes_expired_orphaned_devices(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test cleanup removes expired orphaned devices."""
-    config_entry = MockConfigEntry(domain="hue")
-    config_entry.add_to_hass(hass)
-
-    device_registry.async_get_or_create(
-        identifiers={("hue", "d1")}, config_entry_id=config_entry.entry_id
-    )
-    device_registry.async_get_or_create(
-        identifiers={("hue", "d2")}, config_entry_id=config_entry.entry_id
-    )
-    device_registry.async_get_or_create(
-        identifiers={("hue", "d3")}, config_entry_id=config_entry.entry_id
-    )
-
-    device_registry.async_clear_config_entry(config_entry.entry_id)
-    assert len(device_registry.devices) == 0
-    assert len(device_registry.deleted_devices) == 3
-
-    dr.async_cleanup(hass, device_registry, entity_registry)
-
-    assert len(device_registry.devices) == 0
-    assert len(device_registry.deleted_devices) == 3
-
-    future_time = time.time() + dr.ORPHANED_DEVICE_KEEP_SECONDS + 1
-
-    with patch("time.time", return_value=future_time):
-        dr.async_cleanup(hass, device_registry, entity_registry)
-
-    assert len(device_registry.devices) == 0
-    assert len(device_registry.deleted_devices) == 0
 
 
 async def test_cleanup_startup(hass: HomeAssistant) -> None:
