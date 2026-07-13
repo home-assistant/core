@@ -25,7 +25,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
-    BooleanSelector,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -47,7 +46,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenRouter."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @classmethod
     @callback
@@ -221,7 +220,42 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
                             CONF_WEB_SEARCH,
                             RECOMMENDED_CONVERSATION_OPTIONS[CONF_WEB_SEARCH],
                         ),
-                    ): BooleanSelector(),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value="off", label="Off"),
+                                SelectOptionDict(
+                                    value="plugin",
+                                    label="Plugin (configured in OpenRouter settings, deprecated)",
+                                ),
+                                SelectOptionDict(
+                                    value="tool",
+                                    label="Auto (Native if supported by model, else Exa)",
+                                ),
+                                SelectOptionDict(
+                                    value="tool_native",
+                                    label="Model native",
+                                ),
+                                SelectOptionDict(
+                                    value="tool_exa",
+                                    label="Exa",
+                                ),
+                                SelectOptionDict(
+                                    value="tool_firecrawl",
+                                    label="Firecrawl",
+                                ),
+                                SelectOptionDict(
+                                    value="tool_parallel",
+                                    label="Parallel",
+                                ),
+                                SelectOptionDict(
+                                    value="tool_perplexity",
+                                    label="Perplexity",
+                                ),
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
                 }
             ),
         )

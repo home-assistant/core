@@ -63,18 +63,23 @@ async def async_migrate_entry(
     """Migrate config entry."""
     LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
-    if entry.version == 1 and entry.minor_version < 2:
+    if entry.version == 1 and entry.minor_version < 3:
         for subentry in entry.subentries.values():
-            if CONF_WEB_SEARCH in subentry.data:
+            current_value = subentry.data.get(CONF_WEB_SEARCH)
+
+            if isinstance(current_value, str):
                 continue
 
-            updated_data = {**subentry.data, CONF_WEB_SEARCH: False}
+            updated_data = {
+                **subentry.data,
+                CONF_WEB_SEARCH: "plugin" if current_value is True else "off",
+            }
 
             hass.config_entries.async_update_subentry(
                 entry, subentry, data=updated_data
             )
 
-        hass.config_entries.async_update_entry(entry, minor_version=2)
+        hass.config_entries.async_update_entry(entry, minor_version=3)
 
     LOGGER.info(
         "Migration to version %s.%s successful", entry.version, entry.minor_version
