@@ -1,8 +1,9 @@
 """Test the UniFi Protect camera platform."""
 
 from typing import Any
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
+from aiohttp.client_exceptions import ServerDisconnectedError
 import pytest
 from uiprotect.data import (
     AiPort,
@@ -955,3 +956,62 @@ async def test_public_only_camera_deleted_during_gap(
 
     # Not resurrected from the stale cache: the fresh snapshot has no camera.
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("error", "expect_reauth"),
+    [
+        pytest.param(NotAuthorized("revoked"), True, id="revoked_key"),
+        pytest.param(ServerDisconnectedError(), False, id="transport_error"),
+    ],
+)
+async def test_reconnect_refresh_failures(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+    error: Exception,
+    expect_reauth: bool,
+) -> None:
+    """A failed reconnect refresh starts reauth on 401 and retries on transport."""
+    for channel in camera.channels:
+        channel._api = ufp.api
+    public = make_public_camera(camera)
+    public.rtsps_streams = public_rtsps_for(camera)
+
+    async def _prime_public_only() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {camera.id: public}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_public_only)
+    ufp.api.is_public_only = True
+
+    await init_entry(hass, ufp, [])
+
+    ufp.api.update_public = AsyncMock(side_effect=error)
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    with patch.object(ufp.entry, "async_start_reauth") as mock_reauth:
+        ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+        await hass.async_block_till_done()
+
+    assert mock_reauth.called is expect_reauth
+
+
+async def test_hybrid_camera_lost_public_mirror_logs(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A vanished public mirror is observable instead of a silent no-op."""
+    await init_entry(hass, ufp, [camera])
+
+    ufp.api.public_bootstrap.cameras = {}
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = camera
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+
+    assert "has no public mirror" in caplog.text

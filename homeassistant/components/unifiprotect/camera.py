@@ -324,6 +324,13 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
                 PublicCamera,
             ):
                 self._public = public
+            else:
+                # keep the last object for identity, but log so a vanished
+                # public mirror is observable rather than a silent no-op
+                _LOGGER.debug(
+                    "Camera %s has no public mirror; keeping the last known one",
+                    updated_device.display_name,
+                )
             channel_id = self._channel_id
             channel = (
                 updated_device.channels[channel_id]

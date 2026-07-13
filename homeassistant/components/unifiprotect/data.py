@@ -8,6 +8,7 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
+from aiohttp.client_exceptions import ServerDisconnectedError
 from uiprotect import EventChange, ProtectApiClient, ProtectEvent
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
@@ -356,9 +357,12 @@ class ProtectData:
         """Re-signal public entities once a fresh public snapshot is applied."""
         try:
             await self.api.update_public()
-        except (TimeoutError, ClientError) as err:
-            # A revoked key routes to reauth via the websocket AUTH_FAILED
-            # path; transport errors retry on the next reconnect.
+        except NotAuthorized:
+            # A revoked API key cannot self-recover.
+            self._entry.async_start_reauth(self._hass)
+            return
+        except (TimeoutError, ClientError, ServerDisconnectedError) as err:
+            # Transport errors retry on the next reconnect.
             _LOGGER.debug("Public refresh after reconnect failed: %s", err)
             return
         self._async_process_public_updates()
