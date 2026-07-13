@@ -4,6 +4,7 @@ from ipaddress import ip_address
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientConnectorCertificateError, ClientError
+from pyoverkiz.auth.credentials import SomfyTokenCredentials
 from pyoverkiz.client import GatewayCandidate
 from pyoverkiz.const import (
     REXEL_OAUTH_AUTHORIZE_URL,
@@ -16,6 +17,8 @@ from pyoverkiz.exceptions import (
     BadCredentialsError,
     MaintenanceError,
     NoSuchTokenError,
+    NotAuthenticatedError,
+    SomfyServiceError,
     TooManyAttemptsBannedError,
     TooManyRequestsError,
     UnknownUserError,
@@ -27,7 +30,8 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.overkiz.const import DOMAIN
+from homeassistant.components.overkiz.const import CONF_GATEWAY_ID, DOMAIN
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -58,6 +62,10 @@ TEST_GATEWAY_ID3 = "SOMFY_PROTECT-v0NT53occUBPyuJRzx59kalW1hFfzimN"
 TEST_HOST = "gateway-1234-5678-9123.local:8443"
 TEST_HOST2 = "192.168.11.104:8443"
 TEST_TOKEN = "1234123412341234"
+
+TEST_REFRESH_TOKEN = "somfy-refresh-token"
+TEST_SITE_OID = "site-oid-1"
+TEST_REGION = "EMEA"
 
 MOCK_GATEWAY_RESPONSE = [Mock(id=TEST_GATEWAY_ID)]
 MOCK_GATEWAY2_RESPONSE = [Mock(id=TEST_GATEWAY_ID3), Mock(id=TEST_GATEWAY_ID2)]
@@ -1345,3 +1353,375 @@ async def test_rexel_reauth_success(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_rexel_config_entry.data["token"]["access_token"] == "mock-access-token"
+
+
+async def test_somfy_full_flow_single_site(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """A single-site Somfy account auto-selects and stores a token bundle."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"hub": "somfy"}
+    )
+
+    # Somfy is part of SERVERS_WITH_LOCAL_API, so the local/cloud choice is
+    # shown before the multi-account login starts.
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "somfy"
+
+    credentials = SomfyTokenCredentials(
+        refresh_token=TEST_REFRESH_TOKEN,
+        site_oid=TEST_SITE_OID,
+        region=TEST_REGION,
+        gateway_id=TEST_GATEWAY_ID,
+    )
+
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.discover_gateways",
+            return_value=[
+                GatewayCandidate(gateway_id=TEST_GATEWAY_ID, label="My Home")
+            ],
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.select_gateway"
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.to_credentials",
+            return_value=credentials,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "My Home"
+    assert result["result"].unique_id == TEST_GATEWAY_ID
+    assert result["data"]["hub"] == "somfy"
+    assert result["data"]["api_type"] == "cloud"
+    assert result["data"]["refresh_token"] == TEST_REFRESH_TOKEN
+    assert result["data"]["site_oid"] == TEST_SITE_OID
+    assert result["data"]["region"] == TEST_REGION
+    assert result["data"]["gateway_id"] == TEST_GATEWAY_ID
+    # The email is stored to pre-fill reauth; the password is never persisted.
+    assert result["data"]["username"] == TEST_EMAIL
+    assert "password" not in result["data"]
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_somfy_full_flow_multiple_sites(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """A multi-site Somfy account shows the gateway selection step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"hub": "somfy"}
+    )
+
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
+
+    assert result["step_id"] == "somfy"
+
+    credentials = SomfyTokenCredentials(
+        refresh_token=TEST_REFRESH_TOKEN,
+        site_oid=TEST_SITE_OID,
+        region=TEST_REGION,
+        gateway_id=TEST_GATEWAY_ID2,
+    )
+
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.discover_gateways",
+            return_value=[
+                GatewayCandidate(
+                    gateway_id=TEST_GATEWAY_ID, label="Home", country="NL"
+                ),
+                GatewayCandidate(
+                    gateway_id=TEST_GATEWAY_ID2, label="Cabin", country="FR"
+                ),
+            ],
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.select_gateway"
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.to_credentials",
+            return_value=credentials,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "select_gateway"
+
+        # The gateway options are a dropdown labelled "<name> (<country>)".
+        options = result["data_schema"].schema[CONF_GATEWAY_ID].config["options"]
+        assert options == [
+            {"value": TEST_GATEWAY_ID, "label": "Home (NL)"},
+            {"value": TEST_GATEWAY_ID2, "label": "Cabin (FR)"},
+        ]
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"gateway_id": TEST_GATEWAY_ID2}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Cabin"
+    assert result["result"].unique_id == TEST_GATEWAY_ID2
+    assert result["data"]["gateway_id"] == TEST_GATEWAY_ID2
+    assert result["data"]["site_oid"] == TEST_SITE_OID
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_somfy_flow_no_sites(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """A Somfy account without sites aborts."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"hub": "somfy"}
+    )
+
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
+
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.discover_gateways",
+            return_value=[],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_gateways"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(BadCredentialsError, "invalid_auth", id="bad_credentials"),
+        pytest.param(NotAuthenticatedError, "invalid_auth", id="not_authenticated"),
+        pytest.param(TooManyRequestsError, "too_many_requests", id="too_many_requests"),
+        pytest.param(SomfyServiceError, "cannot_connect", id="somfy_service_error"),
+        pytest.param(ClientError, "cannot_connect", id="client_error"),
+        pytest.param(
+            MaintenanceError, "server_in_maintenance", id="server_in_maintenance"
+        ),
+        pytest.param(
+            TooManyAttemptsBannedError, "too_many_attempts", id="too_many_attempts"
+        ),
+    ],
+)
+async def test_somfy_flow_error_buckets(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    side_effect: type[Exception],
+    error: str,
+) -> None:
+    """Somfy login/discovery failures map to the expected error bucket."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"hub": "somfy"}
+    )
+
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
+
+    with patch(
+        "pyoverkiz.client.OverkizClient.login",
+        side_effect=side_effect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "somfy"
+    assert result["errors"] == {"base": error}
+
+
+async def test_somfy_flow_unsupported_hardware(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """A Somfy Protect account maps to unsupported_hardware."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"hub": "somfy"}
+    )
+
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
+
+    with patch(
+        "pyoverkiz.client.OverkizClient.login",
+        side_effect=UnknownUserError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "somfy"
+    assert result["errors"] == {"base": "unsupported_hardware"}
+
+
+async def test_somfy_reauth_success(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Somfy reauth re-runs username/password login for the same gateway."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        version=1,
+        minor_version=2,
+        data={
+            "hub": "somfy",
+            "api_type": "cloud",
+            "username": TEST_EMAIL,
+            "refresh_token": "old-token",
+            "site_oid": TEST_SITE_OID,
+            "region": TEST_REGION,
+            "gateway_id": TEST_GATEWAY_ID,
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "somfy"
+    # The stored email pre-fills the username field on reauth.
+    username_key = next(
+        key for key in result["data_schema"].schema if key == CONF_USERNAME
+    )
+    assert username_key.default() == TEST_EMAIL
+
+    credentials = SomfyTokenCredentials(
+        refresh_token="new-token",
+        site_oid=TEST_SITE_OID,
+        region=TEST_REGION,
+        gateway_id=TEST_GATEWAY_ID,
+    )
+
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.discover_gateways",
+            return_value=[
+                GatewayCandidate(gateway_id=TEST_GATEWAY_ID, label="My Home")
+            ],
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.select_gateway"
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.to_credentials",
+            return_value=credentials,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_entry.data["refresh_token"] == "new-token"
+    assert mock_entry.data["username"] == TEST_EMAIL
+
+
+async def test_somfy_reauth_wrong_account(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Somfy reauth with a different gateway aborts."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        version=1,
+        minor_version=2,
+        data={
+            "hub": "somfy",
+            "api_type": "cloud",
+            "username": TEST_EMAIL,
+            "refresh_token": "old-token",
+            "site_oid": TEST_SITE_OID,
+            "region": TEST_REGION,
+            "gateway_id": TEST_GATEWAY_ID,
+        },
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reauth_flow(hass)
+    assert result["step_id"] == "somfy"
+
+    credentials = SomfyTokenCredentials(
+        refresh_token="new-token",
+        site_oid="other-site",
+        region=TEST_REGION,
+        gateway_id=TEST_GATEWAY_ID2,
+    )
+
+    with (
+        patch("pyoverkiz.client.OverkizClient.login", return_value=True),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.discover_gateways",
+            return_value=[GatewayCandidate(gateway_id=TEST_GATEWAY_ID2, label="Other")],
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.select_gateway"
+        ),
+        patch(
+            "homeassistant.components.overkiz.config_flow.OverkizClient.to_credentials",
+            return_value=credentials,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": TEST_EMAIL, "password": TEST_PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_wrong_account"

@@ -77,6 +77,17 @@
         },
         "description": "Select the gateway you want to control with Home Assistant."
       },
+      "somfy": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password of your Somfy account (app).",
+          "username": "The username of your Somfy account (app)."
+        },
+        "description": "Enter your Somfy account credentials. All homes on your account will be discovered so you can choose one."
+      },
       "user": {
         "data": {
           "hub": "Server"
