@@ -60,31 +60,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-def _get_host_configs(data: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return configured hosts from the config entry."""
-    host_entries = data.get(CONF_HOSTS, [])
-
-    host_configs: list[dict[str, Any]] = []
-    for entry in host_entries:
-        if not isinstance(entry, dict):
-            continue
-
-        host = entry.get(CONF_HOST)
-        if not host:
-            continue
-
-        host_configs.append(
-            {
-                CONF_HOST: str(host),
-                CONF_USERNAME: entry.get(CONF_USERNAME, ""),
-                CONF_PASSWORD: entry.get(CONF_PASSWORD, ""),
-                CONF_PORT: cv.port(entry.get(CONF_PORT, DEFAULT_SSH_PORT)),
-            }
-        )
-
-    return host_configs
-
-
 def _has_duplicate_hosts(host_configs: list[dict[str, Any]]) -> bool:
     """Return if the configured hosts contain duplicates."""
     hosts = [host_config[CONF_HOST] for host_config in host_configs]
@@ -93,7 +68,7 @@ def _has_duplicate_hosts(host_configs: list[dict[str, Any]]) -> bool:
 
 def validate_connection_data(data: dict[str, Any]) -> None:
     """Validate that we can connect to the UniFi AP with the provided configuration."""
-    for host_config in _get_host_configs(data):
+    for host_config in data.get(CONF_HOSTS, []):
         try:
             ap = UniFiAP(
                 target=host_config[CONF_HOST],
@@ -123,7 +98,7 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] | None = None
         if user_input is not None:
-            host_configs = _get_host_configs(user_input)
+            host_configs = user_input.get(CONF_HOSTS, [])
             if not host_configs or _has_duplicate_hosts(host_configs):
                 errors["base"] = "invalid_config"
             else:
@@ -183,7 +158,7 @@ class UniFiDirectConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] | None = None
         if user_input is not None:
-            host_configs = _get_host_configs(user_input)
+            host_configs = user_input.get(CONF_HOSTS, [])
             if not host_configs or _has_duplicate_hosts(host_configs):
                 errors["base"] = "invalid_config"
             else:
