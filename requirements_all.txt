@@ -2851,6 +2851,9 @@ pywmspro==0.4.2
 # homeassistant.components.ws66i
 pyws66i==1.1
 
+# homeassistant.components.wybot
+pywybot==1.2.0
+
 # homeassistant.components.xeoma
 pyxeoma==1.4.2
 
