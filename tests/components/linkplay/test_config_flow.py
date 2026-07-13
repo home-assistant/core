@@ -8,7 +8,7 @@ from linkplay.manufacturers import MANUFACTURER_WIIM
 import pytest
 
 from homeassistant.components.linkplay.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -26,7 +26,7 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     port=59152,
     type="_linkplay._tcp.local.",
     properties={
-        "uuid": f"uuid:{UUID}",
+        "uuid": "uuid:FF31F09E-5001-FBDE-0546-2DBFFF31F09E",
         "mac": "00:2F:69:01:84:3A",
         "security": "https 2.0",
         "upnp": "1.0.0",
@@ -42,7 +42,7 @@ ZEROCONF_DISCOVERY_RE_ENTRY = ZeroconfServiceInfo(
     port=59152,
     type="_linkplay._tcp.local.",
     properties={
-        "uuid": f"uuid:{UUID}",
+        "uuid": "uuid:FF31F09E-5001-FBDE-0546-2DBFFF31F09E",
         "mac": "00:2F:69:01:84:3A",
         "security": "https 2.0",
         "upnp": "1.0.0",
@@ -132,6 +132,58 @@ async def test_zeroconf_flow(
         CONF_HOST: HOST,
     }
     assert result["result"].unique_id == UUID
+
+
+async def test_zeroconf_flow_ignored_entry(
+    hass: HomeAssistant,
+    mock_linkplay_factory_bridge: AsyncMock,
+) -> None:
+    """Test Zeroconf discovery does not probe a device with an ignored entry."""
+
+    entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        title=NAME,
+        unique_id=UUID,
+        source=SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_linkplay_factory_bridge.assert_not_called()
+
+
+async def test_zeroconf_flow_same_uuid_does_not_probe(
+    hass: HomeAssistant,
+    mock_linkplay_factory_bridge: AsyncMock,
+) -> None:
+    """Test Zeroconf discovery aborts before probing when the UUID matches."""
+
+    entry = MockConfigEntry(
+        data={CONF_HOST: HOST},
+        domain=DOMAIN,
+        title=NAME,
+        unique_id=UUID,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY_RE_ENTRY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == HOST_REENTRY
+    mock_linkplay_factory_bridge.assert_not_called()
 
 
 @pytest.mark.usefixtures("mock_linkplay_factory_bridge")

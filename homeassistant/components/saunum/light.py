@@ -40,7 +40,7 @@ class LeilSaunaLight(LeilSaunaEntity, LightEntity):
         """Initialize the light entity."""
         super().__init__(coordinator)
         # Override unique_id to differentiate from climate entity
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_light"
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
     @override

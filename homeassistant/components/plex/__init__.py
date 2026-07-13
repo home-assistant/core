@@ -1,4 +1,5 @@
 """Support to embed Plex."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from functools import partial
 import logging
@@ -85,7 +86,7 @@ async def async_browse_media(hass, media_content_type, media_content_id, platfor
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Plex component."""
+    """Set up the Plex integration."""
     gdm = GDM()
 
     def gdm_scan():

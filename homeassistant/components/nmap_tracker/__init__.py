@@ -1,4 +1,5 @@
 """The Nmap Tracker integration."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from dataclasses import dataclass

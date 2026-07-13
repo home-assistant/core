@@ -17,8 +17,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     ARP,
@@ -45,6 +44,7 @@ from .const import (
 )
 from .device import Device
 from .errors import CannotConnect, LoginError
+from .utils import mikrotik_config_entry_errors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,7 +134,11 @@ class MikrotikData:
         arp_devices = {}
         device_list = {}
         wireless_devices = {}
-        try:
+        with mikrotik_config_entry_errors():
+            # Check if connection/login are still valid
+            self.api = get_api(dict(self.config_entry.data))
+
+            # Retrieve data
             self.all_devices = self.get_list_from_interface(DHCP)
             if self.support_capsman:
                 _LOGGER.debug("Hub is a CAPSman manager")
@@ -159,11 +163,6 @@ class MikrotikData:
 
             # get new hub firmware version if updated
             self.firmware = self.get_info(ATTR_FIRMWARE)
-
-        except CannotConnect as err:
-            raise UpdateFailed from err
-        except LoginError as err:
-            raise ConfigEntryAuthFailed from err
 
         if not device_list:
             return
@@ -225,27 +224,12 @@ class MikrotikData:
     ) -> list[dict[str, Any]]:
         """Retrieve data from Mikrotik API."""
         _LOGGER.debug("Running command %s", cmd)
-        try:
+        with mikrotik_config_entry_errors(
+            suppress_errors=suppress_errors, host=self._host
+        ):
             if params:
-                return list(self.api(cmd=cmd, **params))
-            return list(self.api(cmd=cmd))
-        except (
-            librouteros.exceptions.ConnectionClosed,
-            OSError,
-            TimeoutError,
-        ) as api_error:
-            _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
-            # try to reconnect
-            self.api = get_api(dict(self.config_entry.data))
-            # we still have to raise CannotConnect to fail the update.
-            raise CannotConnect from api_error
-        except librouteros.exceptions.ProtocolError as api_error:
-            emsg = "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s"
-            if suppress_errors and "no such command prefix" in str(api_error):
-                _LOGGER.debug(emsg, self._host, cmd, api_error)
-                return []
-            _LOGGER.warning(emsg, self._host, cmd, api_error)
-            return []
+                return list(self.api(cmd, **params))
+            return list(self.api(cmd))
 
 
 class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
@@ -318,8 +302,7 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
     """Connect to Mikrotik hub."""
     _LOGGER.debug("Connecting to Mikrotik hub [%s]", entry[CONF_HOST])
 
-    _login_method = (login_plain, login_token)
-    kwargs = {"login_methods": _login_method, "port": entry["port"], "encoding": "utf8"}
+    kwargs = {"port": entry["port"], "encoding": "utf8"}
 
     if entry[CONF_VERIFY_SSL]:
         ssl_context = ssl.create_default_context()
@@ -328,22 +311,30 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
         _ssl_wrapper = ssl_context.wrap_socket
         kwargs["ssl_wrapper"] = _ssl_wrapper
 
-    try:
-        api = librouteros.connect(
-            entry[CONF_HOST],
-            entry[CONF_USERNAME],
-            entry[CONF_PASSWORD],
-            **kwargs,
-        )
-    except (
-        librouteros.exceptions.LibRouterosError,
-        OSError,
-        TimeoutError,
-    ) as api_error:
-        _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], api_error)
-        if "invalid user name or password" in str(api_error):
-            raise LoginError from api_error
-        raise CannotConnect from api_error
+    _error: Exception | None = None
+    for method in (login_plain, login_token):
+        try:
+            kwargs["login_method"] = method
+            api = librouteros.connect(
+                entry[CONF_HOST],
+                entry[CONF_USERNAME],
+                entry[CONF_PASSWORD],
+                **kwargs,
+            )
+            _error = None
+            break
+        except (
+            librouteros.exceptions.LibRouterosError,
+            OSError,
+            TimeoutError,
+        ) as api_error:
+            _error = api_error
+
+    if _error is not None:
+        _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], _error)
+        if "invalid user name or password" in str(_error):
+            raise LoginError from _error
+        raise CannotConnect from _error
 
     _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
     return api

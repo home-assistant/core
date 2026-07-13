@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     UnitOfDataRate,
     UnitOfTemperature,
@@ -92,6 +93,27 @@ async def async_setup_entry(
         )
         for sensor_id, sensor_name in router.sensors_temperature_names.items()
     ]
+
+    _LOGGER.debug(
+        "%s - %s - %s fan sensors",
+        router.name,
+        router.mac,
+        len(router.sensors_fan_names),
+    )
+    entities.extend(
+        FreeboxSensor(
+            router,
+            SensorEntityDescription(
+                key=fan_id,
+                name=fan_name,
+                native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+                state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                icon="mdi:fan",
+            ),
+        )
+        for fan_id, fan_name in router.sensors_fan_names.items()
+    )
 
     entities.extend(
         [FreeboxSensor(router, description) for description in CONNECTION_SENSORS]

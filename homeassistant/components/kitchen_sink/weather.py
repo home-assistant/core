@@ -237,7 +237,7 @@ class DemoWeather(WeatherEntity):
     ) -> None:
         """Initialize the Demo weather."""
         self._attr_name = f"Test Weather {name}"
-        self._attr_unique_id = f"test-weather-{name.lower()}"
+        self._attr_unique_id = f"test-weather-{name.lower()}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._condition = condition
         self._native_temperature = temperature
         self._native_temperature_unit = temperature_unit

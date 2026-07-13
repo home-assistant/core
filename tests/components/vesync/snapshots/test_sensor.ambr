@@ -104,7 +104,7 @@
       'supported_features': 0,
       'translation_key': 'filter_life',
       'unique_id': 'air-purifier-filter-life',
-      'unit_of_measurement': '%',
+      'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
     }),
   ])
 # ---
@@ -126,7 +126,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 131s Filter lifetime',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_131s_filter_lifetime',
@@ -206,7 +206,7 @@
       'supported_features': 0,
       'translation_key': 'filter_life',
       'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55-filter-life',
-      'unit_of_measurement': '%',
+      'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
     }),
   ])
 # ---
@@ -215,7 +215,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 200s Filter lifetime',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_200s_filter_lifetime',
@@ -330,7 +330,7 @@
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '400s-purifier-pm25',
-      'unit_of_measurement': 'μg/m³',
+      'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     EntityRegistryEntrySnapshot({
       'aliases': list([
@@ -367,7 +367,7 @@
       'supported_features': 0,
       'translation_key': 'filter_life',
       'unique_id': '400s-purifier-filter-life',
-      'unit_of_measurement': '%',
+      'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
     }),
   ])
 # ---
@@ -389,7 +389,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 400s Filter lifetime',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_400s_filter_lifetime',
@@ -405,7 +405,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 400s PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_400s_pm2_5',
@@ -520,7 +520,7 @@
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '600s-purifier-pm25',
-      'unit_of_measurement': 'μg/m³',
+      'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     EntityRegistryEntrySnapshot({
       'aliases': list([
@@ -557,7 +557,7 @@
       'supported_features': 0,
       'translation_key': 'filter_life',
       'unique_id': '600s-purifier-filter-life',
-      'unit_of_measurement': '%',
+      'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
     }),
   ])
 # ---
@@ -579,7 +579,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 600s Filter lifetime',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_600s_filter_lifetime',
@@ -595,7 +595,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 600s PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'μg/m³',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.air_purifier_600s_pm2_5',
@@ -1391,7 +1391,7 @@
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '200s-humidifier4321-humidity',
-      'unit_of_measurement': '%',
+      'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
     }),
   ])
 # ---
@@ -1401,7 +1401,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 200s Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.humidifier_200s_humidity',
@@ -1481,7 +1481,7 @@
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '6000s-humidity',
-      'unit_of_measurement': '%',
+      'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     EntityRegistryEntrySnapshot({
       'aliases': list([
@@ -1558,7 +1558,7 @@
       'supported_features': 0,
       'translation_key': 'filter_life',
       'unique_id': '6000s-filter-life',
-      'unit_of_measurement': '%',
+      'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
     }),
   ])
 # ---
@@ -1567,7 +1567,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s Filter lifetime',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.humidifier_6000s_filter_lifetime',
@@ -1583,7 +1583,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 6000s Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.humidifier_6000s_humidity',
@@ -1679,7 +1679,7 @@
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '600s-humidifier-humidity',
-      'unit_of_measurement': '%',
+      'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
     }),
   ])
 # ---
@@ -1689,7 +1689,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Humidifier 600S Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.humidifier_600s_humidity',
@@ -2180,6 +2180,43 @@
   ])
 # ---
 # name: test_sensor_state[Wall Switch][entities]
+  list([
+  ])
+# ---
+# name: test_sensor_state[CoreBreeze 432S][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'corebreeze432s',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LPF-R432S-AEU',
+      'model_id': None,
+      'name': 'CoreBreeze 432S',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[CoreBreeze 432S][entities]
   list([
   ])
 # ---

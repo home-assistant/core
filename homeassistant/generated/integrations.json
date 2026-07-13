@@ -499,7 +499,7 @@
     "aqualogic": {
       "name": "AquaLogic",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "aquostv": {
@@ -2319,6 +2319,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "fuelprices_dk": {
+      "name": "Fuelprices.dk",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "fujitsu": {
       "name": "Fujitsu",
       "integrations": {
@@ -2477,9 +2483,8 @@
     },
     "gitter": {
       "name": "Gitter",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "cloud_polling"
+      "integration_type": "virtual",
+      "supported_by": "matrix"
     },
     "glances": {
       "name": "Glances",
@@ -2554,6 +2559,12 @@
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Google Gemini"
+        },
+        "google_health": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Health"
         },
         "google_mail": {
           "integration_type": "service",
@@ -3324,6 +3335,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "iotorero": {
+      "name": "IoTorero",
+      "integration_type": "virtual",
+      "supported_by": "esphome"
+    },
     "iotty": {
       "name": "iotty",
       "integration_type": "device",
@@ -3889,6 +3905,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "llama_cpp": {
+      "name": "llama.cpp",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "llamalab_automate": {
       "name": "LlamaLab Automate",
       "integration_type": "hub",
@@ -4023,6 +4045,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "lyngdorf": {
+      "name": "Lyngdorf",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "madeco": {
       "name": "Madeco",
       "integration_type": "virtual",
@@ -4134,12 +4162,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
-    },
-    "melcloud_home": {
-      "name": "MELCloud Home",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
     },
     "melissa": {
       "name": "Melissa",
@@ -4334,6 +4356,12 @@
           "iot_class": "cloud_polling",
           "name": "MELCloud"
         },
+        "melcloud_home": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "MELCloud Home"
+        },
         "mitsubishi_comfort": {
           "integration_type": "hub",
           "config_flow": true,
@@ -4366,9 +4394,14 @@
       "iot_class": "local_polling"
     },
     "modbus": {
-      "name": "Modbus",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "modbus_connection": {
+      "name": "Modbus Connection",
+      "integration_type": "hub",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "modem_callerid": {
@@ -4621,6 +4654,12 @@
       "integration_type": "virtual",
       "supported_by": "shelly"
     },
+    "neopool": {
+      "name": "NeoPool",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "ness_alarm": {
       "name": "Ness Alarm",
       "integration_type": "hub",
@@ -4631,7 +4670,8 @@
       "name": "Netatmo",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "netdata": {
       "name": "Netdata",
@@ -5095,7 +5135,7 @@
       "integrations": {
         "luci": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "OpenWrt (luci)"
         },
@@ -5292,7 +5332,7 @@
     "permobil": {
       "name": "MyPermobil",
       "integration_type": "device",
-      "config_flow": true,
+      "config_flow": false,
       "iot_class": "cloud_polling"
     },
     "pge": {
@@ -6162,6 +6202,12 @@
       "name": "Seattle City Light (SCL)",
       "integration_type": "virtual",
       "supported_by": "opower"
+    },
+    "scorpiontrack": {
+      "name": "ScorpionTrack",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "scrape": {
       "name": "Scrape",
@@ -8490,6 +8536,7 @@
     "local_todo",
     "min_max",
     "mobile_app",
+    "modbus",
     "moehlenhoff_alpha2",
     "mold_indicator",
     "moon",
