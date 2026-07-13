@@ -1,0 +1,70 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "already_configured": "Device already configured",
+      "api_disabled": "API endloint disabled",
+      "device_offline": "The device is offline",
+      "invalid_auth": "Invalid authentication",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "wrong_device_serial": "The entered BIOCAT serial number is not correct"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "bsn": "BIOCAT Serial Number"
+        },
+        "data_description": {
+          "api_key": "BIOCAT Smart Home API Key",
+          "bsn": "BIOCAT Serial Number"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "event_category": {
+        "name": "Event category"
+      },
+      "event_description": {
+        "name": "Event description"
+      },
+      "event_id": {
+        "name": "Event ID"
+      },
+      "event_timestamp": {
+        "name": "Event timestamp"
+      },
+      "event_title": {
+        "name": "Event title"
+      },
+      "flow_rate": {
+        "name": "Flow rate"
+      },
+      "last_water_tap_duration": {
+        "name": "Last water tap duration"
+      },
+      "last_water_tap_volume": {
+        "name": "Last water tap volume"
+      },
+      "ml_state": {
+        "name": "Microleakage state"
+      },
+      "mode_id": {
+        "name": "Mode"
+      },
+      "pause_leakage_protection_until_utc": {
+        "name": "Pause leakage protection until"
+      },
+      "pressure": {
+        "name": "Pressure"
+      },
+      "water_temp": {
+        "name": "Water temperature"
+      }
+    }
+  }
+}

@@ -1997,6 +1997,7 @@ CLAUDE.md @home-assistant/core
 /tests/components/waqi/ @joostlek
 /homeassistant/components/water_heater/ @home-assistant/core
 /tests/components/water_heater/ @home-assistant/core
+/homeassistant/components/watercryst/ @WATERCryst
 /homeassistant/components/waterfurnace/ @sdague @masterkoppa
 /tests/components/waterfurnace/ @sdague @masterkoppa
 /homeassistant/components/watergate/ @adam-the-hero
