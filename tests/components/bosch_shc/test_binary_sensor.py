@@ -170,10 +170,8 @@ async def test_shutter_contact_device_class_mapping(
     """The device_class switcher maps every known Bosch device_class, defaulting to window."""
     await setup_integration(hass, mock_config_entry)
 
-    assert (
-        hass.states.get(CONTACT_ENTITY_ID).attributes["device_class"]
-        == expected_ha_class
-    )
+    assert (state := hass.states.get(CONTACT_ENTITY_ID)) is not None
+    assert state.attributes["device_class"] == expected_ha_class
 
 
 @pytest.mark.parametrize(
@@ -201,7 +199,8 @@ async def test_shutter_contact_is_on(
     """The contact sensor is on exactly when the device reports OPEN."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(CONTACT_ENTITY_ID).state == expected_ha_state
+    assert (state := hass.states.get(CONTACT_ENTITY_ID)) is not None
+    assert state.state == expected_ha_state
 
 
 @pytest.mark.parametrize(
@@ -229,4 +228,5 @@ async def test_battery_sensor_is_on(
     """The battery sensor is on (problem) whenever the level isn't OK."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(MOTION_BATTERY_ENTITY_ID).state == expected_ha_state
+    assert (state := hass.states.get(MOTION_BATTERY_ENTITY_ID)) is not None
+    assert state.state == expected_ha_state
