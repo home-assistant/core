@@ -43,7 +43,7 @@ def async_discovered_service_info(hass: HomeAssistant) -> list[DhcpServiceInfo]:
     return [
         DhcpServiceInfo(
             ip=data[IP_ADDRESS],
-            hostname=data[HOSTNAME],
+            hostname=data[HOSTNAME].lower(),
             macaddress=mac_address,
         )
         for mac_address, data in async_get_address_data_internal(hass).items()
