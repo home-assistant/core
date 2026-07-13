@@ -1,22 +1,33 @@
 """Test the Teslemetry config flow."""
 
+from collections.abc import Generator
+from pathlib import Path
 import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 from urllib.parse import parse_qs, urlparse
 
-from aiohttp import ClientConnectionError
+from aiohttp import ClientConnectionError, ClientResponseError
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 import pytest
 from tesla_fleet_api.exceptions import (
     InvalidToken,
+    ResponseError,
     SubscriptionRequired,
     TeslaFleetError,
+)
+from tesla_fleet_api.teslemetry import Teslemetry
+from tesla_fleet_api.teslemetry.energysite import (
+    AuthorizedClients,
+    TeslemetryEnergySite,
 )
 
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
     DOMAIN,
+    SUBENTRY_TYPE_ENERGY_SITE,
     TOKEN_URL,
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -32,6 +43,42 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 REDIRECT = "https://example.com/auth/external/callback"
+
+# A small key generated once keeps the pairing-flow tests off the slow
+# RSA-4096 keygen path; the flow only reads its public bytes, never its size.
+_TEST_RSA_KEY = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+_TEST_RSA_PEM = _TEST_RSA_KEY.private_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PrivateFormat.TraditionalOpenSSL,
+    encryption_algorithm=serialization.NoEncryption(),
+)
+
+
+@pytest.fixture
+def mock_rsa_key() -> Generator[None]:
+    """Provide the pairing flow a ready RSA key instead of generating one."""
+
+    async def _fake_get_rsa_private_key(
+        self: Teslemetry, path: str, key_size: int = 4096
+    ) -> rsa.RSAPrivateKey:
+        self.rsa_private_key = _TEST_RSA_KEY
+        Path(path).write_bytes(_TEST_RSA_PEM)
+        return _TEST_RSA_KEY
+
+    with patch(
+        "homeassistant.components.teslemetry.config_flow.Teslemetry.get_rsa_private_key",
+        _fake_get_rsa_private_key,
+    ):
+        yield
+
+
+def _energy_subentry_id(entry: MockConfigEntry) -> str:
+    """Return the energy-site subentry id created during setup."""
+    return next(
+        subentry_id
+        for subentry_id, subentry in entry.subentries.items()
+        if subentry.subentry_type == SUBENTRY_TYPE_ENERGY_SITE
+    )
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -521,3 +568,148 @@ async def test_migrate_error_from_future(
 
     entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+POWERWALL_502_ERRORS = [
+    pytest.param(ResponseError(status=502), id="response_error"),
+    pytest.param(ClientResponseError(None, (), status=502), id="client_response_error"),
+]
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+@pytest.mark.parametrize("error", POWERWALL_502_ERRORS)
+async def test_energy_subentry_verify_powerwall_unreachable(
+    hass: HomeAssistant,
+    error: Exception,
+) -> None:
+    """A 502 while checking the key aborts with the retryable message."""
+    entry = await setup_platform(hass)
+    subentry_id = _energy_subentry_id(entry)
+
+    with patch.object(
+        TeslemetryEnergySite,
+        "find_authorized_clients",
+        AsyncMock(side_effect=error),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "powerwall_unreachable"
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+@pytest.mark.parametrize("error", POWERWALL_502_ERRORS)
+async def test_energy_subentry_add_client_powerwall_unreachable(
+    hass: HomeAssistant,
+    error: Exception,
+) -> None:
+    """A 502 while registering the key aborts with the retryable message."""
+    entry = await setup_platform(hass)
+    subentry_id = _energy_subentry_id(entry)
+
+    with (
+        patch.object(
+            TeslemetryEnergySite,
+            "find_authorized_clients",
+            AsyncMock(return_value=AuthorizedClients(clients=[], raw=None)),
+        ),
+        patch.object(
+            TeslemetryEnergySite,
+            "add_authorized_client",
+            AsyncMock(side_effect=error),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "powerwall_unreachable"
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_energy_subentry_add_client_generic_error(
+    hass: HomeAssistant,
+) -> None:
+    """A non-502 error while registering the key keeps the generic abort."""
+    entry = await setup_platform(hass)
+    subentry_id = _energy_subentry_id(entry)
+
+    with (
+        patch.object(
+            TeslemetryEnergySite,
+            "find_authorized_clients",
+            AsyncMock(return_value=AuthorizedClients(clients=[], raw=None)),
+        ),
+        patch.object(
+            TeslemetryEnergySite,
+            "add_authorized_client",
+            AsyncMock(side_effect=TeslaFleetError),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+@pytest.mark.parametrize("error", POWERWALL_502_ERRORS)
+async def test_energy_subentry_pair_poll_powerwall_unreachable(
+    hass: HomeAssistant,
+    error: Exception,
+) -> None:
+    """A 502 while polling for approval re-shows the pair form as retryable."""
+    entry = await setup_platform(hass)
+    subentry_id = _energy_subentry_id(entry)
+    empty = AuthorizedClients(clients=[], raw=None)
+
+    with (
+        patch.object(
+            TeslemetryEnergySite,
+            "find_authorized_clients",
+            AsyncMock(side_effect=[empty, error]),
+        ),
+        patch.object(
+            TeslemetryEnergySite,
+            "add_authorized_client",
+            AsyncMock(return_value={}),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "pair"
+        assert not result["errors"]
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    assert result["errors"] == {"base": "powerwall_unreachable"}
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_energy_subentry_empty_client_list_proceeds(
+    hass: HomeAssistant,
+) -> None:
+    """An empty (200) authorized-client list is valid and advances to pairing."""
+    entry = await setup_platform(hass)
+    subentry_id = _energy_subentry_id(entry)
+
+    with (
+        patch.object(
+            TeslemetryEnergySite,
+            "find_authorized_clients",
+            AsyncMock(return_value=AuthorizedClients(clients=[], raw=None)),
+        ),
+        patch.object(
+            TeslemetryEnergySite,
+            "add_authorized_client",
+            AsyncMock(return_value={}),
+        ),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    assert not result["errors"]

@@ -2,11 +2,12 @@
 
 import asyncio
 from collections.abc import Mapping
+from http import HTTPStatus
 import logging
 from pathlib import Path
 from typing import Any, cast, override
 
-from aiohttp import ClientConnectionError
+from aiohttp import ClientConnectionError, ClientResponseError
 from aiopowerwall import (
     DEFAULT_GATEWAY_HOST,
     PowerwallAuthenticationError,
@@ -56,6 +57,26 @@ from .const import (
     POWERWALL_KEY_FILE,
     SUBENTRY_TYPE_ENERGY_SITE,
 )
+
+
+class PowerwallUnreachableError(Exception):
+    """Signal that an energy gateway-relay command returned HTTP 502.
+
+    The Teslemetry API returns 502 Bad Gateway on energy gateway-relay grpc
+    commands when the customer's Powerwall gateway is unreachable (for example
+    it has dropped off the network). This is a retryable upstream condition,
+    distinct from an ordinary API failure.
+    """
+
+
+def _is_gateway_unreachable(err: TeslaFleetError | ClientResponseError) -> bool:
+    """Return whether err is a 502 Bad Gateway from an energy gateway command.
+
+    A bodyless 502 surfaces from tesla-fleet-api as ``ResponseError`` (a
+    ``TeslaFleetError`` carrying ``status``); a 502 with a JSON body instead
+    surfaces as ``aiohttp.ClientResponseError``. Both expose ``status``.
+    """
+    return err.status == HTTPStatus.BAD_GATEWAY
 
 
 class OAuth2FlowHandler(
@@ -248,7 +269,11 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         self._public_key_der = keyholder.rsa_public_der_pkcs1
         self._public_key_b64 = keyholder.rsa_public_der_pkcs1_b64
 
-        if await self._key_is_verified():
+        try:
+            verified = await self._key_is_verified()
+        except PowerwallUnreachableError:
+            return self.async_abort(reason="powerwall_unreachable")
+        if verified:
             return await self.async_step_credentials()
 
         try:
@@ -259,7 +284,13 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 key_type=AuthorizedClientKeyType.RSA,
                 authorized_client_type=AuthorizedClientType.CUSTOMER_MOBILE_APP,
             )
+        except ClientResponseError as err:
+            if _is_gateway_unreachable(err):
+                return self.async_abort(reason="powerwall_unreachable")
+            raise
         except TeslaFleetError as err:
+            if _is_gateway_unreachable(err):
+                return self.async_abort(reason="powerwall_unreachable")
             LOGGER.error("Add authorized client failed: %s", err)
             return self.async_abort(reason="cannot_connect")
 
@@ -274,7 +305,13 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_show_form(step_id="pair")
 
         for _ in range(KEY_PAIRING_POLL_ATTEMPTS):
-            if await self._key_is_verified():
+            try:
+                verified = await self._key_is_verified()
+            except PowerwallUnreachableError:
+                return self.async_show_form(
+                    step_id="pair", errors={"base": "powerwall_unreachable"}
+                )
+            if verified:
                 return await self.async_step_credentials()
             await asyncio.sleep(KEY_PAIRING_POLL_INTERVAL)
 
@@ -290,7 +327,13 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         assert self._energy_site is not None
         try:
             result = await self._energy_site.find_authorized_clients()
+        except ClientResponseError as err:
+            if _is_gateway_unreachable(err):
+                raise PowerwallUnreachableError from err
+            raise
         except TeslaFleetError as err:
+            if _is_gateway_unreachable(err):
+                raise PowerwallUnreachableError from err
             LOGGER.debug("find_authorized_clients failed: %s", err)
             return False
         return any(
