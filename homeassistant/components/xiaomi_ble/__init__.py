@@ -337,26 +337,26 @@ def _purge_stale_sensor_restore_keys(
 def _async_recover_interrupted_s400_migration(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
-    """Finish an S400 unique_id rename left incomplete by a crash.
+    """Finish the legacy "impedance" -> "impedance_low" rename, if safe.
 
     HA never retries async_migrate_entry once minor_version already
     reads as current, so an attempt interrupted between the config
     entry's fast save and the entity registry's much slower one (see
     _async_purge_phantom_s400_impedance_entity) would otherwise never
-    complete.
+    complete for this step.
 
-    Only recovers the legacy "impedance" -> "impedance_low" step, and
-    only when that target slot is free. The other step (an original,
-    un-renamed "impedance_low" awaiting promotion to "impedance_high")
-    is not attempted here: a legacy "-impedance" entity can be
-    resurrected independently of any migration state, by the entity
-    registry's own debounced save (180s) racing the bluetooth passive-
-    processor's separate, even slower one (15 min) -- a crash between
-    the two can bring back an already-cleaned-up phantom right next to
-    an already-correct, freshly-persisted "impedance_low". Since that
-    looks identical to a genuinely interrupted low->high step, renaming
-    into it would risk mislabeling real, accurate data, so it is left
-    alone rather than guessed at.
+    Deliberately does not attempt the other step (an original,
+    un-renamed "impedance_low" awaiting promotion to "impedance_high"):
+    when that target is already occupied by a real "-impedance_low"
+    entity, the same crash can equally mean either a still-pending
+    rename, or an already-correct entity sitting next to a legacy
+    "-impedance" resurrected by a separate, unrelated save-timing race
+    (the entity registry's own 180s debounce racing the bluetooth
+    passive-processor's 15-minute one). Since those two states are
+    indistinguishable here, and guessing wrong would mislabel real,
+    accurate data, that case is left alone rather than guessed at --
+    the legacy entity then remains under its old name permanently,
+    rather than being recovered.
     """
     if entry.version != 1 or entry.minor_version < 2:
         return
