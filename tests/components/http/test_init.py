@@ -1478,6 +1478,9 @@ async def test_pending_config_reverted_in_place_on_bind_failure(
     store = await async_get_and_load_store(hass)
     assert store.revert_deadline is None
     assert "could not be applied, reverting" in caplog.text
+    assert "previous HTTP configuration has been restored (server port 9876)" in (
+        caplog.text
+    )
     stable_sock.close()
 
 

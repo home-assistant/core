@@ -250,6 +250,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     conf[CONF_SERVER_PORT],
                     stable_err,
                 )
+            else:
+                _LOGGER.warning(
+                    "The previous HTTP configuration has been restored (server "
+                    "port %d)",
+                    conf[CONF_SERVER_PORT],
+                )
         elif isinstance(err, HomeAssistantError):
             # Unusable SSL configuration on the stable config; failing setup
             # activates recovery mode, which retries with an emergency
