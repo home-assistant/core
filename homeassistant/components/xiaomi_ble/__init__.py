@@ -251,7 +251,7 @@ def _async_purge_stale_s400_impedance_restore_cache(
         return
 
     if _async_is_known_s400(hass, address, coordinator):
-        _purge_stale_sensor_restore_keys(coordinator)
+        _purge_stale_sensor_restore_keys(hass, address, coordinator)
         hass.config_entries.async_update_entry(
             entry, data=entry.data | {DATA_S400_IMPEDANCE_CACHE_PURGED: True}
         )
@@ -273,31 +273,52 @@ def _async_purge_stale_s400_impedance_restore_cache(
 
 
 def _purge_stale_sensor_restore_keys(
+    hass: HomeAssistant,
+    address: str,
     coordinator: XiaomiActiveBluetoothProcessorCoordinator,
 ) -> None:
     """Drop the stale "impedance" and "impedance_low" restore-cache entries.
 
-    Only acts if the generic "impedance" key is present in the cache:
-    only the old, buggy library ever wrote it, so its presence is proof
-    this cache holds pre-fix data. A device that never had it (e.g. a
-    fresh S400 from day one) has nothing stale to remove, and its
-    "impedance_low" already holds a real, correctly labeled value that
-    must be left alone.
+    The generic "impedance" key's presence proves stale, pre-fix data --
+    only the old library ever wrote it. The low-only migration (a
+    device that only ever got the advertisement carrying that key) has
+    no such residue, so it's identified instead via migration
+    provenance: an "impedance_high" entity whose previous_unique_id is
+    the old "impedance_low" proves that specific rename happened,
+    meaning any cached "impedance_low" value predates it and is stale.
+    Neither signal present means nothing to purge -- e.g. a fresh S400
+    from day one, whose "impedance_low" already holds a real, correctly
+    labeled value that must be left alone.
     """
     sensor_restore_data = coordinator.restore_data.get(Platform.SENSOR)
     if sensor_restore_data is None:
         return
 
     legacy_key = PassiveBluetoothEntityKey(key="impedance", device_id=None).to_string()
-    if legacy_key not in sensor_restore_data.get(
+    low_key = PassiveBluetoothEntityKey(key="impedance_low", device_id=None).to_string()
+
+    has_legacy_residue = legacy_key in sensor_restore_data.get(
         "entity_data", {}
-    ) and legacy_key not in sensor_restore_data.get("entity_descriptions", {}):
+    ) or legacy_key in sensor_restore_data.get("entity_descriptions", {})
+
+    entity_registry = er.async_get(hass)
+    high_entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{address}-impedance_high"
+    )
+    high_entity = (
+        entity_registry.async_get(high_entity_id)
+        if high_entity_id is not None
+        else None
+    )
+    low_only_migrated = (
+        high_entity is not None
+        and high_entity.previous_unique_id == f"{address}-impedance_low"
+    )
+
+    if not has_legacy_residue and not low_only_migrated:
         return
 
-    stale_keys = (
-        legacy_key,
-        PassiveBluetoothEntityKey(key="impedance_low", device_id=None).to_string(),
-    )
+    stale_keys = (legacy_key, low_key) if has_legacy_residue else (low_key,)
     restore_buckets: tuple[tuple[str, dict[str, Any]], ...] = (
         ("entity_data", sensor_restore_data["entity_data"]),
         ("entity_descriptions", sensor_restore_data["entity_descriptions"]),
@@ -322,26 +343,20 @@ def _async_recover_interrupted_s400_migration(
     reads as current, so an attempt interrupted between the config
     entry's fast save and the entity registry's much slower one (see
     _async_purge_phantom_s400_impedance_entity) would otherwise never
-    complete. Safe to run on every setup: a lingering legacy
-    "-impedance" entity is the sole trigger, so this never touches an
-    already-consistent or genuinely fresh S400.
+    complete.
 
-    Both renames only proceed if their target unique_id is free, and are
-    otherwise safe to complete unconditionally: Home Assistant creates a
-    device's entities and its device-registry row together,
-    synchronously, within the same advertisement-processing call, so a
-    legacy "-impedance"/original "-impedance_low" pair can only coexist
-    post-migration because a crash interrupted that very rename attempt
-    -- never because a later, independent advertisement created a fresh
-    entity under the same key (V1/V2 never emits "impedance_low", and a
-    real S400's model is already known the moment any of its impedance
-    entities exist, so the original migration would already have
-    identified and attempted this exact rename in one synchronous pass).
-    This runs before any advertisement can be processed this setup, so
-    there is no independently reachable scenario exercising the "target
-    occupied" branch by itself; it remains as cheap, defensive insurance
-    against a ValueError blocking setup, should that reasoning ever not
-    hold (e.g. a future code change).
+    Only recovers the legacy "impedance" -> "impedance_low" step, and
+    only when that target slot is free. The other step (an original,
+    un-renamed "impedance_low" awaiting promotion to "impedance_high")
+    is not attempted here: a legacy "-impedance" entity can be
+    resurrected independently of any migration state, by the entity
+    registry's own debounced save (180s) racing the bluetooth passive-
+    processor's separate, even slower one (15 min) -- a crash between
+    the two can bring back an already-cleaned-up phantom right next to
+    an already-correct, freshly-persisted "impedance_low". Since that
+    looks identical to a genuinely interrupted low->high step, renaming
+    into it would risk mislabeling real, accurate data, so it is left
+    alone rather than guessed at.
     """
     if entry.version != 1 or entry.minor_version < 2:
         return
@@ -359,19 +374,6 @@ def _async_recover_interrupted_s400_migration(
         return
 
     low_id = f"{address}-impedance_low"
-    high_id = f"{address}-impedance_high"
-    low_entity_id = entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, low_id)
-    high_exists = (
-        entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, high_id)
-        is not None
-    )
-
-    if low_entity_id is not None and not high_exists:
-        _LOGGER.debug("S400 migration recovery: %s -> %s", low_id, high_id)
-        entity_registry.async_update_entity(
-            low_entity_id, new_unique_id=high_id, original_name="Impedance High"
-        )
-
     if entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, low_id) is None:
         _LOGGER.debug("S400 migration recovery: %s -> %s", old_legacy_id, low_id)
         entity_registry.async_update_entity(

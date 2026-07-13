@@ -478,6 +478,67 @@ async def test_purge_stale_restore_cache_via_cache_signal_alone(
     await hass.async_block_till_done()
 
 
+def _low_only_stale_restore_data() -> dict:
+    """Build restore_data for a device whose old history is low-only.
+
+    The old parser wrote only the "impedance_low" key (no generic
+    "impedance") for a device that only ever got the advertisement
+    carrying that key -- so there's no legacy-residue signal to prove
+    staleness, only migration provenance can.
+    """
+    return {
+        Platform.SENSOR: {
+            "entity_data": {
+                "impedance_low___": 479.3,
+                "mass___": 74.2,
+            },
+            "entity_descriptions": {
+                "impedance_low___": {"key": "impedance_low"},
+                "mass___": {"key": "mass_kg"},
+            },
+            "entity_names": {},
+            "devices": {},
+        }
+    }
+
+
+async def test_purge_stale_restore_cache_via_low_only_provenance(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the stale low-only cache is purged via migration provenance.
+
+    No generic "impedance" key ever existed for this device, so its
+    presence can't prove staleness here. The "impedance_high" entity's
+    previous_unique_id (set by the low->high rename) proves it instead.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
+    )
+    entry.add_to_hass(hass)
+    device = _async_setup_device(device_registry, entry, model=S400_MODEL)
+    _async_add_entity(
+        entity_registry,
+        entry,
+        device.id,
+        f"{S400_ADDRESS}-impedance_low",
+        original_name="Impedance Low",
+    )
+    restore_data = _seed_restore_data(hass, entry, _low_only_stale_restore_data())
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+    sensor_data = restore_data[Platform.SENSOR]
+    assert "impedance_low___" not in sensor_data["entity_data"]
+    assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_purge_stale_restore_cache_leaves_fresh_s400_untouched(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -675,18 +736,19 @@ async def test_purge_stale_restore_cache_runs_once(
     await hass.async_block_till_done()
 
 
-async def test_recover_interrupted_migration_completes_both_steps(
+async def test_recover_interrupted_migration_leaves_ambiguous_pair_alone(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test recovery when neither rename was persisted.
+    """Test recovery leaves both entities alone when "impedance_low" exists.
 
-    "-impedance" and the original "-impedance_low" (no "-impedance_high"
-    yet) can only coexist post-migration because a crash interrupted
-    this exact rename attempt -- device and entity are always created
-    together, so a real S400 in this state is unambiguous. Both renames
-    must complete, in the same order as the original migration.
+    A lingering "-impedance" plus an existing "-impedance_low" is
+    structurally identical whether that low entity is the original one
+    awaiting promotion to "impedance_high", or an already-correct one
+    that happens to coexist with a "-impedance" resurrected by an
+    unrelated save-timing race (see _async_recover_interrupted_s400_migration).
+    Recovery must not guess and leave both alone.
     """
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
@@ -709,11 +771,11 @@ async def test_recover_interrupted_migration_completes_both_steps(
 
     legacy_after = entity_registry.async_get(legacy_entity_id)
     assert legacy_after is not None
-    assert legacy_after.unique_id == f"{S400_ADDRESS}-impedance_low"
+    assert legacy_after.unique_id == f"{S400_ADDRESS}-impedance"
 
     low_after = entity_registry.async_get(low_entity_id)
     assert low_after is not None
-    assert low_after.unique_id == f"{S400_ADDRESS}-impedance_high"
+    assert low_after.unique_id == f"{S400_ADDRESS}-impedance_low"
 
     assert legacy_after.unique_id != low_after.unique_id
 
