@@ -1,13 +1,16 @@
 """The tests for the webdav todo component."""
 
 from datetime import UTC, date, datetime
+import threading
 from typing import Any
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 
+import caldav
 from caldav.lib.error import DAVError, NotFoundError
 from caldav.objects import Todo
 import pytest
 
+from homeassistant.components.caldav import todo as caldav_todo
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
     ATTR_DUE_DATE,
@@ -16,6 +19,7 @@ from homeassistant.components.todo import (
     ATTR_RENAME,
     ATTR_STATUS,
     DOMAIN as TODO_DOMAIN,
+    TodoItem,
     TodoServices,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
@@ -208,6 +212,32 @@ async def test_todo_list_state(
         "friendly_name": ENTITY_NAME,
         "supported_features": SUPPORTED_FEATURES,
     }
+
+
+@pytest.mark.parametrize("todos", [[TODO_NEEDS_ACTION, TODO_COMPLETED]])
+async def test_parse_runs_off_event_loop(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that iCalendar parsing of todo items happens off the event loop."""
+    loop_thread_id = threading.get_ident()
+    parse_thread_ids: list[int] = []
+    real_todo_item = caldav_todo._todo_item
+
+    def _record_thread(
+        resource: caldav.CalendarObjectResource,
+    ) -> TodoItem | None:
+        parse_thread_ids.append(threading.get_ident())
+        return real_todo_item(resource)
+
+    with patch(
+        "homeassistant.components.caldav.todo._todo_item",
+        side_effect=_record_thread,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert parse_thread_ids
+    assert all(thread_id != loop_thread_id for thread_id in parse_thread_ids)
 
 
 @pytest.mark.parametrize(
