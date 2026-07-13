@@ -85,7 +85,7 @@
       },
       "reconfigure": {
         "title": "Reconfigure UniFi Protect",
-        "description": "Choose how to connect to your UniFi Protect console. The API-key-only mode is new and currently provides a limited set of entities: the alarm manager and cameras (streams and snapshots). Everything else requires a local user.",
+        "description": "[%key:component::unifiprotect::config::step::user::description%]",
         "menu_options": {
           "reconfigure_full": "Local user and API key (full access)",
           "reconfigure_api_key": "API key only (limited feature set)"

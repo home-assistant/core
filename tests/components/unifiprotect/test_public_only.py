@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import web
@@ -243,47 +244,68 @@ async def test_public_only_auth_failed_triggers_reauth(hass: HomeAssistant) -> N
     assert hass.states.get(_ALARM_ENTITY_ID).state == "unavailable"
 
 
-async def test_public_only_unresolved_mac_not_ready(hass: HomeAssistant) -> None:
-    """An NVR mac the library could not backfill leaves the entry retrying."""
-    entry = _public_only_entry()
-    entry.add_to_hass(hass)
-    client = _public_client()
+def _mutate_backfill_missing(client: Mock) -> None:
     client.public_bootstrap.nvr.mac = None
-    with patch(
-        "homeassistant.components.unifiprotect.async_create_api_client",
-        return_value=client,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_public_only_auth_failed_on_prime(hass: HomeAssistant) -> None:
-    """A rejected API key while priming aborts to reauth."""
-
-    entry = _public_only_entry()
-    entry.add_to_hass(hass)
-    client = _public_client()
+def _mutate_prime_unauthorized(client: Mock) -> None:
     client.update_public = AsyncMock(side_effect=NotAuthorized)
-    with patch(
-        "homeassistant.components.unifiprotect.async_create_api_client",
-        return_value=client,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_public_only_version_too_old(hass: HomeAssistant) -> None:
-    """An NVR below the minimum version aborts setup."""
-    entry = _public_only_entry()
-    entry.add_to_hass(hass)
-    client = _public_client()
+def _mutate_old_version(client: Mock) -> None:
     meta = Mock()
     meta.version = Version("1.0.0")
     client.get_meta_info = AsyncMock(return_value=meta)
+
+
+def _mutate_prime_transport_error(client: Mock) -> None:
+    client.update_public = AsyncMock(side_effect=ClientError)
+
+
+def _mutate_no_public_nvr(client: Mock) -> None:
+    client.public_bootstrap.nvr = None
+
+
+@pytest.mark.parametrize(
+    ("mutate", "expected_state"),
+    [
+        pytest.param(
+            _mutate_backfill_missing,
+            ConfigEntryState.SETUP_RETRY,
+            id="unresolved_mac_retries",
+        ),
+        pytest.param(
+            _mutate_prime_unauthorized,
+            ConfigEntryState.SETUP_ERROR,
+            id="rejected_key_aborts_to_reauth",
+        ),
+        pytest.param(
+            _mutate_old_version,
+            ConfigEntryState.SETUP_ERROR,
+            id="old_version_aborts",
+        ),
+        pytest.param(
+            _mutate_prime_transport_error,
+            ConfigEntryState.SETUP_RETRY,
+            id="transport_error_retries",
+        ),
+        pytest.param(
+            _mutate_no_public_nvr,
+            ConfigEntryState.SETUP_RETRY,
+            id="missing_public_nvr_retries",
+        ),
+    ],
+)
+async def test_public_only_setup_failures(
+    hass: HomeAssistant,
+    mutate: Callable[[Mock], None],
+    expected_state: ConfigEntryState,
+) -> None:
+    """Each public-only setup failure lands in the right config-entry state."""
+    entry = _public_only_entry()
+    entry.add_to_hass(hass)
+    client = _public_client()
+    mutate(client)
     with patch(
         "homeassistant.components.unifiprotect.async_create_api_client",
         return_value=client,
@@ -291,7 +313,7 @@ async def test_public_only_version_too_old(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is expected_state
 
 
 async def test_public_only_sets_unique_id_when_missing(hass: HomeAssistant) -> None:
@@ -342,39 +364,6 @@ async def test_public_only_ws_state_refreshes_alarm(hass: HomeAssistant) -> None
     state_cb(WebsocketState.CONNECTED)
     await hass.async_block_till_done()
     assert hass.states.get(_ALARM_ENTITY_ID).state == "disarmed"
-
-
-async def test_public_only_prime_client_error_not_ready(hass: HomeAssistant) -> None:
-    """A transport error while priming leaves the entry in a retry state."""
-
-    entry = _public_only_entry()
-    entry.add_to_hass(hass)
-    client = _public_client()
-    client.update_public = AsyncMock(side_effect=ClientError)
-    with patch(
-        "homeassistant.components.unifiprotect.async_create_api_client",
-        return_value=client,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_public_only_no_public_nvr_not_ready(hass: HomeAssistant) -> None:
-    """A missing public NVR (fetch failed) leaves the entry retrying."""
-    entry = _public_only_entry()
-    entry.add_to_hass(hass)
-    client = _public_client()
-    client.public_bootstrap.nvr = None
-    with patch(
-        "homeassistant.components.unifiprotect.async_create_api_client",
-        return_value=client,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_public_only_entry_skipped_by_media_and_nvr_lookup(

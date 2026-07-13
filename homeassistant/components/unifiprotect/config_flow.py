@@ -583,8 +583,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             }
             # Identity is pinned by the stored host; like the full-access
             # reauth, no unique-id re-check (the resolved mac is unused).
-            mac, errors = await self._async_get_public_nvr_identity(validate_input)
-            if mac and not errors:
+            _, errors = await self._async_get_public_nvr_identity(validate_input)
+            if not errors:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data={
