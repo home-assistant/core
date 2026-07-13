@@ -234,9 +234,7 @@ class MikrotikData:
     ) -> list[dict[str, Any]]:
         """Retrieve data from Mikrotik API."""
         _LOGGER.debug("Running command %s", cmd)
-        with mikrotik_config_entry_errors(
-            suppress_errors=suppress_errors, host=self._host
-        ):
+        with mikrotik_config_entry_errors(suppress_errors=suppress_errors):
             if params:
                 return list(self.api(cmd, **params))
             return list(self.api(cmd))
