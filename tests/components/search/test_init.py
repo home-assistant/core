@@ -568,6 +568,7 @@ async def test_search(
         ItemType.AREA: {living_room_area.id},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id},
+        ItemType.ENTITY: {wled_segment_1_entity.entity_id},
         ItemType.FLOOR: {first_floor.floor_id},
         ItemType.INTEGRATION: {"wled"},
     }
@@ -711,7 +712,7 @@ async def test_search(
     assert not search(ItemType.ENTITY, "sensor.unknown")
     assert search(ItemType.ENTITY, wled_segment_1_entity.entity_id) == {
         ItemType.AREA: {living_room_area.id},
-        ItemType.AUTOMATION: {"automation.wled_entity"},
+        ItemType.AUTOMATION: {"automation.wled_entity", "automation.wled_device"},
         ItemType.CONFIG_ENTRY: {wled_config_entry.entry_id},
         ItemType.DEVICE: {wled_device.id},
         ItemType.FLOOR: {first_floor.floor_id},

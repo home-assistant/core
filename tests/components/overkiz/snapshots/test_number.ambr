@@ -183,68 +183,6 @@
     'state': '4',
   })
 # ---
-# name: test_number_entities_snapshot[cloud_atlantic_cozytouch.json][number.my_home_patio_water_heating_freeze_protection_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.my_home_patio_water_heating_freeze_protection_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Freeze protection temperature',
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': 'mdi:sun-thermometer-outline',
-    'original_name': 'Freeze protection temperature',
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'io://1234-5678-5643/109286#1-core:SecuredPositionTemperatureState',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_number_entities_snapshot[cloud_atlantic_cozytouch.json][number.my_home_patio_water_heating_freeze_protection_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Patio Water Heating Freeze protection temperature',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:sun-thermometer-outline',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 15,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 5,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.my_home_patio_water_heating_freeze_protection_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_number_entities_snapshot[cloud_atlantic_cozytouch.json][number.my_home_patio_water_heating_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -365,68 +303,6 @@
     'state': '60.0',
   })
 # ---
-# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_garden_radiator_comfort_room_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 7,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.maple_residence_garden_radiator_comfort_room_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Comfort room temperature',
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': 'mdi:home-thermometer-outline',
-    'original_name': 'Comfort room temperature',
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'io://1234-5678-1698/15702199#1-core:ComfortRoomTemperatureState',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_garden_radiator_comfort_room_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Radiator Comfort room temperature',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:home-thermometer-outline',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 7,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.maple_residence_garden_radiator_comfort_room_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '21.0',
-  })
-# ---
 # name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_hallway_shutter_my_position-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -484,249 +360,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '85',
-  })
-# ---
-# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_air_inlet_my_position-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.maple_residence_living_room_air_inlet_my_position',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'My position',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:content-save-cog',
-    'original_name': 'My position',
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'io://1234-5678-1698/10001-core:Memorized1PositionState',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_air_inlet_my_position-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Inlet My position',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:content-save-cog',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.maple_residence_living_room_air_inlet_my_position',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_air_outlet_my_position-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.maple_residence_living_room_air_outlet_my_position',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'My position',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:content-save-cog',
-    'original_name': 'My position',
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'io://1234-5678-1698/10002-core:Memorized1PositionState',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_air_outlet_my_position-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Outlet My position',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:content-save-cog',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.maple_residence_living_room_air_outlet_my_position',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_air_transfer_my_position-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.maple_residence_living_room_air_transfer_my_position',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'My position',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:content-save-cog',
-    'original_name': 'My position',
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'io://1234-5678-1698/10003-core:Memorized1PositionState',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_air_transfer_my_position-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Air Transfer My position',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:content-save-cog',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 100,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.maple_residence_living_room_air_transfer_my_position',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_radiator_comfort_room_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 7,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.maple_residence_living_room_radiator_comfort_room_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Comfort room temperature',
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': 'mdi:home-thermometer-outline',
-    'original_name': 'Comfort room temperature',
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'io://1234-5678-1698/9253412#1-core:ComfortRoomTemperatureState',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_radiator_comfort_room_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Radiator Comfort room temperature',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:home-thermometer-outline',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 7,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.maple_residence_living_room_radiator_comfort_room_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '21.0',
+    'state': '15',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_nursery_shutter_my_position-entry]
@@ -786,7 +420,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '85',
+    'state': '15',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_office_shutter_my_position-entry]
@@ -846,69 +480,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '85',
-  })
-# ---
-# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_study_radiator_comfort_room_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 7,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.maple_residence_study_radiator_comfort_room_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Comfort room temperature',
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': 'mdi:home-thermometer-outline',
-    'original_name': 'Comfort room temperature',
-    'platform': 'overkiz',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'io://1234-5678-1698/9187218#1-core:ComfortRoomTemperatureState',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_study_radiator_comfort_room_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Study Radiator Comfort room temperature',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:home-thermometer-outline',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 30,
-      <NumberEntityCapabilityAttribute.MIN: 'min'>: 7,
-      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
-      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.maple_residence_study_radiator_comfort_room_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '21.0',
+    'state': '15',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_terrace_radiator_comfort_room_temperature-entry]
@@ -1154,7 +726,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '86',
+    'state': '14',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.garage_dining_room_shutter_my_position-entry]
@@ -1214,7 +786,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '69',
+    'state': '31',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.garage_guest_room_shutter_my_position-entry]
@@ -1274,7 +846,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '84',
+    'state': '16',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.guest_bedroom_kids_room_shutter_my_position-entry]
@@ -1334,7 +906,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '86',
+    'state': '14',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.kids_room_kitchen_shutter_my_position-entry]
@@ -1394,7 +966,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '87',
+    'state': '13',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.kids_room_office_shutter_my_position-entry]
@@ -1454,7 +1026,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '72',
+    'state': '28',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.kids_room_patio_shutter_my_position-entry]
@@ -1514,7 +1086,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '81',
+    'state': '19',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.main_bedroom_bedroom_blinds_my_position-entry]
@@ -1574,7 +1146,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '86',
+    'state': '14',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.office_garden_house_shutter_my_position-entry]
@@ -1634,7 +1206,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '86',
+    'state': '14',
   })
 # ---
 # name: test_number_entities_snapshot[cloud_somfy_tahoma_v2_europe.json][number.reading_nook_living_room_shutter_my_position-entry]
@@ -1694,7 +1266,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '86',
+    'state': '14',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.bathroom_blinds_my_position-entry]
@@ -1754,7 +1326,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.bedroom_blinds_my_position-entry]
@@ -1814,7 +1386,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.dining_room_blinds_my_position-entry]
@@ -1874,7 +1446,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.garage_blinds_my_position-entry]
@@ -1934,7 +1506,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.guest_room_blinds_my_position-entry]
@@ -1994,7 +1566,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.hallway_blinds_my_position-entry]
@@ -2054,7 +1626,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.kitchen_blinds_my_position-entry]
@@ -2114,7 +1686,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.living_room_blinds_my_position-entry]
@@ -2174,7 +1746,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.master_bedroom_blinds_my_position-entry]
@@ -2234,7 +1806,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.nursery_blinds_my_position-entry]
@@ -2294,7 +1866,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.office_blinds_my_position-entry]
@@ -2354,7 +1926,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '85',
+    'state': '15',
   })
 # ---
 # name: test_number_entities_snapshot[local_somfy_tahoma_switch_europe.json][number.study_blinds_my_position-entry]
@@ -2414,6 +1986,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '0',
   })
 # ---
