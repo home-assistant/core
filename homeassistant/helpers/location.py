@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable
 import logging
+from typing import NamedTuple
 
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, State
@@ -10,8 +11,15 @@ from homeassistant.util import location as location_util
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_location(state: State) -> tuple[float, float] | None:
-    """Return the state's location as a (latitude, longitude) tuple, or None.
+class Location(NamedTuple):
+    """A latitude/longitude coordinate pair."""
+
+    latitude: float
+    longitude: float
+
+
+def get_location(state: State) -> Location | None:
+    """Return the state's location, or None.
 
     Returns None if the state does not contain a valid location.
 
@@ -24,7 +32,7 @@ def get_location(state: State) -> tuple[float, float] | None:
         longitude := state.attributes.get(EntityStateAttribute.LONGITUDE),
         (float, int),
     ):
-        return (latitude, longitude)
+        return Location(latitude, longitude)
     return None
 
 

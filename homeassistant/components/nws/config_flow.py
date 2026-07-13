@@ -116,7 +116,6 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                 if state is None or (location := get_location(state)) is None:
                     errors["base"] = "entity_no_coordinates"
                 else:
-                    latitude, longitude = location
                     data = {
                         CONF_API_KEY: user_input[CONF_API_KEY],
                         CONF_LOCATION_ENTITY: entity_entry.id,
@@ -129,8 +128,8 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                             self.hass,
                             {
                                 CONF_API_KEY: user_input[CONF_API_KEY],
-                                CONF_LATITUDE: latitude,
-                                CONF_LONGITUDE: longitude,
+                                CONF_LATITUDE: location.latitude,
+                                CONF_LONGITUDE: location.longitude,
                             },
                         )
                         return self.async_create_entry(title=location_entity, data=data)

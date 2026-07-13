@@ -42,9 +42,11 @@ def test_get_location_with_invalid_state() -> None:
 
 
 def test_get_location_with_valid_location() -> None:
-    """Test that a valid location returns a (latitude, longitude) tuple."""
+    """Test that a valid location returns the coordinates."""
     state = State("hello.world", "valid", {ATTR_LATITUDE: 12.34, ATTR_LONGITUDE: 56.78})
-    assert location.get_location(state) == (12.34, 56.78)
+    assert location.get_location(state) == location.Location(
+        latitude=12.34, longitude=56.78
+    )
 
 
 def test_closest_with_no_states_with_location() -> None:
