@@ -7,6 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.device_registry as dr
 import homeassistant.helpers.entity_registry as er
 
 from . import setup_controller, setup_integration
@@ -307,3 +308,42 @@ async def test_setup_entry_only_adds_entities_for_matching_config_entry(
     unique_ids = {entity.unique_id for entity in entry_entities}
 
     assert unique_ids == {"000000001", "000000001_z1"}
+
+
+@pytest.mark.parametrize("mock_zones", [[]])
+@pytest.mark.parametrize(
+    "mock_controller",
+    [
+        create_mock_controller(
+            ras_mode="zones",
+            sys_type="0",
+            zones_total=0,
+            free_air_enabled=False,
+        )
+    ],
+)
+async def test_controller_device_init_fault_bootstrap(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovery: AsyncMock,
+    mock_controller: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Controller climate entity is created with fault-shaped controller defaults."""
+    await setup_integration(hass, mock_config_entry)
+    await setup_controller(hass, mock_discovery, mock_controller)
+
+    entity_id = "climate.izone_controller_000000001"
+    assert hass.states.get(entity_id) is not None
+
+    entry_entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert {entity.unique_id for entity in entry_entities} == {"000000001"}
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+    assert device_entry.model == "0"
