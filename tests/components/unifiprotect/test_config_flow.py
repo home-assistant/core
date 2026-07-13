@@ -1,5 +1,6 @@
 """Test the UniFi Protect config flow."""
 
+from collections.abc import Callable
 from dataclasses import asdict
 import socket
 from unittest.mock import AsyncMock, Mock, patch
@@ -68,6 +69,27 @@ UNIFI_DISCOVERY_DICT = asdict(UNIFI_DISCOVERY)
 UNIFI_DISCOVERY_DICT_PARTIAL = asdict(UNIFI_DISCOVERY_PARTIAL)
 
 
+async def _advance_menu(
+    hass: HomeAssistant, result: ConfigFlowResult, next_step_id: str
+) -> ConfigFlowResult:
+    """Advance a menu step to the chosen next step's form."""
+    assert result["type"] is FlowResultType.MENU
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": next_step_id}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == next_step_id
+    return result
+
+
+async def _start_full_flow(hass: HomeAssistant) -> ConfigFlowResult:
+    """Advance the user menu to the full-access step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    return await _advance_menu(hass, result, "full")
+
+
 async def _complete_reconfigure_flow(
     hass: HomeAssistant,
     flow_id: str,
@@ -97,14 +119,7 @@ async def _complete_reconfigure_flow(
 
 async def test_user_flow(hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR) -> None:
     """Test successful user flow creates config entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "full"}
-    )
-    assert result["type"] is FlowResultType.FORM
+    result = await _start_full_flow(hass)
     assert not result["errors"]
 
     bootstrap.nvr = nvr
@@ -157,12 +172,7 @@ async def test_form_version_too_old(
     hass: HomeAssistant, bootstrap: Bootstrap, old_nvr: NVR, nvr: NVR, mock_setup: None
 ) -> None:
     """Test we handle the version being too old and can recover."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "full"}
-    )
+    result = await _start_full_flow(hass)
 
     bootstrap.nvr = old_nvr
     with (
@@ -218,12 +228,7 @@ async def test_form_invalid_auth_password(
     hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR, mock_setup: None
 ) -> None:
     """Test we handle invalid auth password and can recover."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "full"}
-    )
+    result = await _start_full_flow(hass)
 
     with (
         patch(
@@ -278,12 +283,7 @@ async def test_form_invalid_auth_api_key(
     hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR, mock_setup: None
 ) -> None:
     """Test we handle invalid auth api key and can recover."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "full"}
-    )
+    result = await _start_full_flow(hass)
 
     with (
         patch(
@@ -342,12 +342,7 @@ async def test_form_cloud_user(
     mock_setup: None,
 ) -> None:
     """Test we handle cloud users and can recover with local user."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "full"}
-    )
+    result = await _start_full_flow(hass)
 
     user = bootstrap.users[bootstrap.auth_user_id]
     user.cloud_account = cloud_account
@@ -407,12 +402,7 @@ async def test_form_cannot_connect(
     hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR, mock_setup: None
 ) -> None:
     """Test we handle cannot connect error and can recover."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "full"}
-    )
+    result = await _start_full_flow(hass)
 
     with (
         patch(
@@ -606,13 +596,8 @@ async def test_discovered_by_unifi_discovery_direct_connect(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discovery_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_full"
+    result = await _advance_menu(hass, result, "discovery_full")
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
         "ip_address": DEVICE_IP_ADDRESS,
@@ -816,13 +801,8 @@ async def test_discovered_by_unifi_discovery(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discovery_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_full"
+    result = await _advance_menu(hass, result, "discovery_full")
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
         "ip_address": DEVICE_IP_ADDRESS,
@@ -890,13 +870,8 @@ async def test_discovered_by_unifi_discovery_partial(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discovery_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_full"
+    result = await _advance_menu(hass, result, "discovery_full")
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
         "ip_address": DEVICE_IP_ADDRESS,
@@ -978,13 +953,8 @@ async def test_discovery_name_resolution(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discovery_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_full"
+    result = await _advance_menu(hass, result, "discovery_full")
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"]["name"] == expected_name
 
@@ -1124,13 +1094,8 @@ async def test_discovered_by_unifi_discovery_dc_different_interface_resolver_fai
         )
         await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discovery_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_full"
+    result = await _advance_menu(hass, result, "discovery_full")
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert flows[0]["context"]["title_placeholders"] == {
         "ip_address": "127.0.0.2",
@@ -1279,13 +1244,8 @@ async def test_discovery_with_both_ignored_and_normal_entry(
     await hass.async_block_till_done()
 
     # Flow continues to discovery step since no match found
-    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discovery_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_full"
+    result = await _advance_menu(hass, result, "discovery_full")
 
     # Complete the flow
     bootstrap.nvr = nvr
@@ -1338,13 +1298,8 @@ async def test_discovery_confirm_fallback_to_ip(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discovery_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_full"
+    result = await _advance_menu(hass, result, "discovery_full")
 
     bootstrap.nvr = nvr
     # First call (direct connect) fails, second call (IP) succeeds
@@ -1393,13 +1348,8 @@ async def test_discovery_confirm_with_api_key_error(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "discovery_confirm"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discovery_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_full"
+    result = await _advance_menu(hass, result, "discovery_full")
 
     # Both attempts fail to test form_data preservation with API key
     mock_api_bootstrap.side_effect = NvrError("Connection failed")
@@ -1462,12 +1412,7 @@ async def test_reconfigure(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reconfigure_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_full"
+    result = await _advance_menu(hass, result, "reconfigure_full")
 
     # Test with connection error
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
@@ -1517,12 +1462,7 @@ async def test_reconfigure_different_nvr(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reconfigure_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_full"
+    result = await _advance_menu(hass, result, "reconfigure_full")
 
     # Create a different NVR with different MAC (not matching MAC_ADDR)
     different_nvr = nvr.model_copy()
@@ -1560,12 +1500,7 @@ async def test_reconfigure_auth_error(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reconfigure_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_full"
+    result = await _advance_menu(hass, result, "reconfigure_full")
 
     # Test with password authentication error
     mock_api_bootstrap.side_effect = NotAuthorized
@@ -1599,12 +1534,7 @@ async def test_reconfigure_api_key_error(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reconfigure_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_full"
+    result = await _advance_menu(hass, result, "reconfigure_full")
 
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
@@ -1640,12 +1570,7 @@ async def test_reconfigure_cloud_user(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reconfigure_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_full"
+    result = await _advance_menu(hass, result, "reconfigure_full")
 
     # Set up bootstrap with cloud user
     bootstrap.nvr = nvr
@@ -1693,12 +1618,7 @@ async def test_reconfigure_outdated_version(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reconfigure_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_full"
+    result = await _advance_menu(hass, result, "reconfigure_full")
 
     # Set up NVR with outdated version
     old_nvr = nvr.model_copy()
@@ -1735,12 +1655,7 @@ async def test_reconfigure_form_defaults(
 
     result = await ufp_reauth_entry_alt.start_reconfigure_flow(hass)
 
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reconfigure_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_full"
+    result = await _advance_menu(hass, result, "reconfigure_full")
 
     # Verify that non-sensitive fields are pre-filled and sensitive fields are not
     # The data_schema will have been created with add_suggested_values_to_schema
@@ -1806,12 +1721,7 @@ async def test_reconfigure_same_nvr_updated_credentials(
     mock_config.add_to_hass(hass)
 
     result = await mock_config.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reconfigure_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_full"
+    result = await _advance_menu(hass, result, "reconfigure_full")
 
     bootstrap.nvr = nvr
     result = await hass.config_entries.flow.async_configure(
@@ -1853,11 +1763,7 @@ async def test_reconfigure_empty_credentials_keeps_existing(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reconfigure_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
+    result = await _advance_menu(hass, result, "reconfigure_full")
 
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
@@ -1917,11 +1823,7 @@ async def test_reconfigure_credential_update(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reconfigure_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
+    result = await _advance_menu(hass, result, "reconfigure_full")
 
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
@@ -1950,11 +1852,7 @@ async def test_reconfigure_invalid_existing_password_shows_error(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reconfigure_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
+    result = await _advance_menu(hass, result, "reconfigure_full")
 
     # Simulate invalid existing password (user leaves field empty)
     mock_api_bootstrap.side_effect = NotAuthorized
@@ -2122,12 +2020,7 @@ async def test_reconfigure_clears_session_failure_continues(
     ufp_reauth_entry.add_to_hass(hass)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reconfigure_full"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_full"
+    result = await _advance_menu(hass, result, "reconfigure_full")
 
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
     bootstrap.nvr = nvr
@@ -2167,14 +2060,7 @@ async def test_form_api_key_client_error(
     mock_api_bootstrap: Mock,
 ) -> None:
     """Test that ClientError during API key validation shows cannot_connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "full"}
-    )
-    assert result["type"] is FlowResultType.FORM
+    result = await _start_full_flow(hass)
     assert result["errors"] == {}
 
     bootstrap.nvr = nvr
@@ -2207,14 +2093,7 @@ async def test_port_int_conversion(
     mock_api_meta_info: Mock,
 ) -> None:
     """Test that port value is converted to int (NumberSelector returns float)."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "full"}
-    )
-    assert result["type"] is FlowResultType.FORM
+    result = await _start_full_flow(hass)
 
     bootstrap.nvr = nvr
 
@@ -2252,13 +2131,7 @@ async def _start_api_key_flow(hass: HomeAssistant) -> ConfigFlowResult:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "api_key"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "api_key"
-    return result
+    return await _advance_menu(hass, result, "api_key")
 
 
 def _meta_info(version: str = "7.1.83") -> Mock:
@@ -2304,69 +2177,46 @@ async def test_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_api_key_flow_invalid_auth(hass: HomeAssistant) -> None:
-    """A rejected API key surfaces an invalid_auth error and can recover."""
-    result = await _start_api_key_flow(hass)
-
-    with patch(
-        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
-        side_effect=NotAuthorized,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "1.1.1.1", "api_key": "bad-key"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"api_key": "invalid_auth"}
-
-
-async def test_api_key_flow_cannot_connect(hass: HomeAssistant) -> None:
-    """A transport error surfaces cannot_connect."""
-    result = await _start_api_key_flow(hass)
-
-    with patch(
-        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
-        side_effect=ClientError,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "1.1.1.1", "api_key": "test-api-key"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_api_key_flow_version_too_old(hass: HomeAssistant) -> None:
-    """An NVR below the minimum version is rejected."""
-    result = await _start_api_key_flow(hass)
-
-    with patch(
-        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
-        return_value=_meta_info("1.0.0"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "1.1.1.1", "api_key": "test-api-key"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "protect_version"}
-
-
-async def test_api_key_flow_mac_unresolved(hass: HomeAssistant) -> None:
-    """An unresolvable NVR mac surfaces cannot_connect."""
+@pytest.mark.parametrize(
+    ("meta_effect", "resolve_effect", "expected_errors"),
+    [
+        pytest.param(
+            NotAuthorized, lambda: None, {"api_key": "invalid_auth"}, id="invalid_auth"
+        ),
+        pytest.param(
+            ClientError, lambda: None, {"base": "cannot_connect"}, id="cannot_connect"
+        ),
+        pytest.param(
+            lambda: _meta_info("1.0.0"),
+            lambda: None,
+            {"base": "protect_version"},
+            id="version_too_old",
+        ),
+        pytest.param(
+            _meta_info, lambda: None, {"base": "cannot_connect"}, id="mac_unresolved"
+        ),
+        pytest.param(
+            _meta_info, ClientError, {"base": "cannot_connect"}, id="resolve_error"
+        ),
+    ],
+)
+async def test_api_key_flow_errors(
+    hass: HomeAssistant,
+    meta_effect: type[Exception] | Callable[[], Mock],
+    resolve_effect: type[Exception] | Callable[[], None],
+    expected_errors: dict[str, str],
+) -> None:
+    """Validation failures surface the matching form error and can recover."""
     result = await _start_api_key_flow(hass)
 
     with (
         patch(
             "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
-            return_value=_meta_info(),
+            side_effect=meta_effect,
         ),
         patch(
             "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
-            return_value=None,
+            side_effect=resolve_effect,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2375,7 +2225,7 @@ async def test_api_key_flow_mac_unresolved(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == expected_errors
 
 
 async def test_reconfigure_flip_to_api_key(
@@ -2389,12 +2239,7 @@ async def test_reconfigure_flip_to_api_key(
     nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
 
     result = await ufp_reauth_entry.start_reconfigure_flow(hass)
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "reconfigure_api_key"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_api_key"
+    result = await _advance_menu(hass, result, "reconfigure_api_key")
 
     with (
         patch(
@@ -2452,29 +2297,6 @@ async def test_reconfigure_flip_wrong_nvr(
     assert result["reason"] == "wrong_nvr"
 
 
-async def test_api_key_flow_resolve_error(hass: HomeAssistant) -> None:
-    """A transport error while resolving the NVR mac surfaces cannot_connect."""
-    result = await _start_api_key_flow(hass)
-
-    with (
-        patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
-            return_value=_meta_info(),
-        ),
-        patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
-            side_effect=ClientError,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"host": "1.1.1.1", "api_key": "test-api-key"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
 async def test_reauth_public_only_api_key(
     hass: HomeAssistant,
     ufp_public_only_entry: MockConfigEntry,
@@ -2508,41 +2330,6 @@ async def test_reauth_public_only_api_key(
     assert ufp_public_only_entry.data[CONF_API_KEY] == "new-api-key"
     # The entry must stay public-only; reauth never flips the mode.
     assert CONF_USERNAME not in ufp_public_only_entry.data
-
-
-async def test_reauth_public_only_keeps_identity(
-    hass: HomeAssistant,
-    ufp_public_only_entry: MockConfigEntry,
-    mock_setup: None,
-) -> None:
-    """Reauth never re-checks identity: the stored host pins the console.
-
-    Mirrors the full-access reauth; a resolved mac differing from the entry's
-    unique_id (e.g. discovery hw_addr vs NVR mac) must not lock the user out.
-    """
-    ufp_public_only_entry.add_to_hass(hass)
-
-    result = await ufp_public_only_entry.start_reauth_flow(hass)
-
-    with (
-        patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
-            return_value=_meta_info(),
-        ),
-        patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
-            return_value="ffffffffffff",
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_API_KEY: "new-api-key"}
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-    assert ufp_public_only_entry.data[CONF_API_KEY] == "new-api-key"
-    assert ufp_public_only_entry.unique_id == _async_unifi_mac_from_hass(MAC_ADDR)
 
 
 async def test_reauth_public_only_invalid_key(
@@ -2613,12 +2400,7 @@ async def test_discovery_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.MENU
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "discovery_api_key"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_api_key"
+    result = await _advance_menu(hass, result, "discovery_api_key")
 
     with (
         patch(
@@ -2699,11 +2481,12 @@ async def test_reauth_public_only_survives_identity_resolution_failure(
     ufp_public_only_entry: MockConfigEntry,
     mock_setup: None,
 ) -> None:
-    """Reauth succeeds even if NVR identity resolution would fail.
+    """Reauth never re-checks identity: the stored host pins the console.
 
     Reauth validates only the key and version; it must not call
     ``resolve_nvr_mac`` at all, so a transient failure there (for example the
-    `/api/system` fallback being unreachable) cannot block a valid new key.
+    `/api/system` fallback being unreachable) cannot block a valid new key,
+    and a divergent resolved mac cannot lock the user out.
     """
     ufp_public_only_entry.add_to_hass(hass)
 
@@ -2728,3 +2511,4 @@ async def test_reauth_public_only_survives_identity_resolution_failure(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert ufp_public_only_entry.data[CONF_API_KEY] == "new-api-key"
+    assert ufp_public_only_entry.unique_id == _async_unifi_mac_from_hass(MAC_ADDR)
