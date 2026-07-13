@@ -589,6 +589,9 @@ async def test_migration_from_1_1(
                     "id": "deletedid",
                     "identifiers": [["serial", "123456ABCDFF"]],
                     "labels": [],
+                    "composite_device_id": None,
+                    "composite_primary_config_entry": None,
+                    "split_at": None,
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "orphaned_timestamp": None,
@@ -2386,6 +2389,47 @@ async def test_get_or_create_via_device_and_via_device_id_raises_cleanly(
 
     assert device_registry.async_get_device(identifiers={("test", "1")}) is None
     assert len(device_registry.devices) == 0
+
+
+async def test_get_or_create_invalid_subentry_raises_cleanly(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """An unknown config_subentry_id raises without inserting a device."""
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    with pytest.raises(HomeAssistantError, match="has no subentry"):
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            config_subentry_id="does-not-exist",
+            identifiers={("test", "1")},
+        )
+
+    assert device_registry.async_get_device(identifiers={("test", "1")}) is None
+    assert len(device_registry.devices) == 0
+
+
+async def test_add_current_config_entry_is_noop(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Adding the device's current owner records no pending move.
+
+    So a later removal of that sole owner deletes the device instead of moving it to
+    itself.
+    """
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "1")}
+    )
+
+    device_registry.async_update_device(device.id, add_config_entry_id=entry.entry_id)
+    result = device_registry.async_update_device(
+        device.id, remove_config_entry_id=entry.entry_id
+    )
+
+    assert result is None
+    assert device.id not in device_registry.devices
 
 
 async def test_clear_config_subentry_removes_device_with_pending_move(
@@ -4281,6 +4325,79 @@ async def test_disabled_by_not_reconciled_without_composite_split(
     assert device is not None
     # The reconcile is gated on a composite split, so disabled_by is left as stored
     assert device.disabled_by is None
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_composite_lineage_survives_remove_and_restore(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """A migrated split keeps its composite_device_id across removal and restore.
+
+    The tombstone carries the composite lineage, so re-registering the split still
+    resolves from the pre-migration composite id (e.g. for a legacy automation).
+    """
+    entry_a = MockConfigEntry(domain="dom_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="dom_b")
+    entry_b.add_to_hass(hass)
+
+    old_id = "composite00000000000000000000"
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 12,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                {
+                    "area_id": None,
+                    "config_entries": [entry_a.entry_id, entry_b.entry_id],
+                    "config_entries_subentries": {
+                        entry_a.entry_id: [None],
+                        entry_b.entry_id: [None],
+                    },
+                    "configuration_url": None,
+                    "connections": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "disabled_by": None,
+                    "entry_type": None,
+                    "hw_version": None,
+                    "id": old_id,
+                    "identifiers": [["dom_a", "x"], ["dom_b", "x"]],
+                    "labels": [],
+                    "manufacturer": None,
+                    "model": None,
+                    "name": None,
+                    "model_id": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name_by_user": None,
+                    "primary_config_entry": entry_a.entry_id,
+                    "serial_number": None,
+                    "sw_version": None,
+                    "via_device_id": None,
+                }
+            ],
+            "deleted_devices": [],
+        },
+    }
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    split_a = registry.async_get_device(identifiers={("dom_a", "x")})
+    assert split_a is not None
+    assert split_a.composite_device_id == old_id
+
+    # Remove the split; the tombstone keeps the composite lineage
+    registry.async_remove_device(split_a.id)
+    assert registry.deleted_devices[split_a.id].composite_device_id == old_id
+
+    # Re-registering restores it, and the old composite id resolves to it again
+    restored = registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id, identifiers={("dom_a", "x")}
+    )
+    assert restored.id == split_a.id
+    assert restored.composite_device_id == old_id
+    assert restored in registry.async_get_devices_for_composite_device_id(old_id)
 
 
 async def test_cleanup_device_registry(

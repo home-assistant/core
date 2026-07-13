@@ -615,6 +615,12 @@ class DeletedDeviceEntry:
     modified_at: datetime = attr.ib()
     name_by_user: str | None = attr.ib()
     orphaned_timestamp: float | None = attr.ib()
+    # Composite lineage copied from the active split so it survives removal and restore,
+    # keeping a restored split resolvable by the pre-migration composite device id. Can be
+    # removed in HA Core 2027.8.
+    composite_device_id: str | None = attr.ib(default=None)
+    composite_primary_config_entry: str | None = attr.ib(default=None)
+    split_at: datetime | None = attr.ib(default=None)
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @property
@@ -666,6 +672,9 @@ class DeletedDeviceEntry:
             id=self.id,
             labels=self.labels,  # type: ignore[arg-type]
             name_by_user=self.name_by_user,
+            composite_device_id=self.composite_device_id,
+            composite_primary_config_entry=self.composite_primary_config_entry,
+            split_at=self.split_at,
         )
 
     @under_cached_property
@@ -696,6 +705,11 @@ class DeletedDeviceEntry:
                     "identifiers": list(self.identifiers),
                     "id": self.id,
                     "labels": list(self.labels),
+                    "composite_device_id": self.composite_device_id,
+                    "composite_primary_config_entry": (
+                        self.composite_primary_config_entry
+                    ),
+                    "split_at": self.split_at,
                     "modified_at": self.modified_at,
                     "name_by_user": self.name_by_user,
                     "orphaned_timestamp": self.orphaned_timestamp,
@@ -925,6 +939,8 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         split["config_entries_subentries"] = {
                             config_entry_id: [subentry_id]
                         }
+                        split["composite_device_id"] = old_id
+                        split["split_at"] = migrated_at
                         split_deleted_devices.append(split)
                 old_data["deleted_devices"] = split_deleted_devices
 
@@ -1444,6 +1460,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "Passing both `via_device` and `via_device_id` is not allowed; "
                 "`via_device` is deprecated, pass `via_device_id` only"
             )
+        if (
+            config_subentry_id is not UNDEFINED
+            and config_subentry_id is not None
+            and config_subentry_id not in config_entry.subentries
+        ):
+            raise HomeAssistantError(
+                f"Config entry {config_entry_id} has no subentry {config_subentry_id}"
+            )
 
         if translation_key:
             full_translation_key = (
@@ -1756,12 +1780,20 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             target_config_subentry_id = new_config_subentry_id
         else:
             if add_config_entry_id is not UNDEFINED:
-                pending_move = (
-                    add_config_entry_id,
-                    add_config_subentry_id
-                    if add_config_subentry_id is not UNDEFINED
-                    else None,
+                # Adding the config entry (and subentry) the device already belongs to is a
+                # no-op; recording it as a pending move would make a later removal of that
+                # sole owner move the device to itself instead of deleting it.
+                already_owner = add_config_entry_id == old.config_entry_id and (
+                    add_config_subentry_id is UNDEFINED
+                    or add_config_subentry_id == old.config_subentry_id
                 )
+                if not already_owner:
+                    pending_move = (
+                        add_config_entry_id,
+                        add_config_subentry_id
+                        if add_config_subentry_id is not UNDEFINED
+                        else None,
+                    )
             if remove_config_entry_id == old.config_entry_id and (
                 remove_config_subentry_id is UNDEFINED
                 or remove_config_subentry_id == old.config_subentry_id
@@ -2229,6 +2261,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             modified_at=utcnow(),
             name_by_user=device.name_by_user,
             orphaned_timestamp=None,
+            composite_device_id=device.composite_device_id,
+            composite_primary_config_entry=device.composite_primary_config_entry,
+            split_at=device.split_at,
         )
         for other_device in list(self.devices.values()):
             if other_device.via_device_id == device_id:
@@ -2337,6 +2372,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     modified_at=datetime.fromisoformat(device["modified_at"]),
                     name_by_user=device["name_by_user"],
                     orphaned_timestamp=device["orphaned_timestamp"],
+                    # .get for composite lineage: absent in pre-1.13 stores and in beta
+                    # 1.13 stores written before the tombstone gained these fields.
+                    composite_device_id=device.get("composite_device_id"),
+                    composite_primary_config_entry=device.get(
+                        "composite_primary_config_entry"
+                    ),
+                    split_at=(
+                        datetime.fromisoformat(device["split_at"])
+                        if device.get("split_at")
+                        else None
+                    ),
                 )
 
         self.devices = devices
