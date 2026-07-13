@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -41,9 +42,10 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[PTDevicesBinarySensorEntityDescription, ...] =
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda data: (
-            data.get(PTDevicesBinarySensors.DEVICE_BATTERY_STATUS) == "low"
+            None
             if data.get(PTDevicesBinarySensors.DEVICE_BATTERY_STATUS)
-            else None
+            in (None, "unknown")
+            else data.get(PTDevicesBinarySensors.DEVICE_BATTERY_STATUS) == "low"
         ),
     ),
     PTDevicesBinarySensorEntityDescription(
@@ -113,6 +115,7 @@ class PTDevicesBinarySensorEntity(PTDevicesEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         return self.entity_description.is_on_fn(self.device)
