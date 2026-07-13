@@ -2432,6 +2432,41 @@ async def test_add_current_config_entry_is_noop(
     assert device.id not in device_registry.devices
 
 
+async def test_reregister_restores_orphaned_tombstone(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Re-adding an integration restores an orphaned tombstone.
+
+    async_clear_config_entry orphans deleted devices (config_entry_id=None) and keeps them
+    for 30 days; a later async_get_or_create under a new config entry must restore that
+    tombstone (id, labels, name) rather than create a fresh device.
+    """
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "1")}, name="Original"
+    )
+    device_registry.async_update_device(
+        device.id, name_by_user="Custom", labels={"label1"}
+    )
+
+    # Removing the config entry orphans the tombstone (config_entry_id=None)
+    device_registry.async_clear_config_entry(entry.entry_id)
+    assert device_registry.deleted_devices[device.id].config_entry_id is None
+
+    # Re-add the integration under a new config entry and re-register the device
+    new_entry = MockConfigEntry()
+    new_entry.add_to_hass(hass)
+    restored = device_registry.async_get_or_create(
+        config_entry_id=new_entry.entry_id, identifiers={("test", "1")}
+    )
+
+    assert restored.id == device.id
+    assert restored.config_entry_id == new_entry.entry_id
+    assert restored.name_by_user == "Custom"
+    assert restored.labels == {"label1"}
+
+
 async def test_clear_config_subentry_removes_device_with_pending_move(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:

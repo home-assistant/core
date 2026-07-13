@@ -928,8 +928,10 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         continue
                     # A deleted device that belonged to several config entries or
                     # subentries is split like an active one - each split keeps a copy of
-                    # the identifiers/connections - so every config entry can still
-                    # restore its share when a matching device is re-registered.
+                    # the identifiers/connections and a reference to the original composite
+                    # device id - so every config entry can still restore its share, and
+                    # its composite lineage, when a matching device is re-registered.
+                    old_id = device["id"]
                     for config_entry_id, subentry_id in pairs:
                         split = copy.deepcopy(device)
                         split["id"] = uuid_util.random_uuid_hex()
@@ -1528,6 +1530,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 identifiers=identifiers,
                 config_entry_id=config_entry_id,
             )
+            if deleted_device is None:
+                # Fall back to an orphaned tombstone (its owning config entry was removed,
+                # so it is keyed under config_entry_id=None) - re-adding an integration
+                # should restore the device id, area, labels and name rather than create a
+                # fresh device.
+                deleted_device = self.deleted_devices.get_entry(
+                    connections=connections,
+                    identifiers=identifiers,
+                    config_entry_id=None,
+                )
             if deleted_device is None:
                 area_id: str | None = None
                 if (

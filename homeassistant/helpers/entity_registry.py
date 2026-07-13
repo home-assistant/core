@@ -2079,7 +2079,10 @@ class EntityRegistry(BaseRegistry):
                 device_id
             )
             if not successors:
-                return device_id
+                # The device is gone (e.g. the migration dropped a device with no config
+                # entry) and was not split; detach the entity rather than leave it pointing
+                # at a device id that no longer exists.
+                return None
             for successor in successors:
                 if (
                     successor.config_entry_id == config_entry_id

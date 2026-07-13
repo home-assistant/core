@@ -554,6 +554,39 @@ async def test_entity_registry_loading_waits_for_device_registry(
     assert registry.async_get("test.my_entity") is not None
 
 
+@pytest.mark.parametrize("load_registries", [False])
+async def test_entity_load_detaches_from_dropped_device(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """An entity referencing a device that no longer exists is detached on load.
+
+    The device migration drops a device with no config entry; an entity that pointed at
+    it must be detached rather than left on a removed device id.
+    """
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "data": {
+            "entities": [
+                {
+                    "entity_id": "test.my_entity",
+                    "device_id": "gone-device",
+                    "platform": "test_platform",
+                    "unique_id": "unique-1",
+                },
+            ]
+        },
+    }
+
+    dr.async_setup(hass)
+    await asyncio.gather(er.async_load(hass), dr.async_load(hass))
+
+    registry = er.async_get(hass)
+    entity = registry.async_get("test.my_entity")
+    assert entity is not None
+    assert entity.device_id is None
+
+
 def test_get_available_entity_id_considers_registered_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
