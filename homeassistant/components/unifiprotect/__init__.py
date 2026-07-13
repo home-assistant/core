@@ -356,7 +356,10 @@ async def async_remove_config_entry_device(
             and (_async_unifi_mac_from_hass(pb.nvr.mac) in unifi_macs)
         ):
             return False
-        return not any(camera.mac in unifi_macs for camera in pb.cameras.values())
+        return not any(
+            camera.mac and _async_unifi_mac_from_hass(camera.mac) in unifi_macs
+            for camera in pb.cameras.values()
+        )
     if api.bootstrap.nvr.mac in unifi_macs:
         return False
     for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT):

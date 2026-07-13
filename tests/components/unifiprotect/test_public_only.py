@@ -478,7 +478,7 @@ async def test_public_only_device_removal(
     The NVR (a live device) must refuse removal; a stale device unknown to
     the public cache must allow it.
     """
-    entry, _client = await _setup_public_only(hass)
+    entry, client = await _setup_public_only(hass)
 
     nvr_device = device_registry.async_get_device(identifiers={(DOMAIN, _UNIFI_MAC)})
     assert nvr_device is not None
@@ -489,6 +489,17 @@ async def test_public_only_device_removal(
         connections={(dr.CONNECTION_NETWORK_MAC, "FFEEDDCCBB99")},
     )
     assert await async_remove_config_entry_device(hass, entry, stale)
+
+    # A live camera must refuse removal even if its public mac is not in the
+    # registry's normalized (uppercase, no separator) format.
+    camera = Mock()
+    camera.mac = "aa:bb:cc:dd:ee:01"
+    client.public_bootstrap.cameras = {"cam-id": camera}
+    camera_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "AABBCCDDEE01")},
+    )
+    assert not await async_remove_config_entry_device(hass, entry, camera_device)
 
 
 async def test_public_only_manual_refresh(hass: HomeAssistant) -> None:
