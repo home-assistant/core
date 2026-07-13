@@ -84,6 +84,12 @@
       "reconnect_zigbee_router": {
         "name": "Reconnect Zigbee router"
       },
+      "z_wave_flash_mode": {
+        "name": "Z-Wave flash mode"
+      },
+      "z_wave_restart": {
+        "name": "Z-Wave restart"
+      },
       "zigbee_flash_mode": {
         "name": "Zigbee flash mode"
       },
@@ -159,6 +165,9 @@
     "update": {
       "core_update": {
         "name": "Core firmware"
+      },
+      "z_wave_update": {
+        "name": "Z-Wave firmware"
       },
       "zigbee_update": {
         "name": "Zigbee firmware"
