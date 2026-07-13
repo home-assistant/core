@@ -12,6 +12,7 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pyatmo"],
+  "quality_scale": "bronze",
   "requirements": ["pyatmo==9.4.0"],
   "single_config_entry": true
 }

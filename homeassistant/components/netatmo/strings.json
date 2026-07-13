@@ -181,6 +181,15 @@
           "mode": "Calculation",
           "show_on_map": "Show on map"
         },
+        "data_description": {
+          "area_name": "Name used to identify this weather area.",
+          "lat_ne": "Latitude of the northeast corner of the area.",
+          "lat_sw": "Latitude of the southwest corner of the area.",
+          "lon_ne": "Longitude of the northeast corner of the area.",
+          "lon_sw": "Longitude of the southwest corner of the area.",
+          "mode": "How values from multiple stations in the area are aggregated.",
+          "show_on_map": "Whether to show the sensors on the map."
+        },
         "description": "Configure a public weather sensor for an area.",
         "title": "Netatmo public weather sensor"
       },
@@ -188,6 +197,10 @@
         "data": {
           "new_area": "Area name",
           "weather_areas": "Weather areas"
+        },
+        "data_description": {
+          "new_area": "Name of a new weather area to add.",
+          "weather_areas": "Configured weather areas to edit or remove."
         },
         "description": "Configure public weather sensors.",
         "title": "[%key:component::netatmo::options::step::public_weather::title%]"
