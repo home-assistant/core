@@ -187,7 +187,8 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
     search_album = call.data.get(ATTR_SEARCH_ALBUM)
     search_username = call.data.get(ATTR_USERNAME)
     if search_username:
-        assert mass.server_info  # for type checking
+        if TYPE_CHECKING:
+            assert mass.server_info
         if mass.server_info.schema_version < 35:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

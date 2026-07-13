@@ -60,7 +60,7 @@ async def test_search_action_with_username(
 
     # services with an api version < 35 must raise a validation error even if the username is valid
     music_assistant_client.server_info.schema_version = 30
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SEARCH,
@@ -72,43 +72,16 @@ async def test_search_action_with_username(
             blocking=True,
             return_response=True,
         )
+    assert exc.value.translation_key == "unsupported_parameter"
 
     # tests for servers supporting the username
-
-    # valid username forwarding
     music_assistant_client.server_info.schema_version = 35
-    with pytest.raises(ValueError):
-        # we get a ValueError as the SearchResults can't be created from our dummy call, but this test
-        # is only there to verify that the username parameter is forwarded to the client.
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEARCH,
-            {
-                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-                ATTR_SEARCH_NAME: "test",
-                ATTR_USERNAME: "user_user",
-            },
-            blocking=True,
-            return_response=True,
-        )
-    assert music_assistant_client.send_command.call_count == 1
-    assert music_assistant_client.send_command.call_args == call(
-        "music/search",
-        search_query="test",
-        media_types=MediaType.ALL,
-        limit=5,
-        library_only=False,
-        user="user_user",
-        require_schema=35,
+    # mock client's send_command for username tests
+    music_assistant_client.music.client.send_command = AsyncMock(
+        return_value={"albums": []}
     )
 
-    # mock search return for pure username tests
-    music_assistant_client.music.search = AsyncMock(
-        return_value=SearchResults(
-            albums=create_library_albums_from_fixture(),
-        )
-    )
-    # valid user ok
+    # valid user ok and forwarded
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SEARCH,
@@ -120,9 +93,20 @@ async def test_search_action_with_username(
         blocking=True,
         return_response=True,
     )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "music/search",
+        search_query="test",
+        media_types=MediaType.ALL,
+        limit=5,
+        library_only=False,
+        user="user_user",
+        require_schema=35,
+    )
+
     # not valid because of name, disabled or guest
     for username in ("non_existing_user", "party_guest", "user_disabled"):
-        with pytest.raises(ServiceValidationError):
+        with pytest.raises(ServiceValidationError) as exc:
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_SEARCH,
@@ -134,6 +118,7 @@ async def test_search_action_with_username(
                 blocking=True,
                 return_response=True,
             )
+        assert exc.value.translation_key == "invalid_username"
 
 
 @pytest.mark.parametrize(
