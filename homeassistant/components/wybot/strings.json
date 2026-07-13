@@ -49,6 +49,35 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "data_source": {
+        "name": "Data source",
+        "state": {
+          "bluetooth": "Bluetooth",
+          "cloud": "Cloud (MQTT)"
+        }
+      },
+      "dock_battery": {
+        "name": "Battery"
+      },
+      "dock_type": {
+        "name": "Type"
+      },
+      "last_ble_communication": {
+        "name": "Last BLE communication"
+      },
+      "last_mqtt_communication": {
+        "name": "Last MQTT communication"
+      },
+      "robot_battery": {
+        "name": "Robot battery"
+      },
+      "solar_energy": {
+        "name": "Energy harvested"
+      }
+    }
+  },
   "exceptions": {
     "cannot_connect": {
       "message": "Unable to connect to the WyBot API."

@@ -1,0 +1,22 @@
+{
+  "entity": {
+    "sensor": {
+      "data_source": {
+        "default": "mdi:help-circle",
+        "state": {
+          "bluetooth": "mdi:bluetooth",
+          "cloud": "mdi:cloud"
+        }
+      },
+      "dock_type": {
+        "default": "mdi:home-import-outline"
+      },
+      "last_ble_communication": {
+        "default": "mdi:bluetooth-connect"
+      },
+      "last_mqtt_communication": {
+        "default": "mdi:cloud-clock"
+      }
+    }
+  }
+}
