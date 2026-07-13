@@ -27,6 +27,7 @@ from tesla_fleet_api.teslemetry.energysite import (
 )
 from yarl import URL
 
+from homeassistant.components.teslemetry.config_flow import _is_gateway_unreachable
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
@@ -590,6 +591,23 @@ async def test_migrate_error_from_future(
 
     entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        pytest.param(TeslaFleetError(), False, id="tesla_fleet_error_no_status"),
+        pytest.param(ResponseError(status=502), True, id="response_error_502"),
+        pytest.param(
+            ClientResponseError(None, (), status=500),
+            False,
+            id="client_response_error_500",
+        ),
+    ],
+)
+def test_is_gateway_unreachable(error: Exception, expected: bool) -> None:
+    """A bare TeslaFleetError has no status set and must not raise AttributeError."""
+    assert _is_gateway_unreachable(error) is expected
 
 
 POWERWALL_502_ERRORS = [
