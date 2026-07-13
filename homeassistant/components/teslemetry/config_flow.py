@@ -24,7 +24,8 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 from tesla_fleet_api.tesla import EnergySiteRouter
-from tesla_fleet_api.teslemetry import EnergySite, Teslemetry
+from tesla_fleet_api.teslemetry import Teslemetry
+from tesla_fleet_api.teslemetry.energysite import TeslemetryEnergySite
 import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
@@ -55,52 +56,6 @@ from .const import (
     POWERWALL_KEY_FILE,
     SUBENTRY_TYPE_ENERGY_SITE,
 )
-
-# Authorized-client states meaning "the gateway has confirmed this key".
-# Includes both the enum and its raw int value since the command endpoint's
-# response shape for this field is not documented.
-_VERIFIED_VALUES: tuple[Any, ...] = (
-    AuthorizedClientState.VERIFIED,
-    int(AuthorizedClientState.VERIFIED),
-)
-
-
-def _normalize_b64(value: Any) -> str:
-    """Strip whitespace from a base64 string; return "" for non-strings."""
-    return "".join(value.split()) if isinstance(value, str) else ""
-
-
-def _iter_clients(payload: Any) -> list[Any]:
-    """Find the list of authorized clients inside a command response.
-
-    The exact response shape isn't documented, so this walks common wrapper
-    keys before falling back to a depth-first search of nested values.
-    """
-    if isinstance(payload, list):
-        return payload
-    if not isinstance(payload, Mapping):
-        return []
-    for key in ("authorized_clients", "authorizedClients", "clients", "response"):
-        if key in payload and (found := _iter_clients(payload[key])):
-            return found
-    for value in payload.values():
-        if isinstance(value, (list, Mapping)) and (found := _iter_clients(value)):
-            return found
-    return []
-
-
-def _is_verified(list_response: Any, public_key_b64: str) -> bool:
-    """Return True if ``list_response`` contains our key in VERIFIED state."""
-    target = _normalize_b64(public_key_b64)
-    for client in _iter_clients(list_response):
-        if not isinstance(client, Mapping):
-            continue
-        key = client.get("public_key") or client.get("publicKey") or ""
-        if _normalize_b64(key) != target:
-            continue
-        state = client.get("state") or client.get("authorized_client_state")
-        return state in _VERIFIED_VALUES
-    return False
 
 
 class OAuth2FlowHandler(
@@ -237,7 +192,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
     def __init__(self) -> None:
         """Initialize the energy site subentry flow."""
-        self._energy_site: EnergySite | None = None
+        self._energy_site: TeslemetryEnergySite | None = None
         self._key_pem: bytes | None = None
         self._public_key_der: bytes = b""
         self._public_key_b64: str = ""
@@ -268,10 +223,11 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         )
         if energy_data is None:
             return self.async_abort(reason="cannot_connect")
-        self._energy_site = (
+        self._energy_site = cast(
+            TeslemetryEnergySite,
             energy_data.api.secondary
             if isinstance(energy_data.api, EnergySiteRouter)
-            else energy_data.api
+            else energy_data.api,
         )
 
         path = self.hass.config.path(POWERWALL_KEY_FILE)
@@ -283,13 +239,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         self._public_key_der = keyholder.rsa_public_der_pkcs1
         self._public_key_b64 = keyholder.rsa_public_der_pkcs1_b64
 
-        try:
-            response = await self._energy_site.list_authorized_clients()
-        except TeslaFleetError as err:
-            LOGGER.debug("list_authorized_clients failed: %s", err)
-            response = None
-
-        if _is_verified(response, self._public_key_b64):
+        if await self._key_is_verified():
             return await self.async_step_credentials()
 
         try:
@@ -314,15 +264,30 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             return self.async_show_form(step_id="pair")
 
         for _ in range(KEY_PAIRING_POLL_ATTEMPTS):
-            try:
-                response = await self._energy_site.list_authorized_clients()
-            except TeslaFleetError:
-                response = None
-            if _is_verified(response, self._public_key_b64):
+            if await self._key_is_verified():
                 return await self.async_step_credentials()
             await asyncio.sleep(KEY_PAIRING_POLL_INTERVAL)
 
         return self.async_show_form(step_id="pair", errors={"base": "timeout"})
+
+    async def _key_is_verified(self) -> bool:
+        """Report whether our public key is registered and VERIFIED on the gateway.
+
+        Parsing lives in the library's typed ``find_authorized_clients`` accessor
+        (envelope unwrap, null-body handling, ``state`` typing); an explicitly
+        empty client list authoritatively means "not verified".
+        """
+        assert self._energy_site is not None
+        try:
+            result = await self._energy_site.find_authorized_clients()
+        except TeslaFleetError as err:
+            LOGGER.debug("find_authorized_clients failed: %s", err)
+            return False
+        return any(
+            client.public_key == self._public_key_b64
+            and client.state == AuthorizedClientState.VERIFIED
+            for client in result.clients
+        )
 
     async def async_step_credentials(
         self, user_input: dict[str, Any] | None = None
