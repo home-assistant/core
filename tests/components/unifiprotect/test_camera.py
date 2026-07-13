@@ -673,14 +673,9 @@ async def test_private_enumeration_upgrade_keeps_entities(
     ufp: MockUFPFixture,
     camera_all: ProtectCamera,
 ) -> None:
-    """Entities registered by the old private enumeration survive the public one.
+    """Old private-enumeration registry entries survive the public enumeration.
 
-    Simulates an upgrade: the registry holds the camera entities exactly as the
-    previous release (private channel enumeration) created them — high enabled,
-    medium/low disabled, one entity_id customized by the user. The
-    public-master enumeration must claim the same registry entries (same
-    unique_ids and entity_ids, no duplicates), and a reload must not move
-    anything either.
+    Same unique_ids, entity_ids, and enabled split — including across a reload.
     """
     seeded: dict[str, str] = {}
     for channel_id, disabled_by in (
@@ -1064,3 +1059,21 @@ async def test_public_only_camera_added_during_gap(
     # Three tiers each for both cameras; no duplicates for the first one.
     assert_entity_counts(hass, Platform.CAMERA, 6, 2)
     assert hass.states.get("camera.gap_camera_high_resolution_channel") is not None
+
+
+async def test_unadopted_camera_not_enumerated_from_public_frame(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+) -> None:
+    """A public frame cannot create entities for an unadopted camera."""
+    camera.is_adopted = False
+    await init_entry(hass, ufp, [camera])
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+
+    public = ufp.api.public_bootstrap.cameras[camera.id]
+    msg = public_device_ws_message(public)
+    msg.changed_data = {"rtsps_streams": public.rtsps_streams}
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    # still excluded, exactly like the startup enumeration
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)

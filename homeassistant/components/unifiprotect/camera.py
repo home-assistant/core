@@ -99,6 +99,9 @@ def _async_camera_entities(
             if data.api.is_public_only
             else data.api.bootstrap.cameras.get(public_device.id)
         )
+        # mirror the startup enumeration's adopted filter
+        if private is not None and not private.is_adopted_by_us:
+            return entities
         pairs = [(public_device, private)]
     elif ufp_device is None:
         pairs = data.get_public_cameras()
