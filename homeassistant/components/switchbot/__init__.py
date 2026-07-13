@@ -307,12 +307,8 @@ def _migrate_hygrometer_pro_sensor_type(
 ) -> None:
     """Upgrade a plain "hygrometer" entry to "hygrometer_pro" if it is actually a Meter Pro.
 
-    Meter Pro devices were originally lumped in with the plain Meter/Meter Plus
-    under the "hygrometer" sensor type, before the Meter Pro got its own type to
-    support the sync-datetime button. Existing entries are only upgraded
-    opportunistically from already-cached advertisement data so plain Meter/Meter
-    Plus entries (the vast majority of "hygrometer" entries) are never blocked or
-    delayed by this check.
+    Only acts on already-cached advertisement data; never blocks or delays
+    setup if none is available yet.
     """
     address: str = entry.data[CONF_ADDRESS]
     if not (
