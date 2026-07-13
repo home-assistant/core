@@ -537,9 +537,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 )
             except SonosWebsocketError as exc:
                 raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="announcement_connection_error",
-                    translation_placeholders={"error": str(exc)},
+                    f"Error when calling Sonos websocket: {exc}"
                 ) from exc
             if response.get("success"):
                 if data:
