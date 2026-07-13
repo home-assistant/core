@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.core import HomeAssistant
@@ -131,20 +131,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Steam platform."""
     coordinator = entry.runtime_data
+    if TYPE_CHECKING:
+        assert entry.unique_id
 
     async_add_entities(
         SteamImageEntity(hass, coordinator, entry.unique_id, description)
         for description in IMAGE_DESCRIPTIONS
-        if entry.unique_id is not None and entry.unique_id in coordinator.data
+        if entry.unique_id in coordinator.data
     )
 
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_FRIEND):
+        if TYPE_CHECKING:
+            assert subentry.unique_id
         async_add_entities(
             [
                 SteamImageEntity(hass, coordinator, subentry.unique_id, description)
                 for description in IMAGE_DESCRIPTIONS
-                if subentry.unique_id is not None
-                and subentry.unique_id in coordinator.data
+                if subentry.unique_id in coordinator.data
             ],
             config_subentry_id=subentry.subentry_id,
         )
