@@ -530,6 +530,9 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
     an emergency cert (probably will never happen since this means
     the system is very broken), we do not want to startup http
     as it would allow connections that are not verified by the cert.
+    This intentionally overrides the recovery-mode fallback to the default
+    config: connections must never be accepted without client certificate
+    verification once it is configured.
     """
 
     cert_path, key_path = await hass.async_add_executor_job(
@@ -1618,16 +1621,16 @@ async def test_bound_sockets_released_on_stop_before_start(
     assert sock.fileno() == -1
 
 
-async def test_stable_config_bind_failure_runs_without_server(
+async def test_stable_config_bind_failure_fails_setup(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
-    caplog: pytest.LogCaptureFixture,
     mock_create_server_sockets: Mock,
 ) -> None:
-    """A stable config that cannot be bound keeps Home Assistant running.
+    """A stable config that cannot be bound fails setup.
 
-    There is no better config to fall back to, so no revert happens and the
-    server is not started.
+    Failing setup activates recovery mode on a real boot, which retries with
+    the stable config and falls back to the default config, so Home Assistant
+    stays reachable.
     """
     hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
 
@@ -1636,19 +1639,100 @@ async def test_stable_config_bind_failure_runs_without_server(
         errno.EADDRINUSE, "Address already in use"
     )
 
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_start()
-    await hass.async_block_till_done()
+    assert not await async_setup_component(hass, DOMAIN, {})
 
-    assert "Failed to create HTTP server at port 80" in caplog.text
-    assert "Not listening on port 80" in caplog.text
-    assert hass.http.sites == []
     assert len(restart_calls) == 0
     assert hass_storage["http"]["data"] == {
         "stable": HTTP_STORAGE_SCHEMA({"server_port": 80}),
         "pending": None,
         "yaml_migration_done": True,
     }
+
+
+async def test_pending_and_stable_config_bind_failure_fails_setup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_create_server_sockets: Mock,
+) -> None:
+    """Setup fails when the trialed pending and the stable config cannot bind.
+
+    The pending config must already be cleared and persisted, so the recovery
+    boot and future normal starts use stable instead of re-trialing it.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {"server_port": 9876}, pending={"server_port": 80}
+    )
+
+    mock_create_server_sockets.side_effect = [
+        OSError(errno.EADDRINUSE, "Address already in use"),
+        OSError(errno.EADDRINUSE, "Address already in use"),
+    ]
+
+    assert not await async_setup_component(hass, DOMAIN, {})
+
+    assert hass_storage["http"]["data"]["pending"] is None
+
+
+async def test_recovery_mode_bind_failure_falls_back_to_default_config(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    mock_create_server_sockets: Mock,
+) -> None:
+    """In recovery mode an unbindable stable config falls back to defaults.
+
+    Recovery mode is the last resort and must not fail setup again, so the
+    default config is applied in place to keep the recovery UI reachable.
+    The stable config is left untouched.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
+    hass.config.recovery_mode = True
+
+    stable_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    stable_sock.bind(("127.0.0.1", 0))
+    mock_create_server_sockets.side_effect = [
+        OSError(errno.EADDRINUSE, "Address already in use"),
+        [stable_sock],
+    ]
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    assert "falling back to the default configuration" in caplog.text
+    assert hass.config.api is not None
+    assert hass.config.api.port == default_server_port()
+    # The second bind attempt was for the default config.
+    assert mock_create_server_sockets.call_args_list[1].args[1] == (
+        default_server_port()
+    )
+    assert hass_storage["http"]["data"]["stable"] == HTTP_STORAGE_SCHEMA(
+        {"server_port": 80}
+    )
+    stable_sock.close()
+
+
+async def test_recovery_mode_default_config_bind_failure_runs_without_server(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    mock_create_server_sockets: Mock,
+) -> None:
+    """Recovery keeps running without a TCP listener if defaults cannot bind."""
+    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
+    hass.config.recovery_mode = True
+
+    mock_create_server_sockets.side_effect = OSError(
+        errno.EADDRINUSE, "Address already in use"
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert f"Failed to create HTTP server at port {default_server_port()}" in (
+        caplog.text
+    )
+    assert f"Not listening on port {default_server_port()}" in caplog.text
+    assert hass.http.sites == []
 
 
 async def test_pending_config_promote_cancels_revert(
