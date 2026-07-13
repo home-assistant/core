@@ -776,10 +776,10 @@ async def test_dhcp_discovery_no_broadcast(hass: HomeAssistant) -> None:
     assert result["reason"] == "cannot_discover"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_changes_ip(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """A new IP is probed before save when the entry is not loaded."""
     new_ip = "192.168.1.200"
@@ -826,11 +826,10 @@ async def test_reconfigure_flow_changes_ip(
     ],
     ids=["unreachable_ip", "invalid_format"],
 )
+@pytest.mark.usefixtures("mock_setup_entry", "mock_unload_entry")
 async def test_reconfigure_flow_rejects_bad_ip(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
-    mock_unload_entry: AsyncMock,
     submitted_ip: str,
     connect_outcome: dict[str, object],
     expected_error: str,
