@@ -40,3 +40,4 @@ class MikrotikEntity[DescriptionT: EntityDescription](
             sw_version=coordinator.firmware,
             serial_number=self._serial,
         )
+        self._attr_unique_id = f"{self._serial}_{description.key}"
