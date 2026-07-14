@@ -1,59 +1,42 @@
-"""Init."""
-
 import logging
 
 import aiohttp
-from defusedxml import ElementTree as ET
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+
+from .APIClient import PapouchApiClient
+from .coordinator import PapouchDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "papouch"
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
 
-
-def parse_quido_xml(raw_xml: str) -> dict:
-    """Parsing data."""
-    # TODO: it's hardcoded for quido, need rework for other devices
-    root = ET.fromstring(raw_xml)
-
-    parsed_data = {"temp": {}, "din": {}, "dout": {}}
-
-    for element in root:
-        if element.tag in ["temp", "din", "dout"]:
-            item_id = element.attrib.get("id")
-            val_str = element.attrib.get("val", "0")
-
-            if element.tag == "temp":
-                parsed_data[element.tag][item_id] = float(val_str)
-            else:
-                parsed_data[element.tag][item_id] = int(val_str)
-
-    return parsed_data
+type PapouchConfigEntry = ConfigEntry[PapouchApiClient]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Setup. Note that polling is used with HTTP 1.0."""
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> bool:
+    """Set up Papouch from a config entry."""
     session = async_get_clientsession(hass)
+    api_client = PapouchApiClient(entry.data["ip_address"], session)
 
-    headers = {"User-Agent": "curl/8.14.1", "Accept": "*/*", "Connection": "close"}
+    coordinator = PapouchDataUpdateCoordinator(hass, api_client, entry)
 
-    try:
-        # TODO: change it to prevent hard-coded IP (even though it probably will be the same)
-        async with session.get(
-            "http://192.168.3.31/fresh.xml", headers=headers
-        ) as response:
-            data = await response.text(encoding="iso-8859-2")
+    await coordinator.async_config_entry_first_refresh()
 
-            if data:
-                parsed_data = parse_quido_xml(data)
-                # TODO: create a Option flow
-                # TODO: do something with that data
-                return True
+    entry.runtime_data = coordinator
 
-    except aiohttp.ClientError as err:
-        _LOGGER.error("Error connecting to device: %s", err)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return False
+    return True

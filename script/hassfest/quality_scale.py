@@ -688,6 +688,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "panasonic_bluray",
     "panasonic_viera",
     "panel_iframe",
+    "papouch",
     "peco",
     "pencom",
     "permobil",

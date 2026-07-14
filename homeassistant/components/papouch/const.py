@@ -1,0 +1,2 @@
+DOMAIN = "papouch"
+DEFAULT_SCAN_INTERVAL = 10

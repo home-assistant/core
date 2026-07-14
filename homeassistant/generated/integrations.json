@@ -5284,6 +5284,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "papouch": {
+      "name": "Papouch",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "pcs_lighting": {
       "name": "PCS Lighting",
       "integration_type": "virtual",
