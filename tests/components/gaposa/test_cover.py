@@ -16,7 +16,7 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER,
     CoverEntityFeature,
 )
-from homeassistant.components.gaposa.const import MOTION_DELAY
+from homeassistant.components.gaposa.const import MOTION_DELAY, UPDATE_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -118,13 +118,7 @@ async def test_stop_cover_calls_motor_stop(
 async def test_stop_ends_motion_window(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
-    """A stop command mid-motion collapses the motion window immediately.
-
-    Open the (closed) bedroom cover so it enters STATE_OPENING, then stop.
-    The entity should immediately report the steady-state (STATE_CLOSED,
-    from the underlying motor) rather than staying in STATE_OPENING until
-    the motion window would have expired.
-    """
+    """A stop mid-motion collapses the motion window so the cover reports the motor's steady state, not STATE_OPENING."""
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
@@ -188,7 +182,8 @@ async def test_cover_state_mapping(
     motor = mock_motors[0]
     motor.state = motor_state
 
-    await init_integration.runtime_data.async_refresh()
+    later = dt_util.utcnow() + timedelta(seconds=UPDATE_INTERVAL + 1)
+    async_fire_time_changed(hass, later)
     await hass.async_block_till_done()
 
     assert hass.states.get(LIVING_ROOM_ENTITY).state == expected

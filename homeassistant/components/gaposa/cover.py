@@ -42,7 +42,12 @@ async def async_setup_entry(
     config_entry: GaposaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add a cover entity for every motor the coordinator knows about."""
+    """Add a cover entity for every motor present at the first refresh.
+
+    Motors added to the Gaposa account later will not appear until the
+    config entry is reloaded — the ``dynamic-devices`` quality-scale rule
+    is still ``todo`` for this integration.
+    """
     coordinator = config_entry.runtime_data
     async_add_entities(
         GaposaCover(coordinator, motor_id, motor)
