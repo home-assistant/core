@@ -2764,6 +2764,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "harman_luxury": {
+      "name": "Harman Luxury Audio",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "harvey": {
       "name": "Harvey",
       "integration_type": "virtual",
@@ -3494,6 +3500,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "karakeep": {
+      "name": "Karakeep",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "keba": {
       "name": "Keba Charging Station",
       "integration_type": "hub",
@@ -3709,6 +3721,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "led_infrared": {
+      "name": "LED Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
     },
     "legrand": {
       "name": "Legrand",
@@ -5326,7 +5344,7 @@
     "permobil": {
       "name": "MyPermobil",
       "integration_type": "device",
-      "config_flow": true,
+      "config_flow": false,
       "iot_class": "cloud_polling"
     },
     "pge": {

@@ -1,12 +1,13 @@
 """Config flow for Nobø Ecohub integration."""
 
-import socket
+import ipaddress
 from typing import TYPE_CHECKING, Any, override
 
 from pynobo import nobo
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -199,6 +200,68 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing hub.
+
+        Only the IP address is editable. When the entry is not loaded,
+        the new IP is probed here before updating. When the entry is
+        loaded, probing is skipped to avoid competing with the active
+        connection for the hub's limited concurrent-connection slots;
+        the reload's ``async_setup_entry`` re-validates the updated IP.
+        """
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            new_ip = user_input[CONF_IP_ADDRESS]
+            is_loaded = reconfigure_entry.state is ConfigEntryState.LOADED
+            try:
+                ipaddress.ip_address(new_ip)
+            except ValueError:
+                errors[CONF_IP_ADDRESS] = "invalid_ip"
+            else:
+                try:
+                    # Probe the new IP only when the integration is not currently
+                    # loaded — if it were, the running connection would compete
+                    # with the probe for the hub's limited concurrent-connection
+                    # slots.
+                    if not is_loaded:
+                        await self._test_connection(
+                            reconfigure_entry.data[CONF_SERIAL], new_ip
+                        )
+                except NoboHubConnectError as error:
+                    # The serial is fixed in reconfigure, so blame the IP rather
+                    # than the (uneditable) serial number.
+                    errors[CONF_IP_ADDRESS] = (
+                        "cannot_connect_ip"
+                        if error.msg == "cannot_connect"
+                        else error.msg
+                    )
+                else:
+                    if new_ip == reconfigure_entry.data[CONF_IP_ADDRESS] and is_loaded:
+                        # No-op: IP unchanged and the running integration already
+                        # proves it works. Skip the reload to avoid a needless
+                        # reconnect.
+                        return self.async_abort(reason="reconfigure_successful")
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data_updates={CONF_IP_ADDRESS: new_ip},
+                    )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema({vol.Required(CONF_IP_ADDRESS): str}),
+                user_input or reconfigure_entry.data,
+            ),
+            errors=errors,
+            description_placeholders={
+                CONF_SERIAL: reconfigure_entry.data[CONF_SERIAL],
+            },
+        )
+
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -245,8 +308,8 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         if len(serial) != SERIAL_LENGTH or not serial.isdigit():
             raise NoboHubConnectError("invalid_serial")
         try:
-            socket.inet_aton(ip_address)
-        except OSError as err:
+            ipaddress.ip_address(ip_address)
+        except ValueError as err:
             raise NoboHubConnectError("invalid_ip") from err
         hub = nobo(serial=serial, ip=ip_address, discover=False, synchronous=False)
         # pynobo distinguishes the two failure modes: TCP-level errors
