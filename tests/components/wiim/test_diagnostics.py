@@ -1,8 +1,8 @@
 """Tests for WiiM diagnostics."""
 
-import pytest
 from unittest.mock import AsyncMock
 
+import pytest
 from wiim.models import WiimDeviceDiagnostics
 
 from homeassistant.components.wiim.diagnostics import async_get_config_entry_diagnostics
