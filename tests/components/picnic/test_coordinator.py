@@ -14,6 +14,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
+from .conftest import SetupDeliveryFixture
+
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
@@ -30,33 +32,6 @@ async def test_timeout_failed_with_retry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def _setup_with_delivery(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_picnic_api: MagicMock,
-    status: str,
-    eta2: tuple[timedelta, timedelta] | None,
-    slot_window: tuple[timedelta, timedelta],
-) -> dict:
-    """Set up the integration with the mocked delivery in the given state."""
-    delivery = mock_picnic_api.get_deliveries.return_value[0]
-    delivery["status"] = status
-    delivery["delivery_time"] = None
-    # eta2 is the API's field name for the route-planning ETA
-    delivery["eta2"] = eta2 and {
-        "start": (dt_util.utcnow() + eta2[0]).isoformat(),
-        "end": (dt_util.utcnow() + eta2[1]).isoformat(),
-    }
-    delivery["slot"]["window_start"] = (dt_util.utcnow() + slot_window[0]).isoformat()
-    delivery["slot"]["window_end"] = (dt_util.utcnow() + slot_window[1]).isoformat()
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return delivery
 
 
 @pytest.mark.parametrize(
@@ -115,18 +90,15 @@ async def _setup_with_delivery(
 )
 @pytest.mark.usefixtures("freezer")
 async def test_update_interval(
-    hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_picnic_api: MagicMock,
+    setup_delivery: SetupDeliveryFixture,
     status: str,
     eta2: tuple[timedelta, timedelta] | None,
     slot_window: tuple[timedelta, timedelta],
     expected_interval: timedelta,
 ) -> None:
     """Test the update interval for the various delivery states."""
-    await _setup_with_delivery(
-        hass, mock_config_entry, mock_picnic_api, status, eta2, slot_window
-    )
+    await setup_delivery(status, eta2, slot_window)
 
     coordinator = mock_config_entry.runtime_data
     assert coordinator.update_interval == expected_interval
@@ -161,14 +133,11 @@ async def test_update_interval_with_malformed_eta(
 async def test_update_interval_relaxes_after_delivery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_picnic_api: MagicMock,
+    setup_delivery: SetupDeliveryFixture,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that the update interval returns to the default once delivered."""
-    delivery = await _setup_with_delivery(
-        hass,
-        mock_config_entry,
-        mock_picnic_api,
+    delivery = await setup_delivery(
         "CURRENT",
         (timedelta(minutes=10), timedelta(minutes=30)),
         (timedelta(minutes=-15), timedelta(minutes=45)),
@@ -189,13 +158,11 @@ async def test_update_interval_relaxes_when_refresh_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_picnic_api: MagicMock,
+    setup_delivery: SetupDeliveryFixture,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that failed refreshes still relax the interval past the window."""
-    await _setup_with_delivery(
-        hass,
-        mock_config_entry,
-        mock_picnic_api,
+    await setup_delivery(
         "CURRENT",
         (timedelta(minutes=10), timedelta(minutes=30)),
         (timedelta(minutes=-15), timedelta(minutes=45)),
