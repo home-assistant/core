@@ -15,6 +15,7 @@ from homeassistant.components.proxmoxve.const import (
     CONF_TOKEN_SECRET,
     CONF_VMS,
     DOMAIN,
+    ProxmoxPermission,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -127,8 +128,8 @@ def mock_proxmox_client():
 
         node_mock.tasks.get.side_effect = lambda **kwargs: (
             []
-            if "Sys.Audit"
-            not in mock_instance.access.permissions.get.return_value.get("/nodes", {})
+            if ProxmoxPermission.SYSAUDIT
+            not in mock_instance.access.permissions.get.return_value.get("/nodes", [])
             else load_json_array_fixture("nodes/tasks.json", DOMAIN)
         )
 
