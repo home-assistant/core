@@ -48,7 +48,7 @@ rules:
     status: done
     comment: >
       Model name "Nobø Ecohub" under review for rename to "Nobø Hub".
-  diagnostics: todo
+  diagnostics: done
   discovery: done
   discovery-update-info: done
   docs-data-update: done
