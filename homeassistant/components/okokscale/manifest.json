@@ -28,5 +28,5 @@
   "iot_class": "local_push",
   "loggers": ["okokscale"],
   "quality_scale": "bronze",
-  "requirements": ["okokscale==0.0.1"]
+  "requirements": ["okokscale==0.0.2"]
 }
