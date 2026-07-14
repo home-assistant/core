@@ -230,12 +230,10 @@ def test_server_context_intermediate() -> None:
         "TLS_CHACHA20_POLY1305_SHA256",
     } <= set(tls13_ciphers)
 
-    tls12_ciphers = [
-        cipher["name"]
-        for cipher in context.get_ciphers()
-        if cipher["protocol"] == "TLSv1.2"
-    ]
-    assert tls12_ciphers == [
+    # set_ciphers() selects this ordered Mozilla intermediate list. System
+    # OpenSSL policy may disable some of the suites, so require: non-empty,
+    # no unexpected names, and preserved relative order among those present.
+    expected_tls12 = [
         "ECDHE-ECDSA-AES128-GCM-SHA256",
         "ECDHE-RSA-AES128-GCM-SHA256",
         "ECDHE-ECDSA-AES256-GCM-SHA384",
@@ -243,3 +241,11 @@ def test_server_context_intermediate() -> None:
         "ECDHE-ECDSA-CHACHA20-POLY1305",
         "ECDHE-RSA-CHACHA20-POLY1305",
     ]
+    tls12_ciphers = [
+        cipher["name"]
+        for cipher in context.get_ciphers()
+        if cipher["protocol"] == "TLSv1.2"
+    ]
+    assert tls12_ciphers
+    assert set(tls12_ciphers) <= set(expected_tls12)
+    assert tls12_ciphers == [c for c in expected_tls12 if c in tls12_ciphers]
