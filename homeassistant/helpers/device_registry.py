@@ -1007,18 +1007,29 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
     def _unindex_entry(
         self, key: str, replacement_entry: _EntryTypeT | None = None
     ) -> None:
-        """Unindex an entry."""
+        """Unindex an entry.
+
+        Guards against collisions, the code below can be simplified once
+        collisions are not longer allowed, refer to commit history in PR
+        175785.
+        """
         old_entry = self.data[key]
         config_entry_id = old_entry.config_entry_id
         for connection in old_entry.connections:
-            if connection in self._connections:
-                del self._connections[connection][config_entry_id]
-                if not self._connections[connection]:
+            by_config_entry = self._connections.get(connection)
+            if by_config_entry is not None and (
+                by_config_entry.get(config_entry_id) is old_entry
+            ):
+                del by_config_entry[config_entry_id]
+                if not by_config_entry:
                     del self._connections[connection]
         for identifier in old_entry.identifiers:
-            if identifier in self._identifiers:
-                del self._identifiers[identifier][config_entry_id]
-                if not self._identifiers[identifier]:
+            by_config_entry = self._identifiers.get(identifier)
+            if by_config_entry is not None and (
+                by_config_entry.get(config_entry_id) is old_entry
+            ):
+                del by_config_entry[config_entry_id]
+                if not by_config_entry:
                     del self._identifiers[identifier]
 
     def get_entry(

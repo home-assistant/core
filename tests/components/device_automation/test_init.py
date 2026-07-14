@@ -12,10 +12,14 @@ from homeassistant import loader
 from homeassistant.components import automation, device_automation
 from homeassistant.components.device_automation import (
     DOMAIN,
+    DeviceAutomationType,
     InvalidDeviceAutomationConfig,
     toggle_entity,
 )
-from homeassistant.components.device_automation.helpers import _resolve_device_id
+from homeassistant.components.device_automation.helpers import (
+    _resolve_device_id,
+    async_validate_device_automation_config,
+)
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -1837,3 +1841,46 @@ async def test_device_automation_resolves_legacy_id(
 
     # An unknown domain is returned unchanged
     assert _resolve_device_id(hass, COMPOSITE_ID, "not_present") == COMPOSITE_ID
+
+
+async def test_validate_config_rewrites_composite_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_integration: None,
+) -> None:
+    """Validating a device automation rewrites a composite id to its domain's split."""
+    fake_entry = MockConfigEntry(domain="fake_integration")
+    fake_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    connection = (dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")
+    device_fake = device_registry.async_get_or_create(
+        config_entry_id=fake_entry.entry_id, connections={connection}
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id, connections={connection}
+    )
+    entity = entity_registry.async_get_or_create(
+        "light", "fake_integration", "u", device_id=device_fake.id
+    )
+    # A shared connection across config entries resolves to a transient composite id
+    composite = device_registry.async_get_device(connections={connection})
+    assert composite.id not in device_registry.devices
+
+    validated = await async_validate_device_automation_config(
+        hass,
+        {
+            "platform": "device",
+            "domain": "fake_integration",
+            "device_id": composite.id,
+            "entity_id": entity.entity_id,
+            "type": "turned_on",
+        },
+        vol.Schema(
+            {vol.Required("device_id"): str, vol.Required("domain"): str},
+            extra=vol.ALLOW_EXTRA,
+        ),
+        DeviceAutomationType.TRIGGER,
+    )
+    assert validated["device_id"] == device_fake.id

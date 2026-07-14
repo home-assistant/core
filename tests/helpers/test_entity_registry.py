@@ -5403,6 +5403,75 @@ async def test_migration_repoints_entities(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+async def test_migration_repoints_entities_fallbacks(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """An entity not exactly matching a split falls back by config entry, then first split."""
+    entry_a = MockConfigEntry(
+        domain="domain_a",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-sub",
+                subentry_type="test",
+                title="t",
+                unique_id="u",
+            )
+        ],
+    )
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="domain_b")
+    entry_b.add_to_hass(hass)
+    # The split for entry_a is on the "mock-sub" subentry
+    device_store = _composite_device_storage(entry_a, entry_b)
+    device_store["data"]["devices"][0]["config_entries_subentries"] = {
+        entry_a.entry_id: ["mock-sub"],
+        entry_b.entry_id: [None],
+    }
+    hass_storage[dr.STORAGE_KEY] = device_store
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "data": {
+            "entities": [
+                {
+                    # config entry matches a split, but the subentry does not
+                    "entity_id": "sensor.sub",
+                    "platform": "domain_a",
+                    "unique_id": "sub",
+                    "config_entry_id": entry_a.entry_id,
+                    "config_subentry_id": None,
+                    "device_id": COMPOSITE_ID,
+                },
+                {
+                    # no split matches the config entry (it has none)
+                    "entity_id": "sensor.none",
+                    "platform": "domain_a",
+                    "unique_id": "none",
+                    "config_entry_id": None,
+                    "device_id": COMPOSITE_ID,
+                },
+            ]
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    await er.async_load(hass)
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    splits = device_registry.async_get_devices_for_composite_device_id(COMPOSITE_ID)
+    by_entry = {d.config_entry_id: d.id for d in splits}
+    # Subentry mismatch falls back to the split owning the entity's config entry
+    assert (
+        entity_registry.async_get("sensor.sub").device_id == by_entry[entry_a.entry_id]
+    )
+    # No matching config entry falls back to the first split
+    assert entity_registry.async_get("sensor.none").device_id in {d.id for d in splits}
+
+
+@pytest.mark.parametrize("load_registries", [False])
 async def test_async_entries_for_device_legacy_composite_id(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
