@@ -79,9 +79,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
     @property
     def device_data(self) -> dict[str, Any]:
         """Return current device data."""
-        if self.coordinator.data and self._device_id in self.coordinator.data:
-            return self.coordinator.data[self._device_id]
-        return {}
+        return self.coordinator.data[self._device_id]
 
     @property
     def is_on(self) -> bool:
