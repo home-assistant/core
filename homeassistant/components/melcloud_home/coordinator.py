@@ -30,20 +30,6 @@ UPDATE_INTERVAL = timedelta(seconds=60)
 type MelCloudHomeConfigEntry = ConfigEntry[MelCloudHomeCoordinator]
 
 
-def _apply_delta[_UnitT: (ATAUnit, ATWUnit)](
-    units: dict[str, _UnitT], delta: UnitStateDelta
-) -> bool:
-    """Apply a websocket delta to a cached unit; return True if state changed."""
-    # Unknown units are discovered by the regular poll
-    if (unit := units.get(delta.unit_id)) is None:
-        return False
-    updated = delta.apply_to(unit)
-    if updated is unit:
-        return False
-    units[delta.unit_id] = updated
-    return True
-
-
 class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
     """Coordinator to manage fetching MELCloud Home data."""
 
@@ -187,22 +173,29 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
 
     async def listen(self) -> None:
         """Process websocket updates; polling remains as fallback if it fails and for the regular endpoints."""
+
+        def _apply_delta[_UnitT: (ATAUnit, ATWUnit)](
+            units: dict[str, _UnitT], delta: UnitStateDelta
+        ) -> None:
+            """Apply a websocket delta to a cached unit."""
+            # Unknown units are discovered by the regular poll
+            if (unit := units.get(delta.unit_id)) is None:
+                return
+            updated = delta.apply_to(unit)
+            if updated is unit:
+                return
+            units[delta.unit_id] = updated
+
         try:
             async for delta in self.websocket.stream():
                 _LOGGER.debug("Received websocket delta: %s", delta)
                 if delta.unit_type == DEVICE_ATA:
-                    updated = _apply_delta(self.ata_units, delta)
+                    _apply_delta(self.ata_units, delta)
                 elif delta.unit_type == DEVICE_ATW:
-                    updated = _apply_delta(self.atw_units, delta)
-                else:
-                    return
-                if updated:
-                    self.async_update_listeners()
+                    _apply_delta(self.atw_units, delta)
+                self.async_update_listeners()
         except MelCloudHomeError as err:
             _LOGGER.warning(
-                "Live updates are unavailable (%s); falling back to polling", err
+                "Live updates are unavailable. Falling back to polling. Error received: %s",
+                err,
             )
-
-    @callback
-    def _async_handle_delta(self, delta: UnitStateDelta) -> None:
-        """Apply a websocket state delta and notify entities."""

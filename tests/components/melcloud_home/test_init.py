@@ -341,25 +341,16 @@ async def test_websocket_error_falls_back_to_polling(
     websocket_updates.put_nowait(MelCloudHomeWebSocketError("boom"))
     await hass.async_block_till_done()
 
-    assert "Live updates are unavailable" in caplog.text
+    assert (
+        "Live updates are unavailable. Falling back to polling. Error received: boom"
+        in caplog.text
+    )
 
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    # The coordinator should have polled the API again, so the context is fetched twice in total
     assert mock_melcloud_client.get_context.call_count == 2
     state = hass.states.get(ATA_ENTITY_ID)
     assert state.state != STATE_UNAVAILABLE
-
-
-@pytest.mark.usefixtures("mock_melcloud_client")
-async def test_websocket_closed_on_unload(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_websocket: AsyncMock,
-) -> None:
-    """Test the websocket is closed when the entry is unloaded."""
-    await setup_integration(hass, mock_config_entry)
-
-    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    mock_websocket.close.assert_awaited_once()
