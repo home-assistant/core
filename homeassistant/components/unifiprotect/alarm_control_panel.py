@@ -1,5 +1,6 @@
 """Support for UniFi Protect NVR alarm control panel."""
 
+import logging
 from typing import cast, override
 
 from uiprotect.data import NVR, NvrArmModeStatus
@@ -21,6 +22,8 @@ from .const import DEFAULT_BRAND, DOMAIN
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectNVREntity
 from .utils import _async_unifi_mac_from_hass, async_ufp_instance_command
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -58,7 +61,14 @@ async def async_setup_entry(
     # the public one, whose mac the library backfills during priming.
     if api.is_public_only:
         public_nvr = api.public_bootstrap.nvr
-        if public_nvr is None:
+        if public_nvr is None:  # pragma: no cover
+            # Setup already guaranteed a resolved NVR (it aborts with
+            # ConfigEntryNotReady otherwise), so reaching this is an internal
+            # inconsistency; surface it rather than dropping the panel in
+            # silence. Unreachable via the normal setup path, hence no cover.
+            _LOGGER.warning(
+                "Public NVR unexpectedly missing; skipping alarm panel setup"
+            )
             return
         nvr = cast(NVR, public_nvr)
     else:
