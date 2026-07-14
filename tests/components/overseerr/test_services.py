@@ -90,7 +90,6 @@ async def test_service_search_media(
     hass: HomeAssistant,
     mock_overseerr_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the search_media service."""
     # Mock the search method
@@ -117,7 +116,6 @@ async def test_service_request_media(
     hass: HomeAssistant,
     mock_overseerr_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the request_media service."""
 
@@ -263,10 +261,13 @@ async def test_service_entry_availability(
         ("", "all"),
         ("  ", "all"),
         (None, "all"),
+        ("all", "all"),
         ("Not a valid input", "all"),
         ("-", "all"),
     ],
 )
-def test_parse_seasons_input(seasons_input, expected_seasons) -> None:
+def test_parse_seasons_input(
+    seasons_input: str | None, expected_seasons: list[int] | str
+) -> None:
     """Test that all inputs are parsed correctly."""
     assert expected_seasons == parse_seasons_input(seasons_input)

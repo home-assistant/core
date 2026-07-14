@@ -65,7 +65,7 @@ SERVICE_REQUEST_MEDIA_SCHEMA = vol.Schema(
         vol.Optional(ATTR_SEASONS): vol.Any(
             vol.Coerce(int),
             [vol.Coerce(int)],
-            "all",
+            str,
         ),
     }
 )
@@ -186,14 +186,14 @@ async def _async_request_media(call: ServiceCall) -> ServiceResponse:
 def parse_seasons_input(seasons_input: Any | None) -> Literal["all"] | list[int]:
     """Parse all possible inputs to "all" or a list of integers."""
     seasons_str = str(seasons_input).strip()
-    if seasons_str == "" or seasons_input is None:
+    if seasons_input is None or seasons_str in ("", "all"):
         return "all"
 
     try:
         parsed = ast.literal_eval(seasons_str)
         if isinstance(parsed, int):
             return [parsed]
-        return list(parsed)
+        return [int(season) for season in parsed]
     except ValueError, SyntaxError, TypeError:
         LOGGER.error("Unable to cast input to a list '%s'", seasons_input)
         return "all"
