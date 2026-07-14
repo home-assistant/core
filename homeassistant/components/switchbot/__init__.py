@@ -157,6 +157,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.FLOOR_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.STRIP_LIGHT_3.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.RGBICWW_FLOOR_LAMP.value: [Platform.LIGHT, Platform.SENSOR],
+    SupportedModels.RGBICWW_LIGHT_BARS.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.RGBICWW_STRIP_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.PERMANENT_OUTDOOR_LIGHT.value: [Platform.LIGHT, Platform.SENSOR],
     SupportedModels.PLUG_MINI_EU.value: [Platform.SWITCH, Platform.SENSOR],
@@ -240,6 +241,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.FLOOR_LAMP.value: switchbot.SwitchbotStripLight3,
     SupportedModels.STRIP_LIGHT_3.value: switchbot.SwitchbotStripLight3,
     SupportedModels.RGBICWW_FLOOR_LAMP.value: switchbot.SwitchbotRgbicLight,
+    SupportedModels.RGBICWW_LIGHT_BARS.value: switchbot.SwitchbotRgbicLight,
     SupportedModels.RGBICWW_STRIP_LIGHT.value: switchbot.SwitchbotRgbicLight,
     SupportedModels.PERMANENT_OUTDOOR_LIGHT.value: (
         switchbot.SwitchbotPermanentOutdoorLight
