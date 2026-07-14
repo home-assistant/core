@@ -281,6 +281,9 @@ aiogithubapi==26.0.0
 # homeassistant.components.guardian
 aioguardian==2026.01.1
 
+# homeassistant.components.harman_luxury
+aioharmanluxury==0.2.3
+
 # homeassistant.components.harmony
 aioharmony==1.0.8
 
@@ -310,6 +313,9 @@ aioimmich==0.16.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
+
+# homeassistant.components.karakeep
+aiokarakeep==0.3.0
 
 # homeassistant.components.kef
 aiokef==0.2.16
@@ -1192,7 +1198,7 @@ growattServer==2.1.0
 gspread==5.5.0
 
 # homeassistant.components.guntamatic
-guntamatic==1.9.1
+guntamatic==1.9.2
 
 # homeassistant.components.profiler
 guppy3==3.1.7
@@ -1365,7 +1371,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==6.6.1
+infrared-protocols==7.0.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4

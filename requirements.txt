@@ -30,7 +30,7 @@ home-assistant-bluetooth==2.0.0
 home-assistant-intents==2026.6.24
 httpx==0.28.1
 ifaddr==0.2.0
-infrared-protocols==6.6.1
+infrared-protocols==7.0.0
 Jinja2==3.1.6
 lru-dict==1.4.1
 mutagen==1.48.1
