@@ -82,6 +82,7 @@ class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):
         config_entry: MammotionConfigEntry,
         device: Device,
         api: HomeAssistantMowerApi,
+        store: MammotionConfigStore,
     ) -> None:
         """Initialize mammotion data updater."""
         super().__init__(
@@ -91,34 +92,30 @@ class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):
             api=api,
             update_interval=DEFAULT_INTERVAL,
         )
+        self.store = store
 
     async def async_restore_data(self) -> None:
         """Restore saved data."""
-        store = MammotionConfigStore(self.hass)
-        restored_data: Mapping[str, Any] | None = await store.async_load()
+        async with self.store.lock:
+            restored_data: Mapping[str, Any] | None = await self.store.async_load()
 
-        if restored_data is None:
-            self.data = MowingDevice()
-            if handle := self.api.mammotion.mower(self.device_name):
-                handle.restore_device(self.data)
-            return
-
-        try:
-            if mower_data := restored_data.get(self.device_name):
+        mower_state = MowingDevice()
+        if restored_data and (mower_data := restored_data.get(self.device_name)):
+            try:
                 mower_state = MowingDevice().from_dict(mower_data)
-                if handle := self.api.mammotion.mower(self.device_name):
-                    handle.restore_device(mower_state)
-        except InvalidFieldValue:
-            self.data = MowingDevice()
-            if handle := self.api.mammotion.mower(self.device_name):
-                handle.restore_device(self.data)
+            except InvalidFieldValue:
+                mower_state = MowingDevice()
+
+        self.data = mower_state
+        if handle := self.api.mammotion.mower(self.device_name):
+            handle.restore_device(mower_state)
 
     async def async_save_data(self, data: MowingDevice) -> None:
-        """Get map data from the device."""
-        store = MammotionConfigStore(self.hass)
-        current_store: dict[str, Any] = await store.async_load() or {}
-        current_store[self.device_name] = data.to_dict()
-        await store.async_save(current_store)
+        """Save mower data to the store."""
+        async with self.store.lock:
+            current_store: dict[str, Any] = await self.store.async_load() or {}
+            current_store[self.device_name] = data.to_dict()
+            await self.store.async_save(current_store)
 
     @override
     async def _async_update_data(self) -> MowingDevice:

@@ -1,5 +1,7 @@
 """Config storage for Mammotion integration."""
 
+import asyncio
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
@@ -22,3 +24,5 @@ class MammotionConfigStore(Store):
     ) -> None:
         """Initialize the configuration store."""
         super().__init__(hass, version=version, minor_version=minor_version, key=key)
+        # Serializes read-modify-write cycles shared between coordinators
+        self.lock = asyncio.Lock()

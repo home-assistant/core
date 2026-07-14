@@ -1,384 +1,235 @@
 """Test for the Mammotion lawn_mower platform."""
 
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from datetime import timedelta
+from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
+from pymammotion.data.model.device import MowingDevice
 from pymammotion.utility.constant.device_constant import WorkMode
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lawn_mower import (
+    DOMAIN as LAWN_MOWER_DOMAIN,
+    SERVICE_DOCK,
+    SERVICE_PAUSE,
+    SERVICE_START_MOWING,
     LawnMowerActivity,
-    LawnMowerEntityFeature,
 )
-from homeassistant.components.mammotion import MammotionDevices
 from homeassistant.components.mammotion.const import COMMAND_EXCEPTIONS, DOMAIN
-from homeassistant.components.mammotion.lawn_mower import (
-    MammotionLawnMowerEntity,
-    async_setup_entry,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from . import setup_integration
+
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+ENTITY_ID = "lawn_mower.garden_luba"
 
 
-async def test_async_setup_entry(
-    hass: HomeAssistant, mock_mower_coordinator: MagicMock
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_mower_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test setting up the lawn mower platform."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        unique_id="test-unique-id",
-    )
-    config_entry.runtime_data = MammotionDevices(
-        mowers=[MagicMock(reporting_coordinator=mock_mower_coordinator)]
-    )
+    """Test all entities."""
+    await setup_integration(hass, mock_config_entry)
 
-    with patch(
-        "homeassistant.components.mammotion.lawn_mower.MammotionLawnMowerEntity"
-    ):
-        await async_setup_entry(hass, config_entry, Mock())
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_lawn_mower_entity_init(mock_mower_coordinator: MagicMock) -> None:
-    """Test initializing the lawn mower entity."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-
-    assert entity._attr_name is None
-    assert entity._attr_supported_features == (
-        LawnMowerEntityFeature.DOCK
-        | LawnMowerEntityFeature.PAUSE
-        | LawnMowerEntityFeature.START_MOWING
-    )
-
-
-async def test_lawn_mower_activity_mowing(mock_mower_coordinator: MagicMock) -> None:
-    """Test the activity property when mowing."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_WORKING
-
-    assert entity.activity == LawnMowerActivity.MOWING
-
-
-async def test_lawn_mower_activity_paused(mock_mower_coordinator: MagicMock) -> None:
-    """Test the activity property when paused."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-
-    # Test MODE_PAUSE
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_PAUSE
-    assert entity.activity == LawnMowerActivity.PAUSED
-
-    # Test MODE_READY with charge_state 0
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_READY
-    mock_mower_coordinator.data.report_data.dev.charge_state = 0
-    assert entity.activity == LawnMowerActivity.PAUSED
-
-
-async def test_lawn_mower_activity_docked(mock_mower_coordinator: MagicMock) -> None:
-    """Test the activity property when docked."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_READY
-    mock_mower_coordinator.data.report_data.dev.charge_state = 1
-
-    assert entity.activity == LawnMowerActivity.DOCKED
-
-
-async def test_lawn_mower_activity_returning(mock_mower_coordinator: MagicMock) -> None:
-    """Test the activity property when returning."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_RETURNING
-
-    assert entity.activity == LawnMowerActivity.RETURNING
-
-
-async def test_lawn_mower_activity_error(mock_mower_coordinator: MagicMock) -> None:
-    """Test the activity property when in error state."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_LOCK
-
-    assert entity.activity == LawnMowerActivity.ERROR
-
-
-async def test_lawn_mower_activity_none(mock_mower_coordinator: MagicMock) -> None:
-    """Test the activity property returns None for unknown states."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-
-    # Test None sys_status
-    mock_mower_coordinator.data.report_data.dev.sys_status = None
-    assert entity.activity is None
-
-    # Test unhandled sys_status
-    mock_mower_coordinator.data.report_data.dev.sys_status = 999
-    assert entity.activity is None
-
-
-async def test_async_start_mowing(mock_mower_coordinator: MagicMock) -> None:
-    """Test the async_start_mowing method."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-    mock_mower_coordinator.async_send_command = AsyncMock()
-    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
-
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_READY
-
-    await entity.async_start_mowing()
-
-    assert mock_mower_coordinator.async_send_command.call_count == 1
-    assert (
-        mock_mower_coordinator.async_send_command.call_args_list[0][0][0] == "start_job"
-    )
-    assert mock_mower_coordinator.api.async_request_iot_sync.call_count == 1
-
-
-async def test_async_start_mowing_resume(mock_mower_coordinator: MagicMock) -> None:
-    """Test the async_start_mowing method when paused."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-    mock_mower_coordinator.async_send_command = AsyncMock()
-    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
-
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_PAUSE
-
-    await entity.async_start_mowing()
-
-    assert mock_mower_coordinator.async_send_command.call_count == 1
-    assert (
-        mock_mower_coordinator.async_send_command.call_args_list[0][0][0]
-        == "resume_execute_task"
-    )
-    assert mock_mower_coordinator.api.async_request_iot_sync.call_count == 1
-
-
-async def test_async_start_mowing_not_ready(mock_mower_coordinator: MagicMock) -> None:
-    """Test the async_start_mowing method when device is not ready."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-
-    mock_mower_coordinator.data.report_data.dev.sys_status = None
-
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await entity.async_start_mowing()
-    error = exc_info.value
-    assert error.translation_domain == DOMAIN
-    assert error.translation_key == "device_not_ready"
-
-
-async def test_async_start_mowing_command_exception(
-    mock_mower_coordinator: MagicMock,
+@pytest.mark.parametrize(
+    ("sys_status", "charge_state", "expected_state"),
+    [
+        pytest.param(WorkMode.MODE_WORKING, 0, LawnMowerActivity.MOWING, id="mowing"),
+        pytest.param(WorkMode.MODE_PAUSE, 0, LawnMowerActivity.PAUSED, id="paused"),
+        pytest.param(
+            WorkMode.MODE_READY, 0, LawnMowerActivity.PAUSED, id="ready-undocked"
+        ),
+        pytest.param(WorkMode.MODE_READY, 1, LawnMowerActivity.DOCKED, id="docked"),
+        pytest.param(
+            WorkMode.MODE_RETURNING, 0, LawnMowerActivity.RETURNING, id="returning"
+        ),
+        pytest.param(WorkMode.MODE_LOCK, 0, LawnMowerActivity.ERROR, id="locked"),
+        pytest.param(999, 0, STATE_UNKNOWN, id="unknown-mode"),
+    ],
+)
+@pytest.mark.usefixtures("mock_mower_api")
+async def test_activity(
+    hass: HomeAssistant,
+    mock_mowing_device: MowingDevice,
+    mock_config_entry: MockConfigEntry,
+    sys_status: int,
+    charge_state: int,
+    expected_state: str,
 ) -> None:
-    """Test the async_start_mowing method with command exceptions."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-    mock_error = COMMAND_EXCEPTIONS[0]("Test error")
-    mock_mower_coordinator.async_send_command = AsyncMock(side_effect=mock_error)
-    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
+    """Test the mower state reflects the reported device status."""
+    mock_mowing_device.report_data.dev.sys_status = sys_status
+    mock_mowing_device.report_data.dev.charge_state = charge_state
 
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_READY
+    await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await entity.async_start_mowing()
-    error = exc_info.value
-    assert error.translation_domain == DOMAIN
-    assert error.translation_key == "start_failed"
-
-    assert mock_mower_coordinator.api.async_request_iot_sync.call_count == 1
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == expected_state
 
 
-async def test_async_start_mowing_resume_command_exception(
-    mock_mower_coordinator: MagicMock,
+@pytest.mark.parametrize(
+    ("service", "sys_status", "charge_state", "expected_commands"),
+    [
+        pytest.param(
+            SERVICE_START_MOWING, WorkMode.MODE_READY, 0, ["start_job"], id="start"
+        ),
+        pytest.param(
+            SERVICE_START_MOWING,
+            WorkMode.MODE_PAUSE,
+            0,
+            ["resume_execute_task"],
+            id="resume",
+        ),
+        pytest.param(
+            SERVICE_DOCK,
+            WorkMode.MODE_WORKING,
+            0,
+            ["pause_execute_task", "return_to_dock"],
+            id="dock-while-mowing",
+        ),
+        pytest.param(
+            SERVICE_DOCK, WorkMode.MODE_READY, 0, ["return_to_dock"], id="dock-ready"
+        ),
+        pytest.param(
+            SERVICE_DOCK, WorkMode.MODE_RETURNING, 0, [], id="dock-already-returning"
+        ),
+        pytest.param(SERVICE_DOCK, WorkMode.MODE_READY, 1, [], id="dock-when-docked"),
+        pytest.param(
+            SERVICE_PAUSE, WorkMode.MODE_WORKING, 0, ["pause_execute_task"], id="pause"
+        ),
+        pytest.param(
+            SERVICE_PAUSE,
+            WorkMode.MODE_RETURNING,
+            0,
+            ["cancel_return_to_dock"],
+            id="pause-returning",
+        ),
+        pytest.param(SERVICE_PAUSE, WorkMode.MODE_READY, 0, [], id="pause-idle"),
+    ],
+)
+async def test_services(
+    hass: HomeAssistant,
+    mock_mower_api: MagicMock,
+    mock_mowing_device: MowingDevice,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    sys_status: int,
+    charge_state: int,
+    expected_commands: list[str],
 ) -> None:
-    """Test the async_start_mowing resume path with command exceptions."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-    mock_error = COMMAND_EXCEPTIONS[0]("Test error")
-    mock_mower_coordinator.async_send_command = AsyncMock(side_effect=mock_error)
-    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
+    """Test the lawn mower services send the expected commands."""
+    mock_mowing_device.report_data.dev.sys_status = sys_status
+    mock_mowing_device.report_data.dev.charge_state = charge_state
 
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_PAUSE
+    await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await entity.async_start_mowing()
-    error = exc_info.value
-    assert error.translation_domain == DOMAIN
-    assert error.translation_key == "resume_failed"
-
-    assert mock_mower_coordinator.api.async_request_iot_sync.call_count == 1
-
-
-async def test_async_dock(mock_mower_coordinator: MagicMock) -> None:
-    """Test the async_dock method."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-    mock_mower_coordinator.async_send_command = AsyncMock()
-    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
-
-    # Test working mode
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_WORKING
-    mock_mower_coordinator.data.report_data.dev.charge_state = 0
-
-    await entity.async_dock()
-
-    assert mock_mower_coordinator.async_send_command.call_count == 2
-    assert (
-        mock_mower_coordinator.async_send_command.call_args_list[0][0][0]
-        == "pause_execute_task"
+    await hass.services.async_call(
+        LAWN_MOWER_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
-    assert (
-        mock_mower_coordinator.async_send_command.call_args_list[1][0][0]
-        == "return_to_dock"
+
+    assert [
+        call.args[1] for call in mock_mower_api.async_send_command.call_args_list
+    ] == expected_commands
+    assert mock_mower_api.async_request_iot_sync.call_count == (
+        1 if expected_commands else 0
     )
-    assert mock_mower_coordinator.api.async_request_iot_sync.call_count == 1
 
 
-async def test_async_dock_returning(mock_mower_coordinator: MagicMock) -> None:
-    """Test the async_dock method when already returning."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-    mock_mower_coordinator.async_send_command = AsyncMock()
-    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
-
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_RETURNING
-    mock_mower_coordinator.data.report_data.dev.charge_state = 0
-
-    await entity.async_dock()
-
-    assert mock_mower_coordinator.async_send_command.call_count == 1
-    assert (
-        mock_mower_coordinator.async_send_command.call_args_list[0][0][0]
-        == "cancel_return_to_dock"
-    )
-    assert mock_mower_coordinator.api.async_request_iot_sync.call_count == 1
-
-
-async def test_async_dock_ready(mock_mower_coordinator: MagicMock) -> None:
-    """Test the async_dock method when device is ready."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-    mock_mower_coordinator.async_send_command = AsyncMock()
-    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
-
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_READY
-    mock_mower_coordinator.data.report_data.dev.charge_state = 0
-
-    await entity.async_dock()
-
-    assert mock_mower_coordinator.async_send_command.call_count == 1
-    assert (
-        mock_mower_coordinator.async_send_command.call_args_list[0][0][0]
-        == "return_to_dock"
-    )
-    assert mock_mower_coordinator.api.async_request_iot_sync.call_count == 1
-
-
-async def test_async_dock_not_ready(mock_mower_coordinator: MagicMock) -> None:
-    """Test the async_dock method when device is not ready."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-
-    mock_mower_coordinator.data.report_data.dev.sys_status = None
-
-    with patch.object(mock_mower_coordinator, "async_send_command"):
-        with pytest.raises(HomeAssistantError) as exc_info:
-            await entity.async_dock()
-        error = exc_info.value
-        assert error.translation_domain
-
-
-async def test_async_dock_command_exception(mock_mower_coordinator: MagicMock) -> None:
-    """Test the async_dock method with command exceptions."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-    mock_error = COMMAND_EXCEPTIONS[0]("Test error")
-    mock_mower_coordinator.async_send_command = AsyncMock(side_effect=mock_error)
-    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
-
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_WORKING
-    mock_mower_coordinator.data.report_data.dev.charge_state = 0
-
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await entity.async_dock()
-    error = exc_info.value
-    assert error.translation_domain == DOMAIN
-    assert error.translation_key == "pause_failed"
-
-    assert mock_mower_coordinator.api.async_request_iot_sync.call_count == 1
-
-
-async def test_async_pause(mock_mower_coordinator: MagicMock) -> None:
-    """Test the async_pause method."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-    mock_mower_coordinator.async_send_command = AsyncMock()
-    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
-
-    # Test working mode
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_WORKING
-
-    await entity.async_pause()
-
-    assert mock_mower_coordinator.async_send_command.call_count == 1
-    assert (
-        mock_mower_coordinator.async_send_command.call_args_list[0][0][0]
-        == "pause_execute_task"
-    )
-    assert mock_mower_coordinator.api.async_request_iot_sync.call_count == 1
-
-
-async def test_async_pause_returning(mock_mower_coordinator: MagicMock) -> None:
-    """Test the async_pause method when returning."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-    mock_mower_coordinator.async_send_command = AsyncMock()
-    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
-
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_RETURNING
-
-    await entity.async_pause()
-
-    assert mock_mower_coordinator.async_send_command.call_count == 1
-    assert (
-        mock_mower_coordinator.async_send_command.call_args_list[0][0][0]
-        == "cancel_return_to_dock"
-    )
-    assert mock_mower_coordinator.api.async_request_iot_sync.call_count == 1
-
-
-async def test_async_pause_not_ready(mock_mower_coordinator: MagicMock) -> None:
-    """Test the async_pause method when device is not ready."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-
-    mock_mower_coordinator.data.report_data.dev.sys_status = None
-
-    with patch.object(mock_mower_coordinator, "async_send_command"):
-        with pytest.raises(HomeAssistantError) as exc_info:
-            await entity.async_pause()
-        error = exc_info.value
-        assert error.translation_domain == DOMAIN
-        assert error.translation_key == "device_not_ready"
-
-
-async def test_async_pause_not_working_or_returning(
-    mock_mower_coordinator: MagicMock,
+@pytest.mark.parametrize(
+    ("service", "sys_status", "expected_translation_key"),
+    [
+        pytest.param(
+            SERVICE_START_MOWING, WorkMode.MODE_READY, "start_failed", id="start"
+        ),
+        pytest.param(
+            SERVICE_START_MOWING, WorkMode.MODE_PAUSE, "resume_failed", id="resume"
+        ),
+        pytest.param(SERVICE_DOCK, WorkMode.MODE_WORKING, "pause_failed", id="dock"),
+        pytest.param(SERVICE_PAUSE, WorkMode.MODE_WORKING, "pause_failed", id="pause"),
+    ],
+)
+async def test_services_command_failure(
+    hass: HomeAssistant,
+    mock_mower_api: MagicMock,
+    mock_mowing_device: MowingDevice,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    sys_status: int,
+    expected_translation_key: str,
 ) -> None:
-    """Test the async_pause method when not in working or returning mode."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-    mock_mower_coordinator.async_send_command = AsyncMock()
-    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
+    """Test the lawn mower services raise on command failures."""
+    mock_mowing_device.report_data.dev.sys_status = sys_status
+    mock_mowing_device.report_data.dev.charge_state = 0
+    mock_mower_api.async_send_command.side_effect = COMMAND_EXCEPTIONS[0]("boom")
 
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_READY
-
-    # Should not call any commands
-    await entity.async_pause()
-
-    assert mock_mower_coordinator.async_send_command.call_count == 0
-    assert mock_mower_coordinator.api.async_request_iot_sync.call_count == 0
-
-
-async def test_async_pause_command_exception(mock_mower_coordinator: MagicMock) -> None:
-    """Test the async_pause method with command exceptions."""
-    entity = MammotionLawnMowerEntity(mock_mower_coordinator)
-    mock_error = COMMAND_EXCEPTIONS[0]("Test error")
-    mock_mower_coordinator.async_send_command = AsyncMock(side_effect=mock_error)
-    mock_mower_coordinator.api.async_request_iot_sync = AsyncMock()
-
-    mock_mower_coordinator.data.report_data.dev.sys_status = WorkMode.MODE_WORKING
+    await setup_integration(hass, mock_config_entry)
 
     with pytest.raises(HomeAssistantError) as exc_info:
-        await entity.async_pause()
-    error = exc_info.value
-    assert error.translation_domain == DOMAIN
-    assert error.translation_key == "pause_failed"
+        await hass.services.async_call(
+            LAWN_MOWER_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == expected_translation_key
+    assert mock_mower_api.async_request_iot_sync.call_count == 1
 
-    assert mock_mower_coordinator.api.async_request_iot_sync.call_count == 1
+
+@pytest.mark.parametrize("service", [SERVICE_START_MOWING, SERVICE_DOCK, SERVICE_PAUSE])
+@pytest.mark.usefixtures("mock_mower_api")
+async def test_services_device_not_ready(
+    hass: HomeAssistant,
+    mock_mowing_device: MowingDevice,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+) -> None:
+    """Test the lawn mower services raise when the device is not ready."""
+    mock_mowing_device.report_data.dev.sys_status = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            LAWN_MOWER_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "device_not_ready"
+
+
+async def test_availability(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_mower_api: MagicMock,
+    mock_mowing_device: MowingDevice,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the entity becomes unavailable on failed updates or offline device."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+
+    mock_mower_api.update.return_value = None
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_mower_api.update.return_value = mock_mowing_device
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+
+    mock_mower_api.is_online.return_value = False
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE

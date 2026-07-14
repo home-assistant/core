@@ -15,12 +15,12 @@ from .coordinator import MammotionBaseUpdateCoordinator
 
 
 class MammotionBaseEntity(CoordinatorEntity[MammotionBaseUpdateCoordinator]):
-    """Representation of a Luba lawn mower."""
+    """Base entity for Mammotion devices."""
 
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: MammotionBaseUpdateCoordinator, key: str) -> None:
-        """Initialize the lawn mower."""
+        """Initialize the entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{coordinator.device_name}_{key}"
 
@@ -86,4 +86,4 @@ class MammotionBaseEntity(CoordinatorEntity[MammotionBaseUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.coordinator.data is not None and self.coordinator.is_online()
+        return super().available and self.coordinator.is_online()

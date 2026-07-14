@@ -9,7 +9,8 @@
       "no_devices_found_in_account": "No devices present in your account",
       "no_longer_present": "Device is no longer present",
       "not_supported": "Device not supported",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure using the same Mammotion account"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -31,7 +32,7 @@
           "password": "[%key:component::mammotion::config::step::wifi::data_description::password%]"
         },
         "description": "Enter your Mammotion account email or ID and password",
-        "title": "Connect to Wi-Fi"
+        "title": "Update configuration"
       },
       "user": {
         "data": {

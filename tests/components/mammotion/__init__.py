@@ -1,6 +1,9 @@
 """Tests for the Mammotion integration."""
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+
+from tests.common import MockConfigEntry
 
 BLE_DEVICE_LUBA = BluetoothServiceInfo(
     name="Luba-ABC123",
@@ -21,3 +24,10 @@ BLE_DEVICE_YUKA = BluetoothServiceInfo(
     service_data={},
     source="local",
 )
+
+
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Set up the Mammotion integration for testing."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()

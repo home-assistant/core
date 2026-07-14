@@ -1,7 +1,6 @@
 """The Mammotion integration."""
 
 import contextlib
-from datetime import datetime
 from typing import Any
 
 from aiohttp import ClientConnectorError
@@ -16,7 +15,6 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.event import async_call_later
 
 from .config import MammotionConfigStore
 from .const import (
@@ -46,19 +44,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
 
     mammotion_mowers: list[MammotionMowerData] = []
     mammotion_devices: MammotionDevices = MammotionDevices([])
+    store = MammotionConfigStore(hass)
 
     if account and password:
         session = async_get_clientsession(hass)
         cached = _load_cached_credentials(entry)
         try:
             if cached:
-                await mammotion.restore_credentials(account, password, cached, session)
+                try:
+                    await mammotion.restore_credentials(
+                        account, password, cached, session
+                    )
+                except EXPIRED_CREDENTIAL_EXCEPTIONS:
+                    await mammotion.login_and_initiate_cloud(account, password, session)
             else:
                 await mammotion.login_and_initiate_cloud(account, password, session)
         except ClientConnectorError as err:
             raise ConfigEntryNotReady(err) from err
-        except EXPIRED_CREDENTIAL_EXCEPTIONS:
-            await mammotion.login_and_initiate_cloud(account, password, session)
         except UnretryableException as err:
             raise ConfigEntryError(err) from err
 
@@ -75,10 +77,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
 
         for device in device_list:
             update_coordinator = MammotionMowerUpdateCoordinator(
-                hass, entry, device, api
+                hass, entry, device, api, store
             )
 
             await update_coordinator.async_restore_data()
+            await update_coordinator.async_config_entry_first_refresh()
 
             mammotion_mowers.append(
                 MammotionMowerData(
@@ -88,14 +91,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                     device=device,
                 )
             )
-
-            async def _start_coordinator(
-                _: datetime | None = None,
-                coordinator: MammotionMowerUpdateCoordinator = update_coordinator,
-            ) -> None:
-                await coordinator.async_config_entry_first_refresh()
-
-            async_call_later(hass, 1, _start_coordinator)
 
     mammotion_devices.mowers = mammotion_mowers
     entry.runtime_data = mammotion_devices
@@ -147,11 +142,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -
     return unload_ok
 
 
-async def async_remove_config_entry(
-    hass: HomeAssistant, entry: MammotionConfigEntry
-) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> None:
     """Remove a config entry."""
-    await hass.config_entries.async_remove(entry.entry_id)
     store = MammotionConfigStore(hass)
     await store.async_remove()
 

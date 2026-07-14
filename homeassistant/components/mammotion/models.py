@@ -10,7 +10,7 @@ from .coordinator import MammotionMowerUpdateCoordinator
 
 @dataclass
 class MammotionMowerData:
-    """Data for a mower information."""
+    """Data for a mower."""
 
     name: str
     api: HomeAssistantMowerApi

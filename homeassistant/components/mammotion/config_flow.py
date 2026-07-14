@@ -1,6 +1,6 @@
 """Config flow for Mammotion."""
 
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from aiohttp import ClientError
 from bleak.backends.device import BLEDevice
@@ -76,10 +76,13 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @override
     async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfo
+        self, discovery_info: BluetoothServiceInfo | None
     ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         LOGGER.debug("Discovered bluetooth device: %s", discovery_info)
+
+        if discovery_info is None:
+            return self.async_abort(reason="no_devices_found")
 
         await self.async_set_unique_id(format_mac(discovery_info.address))
         self._abort_if_unique_id_configured()
@@ -100,10 +103,10 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if entry := await self.check_and_update_bluetooth_device(device):
             ble_devices = {
+                **entry.data.get(CONF_BLE_DEVICES, {}),
                 self._discovered_device.name: format_mac(
                     self._discovered_device.address
                 ),
-                **entry.data.get(CONF_BLE_DEVICES, {}),
             }
             self._abort_if_unique_id_configured(updates={CONF_BLE_DEVICES: ble_devices})
 
@@ -120,8 +123,8 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         name = device.name or ""
         if entry := await self.check_and_update_bluetooth_device(device):
             existing_devices = {
-                name: format_mac(device.address),
                 **entry.data.get(CONF_BLE_DEVICES, {}),
+                name: format_mac(device.address),
             }
             self._abort_if_unique_id_configured(
                 updates={CONF_BLE_DEVICES: existing_devices}
@@ -176,27 +179,37 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    async def _async_validate_login(
+        self, account: str, password: str
+    ) -> tuple[dict[str, str], str | None]:
+        """Validate the credentials and return errors and the account ID."""
+        errors: dict[str, str] = {}
+        mammotion_http = MammotionHTTP(account, password)
+
+        try:
+            await mammotion_http.login_v2(account, password)
+        except ClientError, TimeoutError, OSError:
+            errors["base"] = "cannot_connect"
+            return errors, None
+
+        if (login_info := mammotion_http.login_info) is None:
+            errors["base"] = "invalid_auth"
+            return errors, None
+
+        return errors, login_info.userInformation.userAccount
+
     async def async_step_wifi(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user step for Wi-Fi control."""
         errors: dict[str, str] = {}
 
-        if user_input is not None and user_input.get(CONF_ACCOUNTNAME):
-            account = user_input.get(CONF_ACCOUNTNAME, "")
-            password = user_input.get(CONF_PASSWORD, "")
-            mammotion_http = MammotionHTTP(account, password)
+        if user_input is not None:
+            account = user_input[CONF_ACCOUNTNAME]
+            password = user_input[CONF_PASSWORD]
+            errors, user_account = await self._async_validate_login(account, password)
 
-            try:
-                await mammotion_http.login_v2(account, password)
-                if mammotion_http.login_info is None:
-                    errors["base"] = "invalid_auth"
-            except ClientError, TimeoutError, OSError:
-                errors["base"] = "cannot_connect"
-
-            if not errors and (login_info := mammotion_http.login_info):
-                user_account = login_info.userInformation.userAccount
-
+            if not errors:
                 await self.async_set_unique_id(user_account, raise_on_progress=False)
                 self._abort_if_unique_id_configured()
 
@@ -211,8 +224,8 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         schema = {
-            vol.Optional(CONF_ACCOUNTNAME): cv.string,
-            vol.Optional(CONF_PASSWORD): cv.string,
+            vol.Required(CONF_ACCOUNTNAME): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
         }
 
         return self.async_show_form(
@@ -223,21 +236,25 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        if TYPE_CHECKING:
-            assert entry
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
 
-        errors: dict[str, str] | None = None
-        user_input = user_input or {}
-        if user_input:
+        if user_input is not None:
+            account = user_input[CONF_ACCOUNTNAME]
+            password = user_input[CONF_PASSWORD]
+            errors, user_account = await self._async_validate_login(account, password)
+
             if not errors:
+                await self.async_set_unique_id(user_account)
+                self._abort_if_unique_id_mismatch()
+
                 return self.async_update_reload_and_abort(
                     entry,
-                    data={
-                        **entry.data,
-                        **user_input,
+                    data_updates={
+                        CONF_ACCOUNTNAME: account,
+                        CONF_PASSWORD: password,
+                        CONF_ACCOUNT_ID: user_account,
                     },
-                    reason="reconfigure_successful",
                 )
 
         schema = {
