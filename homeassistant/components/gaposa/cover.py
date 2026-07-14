@@ -112,6 +112,13 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
     @override
     def is_closed(self) -> bool | None:
         """Return whether the cover is fully closed."""
+        # stop() returns before pygaposa's post-command poll updates
+        # motor.state, so trusting the stale UP/DOWN would report the
+        # pre-stop endpoint even though the cover was halted mid-way.
+        # Report unknown until the state converges or MOTION_DELAY
+        # elapses.
+        if self._is_post_stop_pending():
+            return None
         if self.motor.state == STATE_DOWN:
             return True
         if self.motor.state == STATE_UP:
@@ -133,6 +140,13 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
     def _is_moving(self) -> bool:
         """True while we're still inside the motion window of the last command."""
         if self._last_command_time is None or self._last_command == COMMAND_STOP:
+            return False
+        deadline = self._last_command_time + timedelta(seconds=MOTION_DELAY)
+        return dt_util.utcnow() < deadline
+
+    def _is_post_stop_pending(self) -> bool:
+        """True while we're waiting for motor.state to reflect a stop command."""
+        if self._last_command != COMMAND_STOP or self._last_command_time is None:
             return False
         deadline = self._last_command_time + timedelta(seconds=MOTION_DELAY)
         return dt_util.utcnow() < deadline
@@ -174,12 +188,15 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         """
         await self.motor.stop(False)
         self._last_command = COMMAND_STOP
-        self._last_command_time = None
+        # Timestamp arms _is_post_stop_pending so is_closed reports
+        # unknown until the post-command poll updates motor.state.
+        self._last_command_time = dt_util.utcnow()
         if self._cancel_motion_refresh is not None:
             self._cancel_motion_refresh()
             self._cancel_motion_refresh = None
         await self.coordinator.async_request_refresh()
         self.async_write_ha_state()
+        self._schedule_refresh_after_motion()
 
     @callback
     def _schedule_refresh_after_motion(self) -> None:

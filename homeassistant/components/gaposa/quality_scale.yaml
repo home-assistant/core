@@ -34,8 +34,10 @@ rules:
 
   # Silver
   action-exceptions:
-    status: exempt
-    comment: This integration does not register custom actions.
+    status: todo
+    comment: |
+      Cover open/close/stop currently propagate raw pygaposa
+      exceptions; they should be translated to HomeAssistantError.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt

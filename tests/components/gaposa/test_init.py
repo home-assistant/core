@@ -64,8 +64,9 @@ async def test_setup_failure_closes_client(
     """Any failure during setup releases the client.
 
     Transient errors (network) enter SETUP_RETRY; auth errors enter
-    SETUP_ERROR so Home Assistant surfaces a reauth prompt instead of
-    silently retrying with bad credentials.
+    SETUP_ERROR so Home Assistant stops silently retrying with bad
+    credentials. (This flow has no async_step_reauth yet, so a
+    reauth prompt does not fire — that is quality-scale todo.)
     """
     getattr(mock_gaposa, target).side_effect = exc
 

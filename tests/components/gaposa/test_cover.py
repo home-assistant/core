@@ -115,10 +115,15 @@ async def test_stop_cover_calls_motor_stop(
     living_room_motor.stop.assert_called_once_with(False)
 
 
-async def test_stop_ends_motion_window(
+async def test_stop_leaves_state_unknown_until_poll(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
-    """A stop mid-motion collapses the motion window so the cover reports the motor's steady state, not STATE_OPENING."""
+    """A stop mid-motion parks the cover in STATE_UNKNOWN until the poll confirms STOP.
+
+    The bedroom motor's steady-state is DOWN. After we open it and
+    then stop, the physical cover is somewhere between endpoints —
+    reporting the pre-stop endpoint would be wrong.
+    """
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER,
@@ -133,7 +138,7 @@ async def test_stop_ends_motion_window(
         {ATTR_ENTITY_ID: BEDROOM_ENTITY},
         blocking=True,
     )
-    assert hass.states.get(BEDROOM_ENTITY).state == STATE_CLOSED
+    assert hass.states.get(BEDROOM_ENTITY).state == STATE_UNKNOWN
 
 
 async def test_cover_reports_opening_during_motion_window(
@@ -200,6 +205,30 @@ async def test_cover_device_registry_entries(
     )
     assert len(devices) == 2
     assert {d.name for d in devices} == {"Living Room", "Bedroom"}
+
+
+async def test_device_listener_pushes_state(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_gaposa: MagicMock,
+    mock_motors: list[MagicMock],
+) -> None:
+    """The listener registered on each device pushes fresh state without a full poll.
+
+    pygaposa fires the callback registered via ``device.addListener``
+    after post-command polls. Grab that callback off the mock, mutate
+    a motor's state, and confirm the entity reflects it once the
+    listener fires.
+    """
+    device = mock_gaposa.clients[0][0].devices[0]
+    assert device.addListener.called
+    listener = device.addListener.call_args[0][0]
+
+    mock_motors[0].state = "DOWN"
+    listener()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_CLOSED
 
 
 async def test_motion_window_collapses_after_delay(
