@@ -196,7 +196,7 @@ async def test_service_validation_errors(
     mock_miele_client.set_program.assert_not_called()
 
     # Test invalid program_id
-    with pytest.raises(MultipleInvalid, match="expected int for dictionary value"):
+    with pytest.raises(MultipleInvalid, match="expected int at"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_PROGRAM,

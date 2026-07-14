@@ -417,7 +417,7 @@ async def test_invalid_json_state_message(
     assert (
         "Schema violation after processing payload '{\"update_percentage\":101}' on "
         "topic 'test/state-topic' for entity 'update.test_update': value must be at "
-        "most 100 for dictionary value @ data['update_percentage']" in caplog.text
+        "most 100 at 'update_percentage'" in caplog.text
     )
 
 

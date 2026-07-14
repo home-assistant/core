@@ -114,7 +114,7 @@ async def test_send_code_no_protocol(hass: HomeAssistant) -> None:
                 service_data={"noprotocol": "test", "value": 42},
                 blocking=True,
             )
-        assert "required key not provided @ data['protocol']" in str(excinfo.value)
+        assert "required key not provided at 'protocol'" in str(excinfo.value)
 
 
 @patch("homeassistant.components.pilight._LOGGER.error")

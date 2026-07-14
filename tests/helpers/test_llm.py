@@ -1069,7 +1069,7 @@ async def test_selector_serializer(
             "seconds": {"type": "number"},
             "milliseconds": {"type": "number"},
         },
-        "required": [],
+        "additionalProperties": False,
     }
     assert selector_serializer(selector.EntitySelector()) == {
         "type": "string",
@@ -1105,6 +1105,7 @@ async def test_selector_serializer(
             "radius": {"type": "number"},
         },
         "required": ["latitude", "longitude"],
+        "additionalProperties": False,
     }
     assert selector_serializer(selector.MediaSelector()) == {
         "type": "object",
@@ -1115,6 +1116,7 @@ async def test_selector_serializer(
             "metadata": {"type": "object", "additionalProperties": True},
         },
         "required": ["media_content_id", "media_content_type"],
+        "additionalProperties": False,
     }
     assert selector_serializer(selector.MediaSelector({"multiple": True})) == {
         "type": "array",
@@ -1127,6 +1129,7 @@ async def test_selector_serializer(
                 "metadata": {"type": "object", "additionalProperties": True},
             },
             "required": ["media_content_id", "media_content_type"],
+            "additionalProperties": False,
         },
     }
     assert selector_serializer(selector.NumberSelector({"mode": "box"})) == {
@@ -1227,7 +1230,7 @@ async def test_selector_serializer(
             "floor_id": {"items": {"type": "string"}, "type": "array"},
             "label_id": {"items": {"type": "string"}, "type": "array"},
         },
-        "required": [],
+        "additionalProperties": False,
     }
 
     assert selector_serializer(selector.TemplateSelector()) == {

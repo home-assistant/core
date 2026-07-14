@@ -556,9 +556,7 @@ async def test_sending_none_message(hass: HomeAssistant, tmp_path: Path) -> None
         await hass.services.async_call(
             notify.DOMAIN, notify.SERVICE_NOTIFY, {notify.ATTR_MESSAGE: None}
         )
-    assert (
-        str(exc.value) == "string value is None for dictionary value @ data['message']"
-    )
+    assert str(exc.value) == "string value is None at 'message'"
     send_message_mock.assert_not_called()
 
 
