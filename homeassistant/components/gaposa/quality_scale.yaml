@@ -90,7 +90,14 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession: done
+  inject-websession:
+    status: todo
+    comment: |
+      The integration passes Home Assistant's aiohttp session to
+      Gaposa(), but pygaposa 0.2.4 does not forward it to
+      firebase_admin.initialize_app(), so Firebase creates its own
+      ClientSession that Gaposa.close() never closes. Blocked on
+      an upstream change to pygaposa.
   strict-typing:
     status: todo
     comment: |
