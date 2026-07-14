@@ -53,7 +53,7 @@ async def test_setup(
 
 
 @pytest.mark.parametrize(
-    ("device_type", "button", "expected_codes"),
+    ("device_type", "key", "expected_codes"),
     [
         (
             LEDIrDeviceType.GENERIC_24_KEY,
@@ -87,7 +87,7 @@ async def test_button_press(
     hass: HomeAssistant,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     device_type: LEDIrDeviceType,
-    button: str,
+    key: str,
     expected_codes: list[Generic24KeyCode | Generic13KeyCode],
 ) -> None:
     """Test button press action."""
@@ -106,10 +106,15 @@ async def test_button_press(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
+    entity_id = er.async_get(hass).async_get_entity_id(
+        BUTTON_DOMAIN, DOMAIN, f"{config_entry.entry_id}_{key}"
+    )
+    assert entity_id is not None
+
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: f"button.led_infrared_{button}"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
