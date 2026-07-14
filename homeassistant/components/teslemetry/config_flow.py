@@ -312,6 +312,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
         try:
             # Not revoked on removal by design; see the class docstring.
+            LOGGER.info("Powerwall key setup: id=%s", self._energy_site.energy_site_id)
             await self._energy_site.add_authorized_client(
                 self._public_key_der,
                 description="Home Assistant",
