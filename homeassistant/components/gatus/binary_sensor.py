@@ -25,7 +25,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Gatus binary sensor platform."""
-    coordinator: GatusDataUpdateCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     async_add_entities(
         GatusEndpointBinarySensor(coordinator, entry, endpoint_key)
