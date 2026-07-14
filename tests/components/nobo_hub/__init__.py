@@ -24,10 +24,19 @@ def entity_unique_ids(entity_registry: er.EntityRegistry, entry_id: str) -> set[
     }
 
 
-async def fire_hub_update(hass: HomeAssistant, hub: MagicMock) -> None:
-    """Fire the hub's registered push-update callbacks and wait for state to settle."""
+def dispatch_hub_update(hub: MagicMock) -> None:
+    """Fire the hub's registered push-update callbacks without awaiting.
+
+    Mirrors pynobo dispatching a single message: call this twice in a row to
+    reproduce buffered messages processed with no event-loop yield between them.
+    """
     for call in hub.register_callback.call_args_list:
         call.args[0](hub)
+
+
+async def fire_hub_update(hass: HomeAssistant, hub: MagicMock) -> None:
+    """Fire the hub's registered push-update callbacks and wait for state to settle."""
+    dispatch_hub_update(hub)
     await hass.async_block_till_done()
 
 

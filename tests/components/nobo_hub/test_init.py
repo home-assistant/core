@@ -14,9 +14,15 @@ from homeassistant.components.nobo_hub.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import device_identifiers, fire_hub_connection, fire_hub_update
+from . import (
+    device_identifiers,
+    dispatch_hub_update,
+    entity_unique_ids,
+    fire_hub_connection,
+    fire_hub_update,
+)
 from .conftest import SERIAL, STORED_IP
 
 from tests.common import MockConfigEntry
@@ -411,6 +417,45 @@ async def test_disconnect_does_not_readd_entities_on_reconnect(
     mock_nobo_hub.components.update(saved_components)
     await fire_hub_update(hass, mock_nobo_hub)
 
+    assert "already exists" not in caplog.text
+
+
+@pytest.mark.parametrize("platforms", [[Platform.CLIMATE]], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_buffered_remove_then_readd_same_id(
+    hass: HomeAssistant,
+    mock_nobo_hub: MagicMock,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A buffered remove + same-id re-add (no event-loop yield between) re-registers cleanly.
+
+    pynobo can process a delete and an id-reusing add back-to-back before the
+    loop yields (buffered messages), so synchronous device removal must fully
+    deregister the old entity before the re-add, or the add collides with the
+    still-registered unique id.
+    """
+    entry_id = mock_config_entry.entry_id
+    zone = {
+        "zone_id": "2",
+        "name": "Bedroom",
+        "week_profile_id": "0",
+        "temp_comfort_c": "22",
+        "temp_eco_c": "18",
+    }
+    mock_nobo_hub.zones["2"] = zone
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert f"{SERIAL}:2" in entity_unique_ids(entity_registry, entry_id)
+
+    # Remove then re-add the same id with no await (no event-loop yield) between.
+    del mock_nobo_hub.zones["2"]
+    dispatch_hub_update(mock_nobo_hub)
+    mock_nobo_hub.zones["2"] = zone
+    dispatch_hub_update(mock_nobo_hub)
+    await hass.async_block_till_done()
+
+    assert f"{SERIAL}:2" in entity_unique_ids(entity_registry, entry_id)
     assert "already exists" not in caplog.text
 
 
