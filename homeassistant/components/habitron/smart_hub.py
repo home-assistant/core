@@ -132,12 +132,18 @@ class SmartHub:
             ]
 
         # 4. Build the bus model (router + modules), register their devices.
+        # ``reinit_hub(0)`` stops the hub's event server for the duration of the
+        # setup; ``reinit_hub(1)`` must always restore it, even when building the
+        # model or registering devices raises, or the hub would stay stopped
+        # while Home Assistant retries the setup.
         await self.comm.reinit_hub(0)
-        await self.comm.send_network_info(self.config.data["websock_token"])
-        self.router = await async_build_system(self.comm.client, b_uid=self.uid)
-        self.comm.set_router(self.router)
-        await self._register_bus_devices()
-        await self.comm.reinit_hub(1)
+        try:
+            await self.comm.send_network_info(self.config.data["websock_token"])
+            self.router = await async_build_system(self.comm.client, b_uid=self.uid)
+            self.comm.set_router(self.router)
+            await self._register_bus_devices()
+        finally:
+            await self.comm.reinit_hub(1)
 
         # 5. First hub-diagnostics update.
         await self.update()
