@@ -69,7 +69,7 @@ rules:
   exception-translations: done
   icon-translations: todo
   reconfiguration-flow: done
-  repair-issues: todo
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: One device per config entry; the device is removed when the entry is removed.
