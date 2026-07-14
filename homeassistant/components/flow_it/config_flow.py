@@ -59,7 +59,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
 
-            # Ensure host has protocol
             if not URL(host).scheme:
                 host = str(URL.build(scheme="http", host=host))
                 user_input[CONF_HOST] = host
@@ -173,7 +172,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "friendly_name": friendly_name,
         }
 
-        # Check if already configured
         self._async_abort_entries_match({CONF_HOST: host})
         self._async_abort_entries_match({CONF_HOST: hostname})
         self._async_abort_entries_match({CONF_HOST: f"http://{host}"})

@@ -57,7 +57,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> b
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         vmc = entry.runtime_data.vmc
-        # Stop websocket and close client
         await vmc.close()
 
     return unload_ok

@@ -20,7 +20,6 @@ def get_mock_vmc(
     mock_vmc = AsyncMock()
     mock_vmc.get_info.return_value.hostname = info_hostname
 
-    # Load a minimal valid MachineStatusResponse for the fan tests
     json_data = load_json_value_fixture("machine_status.json", DOMAIN)
     json_data["name"] = state_name
     mock_vmc.state = MachineStatusResponse(**json_data)
