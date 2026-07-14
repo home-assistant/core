@@ -34,7 +34,7 @@ async def test_user_flow_success(
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
     mock_smart_hub_setup: None,
-    mock_coordinator_refresh,
+    mock_coordinator_refresh: AsyncMock,
 ) -> None:
     """The manual user flow creates an entry when the hub responds."""
     result = await hass.config_entries.flow.async_init(
@@ -137,7 +137,7 @@ async def test_ssdp_discovery_with_udn(
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
     mock_smart_hub_setup: None,
-    mock_coordinator_refresh,
+    mock_coordinator_refresh: AsyncMock,
 ) -> None:
     """SSDP discovery prefers the UDN as unique id."""
     discovery = SsdpServiceInfo(
@@ -170,7 +170,7 @@ async def test_ssdp_discovery_serial_fallback(
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
     mock_smart_hub_setup: None,
-    mock_coordinator_refresh,
+    mock_coordinator_refresh: AsyncMock,
 ) -> None:
     """When no UDN, the UPnP serialNumber is used."""
     discovery = SsdpServiceInfo(
@@ -372,7 +372,7 @@ async def test_ssdp_discovery_falls_back_to_discovery_serial(
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
     mock_smart_hub_setup: None,
-    mock_coordinator_refresh,
+    mock_coordinator_refresh: AsyncMock,
 ) -> None:
     """A discovery without UDN/serial picks the serial from the network probe."""
     discovery = SsdpServiceInfo(
@@ -405,7 +405,7 @@ async def test_ssdp_discovery_no_udn_no_probe_falls_back_to_host_id(
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
     mock_smart_hub_setup: None,
-    mock_coordinator_refresh,
+    mock_coordinator_refresh: AsyncMock,
 ) -> None:
     """Without UDN, serial or matching probe device, the host string is used."""
     discovery = SsdpServiceInfo(
@@ -487,6 +487,40 @@ async def test_ssdp_discovery_confirm_cannot_connect_retries(
     with patch(
         "homeassistant.components.habitron.config_flow.validate_input",
         side_effect=CannotConnect,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.parametrize("error", [HostNotFound, InvalidHost])
+async def test_ssdp_discovery_confirm_host_error_retries(
+    hass: HomeAssistant,
+    setup_homeassistant: None,
+    mock_habitron_client: MagicMock,
+    error: type[Exception],
+) -> None:
+    """An unresolved discovery host re-shows the confirm form to retry."""
+    discovery = SsdpServiceInfo(
+        ssdp_usn=f"{MOCK_UDN}::urn:habitron-com:device:SmartHub:1",
+        ssdp_st="urn:habitron-com:device:SmartHub:1",
+        ssdp_location=f"http://{MOCK_HOST}:80/desc.xml",
+        upnp={ATTR_UPNP_UDN: MOCK_UDN},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery,
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.habitron.config_flow.validate_input",
+        side_effect=error,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -623,7 +657,7 @@ async def test_user_flow_own_ip_canonicalizes_unique_id(
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
     mock_smart_hub_setup: None,
-    mock_coordinator_refresh,
+    mock_coordinator_refresh: AsyncMock,
 ) -> None:
     """An own-IP host is canonicalized to ``local`` before deriving the id.
 
@@ -649,7 +683,7 @@ async def test_user_flow_picks_up_serial_from_discovery_probe(
     setup_homeassistant: None,
     mock_habitron_client: MagicMock,
     mock_smart_hub_setup: None,
-    mock_coordinator_refresh,
+    mock_coordinator_refresh: AsyncMock,
 ) -> None:
     """A matching discovery serial becomes the unique id."""
     with patch(

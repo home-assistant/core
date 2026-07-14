@@ -195,8 +195,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, data)
                 return self.async_create_entry(title=info["title"], data=data)
-            except CannotConnect:
-                # A briefly-offline hub should be retryable, not aborted.
+            except CannotConnect, HostNotFound, InvalidHost:
+                # A briefly-offline hub or an unresolved discovery host should be
+                # retryable via the confirmation form, not aborted.
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 return self.async_abort(reason="unknown")
@@ -257,7 +258,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # against a duplicate entry (and a second connection to the same
             # hub) by also checking the entered host/IP against existing entries.
             probed_ip = target.get("ip") if target else None
-            if self._is_device_already_configured(user_input[KEY_HOST], probed_ip):
+            # Use the canonicalized host: an own-IP entry is stored as ``local``,
+            # so an SSDP entry that was likewise canonicalized is only matched
+            # when we compare against ``host_input`` rather than the raw input.
+            if self._is_device_already_configured(host_input, probed_ip):
                 return self.async_abort(reason="already_configured")
 
             try:
