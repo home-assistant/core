@@ -8,19 +8,22 @@ from pyocat import AsyncApiClient, AsyncAuth
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_MODEL_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import (
+    CONF_BLE_MAC,
     CONF_BSN,
     CONF_ESN,
     CONF_FW_VERSION,
+    CONF_HW_VERSION,
     CONF_LATEST_FW_VERSION,
     CONF_LINE,
     CONF_SERIES,
+    CONF_SYSTEM_MAC,
     DOMAIN,
 )
 
@@ -102,11 +105,15 @@ class WatercrystConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_BSN: user_input[CONF_BSN],
                     CONF_API_KEY: user_input[CONF_API_KEY],
                     CONF_ESN: info.electronics_serial,
+                    CONF_MODEL_ID: info.device_type_number,
                     CONF_LINE: info.line,
                     CONF_SERIES: info.series,
                     CONF_NAME: info.name,
                     CONF_FW_VERSION: info.current_firmware_version,
+                    CONF_HW_VERSION: info.current_hardware_version,
                     CONF_LATEST_FW_VERSION: info.latest_firmware_version,
+                    CONF_SYSTEM_MAC: info.system_mac_address,
+                    CONF_BLE_MAC: info.ble_mac_address,
                 }
 
                 return self.async_create_entry(title=info.name, data=data)

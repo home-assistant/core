@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["pyocat==0.6.0"]
+  "requirements": ["pyocat==0.7.0"]
 }
