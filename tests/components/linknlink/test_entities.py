@@ -38,3 +38,19 @@ async def test_entities_unavailable_when_device_reports_offline(
     assert (
         hass.states.get("sensor.emotion_ultra_temperature").state == STATE_UNAVAILABLE
     )
+
+
+async def test_unsupported_sensor_is_not_created(
+    hass: HomeAssistant,
+    mock_linknlink_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sensors absent from the first refresh are not created."""
+    mock_linknlink_client.refresh.return_value = replace(
+        STATE, values={"envtemp": 23.5}, children={}
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.emotion_ultra_temperature") is not None
+    assert hass.states.get("sensor.emotion_ultra_humidity") is None

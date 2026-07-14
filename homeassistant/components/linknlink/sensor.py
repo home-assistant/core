@@ -95,7 +95,9 @@ async def async_setup_entry(
     """Set up LinknLink sensors."""
     coordinator = entry.runtime_data
     entities: list[LinknLinkSensor] = [
-        LinknLinkSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
+        LinknLinkSensor(coordinator, description)
+        for description in SENSOR_DESCRIPTIONS
+        if description.key in coordinator.data.values
     ]
     entities.extend(
         LinknLinkSensor(coordinator, description, subdevice_id)
