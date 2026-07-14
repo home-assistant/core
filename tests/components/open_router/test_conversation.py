@@ -97,7 +97,7 @@ async def test_web_search(
     mock_config_entry: MockConfigEntry,
     mock_openai_client: AsyncMock,
     mock_chat_log: MockChatLog,  # noqa: F811
-    web_search: bool,
+    web_search: str,
     expected_server_tools: dict[str, str] | None,
     expected_model_suffix: str,
 ) -> None:
