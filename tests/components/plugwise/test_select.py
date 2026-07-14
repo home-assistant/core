@@ -6,6 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.plugwise.const import (
+    DHW_MODE,
     SELECT_DHW_MODE,
     SELECT_GATEWAY_MODE,
     SELECT_REGULATION_MODE,
@@ -212,4 +213,29 @@ async def test_anna_select_dhw_mode(
         "bfb5ee0a88e14e5f97bfa725a760cc49",
         "boost",
         "on",
+    )
+
+
+@pytest.mark.parametrize("chosen_env", ["anna_v4_dhw"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
+async def test_anna_dhw_mode_select(
+    hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry
+) -> None:
+    """Test setting Anna Opentherm dhw_mode Select to comfort."""
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.opentherm_dhw_mode",
+            ATTR_OPTION: "comfort",
+        },
+        blocking=True,
+    )
+    assert mock_smile_anna.set_select.call_count == 1
+    mock_smile_anna.set_select.assert_called_with(
+        DHW_MODE,
+        "cd0e6156b1f04d5f952349ffbe397481",
+        "comfort",
+        "on"
     )
