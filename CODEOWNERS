@@ -721,6 +721,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/hardkernel/ @home-assistant/core
 /homeassistant/components/hardware/ @home-assistant/core
 /tests/components/hardware/ @home-assistant/core
+/homeassistant/components/harman_luxury/ @sbesh91
+/tests/components/harman_luxury/ @sbesh91
 /homeassistant/components/harmony/ @ehendrix23 @bdraco @mkeesey @Aohzan
 /tests/components/harmony/ @ehendrix23 @bdraco @mkeesey @Aohzan
 /homeassistant/components/hassio/ @home-assistant/supervisor
@@ -942,6 +944,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/kaiterra/ @Michsior14
 /homeassistant/components/kaleidescape/ @SteveEasley
 /tests/components/kaleidescape/ @SteveEasley
+/homeassistant/components/karakeep/ @sli-cka
+/tests/components/karakeep/ @sli-cka
 /homeassistant/components/keba/ @dannerph
 /homeassistant/components/keenetic_ndms2/ @foxel
 /tests/components/keenetic_ndms2/ @foxel
@@ -997,6 +1001,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/leaone/ @bdraco
 /homeassistant/components/led_ble/ @bdraco
 /tests/components/led_ble/ @bdraco
+/homeassistant/components/led_infrared/ @tr4nt0r
+/tests/components/led_infrared/ @tr4nt0r
 /homeassistant/components/lektrico/ @lektrico
 /tests/components/lektrico/ @lektrico
 /homeassistant/components/letpot/ @jpelgrom
@@ -1373,8 +1379,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/peco/ @IceBotYT
 /homeassistant/components/pegel_online/ @mib1185
 /tests/components/pegel_online/ @mib1185
-/homeassistant/components/permobil/ @IsakNyberg
-/tests/components/permobil/ @IsakNyberg
 /homeassistant/components/persistent_notification/ @home-assistant/core
 /tests/components/persistent_notification/ @home-assistant/core
 /homeassistant/components/pglab/ @pglab-electronics
@@ -1733,8 +1737,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/starline/ @anonym-tsk
 /homeassistant/components/statistics/ @ThomDietrich @gjohansson-ST
 /tests/components/statistics/ @ThomDietrich @gjohansson-ST
-/homeassistant/components/steam_online/ @tkdrob
-/tests/components/steam_online/ @tkdrob
+/homeassistant/components/steam_online/ @tr4nt0r @tkdrob
+/tests/components/steam_online/ @tr4nt0r @tkdrob
 /homeassistant/components/steamist/ @bdraco
 /tests/components/steamist/ @bdraco
 /homeassistant/components/stiebel_eltron/ @fucm @ThyMYthOS
