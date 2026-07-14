@@ -19,6 +19,7 @@ TEST_PASSWORD = "test-password"
 TEST_API_KEY = "test-apikey"
 TEST_DEVICE_SERIAL = "DEVICE123"
 TEST_CLIENT_ID = "gaposa-client-123"
+TEST_USER_UID = "firebase-uid-test-1234"
 
 
 def _make_mock_motor(motor_id: str, name: str, state: str = "UP") -> MagicMock:
@@ -71,6 +72,7 @@ def mock_gaposa(mock_motors: list[MagicMock]) -> Generator[MagicMock]:
     device = _make_mock_device(TEST_DEVICE_SERIAL, mock_motors)
     client = _make_mock_client([device], TEST_CLIENT_ID)
     user = MagicMock()
+    user.uid = TEST_USER_UID
     instance = MagicMock()
     instance.login = AsyncMock()
     instance.update = AsyncMock()
@@ -109,7 +111,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: TEST_PASSWORD,
         },
         title="Gaposa Gateway",
-        unique_id=TEST_CLIENT_ID,
+        unique_id=TEST_USER_UID,
     )
 
 

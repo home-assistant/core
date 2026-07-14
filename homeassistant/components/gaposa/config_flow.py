@@ -34,8 +34,10 @@ class GaposaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> tuple[str | None, str]:
         """Attempt to authenticate against the Gaposa cloud.
 
-        Returns a ``(client_id, error)`` tuple. ``client_id`` is ``None``
-        on any failure and ``error`` is ``""`` on success.
+        Returns a ``(user_uid, error)`` tuple. ``user_uid`` is the
+        Firebase user identifier, stable per login regardless of
+        client-membership order or count; ``None`` on any failure.
+        ``error`` is ``""`` on success.
         """
         gaposa = Gaposa(
             data[CONF_API_KEY],
@@ -58,7 +60,7 @@ class GaposaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if not gaposa.clients:
             return None, "no_clients"
-        return gaposa.clients[0][0].id, ""
+        return gaposa.clients[0][1].uid, ""
 
     @override
     async def async_step_user(
@@ -68,11 +70,11 @@ class GaposaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            client_id, error = await self._async_validate_credentials(user_input)
+            user_uid, error = await self._async_validate_credentials(user_input)
             if error:
                 errors["base"] = error
             else:
-                await self.async_set_unique_id(client_id)
+                await self.async_set_unique_id(user_uid)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=DEFAULT_GATEWAY_NAME, data=user_input

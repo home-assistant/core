@@ -14,7 +14,7 @@ from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TEST_CLIENT_ID
+from .conftest import TEST_USER_UID
 
 from tests.common import MockConfigEntry
 
@@ -46,7 +46,7 @@ async def test_form_creates_entry(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Gaposa Gateway"
     assert result["data"] == USER_INPUT
-    assert result["result"].unique_id == TEST_CLIENT_ID
+    assert result["result"].unique_id == TEST_USER_UID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
