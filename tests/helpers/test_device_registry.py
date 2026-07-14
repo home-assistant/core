@@ -4220,11 +4220,22 @@ async def test_migration_remaps_via_device_id_to_split(
 
 @pytest.mark.parametrize("load_registries", [False])
 @pytest.mark.parametrize(
-    ("composite_disabled_by", "expected_split_disabled_by"),
+    ("composite_disabled_by", "expected_split_enabled", "expected_split_disabled"),
     [
-        pytest.param(None, dr.DeviceEntryDisabler.CONFIG_ENTRY, id="enabled_composite"),
         pytest.param(
-            dr.DeviceEntryDisabler.USER, dr.DeviceEntryDisabler.USER, id="user_disabled"
+            None, None, dr.DeviceEntryDisabler.CONFIG_ENTRY, id="enabled_composite"
+        ),
+        pytest.param(
+            dr.DeviceEntryDisabler.USER,
+            dr.DeviceEntryDisabler.USER,
+            dr.DeviceEntryDisabler.USER,
+            id="user_disabled",
+        ),
+        pytest.param(
+            dr.DeviceEntryDisabler.CONFIG_ENTRY,
+            None,
+            dr.DeviceEntryDisabler.CONFIG_ENTRY,
+            id="config_entry_disabled",
         ),
     ],
 )
@@ -4232,13 +4243,15 @@ async def test_migration_split_disabled_by_follows_config_entry(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     composite_disabled_by: dr.DeviceEntryDisabler | None,
-    expected_split_disabled_by: dr.DeviceEntryDisabler,
+    expected_split_enabled: dr.DeviceEntryDisabler | None,
+    expected_split_disabled: dr.DeviceEntryDisabler,
 ) -> None:
     """A split's disabled_by follows its single owning config entry's disabled state.
 
     A composite spanning an enabled and a disabled config entry copies its disabled_by to
-    both splits; the split owned by the disabled entry is then reconciled to CONFIG_ENTRY
-    (a USER disable is preserved), while the split owned by the enabled entry is unchanged.
+    both splits; each split is then reconciled against its own entry - the split owned by
+    the disabled entry becomes CONFIG_ENTRY disabled (a USER disable is preserved), while
+    the split owned by the enabled entry has a stale CONFIG_ENTRY disable cleared.
     """
     entry_enabled = MockConfigEntry(domain="dom_a")
     entry_enabled.add_to_hass(hass)
@@ -4297,20 +4310,20 @@ async def test_migration_split_disabled_by_follows_config_entry(
     assert split_disabled is not None
     assert split_enabled.config_entry_id == entry_enabled.entry_id
     assert split_disabled.config_entry_id == entry_disabled.entry_id
-    # The split owned by the enabled entry keeps the composite's disabled_by
-    assert split_enabled.disabled_by is composite_disabled_by
+    # The split owned by the enabled entry has a stale CONFIG_ENTRY disable cleared
+    assert split_enabled.disabled_by is expected_split_enabled
     # The split owned by the disabled entry follows that entry (USER preserved)
-    assert split_disabled.disabled_by is expected_split_disabled_by
+    assert split_disabled.disabled_by is expected_split_disabled
 
 
 @pytest.mark.parametrize("load_registries", [False])
 async def test_disabled_by_not_reconciled_without_composite_split(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
-    """disabled_by is reconciled only when the migration splits a composite device.
+    """disabled_by is reconciled only for split composites, not other migrated devices.
 
-    A 1.12 -> 1.13 migration that splits no composite leaves the store flag unset, so a
-    device whose disabled_by does not match its config entry is not touched on load.
+    A 1.12 -> 1.13 migration that splits no composite does not touch a device whose stored
+    disabled_by does not match its config entry.
     """
     entry = MockConfigEntry(
         domain="dom_a", disabled_by=config_entries.ConfigEntryDisabler.USER
@@ -4355,11 +4368,54 @@ async def test_disabled_by_not_reconciled_without_composite_split(
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
-    assert registry._store.migrated_composite_devices is False
     device = registry.async_get_device(identifiers={("dom_a", "x")})
     assert device is not None
     # The reconcile is gated on a composite split, so disabled_by is left as stored
     assert device.disabled_by is None
+
+
+@pytest.mark.parametrize("config_entry_disabled", [False, True])
+@pytest.mark.parametrize(
+    "initial_disabled_by",
+    [
+        None,
+        dr.DeviceEntryDisabler.CONFIG_ENTRY,
+        dr.DeviceEntryDisabler.INTEGRATION,
+        dr.DeviceEntryDisabler.USER,
+    ],
+)
+async def test_migrate_device_disabled_by_matches_runtime(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    initial_disabled_by: dr.DeviceEntryDisabler | None,
+    config_entry_disabled: bool,
+) -> None:
+    """The migration dict reconcile matches async_config_entry_disabled_by_changed.
+
+    _migrate_device_disabled_by reimplements the runtime helper on stored data, so for
+    every combination of device disabled_by and config entry state both must agree.
+    """
+    config_entry = MockConfigEntry(
+        disabled_by=config_entries.ConfigEntryDisabler.USER
+        if config_entry_disabled
+        else None
+    )
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("test", "1")}
+    )
+    # Explicit disabled_by bypasses async_update_device's own reconciliation
+    device_registry.async_update_device(device.id, disabled_by=initial_disabled_by)
+
+    # Runtime helper on the loaded registry
+    dr.async_config_entry_disabled_by_changed(device_registry, config_entry)
+    runtime_result = device_registry.async_get(device.id).disabled_by
+
+    # Migration helper on the stored representation
+    stored = {"disabled_by": initial_disabled_by}
+    dr._migrate_device_disabled_by(stored, config_entry_disabled)
+
+    assert stored["disabled_by"] == runtime_result
 
 
 @pytest.mark.parametrize("load_registries", [False])

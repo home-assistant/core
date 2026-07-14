@@ -721,8 +721,6 @@ class DeletedDeviceEntry:
 class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
-    migrated_composite_devices: bool = False
-
     @override
     async def _async_migrate_func(  # noqa: C901
         self,
@@ -827,6 +825,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 migrated_at = utcnow().isoformat()
                 split_devices: list[dict[str, Any]] = []
                 composite_splits: dict[str, dict[str, str]] = {}
+                migrated_active_splits: list[dict[str, Any]] = []
                 for device in old_data["devices"]:
                     # One target per config entry. config_entries_subentries was a set, so
                     # the old model allowed a device in several subentries of one config
@@ -860,7 +859,6 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         split_devices.append(device)
                         continue
                     old_id = device["id"]
-                    self.migrated_composite_devices = True
                     composite_primary = device.get("primary_config_entry")
                     for config_entry_id, subentry_id in pairs:
                         split = copy.deepcopy(device)
@@ -879,6 +877,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         split["split_at"] = migrated_at
                         split["has_composite_identifiers"] = True
                         split_devices.append(split)
+                        migrated_active_splits.append(split)
                         composite_splits.setdefault(old_id, {})[config_entry_id] = (
                             split["id"]
                         )
@@ -895,6 +894,20 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                             device["config_entry_id"], next(iter(splits.values()))
                         )
                 old_data["devices"] = split_devices
+                # A split inherited the composite's disabled_by, which may not match its
+                # single config entry (e.g. a split owned by an enabled entry must not stay
+                # CONFIG_ENTRY disabled). Wait for the config entry store to load, then
+                # reconcile each split against its own entry.
+                if migrated_active_splits:
+                    await self.hass.config_entries.async_wait_initialized()
+                    for split in migrated_active_splits:
+                        config_entry = self.hass.config_entries.async_get_entry(
+                            split["config_entry_id"]
+                        )
+                        if config_entry is not None:
+                            _migrate_device_disabled_by(
+                                split, config_entry.disabled_by is not None
+                            )
                 split_deleted_devices: list[dict[str, Any]] = []
                 for device in old_data["deleted_devices"]:
                     # One target per config entry. config_entries_subentries was a set, so
@@ -1131,7 +1144,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
     devices: ActiveDeviceRegistryItems
     deleted_devices: DeviceRegistryItems[DeletedDeviceEntry]
-    _store: DeviceRegistryStore
     _device_data: dict[str, DeviceEntry]
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -2401,17 +2413,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.deleted_devices = deleted_devices
         self._device_data = devices.data
 
-        if self._store.migrated_composite_devices:
-            # The migration split composite devices into one device per config entry; each
-            # split copied the composite's disabled_by, which does not reflect its single
-            # owning config entry (a split owned by a disabled entry must be CONFIG_ENTRY
-            # disabled). Config entries load concurrently, so wait for them, then reconcile.
-            # Can be removed in HA Core 2027.8.
-            await self.hass.config_entries.async_wait_initialized()
-            for config_entry in self.hass.config_entries.async_entries():
-                if config_entry.disabled_by:
-                    async_config_entry_disabled_by_changed(self, config_entry)
-
         self._loaded_event.set()
 
     async def async_wait_loaded(self) -> None:
@@ -2604,6 +2605,28 @@ def async_config_entry_disabled_by_changed(
         registry._async_update_device(  # noqa: SLF001
             device.id, disabled_by=DeviceEntryDisabler.CONFIG_ENTRY
         )
+
+
+@callback
+def _migrate_device_disabled_by(
+    device: dict[str, Any], config_entry_disabled: bool
+) -> None:
+    """Reconcile a stored device's disabled_by with its config entry's disabled state.
+
+    Reimplements async_config_entry_disabled_by_changed on stored data so the 1.13
+    migration can fix a split device that inherited the composite's disabled_by. Kept in
+    lockstep with that function by test_migrate_device_disabled_by_matches_runtime; can be
+    removed in HA Core 2027.8.
+    """
+    disabled_by = device["disabled_by"]
+    if not config_entry_disabled:
+        # Config entry enabled: drop a config-entry disable, keep a user/integration one
+        if disabled_by == DeviceEntryDisabler.CONFIG_ENTRY:
+            device["disabled_by"] = None
+        return
+    # Config entry disabled: disable the device unless it is already disabled
+    if disabled_by is None:
+        device["disabled_by"] = DeviceEntryDisabler.CONFIG_ENTRY
 
 
 @callback
