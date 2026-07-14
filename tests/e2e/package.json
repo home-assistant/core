@@ -1,0 +1,12 @@
+{
+  "name": "home-assistant-e2e-tests",
+  "version": "1.0.0",
+  "description": "End-to-end browser tests for Home Assistant Core",
+  "private": true,
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1"
+  }
+}
