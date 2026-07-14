@@ -17,14 +17,19 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import ADDRESS, CART_DATA, LAST_ORDER_DATA, NEXT_DELIVERY_DATA, SLOT_DATA
+from .const import (
+    ADDRESS,
+    CART_DATA,
+    DEFAULT_UPDATE_INTERVAL,
+    DELIVERY_UPDATE_INTERVAL,
+    DELIVERY_WINDOW_LAG_TIME,
+    DELIVERY_WINDOW_LEAD_TIME,
+    LAST_ORDER_DATA,
+    NEXT_DELIVERY_DATA,
+    SLOT_DATA,
+)
 
 type PicnicConfigEntry = ConfigEntry[PicnicUpdateCoordinator]
-
-DEFAULT_UPDATE_INTERVAL = timedelta(minutes=30)
-DELIVERY_UPDATE_INTERVAL = timedelta(minutes=1)
-DELIVERY_WINDOW_LEAD_TIME = timedelta(minutes=30)
-DELIVERY_WINDOW_LAG_TIME = timedelta(hours=2)
 
 
 class PicnicUpdateCoordinator(DataUpdateCoordinator):

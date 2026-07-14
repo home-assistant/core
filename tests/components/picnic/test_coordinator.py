@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.picnic.coordinator import (
+from homeassistant.components.picnic.const import (
     DEFAULT_UPDATE_INTERVAL,
     DELIVERY_UPDATE_INTERVAL,
 )
