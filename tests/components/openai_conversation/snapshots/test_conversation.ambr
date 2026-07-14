@@ -297,6 +297,27 @@
     }),
   ])
 # ---
+# name: test_model_args[subentry_options0]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt-5.6-sol',
+    'prompt_cache_retention': '24h',
+    'reasoning': dict({
+      'effort': 'low',
+      'mode': 'pro',
+      'summary': 'auto',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+  })
+# ---
 # name: test_web_search[False]
   list([
     dict({
