@@ -351,16 +351,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         await legacy_store.async_remove()
 
-    if (user := hass.data.get(DATA_HASSIO_SUPERVISOR_USER)) is not None:
-        if entry.data.get(ENTRY_DATA_USER) != user.id:
-            hass.config_entries.async_update_entry(
-                entry,
-                data={**entry.data, ENTRY_DATA_USER: user.id},
-            )
-    else:
-        user = await _async_get_or_create_supervisor_user(hass, entry)
-
-    hass.data[DATA_HASSIO_SUPERVISOR_USER] = user
+    # Async setup runs first unconditionally and always populates this field
+    user = hass.data[DATA_HASSIO_SUPERVISOR_USER]
+    if entry.data.get(ENTRY_DATA_USER) != user.id:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, ENTRY_DATA_USER: user.id},
+        )
 
     supervisor_client = get_supervisor_client(hass)
 
