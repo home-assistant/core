@@ -128,26 +128,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: NoboHubConfigEntry) -> b
             (DOMAIN, f"{hub.hub_serial}:{zone_id}") for zone_id in hub.zones
         )
         expected_identifiers.update((DOMAIN, serial) for serial in hub.components)
-        stale_device_ids = [
-            device.id
-            for device in dr.async_entries_for_config_entry(
-                device_registry, entry.entry_id
-            )
-            if device.identifiers.isdisjoint(expected_identifiers)
-        ]
-        if not stale_device_ids:
-            return
-
-        @callback
-        def _remove_stale_devices() -> None:
-            for device_id in stale_device_ids:
+        # Runs inside pynobo's update-callback dispatch: removing a device
+        # deregisters its entities' callbacks mid-iteration, which can skip a
+        # following callback. Safe because a pynobo message carries a single
+        # topology change, so a removal never coincides with a surviving
+        # entity's update in the same dispatch.
+        for device in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            if device.identifiers.isdisjoint(expected_identifiers):
                 device_registry.async_update_device(
-                    device_id, remove_config_entry_id=entry.entry_id
+                    device.id, remove_config_entry_id=entry.entry_id
                 )
-
-        # Removing a device tears down entities that deregister their pynobo
-        # callbacks; defer so we don't mutate the list pynobo is iterating.
-        hass.loop.call_soon(_remove_stale_devices)
 
     _cleanup_devices(hub)
     hub.register_callback(_cleanup_devices)
