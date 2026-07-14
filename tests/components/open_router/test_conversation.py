@@ -110,8 +110,9 @@ async def test_web_search(
         Context(),
         agent_id="conversation.gpt_3_5_turbo",
     )
-
     call = mock_openai_client.chat.completions.create.call_args_list[0][1]
+    expected_model = "openai/gpt-3.5-turbo" + expected_model_suffix
+    assert call["model"] == expected_model
     assert call["extra_body"].get("tools") == expected_server_tools
 
 
