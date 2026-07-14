@@ -96,7 +96,7 @@ from .headers import setup_headers
 from .request_context import setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
-from .web_runner import HomeAssistantUnixSite, create_server_sockets
+from .web_runner import HomeAssistantUnixSite
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -481,13 +481,12 @@ class HomeAssistantHTTP:
         self.ssl_profile = ssl_profile
         self.supervisor_unix_socket_path = supervisor_unix_socket_path
         self.runner: web.AppRunner | None = None
-        self.sites: list[web.SockSite] = []
         self.supervisor_site: HomeAssistantUnixSite | None = None
         self.context: ssl.SSLContext | None = None
-        self._sockets: list[socket.socket] | None = None
+        self._server: asyncio.Server | None = None
 
     async def async_bind(self) -> None:
-        """Create the SSL context and bind the server sockets.
+        """Create the SSL context and the server, binding its sockets.
 
         Called during setup so that an unusable configuration surfaces before
         it is applied; serving starts later in ``start()``. Raises
@@ -498,11 +497,35 @@ class HomeAssistantHTTP:
             self.context = await self.hass.async_add_executor_job(
                 self._create_ssl_context
             )
-        self._sockets = await self.hass.async_add_executor_job(
-            create_server_sockets,
-            self.server_host if self.server_host is not None else _DEFAULT_BIND,
-            self.server_port,
-        )
+        self._server = await self._async_create_server()
+
+    async def _async_create_server(self) -> asyncio.Server:
+        """Create the (not yet serving) HTTP server, binding its sockets."""
+        try:
+            return await self.hass.loop.create_server(
+                self._make_protocol,
+                self.server_host if self.server_host is not None else _DEFAULT_BIND,
+                self.server_port,
+                ssl=self.context,
+                backlog=128,
+                start_serving=False,
+            )
+        except UnicodeError as err:
+            # create_server() raises UnicodeError for hosts the IDNA codec
+            # cannot encode (e.g. a label longer than 63 characters);
+            # normalize to OSError so callers only need to handle one error
+            # type.
+            raise OSError(f"error while resolving host: {err}") from err
+
+    def _make_protocol(self) -> RequestHandler:
+        """Create a protocol instance for an accepted connection.
+
+        Connections are only accepted once ``start()`` has run, so the
+        runner is set up by the time this is called.
+        """
+        runner = self.runner
+        assert runner is not None and runner.server is not None
+        return runner.server()
 
     async def async_initialize(
         self,
@@ -769,14 +792,10 @@ class HomeAssistantHTTP:
         )
         await self.runner.setup()
 
-        # Setup either binds the sockets or fails, so they are always
-        # available here.
-        assert self._sockets is not None
-
-        for sock in self._sockets:
-            site = web.SockSite(self.runner, sock, ssl_context=self.context)
-            await site.start()
-            self.sites.append(site)
+        # Setup either binds the server or fails, so it is always available
+        # here.
+        assert self._server is not None
+        await self._server.start_serving()
 
         _LOGGER.info("Now listening on port %d", self.server_port)
 
@@ -795,12 +814,8 @@ class HomeAssistantHTTP:
                         self.supervisor_unix_socket_path,
                         err,
                     )
-        for site in self.sites:
-            await site.stop()
-        if self._sockets is not None:
-            # Close any socket that was bound but never served (closing an
-            # already served socket is a no-op).
-            for sock in self._sockets:
-                sock.close()
+        if self._server is not None:
+            self._server.close()
+            await self._server.wait_closed()
         if self.runner is not None:
             await self.runner.cleanup()

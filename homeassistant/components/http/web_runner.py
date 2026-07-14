@@ -1,84 +1,11 @@
 """HomeAssistant specific aiohttp Site."""
 
 import asyncio
-import errno
-import os
 from pathlib import Path
 import socket
-import sys
 from typing import override
 
 from aiohttp import web
-
-
-def create_server_sockets(hosts: list[str], port: int) -> list[socket.socket]:
-    """Create and bind the listening sockets for the given hosts and port.
-
-    Mirrors the bind behavior of ``loop.create_server()`` (multiple hosts,
-    ``SO_REUSEADDR``, ``IPV6_V6ONLY``, skipping unavailable address families)
-    but only binds, so an unusable configuration surfaces before it is
-    applied. Serving starts later, when the sockets are handed to aiohttp.
-
-    Performs blocking name resolution and is intended to be run in an
-    executor. Raises OSError (including ``socket.gaierror``) if the
-    configuration cannot be bound.
-    """
-    # Resolve all hosts up front so an unresolvable one fails the whole
-    # configuration before any socket is bound. Dict keys de-duplicate
-    # while keeping resolution order.
-    try:
-        addr_infos = {
-            info: None
-            for host in hosts
-            for info in socket.getaddrinfo(
-                host, port, type=socket.SOCK_STREAM, flags=socket.AI_PASSIVE
-            )
-        }
-    except UnicodeError as err:
-        # getaddrinfo() raises UnicodeError for hosts the IDNA codec cannot
-        # encode (e.g. a label longer than 63 characters); normalize to
-        # OSError so callers only need to handle one error type.
-        raise OSError(f"error while resolving host: {err}") from err
-    reuse_address = os.name == "posix" and sys.platform != "cygwin"
-
-    sockets: list[socket.socket] = []
-    try:
-        for family, socktype, proto, _canonname, address in addr_infos:
-            try:
-                sock = socket.socket(family, socktype, proto)
-            except OSError:
-                # Address family not supported on this system
-                continue
-            sockets.append(sock)
-            if reuse_address:
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            # Disable IPv4/IPv6 dual stack support (enabled by default on
-            # Linux) which makes a single socket listen on both address
-            # families.
-            if family == socket.AF_INET6 and hasattr(socket, "IPPROTO_IPV6"):
-                sock.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
-            try:
-                sock.bind(address)
-            except OSError as err:
-                if err.errno == errno.EADDRNOTAVAIL:
-                    # Assume the address family is not enabled (bpo-30945)
-                    sockets.pop()
-                    sock.close()
-                    continue
-                raise OSError(
-                    err.errno,
-                    f"error while attempting to bind on address {address!r}: "
-                    f"{(err.strerror or str(err)).lower()}",
-                ) from None
-    except BaseException:
-        for sock in sockets:
-            sock.close()
-        raise
-    if not sockets:
-        raise OSError(
-            f"could not bind on any address out of {[info[4] for info in addr_infos]!r}"
-        )
-    return sockets
 
 
 class HomeAssistantUnixSite(web.BaseSite):
