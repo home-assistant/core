@@ -37,6 +37,8 @@ class LinknLinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not re.fullmatch(r"(?:[0-9a-f]{2}:){5}[0-9a-f]{2}", mac):
                 errors[CONF_MAC] = "invalid_mac"
             else:
+                await self.async_set_unique_id(mac)
+                self._abort_if_unique_id_configured()
                 port = user_input[CONF_PORT]
                 device = UltraDevice(
                     id=mac,
@@ -55,8 +57,6 @@ class LinknLinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                     errors["base"] = "unknown"
                 else:
-                    await self.async_set_unique_id(mac)
-                    self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=DISPLAY_MODEL_ULTRA,
                         data={

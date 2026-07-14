@@ -25,14 +25,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "motion": {
-        "name": "Motion"
-      },
-      "presence": {
-        "name": "Presence"
-      }
-    },
     "sensor": {
       "detect_position": {
         "name": "Detected position"
@@ -61,20 +53,9 @@
       "wifi_rssi": {
         "name": "Wi-Fi signal strength"
       }
-    },
-    "switch": {
-      "power": {
-        "name": "Power"
-      },
-      "switch": {
-        "name": "Switch"
-      }
     }
   },
   "exceptions": {
-    "control_error": {
-      "message": "Failed to control the LinknLink device: {error}"
-    },
     "update_error": {
       "message": "Error communicating with the LinknLink device: {error}"
     }

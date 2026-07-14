@@ -104,6 +104,7 @@ async def test_duplicate_device(
 ) -> None:
     """Test that the same device cannot be configured twice."""
     mock_config_entry.add_to_hass(hass)
+    mock_linknlink_client.connect.side_effect = UltraConnectionError("offline")
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -112,3 +113,4 @@ async def test_duplicate_device(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    mock_linknlink_client.connect.assert_not_awaited()

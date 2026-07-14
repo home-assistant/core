@@ -74,9 +74,7 @@ rules:
   repair-issues:
     status: exempt
     comment: The integration does not raise repair issues.
-  stale-devices:
-    status: exempt
-    comment: Each config entry represents one fixed gateway device.
+  stale-devices: todo
 
   # Platinum
   async-dependency: done
