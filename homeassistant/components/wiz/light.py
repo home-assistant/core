@@ -59,11 +59,7 @@ def _async_pilot_builder(**kwargs: Any) -> PilotBuilder:
         )
 
     if ATTR_EFFECT in kwargs:
-        effect = kwargs[ATTR_EFFECT]
-        if effect == EFFECT_TV_SYNC:
-            # The pseudo effect is not a real scene and cannot be sent
-            return PilotBuilder(brightness=brightness)
-        scene_id = get_id_from_scene_name(effect)
+        scene_id = get_id_from_scene_name(kwargs[ATTR_EFFECT])
         if scene_id == 1000:  # rhythm
             return PilotBuilder()
         return PilotBuilder(brightness=brightness, scene=scene_id)
@@ -170,5 +166,8 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
+        if self._is_tv_sync_product and kwargs.get(ATTR_EFFECT) == EFFECT_TV_SYNC:
+            # The pseudo effect is not a real scene and cannot be sent
+            kwargs.pop(ATTR_EFFECT)
         await self._device.turn_on(_async_pilot_builder(**kwargs))
         await self.coordinator.async_request_refresh()

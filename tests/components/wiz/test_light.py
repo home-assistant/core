@@ -334,6 +334,19 @@ async def test_tv_sync_product_without_color_state_or_brightness(
     assert state.attributes[ATTR_EFFECT] == EFFECT_TV_SYNC
 
 
+async def test_color_light_rejects_tv_sync_pseudo_effect(hass: HomeAssistant) -> None:
+    """Test a regular bulb still rejects the pseudo effect as an unknown scene."""
+    bulb, _ = await async_setup_integration(hass, bulb_type=FAKE_RGBWW_BULB)
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "light.mock_title", ATTR_EFFECT: EFFECT_TV_SYNC},
+            blocking=True,
+        )
+    bulb.turn_on.assert_not_called()
+
+
 async def test_color_light_without_color_state(hass: HomeAssistant) -> None:
     """Test a regular color light pushing states without color values or a scene.
 
