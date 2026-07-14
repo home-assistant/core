@@ -2,13 +2,11 @@
 
 from typing import override
 
-from homeassistant.components.device_tracker import TrackerEntity
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
+from homeassistant.components.device_tracker import (
+    TrackerEntity,
+    TrackerEntityStateAttribute,
 )
+from homeassistant.const import ATTR_BATTERY_LEVEL, EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -120,9 +118,11 @@ class GPSLoggerEntity(TrackerEntity, RestoreEntity):
             return
 
         attr = state.attributes
-        self._attr_latitude = attr.get(ATTR_LATITUDE)
-        self._attr_longitude = attr.get(ATTR_LONGITUDE)
-        self._attr_location_accuracy = attr.get(ATTR_GPS_ACCURACY, 0)
+        self._attr_latitude = attr.get(EntityStateAttribute.LATITUDE)
+        self._attr_longitude = attr.get(EntityStateAttribute.LONGITUDE)
+        self._attr_location_accuracy = attr.get(
+            TrackerEntityStateAttribute.GPS_ACCURACY, 0
+        )
         self._attr_extra_state_attributes = {
             ATTR_ALTITUDE: attr.get(ATTR_ALTITUDE),
             ATTR_ACTIVITY: attr.get(ATTR_ACTIVITY),
