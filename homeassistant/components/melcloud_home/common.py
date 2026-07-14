@@ -1,13 +1,22 @@
 """Commonly shared code for the MELCloud Home integration."""
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Coroutine, Iterable
+from typing import Any
 
-from aiomelcloudhome import ATAUnit, ATWUnit
+from aiomelcloudhome import (
+    ATAUnit,
+    ATWUnit,
+    MelCloudHomeAuthenticationError,
+    MelCloudHomeConnectionError,
+    MelCloudHomeTimeoutError,
+)
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import MelCloudHomeCoordinator
 
 
@@ -31,6 +40,32 @@ def async_setup_unit_entities(
 
     _async_add_new_ata_units(list(coordinator.ata_units.values()))
     _async_add_new_atw_units(list(coordinator.atw_units.values()))
+
+
+async def perform_action(
+    coordinator: MelCloudHomeCoordinator,
+    coroutine: Coroutine[Any, Any, None],
+) -> None:
+    """Perform a MELCloud Home action with error handling and coordinator refresh."""
+    try:
+        await coroutine
+    except MelCloudHomeAuthenticationError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        ) from err
+    except MelCloudHomeConnectionError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
+    except MelCloudHomeTimeoutError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="timeout_connect",
+        ) from err
+    else:
+        await coordinator.async_request_refresh()
 
 
 def unit_ids(unit: ATAUnit | ATWUnit) -> dict[str, list[str]]:
