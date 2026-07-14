@@ -65,7 +65,7 @@
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "invalid_password": "[%key:common::config_flow::error::invalid_auth%]",
         "key_not_registered": "Home Assistant's key is no longer registered on your Powerwall system. Restart setup to register it again.",
-        "key_pending": "Home Assistant's key has not been approved yet. Flick the On/Off switch on the side of your primary Powerwall off and back on to approve it, then submit again.",
+        "key_pending": "Home Assistant's key has not been approved yet. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again.",
         "key_pending_verification": "Your approval is still being verified by your Powerwall system. Wait a moment, then submit again.",
         "powerwall_unreachable": "There is a problem communicating with your Powerwall. Ensure it has a reliable network connection and try again later."
       },
@@ -83,7 +83,7 @@
           "title": "Connect to your Powerwall system"
         },
         "pair": {
-          "description": "Flick the On/Off switch on the side of your primary Powerwall off and back on to approve Home Assistant's access, then continue. This only needs to be done once. Removing this integration later does not revoke this access on your Powerwall or Backup Gateway.",
+          "description": "Flick the On/Off switch on your primary Powerwall off and back on to approve Home Assistant's access, then continue. This only needs to be done once. Removing this integration later does not revoke this access on your Powerwall or Backup Gateway.",
           "title": "Approve the local access key"
         }
       }
