@@ -26,13 +26,12 @@ _MODEL_FIELDS = (
 
 
 def _component_to_dict(component: ComponentInfo) -> dict[str, Any]:
-    formatted = dict(component)
-    if (model := formatted.get("model")) is not None:
-        model_dict = {field: getattr(model, field, None) for field in _MODEL_FIELDS}
-        if getattr(model, "type", None) == nobo.Model.UNKNOWN:
-            # Unknown models carry the serial number in the name.
-            model_dict["name"] = REDACTED
-        formatted["model"] = model_dict
+    model = component["model"]
+    formatted: dict[str, Any] = dict(component)
+    formatted["model"] = {field: getattr(model, field, None) for field in _MODEL_FIELDS}
+    if model.type == nobo.Model.UNKNOWN:
+        # Unknown models carry the serial number in the name.
+        formatted["model"]["name"] = REDACTED
     return formatted
 
 
