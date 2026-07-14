@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, cast, override
 
 from pyprusalink import JobInfo, LegacyPrinterStatus, PrinterStatus, PrusaLink
 from pyprusalink.types import Conflict, PrinterState
@@ -15,14 +15,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
 from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
 
-T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
-
 
 @dataclass(frozen=True, kw_only=True)
-class PrusaLinkButtonEntityDescription(
+class PrusaLinkButtonEntityDescription[
+    T: (PrinterStatus, LegacyPrinterStatus, JobInfo)
+](
     ButtonEntityDescription,
     PrusaLinkEntityDescription,
-    Generic[T],
 ):
     """Describes PrusaLink button entity."""
 
@@ -54,6 +53,14 @@ BUTTONS: dict[str, tuple[PrusaLinkButtonEntityDescription, ...]] = {
             press_fn=lambda api: api.resume_job,
             available_fn=lambda data: cast(
                 bool, data["printer"]["state"] == PrinterState.PAUSED.value
+            ),
+        ),
+        PrusaLinkButtonEntityDescription[PrinterStatus](
+            key="job.continue_job",
+            translation_key="continue_job",
+            press_fn=lambda api: api.continue_job,
+            available_fn=lambda data: cast(
+                bool, data["printer"]["state"] == PrinterState.ATTENTION.value
             ),
         ),
     ),
@@ -95,6 +102,7 @@ class PrusaLinkButtonEntity(PrusaLinkEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         job_id = self.coordinator.data["job"]["id"]

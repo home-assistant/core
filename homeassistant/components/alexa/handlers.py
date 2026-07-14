@@ -1255,7 +1255,10 @@ async def async_api_set_mode(
             service = water_heater.SERVICE_SET_OPERATION_MODE
             data[water_heater.ATTR_OPERATION_MODE] = operation_mode
         else:
-            msg = f"Entity '{entity.entity_id}' does not support Operation mode '{operation_mode}'"
+            msg = (
+                f"Entity '{entity.entity_id}' does not support"
+                f" Operation mode '{operation_mode}'"
+            )
             raise AlexaInvalidValueError(msg)
 
     # Cover Position

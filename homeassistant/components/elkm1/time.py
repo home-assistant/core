@@ -2,7 +2,7 @@
 
 from datetime import time as dt_time
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from elkm1_lib.const import SettingFormat
 from elkm1_lib.elements import Element
@@ -30,7 +30,7 @@ async def async_setup_entry(
     time_settings = [
         setting
         for setting in cast(list[Setting], elk.settings)
-        if setting.value_format == SettingFormat.TIME_OF_DAY
+        if setting.value_format is SettingFormat.TIME_OF_DAY
     ]
 
     create_elk_entities(
@@ -48,6 +48,7 @@ class ElkTimeSetting(ElkAttachedEntity, TimeEntity):
 
     _element: Setting
 
+    @override
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         value = self._element.value
         # Guard against the panel possibly changing the underlying
@@ -57,10 +58,13 @@ class ElkTimeSetting(ElkAttachedEntity, TimeEntity):
         else:
             self._attr_available = False
             _LOGGER.warning(
-                "Setting type for '%s' differs between the ElkM1 and the entity. Restart the integration to fix",
+                "Setting type for '%s' differs between the"
+                " ElkM1 and the entity. Restart the"
+                " integration to fix",
                 self.entity_id,
             )
 
+    @override
     async def async_set_value(self, value: dt_time) -> None:
         """Set the time of the setting."""
         self._element.set((value.hour, value.minute))

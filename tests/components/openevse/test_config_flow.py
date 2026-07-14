@@ -1,13 +1,18 @@
 """Tests for the OpenEVSE sensor platform."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from openevsehttp.exceptions import AuthenticationError, MissingSerial
 import pytest
 
 from homeassistant.components.openevse.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    SOURCE_ZEROCONF,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -16,11 +21,8 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from tests.common import MockConfigEntry
 
 
-async def test_user_flow(
-    hass: HomeAssistant,
-    mock_charger: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow(hass: HomeAssistant, mock_charger: MagicMock) -> None:
     """Test user flow create entry with bad charger."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -37,11 +39,8 @@ async def test_user_flow(
     assert result["result"].unique_id == "deadbeeffeed"
 
 
-async def test_user_flow_flaky(
-    hass: HomeAssistant,
-    mock_charger: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_flaky(hass: HomeAssistant, mock_charger: MagicMock) -> None:
     """Test user flow create entry with flaky charger."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -66,11 +65,9 @@ async def test_user_flow_flaky(
     assert result["result"].unique_id == "deadbeeffeed"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_duplicate(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_charger: MagicMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MagicMock, mock_charger: MagicMock
 ) -> None:
     """Test user flow aborts when config entry already exists."""
     mock_config_entry.add_to_hass(hass)
@@ -88,10 +85,9 @@ async def test_user_flow_duplicate(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_no_serial(
-    hass: HomeAssistant,
-    mock_charger: MagicMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_charger: MagicMock
 ) -> None:
     """Test user flow handles missing serial gracefully."""
     mock_charger.test_and_get.side_effect = [{}, MissingSerial]
@@ -108,10 +104,9 @@ async def test_user_flow_no_serial(
     assert result["result"].unique_id is None
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_flow_no_serial(
-    hass: HomeAssistant,
-    mock_charger: MagicMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_charger: MagicMock
 ) -> None:
     """Test import flow handles missing serial gracefully."""
     mock_charger.test_and_get.side_effect = [{}, MissingSerial]
@@ -126,10 +121,9 @@ async def test_import_flow_no_serial(
     assert result["result"].unique_id is None
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_with_auth(
-    hass: HomeAssistant,
-    mock_charger: MagicMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_charger: MagicMock
 ) -> None:
     """Test user flow create entry with authentication."""
     mock_charger.test_and_get.side_effect = [
@@ -229,11 +223,8 @@ async def test_user_flow_with_missing_serial(
     assert result["result"].unique_id is None
 
 
-async def test_import_flow(
-    hass: HomeAssistant,
-    mock_charger: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_flow(hass: HomeAssistant, mock_charger: MagicMock) -> None:
     """Test import flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: "10.0.0.131"}
@@ -244,11 +235,8 @@ async def test_import_flow(
     assert result["result"].unique_id == "deadbeeffeed"
 
 
-async def test_import_flow_bad(
-    hass: HomeAssistant,
-    mock_charger: MagicMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_import_flow_bad(hass: HomeAssistant, mock_charger: MagicMock) -> None:
     """Test import flow with bad charger."""
     mock_charger.test_and_get.side_effect = TimeoutError
 
@@ -259,11 +247,9 @@ async def test_import_flow_bad(
     assert result["reason"] == "unavailable_host"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_flow_duplicate(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_charger: MagicMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MagicMock, mock_charger: MagicMock
 ) -> None:
     """Test import flow aborts when config entry already exists."""
     mock_config_entry.add_to_hass(hass)
@@ -277,9 +263,8 @@ async def test_import_flow_duplicate(
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_discovery(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_charger: MagicMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_zeroconf_discovery(hass: HomeAssistant, mock_charger: MagicMock) -> None:
     """Test zeroconf discovery."""
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.123"),
@@ -317,11 +302,9 @@ async def test_zeroconf_discovery(
     assert result["result"].unique_id == "deadbeeffeed"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_already_configured_unique_id(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_charger: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_charger: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test zeroconf discovery updates info if unique_id is already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -462,8 +445,9 @@ async def test_zeroconf_auth_failure(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_already_configured_host(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test zeroconf discovery aborts if host is already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -489,11 +473,9 @@ async def test_zeroconf_already_configured_host(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
-    hass: HomeAssistant,
-    mock_charger: MagicMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_charger: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauthentication flow."""
     mock_config_entry.add_to_hass(hass)
@@ -525,10 +507,10 @@ async def test_reauth_flow(
         (TimeoutError, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_errors(
     hass: HomeAssistant,
     mock_charger: MagicMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     error_base: str,
@@ -563,4 +545,250 @@ async def test_reauth_flow_errors(
         CONF_HOST: "192.168.1.100",
         CONF_USERNAME: "newuser",
         CONF_PASSWORD: "newpassword",
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_host_only(
+    hass: HomeAssistant, mock_charger: MagicMock
+) -> None:
+    """Test reconfiguration flow for entry with host only."""
+    config_entry = MockConfigEntry(
+        title="openevse_mock_config",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="FAKE",
+        unique_id="deadbeeffeed",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.101"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        CONF_HOST: "192.168.1.101",
+        CONF_USERNAME: None,
+        CONF_PASSWORD: None,
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_with_auth(
+    hass: HomeAssistant, mock_charger: MagicMock
+) -> None:
+    """Test reconfiguration flow for entry with credentials."""
+    config_entry = MockConfigEntry(
+        title="openevse_mock_config",
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_USERNAME: "olduser",
+            CONF_PASSWORD: "oldpassword",
+        },
+        entry_id="FAKE",
+        unique_id="deadbeeffeed",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.101",
+            CONF_USERNAME: "newuser",
+            CONF_PASSWORD: "newpassword",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        CONF_HOST: "192.168.1.101",
+        CONF_USERNAME: "newuser",
+        CONF_PASSWORD: "newpassword",
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_duplicate_host(
+    hass: HomeAssistant, mock_charger: MagicMock
+) -> None:
+    """Test reconfiguration flow aborts when host matches another entry."""
+    other_entry = MockConfigEntry(
+        title="openevse_other_config",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.101"},
+        entry_id="OTHER",
+        unique_id="otherfeedfeed",
+    )
+    other_entry.add_to_hass(hass)
+
+    config_entry = MockConfigEntry(
+        title="openevse_mock_config",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="FAKE",
+        unique_id="deadbeeffeed",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.101"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data == {CONF_HOST: "192.168.1.100"}
+
+
+@pytest.mark.parametrize(
+    ("exception", "error_base"),
+    [
+        (AuthenticationError, "invalid_auth"),
+        (TimeoutError, "cannot_connect"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_charger: MagicMock,
+    exception: Exception,
+    error_base: str,
+) -> None:
+    """Test reconfiguration flow handles connection errors."""
+    config_entry = MockConfigEntry(
+        title="openevse_mock_config",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="FAKE",
+        unique_id="deadbeeffeed",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_charger.test_and_get.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.101"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": error_base}
+
+    mock_charger.test_and_get.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.102"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        CONF_HOST: "192.168.1.102",
+        CONF_USERNAME: None,
+        CONF_PASSWORD: None,
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_changed_serial(
+    hass: HomeAssistant, mock_charger: MagicMock
+) -> None:
+    """Test reconfiguration flow aborts when device serial changes."""
+    config_entry = MockConfigEntry(
+        title="openevse_mock_config",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="FAKE",
+        unique_id="deadbeeffeed",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_charger.test_and_get.return_value = {
+        "serial": "newfeedfeed",
+        "model": "openevse_wifi_v1",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.101"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_no_serial(
+    hass: HomeAssistant, mock_charger: MagicMock
+) -> None:
+    """Test reconfiguration flow when device doesn't return serial."""
+    config_entry = MockConfigEntry(
+        title="openevse_mock_config",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="FAKE",
+        unique_id=None,
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_charger.test_and_get.return_value = {"model": "openevse_wifi_v1"}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.101"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        CONF_HOST: "192.168.1.101",
+        CONF_USERNAME: None,
+        CONF_PASSWORD: None,
     }

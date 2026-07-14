@@ -1,0 +1,11 @@
+{
+  "id": "dev_light_003",
+  "name": "Porch Light",
+  "type": "light",
+  "model": "XT-LT050",
+  "version": "1.0.0",
+  "online": true,
+  "status": {
+    "on": true
+  }
+}

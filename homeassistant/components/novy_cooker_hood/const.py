@@ -7,7 +7,6 @@ from rf_protocols import ModulationType
 DOMAIN: Final = "novy_cooker_hood"
 
 CONF_TRANSMITTER: Final = "transmitter"
-CONF_CODE: Final = "code"
 
 CODE_MIN: Final = 1
 CODE_MAX: Final = 10

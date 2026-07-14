@@ -17,11 +17,8 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
-async def test_full_flow(
-    hass: HomeAssistant,
-    mock_mealie_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_mealie_client: AsyncMock) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -52,12 +49,9 @@ async def test_full_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
-    hass: HomeAssistant,
-    mock_mealie_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_mealie_client: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test flow errors."""
     mock_mealie_client.get_user_info.side_effect = exception
@@ -86,11 +80,8 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_ingress_host(
-    hass: HomeAssistant,
-    mock_mealie_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_ingress_host(hass: HomeAssistant, mock_mealie_client: AsyncMock) -> None:
     """Test disallow ingress host."""
 
     result = await hass.config_entries.flow.async_init(
@@ -130,11 +121,9 @@ async def test_ingress_host(
         ("v2.0.0beta-2"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_version_error(
-    hass: HomeAssistant,
-    mock_mealie_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    version,
+    hass: HomeAssistant, mock_mealie_client: AsyncMock, version
 ) -> None:
     """Test flow version error."""
     mock_mealie_client.get_about.return_value = About(version=version)
@@ -155,10 +144,10 @@ async def test_flow_version_error(
     assert result["errors"] == {"base": "mealie_version"}
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate flow."""
@@ -180,10 +169,10 @@ async def test_duplicate(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reauth flow."""
@@ -203,10 +192,10 @@ async def test_reauth_flow(
     assert mock_config_entry.data[CONF_API_TOKEN] == "token2"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_wrong_account(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reauth flow with wrong account."""
@@ -235,10 +224,10 @@ async def test_reauth_flow_wrong_account(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_exceptions(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     error: str,
@@ -270,10 +259,10 @@ async def test_reauth_flow_exceptions(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow."""
@@ -299,10 +288,10 @@ async def test_reconfigure_flow(
     assert mock_config_entry.data[CONF_VERIFY_SSL] is False
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_wrong_account(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow with wrong account."""
@@ -331,10 +320,10 @@ async def test_reconfigure_flow_wrong_account(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_exceptions(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     error: str,
@@ -366,10 +355,10 @@ async def test_reconfigure_flow_exceptions(
     assert result["reason"] == "reconfigure_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_hassio_success(
     hass: HomeAssistant,
     mock_mealie_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test successful Supervisor flow."""
@@ -459,12 +448,9 @@ async def test_hassio_ignored(hass: HomeAssistant) -> None:
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_hassio_connection_error(
-    hass: HomeAssistant,
-    mock_mealie_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_mealie_client: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test flow errors."""
     mock_mealie_client.get_user_info.side_effect = exception

@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the YouTube integration."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from youtubeaio.helper import first
 from youtubeaio.types import UnauthorizedError, YouTubeBackendError
@@ -21,6 +21,7 @@ from .const import (
     ATTR_THUMBNAIL,
     ATTR_TITLE,
     ATTR_TOTAL_VIEWS,
+    ATTR_VIDEO_COUNT,
     ATTR_VIDEO_ID,
     CONF_CHANNELS,
     DOMAIN,
@@ -51,6 +52,7 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(minutes=15),
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         youtube = await self._auth.get_resource()
         res = {}
@@ -66,7 +68,9 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         ATTR_PUBLISHED_AT: video.snippet.added_at,
                         ATTR_TITLE: video.snippet.title,
                         ATTR_DESCRIPTION: video.snippet.description,
-                        ATTR_THUMBNAIL: video.snippet.thumbnails.get_highest_quality().url,
+                        ATTR_THUMBNAIL: (
+                            video.snippet.thumbnails.get_highest_quality().url
+                        ),
                         ATTR_VIDEO_ID: video.content_details.video_id,
                     }
                 res[channel.channel_id] = {
@@ -76,6 +80,7 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     ATTR_LATEST_VIDEO: latest_video,
                     ATTR_SUBSCRIBER_COUNT: channel.statistics.subscriber_count,
                     ATTR_TOTAL_VIEWS: channel.statistics.view_count,
+                    ATTR_VIDEO_COUNT: channel.statistics.video_count,
                 }
         except UnauthorizedError as err:
             raise ConfigEntryAuthFailed from err

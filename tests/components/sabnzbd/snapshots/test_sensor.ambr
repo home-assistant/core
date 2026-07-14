@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -44,10 +44,10 @@
 # name: test_sensor[sensor.sabnzbd_daily_total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Sabnzbd Daily total',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sabnzbd Daily total',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sabnzbd_daily_total',
@@ -64,7 +64,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,10 +102,10 @@
 # name: test_sensor[sensor.sabnzbd_free_disk_space-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Sabnzbd Free disk space',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sabnzbd Free disk space',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sabnzbd_free_disk_space',
@@ -122,7 +122,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -160,10 +160,10 @@
 # name: test_sensor[sensor.sabnzbd_left_to_download-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Sabnzbd Left to download',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sabnzbd Left to download',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sabnzbd_left_to_download',
@@ -180,7 +180,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -218,10 +218,10 @@
 # name: test_sensor[sensor.sabnzbd_monthly_total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Sabnzbd Monthly total',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sabnzbd Monthly total',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sabnzbd_monthly_total',
@@ -238,7 +238,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -276,10 +276,10 @@
 # name: test_sensor[sensor.sabnzbd_overall_total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Sabnzbd Overall total',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sabnzbd Overall total',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sabnzbd_overall_total',
@@ -296,7 +296,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -334,10 +334,10 @@
 # name: test_sensor[sensor.sabnzbd_queue-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Sabnzbd Queue',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.MEGABYTES: 'MB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sabnzbd Queue',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.MEGABYTES: 'MB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sabnzbd_queue',
@@ -354,7 +354,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -392,8 +392,8 @@
 # name: test_sensor[sensor.sabnzbd_queue_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sabnzbd Queue count',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sabnzbd Queue count',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sabnzbd_queue_count',
@@ -410,7 +410,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -451,10 +451,10 @@
 # name: test_sensor[sensor.sabnzbd_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_rate',
-      'friendly_name': 'Sabnzbd Speed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_rate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sabnzbd Speed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDataRate.MEGABYTES_PER_SECOND: 'MB/s'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sabnzbd_speed',
@@ -504,7 +504,7 @@
 # name: test_sensor[sensor.sabnzbd_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sabnzbd Status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sabnzbd Status',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sabnzbd_status',
@@ -521,7 +521,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -559,10 +559,10 @@
 # name: test_sensor[sensor.sabnzbd_total_disk_space-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Sabnzbd Total disk space',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sabnzbd Total disk space',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sabnzbd_total_disk_space',
@@ -579,7 +579,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -617,10 +617,10 @@
 # name: test_sensor[sensor.sabnzbd_weekly_total-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Sabnzbd Weekly total',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sabnzbd Weekly total',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sabnzbd_weekly_total',

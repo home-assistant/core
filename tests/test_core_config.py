@@ -928,6 +928,9 @@ async def test_config_as_dict() -> None:
         "currency": "EUR",
         "country": None,
         "language": "en",
+        "logging": {
+            "log_file_disabled_reason": None,
+        },
         "safe_mode": False,
         "debug": False,
         "radius": 100,

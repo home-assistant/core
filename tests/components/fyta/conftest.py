@@ -34,7 +34,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_fyta_connector():
-    """Build a fixture for the Fyta API that connects successfully and returns one device."""
+    """Build a fixture for the Fyta API that connects and returns one device."""
 
     plants: dict[int, Plant] = {
         0: Plant.from_dict(load_json_object_fixture("plant_status1.json", DOMAIN)),

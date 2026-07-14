@@ -1,0 +1,417 @@
+[
+  {
+    "deviceId": "D37A2C9F5E1B",
+    "deviceType": "Bot",
+    "power": "ON",
+    "version": "V6.3",
+    "deviceMode": "pressMode",
+    "hubDeviceId": "BBBBBBBBBB"
+  },
+  {
+    "deviceId": "8F2E5C7D9A0B",
+    "deviceType": "Battery Circulator Fan",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "mode": "direct",
+    "version": "V6.3",
+    "battery": 22,
+    "power": "on",
+    "nightStatus": "off",
+    "oscillation": "on",
+    "verticalOscillation": "on",
+    "chargingStatus": "charging",
+    "fanSpeed": 3
+  },
+  {
+    "deviceId": "A1C3E5F7D9B0",
+    "deviceType": "Standing Fan",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "mode": "direct",
+    "version": "V6.3",
+    "power": "on",
+    "nightStatus": "off",
+    "oscillation": "on",
+    "verticalOscillation": "on",
+    "fanSpeed": 3
+  },
+  {
+    "deviceId": "9B0D2F4A6C8E",
+    "deviceType": "Meter",
+    "hubDeviceId": "BBBBBBBBBB",
+    "temperature": 20,
+    "battery": 100,
+    "version": "V6.3",
+    "humidity": 30
+  },
+  {
+    "deviceId": "7E9C0B2D4F6A",
+    "deviceType": "MeterPlus",
+    "hubDeviceId": "BBBBBBBBBB",
+    "battery": 100,
+    "version": "V6.3",
+    "temperature": 20,
+    "humidity": 30
+  },
+  {
+    "deviceId": "5F7A9C0E2D4B",
+    "deviceType": "WoIOSensor",
+    "hubDeviceId": "BBBBBBBBBB",
+    "temperature": 20,
+    "battery": 100,
+    "onlineStatus": "online",
+    "version": "V6.3",
+    "humidity": 30
+  },
+  {
+    "deviceId": "3D5B7F9A0C2E",
+    "deviceType": "Presence Sensor",
+    "hubDeviceId": "BBBBBBBBBB",
+    "battery": 100,
+    "version": "V6.3",
+    "lightLevel": 3,
+    "detected": true
+  },
+  {
+    "deviceId": "1B3D5F7A9C0E",
+    "deviceType": "Relay Switch 1PM",
+    "switchStatus": 1,
+    "voltage": 20,
+    "power": 10,
+    "electricCurrent": 20,
+    "usedElectricity": 20,
+    "version": "V3.1-6.3"
+  },
+  {
+    "deviceId": "F1D3B5A79C0E",
+    "deviceType": "Plug Mini (US)",
+    "power": "ON",
+    "onlineStatus": "online",
+    "hubDeviceId": "BBBBBBBBBB",
+    "voltage": 20,
+    "version": "V3.1-6.3",
+    "weight": 10,
+    "electricityOfDay": 10,
+    "electricCurrent": 10
+  },
+  {
+    "deviceId": "E2C4A68F0D9B",
+    "deviceType": "Plug Mini (JP)",
+    "power": "ON",
+    "onlineStatus": "online",
+    "hubDeviceId": "BBBBBBBBBB",
+    "voltage": 20,
+    "version": "V3.1-6.3",
+    "weight": 10,
+    "electricityOfDay": 10,
+    "electricCurrent": 10
+  },
+  {
+    "deviceId": "94A990502B72",
+    "deviceType": "Plug Mini (EU)",
+    "switchStatus": 1,
+    "voltage": 236.8,
+    "power": 10,
+    "electricCurrent": 20,
+    "usedElectricity": 20,
+    "version": "V3.1-6.3"
+  },
+  {
+    "deviceId": "D4B6F8A0C2E9",
+    "deviceType": "Hub 2",
+    "hubDeviceId": "BBBBBBBBBB",
+    "temperature": 20,
+    "lightLevel": 20,
+    "onlineStatus": "online",
+    "version": "V0.7-0.5",
+    "humidity": 30
+  },
+  {
+    "deviceId": "C3A579F0D2B4",
+    "deviceType": "MeterPro",
+    "hubDeviceId": "BBBBBBBBBB",
+    "battery": 100,
+    "version": "V6.3",
+    "temperature": 13,
+    "humidity": 28
+  },
+  {
+    "deviceId": "B294D6F8A0C2",
+    "deviceType": "MeterPro(CO2)",
+    "hubDeviceId": "BBBBBBBBBB",
+    "battery": 100,
+    "version": "V6.3",
+    "temperature": 13,
+    "humidity": 28,
+    "CO2": 1203
+  },
+  {
+    "deviceId": "A183C5E7F9D0",
+    "deviceType": "Smart Lock",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "battery": 100,
+    "version": "V6.3",
+    "lockState": "unlock",
+    "doorState": "open",
+    "calibrate": true
+  },
+  {
+    "deviceId": "9072B4D6F8A0",
+    "deviceType": "Smart Lock Lite",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "battery": 100,
+    "version": "V6.3",
+    "lockState": "unlock",
+    "calibrate": true
+  },
+  {
+    "deviceId": "8F61D3B597A0",
+    "deviceType": "Smart Lock Pro",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "battery": 100,
+    "version": "V6.3",
+    "lockState": "unlock",
+    "doorState": "open",
+    "calibrate": true
+  },
+  {
+    "deviceId": "7E50C3A19F8D",
+    "deviceType": "Smart Lock Ultra",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "battery": 100,
+    "version": "V6.3",
+    "lockState": "unlock",
+    "doorState": "open",
+    "calibrate": true
+  },
+  {
+    "deviceId": "6D4F9C2A0E8B",
+    "deviceType": "Lock Vision",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "battery": 100,
+    "version": "V6.3",
+    "lockState": "unlock",
+    "doorState": "open",
+    "calibrate": true,
+    "onlineStatus": "online"
+  },
+  {
+    "deviceId": "5C3E9A0F8D6B",
+    "deviceType": "Lock Vision Pro",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "battery": 100,
+    "version": "V6.3",
+    "lockState": "unlock",
+    "doorState": "open",
+    "calibrate": true,
+    "onlineStatus": "online"
+  },
+  {
+    "deviceId": "4B2D8F0E9C7A",
+    "deviceType": "Smart Lock Vision",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "battery": 100,
+    "version": "V6.3",
+    "lockState": "unlock",
+    "doorState": "open",
+    "calibrate": true,
+    "onlineStatus": "online"
+  },
+  {
+    "deviceId": "3A1C7E0D9F5B",
+    "deviceType": "Smart Lock Vision Pro",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "battery": 100,
+    "version": "V6.3",
+    "lockState": "unlock",
+    "doorState": "open",
+    "calibrate": true,
+    "onlineStatus": "online"
+  },
+  {
+    "deviceId": "290E6D8F4A2C",
+    "deviceType": "Smart Lock Pro Wifi",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "battery": 100,
+    "version": "V6.3",
+    "lockState": "unlock",
+    "doorState": "open",
+    "calibrate": true,
+    "onlineStatus": "online"
+  },
+  {
+    "deviceId": "18F7D5B3A10C",
+    "deviceType": "Curtain",
+    "hubDeviceId": "BBBBBBBBBB",
+    "calibrate": false,
+    "group": false,
+    "moving": false,
+    "battery": 100,
+    "version": "V6.3",
+    "slidePosition": 50
+  },
+  {
+    "deviceId": "07E6C4A290F1",
+    "deviceType": "Curtain3",
+    "hubDeviceId": "BBBBBBBBBB",
+    "calibrate": false,
+    "group": false,
+    "moving": false,
+    "battery": 100,
+    "version": "V6.3",
+    "slidePosition": 50
+  },
+  {
+    "deviceId": "F6D5B3A190E2",
+    "deviceType": "Roller Shade",
+    "hubDeviceId": "BBBBBBBBBB",
+    "calibrate": false,
+    "moving": false,
+    "battery": 100,
+    "version": "V6.3",
+    "slidePosition": 50
+  },
+  {
+    "deviceId": "E5C4A290F1D3",
+    "deviceType": "Blind Tilt",
+    "hubDeviceId": "BBBBBBBBBB",
+    "version": 12,
+    "calibrate": false,
+    "group": false,
+    "moving": false,
+    "direction": "Up",
+    "slidePosition": 60
+  },
+  {
+    "version": "V0.5-0.3",
+    "temperature": 24.4,
+    "lightLevel": 10,
+    "moveDetected": true,
+    "onlineStatus": "online",
+    "deviceId": "B0E9FE582974",
+    "deviceType": "Hub 3",
+    "hubDeviceId": "B0E9FE582974"
+  },
+  {
+    "deviceId": "D4F2A08E6C5B",
+    "deviceType": "Motion Sensor",
+    "hubDeviceId": "BBBBBBBBBB",
+    "battery": 100,
+    "version": "V6.3",
+    "moveDetected": true,
+    "brightness": "bright"
+  },
+  {
+    "deviceId": "C3E19F7D5B3A",
+    "deviceType": "Motion Sensor",
+    "hubDeviceId": "BBBBBBBBBB",
+    "battery": 100,
+    "version": "V6.3",
+    "moveDetected": true,
+    "openState": "open",
+    "brightness": "bright"
+  },
+  {
+    "deviceId": "B2D08E6C4A29",
+    "deviceType": "Water Detector",
+    "hubDeviceId": "BBBBBBBBBB",
+    "battery": 100,
+    "onlineStatus": "online",
+    "version": "V6.3",
+    "status": 0
+  },
+  {
+    "deviceId": "A1C97F5D3B10",
+    "deviceType": "Motion Sensor",
+    "hubDeviceId": "BBBBBBBBBB",
+    "battery": 100,
+    "version": "V6.3",
+    "moveDetected": true,
+    "openState": "open",
+    "brightness": "bright"
+  },
+  {
+    "deviceId": "90B86E4C2A0F",
+    "deviceType": "Contact Sensor",
+    "hubDeviceId": "BBBBBBBBBB",
+    "battery": 100,
+    "version": "V6.3",
+    "moveDetected": true,
+    "openState": "open",
+    "brightness": "bright"
+  },
+  {
+    "deviceId": "8FA75D3B109E",
+    "deviceType": "Humidifier",
+    "nebulizationEfficiency": 1,
+    "humidity": 99,
+    "auto": false,
+    "childLock": true,
+    "sound": true,
+    "power": "on",
+    "onlineStatus": "online",
+    "temperature": 13.5,
+    "lackWater": true
+  },
+  {
+    "deviceId": "7E964C2A0F8D",
+    "deviceType": "Home Climate Panel",
+    "battery": 100,
+    "version": "V6.3",
+    "temperature": 13,
+    "humidity": 28,
+    "moveDetected": true,
+    "brightness": "bright"
+  },
+  {
+    "battery": 62,
+    "deviceId": "B0E9FE7FB6E2",
+    "deviceType": "Smart Radiator Thermostat",
+    "hubDeviceId": "000000000000",
+    "mode": 0,
+    "temperature": 17.5,
+    "version": "V0.2"
+  },
+  {
+    "deviceId": "B0E9FEA5D7F0",
+    "deviceType": "AI Art Frame",
+    "hubDeviceId": "B0E9FEA5D7F0",
+    "battery": 0,
+    "displayMode": 1,
+    "imageUrl": "https://p3.itc.cn/images01/20231215/2f2db37e221c4ad3af575254c7769ca1.jpeg",
+    "version": "V0.0-0.5"
+  },
+  {
+    "deviceId": "6D853B109E7F",
+    "deviceType": "WeatherStation",
+    "hubDeviceId": "BBBBBBBBBB",
+    "battery": 100,
+    "version": "V6.3",
+    "temperature": 13,
+    "humidity": 28
+  },
+  {
+    "deviceId": "5C742A0F8E6D",
+    "deviceType": "Relay Switch 2PM",
+    "online": true,
+    "switch1Status": 1,
+    "switch2Status": 1,
+    "switch1Voltage": 20,
+    "switch2Voltage": 20,
+    "switch1Power": 10,
+    "switch2Power": 10,
+    "switch1ElectricCurrent": 20,
+    "switch2ElectricCurrent": 20,
+    "switch1UsedElectricity": 20,
+    "switch2UsedElectricity": 20,
+    "version": "V3.1-6.3",
+    "calibrate": true,
+    "position": 0,
+    "isStuck": true
+  },
+  {
+    "deviceId": "FF14858256Ff",
+    "deviceType": "Garage Door Opener",
+    "doorState": 1,
+    "online": true,
+    "version": "V3.1-6.3"
+  }
+]

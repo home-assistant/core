@@ -5,16 +5,16 @@ import logging
 import jinja2
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
-from homeassistant.const import CONF_DISCOVERY, CONF_PAYLOAD, Platform
+from homeassistant.const import CONF_PAYLOAD, Platform
 from homeassistant.exceptions import TemplateError
 
 ATTR_DISCOVERY_HASH = "discovery_hash"
 ATTR_DISCOVERY_PAYLOAD = "discovery_payload"
 ATTR_DISCOVERY_TOPIC = "discovery_topic"
+ATTR_MESSAGE_EXPIRY_INTERVAL = "message_expiry_interval"
 ATTR_PAYLOAD = "payload"
 ATTR_QOS = "qos"
 ATTR_RETAIN = "retain"
-ATTR_SERIAL_NUMBER = "serial_number"
 ATTR_TOPIC = "topic"
 
 AVAILABILITY_ALL = "all"
@@ -42,19 +42,21 @@ CONF_COMMAND_TOPIC = "command_topic"
 CONF_CONTENT_TYPE = "content_type"
 CONF_DEFAULT_ENTITY_ID = "default_entity_id"
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
+CONF_DISCOVERY_QOS = "discovery_qos"
 CONF_ENCODING = "encoding"
 CONF_IMAGE_ENCODING = "image_encoding"
 CONF_IMAGE_TOPIC = "image_topic"
 CONF_JSON_ATTRS_TOPIC = "json_attributes_topic"
 CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
 CONF_KEEPALIVE = "keepalive"
-CONF_OPTIONS = "options"
+CONF_MESSAGE_EXPIRY_INTERVAL = "message_expiry_interval"
 CONF_ORIGIN = "origin"
 CONF_QOS = ATTR_QOS
 CONF_RETAIN = ATTR_RETAIN
 CONF_SCHEMA = "schema"
 CONF_STATE_TOPIC = "state_topic"
 CONF_STATE_VALUE_TEMPLATE = "state_value_template"
+CONF_TIMEZONE = "timezone"
 CONF_TOPIC = "topic"
 CONF_TRANSPORT = "transport"
 CONF_WS_PATH = "ws_path"
@@ -244,6 +246,7 @@ CONF_TILT_STATE_OPTIMISTIC = "tilt_optimistic"
 CONF_TRANSITION = "transition"
 CONF_URL_TEMPLATE = "url_template"
 CONF_URL_TOPIC = "url_topic"
+CONF_VISIBLE_BY_DEFAULT = "visible_by_default"
 CONF_XY_COMMAND_TEMPLATE = "xy_command_template"
 CONF_XY_COMMAND_TOPIC = "xy_command_topic"
 CONF_XY_STATE_TOPIC = "xy_state_topic"
@@ -312,7 +315,6 @@ DEFAULT_TILT_MAX = 100
 DEFAULT_TILT_MIN = 0
 DEFAULT_TILT_OPEN_POSITION = 100
 DEFAULT_TILT_OPTIMISTIC = False
-DEFAULT_WS_HEADERS: dict[str, str] = {}
 DEFAULT_WS_PATH = "/"
 DEFAULT_POSITION_CLOSED = 0
 DEFAULT_POSITION_OPEN = 100
@@ -382,17 +384,6 @@ PAYLOAD_NONE = "None"
 
 CONFIG_ENTRY_VERSION = 2
 CONFIG_ENTRY_MINOR_VERSION = 1
-
-# Split mqtt entry data and options
-# Can be removed when config entry is bumped to version 2.1
-# with HA Core 2026.7.0. Read support for version 2.1 is expected from 2026.1
-# From 2026.7 we will write version 2.1
-ENTRY_OPTION_FIELDS = (
-    CONF_DISCOVERY,
-    CONF_DISCOVERY_PREFIX,
-    "birth_message",
-    "will_message",
-)
 
 ENTITY_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,

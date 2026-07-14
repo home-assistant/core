@@ -1,11 +1,7 @@
 """Base entity for the Elgato integration."""
 
 from homeassistant.const import ATTR_CONNECTIONS, CONF_MAC
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -26,10 +22,11 @@ class ElgatoEntity(CoordinatorEntity[ElgatoDataUpdateCoordinator]):
             manufacturer="Elgato",
             model=coordinator.data.info.product_name,
             name=coordinator.data.info.display_name,
-            sw_version=f"{coordinator.data.info.firmware_version} ({coordinator.data.info.firmware_build_number})",
+            sw_version=(
+                f"{coordinator.data.info.firmware_version}"
+                f" ({coordinator.data.info.firmware_build_number})"
+            ),
             hw_version=str(coordinator.data.info.hardware_board_type),
         )
         if (mac := coordinator.config_entry.data.get(CONF_MAC)) is not None:
-            self._attr_device_info[ATTR_CONNECTIONS] = {
-                (CONNECTION_NETWORK_MAC, format_mac(mac))
-            }
+            self._attr_device_info[ATTR_CONNECTIONS] = {(CONNECTION_NETWORK_MAC, mac)}

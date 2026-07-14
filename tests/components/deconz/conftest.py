@@ -87,16 +87,27 @@ def fixture_config_entry_source() -> str:
 
 @pytest.fixture(name="mock_put_request")
 def fixture_put_request(
-    aioclient_mock: AiohttpClientMocker, config_entry_data: MappingProxyType[str, Any]
-) -> Callable[[str, str], AiohttpClientMocker]:
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_data: MappingProxyType[str, Any],
+) -> Callable[..., AiohttpClientMocker]:
     """Mock a deCONZ put request."""
     _host = config_entry_data[CONF_HOST]
     _port = config_entry_data[CONF_PORT]
     _api_key = config_entry_data[CONF_API_KEY]
 
-    def __mock_requests(path: str, host: str = "") -> AiohttpClientMocker:
+    def __mock_requests(
+        path: str,
+        host: str = "",
+        *,
+        exc: Exception | type[Exception] | None = None,
+    ) -> AiohttpClientMocker:
         url = f"http://{host or _host}:{_port}/api/{_api_key}{path}"
-        aioclient_mock.put(url, json={}, headers={"content-type": CONTENT_TYPE_JSON})
+        aioclient_mock.put(
+            url,
+            json={},
+            exc=exc,
+            headers={"content-type": CONTENT_TYPE_JSON},
+        )
         return aioclient_mock
 
     return __mock_requests
@@ -129,14 +140,17 @@ def fixture_get_request(
         sensor_payload = {"0": sensor_payload}
     data.setdefault("sensors", sensor_payload)
 
-    def __mock_requests(host: str = "") -> None:
+    def __mock_requests(
+        host: str = "",
+        *,
+        exc: Exception | type[Exception] | None = None,
+    ) -> None:
         url = f"http://{host or _host}:{_port}/api/{_api_key}"
         aioclient_mock.get(
             url,
             json=deconz_payload | {"config": config_payload},
-            headers={
-                "content-type": CONTENT_TYPE_JSON,
-            },
+            exc=exc,
+            headers={"content-type": CONTENT_TYPE_JSON},
         )
 
     return __mock_requests

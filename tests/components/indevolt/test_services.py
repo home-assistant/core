@@ -73,6 +73,25 @@ async def test_service_charge_discharge(
     else:
         mock_indevolt.discharge.assert_called_once_with(power, target_soc)
 
+    # Verify sensor states were updated optimistically
+    expected_rt_command = "charging" if service_name == "charge" else "discharging"
+
+    assert (state := hass.states.get("sensor.cms_sf2000_energy_mode")) is not None
+    assert state.state == "real_time_control"
+
+    assert (state := hass.states.get("sensor.cms_sf2000_real_time_mode")) is not None
+    assert state.state == expected_rt_command
+
+    assert (
+        state := hass.states.get("sensor.cms_sf2000_real_time_target_soc")
+    ) is not None
+    assert int(float(state.state)) == target_soc
+
+    assert (
+        state := hass.states.get("sensor.cms_sf2000_real_time_power_limit")
+    ) is not None
+    assert int(float(state.state)) == power
+
 
 @pytest.mark.parametrize("generation", [1], indirect=True)
 @pytest.mark.parametrize(
@@ -124,7 +143,7 @@ async def test_service_target_soc_below_minimum(
     mock_config_entry: MockConfigEntry,
     service_name: str,
 ) -> None:
-    """Test charge and discharge service validation when SOC is below the library hard minimum."""
+    """Test charge/discharge validation when SOC is below hard minimum."""
     await setup_integration(hass, mock_config_entry)
 
     # Configure the API mock to raise SocBelowMinimumError
@@ -220,7 +239,7 @@ async def test_multi_device_partial_validation_failure(
     power: int,
     target_soc: int,
 ) -> None:
-    """Test charge and discharge with two devices where only the gen 1 device fails power validation."""
+    """Test charge/discharge where only gen 1 device fails power validation."""
 
     # Set up multiple devices (gen 1 & gen 2)
     await setup_integration(hass, mock_config_entry)
@@ -375,7 +394,7 @@ async def test_single_device_execution_failure(
     await setup_integration(hass, mock_config_entry)
 
     # Simulate an API push failure
-    mock_indevolt.set_data.side_effect = OSError("Device push failed")
+    mock_indevolt.set_data.return_value = False
 
     # Mock call to start charging
     with pytest.raises(HomeAssistantError) as exc_info:
@@ -402,14 +421,14 @@ async def test_multi_device_execution_failure(
     mock_config_entry: MockConfigEntry,
     alt_mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that multi_device_errors is raised when execution fails for multiple devices."""
+    """Test multi_device_errors raised when execution fails for multiple."""
 
     # Set up multiple devices (gen 1 & gen 2)
     await setup_integration(hass, mock_config_entry)
     await setup_integration(hass, alt_mock_config_entry)
 
     # Simulate an API push failure (triggers for both coordinators)
-    mock_indevolt.set_data.side_effect = OSError("Device push failed")
+    mock_indevolt.set_data.return_value = False
 
     # Mock call to start charging both devices
     with pytest.raises(HomeAssistantError) as exc_info:

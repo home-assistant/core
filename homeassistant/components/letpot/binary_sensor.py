@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from letpot.models import DeviceFeature, LetPotDeviceStatus
 
@@ -95,7 +96,7 @@ async def async_setup_entry(
     entry: LetPotConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up LetPot binary sensor entities based on a config entry and device status/features."""
+    """Set up LetPot binary sensor entities."""
     coordinators = entry.runtime_data
     async_add_entities(
         LetPotBinarySensorEntity[LetPotGardenStatus](coordinator, description)
@@ -120,9 +121,14 @@ class LetPotBinarySensorEntity[_DataT: LetPotDeviceStatus](
         """Initialize LetPot binary sensor entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{coordinator.device.serial_number}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}"
+            f"_{coordinator.device.serial_number}"
+            f"_{description.key}"
+        )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if the binary sensor is on."""
         return self.entity_description.is_on_fn(self.coordinator.data)

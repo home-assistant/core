@@ -100,7 +100,9 @@ async def test_unlock_throws_august_api_http_error(hass: HomeAssistant) -> None:
             "unlock_return_activities": _unlock_return_activities_side_effect
         },
     )
-    data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
+    data = {
+        ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name"
+    }
 
     with pytest.raises(
         HomeAssistantError,
@@ -130,7 +132,9 @@ async def test_lock_throws_august_api_http_error(hass: HomeAssistant) -> None:
             "lock_return_activities": _lock_return_activities_side_effect
         },
     )
-    data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
+    data = {
+        ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name"
+    }
     with pytest.raises(
         HomeAssistantError,
         match=(
@@ -147,7 +151,9 @@ async def test_open_throws_hass_service_not_supported_error(
     """Test open throws correct error on entity does not support this service error."""
     mocked_lock_detail = await _mock_operative_august_lock_detail(hass)
     await _create_august_with_devices(hass, [mocked_lock_detail])
-    data = {ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name"}
+    data = {
+        ATTR_ENTITY_ID: "lock.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name"
+    }
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(LOCK_DOMAIN, SERVICE_OPEN, data, blocking=True)
 
@@ -160,10 +166,10 @@ async def test_inoperative_locks_are_filtered_out(hass: HomeAssistant) -> None:
         hass, [august_operative_lock, august_inoperative_lock]
     )
 
-    lock_abc_name = hass.states.get("lock.abc_name")
+    lock_abc_name = hass.states.get("lock.abc_name_abc_name")
     assert lock_abc_name is None
     lock_a6697750d607098bae8d6baa11ef8063_name = hass.states.get(
-        "lock.a6697750d607098bae8d6baa11ef8063_name"
+        "lock.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name"
     )
     assert lock_a6697750d607098bae8d6baa11ef8063_name.state == LockState.LOCKED
 
@@ -175,11 +181,11 @@ async def test_lock_has_doorsense(hass: HomeAssistant) -> None:
     await _create_august_with_devices(hass, [doorsenselock, nodoorsenselock])
 
     binary_sensor_online_with_doorsense_name_open = hass.states.get(
-        "binary_sensor.online_with_doorsense_name_door"
+        "binary_sensor.online_with_doorsense_name_online_with_doorsense_name_door"
     )
     assert binary_sensor_online_with_doorsense_name_open.state == STATE_ON
     binary_sensor_missing_doorsense_id_name_open = hass.states.get(
-        "binary_sensor.missing_with_doorsense_name_door"
+        "binary_sensor.missing_with_doorsense_name_missing_with_doorsense_name_door"
     )
     assert binary_sensor_missing_doorsense_id_name_open is None
 
@@ -203,7 +209,7 @@ async def test_load_unload(hass: HomeAssistant) -> None:
 async def test_load_triggers_ble_discovery(
     hass: HomeAssistant, mock_discovery: Mock
 ) -> None:
-    """Test that loading a lock that supports offline ble operation passes the keys to yalexe_ble."""
+    """Test loading a lock with offline BLE passes keys to yalexe_ble."""
 
     august_lock_with_key = await _mock_lock_with_offline_key(hass)
     august_lock_without_key = await _mock_operative_august_lock_detail(hass)
@@ -234,7 +240,9 @@ async def test_device_remove_devices(
     assert await async_setup_component(hass, "config", {})
     august_operative_lock = await _mock_operative_august_lock_detail(hass)
     config_entry, _ = await _create_august_with_devices(hass, [august_operative_lock])
-    entity = entity_registry.entities["lock.a6697750d607098bae8d6baa11ef8063_name"]
+    entity = entity_registry.entities[
+        "lock.a6697750d607098bae8d6baa11ef8063_name_a6697750d607098bae8d6baa11ef8063_name"
+    ]
 
     device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)

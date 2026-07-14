@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import AsyncIterator
 from contextlib import suppress
+from typing import override
 
 import aiohttp
 from aiohttp import web
@@ -120,6 +121,7 @@ class MjpegCamera(Camera):
         if device_info is not None:
             self._attr_device_info = device_info
 
+    @override
     async def stream_source(self) -> str:
         """Return the stream source."""
         url = URL(self._mjpeg_url)
@@ -129,6 +131,7 @@ class MjpegCamera(Camera):
             url = url.with_password(self._password)
         return str(url)
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -146,6 +149,7 @@ class MjpegCamera(Camera):
 
                 return await response.read()
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except TimeoutError:
             LOGGER.error("Timeout getting camera image from %s", self.name)
 
@@ -208,6 +212,7 @@ class MjpegCamera(Camera):
                         await response.write(chunk)
         return response
 
+    @override
     async def handle_async_mjpeg_stream(
         self, request: web.Request
     ) -> web.StreamResponse | None:

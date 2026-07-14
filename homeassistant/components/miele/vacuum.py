@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from enum import IntEnum
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohttp import ClientResponseError
 from pymiele import MieleEnum
@@ -27,8 +27,9 @@ PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 # The following const classes define program speeds and programs for the vacuum cleaner.
-# Miele have used the same and overlapping names for fan_speeds and programs even
-# if the contexts are different. This is an attempt to make it clearer in the integration.
+# Miele have used the same and overlapping names for
+# fan_speeds and programs even if the contexts are different.
+# This is an attempt to make it clearer in the integration.
 
 
 class FanSpeed(IntEnum):
@@ -164,6 +165,7 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
     _attr_name = None
 
     @property
+    @override
     def activity(self) -> VacuumActivity | None:
         """Return activity."""
         return VACUUM_PHASE_TO_ACTIVITY.get(
@@ -171,17 +173,19 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
         )
 
     @property
+    @override
     def fan_speed(self) -> str | None:
         """Return the fan speed."""
         return PROGRAM_TO_SPEED.get(self.device.state_program_id)
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the entity."""
 
-        return (
+        return super().available and (
             self.action.power_off_enabled or self.action.power_on_enabled
-        ) and super().available
+        )
 
     async def send(self, device_id: str, action: dict[str, Any]) -> None:
         """Send action to the device."""
@@ -197,22 +201,27 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
                 },
             ) from err
 
+    @override
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Clean spot."""
         await self.send(self._device_id, {PROGRAM_ID: FanProgram.spot})
 
+    @override
     async def async_start(self, **kwargs: Any) -> None:
         """Start cleaning."""
         await self.send(self._device_id, {PROCESS_ACTION: MieleActions.START})
 
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop cleaning."""
         await self.send(self._device_id, {PROCESS_ACTION: MieleActions.STOP})
 
+    @override
     async def async_pause(self, **kwargs: Any) -> None:
         """Pause cleaning."""
         await self.send(self._device_id, {PROCESS_ACTION: MieleActions.PAUSE})
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         await self.send(self._device_id, {PROGRAM_ID: PROGRAM_MAP[fan_speed]})

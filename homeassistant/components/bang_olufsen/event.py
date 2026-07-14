@@ -1,6 +1,6 @@
 """Event entities for the Bang & Olufsen integration."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from mozart_api.models import PairedRemote
 
@@ -50,7 +50,8 @@ async def async_setup_entry(
         )
 
     # If the remote is no longer available, then delete the device.
-    # The remote may appear as being available to the device after it has been unpaired on the remote
+    # The remote may appear as being available to the device
+    # after it has been unpaired on the remote
     # As it has to be removed from the device on the app.
 
     device_registry = dr.async_get(hass)
@@ -101,6 +102,7 @@ class BeoButtonEvent(BeoEvent):
 
         self._button_type = button_type
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Listen to WebSocket button events."""
         self.async_on_remove(
@@ -146,6 +148,7 @@ class BeoRemoteKeyEvent(BeoEvent):
 
         self._key_type = key_type
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Listen to WebSocket Beoremote One key events."""
         self.async_on_remove(

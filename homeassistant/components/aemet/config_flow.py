@@ -1,6 +1,6 @@
 """Config flow for AEMET OpenData."""
 
-from typing import Any
+from typing import Any, override
 
 from aemet_opendata.exceptions import AuthError
 from aemet_opendata.interface import AEMET, ConnectionOptions
@@ -31,6 +31,7 @@ OPTIONS_FLOW = {
 class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for AEMET OpenData."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -59,6 +60,8 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(CONF_API_KEY): str,
+                # Name field is no longer allowed in config flow schemas
+                # pylint: disable-next=home-assistant-config-flow-name-field
                 vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
                 vol.Optional(
                     CONF_LATITUDE, default=self.hass.config.latitude
@@ -80,6 +83,7 @@ class AemetConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:

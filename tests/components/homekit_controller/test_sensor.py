@@ -114,7 +114,7 @@ async def test_temperature_sensor_read_state(
 async def test_temperature_sensor_not_added_twice(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
-    """A standalone temperature sensor should not get a characteristic AND a service entity."""
+    """Test standalone temperature sensor gets only one entity."""
     helper = await setup_test_component(
         hass, get_next_aid(), create_temperature_sensor_service, suffix="temperature"
     )
@@ -351,7 +351,8 @@ async def test_switch_with_sensor(
     """Test a switch service that has a sensor characteristic is correctly handled."""
     helper = await setup_test_component(hass, get_next_aid(), create_switch_with_sensor)
 
-    # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
+    # Helper will be for the primary entity, which is the outlet. Make a helper for the
+    # sensor.
     energy_helper = Helper(
         hass,
         "sensor.testdevice_power",
@@ -387,7 +388,8 @@ async def test_sensor_unavailable(
     on_char = outlet[CharacteristicsTypes.ON]
     realtime_energy = outlet[CharacteristicsTypes.VENDOR_KOOGEEK_REALTIME_ENERGY]
 
-    # Helper will be for the primary entity, which is the outlet. Make a helper for the sensor.
+    # Helper will be for the primary entity, which is the outlet. Make a helper for the
+    # sensor.
     energy_helper = Helper(
         hass,
         "sensor.testdevice_power",

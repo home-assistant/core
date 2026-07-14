@@ -128,7 +128,7 @@ async def test_setup_subscriber_failure(
     setup_base_platform,
     expected_log_message: str,
 ) -> None:
-    """Test subscriber error handling (SubscriberException and SubscriberTimeoutException)."""
+    """Test subscriber error handling for various exceptions."""
     await setup_base_platform()
 
     entries = hass.config_entries.async_entries(DOMAIN)

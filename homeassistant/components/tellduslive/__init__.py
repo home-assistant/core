@@ -85,7 +85,7 @@ async def async_new_client(hass, session, entry):
     _LOGGER.debug("Update interval %s seconds", interval)
     client = TelldusLiveClient(hass, entry, session, interval)
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     hass.data[DOMAIN] = client
     dev_reg = dr.async_get(hass)
     for hub in await client.async_get_hubs():

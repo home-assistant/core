@@ -81,6 +81,17 @@
         "name": "Shut down"
       }
     },
+    "select": {
+      "fan_speed_mode": {
+        "name": "Fan speed mode",
+        "state": {
+          "cool": "Cool mode",
+          "full_speed": "Full-speed mode",
+          "low_power": "Low-Power mode",
+          "quiet": "Quiet mode"
+        }
+      }
+    },
     "sensor": {
       "cpu_15min_load": {
         "name": "CPU load average (15 min)"
@@ -185,6 +196,17 @@
       "update": {
         "name": "DSM update"
       }
+    }
+  },
+  "exceptions": {
+    "execution_error": {
+      "message": "Execute {action} on DSM with serial {serial} not possible, because of {error}."
+    },
+    "missing_serial": {
+      "message": "More than one DSM configured, must specify one of serials: {serials}."
+    },
+    "serial_not_found": {
+      "message": "DSM with specified serial {serial} not found."
     }
   },
   "issues": {
