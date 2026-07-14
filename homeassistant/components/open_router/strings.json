@@ -70,5 +70,19 @@
         }
       }
     }
+  },
+  "selector": {
+    "web_search_modes": {
+      "options": {
+        "off": "Off",
+        "plugin": "Plugin (configured in OpenRouter plugin settings, deprecated)",
+        "tool": "Auto (Native if supported by model, else Exa)",
+        "tool_exa": "Exa",
+        "tool_firecrawl": "Firecrawl",
+        "tool_native": "Model native",
+        "tool_parallel": "Parallel",
+        "tool_perplexity": "Perplexity"
+      }
+    }
   }
 }

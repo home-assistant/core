@@ -223,36 +223,16 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
                     ): SelectSelector(
                         SelectSelectorConfig(
                             options=[
-                                SelectOptionDict(value="off", label="Off"),
-                                SelectOptionDict(
-                                    value="plugin",
-                                    label="Plugin (configured in OpenRouter settings, deprecated)",
-                                ),
-                                SelectOptionDict(
-                                    value="tool",
-                                    label="Auto (Native if supported by model, else Exa)",
-                                ),
-                                SelectOptionDict(
-                                    value="tool_native",
-                                    label="Model native",
-                                ),
-                                SelectOptionDict(
-                                    value="tool_exa",
-                                    label="Exa",
-                                ),
-                                SelectOptionDict(
-                                    value="tool_firecrawl",
-                                    label="Firecrawl",
-                                ),
-                                SelectOptionDict(
-                                    value="tool_parallel",
-                                    label="Parallel",
-                                ),
-                                SelectOptionDict(
-                                    value="tool_perplexity",
-                                    label="Perplexity",
-                                ),
+                                "off",
+                                "plugin",
+                                "tool",
+                                "tool_native",
+                                "tool_exa",
+                                "tool_firecrawl",
+                                "tool_parallel",
+                                "tool_perplexity",
                             ],
+                            translation_key="web_search_modes",
                             mode=SelectSelectorMode.DROPDOWN,
                         )
                     ),
