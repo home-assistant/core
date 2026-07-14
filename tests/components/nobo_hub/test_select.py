@@ -158,10 +158,40 @@ async def test_zone_removed_removes_week_profile_entity(
     hass: HomeAssistant,
     mock_nobo_hub: MagicMock,
 ) -> None:
-    """A zone removed via the Nobø app must not crash and removes the entity."""
+    """Removing a zone via the Nobø app must not crash and removes the entity."""
     mock_nobo_hub.zones.pop("1")
     await fire_hub_update(hass, mock_nobo_hub)
     assert hass.states.get(PROFILE_ENTITY) is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_readded_zone_reappears_profile_selector(
+    hass: HomeAssistant,
+    mock_nobo_hub: MagicMock,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A zone removed and re-added under the same id (the hub reuses ids) restores its selector."""
+    entry_id = mock_config_entry.entry_id
+    zone = {
+        "zone_id": "2",
+        "name": "Bedroom",
+        "week_profile_id": "0",
+        "temp_comfort_c": "22",
+        "temp_eco_c": "18",
+    }
+
+    mock_nobo_hub.zones["2"] = zone
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert f"{SERIAL}:2:profile" in entity_unique_ids(entity_registry, entry_id)
+
+    del mock_nobo_hub.zones["2"]
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert f"{SERIAL}:2:profile" not in entity_unique_ids(entity_registry, entry_id)
+
+    mock_nobo_hub.zones["2"] = zone
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert f"{SERIAL}:2:profile" in entity_unique_ids(entity_registry, entry_id)
 
 
 @pytest.mark.usefixtures("init_integration")

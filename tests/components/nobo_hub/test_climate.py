@@ -201,7 +201,7 @@ async def test_zone_removed_removes_entity(
     hass: HomeAssistant,
     mock_nobo_hub: MagicMock,
 ) -> None:
-    """A zone removed via the Nobø app must not crash and removes the entity."""
+    """Removing a zone via the Nobø app must not crash and removes the entity."""
     mock_nobo_hub.zones.pop("1")
     await fire_hub_update(hass, mock_nobo_hub)
     assert hass.states.get(CLIMATE_ENTITY) is None

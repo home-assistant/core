@@ -62,10 +62,43 @@ async def test_component_removed_removes_entity(
     hass: HomeAssistant,
     mock_nobo_hub: MagicMock,
 ) -> None:
-    """A component removed via the Nobø app must not crash and removes the entity."""
+    """Removing a component via the Nobø app must not crash and removes the entity."""
     mock_nobo_hub.components.pop("200000059091")
     await fire_hub_update(hass, mock_nobo_hub)
     assert hass.states.get(TEMPERATURE_ENTITY) is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_readded_component_reappears(
+    hass: HomeAssistant,
+    mock_nobo_hub: MagicMock,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A component removed and re-added under the same serial (the hub reuses serials) reappears."""
+    entry_id = mock_config_entry.entry_id
+    serial = "200000059092"
+    model = MagicMock()
+    model.name = "Panel heater"
+    model.has_temp_sensor = True
+    component = {
+        "serial": serial,
+        "name": "Bedroom sensor",
+        "zone_id": "1",
+        "model": model,
+    }
+
+    mock_nobo_hub.components[serial] = component
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert serial in entity_unique_ids(entity_registry, entry_id)
+
+    del mock_nobo_hub.components[serial]
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert serial not in entity_unique_ids(entity_registry, entry_id)
+
+    mock_nobo_hub.components[serial] = component
+    await fire_hub_update(hass, mock_nobo_hub)
+    assert serial in entity_unique_ids(entity_registry, entry_id)
 
 
 @pytest.mark.parametrize(
