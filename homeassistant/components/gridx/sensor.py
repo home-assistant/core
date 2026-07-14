@@ -527,13 +527,15 @@ HIST_BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
     ),
 )
 
-ALL_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
-    *LIVE_BASE_DESCRIPTIONS,
-    *LIVE_BATTERY_DESCRIPTIONS,
-    *LIVE_EV_DESCRIPTIONS,
-    *LIVE_HEATPUMP_DESCRIPTIONS,
-    *LIVE_HEATER_DESCRIPTIONS,
-    *HIST_BASE_DESCRIPTIONS,
+# Optional subsystem sensors are only created when the corresponding data is
+# present in the live payload, keyed by the payload field to check.
+OPTIONAL_DESCRIPTIONS: tuple[
+    tuple[str, tuple[GridxSensorEntityDescription, ...]], ...
+] = (
+    ("battery", LIVE_BATTERY_DESCRIPTIONS),
+    ("evChargingStation", LIVE_EV_DESCRIPTIONS),
+    ("heatPumps", LIVE_HEATPUMP_DESCRIPTIONS),
+    ("heaters", LIVE_HEATER_DESCRIPTIONS),
 )
 
 
@@ -546,8 +548,14 @@ async def async_setup_entry(
     live_coordinator = entry.runtime_data.live_coordinator
     hist_coordinator = entry.runtime_data.hist_coordinator
 
+    descriptions = [*LIVE_BASE_DESCRIPTIONS, *HIST_BASE_DESCRIPTIONS]
+    live_data = live_coordinator.data or {}
+    for data_key, optional_descriptions in OPTIONAL_DESCRIPTIONS:
+        if live_data.get(data_key):
+            descriptions.extend(optional_descriptions)
+
     entities: list[SensorEntity] = []
-    for description in ALL_DESCRIPTIONS:
+    for description in descriptions:
         if description.coordinator_type == "hist":
             entities.append(
                 GridxHistoricalSensorEntity(

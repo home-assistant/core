@@ -83,10 +83,10 @@ async def test_battery_sensor_present(
     assert state.state == "77.0"
 
 
-async def test_battery_sensor_none_without_battery(
+async def test_battery_sensors_not_created_without_battery(
     hass: HomeAssistant, mock_gridx_connector: MagicMock
 ) -> None:
-    """Battery sensors should be STATE_UNKNOWN when no battery data is present."""
+    """Battery sensors are not created when no battery data is present."""
     live_no_battery = {k: v for k, v in MOCK_LIVE_DATA.items() if k != "battery"}
     mock_gridx_connector.retrieve_live_data.return_value = [live_no_battery]
     mock_gridx_connector.retrieve_historical_data.return_value = MOCK_HIST_DATA
@@ -109,11 +109,42 @@ async def test_battery_sensor_none_without_battery(
     entity = registry.async_get_entity_id(
         "sensor", DOMAIN, f"{entry.unique_id}_battery_stateOfCharge"
     )
-    assert entity is not None
-    state = hass.states.get(entity)
-    assert state is not None
-    # None value → unknown
-    assert state.state == STATE_UNKNOWN
+    assert entity is None
+
+
+async def test_optional_subsystem_sensors_created_when_present(
+    hass: HomeAssistant, mock_gridx_connector: MagicMock
+) -> None:
+    """EV, heat pump and heater sensors are created when their data exists."""
+    live_full = {
+        **MOCK_LIVE_DATA,
+        "evChargingStation": {"power": 11000, "stateOfCharge": 0.42},
+        "heatPumps": [{"power": 1500}],
+        "heaters": [{"power": 2000, "temperature": 48.5}],
+    }
+    mock_gridx_connector.retrieve_live_data.return_value = [live_full]
+    mock_gridx_connector.retrieve_historical_data.return_value = MOCK_HIST_DATA
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "full@example.com",
+            CONF_PASSWORD: PASSWORD,
+            CONF_OEM: OEM,
+        },
+        title="full@example.com",
+        unique_id="full@example.com",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    for key in ("ev_power", "heatpump_power", "heater_temperature"):
+        assert (
+            registry.async_get_entity_id("sensor", DOMAIN, f"{entry.unique_id}_{key}")
+            is not None
+        )
 
 
 async def test_grid_meter_ws_to_wh_conversion(
