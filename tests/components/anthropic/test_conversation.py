@@ -1,6 +1,7 @@
 """Tests for the Anthropic integration."""
 
 import datetime
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -56,9 +57,14 @@ from homeassistant.components.anthropic.const import (
     CONF_WEB_SEARCH_USER_LOCATION,
     DOMAIN,
 )
-from homeassistant.components.anthropic.entity import CitationDetails, ContentDetails
+from homeassistant.components.anthropic.entity import (
+    CitationDetails,
+    ContentDetails,
+    _convert_content,
+)
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
+from homeassistant.components.llm import LLMTools
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -164,7 +170,7 @@ async def test_error_handling(
         hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
 
 
@@ -189,7 +195,7 @@ async def test_template_error(
         hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
 
 
@@ -216,6 +222,7 @@ async def test_template_variables(
             ),
         },
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         create_content_block(0, ["Okay, let", " me take care of that for you", "."])
@@ -230,7 +237,7 @@ async def test_template_variables(
             hass, "hello", None, context, agent_id="conversation.claude_conversation"
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "Okay, let me take care of that for you."
@@ -297,6 +304,7 @@ async def test_prompt_caching_automatic(
             CONF_PROMPT_CACHING: "automatic",
         },
     )
+    await hass.async_block_till_done()
 
     context = Context()
 
@@ -317,7 +325,7 @@ async def test_prompt_caching_automatic(
     assert isinstance(system, str)
 
 
-@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 @pytest.mark.parametrize(
     ("tool_call_json_parts", "expected_call_tool_args"),
     [
@@ -354,7 +362,7 @@ async def test_function_call(
     )
     mock_tool.async_call.return_value = "Test response"
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     mock_create_stream.return_value = [
         (
@@ -382,7 +390,7 @@ async def test_function_call(
     system_text = " ".join(block["text"] for block in system if "text" in block)
     assert "You are a voice assistant for Home Assistant." in system_text
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "I have successfully called the function"
@@ -414,7 +422,7 @@ async def test_function_call(
     )
 
 
-@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 async def test_function_exception(
     mock_get_tools,
     hass: HomeAssistant,
@@ -434,7 +442,7 @@ async def test_function_exception(
     )
     mock_tool.async_call.side_effect = HomeAssistantError("Test tool exception")
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     mock_create_stream.return_value = [
         (
@@ -457,7 +465,7 @@ async def test_function_exception(
         agent_id=agent_id,
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "There was an error calling the function"
@@ -498,7 +506,7 @@ async def test_assist_api_tools_conversion(
     mock_create_stream: AsyncMock,
 ) -> None:
     """Test that we are able to convert actual tools from Assist API."""
-    for component in (
+    for domain in (
         "calendar",
         "climate",
         "cover",
@@ -513,9 +521,9 @@ async def test_assist_api_tools_conversion(
         "vacuum",
         "weather",
     ):
-        assert await async_setup_component(hass, component, {})
-        hass.states.async_set(f"{component}.test", "on")
-        async_expose_entity(hass, "conversation", f"{component}.test", True)
+        assert await async_setup_component(hass, domain, {})
+        hass.states.async_set(f"{domain}.test", "on")
+        async_expose_entity(hass, "conversation", f"{domain}.test", True)
 
     async_register_timer_handler(hass, "test_device", lambda *args: None)
 
@@ -638,7 +646,7 @@ async def test_refusal(
         agent_id="conversation.claude_conversation",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown"
     assert (
         result.response.speech["plain"]["speech"]
@@ -656,7 +664,7 @@ async def test_stream_wrong_type(
     mock_create_stream.return_value = Message(
         type="message",
         id="message_id",
-        model="claude-opus-4-6",
+        model="claude-fable-5",
         role="assistant",
         content=[TextBlock(type="text", text="This is not a stream")],
         usage=Usage(input_tokens=42, output_tokens=42),
@@ -670,7 +678,7 @@ async def test_stream_wrong_type(
         agent_id="conversation.claude_conversation",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown"
     assert result.response.speech["plain"]["speech"] == "Expected a stream of messages"
 
@@ -700,7 +708,7 @@ async def test_double_system_messages(
             agent_id="conversation.claude_conversation",
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.response_type is intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown"
     assert (
         result.response.speech["plain"]["speech"]
@@ -726,6 +734,7 @@ async def test_extended_thinking(
             CONF_THINKING_EFFORT: "medium",
         },
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         (
@@ -790,6 +799,7 @@ async def test_disabled_thinking(
         next(iter(mock_config_entry.subentries.values())),
         data=subentry_data,
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         create_content_block(1, ["Hello, how can I help you today?"])
@@ -843,7 +853,7 @@ async def test_redacted_thinking(
     assert chat_log.content[1:] == snapshot
 
 
-@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 async def test_extended_thinking_tool_call(
     mock_get_tools,
     hass: HomeAssistant,
@@ -862,6 +872,7 @@ async def test_extended_thinking_tool_call(
             CONF_THINKING_EFFORT: "medium",
         },
     )
+    await hass.async_block_till_done()
 
     agent_id = "conversation.claude_conversation"
     context = Context()
@@ -874,7 +885,7 @@ async def test_extended_thinking_tool_call(
     )
     mock_tool.async_call.return_value = "Test response"
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     mock_create_stream.return_value = [
         (
@@ -946,6 +957,7 @@ async def test_web_search(
             CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
         },
     )
+    await hass.async_block_till_done()
 
     web_search_results = [
         WebSearchResultBlock(
@@ -1091,6 +1103,7 @@ async def test_web_search_error(
             CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
         },
     )
+    await hass.async_block_till_done()
 
     web_search_results = WebSearchToolResultError(
         type="web_search_tool_result_error",
@@ -1169,6 +1182,7 @@ async def test_web_search_dynamic_filtering(
             CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
         },
     )
+    await hass.async_block_till_done()
 
     web_search_results = [
         WebSearchResultBlock(
@@ -1305,6 +1319,7 @@ async def test_bash_code_execution(
             CONF_CODE_EXECUTION: True,
         },
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         (
@@ -1385,6 +1400,7 @@ async def test_bash_code_execution_error(
             CONF_CODE_EXECUTION: True,
         },
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         (
@@ -1558,6 +1574,7 @@ async def test_text_editor_code_execution(
             CONF_CODE_EXECUTION: True,
         },
     )
+    await hass.async_block_till_done()
 
     mock_create_stream.return_value = [
         (
@@ -1608,6 +1625,7 @@ async def test_tool_search(
             CONF_TOOL_SEARCH: True,
         },
     )
+    await hass.async_block_till_done()
 
     tool_search_result = ToolSearchToolSearchResultBlock(
         type="tool_search_tool_search_result",
@@ -1722,6 +1740,7 @@ async def test_tool_search_error(
             CONF_TOOL_SEARCH: True,
         },
     )
+    await hass.async_block_till_done()
 
     tool_search_result = ToolSearchToolResultError(
         type="tool_search_tool_result_error",
@@ -1795,6 +1814,7 @@ async def test_web_fetch(
             CONF_WEB_FETCH_MAX_USES: 5,
         },
     )
+    await hass.async_block_till_done()
 
     web_fetch_result = WebFetchBlock(
         type="web_fetch_result",
@@ -1897,11 +1917,12 @@ async def test_web_fetch_error(
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
             CONF_CODE_EXECUTION: True,
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: "claude-fable-5",
             CONF_WEB_FETCH: True,
             CONF_WEB_FETCH_MAX_USES: 5,
         },
     )
+    await hass.async_block_till_done()
 
     web_fetch_result = WebFetchToolResultErrorBlock(
         type="web_fetch_tool_result_error",
@@ -2377,3 +2398,103 @@ async def test_history_conversion(
         )
 
         assert mock_create_stream.mock_calls[0][2]["messages"] == snapshot
+
+
+async def test_history_conversion_skips_whitespace_content(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Test that whitespace-only chat log content is not sent to the API.
+
+    The API rejects text content blocks that contain only whitespace, and a
+    single such entry in a reused chat session would fail every following turn.
+    """
+    conversation_id = "conversation_id"
+    mock_create_stream.return_value = [create_content_block(0, ["Yes, I am sure!"])]
+    with (
+        chat_session.async_get_chat_session(hass, conversation_id) as session,
+        conversation.async_get_chat_log(hass, session) as chat_log,
+    ):
+        chat_log.content = [
+            conversation.chat_log.SystemContent("You are a helpful assistant."),
+            conversation.chat_log.UserContent("What shape is a donut?"),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation", content="\n"
+            ),
+            conversation.chat_log.UserContent(" "),
+            conversation.chat_log.AssistantContent(
+                agent_id="conversation.claude_conversation", content="Round."
+            ),
+        ]
+
+        await conversation.async_converse(
+            hass,
+            "Are you sure?",
+            conversation_id,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    assert mock_create_stream.mock_calls[0][2]["messages"] == [
+        {"role": "user", "content": "What shape is a donut?"},
+        {"role": "assistant", "content": "Round."},
+        {"role": "user", "content": "Are you sure?"},
+        {"role": "assistant", "content": "Yes, I am sure!"},
+    ]
+
+
+def test_convert_content_whitespace_with_attachments() -> None:
+    """Test conversion of whitespace-only user content carrying attachments.
+
+    Attachments are only appended to the last message afterwards, so an empty
+    user message is only created when the content is the last entry; earlier
+    whitespace-only entries are dropped even if they carry attachments.
+    """
+    attachment = conversation.chat_log.Attachment(
+        media_content_id="media-source://media/doorbell_snapshot.jpg",
+        mime_type="image/jpg",
+        path=Path("doorbell_snapshot.jpg"),
+    )
+
+    # Not the last entry: dropped, surrounding user messages are combined
+    messages, _ = _convert_content(
+        [
+            conversation.chat_log.UserContent("Take a look"),
+            conversation.chat_log.UserContent(" ", attachments=[attachment]),
+            conversation.chat_log.UserContent("What do you see?"),
+        ]
+    )
+    assert messages == [
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Take a look"},
+                {"type": "text", "text": "What do you see?"},
+            ],
+        },
+    ]
+
+    # Last entry preceded by a user message: no text block is added, the
+    # attachments are appended to the preceding message afterwards
+    messages, _ = _convert_content(
+        [
+            conversation.chat_log.UserContent("Take a look"),
+            conversation.chat_log.UserContent(" ", attachments=[attachment]),
+        ]
+    )
+    assert messages == [
+        {"role": "user", "content": "Take a look"},
+    ]
+
+    # Last entry with no preceding user message: an empty message is created
+    # for the attachments to be appended to afterwards
+    messages, _ = _convert_content(
+        [
+            conversation.chat_log.UserContent(" ", attachments=[attachment]),
+        ]
+    )
+    assert messages == [
+        {"role": "user", "content": []},
+    ]

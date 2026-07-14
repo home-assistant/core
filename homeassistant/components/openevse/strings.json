@@ -3,7 +3,9 @@
     "abort": {
       "already_configured": "This charger is already configured",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unavailable_host": "Unable to connect to host"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unavailable_host": "Unable to connect to host",
+      "unique_id_mismatch": "The charger identifier does not match the previous identifier"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -31,6 +33,19 @@
         },
         "description": "The credentials for your OpenEVSE charger at {host} are no longer valid. Please enter your current username and password."
       },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "Enter the IP address of your OpenEVSE.",
+          "password": "[%key:component::openevse::config::step::auth::data_description::password%]",
+          "username": "[%key:component::openevse::config::step::auth::data_description::username%]"
+        },
+        "description": "Update the configuration for your OpenEVSE charger."
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -42,6 +57,34 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "divert_active": {
+        "name": "Divert active"
+      },
+      "has_limit": {
+        "name": "Limit active"
+      },
+      "mqtt_connected": {
+        "name": "MQTT connected"
+      },
+      "shaper_active": {
+        "name": "Shaper active"
+      },
+      "using_ethernet": {
+        "name": "Ethernet connected"
+      },
+      "vehicle": {
+        "name": "Vehicle connected"
+      }
+    },
+    "button": {
+      "restart": {
+        "name": "Restart"
+      },
+      "restart_wifi": {
+        "name": "Restart Wi-Fi"
+      }
+    },
     "number": {
       "charge_rate": {
         "name": "Charge rate"
@@ -164,6 +207,20 @@
       "vehicle_soc": {
         "name": "Vehicle state of charge"
       }
+    }
+  },
+  "exceptions": {
+    "authentication_error": {
+      "message": "Authentication failed"
+    },
+    "communication_error": {
+      "message": "Failed to communicate with the charger"
+    },
+    "invalid_value": {
+      "message": "Value {value} is invalid for the charger."
+    },
+    "unsupported_feature": {
+      "message": "The charger does not support this feature."
     }
   },
   "issues": {

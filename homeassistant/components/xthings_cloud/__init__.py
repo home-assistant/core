@@ -2,10 +2,11 @@
 
 from ha_xthings_cloud import XthingsCloudApiClient
 
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_TOKEN, PLATFORMS
+from .const import PLATFORMS
 from .coordinator import XthingsCloudConfigEntry, XthingsCloudCoordinator
 
 

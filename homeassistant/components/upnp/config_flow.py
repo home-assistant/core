@@ -1,7 +1,7 @@
 """Config flow for UPNP."""
 
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, cast, override
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -97,6 +97,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> UpnpOptionsFlowHandler:
@@ -117,6 +118,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         """Remove a discovery by its USN/unique_id."""
         return self._discoveries.pop(usn)
 
+    @override
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -170,6 +172,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=data_schema,
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -256,6 +259,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         discovery = self._remove_discovery(self.unique_id)
         return await self._async_create_entry_from_discovery(discovery)
 
+    @override
     async def async_step_ignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Ignore this config flow."""
         usn = user_input["unique_id"]

@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from proxmoxer import AuthenticationError
 from proxmoxer.core import ResourceException
@@ -25,6 +25,8 @@ from .const import DOMAIN, ProxmoxPermission
 from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, ProxmoxNodeData
 from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
 from .helpers import is_granted
+
+PARALLEL_UPDATES = 1
 
 NO_PERM_VM_LXC_POWER = "no_permission_vm_lxc_power"
 
@@ -314,6 +316,7 @@ class ProxmoxBaseButton(ButtonEntity):
     async def _async_press_call(self) -> None:
         """Abstract method used per Proxmox button class."""
 
+    @override
     async def async_press(self) -> None:
         """Trigger the Proxmox button press service."""
         try:
@@ -321,22 +324,22 @@ class ProxmoxBaseButton(ButtonEntity):
         except AuthenticationError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="cannot_connect_no_details",
+                translation_key="cannot_connect",
             ) from err
         except SSLError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="invalid_auth_no_details",
+                translation_key="invalid_auth",
             ) from err
         except ConnectTimeout as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="timeout_connect_no_details",
+                translation_key="timeout_connect",
             ) from err
         except (ResourceException, requests.exceptions.ConnectionError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="api_error_no_details",
+                translation_key="api_error_details",
             ) from err
 
 
@@ -345,6 +348,7 @@ class ProxmoxNodeButtonEntity(ProxmoxNodeEntity, ProxmoxBaseButton):
 
     entity_description: ProxmoxNodeButtonNodeEntityDescription
 
+    @override
     async def _async_press_call(self) -> None:
         """Execute the node button action via executor."""
         node_id = self._node_data.node["node"]
@@ -370,6 +374,7 @@ class ProxmoxVMButtonEntity(ProxmoxVMEntity, ProxmoxBaseButton):
 
     entity_description: ProxmoxVMButtonEntityDescription
 
+    @override
     async def _async_press_call(self) -> None:
         """Execute the VM button action via executor."""
         vmid = self.vm_data["vmid"]
@@ -396,6 +401,7 @@ class ProxmoxContainerButtonEntity(ProxmoxContainerEntity, ProxmoxBaseButton):
 
     entity_description: ProxmoxContainerButtonEntityDescription
 
+    @override
     async def _async_press_call(self) -> None:
         """Execute the container button action via executor."""
         vmid = self.container_data["vmid"]

@@ -125,6 +125,9 @@ class FreeboxRouter:
         self.supports_raid = True
         self.raids: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
+        self.sensors_temperature_names: dict[str, str] = {}
+        self.sensors_fan: dict[str, int] = {}
+        self.sensors_fan_names: dict[str, str] = {}
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
@@ -185,7 +188,15 @@ class FreeboxRouter:
         # temperature sensors in celsius degree.
         # Name and id of sensors may vary under Freebox devices.
         for sensor in syst_datas["sensors"]:
-            self.sensors_temperature[sensor["name"]] = sensor.get("value")
+            sensor_id = sensor["id"]
+            self.sensors_temperature[sensor_id] = sensor.get("value")
+            self.sensors_temperature_names[sensor_id] = sensor["name"]
+
+        # Fan speed sensors (rpm). Name and id may vary under Freebox devices.
+        for fan in syst_datas.get("fans", []):
+            fan_id = fan["id"]
+            self.sensors_fan[fan_id] = fan.get("value")
+            self.sensors_fan_names[fan_id] = fan["name"]
 
         # Connection sensors
         connection_datas: dict[str, Any] = await self._api.connection.get_status()
@@ -197,7 +208,7 @@ class FreeboxRouter:
             "IPv6": connection_datas.get("ipv6"),
             "connection_type": connection_datas["media"],
             "uptime": datetime.fromtimestamp(
-                round(datetime.now().timestamp()) - syst_datas["uptime_val"]
+                round(datetime.now().timestamp()) - syst_datas["uptime_val"]  # pylint: disable=home-assistant-enforce-naive-now
             ),
             "firmware_version": self._sw_v,
             "serial": syst_datas["serial"],
@@ -318,7 +329,11 @@ class FreeboxRouter:
     @property
     def sensors(self) -> dict[str, Any]:
         """Return sensors."""
-        return {**self.sensors_temperature, **self.sensors_connection}
+        return {
+            **self.sensors_temperature,
+            **self.sensors_fan,
+            **self.sensors_connection,
+        }
 
     @property
     def call(self) -> Call:

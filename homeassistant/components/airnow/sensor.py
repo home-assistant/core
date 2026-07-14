@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from dateutil import parser
 
@@ -12,11 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    ATTR_TIME,
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
-)
+from homeassistant.const import ATTR_TIME, UnitOfDensity, UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -95,7 +91,7 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     AirNowEntityDescription(
         key=ATTR_API_PM10,
         translation_key="pm10",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM10,
         value_fn=lambda data: data.get(ATTR_API_PM10),
@@ -104,7 +100,7 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     AirNowEntityDescription(
         key=ATTR_API_PM25,
         translation_key="pm25",
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PM25,
         value_fn=lambda data: data.get(ATTR_API_PM25),
@@ -113,7 +109,7 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     AirNowEntityDescription(
         key=ATTR_API_O3,
         translation_key="o3",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.get(ATTR_API_O3),
         extra_state_attributes_fn=None,
@@ -168,11 +164,13 @@ class AirNowSensor(CoordinatorEntity[AirNowDataUpdateCoordinator], SensorEntity)
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the state attributes."""
         if self.entity_description.extra_state_attributes_fn:

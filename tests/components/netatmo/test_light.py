@@ -127,12 +127,12 @@ async def test_setup_component_no_devices(hass: HomeAssistant, config_entry) -> 
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["light"]),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["light"]),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = (

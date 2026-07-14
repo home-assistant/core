@@ -868,7 +868,8 @@ async def test_delay_template_invalid(
                 {
                     "error": (
                         "offset  should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
-                    )
+                    ),
+                    "template_errors": ["'invalid_delay' is undefined"],
                 }
             ],
         },
@@ -933,7 +934,12 @@ async def test_delay_template_complex_invalid(
     assert_action_trace(
         {
             "0": [{"result": {"event": "test_event", "event_data": {}}}],
-            "1": [{"error": "expected float for dictionary value @ data['seconds']"}],
+            "1": [
+                {
+                    "error": "expected float for dictionary value @ data['seconds']",
+                    "template_errors": ["'invalid_delay' is undefined"],
+                }
+            ],
         },
         expected_script_execution="aborted",
     )
@@ -2646,7 +2652,12 @@ async def test_repeat_for_each_invalid_template(
 
     assert_action_trace(
         {
-            "0": [{"error": "Repeat 'for_each' must be a list of items"}],
+            "0": [
+                {
+                    "error": "Repeat 'for_each' must be a list of items",
+                    "template_errors": ["'Muhaha' is undefined"],
+                }
+            ],
         },
         expected_script_execution="aborted",
     )
@@ -2715,7 +2726,12 @@ async def test_repeat_condition_warning(
     expected_trace[f"0/repeat/{condition}/0"] = [
         {"error": "In 'numeric_state':\n  " + expected_error}
     ]
-    expected_trace[f"0/repeat/{condition}/0/entity_id/0"] = [{"error": expected_error}]
+    expected_trace[f"0/repeat/{condition}/0/entity_id/0"] = [
+        {
+            "error": expected_error,
+            "template_errors": ["'unassigned_variable' is undefined"],
+        }
+    ]
     assert_action_trace(expected_trace)
 
 
@@ -4292,6 +4308,45 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "repeat": {
+                        "count": 3,
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"label_id": "label_repeat_count_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "while": {
+                            "condition": "light.is_on",
+                            "target": {"label_id": "label_repeat_while_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"label_id": "label_repeat_while_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "until": {
+                            "condition": "light.is_on",
+                            "target": {"label_id": "label_repeat_until_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"label_id": "label_repeat_until_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
                     "wait_for_trigger": {
                         "platform": "state",
                         "entity_id": "sensor.test",
@@ -4329,6 +4384,11 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
         "label_in_data_template",
         "label_in_target",
         "label_parallel",
+        "label_repeat_count_seq",
+        "label_repeat_until_cond",
+        "label_repeat_until_seq",
+        "label_repeat_while_cond",
+        "label_repeat_while_seq",
         "label_sequence",
         "label_service_list_1",
         "label_service_list_2",
@@ -4446,6 +4506,45 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "repeat": {
+                        "count": 3,
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"floor_id": "floor_repeat_count_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "while": {
+                            "condition": "light.is_on",
+                            "target": {"floor_id": "floor_repeat_while_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"floor_id": "floor_repeat_while_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "until": {
+                            "condition": "light.is_on",
+                            "target": {"floor_id": "floor_repeat_until_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"floor_id": "floor_repeat_until_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
                     "wait_for_trigger": {
                         "platform": "state",
                         "entity_id": "sensor.test",
@@ -4483,6 +4582,11 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
         "floor_in_data_template",
         "floor_in_target",
         "floor_parallel",
+        "floor_repeat_count_seq",
+        "floor_repeat_until_cond",
+        "floor_repeat_until_seq",
+        "floor_repeat_while_cond",
+        "floor_repeat_while_seq",
         "floor_sequence",
         "floor_service_list",
         "floor_service_not_list",
@@ -4599,6 +4703,45 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "repeat": {
+                        "count": 3,
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"area_id": "area_repeat_count_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "while": {
+                            "condition": "light.is_on",
+                            "target": {"area_id": "area_repeat_while_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"area_id": "area_repeat_while_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "until": {
+                            "condition": "light.is_on",
+                            "target": {"area_id": "area_repeat_until_cond"},
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"area_id": "area_repeat_until_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
                     "wait_for_trigger": {
                         "platform": "state",
                         "entity_id": "sensor.test",
@@ -4636,6 +4779,11 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
         "area_in_data_template",
         "area_in_target",
         "area_parallel",
+        "area_repeat_count_seq",
+        "area_repeat_until_cond",
+        "area_repeat_until_seq",
+        "area_repeat_while_cond",
+        "area_repeat_while_seq",
         "area_sequence",
         "area_service_list",
         "area_service_not_list",
@@ -4686,6 +4834,18 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                 {"action": "test.script", "data": {"without": "entity_id"}},
                 {"scene": "scene.hello"},
                 {
+                    "domain": "light",
+                    "device_id": "abcdefgh",
+                    "entity_id": "light.device_action",
+                    "type": "turn_on",
+                },
+                {
+                    "domain": "light",
+                    "device_id": "abcdefgh",
+                    "entity_id": "1234567890abcdef1234567890abcdef",
+                    "type": "turn_on",
+                },
+                {
                     "choose": [
                         {
                             "conditions": "{{ states.light.choice_1_cond == 'on' }}",
@@ -4718,6 +4878,14 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                     ],
                 },
                 {"event": "test_event"},
+                {
+                    "event": "test_event",
+                    "event_data": {"entity_id": "light.event_data"},
+                },
+                {
+                    "event": "test_event",
+                    "event_data": {"entity_id": "not-a-valid-entity-id"},
+                },
                 {"delay": "{{ delay_period }}"},
                 {
                     "if": [],
@@ -4764,6 +4932,47 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "repeat": {
+                        "count": 3,
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"entity_id": "light.repeat_count_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "while": {
+                            "condition": "state",
+                            "entity_id": "sensor.repeat_while_cond",
+                            "state": "100",
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"entity_id": "light.repeat_while_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "until": {
+                            "condition": "state",
+                            "entity_id": "sensor.repeat_until_cond",
+                            "state": "100",
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "data": {"entity_id": "light.repeat_until_seq"},
+                            }
+                        ],
+                    },
+                },
+                {
                     "wait_for_trigger": {
                         "platform": "state",
                         "entity_id": ["sensor.wait_trigger_state"],
@@ -4792,15 +5001,22 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
         "light.condition_list_2",
         "light.condition_target",
         "light.default_seq",
+        "light.device_action",
         "light.direct_entity_referenced",
         "light.entity_in_data_template",
         "light.entity_in_target",
+        "light.event_data",
         "light.service_list",
         "light.service_not_list",
         "light.if_then",
         "light.if_else",
         "light.parallel",
+        "light.repeat_count_seq",
+        "light.repeat_until_seq",
+        "light.repeat_while_seq",
         "light.sequence",
+        "sensor.repeat_until_cond",
+        "sensor.repeat_while_cond",
         # "light.service_template",  # no entity extraction from template
         "scene.hello",
         "sensor.condition",
@@ -4924,11 +5140,57 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
                     ],
                 },
                 {
+                    "repeat": {
+                        "count": 3,
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "target": {"device_id": "repeat-count-seq-device"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "while": {
+                            "condition": "device",
+                            "device_id": "repeat-while-cond-dev-id",
+                            "domain": "switch",
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "target": {"device_id": "repeat-while-seq-device"},
+                            }
+                        ],
+                    },
+                },
+                {
+                    "repeat": {
+                        "until": {
+                            "condition": "device",
+                            "device_id": "repeat-until-cond-dev-id",
+                            "domain": "switch",
+                        },
+                        "sequence": [
+                            {
+                                "action": "test.script",
+                                "target": {"device_id": "repeat-until-seq-device"},
+                            }
+                        ],
+                    },
+                },
+                {
                     "wait_for_trigger": {
                         "platform": "device",
                         "device_id": "wait-trigger-device",
                         "domain": "switch",
                     },
+                },
+                {"event": "test_event"},
+                {
+                    "event": "test_event",
+                    "event_data": {"device_id": "event-data-device"},
                 },
                 {
                     "wait_for_trigger": {
@@ -4966,6 +5228,7 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
         "data-string-id",
         "data-template-string-id",
         "default-device-target",
+        "event-data-device",
         "script-dev-id",
         "target-list-id-1",
         "target-list-id-2",
@@ -4973,6 +5236,11 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
         "if-then",
         "if-else",
         "parallel-device",
+        "repeat-count-seq-device",
+        "repeat-until-cond-dev-id",
+        "repeat-until-seq-device",
+        "repeat-while-cond-dev-id",
+        "repeat-while-seq-device",
         "sequence-device",
         "wait-trigger-device",
         "wait-trigger-target",
@@ -6745,6 +7013,32 @@ async def test_conversation_response_not_set_subscript_if(
         "1/if/condition/0": [{"result": {"result": var == 1, "entities": []}}],
     }
     assert_action_trace(expected_trace)
+
+
+async def test_conversation_response_nested_with_stop(
+    hass: HomeAssistant,
+) -> None:
+    """Test setting conversation response in a child block with a stop."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "choose": {
+                    "conditions": {
+                        "condition": "template",
+                        "value_template": "{{ true }}",
+                    },
+                    "sequence": [
+                        {"set_conversation_response": "{{ 'conversation response' }}"},
+                        {"stop": "stop response"},
+                    ],
+                },
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    result = await script_obj.async_run(context=Context())
+    assert result.conversation_response == "conversation response"
 
 
 async def test_stopping_run_before_starting(

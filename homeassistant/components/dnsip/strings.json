@@ -15,7 +15,7 @@
           "hostname": "The hostname for which to perform the DNS query."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "port": "IPv4 port",
               "port_ipv6": "IPv6 port",
@@ -29,7 +29,7 @@
               "resolver_ipv6": "Resolver used for the IPv6 lookup."
             },
             "description": "Optionally change resolvers and ports.",
-            "name": "Advanced options"
+            "name": "Additional options"
           }
         }
       }
@@ -63,16 +63,16 @@
     "step": {
       "init": {
         "data": {
-          "port": "[%key:component::dnsip::config::step::user::sections::advanced_options::data::port%]",
-          "port_ipv6": "[%key:component::dnsip::config::step::user::sections::advanced_options::data::port_ipv6%]",
-          "resolver": "[%key:component::dnsip::config::step::user::sections::advanced_options::data::resolver%]",
-          "resolver_ipv6": "[%key:component::dnsip::config::step::user::sections::advanced_options::data::resolver_ipv6%]"
+          "port": "[%key:component::dnsip::config::step::user::sections::additional_options::data::port%]",
+          "port_ipv6": "[%key:component::dnsip::config::step::user::sections::additional_options::data::port_ipv6%]",
+          "resolver": "[%key:component::dnsip::config::step::user::sections::additional_options::data::resolver%]",
+          "resolver_ipv6": "[%key:component::dnsip::config::step::user::sections::additional_options::data::resolver_ipv6%]"
         },
         "data_description": {
-          "port": "[%key:component::dnsip::config::step::user::sections::advanced_options::data_description::port%]",
-          "port_ipv6": "[%key:component::dnsip::config::step::user::sections::advanced_options::data_description::port_ipv6%]",
-          "resolver": "[%key:component::dnsip::config::step::user::sections::advanced_options::data_description::resolver%]",
-          "resolver_ipv6": "[%key:component::dnsip::config::step::user::sections::advanced_options::data_description::resolver_ipv6%]"
+          "port": "[%key:component::dnsip::config::step::user::sections::additional_options::data_description::port%]",
+          "port_ipv6": "[%key:component::dnsip::config::step::user::sections::additional_options::data_description::port_ipv6%]",
+          "resolver": "[%key:component::dnsip::config::step::user::sections::additional_options::data_description::resolver%]",
+          "resolver_ipv6": "[%key:component::dnsip::config::step::user::sections::additional_options::data_description::resolver_ipv6%]"
         },
         "description": "Optionally change resolvers and ports."
       }

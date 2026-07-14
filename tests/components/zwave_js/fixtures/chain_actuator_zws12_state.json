@@ -27,7 +27,7 @@
   "nodeType": 0,
   "roleType": 5,
   "name": "ZWS 12\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
-  "location": "UNKNOWN\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+  "location": "",
   "deviceConfig": {
     "manufacturerId": 133,
     "manufacturer": "Fakro",
