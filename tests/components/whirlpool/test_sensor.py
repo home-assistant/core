@@ -224,6 +224,18 @@ async def test_oven_kitchen_timer_sensor(
         state.state == utc_from_timestamp(as_timestamp(expected_time) + 65).isoformat()
     )
 
+    # Test the end time freezes when the timer finishes.
+    timer.get_state.return_value = KitchenTimerState.Completed
+    await trigger_attr_callback(hass, mock_oven_single_cavity_api)
+    state = hass.states.get(entity_id)
+    finished_time = now.isoformat()
+    assert state.state == finished_time
+
+    # Test the end time doesn't change on subsequent polls while finished.
+    await trigger_attr_callback(hass, mock_oven_single_cavity_api)
+    state = hass.states.get(entity_id)
+    assert state.state == finished_time
+
     # Test that periodic updates call the API to fetch data.
     mock_oven_single_cavity_api.fetch_data.reset_mock()
     freezer.tick(SCAN_INTERVAL)
