@@ -293,8 +293,9 @@ def _patch_aiodns_to_disable_edns() -> None:
     except ImportError:
         return
 
+    patch_marker = "ha_disable_edns_patched"
     original_init = aiodns.DNSResolver.__init__
-    if getattr(original_init, "_ha_disable_edns_patched", False):
+    if getattr(original_init, patch_marker, False):
         return
 
     def new_init(self: Any, *args: Any, **kwargs: Any) -> None:
@@ -302,7 +303,7 @@ def _patch_aiodns_to_disable_edns() -> None:
             kwargs["flags"] = 0
         original_init(self, *args, **kwargs)
 
-    setattr(new_init, "_ha_disable_edns_patched", True)
+    setattr(new_init, patch_marker, True)
     aiodns.DNSResolver.__init__ = new_init  # type: ignore[method-assign]
 
 
