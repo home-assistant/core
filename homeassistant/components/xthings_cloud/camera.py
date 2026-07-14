@@ -1,6 +1,6 @@
 """Camera platform for Xthings Cloud."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from ha_xthings_cloud import KvsSignalingClient, XthingsCloudApiError
@@ -82,11 +82,13 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         return self.coordinator.data[self._device_id]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if on."""
         return True
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if device is available."""
         return (
@@ -95,6 +97,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             and self.device_data["online"]
         )
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -118,6 +121,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             LOGGER.debug("Failed to fetch camera snapshot from %s: %s", url, err)
         return None
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up tasks and sessions when entity is removed."""
         for session_id in list(self._kvs_sessions):
@@ -126,6 +130,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         self._pending_candidates.clear()
         await super().async_will_remove_from_hass()
 
+    @override
     async def async_handle_async_webrtc_offer(
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:
@@ -138,6 +143,9 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             kvs_data = await self.coordinator.client.async_get_camera_webrtc(
                 self._device_id
             )
+            if session_id not in self._open_sessions:
+                return
+
             region = kvs_data.get("region")
             channel_arn = kvs_data.get("channel_arn")
             viewer = kvs_data.get("viewer")
@@ -173,6 +181,9 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
 
             # Bridge: convert dict ICE candidates to HA WebRTCCandidate objects
             def _on_ice(cand: dict) -> None:
+                if session_id not in self._open_sessions:
+                    return
+
                 candidate = cand.get("candidate")
                 if not isinstance(candidate, str) or not candidate:
                     LOGGER.debug("Skipping ICE candidate without candidate value")
@@ -199,6 +210,8 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                 offer_sdp,
                 on_ice_candidate=_on_ice,
             )
+            if session_id not in self._open_sessions:
+                return
 
             if not answer_sdp:
                 send_message(
@@ -209,6 +222,8 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
 
             pending_candidates = self._pending_candidates.get(session_id, [])
             for cand in pending_candidates:
+                if session_id not in self._open_sessions:
+                    return
                 try:
                     await kvs_client.async_send_ice_candidate(
                         candidate=cand.candidate,
@@ -218,18 +233,24 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                 except KVS_EXCEPTIONS as err:
                     LOGGER.warning("Failed to send cached ICE candidate: %s", err)
 
+            if session_id not in self._open_sessions:
+                return
+
             # Clear candidates only after attempting to send them all
             self._pending_candidates.pop(session_id, None)
 
             send_message(WebRTCAnswer(answer=answer_sdp))
 
         except KVS_EXCEPTIONS as err:
+            if session_id not in self._open_sessions:
+                return
             LOGGER.exception("KVS WebRTC failed: %s", err)
             send_message(
                 WebRTCError(code="kvs_error", message="WebRTC negotiation failed")
             )
             await self.async_close_webrtc_session(session_id)
 
+    @override
     async def async_on_webrtc_candidate(
         self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
@@ -262,6 +283,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
         self._pending_candidates.pop(session_id, None)
         return self._kvs_sessions.pop(session_id, None)
 
+    @override
     def close_webrtc_session(self, session_id: str) -> None:
         """Close WebRTC session and clean up KVS signaling."""
         kvs_client = self._remove_webrtc_session(session_id)

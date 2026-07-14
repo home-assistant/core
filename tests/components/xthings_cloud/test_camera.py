@@ -1,5 +1,6 @@
 """Tests for Xthings Cloud camera platform."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
@@ -332,25 +333,98 @@ async def test_webrtc_session_cleanup(
         )
 
 
-async def test_webrtc_session_cleanup_on_entity_removal(
+async def test_webrtc_offer_closed_while_fetching_credentials(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
 ) -> None:
-    """Test WebRTC sessions are awaited during entity removal."""
+    """Test closing a session while the offer is awaiting credentials."""
+    credentials_requested = asyncio.Event()
+    resume_credentials = asyncio.Event()
+
+    async def mock_get_camera_webrtc(_device_id):
+        credentials_requested.set()
+        await resume_credentials.wait()
+        return {
+            "region": "us-east-1",
+            "channel_arn": (
+                "arn:aws:kinesisvideo:us-east-1:111111111111:channel/test/123"
+            ),
+            "viewer": {
+                "AccessKeyId": "test",
+                "SecretAccessKey": "test",
+                "SessionToken": "test",
+            },
+        }
+
+    mock_api_client.async_get_camera_webrtc.side_effect = mock_get_camera_webrtc
+
     with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
         await setup_integration(hass, mock_config_entry)
 
     camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
     assert camera_entity is not None
 
-    mock_kvs_client = MagicMock()
-    mock_kvs_client.async_close = AsyncMock()
-    camera_entity._kvs_sessions["mock_session_id"] = mock_kvs_client
+    session_id = "mock_session_id"
+    mock_send_message = MagicMock()
 
-    await camera_entity.async_will_remove_from_hass()
+    with patch(
+        "homeassistant.components.xthings_cloud.camera.KvsSignalingClient"
+    ) as mock_kvs_client_class:
+        offer_task = hass.async_create_task(
+            camera_entity.async_handle_async_webrtc_offer(
+                offer_sdp="mock_offer_sdp",
+                session_id=session_id,
+                send_message=mock_send_message,
+            )
+        )
 
-    mock_kvs_client.async_close.assert_awaited_once()
+        await credentials_requested.wait()
+        camera_entity.close_webrtc_session(session_id)
+        resume_credentials.set()
+        await offer_task
+
+        mock_kvs_client_class.assert_not_called()
+        mock_send_message.assert_not_called()
+
+
+async def test_webrtc_session_cleanup_on_entity_removal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+) -> None:
+    """Test WebRTC sessions are awaited during entity removal."""
+    mock_api_client.async_get_camera_webrtc.return_value = {
+        "region": "us-east-1",
+        "channel_arn": "arn:aws:kinesisvideo:us-east-1:111111111111:channel/test/123",
+        "viewer": {
+            "AccessKeyId": "test",
+            "SecretAccessKey": "test",
+            "SessionToken": "test",
+        },
+    }
+    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
+        await setup_integration(hass, mock_config_entry)
+
+    camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
+    assert camera_entity is not None
+
+    with patch(
+        "homeassistant.components.xthings_cloud.camera.KvsSignalingClient"
+    ) as mock_kvs_client_class:
+        mock_kvs_client = mock_kvs_client_class.return_value
+        mock_kvs_client.async_get_answer_sdp = AsyncMock(return_value="mock_answer_sdp")
+        mock_kvs_client.async_close = AsyncMock()
+
+        await camera_entity.async_handle_async_webrtc_offer(
+            offer_sdp="mock_offer_sdp",
+            session_id="mock_session_id",
+            send_message=MagicMock(),
+        )
+
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+        mock_kvs_client.async_close.assert_awaited_once()
 
 
 async def test_webrtc_offer_kvs_error(
