@@ -10,7 +10,7 @@ from pathlib import Path
 import socket
 import ssl
 from typing import Any
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -607,6 +607,34 @@ async def test_emergency_ssl_certificate_enforces_peer_certificate(
     mock_load_verify.assert_called_once_with(str(cert_path))
     assert hass.http.context is not None
     assert hass.http.context.verify_mode is ssl.CERT_REQUIRED
+
+
+async def test_create_server_passes_configuration(hass: HomeAssistant) -> None:
+    """The real server factory passes the configured values to asyncio."""
+    server = http.HomeAssistantHTTP(
+        hass,
+        server_host=["127.0.0.1", "::1"],
+        server_port=1234,
+        ssl_certificate=None,
+        ssl_peer_certificate=None,
+        ssl_key=None,
+        trusted_proxies=[],
+        ssl_profile=http.SSL_MODERN,
+    )
+
+    with patch.object(
+        hass.loop, "create_server", new=AsyncMock(return_value=Mock())
+    ) as mock_create:
+        await _REAL_CREATE_SERVER(server)
+
+    mock_create.assert_called_once_with(
+        server._make_protocol,
+        ["127.0.0.1", "::1"],
+        1234,
+        ssl=None,
+        backlog=128,
+        start_serving=False,
+    )
 
 
 async def test_cors_defaults(hass: HomeAssistant) -> None:
