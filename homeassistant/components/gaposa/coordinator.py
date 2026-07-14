@@ -48,22 +48,26 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
 
     @override
     async def _async_setup(self) -> None:
-        """Log in to the Gaposa API once, before the first refresh."""
+        """Log in to the Gaposa API once, before the first refresh.
+
+        Assign self.gaposa before awaiting login so async_shutdown
+        (called from async_setup_entry on any failure, including
+        cancellation) can find and close the client.
+        """
         websession = async_get_clientsession(self.hass)
-        gaposa = Gaposa(self.config_entry.data[CONF_API_KEY], websession=websession)
+        self.gaposa = Gaposa(
+            self.config_entry.data[CONF_API_KEY], websession=websession
+        )
         try:
             async with timeout(10):
-                await gaposa.login(
+                await self.gaposa.login(
                     self.config_entry.data[CONF_USERNAME],
                     self.config_entry.data[CONF_PASSWORD],
                 )
         except (GaposaAuthException, FirebaseAuthException) as exc:
-            await gaposa.close()
             raise ConfigEntryNotReady("Gaposa authentication failed") from exc
         except (ClientError, TimeoutError, OSError) as exc:
-            await gaposa.close()
             raise ConfigEntryNotReady(f"Error connecting to Gaposa: {exc}") from exc
-        self.gaposa = gaposa
 
     @override
     async def _async_update_data(self) -> dict[str, Motor]:

@@ -16,7 +16,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GaposaConfigEntry) -> bo
     coordinator = DataUpdateCoordinatorGaposa(hass, entry)
     try:
         await coordinator.async_config_entry_first_refresh()
-    except Exception:
+    except BaseException:
+        # BaseException so a cancellation during login also releases
+        # the Gaposa client held by the coordinator; async_shutdown is
+        # idempotent.
         await coordinator.async_shutdown()
         raise
 
