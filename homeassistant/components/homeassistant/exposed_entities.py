@@ -1,5 +1,6 @@
 """Control which entities are exposed to voice assistants."""
 
+import asyncio
 from collections.abc import Callable, Mapping
 import dataclasses
 from datetime import datetime, timedelta
@@ -53,6 +54,11 @@ LEGACY_ENTITY_SWEEP_INTERVAL = timedelta(hours=24)
 # single missing observation isn't enough, since the entity could reappear
 # moments later (e.g. a platform reload).
 LEGACY_ENTITY_PURGE_INTERVAL = timedelta(days=30)
+# Entities processed per sweep chunk before yielding to the event loop, so a
+# sweep over a store with millions of legacy records -- the exact installs
+# this is meant to fix -- can't block it for the length of a full pass.
+# Matches recorder's purge batch size.
+LEGACY_ENTITY_SWEEP_CHUNK_SIZE = 1000
 
 DEFAULT_EXPOSED_DOMAINS = {
     "climate",
@@ -146,7 +152,7 @@ class ExposedEntities:
         self._hass = hass
         self._listeners: dict[str, list[Callable[[], None]]] = {}
         self._store: Store[SerializedExposedEntities] = Store(
-            hass, STORAGE_VERSION, STORAGE_KEY
+            hass, STORAGE_VERSION, STORAGE_KEY, serialize_in_event_loop=False
         )
 
     async def async_initialize(self) -> None:
@@ -169,7 +175,10 @@ class ExposedEntities:
         @callback
         def _on_homeassistant_started(_event: Event) -> None:
             """Run one sweep shortly after startup."""
-            self._async_purge_stale_legacy_entities(dt_util.utcnow())
+            self._hass.async_create_task(
+                self._async_purge_stale_legacy_entities(dt_util.utcnow()),
+                "exposed_entities_startup_sweep",
+            )
 
         self._hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED, _on_homeassistant_started
@@ -274,8 +283,7 @@ class ExposedEntities:
             )
             self._async_schedule_save()
 
-    @callback
-    def _async_purge_stale_legacy_entities(self, _now: datetime) -> None:
+    async def _async_purge_stale_legacy_entities(self, _now: datetime) -> None:
         """Sweep to drop legacy entries with no entity behind them.
 
         A record is only purged once it's been continuously missing for the
@@ -283,32 +291,40 @@ class ExposedEntities:
         entity could reappear moments later (e.g. a platform reload). Runs
         once at startup and then on LEGACY_ENTITY_SWEEP_INTERVAL, so installs
         that restart more often than the sweep interval still make progress.
+
+        Processes a snapshot of entity IDs in LEGACY_ENTITY_SWEEP_CHUNK_SIZE
+        chunks, yielding to the event loop between chunks, so a store with
+        millions of legacy records can't block it for a full pass. Entities
+        added after the snapshot is taken are picked up on the next sweep.
         """
         now = time.time()
         purge_after = LEGACY_ENTITY_PURGE_INTERVAL.total_seconds()
-        to_purge: list[str] = []
+        entity_ids = list(self.entities)
         changed = False
 
-        for entity_id, exposed_entity in self.entities.items():
-            if self._hass.states.get(entity_id) is not None:
-                if exposed_entity.orphaned_since is not None:
+        for i in range(0, len(entity_ids), LEGACY_ENTITY_SWEEP_CHUNK_SIZE):
+            for entity_id in entity_ids[i : i + LEGACY_ENTITY_SWEEP_CHUNK_SIZE]:
+                if (exposed_entity := self.entities.get(entity_id)) is None:
+                    continue
+
+                if self._hass.states.get(entity_id) is not None:
+                    if exposed_entity.orphaned_since is not None:
+                        self.entities[entity_id] = dataclasses.replace(
+                            exposed_entity, orphaned_since=None
+                        )
+                        changed = True
+                    continue
+
+                if exposed_entity.orphaned_since is None:
                     self.entities[entity_id] = dataclasses.replace(
-                        exposed_entity, orphaned_since=None
+                        exposed_entity, orphaned_since=now
                     )
                     changed = True
-                continue
+                elif now - exposed_entity.orphaned_since >= purge_after:
+                    del self.entities[entity_id]
+                    changed = True
 
-            if exposed_entity.orphaned_since is None:
-                self.entities[entity_id] = dataclasses.replace(
-                    exposed_entity, orphaned_since=now
-                )
-                changed = True
-            elif now - exposed_entity.orphaned_since >= purge_after:
-                to_purge.append(entity_id)
-
-        for entity_id in to_purge:
-            del self.entities[entity_id]
-            changed = True
+            await asyncio.sleep(0)
 
         if changed:
             self._async_schedule_save()
@@ -499,14 +515,17 @@ class ExposedEntities:
     @callback
     def _data_to_save(self) -> SerializedExposedEntities:
         """Return JSON-compatible date for storing to file."""
+        # Intermediate lists let this run from the executor thread Store
+        # uses for serialize_in_event_loop=False, without racing entities/
+        # _assistants being mutated on the event loop mid-iteration.
+        assistants = list(self._assistants.items())
+        entities = list(self.entities.items())
         return {
             "assistants": {
-                domain: preferences.to_json()
-                for domain, preferences in self._assistants.items()
+                domain: preferences.to_json() for domain, preferences in assistants
             },
             "exposed_entities": {
-                entity_id: entity.to_json()
-                for entity_id, entity in self.entities.items()
+                entity_id: entity.to_json() for entity_id, entity in entities
             },
         }
 

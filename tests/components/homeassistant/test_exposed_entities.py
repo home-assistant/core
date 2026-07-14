@@ -8,6 +8,7 @@ from homeassistant.components.homeassistant import DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     LEGACY_ENTITY_PURGE_INTERVAL,
+    LEGACY_ENTITY_SWEEP_CHUNK_SIZE,
     LEGACY_ENTITY_SWEEP_INTERVAL,
     ExposedEntities,
     ExposedEntity,
@@ -626,7 +627,7 @@ async def test_purge_stale_legacy_entities_periodic_sweep(
     # but does not purge it yet.
     freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert set(exposed_entities.entities) == {"sensor.still_around", "sensor.long_gone"}
     assert exposed_entities.entities["sensor.long_gone"].orphaned_since is not None
@@ -634,7 +635,7 @@ async def test_purge_stale_legacy_entities_periodic_sweep(
     # Once it's stayed missing for the full retention window, a later sweep purges it.
     freezer.tick(LEGACY_ENTITY_PURGE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert set(exposed_entities.entities) == {"sensor.still_around"}
     assert exposed_entities.entities["sensor.still_around"].orphaned_since is None
@@ -645,10 +646,10 @@ async def test_purge_stale_legacy_entities_clears_tracking_on_reappearance(
 ) -> None:
     """An entity that reappears between sweeps is not purged later.
 
-    Guards the bug flagged in review: purging must confirm an entity has
-    been missing for the *whole* retention window, not just that it was
-    missing once, or a transient absence (e.g. a platform reload) would
-    eventually wipe the user's exposure preference after it comes back.
+    Purging must confirm an entity has been missing for the *whole*
+    retention window, not just that it was missing once, or a transient
+    absence (e.g. a platform reload) would eventually wipe the user's
+    exposure preference after it comes back.
     """
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -657,7 +658,7 @@ async def test_purge_stale_legacy_entities_clears_tracking_on_reappearance(
 
     freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert exposed_entities.entities["sensor.flaky"].orphaned_since is not None
 
     # The entity comes back before the retention window elapses.
@@ -665,14 +666,14 @@ async def test_purge_stale_legacy_entities_clears_tracking_on_reappearance(
 
     freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert exposed_entities.entities["sensor.flaky"].orphaned_since is None
     assert "sensor.flaky" in exposed_entities.entities
 
     # Even after the full retention window, it's kept since it's live again.
     freezer.tick(LEGACY_ENTITY_PURGE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert "sensor.flaky" in exposed_entities.entities
 
 
@@ -690,7 +691,7 @@ async def test_legacy_orphaned_since_persists_across_restart(
     async_expose_entity(hass, "test1", "sensor.long_gone", True)
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
 
-    exposed_entities._async_purge_stale_legacy_entities(dt_util.utcnow())
+    await exposed_entities._async_purge_stale_legacy_entities(dt_util.utcnow())
     assert exposed_entities.entities["sensor.long_gone"].orphaned_since is not None
 
     await flush_store(exposed_entities._store)
@@ -716,7 +717,7 @@ async def test_purge_sweep_cancelled_on_stop(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt_util.utcnow() + LEGACY_ENTITY_SWEEP_INTERVAL)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # The sweep must not have run after stop, so nothing was tracked or purged
     assert "sensor.long_gone" in exposed_entities.entities
@@ -740,7 +741,7 @@ async def test_state_added_listener_clears_tracking_immediately(
 
     freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert exposed_entities.entities["sensor.flaky"].orphaned_since is not None
 
     hass.states.async_set("sensor.flaky", "on", {})
@@ -766,3 +767,39 @@ async def test_purge_stale_legacy_entities_runs_on_startup(hass: HomeAssistant) 
     await hass.async_block_till_done()
 
     assert exposed_entities.entities["sensor.long_gone"].orphaned_since is not None
+
+
+async def test_purge_stale_legacy_entities_spans_multiple_chunks(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """The sweep processes stores spanning multiple chunks correctly.
+
+    The sweep processes LEGACY_ENTITY_SWEEP_CHUNK_SIZE entities at a time,
+    yielding to the event loop in between; this confirms entities on both
+    sides of a chunk boundary are still tracked and purged correctly.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    entity_ids = [
+        f"sensor.long_gone_{i}" for i in range(LEGACY_ENTITY_SWEEP_CHUNK_SIZE * 2 + 1)
+    ]
+    for entity_id in entity_ids:
+        async_expose_entity(hass, "test1", entity_id, True)
+
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    assert len(exposed_entities.entities) == len(entity_ids)
+
+    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert all(
+        exposed_entities.entities[entity_id].orphaned_since is not None
+        for entity_id in entity_ids
+    )
+
+    freezer.tick(LEGACY_ENTITY_PURGE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert not exposed_entities.entities
