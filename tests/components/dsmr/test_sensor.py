@@ -1950,12 +1950,7 @@ async def test_power_readings_are_averaged_over_the_update_interval(
     freezer: FrozenDateTimeFactory,
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
-    """Test that power readings are averaged over the configured interval.
-
-    All telegrams received during one ``time_between_update`` window are
-    accumulated and their mean is published by the interval timer, instead of
-    dropping the readings that arrive between two updates.
-    """
+    """Test that power readings are averaged over the configured interval."""
     (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     telegram_callback = await _setup_dsmr_for_averaging(
