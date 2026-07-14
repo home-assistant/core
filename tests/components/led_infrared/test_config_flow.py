@@ -97,3 +97,48 @@ async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_infrared_entities"
+
+
+@pytest.mark.usefixtures("mock_infrared_emitter_entity")
+async def test_flow_reconfigure(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="LED Infrared via Test IR emitter",
+        entry_id="1234567890",
+        data={
+            CONF_DEVICE_TYPE: LEDIrDeviceType.GENERIC_24_KEY,
+            CONF_INFRARED_ENTITY_ID: None,
+        },
+    )
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_INFRARED_ENTITY_ID] == EMITTER_ENTITY_ID
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.usefixtures("init_infrared")
+async def test_reconfigure_flow_no_emitters(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow aborts when no infrared emitters exist."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_infrared_entities"
