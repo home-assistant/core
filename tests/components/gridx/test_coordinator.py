@@ -48,6 +48,62 @@ async def test_live_coordinator_success(
     assert coord.data["battery"]["stateOfCharge"] == 0.77
 
 
+async def test_live_coordinator_aggregates_multiple_systems(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Aggregate live data across multiple systems."""
+    connector = MagicMock()
+    connector.retrieve_live_data = AsyncMock(
+        return_value=[
+            {
+                "photovoltaic": 100,
+                "grid": -50,
+                "selfConsumptionRate": 0.4,
+                "measuredAt": "2024-05-08T09:42:18Z",
+                "battery": {"power": -100, "stateOfCharge": 0.5, "capacity": 10000},
+                "heatPumps": [{"power": 10}],
+            },
+            {
+                "photovoltaic": 200,
+                "grid": 30,
+                "selfConsumptionRate": 0.6,
+                "measuredAt": "2024-05-08T09:42:20Z",
+                "battery": {"power": 40, "stateOfCharge": 0.7, "capacity": 5000},
+                "heatPumps": [{"power": 20}],
+            },
+            {
+                "photovoltaic": 50,
+            },
+        ]
+    )
+
+    data = await _fetch_live(connector)
+
+    assert data["photovoltaic"] == 350
+    assert data["grid"] == -20
+    # Rates are averaged, not summed
+    assert data["selfConsumptionRate"] == pytest.approx(0.5)
+    assert data["measuredAt"] == "2024-05-08T09:42:18Z"
+    # Battery values are aggregated over the systems that have a battery
+    assert data["battery"]["power"] == -60
+    assert data["battery"]["stateOfCharge"] == pytest.approx(0.6)
+    assert data["battery"]["capacity"] == 15000
+    # Lists are concatenated
+    assert data["heatPumps"] == [{"power": 10}, {"power": 20}]
+
+
+async def test_live_coordinator_single_system_untouched(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """A single-system response is returned as-is, including rates."""
+    connector = MagicMock()
+    connector.retrieve_live_data = AsyncMock(return_value=[MOCK_LIVE_DATA])
+
+    data = await _fetch_live(connector)
+
+    assert data == MOCK_LIVE_DATA
+
+
 async def test_live_coordinator_empty_response(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -96,6 +152,7 @@ async def test_historical_coordinator_aggregates_multiple_systems(
                 "total": {
                     "photovoltaic": 100,
                     "gridMeterReadingPositive": 1.5,
+                    "selfConsumptionRate": 0.4,
                     "unit": "Wh",
                     "mode": "single",
                 }
@@ -104,6 +161,7 @@ async def test_historical_coordinator_aggregates_multiple_systems(
                 "total": {
                     "photovoltaic": 250,
                     "gridMeterReadingPositive": 2.5,
+                    "selfConsumptionRate": 0.6,
                     "mode": 1,
                 }
             },
@@ -115,6 +173,8 @@ async def test_historical_coordinator_aggregates_multiple_systems(
 
     assert data["total"]["photovoltaic"] == 350
     assert data["total"]["gridMeterReadingPositive"] == pytest.approx(4.0)
+    # Rates are averaged, not summed
+    assert data["total"]["selfConsumptionRate"] == pytest.approx(0.5)
     assert data["total"]["unit"] == "Wh"
     # Non-numeric first value should not be overwritten by later numeric values.
     assert data["total"]["mode"] == "single"

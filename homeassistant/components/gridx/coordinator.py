@@ -24,6 +24,54 @@ class GridxHistoricalData(TypedDict):
     last_reset: str  # ISO-8601 local midnight, e.g. "2024-01-01T00:00:00+01:00"
 
 
+# Ratio values (0..1) must be averaged across systems, not summed.
+_RATE_KEYS = frozenset(
+    {
+        "directConsumptionRate",
+        "selfConsumptionRate",
+        "selfSufficiencyRate",
+        "stateOfCharge",
+    }
+)
+
+
+def _merge_values(key: str, values: list[Any]) -> Any:
+    """Merge one key's values from multiple systems."""
+    first_non_null = next((value for value in values if value is not None), None)
+    if not isinstance(first_non_null, int | float):
+        return first_non_null
+    numeric = [value for value in values if isinstance(value, int | float)]
+    if key in _RATE_KEYS:
+        return sum(numeric) / len(numeric)
+    return sum(numeric)
+
+
+def _aggregate_results(results: list[dict[str, Any]]) -> dict[str, Any]:
+    """Aggregate per-system results into a single mapping.
+
+    Numeric values are summed (rates averaged), nested mappings are
+    aggregated recursively, lists are concatenated and other values are
+    taken from the first system providing them.
+    """
+    if len(results) == 1:
+        return results[0]
+    keys: dict[str, None] = {}
+    for result in results:
+        keys.update(dict.fromkeys(result))
+    merged: dict[str, Any] = {}
+    for key in keys:
+        values = [result[key] for result in results if key in result]
+        if nested := [value for value in values if isinstance(value, dict)]:
+            merged[key] = _aggregate_results(nested)
+        elif any(isinstance(value, list) for value in values):
+            merged[key] = [
+                item for value in values if isinstance(value, list) for item in value
+            ]
+        else:
+            merged[key] = _merge_values(key, values)
+    return merged
+
+
 async def _fetch_live(connector: GridxConnector) -> dict[str, Any]:
     """Fetch live data."""
     try:
@@ -63,7 +111,7 @@ async def _fetch_live(connector: GridxConnector) -> dict[str, Any]:
             translation_domain=DOMAIN,
             translation_key="no_data",
         )
-    return results[0]
+    return _aggregate_results(results)
 
 
 async def _fetch_historical(connector: GridxConnector) -> GridxHistoricalData:
@@ -113,21 +161,10 @@ async def _fetch_historical(connector: GridxConnector) -> GridxHistoricalData:
             translation_key="no_data",
         )
 
-    total: dict[str, Any] = {}
-    for result in results:
-        result_total = result.get("total", {})
-        if not isinstance(result_total, dict):
-            continue
-        for key, value in result_total.items():
-            current_value = total.get(key)
-            if isinstance(value, int | float) and isinstance(
-                current_value, int | float
-            ):
-                total[key] = current_value + value
-            elif (
-                isinstance(value, int | float) and current_value is None
-            ) or key not in total:
-                total[key] = value
+    totals = [
+        result["total"] for result in results if isinstance(result.get("total"), dict)
+    ]
+    total = _aggregate_results(totals) if totals else {}
     return GridxHistoricalData(total=total, last_reset=midnight.isoformat())
 
 
