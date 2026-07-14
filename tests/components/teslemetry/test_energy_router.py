@@ -132,6 +132,13 @@ def _unverified_clients_response() -> dict:
     return {"response": {"authorized_clients": [{"public_key": "other", "state": 1}]}}
 
 
+def _pending_clients_response() -> dict:
+    """Return a list_authorized_clients response with our key still pending."""
+    return {
+        "response": {"authorized_clients": [{"public_key": PUBLIC_KEY_B64, "state": 1}]}
+    }
+
+
 def _empty_clients_response() -> dict:
     """Return a response whose authorized-clients list is explicitly empty."""
     return {"response": {"authorized_clients": []}}
@@ -217,7 +224,7 @@ async def test_subentry_pairing_already_verified(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("mock_rsa_key")
 async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> None:
-    """Pairing registers the key, waits for approval, then proceeds."""
+    """Pairing registers the key, then advances to credentials once approved."""
     entry = await _setup_energy_site_subentry(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
 
@@ -228,7 +235,7 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
             new=AsyncMock(
                 side_effect=[
                     _empty_clients_response(),
-                    _unverified_clients_response(),
+                    _pending_clients_response(),
                     _verified_clients_response(),
                 ]
             ),
@@ -237,10 +244,6 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
             new=AsyncMock(),
         ) as mock_add,
-        patch(
-            "homeassistant.components.teslemetry.config_flow.asyncio.sleep",
-            new=AsyncMock(),
-        ),
         patch(
             "homeassistant.components.teslemetry.config_flow.PowerwallClient",
             return_value=client,
@@ -253,7 +256,15 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
         assert result["step_id"] == "pair"
         mock_add.assert_awaited_once()
 
-        # confirm pair -> poll (unverified, then verified) -> credentials
+        # confirm pair while still pending -> re-shows pair with an error
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "pair"
+        assert result["errors"] == {"base": "key_pending"}
+
+        # confirm pair again, now verified -> credentials
         result = await hass.config_entries.subentries.async_configure(
             result["flow_id"], {}
         )
@@ -271,8 +282,8 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_subentry_pair_timeout(hass: HomeAssistant) -> None:
-    """The pair step shows a timeout error when the key is never approved."""
+async def test_subentry_pair_key_not_registered(hass: HomeAssistant) -> None:
+    """The pair step errors clearly if the key is not found on the gateway."""
     entry = await _setup_energy_site_subentry(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
 
@@ -285,10 +296,6 @@ async def test_subentry_pair_timeout(hass: HomeAssistant) -> None:
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
             new=AsyncMock(),
         ),
-        patch(
-            "homeassistant.components.teslemetry.config_flow.asyncio.sleep",
-            new=AsyncMock(),
-        ),
     ):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         assert result["step_id"] == "pair"
@@ -299,7 +306,7 @@ async def test_subentry_pair_timeout(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
-    assert result["errors"] == {"base": "timeout"}
+    assert result["errors"] == {"base": "key_not_registered"}
 
 
 @pytest.mark.usefixtures("mock_rsa_key")

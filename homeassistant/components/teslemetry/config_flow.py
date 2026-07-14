@@ -1,6 +1,5 @@
 """Config Flow for Teslemetry integration."""
 
-import asyncio
 from collections.abc import Mapping
 from http import HTTPStatus
 import logging
@@ -51,8 +50,6 @@ from . import TeslemetryConfigEntry
 from .const import (
     CLIENT_ID,
     DOMAIN,
-    KEY_PAIRING_POLL_ATTEMPTS,
-    KEY_PAIRING_POLL_INTERVAL,
     LOGGER,
     POWERWALL_KEY_FILE,
     SUBENTRY_TYPE_ENERGY_SITE,
@@ -318,27 +315,38 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_pair(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Ask the user to approve the pending key, then poll for VERIFIED."""
+        """Check once whether the pending key has been approved on the gateway.
+
+        Advances to credentials if verified; otherwise re-shows this form with
+        an error describing what the user still needs to do, so they can
+        approve the key and submit again.
+        """
         assert self._energy_site is not None
         if user_input is None:
             return self.async_show_form(step_id="pair")
 
-        for _ in range(KEY_PAIRING_POLL_ATTEMPTS):
-            try:
-                verified = await self._key_is_verified()
-            except PowerwallUnreachableError:
-                return self.async_show_form(
-                    step_id="pair", errors={"base": "powerwall_unreachable"}
-                )
-            except PowerwallLookupError:
-                return self.async_show_form(
-                    step_id="pair", errors={"base": "cannot_connect"}
-                )
-            if verified:
-                return await self.async_step_credentials()
-            await asyncio.sleep(KEY_PAIRING_POLL_INTERVAL)
+        try:
+            client = await self._find_authorized_client()
+        except PowerwallUnreachableError:
+            return self.async_show_form(
+                step_id="pair", errors={"base": "powerwall_unreachable"}
+            )
+        except PowerwallLookupError:
+            return self.async_show_form(
+                step_id="pair", errors={"base": "cannot_connect"}
+            )
 
-        return self.async_show_form(step_id="pair", errors={"base": "timeout"})
+        if client is None:
+            return self.async_show_form(
+                step_id="pair", errors={"base": "key_not_registered"}
+            )
+        if client.state == AuthorizedClientState.VERIFIED:
+            return await self.async_step_credentials()
+        if client.state == AuthorizedClientState.PENDING:
+            return self.async_show_form(step_id="pair", errors={"base": "key_pending"})
+        return self.async_show_form(
+            step_id="pair", errors={"base": "key_pending_verification"}
+        )
 
     async def _find_authorized_client(self) -> AuthorizedClient | None:
         """Return our RSA key's authorized-client entry on the gateway, or None.
@@ -370,11 +378,6 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             ),
             None,
         )
-
-    async def _key_is_verified(self) -> bool:
-        """Report whether our public key is registered and VERIFIED on the gateway."""
-        client = await self._find_authorized_client()
-        return client is not None and client.state == AuthorizedClientState.VERIFIED
 
     async def async_step_credentials(
         self, user_input: dict[str, Any] | None = None
