@@ -2325,6 +2325,37 @@ async def test_clear_config_entry_removes_device_with_pending_move(
     assert device_registry.async_get_device(identifiers={("test", "1")}) is None
 
 
+async def test_clear_config_entry_clears_pending_move_targeting_it(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Clearing a config entry drops a pending move that targets it.
+
+    A device owned by another entry can hold a transient pending move to the entry being
+    removed; clearing it stops a later completion from moving the device onto the removed
+    entry instead of deleting it.
+    """
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    # Start a deferred move to entry_2 (add_config_entry_id without the paired remove yet)
+    device_registry.async_update_device(device.id, add_config_entry_id=entry_2.entry_id)
+
+    # entry_2 is torn down before the move completes
+    device_registry.async_clear_config_entry(entry_2.entry_id)
+
+    # Completing the move by removing the owner must delete the device, not move it onto
+    # the removed entry_2
+    result = device_registry.async_update_device(
+        device.id, remove_config_entry_id=entry_1.entry_id
+    )
+    assert result is None
+    assert device.id not in device_registry.devices
+
+
 async def test_move_to_config_entry_clears_target_entry_deleted_device(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -2695,6 +2726,51 @@ async def test_clear_config_subentry_removes_device_with_pending_move(
 
     assert device.id not in device_registry.devices
     assert device_registry.async_get_device(identifiers={("test", "1")}) is None
+
+
+async def test_clear_config_subentry_clears_pending_move_targeting_it(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Clearing a config subentry drops a pending move that targets it.
+
+    A device owned by another entry can hold a transient pending move to the subentry being
+    removed; clearing it stops a later completion from validating against the removed
+    subentry (moving the device onto it, or raising) instead of deleting it.
+    """
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+        ]
+    )
+    entry_2.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    # Start a deferred move into entry_2's subentry
+    device_registry.async_update_device(
+        device.id,
+        add_config_entry_id=entry_2.entry_id,
+        add_config_subentry_id="mock-subentry-id-1",
+    )
+
+    # The target subentry is torn down before the move completes
+    device_registry.async_clear_config_subentry(entry_2.entry_id, "mock-subentry-id-1")
+
+    # Completing the move by removing the owner must delete the device, not move it onto
+    # the removed subentry
+    result = device_registry.async_update_device(
+        device.id, remove_config_entry_id=entry_1.entry_id
+    )
+    assert result is None
+    assert device.id not in device_registry.devices
 
 
 @pytest.mark.parametrize("load_registries", [False])

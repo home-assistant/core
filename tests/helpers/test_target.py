@@ -1092,5 +1092,8 @@ async def test_target_trickle_down_to_splits(
         d.id
         for d in device_registry.async_get_devices_for_composite_device_id(COMPOSITE_ID)
     }
-    assert selected.referenced_devices >= splits
+    # The composite id resolves to its splits only; it is not itself referenced (it is not
+    # a real device), so a device-id consumer does not act on the same device twice.
+    assert selected.referenced_devices == splits
+    assert COMPOSITE_ID not in selected.referenced_devices
     assert selected.indirectly_referenced == {"sensor.a", "sensor.b"}

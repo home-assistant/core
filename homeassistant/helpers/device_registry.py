@@ -2596,6 +2596,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     device, composite_primary_config_entry=None
                 )
                 self.async_schedule_save()
+        # A device owned by another config entry may hold a transient pending move
+        # targeting the entry being removed; clear it so a later completion deletes the
+        # device instead of moving it onto the removed entry.
+        for device in list(self.devices.values()):
+            pending_move = device._pending_move  # noqa: SLF001
+            if pending_move is not None and pending_move[0] == config_entry_id:
+                self.devices[device.id] = attr.evolve(device, pending_move=None)
         for deleted_device in list(self.deleted_devices.values()):
             if deleted_device.config_entry_id != config_entry_id:
                 continue
@@ -2612,6 +2619,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if device.config_subentry_id != config_subentry_id:
                 continue
             self.async_remove_device(device.id)
+        # A device may hold a transient pending move targeting the subentry being removed;
+        # clear it so a later completion deletes the device instead of validating against
+        # the removed subentry.
+        for device in list(self.devices.values()):
+            if device._pending_move == (config_entry_id, config_subentry_id):  # noqa: SLF001
+                self.devices[device.id] = attr.evolve(device, pending_move=None)
         for deleted_device in list(self.deleted_devices.values()):
             if (
                 deleted_device.config_entry_id != config_entry_id
