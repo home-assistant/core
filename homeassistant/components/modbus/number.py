@@ -1,5 +1,6 @@
 """Support for Modbus Numbers."""
 
+import math
 import struct
 from typing import Any, override
 
@@ -11,6 +12,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -104,6 +106,10 @@ class ModbusNumber(ModbusStructEntity, RestoreNumber):
     ) -> list[int]:
         """Convert a value to a list of registers, honoring structure and swap settings."""
         raw: float | int = (value - offset) / scale
+        if not math.isfinite(raw):
+            raise ServiceValidationError(
+                f"Value {value} cannot be encoded with the configured scale and offset"
+            )
         if self._value_is_int:
             raw = round(raw)
         as_bytes = struct.pack(self._structure, raw)
