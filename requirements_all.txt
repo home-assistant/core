@@ -1435,7 +1435,7 @@ knocki==0.4.2
 knx-frontend==2026.6.23.203726
 
 # homeassistant.components.knx
-knx-telegram-store[sqlite]==0.3.2
+knx-telegram-store[sqlite,postgres]==0.9.1
 
 # homeassistant.components.kraken
 krakenex==2.2.2
