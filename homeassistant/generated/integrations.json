@@ -4377,7 +4377,7 @@
         "melcloud_home": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "cloud_polling",
+          "iot_class": "cloud_push",
           "name": "MELCloud Home"
         },
         "mitsubishi_comfort": {
