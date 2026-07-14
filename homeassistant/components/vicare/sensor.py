@@ -4,6 +4,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
@@ -1528,6 +1529,7 @@ def _build_entities(
         if isinstance(device.api, FloorHeating):
             entities.extend(
                 ViCareSensor(
+                    device.coordinator,
                     description,
                     get_device_serial(device.api),
                     device.config,
@@ -1597,6 +1599,7 @@ class ViCareSensor(CoordinatorEntity[ViCareCoordinator], ViCareEntity, SensorEnt
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         with suppress(PyViCareNotSupportedFeatureError):
@@ -1604,6 +1607,7 @@ class ViCareSensor(CoordinatorEntity[ViCareCoordinator], ViCareEntity, SensorEnt
         return None
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
         if self.entity_description.unit_getter is None:
@@ -1615,6 +1619,7 @@ class ViCareSensor(CoordinatorEntity[ViCareCoordinator], ViCareEntity, SensorEnt
         return self.entity_description.native_unit_of_measurement
 
     @property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
         if self.entity_description.unit_getter is not None:

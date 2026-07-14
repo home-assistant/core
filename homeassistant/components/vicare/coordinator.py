@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareUtils import (
@@ -50,6 +51,7 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
         )
         self._device = device
 
+    @override
     async def _async_update_data(self) -> None:
         """Refresh the device's feature payload."""
         await self.hass.async_add_executor_job(self._refresh)
