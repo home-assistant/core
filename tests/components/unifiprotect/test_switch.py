@@ -1,5 +1,6 @@
 """Test the UniFi Protect switch platform."""
 
+from typing import Any
 from unittest.mock import AsyncMock, Mock, call
 
 import pytest
@@ -559,6 +560,13 @@ async def test_switch_camera_detection_public_value(
     """A detection toggle reads its on/off state from the public object."""
 
     setup_public_camera(ufp)
+    async def _prime_without_camera() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_without_camera)
+
     await init_entry(hass, ufp, [doorbell])
 
     description = next(d for d in CAMERA_SWITCHES if d.key == "smart_person")
@@ -621,6 +629,13 @@ async def test_switch_camera_detection_unavailable_without_public(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ) -> None:
     """A migrated detection toggle is unavailable without a public object."""
+
+    async def _prime_without_camera() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_without_camera)
 
     await init_entry(hass, ufp, [doorbell])
 
