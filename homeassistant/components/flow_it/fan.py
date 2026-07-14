@@ -54,6 +54,8 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
         | FanEntityFeature.TURN_OFF
     )
 
+    _attr_preset_modes = list(PRESET_MODES)
+
     def __init__(self, coordinator: FlowItCoordinator, vmc: FlowItVMCMachine) -> None:
         """Initialize the fan."""
         super().__init__(
@@ -94,12 +96,6 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
         if speed in PRESET_MODES:
             return speed
         return None
-
-    @override
-    @property
-    def preset_modes(self) -> list[str] | None:
-        """Return the list of available preset modes."""
-        return list(PRESET_MODES)
 
     async def _async_send_command(
         self, speed: Speed, flow_in: bool, flow_out: bool
