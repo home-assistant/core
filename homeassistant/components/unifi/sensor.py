@@ -709,7 +709,10 @@ async def async_setup_entry(
         async_add_entities, UnifiSensorEntity, ENTITY_DESCRIPTIONS
     )
 
-    if config_entry.runtime_data.speedtest_coordinator.data is not None:
+    if (
+        config_entry.runtime_data.config.option_enable_speedtests
+        and config_entry.runtime_data.speedtest_coordinator.data is not None
+    ):
         async_add_entities(
             [
                 UnifiSpeedtestSensor(

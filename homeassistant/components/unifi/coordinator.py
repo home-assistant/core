@@ -84,6 +84,9 @@ class UnifiSpeedtestCoordinator(
     @override
     async def _async_update_data(self) -> dict[str, SpeedtestStatus] | None:
         """Trigger a speedtest and wait for it to finish."""
+        if not self.hub.config.option_enable_speedtests:
+            return None
+
         if self._first_refresh:
             self._first_refresh = False
             await self.hub.api.speedtest.update()

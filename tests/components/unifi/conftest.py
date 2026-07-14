@@ -12,7 +12,11 @@ import orjson
 import pytest
 
 from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
-from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
+from homeassistant.components.unifi.const import (
+    CONF_ENABLE_SPEEDTESTS,
+    CONF_SITE_ID,
+    DOMAIN,
+)
 from homeassistant.components.unifi.hub.websocket import RETRY_TIMER
 from homeassistant.const import (
     CONF_HOST,
@@ -144,7 +148,7 @@ def fixture_config_entry_data() -> MappingProxyType[str, Any]:
 @pytest.fixture(name="config_entry_options")
 def fixture_config_entry_options() -> MappingProxyType[str, Any]:
     """Define a config entry options fixture."""
-    return {}
+    return {CONF_ENABLE_SPEEDTESTS: False}
 
 
 # Known wireless clients

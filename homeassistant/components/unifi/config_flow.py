@@ -34,6 +34,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import UnifiConfigEntry
@@ -44,6 +49,7 @@ from .const import (
     CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
+    CONF_ENABLE_SPEEDTESTS,
     CONF_IGNORE_WIRED_BUG,
     CONF_MORE_OPTIONS,
     CONF_SITE_ID,
@@ -269,6 +275,11 @@ class UnifiOptionsFlowHandler(OptionsFlow):
             more_options = user_input.pop(CONF_MORE_OPTIONS, {})
             user_input.update(more_options)
             self.options.update(user_input)
+
+            if not self.options.get(
+                CONF_ENABLE_SPEEDTESTS, self.hub.config.option_enable_speedtests
+            ):
+                self.options.pop(CONF_SPEEDTEST_INTERVAL, None)
             return self.async_create_entry(title="", data=self.options)
 
         clients_to_block = {}
@@ -376,42 +387,32 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                                     CONF_ALLOW_UPTIME_SENSORS,
                                     default=self.hub.config.option_allow_uptime_sensors,
                                 ): bool,
+                                vol.Optional(
+                                    CONF_ENABLE_SPEEDTESTS,
+                                    default=self.hub.config.option_enable_speedtests,
+                                ): bool,
+                                vol.Optional(
+                                    CONF_SPEEDTEST_INTERVAL,
+                                    default=self.options.get(
+                                        CONF_SPEEDTEST_INTERVAL,
+                                    )
+                                    or int(
+                                        self.hub.config.option_speedtest_interval.total_seconds()
+                                        // 60
+                                    ),
+                                ): NumberSelector(
+                                    NumberSelectorConfig(
+                                        min=30,
+                                        max=180,
+                                        step=1,
+                                        unit_of_measurement="min",
+                                        mode=NumberSelectorMode.BOX,
+                                    )
+                                ),
                             }
                         ),
                         SectionConfig(collapsed=True),
                     ),
-                }
-            ),
-            last_step=False,
-        )
-
-    async def async_step_statistics_sensors(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the statistics sensors options."""
-        if user_input is not None:
-            self.options.update(user_input)
-            return self.async_create_entry(title="", data=self.options)
-
-        return self.async_show_form(
-            step_id="statistics_sensors",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_ALLOW_BANDWIDTH_SENSORS,
-                        default=self.hub.config.option_allow_bandwidth_sensors,
-                    ): bool,
-                    vol.Optional(
-                        CONF_ALLOW_UPTIME_SENSORS,
-                        default=self.hub.config.option_allow_uptime_sensors,
-                    ): bool,
-                    vol.Optional(
-                        CONF_SPEEDTEST_INTERVAL,
-                        default=int(
-                            self.hub.config.option_speedtest_interval.total_seconds()
-                            / 60
-                        ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=30, max=180)),
                 }
             ),
             last_step=True,

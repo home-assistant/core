@@ -11,7 +11,11 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
+from homeassistant.components.unifi.const import (
+    CONF_ENABLE_SPEEDTESTS,
+    CONF_SITE_ID,
+    DOMAIN,
+)
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     CONF_HOST,
@@ -35,6 +39,12 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 RANDOM_TOKEN = "random_token"
+
+
+@pytest.fixture(name="config_entry_options")
+def fixture_config_entry_options() -> dict[str, bool]:
+    """Enable speedtests for button tests that exercise speedtest entities."""
+    return {CONF_ENABLE_SPEEDTESTS: True}
 
 
 @pytest.fixture(autouse=True)

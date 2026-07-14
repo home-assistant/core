@@ -120,6 +120,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
     UnifiButtonEntityDescription[Wlans, Wlan](
         key="WLAN regenerate password",
         translation_key="wlan_regenerate_password",
+        device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         api_handler_fn=lambda api: api.wlans,
@@ -142,9 +143,10 @@ async def async_setup_entry(
         async_add_entities, UnifiButtonEntity, ENTITY_DESCRIPTIONS, requires_admin=True
     )
 
-    async_add_entities(
-        [UnifiSpeedtestButton(config_entry.runtime_data.speedtest_coordinator)]
-    )
+    if config_entry.runtime_data.config.option_enable_speedtests:
+        async_add_entities(
+            [UnifiSpeedtestButton(config_entry.runtime_data.speedtest_coordinator)]
+        )
 
 
 class UnifiButtonEntity[HandlerT: APIHandler, ApiItemT: ApiItem](

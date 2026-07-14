@@ -14,6 +14,7 @@ from homeassistant.components.unifi.const import (
     CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
+    CONF_ENABLE_SPEEDTESTS,
     CONF_IGNORE_WIRED_BUG,
     CONF_MORE_OPTIONS,
     CONF_SITE_ID,
@@ -413,6 +414,7 @@ async def test_option_flow(
                 CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3", "SSID 4"],
                 CONF_DETECTION_TIME: 100,
                 CONF_DPI_RESTRICTIONS: False,
+                CONF_ENABLE_SPEEDTESTS: False,
                 CONF_ALLOW_BANDWIDTH_SENSORS: True,
                 CONF_ALLOW_UPTIME_SENSORS: True,
             },
@@ -430,10 +432,43 @@ async def test_option_flow(
         CONF_IGNORE_WIRED_BUG: False,
         CONF_DPI_RESTRICTIONS: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
+        CONF_ENABLE_SPEEDTESTS: False,
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
         CONF_ALLOW_UPTIME_SENSORS: True,
-        CONF_SPEEDTEST_INTERVAL: 90,
     }
+
+
+async def test_option_flow_enables_speedtests_with_interval(
+    hass: HomeAssistant, config_entry_setup: MockConfigEntry
+) -> None:
+    """Test the options flow stores a bounded speedtest interval when enabled."""
+    config_entry = config_entry_setup
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TRACK_CLIENTS: True,
+            CONF_TRACK_DEVICES: True,
+            CONF_BLOCK_CLIENT: [],
+            CONF_MORE_OPTIONS: {
+                CONF_CLIENT_SOURCE: [],
+                CONF_TRACK_WIRED_CLIENTS: True,
+                CONF_SSID_FILTER: [],
+                CONF_DETECTION_TIME: 300,
+                CONF_DPI_RESTRICTIONS: True,
+                CONF_ENABLE_SPEEDTESTS: True,
+                CONF_SPEEDTEST_INTERVAL: 90,
+                CONF_ALLOW_BANDWIDTH_SENSORS: False,
+                CONF_ALLOW_UPTIME_SENSORS: False,
+            },
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_ENABLE_SPEEDTESTS] is True
+    assert result["data"][CONF_SPEEDTEST_INTERVAL] == 90
 
 
 async def test_discover_unifi_positive(hass: HomeAssistant) -> None:

@@ -6,12 +6,28 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.unifi.const import CONF_SITE_ID
-from homeassistant.const import CONF_HOST
+from homeassistant.components.unifi.const import (
+    CONF_ENABLE_SPEEDTESTS,
+    CONF_SITE_ID,
+    DOMAIN,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
+
+
+@pytest.fixture(name="config_entry_options")
+def fixture_config_entry_options() -> dict[str, bool]:
+    """Enable speedtests for speedtest-specific tests."""
+    return {CONF_ENABLE_SPEEDTESTS: True}
 
 
 @pytest.fixture(name="speedtest_payload")
@@ -64,6 +80,33 @@ async def test_speedtest_sensors(
     assert (
         hass.states.get("sensor.unifi_network_speedtest_last_run_eth2").state
         == "2020-09-13T12:26:40+00:00"
+    )
+
+
+@pytest.mark.usefixtures("mock_default_requests")
+async def test_speedtest_button_disabled_by_option(hass: HomeAssistant) -> None:
+    """Verify the speedtest button is not created when speedtests are disabled."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="1",
+        unique_id="1",
+        data={
+            CONF_HOST: "1.2.3.4",
+            CONF_USERNAME: "username",
+            CONF_PASSWORD: "password",
+            CONF_PORT: 1234,
+            CONF_SITE_ID: "site_id",
+            CONF_VERIFY_SSL: False,
+        },
+        options={CONF_ENABLE_SPEEDTESTS: False},
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "button.unifi_network_speedtest" not in hass.states.async_entity_ids(
+        BUTTON_DOMAIN
     )
 
 
