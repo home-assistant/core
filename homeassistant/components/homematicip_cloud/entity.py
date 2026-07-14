@@ -1,4 +1,4 @@
-"""Generic entity for the HomematicIP Cloud component."""
+"""Generic entity for the HomematicIP Cloud integration."""
 
 import contextlib
 import logging

@@ -11,7 +11,8 @@
     "velbus-parser",
     "velbus-module",
     "velbus-packet",
-    "velbus-protocol"
+    "velbus-protocol",
+    "velbus-handler"
   ],
   "quality_scale": "silver",
   "requirements": ["velbus-aio==2026.4.1"],
