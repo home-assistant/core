@@ -1,0 +1,82 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_mac": "Invalid MAC address",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "mac": "MAC address",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of the eMotion Ultra device.",
+          "mac": "The MAC address printed on the device or shown by your router.",
+          "port": "The local DNA UDP port used by the device."
+        },
+        "description": "The device must already be connected to Wi-Fi and be reachable from Home Assistant on the same local network."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "motion": {
+        "name": "Motion"
+      },
+      "presence": {
+        "name": "Presence"
+      }
+    },
+    "sensor": {
+      "detect_position": {
+        "name": "Detected position"
+      },
+      "distance": {
+        "name": "Distance"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "illuminance": {
+        "name": "Illuminance"
+      },
+      "persons_in_fenced_zones": {
+        "name": "Persons in fenced zones"
+      },
+      "target_count": {
+        "name": "Target count"
+      },
+      "target_distance": {
+        "name": "Target distance"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi signal strength"
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Power"
+      },
+      "switch": {
+        "name": "Switch"
+      }
+    }
+  },
+  "exceptions": {
+    "control_error": {
+      "message": "Failed to control the LinknLink device: {error}"
+    },
+    "update_error": {
+      "message": "Error communicating with the LinknLink device: {error}"
+    }
+  }
+}

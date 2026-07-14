@@ -1,0 +1,12 @@
+{
+  "domain": "linknlink",
+  "name": "LinknLink",
+  "codeowners": ["@acmen0102"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/linknlink",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["aiolinknlink"],
+  "quality_scale": "bronze",
+  "requirements": ["aiolinknlink==0.1.0"]
+}

@@ -347,6 +347,7 @@ homeassistant.components.lidarr.*
 homeassistant.components.liebherr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
+homeassistant.components.linknlink.*
 homeassistant.components.linkplay.*
 homeassistant.components.litejet.*
 homeassistant.components.litterrobot.*
