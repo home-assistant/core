@@ -1,4 +1,4 @@
-"""Test the Gatus config flow."""
+"""Test the Gatus Config flow."""
 
 from unittest.mock import AsyncMock
 
