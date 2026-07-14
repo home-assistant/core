@@ -57,6 +57,7 @@ async def test_async_step_bluetooth_valid_device(
     assert result["title"] == title
     assert result["data"] == {}
     assert result["result"].unique_id == service_info.address
+    assert result["result"].title == title
 
 
 async def test_async_step_bluetooth_not_supported(hass: HomeAssistant) -> None:
@@ -99,6 +100,7 @@ async def test_async_step_user_with_found_devices(
     assert result["title"] == OKOK_F0_TITLE
     assert result["data"] == {}
     assert result["result"].unique_id == OKOK_F0_ADDRESS
+    assert result["result"].title == OKOK_F0_TITLE
 
 
 async def test_async_step_user_already_configured(
@@ -198,6 +200,7 @@ async def test_async_step_user_replace_ignored(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == OKOK_F0_TITLE
     assert result["result"].unique_id == OKOK_F0_ADDRESS
+    assert result["result"].title == OKOK_F0_TITLE
 
 
 async def test_async_step_user_takes_precedence_over_discovery(
@@ -226,6 +229,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == OKOK_F0_TITLE
     assert result["result"].unique_id == OKOK_F0_ADDRESS
+    assert result["result"].title == OKOK_F0_TITLE
 
     # Verify the original discovery flow was aborted.
     assert not hass.config_entries.flow.async_progress(DOMAIN)
