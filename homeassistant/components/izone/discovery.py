@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 import logging
+from typing import override
 
 import pizone
 
@@ -135,23 +136,28 @@ class DiscoveryService(pizone.Listener):
             self._idle_stop_handle = None
 
     # Listener interface
+    @override
     def controller_discovered(self, ctrl: pizone.Controller) -> None:
         """Handle new controller discovery."""
         self.async_schedule_idle_stop()
         async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_DISCOVERED, ctrl)
 
+    @override
     def controller_disconnected(self, ctrl: pizone.Controller, ex: Exception) -> None:
         """On disconnect from controller."""
         async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_DISCONNECTED, ctrl, ex)
 
+    @override
     def controller_reconnected(self, ctrl: pizone.Controller) -> None:
         """On reconnect to controller."""
         async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_RECONNECTED, ctrl)
 
+    @override
     def controller_update(self, ctrl: pizone.Controller) -> None:
         """System update message is received from the controller."""
         async_dispatcher_send(self.hass, DISPATCH_CONTROLLER_UPDATE, ctrl)
 
+    @override
     def zone_update(self, ctrl: pizone.Controller, zone: pizone.Zone) -> None:
         """Zone update message is received from the controller."""
         async_dispatcher_send(self.hass, DISPATCH_ZONE_UPDATE, ctrl, zone)
