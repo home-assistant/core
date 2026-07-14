@@ -5,6 +5,7 @@ from copy import deepcopy
 from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
+from aiohttp import ClientResponseError, RequestInfo
 from aiopowerwall import (
     DEFAULT_GATEWAY_HOST,
     PowerwallAuthenticationError,
@@ -13,11 +14,14 @@ from aiopowerwall import (
 )
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from multidict import CIMultiDict
 import pytest
 from tesla_fleet_api.const import AuthorizedClientState
-from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.exceptions import InvalidResponse, TeslaFleetError
 from tesla_fleet_api.tesla import EnergySiteRouter
 from tesla_fleet_api.teslemetry import EnergySite
+from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, AuthorizedClients
+from yarl import URL
 
 from homeassistant.components.teslemetry import _async_get_rsa_key_pem
 from homeassistant.components.teslemetry.const import (
@@ -34,7 +38,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import mock_config_entry
-from .const import METADATA, PRODUCTS
+from .const import METADATA, METADATA_NOSCOPE, PRODUCTS
 
 from tests.common import MockConfigEntry
 
@@ -131,75 +135,44 @@ def _mock_powerwall_client(*, connect_error: Exception | None = None) -> MagicMo
     return client
 
 
-def _verified_clients_response() -> dict:
-    """Return a list_authorized_clients response verifying our public key.
+def _own_key_clients(
+    state: AuthorizedClientState | int | str | None,
+) -> AuthorizedClients:
+    """Return a typed client list carrying our key in the given state.
 
-    Includes a non-dict entry and a mismatched key so the library's typed
-    ``find_authorized_clients`` accessor has noise to skip past.
+    Includes a decoy entry so the flow's own key-matching predicate has noise
+    to skip past. Unwrapping the gateway's raw envelope into these typed
+    entries is the library's job, so tests drive the accessor the integration
+    actually calls rather than the raw command underneath it.
     """
-    return {
-        "response": {
-            "authorized_clients": [
-                "not-a-dict",
-                {"public_key": "some-other-key", "state": 3},
-                {"public_key": PUBLIC_KEY_B64, "state": 3},
-            ]
-        }
-    }
+    return AuthorizedClients(
+        clients=[
+            AuthorizedClient(
+                public_key="some-other-key",
+                state=AuthorizedClientState.VERIFIED,
+                raw={},
+            ),
+            AuthorizedClient(public_key=PUBLIC_KEY_B64, state=state, raw={}),
+        ],
+        raw=None,
+    )
 
 
-def _unverified_clients_response() -> dict:
-    """Return a list_authorized_clients response with no matching client."""
-    return {"response": {"authorized_clients": [{"public_key": "other", "state": 1}]}}
+def _unverified_clients() -> AuthorizedClients:
+    """Return a typed client list holding no entry for our key."""
+    return AuthorizedClients(
+        clients=[
+            AuthorizedClient(
+                public_key="other", state=AuthorizedClientState.PENDING, raw={}
+            )
+        ],
+        raw=None,
+    )
 
 
-def _pending_clients_response() -> dict:
-    """Return a list_authorized_clients response with our key still pending."""
-    return {
-        "response": {"authorized_clients": [{"public_key": PUBLIC_KEY_B64, "state": 1}]}
-    }
-
-
-def _empty_clients_response() -> dict:
-    """Return a response whose authorized-clients list is explicitly empty."""
-    return {"response": {"authorized_clients": []}}
-
-
-def _real_shape_clients_response(state: AuthorizedClientState) -> dict:
-    """Return a response matching the gateway's real envelope and field shape.
-
-    Modeled on a live ``authorized_clients`` capture: the list is nested under
-    ``clients`` (not ``authorized_clients``), and each entry carries the full
-    real field set including an object-shaped ``added_time``. Includes a
-    decoy entry so the flow's key-matching predicate has noise to skip past.
-    """
-    return {
-        "response": {
-            "request_id": "03153d0c37283795cf0d1a593eebd9a0",
-            "clients": [
-                {
-                    "type": 1,
-                    "description": "Some Other App",
-                    "key_type": 1,
-                    "public_key": "not-a-match",
-                    "roles": [1],
-                    "state": 3,
-                    "verification": 1,
-                    "added_time": {"seconds": 1700000000},
-                },
-                {
-                    "type": 1,
-                    "description": "Home Assistant",
-                    "key_type": 1,
-                    "public_key": PUBLIC_KEY_B64,
-                    "roles": [1],
-                    "state": int(state),
-                    "verification": 1,
-                    "added_time": {"seconds": 1783997627},
-                },
-            ],
-        }
-    }
+def _empty_clients() -> AuthorizedClients:
+    """Return a typed client list that is authoritatively empty."""
+    return AuthorizedClients(clients=[], raw=None)
 
 
 async def test_energy_site_router_with_powerwall(hass: HomeAssistant) -> None:
@@ -254,8 +227,10 @@ async def test_subentry_pairing_already_verified(hass: HomeAssistant) -> None:
     client = _mock_powerwall_client()
     with (
         patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
-            new=AsyncMock(return_value=_verified_clients_response()),
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+            ),
         ),
         patch(
             "homeassistant.components.teslemetry.config_flow.PowerwallClient",
@@ -289,12 +264,12 @@ async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> No
     client = _mock_powerwall_client()
     with (
         patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
             new=AsyncMock(
                 side_effect=[
-                    _empty_clients_response(),
-                    _pending_clients_response(),
-                    _verified_clients_response(),
+                    _empty_clients(),
+                    _own_key_clients(AuthorizedClientState.PENDING),
+                    _own_key_clients(AuthorizedClientState.VERIFIED),
                 ]
             ),
         ),
@@ -347,8 +322,8 @@ async def test_subentry_pair_key_not_registered(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
-            new=AsyncMock(return_value=_empty_clients_response()),
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(return_value=_empty_clients()),
         ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
@@ -379,11 +354,9 @@ async def test_subentry_recognizes_own_verified_key_no_reregister(
     add_client = AsyncMock()
     with (
         patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
             new=AsyncMock(
-                return_value=_real_shape_clients_response(
-                    AuthorizedClientState.VERIFIED
-                )
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
             ),
         ),
         patch(
@@ -427,8 +400,8 @@ async def test_subentry_recognizes_own_pending_key_no_reregister(
     add_client = AsyncMock()
     with (
         patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
-            new=AsyncMock(return_value=_real_shape_clients_response(state)),
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(return_value=_own_key_clients(state)),
         ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
@@ -452,12 +425,12 @@ async def test_subentry_recognizes_own_pending_key_no_reregister(
 
 @pytest.mark.usefixtures("mock_rsa_key")
 async def test_subentry_null_body_aborts_as_lookup_failure(hass: HomeAssistant) -> None:
-    """A bare null (200) authorized-clients body aborts rather than registering.
+    """A malformed authorized-clients read aborts rather than registering.
 
     Tesla's undocumented endpoint can answer with JSON ``null``; the library's
-    typed accessor now raises ``InvalidResponse`` for it rather than collapsing
-    it to an empty client list, since a malformed response could just as
-    easily be hiding an already-registered key. The flow must not mistake this
+    typed accessor raises ``InvalidResponse`` for it rather than collapsing it
+    to an empty client list, since a malformed response could just as easily be
+    hiding an already-registered key. The flow must not mistake that failure
     for an absent key and re-register it.
     """
     entry = await _setup_energy_site_subentry(hass)
@@ -465,8 +438,8 @@ async def test_subentry_null_body_aborts_as_lookup_failure(hass: HomeAssistant) 
 
     with (
         patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
-            new=AsyncMock(return_value=None),
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(side_effect=InvalidResponse),
         ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
@@ -488,8 +461,8 @@ async def test_subentry_add_authorized_client_fails(hass: HomeAssistant) -> None
 
     with (
         patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
-            new=AsyncMock(return_value=_unverified_clients_response()),
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(return_value=_unverified_clients()),
         ),
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.add_authorized_client",
@@ -511,8 +484,10 @@ async def test_subentry_credentials_invalid_password(hass: HomeAssistant) -> Non
     client = _mock_powerwall_client(connect_error=PowerwallAuthenticationError())
     with (
         patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
-            new=AsyncMock(return_value=_verified_clients_response()),
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+            ),
         ),
         patch(
             "homeassistant.components.teslemetry.config_flow.PowerwallClient",
@@ -540,8 +515,10 @@ async def test_subentry_credentials_cannot_connect(hass: HomeAssistant) -> None:
     client = _mock_powerwall_client(connect_error=PowerwallConnectionError())
     with (
         patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
-            new=AsyncMock(return_value=_verified_clients_response()),
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+            ),
         ),
         patch(
             "homeassistant.components.teslemetry.config_flow.PowerwallClient",
@@ -583,8 +560,10 @@ async def test_subentry_credentials_prefills_discovered_host(
             new=AsyncMock(return_value=discovered_host),
         ),
         patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
-            new=AsyncMock(return_value=_verified_clients_response()),
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+            ),
         ),
     ):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
@@ -595,21 +574,40 @@ async def test_subentry_credentials_prefills_discovered_host(
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_subentry_credentials_discovery_fleet_error_falls_back(
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(TeslaFleetError(), id="tesla_fleet_error"),
+        pytest.param(
+            ClientResponseError(
+                RequestInfo(URL("http://gateway"), "GET", CIMultiDict()), (), status=500
+            ),
+            id="client_response_error",
+        ),
+    ],
+)
+async def test_subentry_credentials_discovery_error_falls_back(
     hass: HomeAssistant,
+    error: Exception,
 ) -> None:
-    """A TeslaFleetError during discovery falls back to the default host, no abort."""
+    """Discovery is best-effort: any lookup error falls back to the default host.
+
+    Both exception types escape the same cloud-command path, and neither may
+    abort the flow - the user must still reach the credentials step.
+    """
     entry = await _setup_energy_site_subentry(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
 
     with (
         patch(
             "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_gateway_address",
-            new=AsyncMock(side_effect=TeslaFleetError()),
+            new=AsyncMock(side_effect=error),
         ),
         patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
-            new=AsyncMock(return_value=_verified_clients_response()),
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+            ),
         ),
     ):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
@@ -633,8 +631,10 @@ async def test_subentry_credentials_discovery_none_falls_back(
             new=AsyncMock(return_value=None),
         ),
         patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
-            new=AsyncMock(return_value=_verified_clients_response()),
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+            ),
         ),
     ):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
@@ -669,8 +669,10 @@ async def test_subentry_reconfigure_reuses_router_fallback(
     client = _mock_powerwall_client()
     with (
         patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
-            new=AsyncMock(return_value=_verified_clients_response()),
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+            ),
         ),
         patch(
             "homeassistant.components.teslemetry.config_flow.PowerwallClient",
@@ -812,6 +814,36 @@ async def test_stale_cleanup_preserves_foreign_subentry(hass: HomeAssistant) -> 
     assert entry.subentries[foreign.subentry_id].subentry_type == "vehicle"
 
 
+async def test_stale_cleanup_preserves_pairing_without_energy_scope(
+    hass: HomeAssistant,
+) -> None:
+    """Losing the energy scope must not delete a paired site's stored credentials.
+
+    Without ``energy_device_data`` the product loop skips every energy site, so
+    the resolved site list is empty for want of an inventory rather than because
+    the sites are gone. Pruning against it would silently drop the user's local
+    gateway host/password.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+            return_value=METADATA_NOSCOPE,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not entry.runtime_data.energysites
+    assert subentry_id in entry.subentries
+    assert entry.subentries[subentry_id].data[CONF_HOST] == HOST
+    assert entry.subentries[subentry_id].data[CONF_PASSWORD] == PASSWORD
+
+
 async def test_subentry_reconfigure_entry_not_loaded(hass: HomeAssistant) -> None:
     """Reconfigure aborts cleanly when the parent entry is not loaded."""
     entry = _entry_with_powerwall()
@@ -834,8 +866,10 @@ async def test_subentry_credentials_password_truncated(hass: HomeAssistant) -> N
     client = _mock_powerwall_client()
     with (
         patch(
-            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.list_authorized_clients",
-            new=AsyncMock(return_value=_verified_clients_response()),
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+            ),
         ),
         patch(
             "homeassistant.components.teslemetry.config_flow.PowerwallClient",
