@@ -59,11 +59,7 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: done
-  entity-category:
-    status: exempt
-    comment: >
-      All entities are primary controls or measurements; none are configuration
-      or diagnostic entities that need a non-default entity category.
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
     status: exempt
