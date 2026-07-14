@@ -12,10 +12,15 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    MATCH_ALL,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
+    EventStateChangedData,
     HomeAssistant,
     callback,
     split_entity_id,
@@ -23,8 +28,12 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import get_device_class
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_state_added_domain,
+    async_track_time_interval,
+)
 from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import DATA_EXPOSED_ENTITIES, DOMAIN
@@ -101,11 +110,17 @@ class ExposedEntity:
     """An exposed entity without a unique_id."""
 
     assistants: dict[str, dict[str, Any]]
+    # time.time() when this entity's state was first observed missing, or
+    # None if it currently has a state. Tracked per-record (rather than in a
+    # separate entity_id -> timestamp map) so a store full of orphaned
+    # legacy records doesn't need a second, equally large index alongside it.
+    orphaned_since: float | None = None
 
     def to_json(self) -> dict[str, Any]:
         """Return a JSON serializable representation for storage."""
         return {
             "assistants": self.assistants,
+            "orphaned_since": self.orphaned_since,
         }
 
 
@@ -114,7 +129,6 @@ class SerializedExposedEntities(TypedDict):
 
     assistants: dict[str, dict[str, Any]]
     exposed_entities: dict[str, dict[str, Any]]
-    legacy_orphaned_since: dict[str, float]
 
 
 class ExposedEntities:
@@ -126,9 +140,6 @@ class ExposedEntities:
 
     _assistants: dict[str, AssistantPreferences]
     entities: dict[str, ExposedEntity]
-    # entity_id -> time.time() when a legacy entity was first observed
-    # missing. Persisted so the retention window survives a restart.
-    _legacy_orphaned_since: dict[str, float]
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize."""
@@ -147,6 +158,22 @@ class ExposedEntities:
         await self._async_load_data()
         # Entities without a unique_id are never in the entity registry, so
         # registry removal events can't be used to prune them.
+        async_track_state_added_domain(
+            self._hass, MATCH_ALL, self._async_state_added_listener
+        )
+
+        # Run once shortly after startup, in addition to the periodic sweep
+        # below: async_track_time_interval only fires after a full interval
+        # elapses, so an install that restarts more often than that would
+        # otherwise never sweep at all.
+        @callback
+        def _on_homeassistant_started(_event: Event) -> None:
+            """Run one sweep shortly after startup."""
+            self._async_purge_stale_legacy_entities(dt_util.utcnow())
+
+        self._hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, _on_homeassistant_started
+        )
         cancel_purge = async_track_time_interval(
             self._hass,
             self._async_purge_stale_legacy_entities,
@@ -228,37 +255,60 @@ class ExposedEntities:
             listener()
 
     @callback
-    def _async_purge_stale_legacy_entities(self, _now: datetime) -> None:
-        """Periodic sweep to drop legacy entries with no entity behind them.
+    def _async_state_added_listener(self, event: Event[EventStateChangedData]) -> None:
+        """Clear orphan tracking the moment a legacy entity's state reappears.
 
-        A record is only purged once it's been continuously missing across
-        repeated sweeps for the full LEGACY_ENTITY_PURGE_INTERVAL, not on a
-        single observation -- the entity could reappear moments later (e.g.
-        a platform reload).
+        Runs in real time rather than waiting for the next sweep: an entity
+        can go missing, come back, and go missing again between two sweeps,
+        and a sweep alone can't tell that apart from having been missing the
+        whole time. Only ever clears tracking, never deletes anything, so it
+        can't reintroduce the immediate-purge-on-removal bug this design
+        deliberately avoids.
+        """
+        entity_id = event.data["entity_id"]
+        if (
+            exposed_entity := self.entities.get(entity_id)
+        ) and exposed_entity.orphaned_since is not None:
+            self.entities[entity_id] = dataclasses.replace(
+                exposed_entity, orphaned_since=None
+            )
+            self._async_schedule_save()
+
+    @callback
+    def _async_purge_stale_legacy_entities(self, _now: datetime) -> None:
+        """Sweep to drop legacy entries with no entity behind them.
+
+        A record is only purged once it's been continuously missing for the
+        full LEGACY_ENTITY_PURGE_INTERVAL, not on a single observation -- the
+        entity could reappear moments later (e.g. a platform reload). Runs
+        once at startup and then on LEGACY_ENTITY_SWEEP_INTERVAL, so installs
+        that restart more often than the sweep interval still make progress.
         """
         now = time.time()
-        missing_now = {
-            entity_id
-            for entity_id in self.entities
-            if self._hass.states.get(entity_id) is None
-        }
-
-        changed = False
-        for entity_id in list(self._legacy_orphaned_since):
-            if entity_id not in missing_now:
-                del self._legacy_orphaned_since[entity_id]
-                changed = True
-
         purge_after = LEGACY_ENTITY_PURGE_INTERVAL.total_seconds()
-        for entity_id in missing_now:
-            orphaned_since = self._legacy_orphaned_since.get(entity_id)
-            if orphaned_since is None:
-                self._legacy_orphaned_since[entity_id] = now
+        to_purge: list[str] = []
+        changed = False
+
+        for entity_id, exposed_entity in self.entities.items():
+            if self._hass.states.get(entity_id) is not None:
+                if exposed_entity.orphaned_since is not None:
+                    self.entities[entity_id] = dataclasses.replace(
+                        exposed_entity, orphaned_since=None
+                    )
+                    changed = True
+                continue
+
+            if exposed_entity.orphaned_since is None:
+                self.entities[entity_id] = dataclasses.replace(
+                    exposed_entity, orphaned_since=now
+                )
                 changed = True
-            elif now - orphaned_since >= purge_after:
-                del self.entities[entity_id]
-                del self._legacy_orphaned_since[entity_id]
-                changed = True
+            elif now - exposed_entity.orphaned_since >= purge_after:
+                to_purge.append(entity_id)
+
+        for entity_id in to_purge:
+            del self.entities[entity_id]
+            changed = True
 
         if changed:
             self._async_schedule_save()
@@ -438,11 +488,6 @@ class ExposedEntities:
 
         self._assistants = assistants
         self.entities = exposed_entities
-        self._legacy_orphaned_since = (
-            dict(data["legacy_orphaned_since"])
-            if data and "legacy_orphaned_since" in data
-            else {}
-        )
 
         return data
 
@@ -463,7 +508,6 @@ class ExposedEntities:
                 entity_id: entity.to_json()
                 for entity_id, entity in self.entities.items()
             },
-            "legacy_orphaned_since": self._legacy_orphaned_since,
         }
 
 

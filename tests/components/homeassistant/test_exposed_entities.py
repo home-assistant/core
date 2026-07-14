@@ -17,7 +17,11 @@ from homeassistant.components.homeassistant.exposed_entities import (
     async_listen_entity_updates,
     async_should_expose,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EntityCategory
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -625,7 +629,7 @@ async def test_purge_stale_legacy_entities_periodic_sweep(
     await hass.async_block_till_done()
 
     assert set(exposed_entities.entities) == {"sensor.still_around", "sensor.long_gone"}
-    assert "sensor.long_gone" in exposed_entities._legacy_orphaned_since
+    assert exposed_entities.entities["sensor.long_gone"].orphaned_since is not None
 
     # Once it's stayed missing for the full retention window, a later sweep purges it.
     freezer.tick(LEGACY_ENTITY_PURGE_INTERVAL)
@@ -633,7 +637,7 @@ async def test_purge_stale_legacy_entities_periodic_sweep(
     await hass.async_block_till_done()
 
     assert set(exposed_entities.entities) == {"sensor.still_around"}
-    assert exposed_entities._legacy_orphaned_since == {}
+    assert exposed_entities.entities["sensor.still_around"].orphaned_since is None
 
 
 async def test_purge_stale_legacy_entities_clears_tracking_on_reappearance(
@@ -654,7 +658,7 @@ async def test_purge_stale_legacy_entities_clears_tracking_on_reappearance(
     freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert "sensor.flaky" in exposed_entities._legacy_orphaned_since
+    assert exposed_entities.entities["sensor.flaky"].orphaned_since is not None
 
     # The entity comes back before the retention window elapses.
     hass.states.async_set("sensor.flaky", "on", {})
@@ -662,7 +666,7 @@ async def test_purge_stale_legacy_entities_clears_tracking_on_reappearance(
     freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert "sensor.flaky" not in exposed_entities._legacy_orphaned_since
+    assert exposed_entities.entities["sensor.flaky"].orphaned_since is None
     assert "sensor.flaky" in exposed_entities.entities
 
     # Even after the full retention window, it's kept since it's live again.
@@ -687,7 +691,7 @@ async def test_legacy_orphaned_since_persists_across_restart(
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
 
     exposed_entities._async_purge_stale_legacy_entities(dt_util.utcnow())
-    assert "sensor.long_gone" in exposed_entities._legacy_orphaned_since
+    assert exposed_entities.entities["sensor.long_gone"].orphaned_since is not None
 
     await flush_store(exposed_entities._store)
 
@@ -695,8 +699,8 @@ async def test_legacy_orphaned_since_persists_across_restart(
     await exposed_entities2.async_initialize()
 
     assert (
-        exposed_entities2._legacy_orphaned_since
-        == exposed_entities._legacy_orphaned_since
+        exposed_entities2.entities["sensor.long_gone"].orphaned_since
+        == exposed_entities.entities["sensor.long_gone"].orphaned_since
     )
 
 
@@ -716,4 +720,49 @@ async def test_purge_sweep_cancelled_on_stop(hass: HomeAssistant) -> None:
 
     # The sweep must not have run after stop, so nothing was tracked or purged
     assert "sensor.long_gone" in exposed_entities.entities
-    assert exposed_entities._legacy_orphaned_since == {}
+    assert exposed_entities.entities["sensor.long_gone"].orphaned_since is None
+
+
+async def test_state_added_listener_clears_tracking_immediately(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Orphan tracking clears the moment a legacy entity's state reappears.
+
+    A sweep alone can't tell "missing the whole time" apart from "went
+    missing, came back, went missing again" between two sweeps. The
+    state-added listener clears tracking in real time so that gap can't
+    be misread as a continuously-missing entity.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "sensor.flaky", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+
+    freezer.tick(LEGACY_ENTITY_SWEEP_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert exposed_entities.entities["sensor.flaky"].orphaned_since is not None
+
+    hass.states.async_set("sensor.flaky", "on", {})
+    await hass.async_block_till_done()
+
+    assert exposed_entities.entities["sensor.flaky"].orphaned_since is None
+
+
+async def test_purge_stale_legacy_entities_runs_on_startup(hass: HomeAssistant) -> None:
+    """A sweep also runs once on Home Assistant startup.
+
+    Without this, an install that restarts more often than
+    LEGACY_ENTITY_SWEEP_INTERVAL would never sweep at all, since
+    async_track_time_interval only fires after a full interval elapses.
+    """
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    async_expose_entity(hass, "test1", "sensor.long_gone", True)
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    assert exposed_entities.entities["sensor.long_gone"].orphaned_since is None
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert exposed_entities.entities["sensor.long_gone"].orphaned_since is not None
