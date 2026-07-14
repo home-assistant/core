@@ -160,11 +160,12 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.motor.up(False)
-        # Skip the motion window if the cover is already at the top —
-        # otherwise HA would report a bogus 60 s of "opening" for a
-        # no-op command. A cover mid-close still reports state=DOWN
-        # (last stable reading), so reversals still trigger motion.
-        if self.motor.state != STATE_UP:
+        # Trigger the motion window unless the cover is already at
+        # the top and idle. Reversing mid-close needs a fresh motion
+        # window too — pygaposa may not have polled since the last
+        # command, so motor.state can still read UP while the cover
+        # is physically moving down.
+        if self.motor.state != STATE_UP or self.is_closing:
             self._begin_motion(COMMAND_UP)
             self._schedule_refresh_after_motion()
         self.async_write_ha_state()
@@ -173,7 +174,7 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.motor.down(False)
-        if self.motor.state != STATE_DOWN:
+        if self.motor.state != STATE_DOWN or self.is_opening:
             self._begin_motion(COMMAND_DOWN)
             self._schedule_refresh_after_motion()
         self.async_write_ha_state()

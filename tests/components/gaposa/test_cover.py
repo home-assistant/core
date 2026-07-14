@@ -141,6 +141,33 @@ async def test_stop_leaves_state_unknown_until_poll(
     assert hass.states.get(BEDROOM_ENTITY).state == STATE_UNKNOWN
 
 
+async def test_reversal_mid_motion_switches_direction(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Reversing mid-motion should switch the reported direction immediately.
+
+    The mock motor.state stays at its starting value (bedroom=DOWN)
+    until pygaposa polls, so a naive endpoint check would leave
+    _last_command pinned to the first command and keep the entity
+    reporting the wrong direction after the reversal.
+    """
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: BEDROOM_ENTITY},
+        blocking=True,
+    )
+    assert hass.states.get(BEDROOM_ENTITY).state == STATE_OPENING
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: BEDROOM_ENTITY},
+        blocking=True,
+    )
+    assert hass.states.get(BEDROOM_ENTITY).state == STATE_CLOSING
+
+
 async def test_cover_reports_opening_during_motion_window(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
