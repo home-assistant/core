@@ -64,8 +64,10 @@
       "error": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "invalid_password": "[%key:common::config_flow::error::invalid_auth%]",
-        "powerwall_unreachable": "There is a problem communicating with your Powerwall. Ensure it has a reliable network connection and try again later.",
-        "timeout": "Timed out waiting for the key to be approved. Try again after flicking the switch on the side of your primary Powerwall off and back on."
+        "key_not_registered": "Home Assistant's key is no longer registered on the gateway. Restart setup to register it again.",
+        "key_pending": "Home Assistant's key has not been approved yet. Flick the switch on the side of your primary Powerwall off and back on to approve it, then submit again.",
+        "key_pending_verification": "Your approval is still being verified by the gateway. Wait a moment, then submit again.",
+        "powerwall_unreachable": "There is a problem communicating with your Powerwall. Ensure it has a reliable network connection and try again later."
       },
       "initiate_flow": {
         "reconfigure": "Set up local control",
