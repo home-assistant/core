@@ -251,8 +251,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     websocket_api_module.async_register_websocket_commands(hass)
 
-    source_ip_task = create_eager_task(async_get_source_ip(hass))
-
     supervisor_unix_socket_path: Path | None = None
     if socket_env := os.environ.get("SUPERVISOR_CORE_API_SOCKET"):
         socket_path = Path(socket_env)
@@ -299,6 +297,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 conf[CONF_SERVER_PORT],
             )
         break
+
+    # Created only after the fallback chain succeeded: if setup fails above,
+    # an already running task would be left behind unawaited.
+    source_ip_task = create_eager_task(async_get_source_ip(hass))
 
     async def stop_server(event: Event) -> None:
         """Stop the server."""
