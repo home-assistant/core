@@ -1,7 +1,5 @@
 """The HiFiBerry integration."""
 
-from dataclasses import dataclass
-
 from aiohifiberry import AudioControlClient, AudioControlError
 
 from homeassistant.config_entries import ConfigEntry
@@ -10,35 +8,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_PORT
-
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
-@dataclass
-class HiFiBerryData:
-    """HiFiBerry runtime data."""
-
-    client: AudioControlClient
-
-
-type HiFiBerryConfigEntry = ConfigEntry[HiFiBerryData]
-
-
-async def async_migrate_entry(hass: HomeAssistant, entry: HiFiBerryConfigEntry) -> bool:
-    """Migrate legacy HiFiBerry OS config entries to HBOS NG settings."""
-    if entry.version >= 2:
-        return True
-
-    data = dict(entry.data)
-    data.pop("authtoken", None)
-    if data.get(CONF_PORT) in (None, 81):
-        data[CONF_PORT] = DEFAULT_PORT
-
-    hass.config_entries.async_update_entry(
-        entry, data=data, version=2, unique_id=data[CONF_HOST]
-    )
-    return True
+type HiFiBerryConfigEntry = ConfigEntry[AudioControlClient]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HiFiBerryConfigEntry) -> bool:
@@ -54,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiFiBerryConfigEntry) ->
     except AudioControlError as err:
         raise ConfigEntryNotReady from err
 
-    entry.runtime_data = HiFiBerryData(client=client)
+    entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

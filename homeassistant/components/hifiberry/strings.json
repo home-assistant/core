@@ -19,7 +19,8 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "host": "Hostname or IP address of your HiFiBerry player."
+          "host": "Hostname or IP address of your HiFiBerry player.",
+          "port": "Port used by the HiFiBerry AudioControl API."
         }
       }
     }

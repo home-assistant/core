@@ -27,8 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={CONF_HOST: "hifiberry.local", CONF_PORT: DEFAULT_PORT},
         title="Kitchen Speaker",
-        unique_id="hifiberry.local",
-        version=2,
+        version=1,
     )
 
 
@@ -55,21 +54,15 @@ def mock_audiocontrol_client() -> Generator[MagicMock]:
         client.connected = True
         client.base_url = "http://hifiberry.local:80"
         client.public_base_url = "http://hifiberry.local"
-        client.now_playing = {
-            "state": "playing",
-            "player": {
-                "name": "spotify",
-                "state": "playing",
-                "capabilities": ["play", "pause", "stop", "next", "previous"],
-            },
-            "song": {
-                "title": "Big Love",
-                "artist": "Fleetwood Mac",
-                "album": "Greatest Hits",
-            },
-        }
-        client.volume = {"percentage": 80}
+        client.state = "playing"
+        client.media_title = "Big Love"
+        client.media_artist = "Fleetwood Mac"
+        client.media_album_name = "Greatest Hits"
+        client.media_album_artist = None
+        client.media_track = None
+        client.volume_level = 0.8
         client.cover_art_url = "https://example.com/cover.jpg"
+        client.source = "spotify"
         client.active_player_name = "spotify"
         client.last_active_player_name = "spotify"
         client.active_player_capabilities = {

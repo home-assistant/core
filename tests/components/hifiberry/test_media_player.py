@@ -48,7 +48,9 @@ async def test_media_player_state(
     assert state.attributes[ATTR_INPUT_SOURCE] == "spotify"
     assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.8
     assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is False
-    assert state.attributes["entity_picture"] == "https://example.com/cover.jpg"
+    assert state.attributes["entity_picture"].startswith(
+        f"/api/media_player_proxy/{ENTITY_ID}"
+    )
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == int(
         MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PAUSE

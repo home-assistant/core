@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -41,28 +41,10 @@ async def validate_input(hass: HomeAssistant, host: str, port: int) -> None:
 class HiFiBerryConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HiFiBerry."""
 
-    VERSION = 2
+    VERSION = 1
 
     _host: str = DEFAULT_HOST
     _port: int = DEFAULT_PORT
-
-    @callback
-    def _async_get_entry(self) -> ConfigFlowResult:
-        """Create the config entry."""
-        return self.async_create_entry(
-            title=self._host,
-            data={
-                CONF_HOST: self._host,
-                CONF_PORT: self._port,
-            },
-        )
-
-    async def _set_unique_id_and_abort(self) -> None:
-        """Set unique ID and abort if already configured."""
-        await self.async_set_unique_id(self._host)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self._host, CONF_PORT: self._port}
-        )
 
     @override
     async def async_step_user(
@@ -83,8 +65,16 @@ class HiFiBerryConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self._set_unique_id_and_abort()
-                return self._async_get_entry()
+                self._async_abort_entries_match(
+                    {CONF_HOST: self._host, CONF_PORT: self._port}
+                )
+                return self.async_create_entry(
+                    title=self._host,
+                    data={
+                        CONF_HOST: self._host,
+                        CONF_PORT: self._port,
+                    },
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=_schema(self._host, self._port), errors=errors
@@ -98,7 +88,8 @@ class HiFiBerryConfigFlow(ConfigFlow, domain=DOMAIN):
         self._host = discovery_info.hostname.rstrip(".")
         self._port = DEFAULT_PORT
 
-        await self._set_unique_id_and_abort()
+        await self.async_set_unique_id(self._host)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
         return await self.async_step_discovery_confirm()
 
@@ -111,7 +102,13 @@ class HiFiBerryConfigFlow(ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, self._host, self._port)
             except CannotConnect:
                 return self.async_abort(reason="cannot_connect")
-            return self._async_get_entry()
+            return self.async_create_entry(
+                title=self._host,
+                data={
+                    CONF_HOST: self._host,
+                    CONF_PORT: self._port,
+                },
+            )
 
         return self.async_show_form(
             step_id="discovery_confirm",

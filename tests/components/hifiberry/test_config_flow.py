@@ -48,7 +48,7 @@ async def test_form(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "hifiberry.local"
     assert result2["data"] == TEST_CONNECTION
-    assert result2["result"].unique_id == "hifiberry.local"
+    assert result2["result"].unique_id is None
     mock_audiocontrol_client.async_validate.assert_awaited_once()
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -94,11 +94,10 @@ async def test_duplicate_updates_existing_entry(
     mock_setup_entry: AsyncMock,
     mock_audiocontrol_client: MagicMock,
 ) -> None:
-    """Test a duplicate host aborts and updates the existing entry."""
+    """Test a duplicate host aborts."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="hifiberry.local",
-        data={CONF_HOST: "old.local", CONF_PORT: 81},
+        data=TEST_CONNECTION,
     )
     entry.add_to_hass(hass)
 
@@ -113,7 +112,6 @@ async def test_duplicate_updates_existing_entry(
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
-    assert entry.data == TEST_CONNECTION
     mock_audiocontrol_client.async_validate.assert_awaited_once()
     assert len(mock_setup_entry.mock_calls) == 0
 
