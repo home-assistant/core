@@ -85,9 +85,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
         except (GaposaAuthException, FirebaseAuthException) as exc:
             # Signal reauth (if configured) instead of tight retry —
             # a fast retry loop cannot recover from bad credentials.
-            raise ConfigEntryAuthFailed(
-                f"Gaposa authentication failed: {exc}"
-            ) from exc
+            raise ConfigEntryAuthFailed(f"Gaposa authentication failed: {exc}") from exc
         except (ClientError, TimeoutError, OSError) as exc:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
             raise UpdateFailed(f"Error talking to Gaposa: {exc}") from exc
