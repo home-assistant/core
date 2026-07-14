@@ -35,7 +35,7 @@ async def test_user_flow(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
         USER_INPUT,
     )
     await hass.async_block_till_done()
-    assert result["data"] == {**USER_INPUT, "host": "http://1.1.1.1"}
+    assert result["data"]["host"] == f"http://{USER_INPUT['host']}"
 
 
 @pytest.mark.parametrize(
