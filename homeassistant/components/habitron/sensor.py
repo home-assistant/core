@@ -149,7 +149,7 @@ async def async_setup_entry(  # noqa: C901
 
     # --- Module Iteration ---
     for hbt_module in hbtn_rt.modules:
-        if hbt_module.typ in [b"\x01\x03", b"\x0b\x1f"]:
+        if hbt_module.typ in [b"\x01\x03", b"\x01\x04", b"\x0b\x1f"]:
             for ain in hbt_module.analogins:
                 if ain.type == 3:
                     analog = HbtnDescribedSensor(

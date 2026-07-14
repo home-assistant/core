@@ -620,7 +620,7 @@ async def test_async_setup_entry_emits_all_sensor_types(hass: HomeAssistant) -> 
     mod = MagicMock(spec=SmartController)
     mod.uid = "MOD-1"
     mod.mod_type = "Smart Controller Touch"
-    mod.typ = b"\x01\x03"
+    mod.typ = b"\x01\x04"
     mod.area = 0
     mod.sensors = [temp, hum, illum, wind, air, ident, finger]
     mod.analogins = [ain]
