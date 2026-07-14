@@ -1365,7 +1365,7 @@ async def test_float_tolerance_values(hass: HomeAssistant) -> None:
 
 
 async def test_float_tolerance_values_2(hass: HomeAssistant) -> None:
-    """Test if dehumidifier turns off when oudside of floating point tolerance values."""
+    """Test dehumidifier turns off outside of floating point tolerance."""
     assert await async_setup_component(
         hass,
         HUMIDIFIER_DOMAIN,

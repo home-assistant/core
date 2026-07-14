@@ -1,9 +1,8 @@
 """Support for ClearPass Policy Manager."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from clearpasspy import ClearPass
 import voluptuous as vol
@@ -59,11 +58,13 @@ class CPPMDeviceScanner(DeviceScanner):
         self._cppm = cppm
         self.results = None
 
+    @override
     def scan_devices(self):
         """Initialize scanner."""
         self.get_cppm_data()
         return [device["mac"] for device in self.results]
 
+    @override
     def get_device_name(self, device):
         """Retrieve device name."""
         return next(

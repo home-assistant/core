@@ -1,0 +1,65 @@
+{
+  "entity": {
+    "sensor": {
+      "filt_mode": {
+        "default": "mdi:water-sync",
+        "state": {
+          "auto": "mdi:water-boiler-auto",
+          "backwash": "mdi:water-boiler-off",
+          "heating": "mdi:water-boiler-alert",
+          "intelligent": "mdi:water-boiler-auto",
+          "manual": "mdi:water-boiler-alert",
+          "smart": "mdi:water-boiler-auto"
+        }
+      },
+      "filtration_speed": {
+        "default": "mdi:fan"
+      },
+      "filtvalve_remaining": {
+        "default": "mdi:timer-sand"
+      },
+      "hidro_current": {
+        "default": "mdi:air-humidifier-off",
+        "range": {
+          "10": "mdi:air-humidifier"
+        }
+      },
+      "hidro_polarity": {
+        "default": "mdi:plus-minus-variant"
+      },
+      "intelligent_intervals": {
+        "default": "mdi:counter"
+      },
+      "intelligent_tt_next_interval": {
+        "default": "mdi:timeline-clock-outline"
+      },
+      "ion_current": {
+        "default": "mdi:atom"
+      },
+      "ion_polarity": {
+        "default": "mdi:plus-minus-variant"
+      },
+      "measure_cl": {
+        "default": "mdi:shaker-outline"
+      },
+      "measure_rx": {
+        "default": "mdi:gradient-vertical"
+      },
+      "ph_pump_status": {
+        "default": "mdi:pump"
+      },
+      "ph_status_alarm": {
+        "default": "mdi:ph",
+        "state": {
+          "ok": "mdi:check-circle-outline",
+          "ph_high": "mdi:alert",
+          "ph_low": "mdi:alert",
+          "ph_over": "mdi:alert",
+          "ph_under": "mdi:alert",
+          "pump_stopped": "mdi:alert",
+          "tank_level": "mdi:alert"
+        }
+      }
+    }
+  }
+}

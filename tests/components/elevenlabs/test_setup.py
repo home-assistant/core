@@ -1,7 +1,5 @@
 """Tests for the ElevenLabs TTS entity."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock
 
 from homeassistant.config_entries import ConfigEntryState

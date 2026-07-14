@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyiskra.devices import Device
 from pyiskra.exceptions import (
@@ -41,17 +42,20 @@ class IskraDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=timedelta(seconds=60),
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from Iskra device."""
         try:
             await self.device.update_status()
         except DeviceTimeoutError as e:
             raise UpdateFailed(
-                f"Timeout error occurred while updating data for device {self.device.serial}"
+                "Timeout error occurred while updating"
+                f" data for device {self.device.serial}"
             ) from e
         except DeviceConnectionError as e:
             raise UpdateFailed(
-                f"Connection error occurred while updating data for device {self.device.serial}"
+                "Connection error occurred while updating"
+                f" data for device {self.device.serial}"
             ) from e
         except NotAuthorised as e:
             raise UpdateFailed(

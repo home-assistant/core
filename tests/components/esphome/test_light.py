@@ -465,7 +465,7 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
-    """Test a generic light entity that only supports brightness along with an unknown color mode."""
+    """Test light entity with brightness and unknown color mode."""
     mock_client.api_version = APIVersion(1, 7)
     entity_info = [
         LightInfo(
@@ -1913,6 +1913,7 @@ async def test_only_cold_warm_white_support(
                 key=1,
                 state=True,
                 color_mode=color_modes,
+                color_temperature=pytest.approx(400.0),
                 cold_white=pytest.approx(0.0),
                 warm_white=pytest.approx(1.0),
                 device_id=0,
@@ -1944,6 +1945,7 @@ async def test_only_cold_warm_white_support(
                 state=True,
                 brightness=pytest.approx(0.4980392156862745),
                 color_mode=color_modes,
+                color_temperature=pytest.approx(277.7777777777778),
                 cold_white=pytest.approx(0.9798, abs=1e-3),
                 warm_white=pytest.approx(1.0),
                 device_id=0,
@@ -2008,6 +2010,7 @@ async def test_cold_warm_white_no_mireds_set(
                 key=1,
                 state=True,
                 color_mode=color_modes,
+                color_temperature=pytest.approx(277.7777777777778),
                 cold_white=1.0,
                 warm_white=1.0,
                 device_id=0,

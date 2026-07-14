@@ -1,8 +1,6 @@
 """Support for XS1 switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from xs1_api_client.api_constants import ActuatorType
 from xs1_api_client.device.actuator import XS1Actuator
@@ -37,19 +35,23 @@ class XS1SwitchEntity(XS1DeviceEntity, SwitchEntity):
     """Representation of a XS1 switch actuator."""
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device if any."""
         return self.device.name()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.device.value() == 100
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self.device.turn_on()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self.device.turn_off()

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from aiorecollect.errors import RecollectError
 import pytest
 
-from homeassistant.components.recollect_waste import (
+from homeassistant.components.recollect_waste.const import (
     CONF_PLACE_ID,
     CONF_SERVICE_ID,
     DOMAIN,

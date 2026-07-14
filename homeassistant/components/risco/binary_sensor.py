@@ -1,10 +1,8 @@
 """Support for Risco alarm zones."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from itertools import chain
-from typing import Any
+from typing import Any, override
 
 from pyrisco.cloud.zone import Zone as CloudZone
 from pyrisco.common import System
@@ -15,16 +13,15 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LocalData, is_local
-from .const import DATA_COORDINATOR, DOMAIN, SYSTEM_UPDATE_SIGNAL
+from .const import DOMAIN, SYSTEM_UPDATE_SIGNAL
 from .coordinator import RiscoDataUpdateCoordinator
 from .entity import RiscoCloudZoneEntity, RiscoLocalZoneEntity
+from .models import RiscoConfigEntry
 
 SYSTEM_ENTITY_DESCRIPTIONS = [
     BinarySensorEntityDescription(
@@ -72,12 +69,12 @@ SYSTEM_ENTITY_DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RiscoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Risco alarm control panel."""
-    if is_local(config_entry):
-        local_data: LocalData = hass.data[DOMAIN][config_entry.entry_id]
+    risco_data = config_entry.runtime_data
+    if local_data := risco_data.local_data:
         zone_entities = (
             entity
             for zone_id, zone in local_data.system.zones.items()
@@ -96,10 +93,8 @@ async def async_setup_entry(
         )
 
         async_add_entities(chain(system_entities, zone_entities))
-    else:
-        coordinator: RiscoDataUpdateCoordinator = hass.data[DOMAIN][
-            config_entry.entry_id
-        ][DATA_COORDINATOR]
+    elif cloud_data := risco_data.cloud_data:
+        coordinator = cloud_data.coordinator
         async_add_entities(
             RiscoCloudBinarySensor(coordinator, zone_id, zone)
             for zone_id, zone in coordinator.data.zones.items()
@@ -119,6 +114,7 @@ class RiscoCloudBinarySensor(RiscoCloudZoneEntity, BinarySensorEntity):
         super().__init__(coordinator=coordinator, suffix="", zone_id=zone_id, zone=zone)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._zone.triggered
@@ -135,6 +131,7 @@ class RiscoLocalBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
         super().__init__(system_id=system_id, suffix="", zone_id=zone_id, zone=zone)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {
@@ -143,6 +140,7 @@ class RiscoLocalBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
         }
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._zone.triggered
@@ -163,6 +161,7 @@ class RiscoLocalAlarmedBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._zone.alarmed
@@ -183,6 +182,7 @@ class RiscoLocalArmedBinarySensor(RiscoLocalZoneEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._zone.armed
@@ -211,6 +211,7 @@ class RiscoSystemBinarySensor(BinarySensorEntity):
         )
         self.entity_description = entity_description
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
         self.async_on_remove(
@@ -220,6 +221,7 @@ class RiscoSystemBinarySensor(BinarySensorEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return getattr(self._system, self._property)

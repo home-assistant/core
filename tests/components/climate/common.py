@@ -32,7 +32,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.loader import bind_hass
 
 
 async def async_set_preset_mode(
@@ -47,7 +46,6 @@ async def async_set_preset_mode(
     await hass.services.async_call(DOMAIN, SERVICE_SET_PRESET_MODE, data, blocking=True)
 
 
-@bind_hass
 def set_preset_mode(
     hass: HomeAssistant, preset_mode: str, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
@@ -86,7 +84,6 @@ async def async_set_temperature(
     )
 
 
-@bind_hass
 def set_temperature(
     hass: HomeAssistant,
     temperature: float | None = None,
@@ -123,7 +120,6 @@ async def async_set_humidity(
     await hass.services.async_call(DOMAIN, SERVICE_SET_HUMIDITY, data, blocking=True)
 
 
-@bind_hass
 def set_humidity(
     hass: HomeAssistant, humidity: int, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
@@ -148,7 +144,6 @@ async def async_set_fan_mode(
     await hass.services.async_call(DOMAIN, SERVICE_SET_FAN_MODE, data, blocking=True)
 
 
-@bind_hass
 def set_fan_mode(
     hass: HomeAssistant, fan: str, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
@@ -173,7 +168,6 @@ async def async_set_hvac_mode(
     await hass.services.async_call(DOMAIN, SERVICE_SET_HVAC_MODE, data, blocking=True)
 
 
-@bind_hass
 def set_operation_mode(
     hass: HomeAssistant, hvac_mode: HVACMode, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:
@@ -212,7 +206,6 @@ async def async_set_swing_mode(
     await hass.services.async_call(DOMAIN, SERVICE_SET_SWING_MODE, data, blocking=True)
 
 
-@bind_hass
 def set_swing_mode(
     hass: HomeAssistant, swing_mode: str, entity_id: str = ENTITY_MATCH_ALL
 ) -> None:

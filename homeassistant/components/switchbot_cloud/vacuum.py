@@ -1,6 +1,6 @@
 """Support for SwitchBot vacuum."""
 
-from typing import Any
+from typing import Any, override
 
 from switchbot_api import (
     Device,
@@ -17,13 +17,11 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
     VacuumEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData
+from . import SwitchbotCloudConfigEntry
 from .const import (
-    DOMAIN,
     VACUUM_FAN_SPEED_MAX,
     VACUUM_FAN_SPEED_QUIET,
     VACUUM_FAN_SPEED_STANDARD,
@@ -35,11 +33,11 @@ from .entity import SwitchBotCloudEntity
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
     async_add_entities(
         _async_make_entity(data.api, device, coordinator)
         for device, coordinator in data.devices.vacuums
@@ -77,8 +75,7 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
     # "Robot Vacuum Cleaner S1 Plus"
 
     _attr_supported_features: VacuumEntityFeature = (
-        VacuumEntityFeature.BATTERY
-        | VacuumEntityFeature.FAN_SPEED
+        VacuumEntityFeature.FAN_SPEED
         | VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.START
@@ -90,6 +87,7 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
         VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED.keys()
     )
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         self._attr_fan_speed = fan_speed
@@ -100,27 +98,30 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
             )
             await self.coordinator.async_request_refresh()
 
+    @override
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
         await self.send_api_command(VacuumCommands.STOP)
         self.async_write_ha_state()
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         await self.send_api_command(VacuumCommands.DOCK)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
         await self.send_api_command(VacuumCommands.START)
         await self.coordinator.async_request_refresh()
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
 
-        self._attr_battery_level = self.coordinator.data.get("battery")
         self._attr_available = self.coordinator.data.get("onlineStatus") == "online"
 
         switchbot_state = str(self.coordinator.data.get("workingStatus"))
@@ -132,6 +133,7 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
 class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
     """Representation of a SwitchBot K20+ Pro & Robot Vacuum Cleaner K11 Plus."""
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         self._attr_fan_speed = fan_speed
@@ -145,16 +147,19 @@ class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
         await self.send_api_command(VacuumCleanerV2Commands.PAUSE)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         await self.send_api_command(VacuumCleanerV2Commands.DOCK)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
         fan_level = (
@@ -178,6 +183,7 @@ class SwitchBotCloudVacuumV2(SwitchBotCloudVacuum):
 class SwitchBotCloudVacuumK10PlusProCombo(SwitchBotCloudVacuumV2):
     """Representation of a SwitchBot vacuum K10+ Pro Combo."""
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         self._attr_fan_speed = fan_speed
@@ -196,6 +202,7 @@ class SwitchBotCloudVacuumK10PlusProCombo(SwitchBotCloudVacuumV2):
 class SwitchBotCloudVacuumV3(SwitchBotCloudVacuumV2):
     """Representation of a SwitchBot vacuum Robot Vacuum Cleaner S10 & S20."""
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         self._attr_fan_speed = fan_speed
@@ -209,6 +216,7 @@ class SwitchBotCloudVacuumV3(SwitchBotCloudVacuumV2):
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
         fan_level = (

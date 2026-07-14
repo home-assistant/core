@@ -56,8 +56,10 @@ async def test_state_reporting_all(hass: HomeAssistant) -> None:
     """Test the state reporting in 'all' mode.
 
     The group state is unavailable if all group members are unavailable.
-    Otherwise, the group state is unknown if at least one group member is unknown or unavailable.
-    Otherwise, the group state is off if at least one group member is off.
+    Otherwise, the group state is unknown if at least one group member
+    is unknown or unavailable.
+    Otherwise, the group state is off if at least one group member is
+    off.
     Otherwise, the group state is on.
     """
     await async_setup_component(

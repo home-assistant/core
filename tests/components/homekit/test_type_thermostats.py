@@ -43,6 +43,12 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.homekit.accessories import HomeDriver
+from homeassistant.components.homekit.climate_base import (
+    FAN_STATE_ACTIVE,
+    FAN_STATE_IDLE,
+    FAN_STATE_INACTIVE,
+)
 from homeassistant.components.homekit.const import (
     ATTR_VALUE,
     CHAR_CURRENT_FAN_STATE,
@@ -56,9 +62,6 @@ from homeassistant.components.homekit.const import (
     PROP_MIN_VALUE,
 )
 from homeassistant.components.homekit.type_thermostats import (
-    FAN_STATE_ACTIVE,
-    FAN_STATE_IDLE,
-    FAN_STATE_INACTIVE,
     HC_HEAT_COOL_AUTO,
     HC_HEAT_COOL_COOL,
     HC_HEAT_COOL_HEAT,
@@ -66,7 +69,11 @@ from homeassistant.components.homekit.type_thermostats import (
     Thermostat,
     WaterHeater,
 )
-from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
+from homeassistant.components.water_heater import (
+    ATTR_OPERATION_LIST,
+    DOMAIN as WATER_HEATER_DOMAIN,
+    WaterHeaterEntityFeature,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -543,8 +550,8 @@ async def test_thermostat_auto(
     assert acc.char_cooling_thresh_temp.value == 25.0
     assert len(events) == 1
     assert (
-        events[-1].data[ATTR_VALUE]
-        == "CoolingThresholdTemperature to 25.0°C, HeatingThresholdTemperature to 20.0°C"
+        events[-1].data[ATTR_VALUE] == "CoolingThresholdTemperature to 25.0\u00b0C,"
+        " HeatingThresholdTemperature to 20.0\u00b0C"
     )
 
 
@@ -651,8 +658,9 @@ async def test_thermostat_mode_and_temp_change(
     assert len(events) == 2
     assert events[-2].data[ATTR_VALUE] == "TargetHeatingCoolingState to 3"
     assert (
-        events[-1].data[ATTR_VALUE]
-        == "TargetHeatingCoolingState to 3, CoolingThresholdTemperature to 25.0°C, HeatingThresholdTemperature to 20.0°C"
+        events[-1].data[ATTR_VALUE] == "TargetHeatingCoolingState to 3,"
+        " CoolingThresholdTemperature to 25.0\u00b0C,"
+        " HeatingThresholdTemperature to 20.0\u00b0C"
     )
 
 
@@ -724,7 +732,7 @@ async def test_thermostat_humidity(
 async def test_thermostat_humidity_with_target_humidity(
     hass: HomeAssistant, hk_driver
 ) -> None:
-    """Test if accessory and HA are updated accordingly with humidity without target hudmidity.
+    """Test accessory and HA updates with humidity without target.
 
     This test is for thermostats that do not support target humidity but
     have a current humidity sensor.
@@ -992,7 +1000,20 @@ async def test_thermostat_get_temperature_range(hass: HomeAssistant, hk_driver) 
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state
-    assert acc.get_temperature_range(state) == (15.5, 21.0)
+    # 60F is 15.56C, rounded inward to the 0.1 step so the slider cannot
+    # go below the entity's own minimum
+    assert acc.get_temperature_range(state) == (15.6, 21.1)
+
+    # A range too narrow to hold a step keeps the exact limits instead
+    # of expanding beyond them
+    acc._unit = UnitOfTemperature.CELSIUS
+    hass.states.async_set(
+        entity_id, HVACMode.OFF, {ATTR_MIN_TEMP: 20.11, ATTR_MAX_TEMP: 20.14}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state
+    assert acc.get_temperature_range(state) == (20.11, 20.14)
 
 
 async def test_thermostat_temperature_step_whole(
@@ -1282,7 +1303,7 @@ async def test_thermostat_hvac_modes_with_auto_only(
 async def test_thermostat_hvac_modes_with_heat_only(
     hass: HomeAssistant, hk_driver
 ) -> None:
-    """Test if unsupported HVAC modes are deactivated in HomeKit and siri calls get converted to heat."""
+    """Test unsupported HVAC modes deactivated, siri calls convert to heat."""
     entity_id = "climate.test"
 
     hass.states.async_set(
@@ -1362,7 +1383,7 @@ async def test_thermostat_hvac_modes_with_heat_only(
 async def test_thermostat_hvac_modes_with_cool_only(
     hass: HomeAssistant, hk_driver
 ) -> None:
-    """Test if unsupported HVAC modes are deactivated in HomeKit and siri calls get converted to cool."""
+    """Test unsupported HVAC modes deactivated, siri calls convert to cool."""
     entity_id = "climate.test"
 
     hass.states.async_set(
@@ -1417,7 +1438,7 @@ async def test_thermostat_hvac_modes_with_cool_only(
 async def test_thermostat_hvac_modes_with_heat_cool_only(
     hass: HomeAssistant, hk_driver
 ) -> None:
-    """Test if unsupported HVAC modes are deactivated in HomeKit and siri calls get converted to heat or cool."""
+    """Test unsupported HVAC modes deactivated, siri converts to heat/cool."""
     entity_id = "climate.test"
 
     hass.states.async_set(
@@ -1782,6 +1803,130 @@ async def test_water_heater(
     assert acc.char_target_heat_cool.value == 1
 
 
+async def test_water_heater_off_mode_on_off(
+    hass: HomeAssistant, hk_driver: HomeDriver, events: list[Event]
+) -> None:
+    """Test water heater Off mode via ON_OFF feature."""
+    entity_id = "water_heater.test"
+
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {ATTR_SUPPORTED_FEATURES: WaterHeaterEntityFeature.ON_OFF},
+    )
+    await hass.async_block_till_done()
+    acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Verify Off is exposed as a valid mode
+    valid_values = acc.char_target_heat_cool.properties.get("ValidValues", {})
+    assert valid_values == {"Off": 0, "Heat": 1}
+
+    # Set to Off from HomeKit
+    call_turn_off = async_mock_service(hass, WATER_HEATER_DOMAIN, "turn_off")
+
+    acc.char_target_heat_cool.client_update_value(0)
+    await hass.async_block_till_done()
+    assert call_turn_off
+    assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] == "off"
+
+    # Set to Heat from HomeKit
+    call_turn_on = async_mock_service(hass, WATER_HEATER_DOMAIN, "turn_on")
+
+    acc.char_target_heat_cool.client_update_value(1)
+    await hass.async_block_till_done()
+    assert call_turn_on
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] == "on"
+
+    # Update HA state to off and verify HomeKit reflects it
+    hass.states.async_set(
+        entity_id,
+        "off",
+        {ATTR_SUPPORTED_FEATURES: WaterHeaterEntityFeature.ON_OFF},
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_OFF
+    assert acc.char_current_heat_cool.value == HC_HEAT_COOL_OFF
+
+    # Update HA state back to heat and verify HomeKit reflects it
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {ATTR_SUPPORTED_FEATURES: WaterHeaterEntityFeature.ON_OFF},
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_heat_cool.value == HC_HEAT_COOL_HEAT
+    assert acc.char_current_heat_cool.value == HC_HEAT_COOL_HEAT
+
+
+async def test_water_heater_off_mode_operation_mode(
+    hass: HomeAssistant, hk_driver: HomeDriver, events: list[Event]
+) -> None:
+    """Test water heater Off mode via OPERATION_MODE feature."""
+    entity_id = "water_heater.test"
+
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            ATTR_SUPPORTED_FEATURES: WaterHeaterEntityFeature.OPERATION_MODE,
+            ATTR_OPERATION_LIST: ["off", "electric", "gas"],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Verify Off is exposed as a valid mode
+    valid_values = acc.char_target_heat_cool.properties.get("ValidValues", {})
+    assert valid_values == {"Off": 0, "Heat": 1}
+
+    # Set to Off from HomeKit — should call set_operation_mode
+    call_set_op = async_mock_service(hass, WATER_HEATER_DOMAIN, "set_operation_mode")
+
+    acc.char_target_heat_cool.client_update_value(0)
+    await hass.async_block_till_done()
+    assert call_set_op
+    assert call_set_op[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_op[0].data["operation_mode"] == "off"
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] == "off"
+
+    # Set to Heat from HomeKit — should pick first non-off operation mode
+    call_set_op.clear()
+
+    acc.char_target_heat_cool.client_update_value(1)
+    await hass.async_block_till_done()
+    assert call_set_op
+    assert call_set_op[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_op[0].data["operation_mode"] == "electric"
+    assert len(events) == 2
+    assert events[-1].data[ATTR_VALUE] == "electric"
+
+
+async def test_water_heater_no_off_mode(
+    hass: HomeAssistant, hk_driver: HomeDriver, events: list[Event]
+) -> None:
+    """Test water heater without ON_OFF or OPERATION_MODE does not expose Off."""
+    entity_id = "water_heater.test"
+
+    hass.states.async_set(entity_id, HVACMode.HEAT)
+    await hass.async_block_till_done()
+    acc = WaterHeater(hass, hk_driver, "WaterHeater", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    valid_values = acc.char_target_heat_cool.properties.get("ValidValues", {})
+    assert valid_values == {"Heat": 1}
+    assert "Off" not in valid_values
+
+
 async def test_water_heater_fahrenheit(
     hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
@@ -1841,7 +1986,9 @@ async def test_water_heater_get_temperature_range(
     state = hass.states.get(entity_id)
     assert state
     await hass.async_block_till_done()
-    assert acc.get_temperature_range(state) == (15.5, 21.0)
+    # 60F is 15.56C, rounded inward to the 0.1 step so the slider cannot
+    # go below the entity's own minimum
+    assert acc.get_temperature_range(state) == (15.6, 21.1)
 
 
 async def test_water_heater_restore(
@@ -1951,7 +2098,7 @@ async def test_thermostat_with_no_modes_when_we_first_see(
 async def test_thermostat_with_no_off_after_recheck(
     hass: HomeAssistant, hk_driver
 ) -> None:
-    """Test if a thermostat that is not ready when we first see it that actually does not have off."""
+    """Test thermostat without off mode discovered after recheck."""
     entity_id = "climate.test"
 
     base_attrs = {
@@ -2206,13 +2353,13 @@ async def test_thermostat_with_fan_modes_with_auto(
     assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == FAN_LOW
 
-    char_active_iid = acc.char_active.to_HAP()[HAP_REPR_IID]
+    char_fan_active_iid = acc.char_fan_active.to_HAP()[HAP_REPR_IID]
     hk_driver.set_characteristics(
         {
             HAP_REPR_CHARS: [
                 {
                     HAP_REPR_AID: acc.aid,
-                    HAP_REPR_IID: char_active_iid,
+                    HAP_REPR_IID: char_fan_active_iid,
                     HAP_REPR_VALUE: 0,
                 }
             ]
@@ -2221,7 +2368,7 @@ async def test_thermostat_with_fan_modes_with_auto(
     )
 
     await hass.async_block_till_done()
-    assert acc.char_active.value == 1
+    assert acc.char_fan_active.value == 1
 
     char_target_fan_state_iid = acc.char_target_fan_state.to_HAP()[HAP_REPR_IID]
 
@@ -2304,7 +2451,7 @@ async def test_thermostat_with_fan_modes_with_off(
     assert CHAR_TARGET_FAN_STATE not in acc.fan_chars
     assert CHAR_SWING_MODE in acc.fan_chars
     assert CHAR_CURRENT_FAN_STATE in acc.fan_chars
-    assert acc.char_active.value == 1
+    assert acc.char_fan_active.value == 1
 
     hass.states.async_set(
         entity_id,
@@ -2330,16 +2477,16 @@ async def test_thermostat_with_fan_modes_with_off(
         },
     )
     await hass.async_block_till_done()
-    assert acc.char_active.value == 0
+    assert acc.char_fan_active.value == 0
 
     call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
-    char_active_iid = acc.char_active.to_HAP()[HAP_REPR_IID]
+    char_fan_active_iid = acc.char_fan_active.to_HAP()[HAP_REPR_IID]
     hk_driver.set_characteristics(
         {
             HAP_REPR_CHARS: [
                 {
                     HAP_REPR_AID: acc.aid,
-                    HAP_REPR_IID: char_active_iid,
+                    HAP_REPR_IID: char_fan_active_iid,
                     HAP_REPR_VALUE: 1,
                 }
             ]
@@ -2357,7 +2504,7 @@ async def test_thermostat_with_fan_modes_with_off(
             HAP_REPR_CHARS: [
                 {
                     HAP_REPR_AID: acc.aid,
-                    HAP_REPR_IID: char_active_iid,
+                    HAP_REPR_IID: char_fan_active_iid,
                     HAP_REPR_VALUE: 0,
                 }
             ]
@@ -2766,3 +2913,107 @@ async def test_thermostat_reversed_min_max(hass: HomeAssistant, hk_driver) -> No
     assert acc.char_heating_thresh_temp.properties[PROP_MAX_VALUE] == DEFAULT_MAX_TEMP
     assert acc.char_heating_thresh_temp.properties[PROP_MIN_VALUE] == 7.0
     assert acc.char_heating_thresh_temp.properties[PROP_MIN_STEP] == 0.1
+
+
+async def test_thermostat_with_capitalized_fan_modes(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test fan modes are sent back with their original casing."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVACMode.OFF,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: ["Auto", "Low", "Medium", "High"],
+            ATTR_HVAC_ACTION: HVACAction.IDLE,
+            ATTR_FAN_MODE: "Auto",
+            ATTR_HVAC_MODES: [
+                HVACMode.HEAT,
+                HVACMode.COOL,
+                HVACMode.OFF,
+                HVACMode.AUTO,
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+
+    acc.run()
+    await hass.async_block_till_done()
+
+    # ordered_fan_speeds tracks the lowercased keys, but the value sent back to
+    # the climate entity must use the entity's original casing.
+    assert acc.ordered_fan_speeds == [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+
+    call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
+    char_rotation_speed_iid = acc.char_speed.to_HAP()[HAP_REPR_IID]
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_rotation_speed_iid,
+                    HAP_REPR_VALUE: 100,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
+    assert len(call_set_fan_mode) == 1
+    assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "High"
+
+    hk_driver.set_characteristics(
+        {
+            HAP_REPR_CHARS: [
+                {
+                    HAP_REPR_AID: acc.aid,
+                    HAP_REPR_IID: char_rotation_speed_iid,
+                    HAP_REPR_VALUE: 100 / 3,
+                }
+            ]
+        },
+        "mock_addr",
+    )
+    await hass.async_block_till_done()
+    assert len(call_set_fan_mode) == 2
+    assert call_set_fan_mode[-1].data[ATTR_ENTITY_ID] == entity_id
+    assert call_set_fan_mode[-1].data[ATTR_FAN_MODE] == "Low"
+
+
+async def test_climate_base_fan_swing_guards(hass: HomeAssistant, hk_driver) -> None:
+    """Test the shared fan and swing setters no-op without predefined modes."""
+    entity_id = "climate.test"
+    hass.states.async_set(
+        entity_id,
+        HVACMode.HEAT,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+            ATTR_HVAC_MODES: [HVACMode.HEAT, HVACMode.OFF],
+        },
+    )
+    await hass.async_block_till_done()
+    acc = Thermostat(hass, hk_driver, "Climate", entity_id, 1, None)
+    hk_driver.add_accessory(acc)
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_set_fan_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
+    call_set_swing_mode = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_SWING_MODE
+    )
+
+    # No predefined fan speeds, so a fan speed write is ignored.
+    acc._set_fan_speed(50)
+    # No swing mode, so a swing write is ignored.
+    acc._set_swing_mode(1)
+    await hass.async_block_till_done()
+
+    assert len(call_set_fan_mode) == 0
+    assert len(call_set_swing_mode) == 0

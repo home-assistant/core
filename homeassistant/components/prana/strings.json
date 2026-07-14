@@ -49,6 +49,11 @@
         }
       }
     },
+    "number": {
+      "display_brightness": {
+        "name": "Display brightness"
+      }
+    },
     "sensor": {
       "inside_temperature": {
         "name": "Inside temperature"

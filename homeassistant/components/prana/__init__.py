@@ -3,8 +3,6 @@
 Sets up the update coordinator and forwards platform setups.
 """
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import Platform
@@ -14,7 +12,7 @@ from .coordinator import PranaConfigEntry, PranaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.FAN, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.FAN, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PranaConfigEntry) -> bool:

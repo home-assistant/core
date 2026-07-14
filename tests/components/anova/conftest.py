@@ -1,7 +1,5 @@
 """Common fixtures for Anova."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 import json
@@ -153,7 +151,9 @@ def anova_api_mock(
                                     "type": "RA2L1-128",
                                 },
                                 "system-info-details": {
-                                    "firmware-version-raw": "VM178_A_02.02.00_MKE15-128",
+                                    "firmware-version-raw": (
+                                        "VM178_A_02.02.00_MKE15-128"
+                                    ),
                                     "systick": 607026,
                                     "version-string": "VM171_A_02.02.00 RA2L1-128",
                                 },

@@ -1,7 +1,5 @@
 """Classes for voice assistant pipelines."""
 
-from __future__ import annotations
-
 import array
 import asyncio
 from collections import defaultdict, deque
@@ -13,7 +11,7 @@ from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
 import time
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 import wave
 
 import hass_nabucasa
@@ -27,7 +25,7 @@ from homeassistant.components import (
     wake_word,
     websocket_api,
 )
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, MATCH_ALL
+from homeassistant.const import MATCH_ALL, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -73,8 +71,10 @@ from .const import (
 from .error import (
     DuplicateWakeUpDetectedError,
     IntentRecognitionError,
+    InvalidPipelineStagesError,
     PipelineError,
     PipelineNotFound,
+    PipelineRunValidationError,
     SpeechToTextError,
     TextToSpeechError,
     WakeWordDetectionAborted,
@@ -492,24 +492,6 @@ PIPELINE_STAGE_ORDER = [
 ]
 
 
-class PipelineRunValidationError(Exception):
-    """Error when a pipeline run is not valid."""
-
-
-class InvalidPipelineStagesError(PipelineRunValidationError):
-    """Error when given an invalid combination of start/end stages."""
-
-    def __init__(
-        self,
-        start_stage: PipelineStage,
-        end_stage: PipelineStage,
-    ) -> None:
-        """Set error message."""
-        super().__init__(
-            f"Invalid stage combination: start={start_stage}, end={end_stage}"
-        )
-
-
 @dataclass(frozen=True)
 class WakeWordSettings:
     """Settings for wake word detection."""
@@ -607,7 +589,10 @@ class PipelineRun:
     """Data tied to the conversation ID."""
 
     _intent_agent_only = False
-    """If request should only be handled by agent, ignoring sentence triggers and local processing."""
+    """If request should only be handled by agent.
+
+    Ignores sentence triggers and local processing.
+    """
 
     _streamed_response_text = False
     """If the conversation agent streamed response text to TTS result."""
@@ -639,6 +624,7 @@ class PipelineRun:
                 self.audio_settings.is_vad_enabled,
             )
 
+    @override
     def __eq__(self, other: object) -> bool:
         """Compare pipeline runs by id."""
         if isinstance(other, PipelineRun):
@@ -662,7 +648,8 @@ class PipelineRun:
         """Emit run start event."""
         self._device_id = device_id
         self._satellite_id = satellite_id
-        self._start_debug_recording_thread()
+        if self.start_stage in (PipelineStage.WAKE_WORD, PipelineStage.STT):
+            self._start_debug_recording_thread()
 
         data: dict[str, Any] = {
             "pipeline": self.pipeline.id,
@@ -949,6 +936,7 @@ class PipelineRun:
                 {
                     "engine": engine,
                     "metadata": asdict(metadata),
+                    "audio_processing": asdict(self.stt_provider.audio_processing),
                 },
             )
         )
@@ -960,7 +948,10 @@ class PipelineRun:
         try:
             # Transcribe audio stream
             stt_vad: VoiceCommandSegmenter | None = None
-            if self.audio_settings.is_vad_enabled:
+            if (
+                self.audio_settings.is_vad_enabled
+                and self.stt_provider.audio_processing.requires_external_vad
+            ):
                 stt_vad = VoiceCommandSegmenter(
                     silence_seconds=self.audio_settings.silence_seconds
                 )
@@ -1059,7 +1050,11 @@ class PipelineRun:
             if agent_info is None:
                 raise IntentRecognitionError(
                     code="intent-agent-not-found",
-                    message=f"Intent recognition engine {self._conversation_data.continue_conversation_agent} asked for follow-up but is no longer found",
+                    message=(
+                        f"Intent recognition engine"
+                        f" {self._conversation_data.continue_conversation_agent}"
+                        " asked for follow-up but is no longer found"
+                    ),
                 )
             self._intent_agent_only = True
 
@@ -1163,14 +1158,17 @@ class PipelineRun:
 
                 nonlocal delta_character_count
 
-                # Streamed responses are not cached. That's why we only start streaming text after
-                # we have received enough characters that indicates it will be a long response
-                # or if we have received text, and then a tool call.
+                # Streamed responses are not cached. That's why we
+                # only start streaming text after we have received
+                # enough characters that indicates it will be a long
+                # response or if we have received text, and then a
+                # tool call.
 
                 # Tool call after we already received text
                 start_streaming = delta_character_count > 0 and delta.get("tool_calls")
 
-                # Count characters in the content and test if we exceed streaming threshold
+                # Count characters in the content and test if we
+                # exceed streaming threshold
                 if not start_streaming and content:
                     delta_character_count += len(content)
                     start_streaming = delta_character_count > STREAM_RESPONSE_CHARS
@@ -1200,7 +1198,8 @@ class PipelineRun:
                     parts.append(tts_input_stream.get_nowait())
                 tts_input_stream.put_nowait(
                     "".join(
-                        # At this point parts is only strings, None indicates end of queue
+                        # At this point parts is only strings,
+                        # None indicates end of queue
                         cast(list[str], parts)
                     )
                 )
@@ -1256,7 +1255,7 @@ class PipelineRun:
                     if (
                         intent_agent_state := self.hass.states.get(self.intent_agent.id)
                     ) and intent_agent_state.attributes.get(
-                        ATTR_SUPPORTED_FEATURES, 0
+                        EntityStateAttribute.SUPPORTED_FEATURES, 0
                     ) & conversation.ConversationEntityFeature.CONTROL:
                         intent_filter = _async_local_fallback_intent_filter
 
@@ -1357,7 +1356,7 @@ class PipelineRun:
     ) -> bool:
         """Return true if all targeted entities were in the same area as the device."""
         if (
-            intent_response.response_type != intent.IntentResponseType.ACTION_DONE
+            intent_response.response_type is not intent.IntentResponseType.ACTION_DONE
             or not intent_response.matched_states
         ):
             return False
@@ -1441,7 +1440,8 @@ class PipelineRun:
                 code="tts-not-supported",
                 message=(
                     f"Text-to-speech engine {engine} "
-                    f"does not support language {self.pipeline.tts_language} or options {tts_options}:"
+                    f"does not support language {self.pipeline.tts_language}"
+                    f" or options {tts_options}:"
                     f" {err}"
                 ),
             ) from err
@@ -1504,9 +1504,7 @@ class PipelineRun:
 
     def _start_debug_recording_thread(self) -> None:
         """Start thread to record wake/stt audio if debug_recording_dir is set."""
-        if self.debug_recording_thread is not None:
-            # Already started
-            return
+        assert self.debug_recording_thread is None
 
         # Directory to save audio for each pipeline run.
         # Configured in YAML for assist_pipeline.
@@ -1557,7 +1555,10 @@ class PipelineRun:
     async def process_volume_only(
         self, audio_stream: AsyncIterable[bytes]
     ) -> AsyncGenerator[EnhancedAudioChunk]:
-        """Apply volume transformation only (no VAD/audio enhancements) with optional chunking."""
+        """Apply volume transformation only with optional chunking.
+
+        No VAD/audio enhancements are applied.
+        """
         timestamp_ms = 0
         async for chunk in audio_stream:
             if self.audio_settings.volume_multiplier != 1.0:
@@ -1576,7 +1577,11 @@ class PipelineRun:
     async def process_enhance_audio(
         self, audio_stream: AsyncIterable[bytes]
     ) -> AsyncGenerator[EnhancedAudioChunk]:
-        """Split audio into chunks and apply VAD/noise suppression/auto gain/volume transformation."""
+        """Split audio into chunks and apply audio enhancements.
+
+        Applies VAD/noise suppression/auto gain/volume
+        transformation.
+        """
         assert self.audio_enhancer is not None
 
         timestamp_ms = 0
@@ -1679,28 +1684,41 @@ class PipelineInput:
     """Identifier of the device that is processing the input/output of the pipeline."""
 
     satellite_id: str | None = None
-    """Identifier of the satellite that is processing the input/output of the pipeline."""
+    """Identifier of the satellite processing the pipeline."""
 
-    async def execute(self) -> None:
+    async def execute(self, validate: bool = False) -> None:
         """Run pipeline."""
+        validation_error: PipelineError | None = None
+        if validate:
+            try:
+                await self.validate()
+            except PipelineError as err:
+                validation_error = err
+
         self.run.start(
             conversation_id=self.session.conversation_id,
             device_id=self.device_id,
             satellite_id=self.satellite_id,
         )
         current_stage: PipelineStage | None = self.run.start_stage
-        stt_audio_buffer: list[EnhancedAudioChunk] = []
-        stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None = None
-
-        if self.stt_stream is not None:
-            if self.run.audio_settings.needs_processor:
-                # VAD/noise suppression/auto gain/volume
-                stt_processed_stream = self.run.process_enhance_audio(self.stt_stream)
-            else:
-                # Volume multiplier only
-                stt_processed_stream = self.run.process_volume_only(self.stt_stream)
 
         try:
+            if validation_error is not None:
+                raise validation_error
+
+            stt_audio_buffer: list[EnhancedAudioChunk] = []
+            stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None = None
+
+            if self.stt_stream is not None:
+                if self.run.audio_settings.needs_processor:
+                    # VAD/noise suppression/auto gain/volume
+                    stt_processed_stream = self.run.process_enhance_audio(
+                        self.stt_stream
+                    )
+                else:
+                    # Volume multiplier only
+                    stt_processed_stream = self.run.process_volume_only(self.stt_stream)
+
             if current_stage == PipelineStage.WAKE_WORD:
                 # wake-word-detection
                 assert stt_processed_stream is not None
@@ -1728,7 +1746,8 @@ class PipelineInput:
                         sec_since_last_wake_up = time.monotonic() - last_wake_up
                         if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
                             _LOGGER.debug(
-                                "Speech-to-text cancelled to avoid duplicate wake-up for %s",
+                                "Speech-to-text cancelled to avoid"
+                                " duplicate wake-up for %s",
                                 self.wake_word_phrase,
                             )
                             raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
@@ -1741,7 +1760,8 @@ class PipelineInput:
                 stt_input_stream = stt_processed_stream
 
                 if stt_audio_buffer:
-                    # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
+                    # Send audio in the buffer first to speech-to-text,
+                    # then move on to stt_stream.
                     # This is basically an async itertools.chain.
                     async def buffer_then_audio_stream() -> AsyncGenerator[
                         EnhancedAudioChunk
@@ -1797,6 +1817,11 @@ class PipelineInput:
                             await self.run.text_to_speech(tts_input)
 
         except PipelineError as err:
+            if self.run.tts_stream:
+                # Clean up TTS stream
+                self.run.tts_stream.delete()
+                self.run.tts_stream = None
+
             self.run.process_event(
                 PipelineEvent(
                     PipelineEventType.ERROR,
@@ -1866,15 +1891,17 @@ class PipelineInput:
         ):
             prepare_tasks.append(self.run.prepare_recognize_intent(self.session))
 
+        if prepare_tasks:
+            await asyncio.gather(*prepare_tasks)
+
+        # Do TTS prepare separately so we don't create a ResultStream if the
+        # pipeline is invalid.
         if (
             start_stage_index
             <= PIPELINE_STAGE_ORDER.index(PipelineStage.TTS)
             <= end_stage_index
         ):
-            prepare_tasks.append(self.run.prepare_text_to_speech())
-
-        if prepare_tasks:
-            await asyncio.gather(*prepare_tasks)
+            await self.run.prepare_text_to_speech()
 
 
 class PipelinePreferred(CollectionError):
@@ -1899,6 +1926,7 @@ class PipelineStorageCollection(
 
     _preferred_item: str
 
+    @override
     async def _async_load_data(self) -> SerializedPipelineStorageCollection | None:
         """Load the data."""
         if not (data := await super()._async_load_data()):
@@ -1910,33 +1938,40 @@ class PipelineStorageCollection(
 
         return data
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         validated_data: dict = validate_language(data)
         return validated_data
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return ulid_util.ulid_now()
 
+    @override
     async def _update_data(self, item: Pipeline, update_data: dict) -> Pipeline:
         """Return a new updated item."""
         update_data = validate_language(update_data)
         return Pipeline(id=item.id, **update_data)
 
+    @override
     def _create_item(self, item_id: str, data: dict) -> Pipeline:
         """Create an item from validated config."""
         return Pipeline(id=item_id, **data)
 
+    @override
     def _deserialize_item(self, data: dict) -> Pipeline:
         """Create an item from its serialized representation."""
         return Pipeline.from_json(data)
 
+    @override
     def _serialize_item(self, item_id: str, item: Pipeline) -> dict:
         """Return the serialized representation of an item for storing."""
         return item.to_json()
 
+    @override
     async def async_delete_item(self, item_id: str) -> None:
         """Delete item."""
         if self._preferred_item == item_id:
@@ -1957,6 +1992,7 @@ class PipelineStorageCollection(
         self._async_schedule_save()
 
     @callback
+    @override
     def _data_to_save(self) -> SerializedPipelineStorageCollection:
         """Return JSON-compatible date for storing to file."""
         base_data = super()._base_data_to_save()
@@ -1972,6 +2008,7 @@ class PipelineStorageCollectionWebsocket(
     """Class to expose storage collection management over websocket."""
 
     @callback
+    @override
     def async_setup(self, hass: HomeAssistant) -> None:
         """Set up the websocket commands."""
         super().async_setup(hass)
@@ -2002,6 +2039,7 @@ class PipelineStorageCollectionWebsocket(
             ),
         )
 
+    @override
     async def ws_delete_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
@@ -2037,6 +2075,7 @@ class PipelineStorageCollectionWebsocket(
         connection.send_result(msg["id"], self.storage_collection.data[item_id])
 
     @callback
+    @override
     def ws_list_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
@@ -2045,7 +2084,9 @@ class PipelineStorageCollectionWebsocket(
             msg["id"],
             {
                 "pipelines": async_get_pipelines(hass),
-                "preferred_pipeline": self.storage_collection.async_get_preferred_item(),
+                "preferred_pipeline": (
+                    self.storage_collection.async_get_preferred_item()
+                ),
             },
         )
 
@@ -2145,6 +2186,7 @@ class PipelineRunDebug:
 class PipelineStore(Store[SerializedPipelineStorageCollection]):
     """Store pipeline data."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,

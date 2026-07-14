@@ -1,9 +1,7 @@
 """Support for Tasmota sensors."""
 
-from __future__ import annotations
-
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from hatasmota import const as hc, sensor as tasmota_sensor, status_sensor
 from hatasmota.entity import TasmotaEntity as HATasmotaEntity
@@ -17,15 +15,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfApparentPower,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -34,6 +29,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -213,10 +209,10 @@ SENSOR_DEVICE_CLASS_ICON_MAP: dict[str, dict[str, Any]] = {
 
 SENSOR_UNIT_MAP = {
     hc.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER
     ),
-    hc.CONCENTRATION_PARTS_PER_BILLION: CONCENTRATION_PARTS_PER_BILLION,
-    hc.CONCENTRATION_PARTS_PER_MILLION: CONCENTRATION_PARTS_PER_MILLION,
+    hc.CONCENTRATION_PARTS_PER_BILLION: UnitOfRatio.PARTS_PER_BILLION,
+    hc.CONCENTRATION_PARTS_PER_MILLION: UnitOfRatio.PARTS_PER_MILLION,
     hc.ELECTRICAL_CURRENT_AMPERE: UnitOfElectricCurrent.AMPERE,
     hc.ELECTRICAL_VOLT_AMPERE: UnitOfApparentPower.VOLT_AMPERE,
     hc.ENERGY_KILO_WATT_HOUR: UnitOfEnergy.KILO_WATT_HOUR,
@@ -224,7 +220,7 @@ SENSOR_UNIT_MAP = {
     hc.LENGTH_CENTIMETERS: UnitOfLength.CENTIMETERS,
     hc.LIGHT_LUX: LIGHT_LUX,
     hc.MASS_KILOGRAMS: UnitOfMass.KILOGRAMS,
-    hc.PERCENTAGE: PERCENTAGE,
+    hc.PERCENTAGE: UnitOfRatio.PERCENTAGE,
     hc.POWER_WATT: UnitOfPower.WATT,
     hc.PRESSURE_HPA: UnitOfPressure.HPA,
     hc.REACTIVE_POWER: UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
@@ -312,6 +308,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
             if self._tasmota_entity.discovered_as_numeric:
                 self._attr_state_class = SensorStateClass.MEASUREMENT
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
         self._tasmota_entity.set_on_state_callback(self.sensor_state_updated)
@@ -327,6 +324,7 @@ class TasmotaSensor(TasmotaAvailability, TasmotaDiscoveryUpdate, SensorEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def native_value(self) -> datetime | str | None:
         """Return the state of the entity."""
         if self._state_timestamp and self.device_class == SensorDeviceClass.TIMESTAMP:

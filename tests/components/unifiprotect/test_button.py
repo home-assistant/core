@@ -1,11 +1,9 @@
 """Test the UniFi Protect button platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from uiprotect.data.devices import Camera, Chime, Doorlock
+from uiprotect.data.devices import Camera, Chime
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
@@ -81,21 +79,21 @@ async def test_adopt_button(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
-    doorlock: Doorlock,
+    chime: Chime,
     doorbell: Camera,
 ) -> None:
     """Test button entity."""
 
-    doorlock._api = ufp.api
-    doorlock.is_adopted = False
-    doorlock.can_adopt = True
+    chime._api = ufp.api
+    chime.is_adopted = False
+    chime.can_adopt = True
 
     await init_entry(hass, ufp, [])
 
     mock_msg = Mock()
     mock_msg.changed_data = {}
     mock_msg.old_obj = None
-    mock_msg.new_obj = doorlock
+    mock_msg.new_obj = chime
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
@@ -103,8 +101,8 @@ async def test_adopt_button(
 
     ufp.api.adopt_device = AsyncMock()
 
-    unique_id = f"{doorlock.mac}_adopt"
-    entity_id = "button.test_lock_adopt_device"
+    unique_id = f"{chime.mac}_adopt"
+    entity_id = "button.test_chime_adopt_device"
 
     entity = entity_registry.async_get(entity_id)
     assert entity
@@ -125,23 +123,23 @@ async def test_adopt_button_removed(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
-    doorlock: Doorlock,
+    chime: Chime,
     doorbell: Camera,
 ) -> None:
     """Test button entity."""
 
-    entity_id = "button.test_lock_adopt_device"
+    entity_id = "button.test_chime_adopt_device"
 
-    doorlock._api = ufp.api
-    doorlock.is_adopted = False
-    doorlock.can_adopt = True
+    chime._api = ufp.api
+    chime.is_adopted = False
+    chime.can_adopt = True
 
-    await init_entry(hass, ufp, [doorlock])
+    await init_entry(hass, ufp, [chime])
     assert_entity_counts(hass, Platform.BUTTON, 1, 1)
     entity = entity_registry.async_get(entity_id)
     assert entity
 
-    await adopt_devices(hass, ufp, [doorlock], fully_adopt=True)
-    assert_entity_counts(hass, Platform.BUTTON, 2, 0)
+    await adopt_devices(hass, ufp, [chime], fully_adopt=True)
+    assert_entity_counts(hass, Platform.BUTTON, 4, 2)
     entity = entity_registry.async_get(entity_id)
     assert entity is None

@@ -1,13 +1,11 @@
 """Support for RFXtrx sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from RFXtrx import ControlEvent, RFXtrxDevice, RFXtrxEvent, SensorEvent
 
@@ -270,7 +268,7 @@ async def async_setup_entry(
     )
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
+# pylint: disable-next=home-assistant-invalid-inheritance # needs fixing
 class RfxtrxSensor(RfxtrxEntity, SensorEntity):
     """Representation of a RFXtrx sensor.
 
@@ -293,6 +291,7 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
         self.entity_description = entity_description
         self._attr_unique_id = "_".join(x for x in (*device_id, entity_description.key))
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore device state."""
         await super().async_added_to_hass()
@@ -305,6 +304,7 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
             self._apply_event(get_rfx_object(event))
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the state of the sensor."""
         if not self._event:
@@ -313,6 +313,7 @@ class RfxtrxSensor(RfxtrxEntity, SensorEntity):
         return self.entity_description.convert(value)
 
     @callback
+    @override
     def _handle_event(self, event: RFXtrxEvent, device_id: DeviceTuple) -> None:
         """Check if event applies to me and update."""
         if device_id != self._device_id:

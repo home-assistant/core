@@ -47,6 +47,14 @@
     }
   },
   "entity": {
+    "button": {
+      "remote_start": {
+        "name": "Remote start"
+      },
+      "remote_stop": {
+        "name": "Remote stop"
+      }
+    },
     "lock": {
       "door_locks": {
         "name": "Door locks"
@@ -74,6 +82,12 @@
       "range": {
         "name": "Range"
       },
+      "recommended_tire_pressure_front": {
+        "name": "Recommended tire pressure front"
+      },
+      "recommended_tire_pressure_rear": {
+        "name": "Recommended tire pressure rear"
+      },
       "tire_pressure_front_left": {
         "name": "Tire pressure front left"
       },
@@ -85,6 +99,15 @@
       },
       "tire_pressure_rear_right": {
         "name": "Tire pressure rear right"
+      },
+      "vehicle_state": {
+        "name": "Vehicle state",
+        "state": {
+          "engine_on_remote_start": "Engine on (remote start)",
+          "ignition_acc": "Accessory power",
+          "ignition_off": "Ignition off",
+          "ignition_on": "Ignition on"
+        }
       }
     }
   },

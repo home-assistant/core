@@ -1,7 +1,5 @@
 """The Z-Wave JS integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 import contextlib
@@ -19,6 +17,7 @@ from zwave_js_server.exceptions import (
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import (
+    BatteryNotification,
     EntryControlNotification,
     MultilevelSwitchNotification,
     NotificationNotification,
@@ -81,6 +80,7 @@ from .const import (
     ATTR_STATUS,
     ATTR_TEST_NODE_ID,
     ATTR_TYPE,
+    ATTR_URGENCY,
     ATTR_VALUE,
     ATTR_VALUE_RAW,
     CONF_ADDON_DEVICE,
@@ -108,6 +108,8 @@ from .const import (
     DOMAIN,
     ESPHOME_ADDON_VERSION,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    EVENT_METADATA_UPDATED,
+    EVENT_VALUE_ADDED,
     EVENT_VALUE_UPDATED,
     LIB_LOGGER,
     LOGGER,
@@ -599,6 +601,7 @@ class ControllerEvents:
                 f"{DOMAIN}.node_reset_and_removed.{dev_id[1]}",
             )
 
+        self.node_events.value_updates_disc_info.pop(node.node_id, None)
         self.remove_device(device)
 
     @callback
@@ -756,6 +759,9 @@ class NodeEvents:
         self.dev_reg = controller_events.dev_reg
         self.ent_reg = er.async_get(hass)
         self.hass = hass
+        self.value_updates_disc_info: dict[
+            int, dict[str, PlatformZwaveDiscoveryInfo]
+        ] = {}
 
     async def async_on_node_ready(self, node: ZwaveNode) -> None:
         """Handle node ready event."""
@@ -766,29 +772,23 @@ class NodeEvents:
         # Remove any old value ids if this is a reinterview.
         self.controller_events.discovered_value_ids.pop(device.id, None)
 
+        # Store the discovery info so it can be reused when re-discovering entities
         value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo] = {}
+        self.value_updates_disc_info[node.node_id] = value_updates_disc_info
 
         # run discovery on all node values and create/update entities
-        await asyncio.gather(
-            *(
-                self.async_handle_discovery_info(
-                    device, disc_info, value_updates_disc_info
-                )
-                for disc_info in async_discover_node_values(
-                    node, device, self.controller_events.discovered_value_ids
-                )
-            )
-        )
+        for disc_info in async_discover_node_values(
+            node, device, self.controller_events.discovered_value_ids
+        ):
+            self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 
         # add listeners to handle new values that get added later
-        for event in ("value added", EVENT_VALUE_UPDATED, "metadata updated"):
+        for event in (EVENT_VALUE_ADDED, EVENT_VALUE_UPDATED, EVENT_METADATA_UPDATED):
             self.config_entry.async_on_unload(
                 node.on(
                     event,
-                    lambda event: self.hass.async_create_task(
-                        self.async_on_value_added(
-                            value_updates_disc_info, event["value"]
-                        )
+                    lambda event: self.async_on_value_added(
+                        value_updates_disc_info, event["value"]
                     ),
                 )
             )
@@ -852,7 +852,8 @@ class NodeEvents:
                 # an upstream bug, or the change has been reverted.
                 async_delete_issue(self.hass, DOMAIN, issue_id)
 
-    async def async_handle_discovery_info(
+    @callback
+    def async_handle_discovery_info(
         self,
         device: dr.DeviceEntry,
         disc_info: PlatformZwaveDiscoveryInfo,
@@ -897,15 +898,17 @@ class NodeEvents:
             )
         )
 
-    async def async_on_value_added(
+    @callback
+    def async_on_value_added(
         self,
         value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
         value: Value,
     ) -> None:
-        """Fire value updated event."""
-        # If node isn't ready or a device for this node doesn't already exist, we can
-        # let the node ready event handler perform discovery. If a value has already
-        # been processed, we don't need to do it again
+        """Run discovery when a value is added, updated or its metadata is changed."""
+        # If node isn't ready or a device for this node doesn't already
+        # exist, we can let the node ready event handler perform discovery.
+        # If a value has already been processed, we don't need to do it
+        # again
         device_id = get_device_id(
             self.controller_events.driver_events.driver, value.node
         )
@@ -917,16 +920,10 @@ class NodeEvents:
             return
 
         LOGGER.debug("Processing node %s added value %s", value.node, value)
-        await asyncio.gather(
-            *(
-                self.async_handle_discovery_info(
-                    device, disc_info, value_updates_disc_info
-                )
-                for disc_info in async_discover_single_value(
-                    value, device, self.controller_events.discovered_value_ids
-                )
-            )
-        )
+        for disc_info in async_discover_single_value(
+            value, device, self.controller_events.discovered_value_ids
+        ):
+            self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 
     @callback
     def async_on_value_notification(self, notification: ValueNotification) -> None:
@@ -970,7 +967,8 @@ class NodeEvents:
 
         driver = self.controller_events.driver_events.driver
         notification: (
-            EntryControlNotification
+            BatteryNotification
+            | EntryControlNotification
             | NotificationNotification
             | PowerLevelNotification
             | MultilevelSwitchNotification
@@ -990,7 +988,15 @@ class NodeEvents:
             ATTR_COMMAND_CLASS: notification.command_class,
         }
 
-        if isinstance(notification, EntryControlNotification):
+        if isinstance(notification, BatteryNotification):
+            event_data.update(
+                {
+                    ATTR_COMMAND_CLASS_NAME: "Battery",
+                    ATTR_EVENT_TYPE: notification.event_type,
+                    ATTR_URGENCY: notification.urgency,
+                }
+            )
+        elif isinstance(notification, EntryControlNotification):
             event_data.update(
                 {
                     ATTR_COMMAND_CLASS_NAME: "Entry Control",
@@ -1212,14 +1218,14 @@ async def async_ensure_addon_running(
     if addon_has_esphome and socket_path is not None:
         addon_config[CONF_ADDON_SOCKET] = socket_path
 
-    if addon_state == AddonState.NOT_INSTALLED:
+    if addon_state is AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
             addon_config,
             catch_error=True,
         )
         raise ConfigEntryNotReady
 
-    if addon_state == AddonState.NOT_RUNNING:
+    if addon_state is AddonState.NOT_RUNNING:
         addon_manager.async_schedule_setup_addon(
             addon_config,
             catch_error=True,

@@ -64,12 +64,9 @@ async def test_step_user(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_user_error_handling(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_immich: Mock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_immich: Mock, exception: Exception, error: str
 ) -> None:
     """Test a user initiated config flow with errors."""
     result = await hass.config_entries.flow.async_init(
@@ -98,9 +95,8 @@ async def test_step_user_error_handling(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_step_user_invalid_url(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_immich: Mock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_step_user_invalid_url(hass: HomeAssistant, mock_immich: Mock) -> None:
     """Test a user initiated config flow with errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -144,11 +140,9 @@ async def test_user_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_immich: Mock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_immich: Mock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauthentication flow."""
     mock_config_entry.add_to_hass(hass)
@@ -227,11 +221,9 @@ async def test_reauth_flow_error_handling(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_mismatch(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_immich: Mock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_immich: Mock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauthentication flow with mis-matching unique id."""
     mock_config_entry.add_to_hass(hass)
@@ -251,11 +243,9 @@ async def test_reauth_flow_mismatch(
     assert result["reason"] == "unique_id_mismatch"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_immich: Mock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_immich: Mock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
@@ -294,9 +284,9 @@ async def test_reconfigure_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_reconfigure_error_handling(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_immich: Mock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
@@ -328,11 +318,9 @@ async def test_step_reconfigure_error_handling(
     assert result["reason"] == "reconfigure_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_reconfigure_invalid_url(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_immich: Mock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_immich: Mock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test a user initiated config flow with errors."""
     mock_config_entry.add_to_hass(hass)

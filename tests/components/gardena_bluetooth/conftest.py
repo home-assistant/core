@@ -1,9 +1,11 @@
 """Common fixtures for the Gardena Bluetooth tests."""
 
+import asyncio
 from collections.abc import Callable, Coroutine, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+import bleak
 from freezegun.api import FrozenDateTimeFactory
 from gardena_bluetooth.client import Client
 from gardena_bluetooth.const import DeviceInformation
@@ -11,12 +13,36 @@ from gardena_bluetooth.exceptions import CharacteristicNotFound
 from gardena_bluetooth.parse import Characteristic, Service
 import pytest
 
+from homeassistant.components import bluetooth
+from homeassistant.components.gardena_bluetooth import async_get_product
+from homeassistant.components.gardena_bluetooth.const import DOMAIN
 from homeassistant.components.gardena_bluetooth.coordinator import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.loader import async_get_bluetooth
 
 from . import WATER_TIMER_SERVICE_INFO, get_config_entry
 
 from tests.common import async_fire_time_changed
+
+
+@pytest.fixture(autouse=True, scope="module")
+def only_discover_this_domain() -> Generator[None]:
+    """Only discover devices for this domain.
+
+    This is needed to avoid interference from domains like
+    gardena bluetooth that also matches on these devices.
+    Which can cause async_block_till_done to wait too long
+    waiting for advertisements that won't show up.
+    """
+
+    async def filtered_matches(hass: HomeAssistant):
+        matchers = await async_get_bluetooth(hass)
+        return [matcher for matcher in matchers if matcher["domain"] == DOMAIN]
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", new=filtered_matches
+    ):
+        yield
 
 
 @pytest.fixture
@@ -69,6 +95,21 @@ async def scan_step(
         await hass.async_block_till_done()
 
     return delay
+
+
+@pytest.fixture(autouse=True)
+def correct_scanners_and_clients_in_library(enable_bluetooth: None) -> Generator[None]:
+    """Make sure the correct scanners and clients are used in the library.
+
+    This is needed since home assistant overrides the bleak scanner and
+    client with wrappers, but does so after enable_bluetooth fixture is
+    applied, which causes the library to use the wrong classes.
+    """
+    with (
+        patch("gardena_bluetooth.scan.BleakScanner", new=bleak.BleakScanner),
+        patch("gardena_bluetooth.client.BleakClient", new=bleak.BleakClient),
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -133,3 +174,46 @@ def mock_client(
 @pytest.fixture(autouse=True)
 def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
+
+
+@pytest.fixture
+def get_product_event() -> Generator[asyncio.Event]:
+    """Track product data requests with an event."""
+
+    event = asyncio.Event()
+
+    async def _get(*args, **kwargs):
+        event.set()
+        return await async_get_product(*args, **kwargs)
+
+    with patch(
+        "homeassistant.components.gardena_bluetooth.async_get_product",
+        wraps=_get,
+    ):
+        yield event
+
+
+@pytest.fixture
+def constant_advertisements() -> Generator[None]:
+    """Ensure async_process_advertisements only return a constant list."""
+
+    async def _advertisements(
+        hass: HomeAssistant,
+        callback: bluetooth.models.ProcessAdvertisementCallback,
+        match_dict: bluetooth.match.BluetoothCallbackMatcher,
+        mode: bluetooth.BluetoothScanningMode,
+        timeout: int,
+    ) -> bluetooth.BluetoothServiceInfoBleak:
+
+        last = None
+        for advertisement in bluetooth.async_discovered_service_info(hass):
+            callback(advertisement)
+            last = advertisement
+        if not last:
+            raise TimeoutError
+        return last
+
+    with (
+        patch.object(bluetooth, "async_process_advertisements", new=_advertisements),
+    ):
+        yield

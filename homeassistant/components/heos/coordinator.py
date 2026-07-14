@@ -1,13 +1,15 @@
 """HEOS integration coordinator.
 
-Control of all HEOS devices is through connection to a single device. Data is pushed through events.
-The coordinator is responsible for refreshing data in response to system-wide events and notifying
-entities to update. Entities subscribe to entity-specific updates within the entity class itself.
+Control of all HEOS devices is through connection to a single
+device. Data is pushed through events. The coordinator is
+responsible for refreshing data in response to system-wide events
+and notifying entities to update. Entities subscribe to
+entity-specific updates within the entity class itself.
 """
 
 from collections.abc import Callable, Sequence
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyheos import (
     Credentials,
@@ -111,7 +113,9 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
 
         if not self.heos.is_signed_in:
             _LOGGER.warning(
-                "The HEOS System is not logged in: Enter credentials in the integration options to access favorites and streaming services"
+                "The HEOS System is not logged in: Enter credentials"
+                " in the integration options to access favorites"
+                " and streaming services"
             )
         # Retrieve initial data
         await self._async_update_groups()
@@ -121,12 +125,16 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         self.heos.add_on_connected(self._async_on_reconnected)
         self.heos.add_on_controller_event(self._async_on_controller_event)
 
+    @override
     async def async_shutdown(self) -> None:
         """Disconnect all callbacks and disconnect from the device."""
-        self.heos.dispatcher.disconnect_all()  # Removes all connected through heos.add_on_* and player.add_on_*
+        # Removes all connected through heos.add_on_*
+        # and player.add_on_*
+        self.heos.dispatcher.disconnect_all()
         await self.heos.disconnect()
         await super().async_shutdown()
 
+    @override
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
@@ -168,7 +176,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         self.async_update_listeners()
 
     async def _async_on_reconnected(self) -> None:
-        """Handle when reconnected so resources are updated and entities marked available."""
+        """Handle reconnection to update resources and mark entities available."""
         assert self.config_entry is not None
         if self.host != self.config_entry.data[CONF_HOST]:
             self.hass.config_entries.async_update_entry(
@@ -188,7 +196,8 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             assert data is not None
             self._async_handle_player_update_result(data)
         elif event in (const.EVENT_SOURCES_CHANGED, const.EVENT_USER_CHANGED):
-            # Debounce because we may have received multiple qualifying events in rapid succession.
+            # Debounce because we may have received multiple
+            # qualifying events in rapid succession.
             await self._update_sources_debouncer.async_call()
         self.async_update_listeners()
 
@@ -268,15 +277,17 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
     def async_get_current_source(
         self, now_playing_media: HeosNowPlayingMedia
     ) -> str | None:
-        """Determine current source from now playing media (either input source or favorite)."""
+        """Determine current source from now playing media."""
         # Try matching input source
         if now_playing_media.source_id == const.MUSIC_SOURCE_AUX_INPUT:
             # If playing a remote input, name will match station
             for input_source in self._inputs:
                 if input_source.name == now_playing_media.station:
                     return input_source.name
-            # If playing a local input, match media_id. This needs to be a second loop as media_id
-            # will match both local and remote inputs, so prioritize remote match by name first.
+            # If playing a local input, match media_id. This needs
+            # to be a second loop as media_id will match both local
+            # and remote inputs, so prioritize remote match by name
+            # first.
             for input_source in self._inputs:
                 if input_source.media_id == now_playing_media.media_id:
                     return input_source.name

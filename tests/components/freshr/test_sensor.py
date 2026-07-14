@@ -5,16 +5,19 @@ from unittest.mock import MagicMock
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 from pyfreshr.exceptions import ApiResponseError
-from pyfreshr.models import DeviceReadings
+from pyfreshr.models import DeviceReadings, DeviceSummary
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.freshr.const import DOMAIN
-from homeassistant.components.freshr.coordinator import READINGS_SCAN_INTERVAL
+from homeassistant.components.freshr.coordinator import (
+    DEVICES_SCAN_INTERVAL,
+    READINGS_SCAN_INTERVAL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import DEVICE_ID
+from .conftest import DEVICE_ID, MOCK_DEVICE_CURRENT
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -82,3 +85,71 @@ async def test_readings_connection_error_makes_unavailable(
     state = hass.states.get("sensor.fresh_r_inside_temperature")
     assert state is not None
     assert state.state == "unavailable"
+
+
+DEVICE_ID_2 = "SN002"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_device_reappears_after_removal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_freshr_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that entities are re-created when a previously removed device reappears."""
+    assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+
+    # Device disappears from the account
+    mock_freshr_client.fetch_devices.return_value = []
+    freezer.tick(DEVICES_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)}) is None
+
+    # Device reappears
+    mock_freshr_client.fetch_devices.return_value = [DeviceSummary(id=DEVICE_ID)]
+    mock_freshr_client.fetch_device_current.return_value = MOCK_DEVICE_CURRENT
+    freezer.tick(DEVICES_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+    t1_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{DEVICE_ID}_t1"
+    )
+    assert t1_entity_id
+    assert hass.states.get(t1_entity_id).state != "unavailable"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_dynamic_device_added(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_freshr_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that sensors are created for a device that appears after initial setup."""
+    assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID_2)}) is None
+
+    mock_freshr_client.fetch_devices.return_value = [
+        DeviceSummary(id=DEVICE_ID),
+        DeviceSummary(id=DEVICE_ID_2),
+    ]
+    mock_freshr_client.fetch_device_current.return_value = MOCK_DEVICE_CURRENT
+    freezer.tick(DEVICES_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_ID_2)})
+    t1_entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{DEVICE_ID_2}_t1"
+    )
+    assert t1_entity_id
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, f"{DEVICE_ID_2}_co2")
+    assert hass.states.get(t1_entity_id).state != "unavailable"

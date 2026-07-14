@@ -251,7 +251,10 @@ async def test_if_fires_on_mqtt_message_after_update_with_template(
     config1 = copy.deepcopy(DEFAULT_CONFIG_JSON)
     config2 = copy.deepcopy(DEFAULT_CONFIG_JSON)
     config2["value_template"] = "{{ value_json.RDM6300.UID }}"
-    tag_scan_2 = '{"Time":"2020-09-28T17:02:10","RDM6300":{"UID":"E9F35959", "DATA":"ILOVETASMOTA"}}'
+    tag_scan_2 = (
+        '{"Time":"2020-09-28T17:02:10",'
+        '"RDM6300":{"UID":"E9F35959", "DATA":"ILOVETASMOTA"}}'
+    )
 
     async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config1))
     await hass.async_block_till_done()
@@ -608,7 +611,7 @@ async def test_cleanup_tag(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/tag/bla1/config", None, 0, True
+        "homeassistant/tag/bla1/config", None, 0, True, message_expiry_interval=None
     )
 
 
@@ -931,6 +934,6 @@ async def test_value_template_fails(
     await hass.async_block_till_done()
 
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

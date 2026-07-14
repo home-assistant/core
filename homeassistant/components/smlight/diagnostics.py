@@ -1,7 +1,5 @@
 """Collect diagnostics for SMLIGHT devices."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pysmlight.const import Actions

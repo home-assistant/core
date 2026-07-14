@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'alarm',
         'armed',
         'open',
@@ -46,16 +46,16 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'zone_status',
-    'unique_id': 'vedo_config_entry_id-0',
+    'unique_id': 'vedo_config_entry_id-human_status-0',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.zone0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Zone0',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zone0',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'alarm',
         'armed',
         'open',

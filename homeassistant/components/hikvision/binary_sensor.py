@@ -1,9 +1,7 @@
 """Support for Hikvision event stream events represented as binary sensors."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -65,10 +63,6 @@ BINARY_SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
     "Tamper Detection": BinarySensorEntityDescription(
         key="tamper_detection",
         device_class=BinarySensorDeviceClass.TAMPER,
-    ),
-    "Shelter Alarm": BinarySensorEntityDescription(
-        key="shelter_alarm",
-        translation_key="shelter_alarm",
     ),
     "Disk Full": BinarySensorEntityDescription(
         key="disk_full",
@@ -258,17 +252,29 @@ async def async_setup_entry(
                 sensor_type,
             )
 
-    async_add_entities(
-        HikvisionBinarySensor(
-            entry=entry,
-            description=BINARY_SENSOR_DESCRIPTIONS[sensor_type],
-            sensor_type=sensor_type,
-            channel=channel_info[1],
-        )
-        for sensor_type, channel_list in sensors.items()
-        if sensor_type in BINARY_SENSOR_DESCRIPTIONS
-        for channel_info in channel_list
-    )
+    entities: list[HikvisionBinarySensor] = []
+    for sensor_type, channel_list in sensors.items():
+        if sensor_type not in BINARY_SENSOR_DESCRIPTIONS:
+            continue
+        # pyhik can report the same channel more than once for a sensor type
+        # (e.g. when a channel has several notification methods enabled), so
+        # deduplicate on the channel to avoid colliding unique IDs.
+        seen_channels: set[int] = set()
+        for channel_info in channel_list:
+            channel = channel_info[1]
+            if channel in seen_channels:
+                continue
+            seen_channels.add(channel)
+            entities.append(
+                HikvisionBinarySensor(
+                    entry=entry,
+                    description=BINARY_SENSOR_DESCRIPTIONS[sensor_type],
+                    sensor_type=sensor_type,
+                    channel=channel,
+                )
+            )
+
+    async_add_entities(entities)
 
 
 class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
@@ -299,16 +305,19 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
         return self._camera.fetch_attributes(self._sensor_type, self._channel)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if sensor is on."""
         return self._get_sensor_attributes()[0]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs = self._get_sensor_attributes()
         return {ATTR_LAST_TRIP_TIME: attrs[3]}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback when entity is added."""
         await super().async_added_to_hass()

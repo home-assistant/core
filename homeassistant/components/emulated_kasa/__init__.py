@@ -1,4 +1,4 @@
-"""Support for local power state reporting of entities by emulating TP-Link Kasa smart plugs."""
+"""Support for local power state reporting by emulating TP-Link Kasa plugs."""
 
 import logging
 

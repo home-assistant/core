@@ -1,7 +1,5 @@
 """Support for Google - Calendar Event Devices."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
@@ -21,9 +19,17 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 from homeassistant.helpers.entity import generate_entity_id
 
 from .api import ApiAuthImpl, get_feature_access
@@ -88,26 +94,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
         _LOGGER.error("Configuration error in %s: %s", YAML_DEVICES, str(err))
         return False
 
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+    try:
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
-    )
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     # Force a token refresh to fix a bug where tokens were persisted with
     # expires_in (relative time delta) and expires_at (absolute time) swapped.
     # A google session token typically only lasts a few days between refresh.
-    now = datetime.now()
+    now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
     if session.token["expires_at"] >= (now + timedelta(days=365)).timestamp():
         session.token["expires_in"] = 0
         session.token["expires_at"] = now.timestamp()
     try:
         await session.async_ensure_token_valid()
-    except aiohttp.ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed from err
-        raise ConfigEntryNotReady from err
-    except aiohttp.ClientError as err:
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed from err
+    except (OAuth2TokenRequestError, aiohttp.ClientError) as err:
         raise ConfigEntryNotReady from err
 
     if not async_entry_has_scopes(entry):

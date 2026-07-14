@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from peco import (
     AlertResults,
@@ -28,12 +29,23 @@ class PECOCoordinatorData:
     alerts: AlertResults
 
 
+@dataclass
+class PecoRuntimeData:
+    """Runtime data for the PECO integration."""
+
+    outage_coordinator: PecoOutageCoordinator
+    meter_coordinator: PecoSmartMeterCoordinator | None = None
+
+
+type PecoConfigEntry = ConfigEntry[PecoRuntimeData]
+
+
 class PecoOutageCoordinator(DataUpdateCoordinator[PECOCoordinatorData]):
     """Coordinator for PECO outage data."""
 
-    config_entry: ConfigEntry
+    config_entry: PecoConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: PecoConfigEntry) -> None:
         """Initialize the outage coordinator."""
         super().__init__(
             hass,
@@ -46,6 +58,7 @@ class PecoOutageCoordinator(DataUpdateCoordinator[PECOCoordinatorData]):
         self._websession = async_get_clientsession(hass)
         self._county: str = entry.data[CONF_COUNTY]
 
+    @override
     async def _async_update_data(self) -> PECOCoordinatorData:
         """Fetch data from API."""
         try:
@@ -65,10 +78,10 @@ class PecoOutageCoordinator(DataUpdateCoordinator[PECOCoordinatorData]):
 class PecoSmartMeterCoordinator(DataUpdateCoordinator[bool]):
     """Coordinator for PECO smart meter data."""
 
-    config_entry: ConfigEntry
+    config_entry: PecoConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, phone_number: str
+        self, hass: HomeAssistant, entry: PecoConfigEntry, phone_number: str
     ) -> None:
         """Initialize the smart meter coordinator."""
         super().__init__(
@@ -82,6 +95,7 @@ class PecoSmartMeterCoordinator(DataUpdateCoordinator[bool]):
         self._websession = async_get_clientsession(hass)
         self._phone_number = phone_number
 
+    @override
     async def _async_update_data(self) -> bool:
         """Fetch data from API."""
         try:

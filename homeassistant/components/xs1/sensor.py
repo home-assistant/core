@@ -1,6 +1,6 @@
 """Support for XS1 sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from xs1_api_client.api_constants import ActuatorType
 from xs1_api_client.device.actuator import XS1Actuator
@@ -46,16 +46,19 @@ class XS1SensorEntity(XS1DeviceEntity, SensorEntity):
     """Representation of a Sensor."""
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the sensor."""
         return self.device.name()
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self.device.value()
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return self.device.unit()

@@ -1,6 +1,5 @@
 """Support to embed Sonos."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 import datetime
@@ -16,7 +15,7 @@ from aiohttp import ClientError
 from requests.exceptions import HTTPError, Timeout
 from soco import events_asyncio, zonegroupstate
 import soco.config as soco_config
-from soco.core import SoCo
+from soco.core import SoCo, soco_reset
 from soco.events_base import Event as SonosEvent, SubscriptionBase
 from soco.exceptions import SoCoException
 import voluptuous as vol
@@ -115,6 +114,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: SonosConfigEntry) -> bool:
     """Set up Sonos from a config entry."""
+    _LOGGER.debug("Setting up Sonos config entry: %s", entry.entry_id)
+    soco_reset()
     soco_config.EVENTS_MODULE = events_asyncio
     soco_config.REQUEST_TIMEOUT = 9.5
     soco_config.ZGT_EVENT_FALLBACK = False
@@ -154,6 +155,8 @@ async def async_unload_entry(
         config_entry, PLATFORMS
     )
     await hass.data[DATA_SONOS_DISCOVERY_MANAGER].async_shutdown()
+    soco_reset()
+    _LOGGER.debug("Sonos config entry unloaded: %s", config_entry.entry_id)
     return unload_ok
 
 
@@ -219,13 +222,15 @@ class SonosDiscoveryManager:
             _ = IPv4Address(ip_address)
         except AddressValueError:
             _LOGGER.debug(
-                "Sonos integration only supports IPv4 addresses, invalid ip_address received: %s",
+                "Sonos integration only supports IPv4 addresses,"
+                " invalid ip_address received: %s",
                 ip_address,
             )
             return
         soco = SoCo(ip_address)
         try:
-            # Cache now to avoid household ID lookup during first ZoneGroupState processing
+            # Cache now to avoid household ID lookup during
+            # first ZoneGroupState processing
             await self.hass.async_add_executor_job(
                 getattr,
                 soco,
@@ -417,6 +422,7 @@ class SonosDiscoveryManager:
                     )
                     new_coordinator.setup(soco)
                     c_dict[soco.household_id] = new_coordinator
+                c_dict[soco.household_id].add_speaker(soco)
             speaker.setup(self.entry)
         except (OSError, SoCoException, Timeout) as ex:
             _LOGGER.warning("Failed to add SonosSpeaker using %s: %s", soco, ex)
@@ -426,7 +432,8 @@ class SonosDiscoveryManager:
     ) -> None:
         """Add and maintain Sonos devices from a manual configuration."""
 
-        # Loop through each configured host and verify that Soco attributes are available for it.
+        # Loop through each configured host and verify that
+        # Soco attributes are available for it.
         for host in self.hosts.copy():
             ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
             soco = SoCo(ip_addr)
@@ -457,8 +464,9 @@ class SonosDiscoveryManager:
 
             if self.hosts_in_error.pop(ip_addr, None):
                 _LOGGER.warning("Connection reestablished to Sonos device %s", ip_addr)
-            # Each speaker has the topology for other online speakers, so add them in here if they were not
-            # configured. The metadata is already in Soco for these.
+            # Each speaker has the topology for other online
+            # speakers, so add them in here if they were not
+            # configured. The metadata is already in Soco.
             if new_hosts := {
                 x.ip_address for x in visible_zones if x.ip_address not in self.hosts
             }:
@@ -469,12 +477,14 @@ class SonosDiscoveryManager:
                 _LOGGER.debug("Discarding %s from manual hosts", ip_addr)
                 self.hosts.discard(ip_addr)
 
-        # Loop through each configured host that is not in error.  Send a discovery message
-        # if a speaker does not already exist, or ping the speaker if it is unavailable.
+        # Loop through each configured host that is not in
+        # error. Send a discovery message if a speaker does
+        # not already exist, or ping if it is unavailable.
         for host in self.hosts.copy():
             ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
             soco = SoCo(ip_addr)
-            # Skip hosts that are in error to avoid blocking call on soco.uuid in event loop
+            # Skip hosts that are in error to avoid blocking
+            # call on soco.uuid in event loop
             if self.hosts_in_error.get(ip_addr):
                 continue
             known_speaker = next(
@@ -487,8 +497,21 @@ class SonosDiscoveryManager:
             )
             if not known_speaker:
                 try:
+                    uid = await self.hass.async_add_executor_job(getattr, soco, "uid")
+                except HTTPError as err:
+                    await self._process_http_connection_error(err, ip_addr)
+                    continue
+                except (
+                    OSError,
+                    SoCoException,
+                    Timeout,
+                    TimeoutError,
+                ) as ex:
+                    _LOGGER.warning("Could not get Sonos uid from %s: %s", ip_addr, ex)
+                    continue
+                try:
                     await self._async_handle_discovery_message(
-                        soco.uid,
+                        uid,
                         ip_addr,
                         "manual zone scan",
                     )
@@ -505,7 +528,7 @@ class SonosDiscoveryManager:
                     # Only send the message if the ping was successful.
                     async_dispatcher_send(
                         self.hass,
-                        f"{SONOS_SPEAKER_ACTIVITY}-{soco.uid}",
+                        f"{SONOS_SPEAKER_ACTIVITY}-{known_speaker.uid}",
                         "manual zone scan",
                     )
                 except SonosUpdateError:
@@ -550,7 +573,7 @@ class SonosDiscoveryManager:
             return
         uid = uid[5:]
 
-        if change == ssdp.SsdpChange.BYEBYE:
+        if change is ssdp.SsdpChange.BYEBYE:
             _LOGGER.debug(
                 "ssdp:byebye received from %s", info.upnp.get("friendlyName", uid)
             )

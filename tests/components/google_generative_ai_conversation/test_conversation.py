@@ -13,6 +13,7 @@ from homeassistant.components.conversation import (
     AssistantContent,
     ToolResultContent,
     UserContent,
+    trace,
 )
 from homeassistant.components.google_generative_ai_conversation.entity import (
     ERROR_GETTING_RESPONSE,
@@ -74,7 +75,7 @@ async def test_error_handling(
             Context(),
             agent_id="conversation.google_ai_conversation",
         )
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert (
         result.response.as_dict()["speech"]["plain"]["speech"] == ERROR_GETTING_RESPONSE
@@ -118,7 +119,7 @@ async def test_function_call(
                 "speech": {"plain": {"speech": "4:24 PM", "extra_data": None}},
                 "response_type": "action_done",
                 "speech_slots": {"time": datetime.time(16, 24, 17, 813343)},
-                "data": {"targets": [], "success": [], "failed": []},
+                "data": {"success": [], "failed": []},
             },
         )
     )
@@ -201,7 +202,8 @@ async def test_function_call(
                         "content": {
                             "parts": [
                                 {
-                                    "text": "test function with the provided parameters.",
+                                    "text": "test function with the"
+                                    " provided parameters.",
                                     "thought_signature": b"_thought_signature_5",
                                 }
                             ],
@@ -248,7 +250,7 @@ async def test_function_call(
         agent_id=agent_id,
         device_id="test_device",
     )
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.as_dict()["speech"]["plain"]["speech"]
         == "I've called the test function with the provided parameters."
@@ -308,7 +310,8 @@ async def test_google_search_tool_is_sent(
     context = Context()
 
     messages = [
-        # Messages from the model which contain the google search answer (the usage of the Google Search tool is server side)
+        # Messages from the model which contain the google search
+        # answer (the usage of the Google Search tool is server side)
         [
             GenerateContentResponse(
                 candidates=[
@@ -354,7 +357,7 @@ async def test_google_search_tool_is_sent(
             agent_id=agent_id,
             device_id="test_device",
         )
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.as_dict()["speech"]["plain"]["speech"]
         == "The last winner of the 2024 FIFA World Cup was Argentina."
@@ -404,7 +407,7 @@ async def test_blocked_response(
         device_id="test_device",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
         "The message got blocked due to content violations, reason: SAFETY"
@@ -448,7 +451,7 @@ async def test_empty_response(
         agent_id=agent_id,
         device_id="test_device",
     )
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
         "Unable to get response"
@@ -483,7 +486,7 @@ async def test_none_response(
         device_id="test_device",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
         "The message got blocked due to content violations, reason: unknown"
@@ -512,7 +515,7 @@ async def test_converse_error(
         agent_id="conversation.google_ai_conversation",
     )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
         "Error preparing LLM API"
@@ -686,7 +689,7 @@ async def test_empty_content_in_chat_history(
     mock_chat_log: MockChatLog,  # noqa: F811
     mock_send_message_stream: AsyncMock,
 ) -> None:
-    """Tests that in case of an empty entry in the chat history the google API will receive an injected space sign instead."""
+    """Test empty chat history entries get an injected space for the API."""
     agent_id = "conversation.google_ai_conversation"
     context = Context()
 
@@ -932,3 +935,72 @@ def test_create_thinking_config_gemini25_flash_custom() -> None:
     assert result is not None
     assert result.include_thoughts is True
     assert result.thinking_budget == 2048
+
+
+@pytest.mark.usefixtures("mock_init_component")
+async def test_token_stats_reported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_chat_log: MockChatLog,  # noqa: F811
+    mock_send_message_stream: AsyncMock,
+) -> None:
+    """Test that token stats are reported to the chat log."""
+    trace.async_clear_traces()
+
+    agent_id = "conversation.google_ai_conversation"
+    context = Context()
+
+    messages = [
+        [
+            GenerateContentResponse(
+                candidates=[
+                    {
+                        "content": {
+                            "parts": [{"text": "Hello! "}],
+                            "role": "model",
+                        },
+                    }
+                ],
+            ),
+            GenerateContentResponse(
+                candidates=[
+                    {
+                        "content": {
+                            "parts": [{"text": "How can I help you?"}],
+                            "role": "model",
+                        },
+                        "finish_reason": "STOP",
+                    }
+                ],
+                usage_metadata={
+                    "prompt_token_count": 10,
+                    "candidates_token_count": 20,
+                    "cached_content_token_count": 5,
+                },
+            ),
+        ],
+    ]
+
+    mock_send_message_stream.return_value = messages
+
+    await conversation.async_converse(
+        hass,
+        "Hello",
+        mock_chat_log.conversation_id,
+        context,
+        agent_id=agent_id,
+    )
+
+    traces = trace.async_get_traces()
+    trace_obj = next(iter(traces))
+    events = trace_obj.as_dict().get("events", [])
+    stats = next(
+        e["data"]["stats"]
+        for e in events
+        if e.get("event_type") == "agent_detail" and e.get("data", {}).get("stats")
+    )
+    assert stats == {
+        "input_tokens": 10,
+        "cached_input_tokens": 5,
+        "output_tokens": 20,
+    }

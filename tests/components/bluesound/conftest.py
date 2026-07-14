@@ -1,7 +1,5 @@
 """Common fixtures for the Bluesound tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
 import ipaddress
@@ -193,7 +191,10 @@ async def player_mocks() -> AsyncGenerator[PlayerMocks]:
     )
 
     # to simulate a player that is already configured
-    player_mocks.player_data_for_already_configured.sync_status_long_polling_mock.get().mac = player_mocks.player_data.sync_status_long_polling_mock.get().mac
+    already_configured = player_mocks.player_data_for_already_configured
+    already_configured.sync_status_long_polling_mock.get().mac = (
+        player_mocks.player_data.sync_status_long_polling_mock.get().mac
+    )
 
     def select_player(*args: Any, **kwargs: Any) -> AsyncMock:
         match args[0]:

@@ -1,7 +1,5 @@
 """Control which entities are exposed to voice assistants."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import dataclasses
 from itertools import chain
@@ -12,7 +10,6 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -248,9 +245,6 @@ class ExposedEntities:
         """Return True if an entity should be exposed to an assistant."""
         should_expose: bool
 
-        if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            return False
-
         entity_registry = er.async_get(self._hass)
         if not (registry_entry := entity_registry.async_get(entity_id)):
             return self._async_should_expose_legacy_entity(assistant, entity_id)
@@ -407,19 +401,6 @@ def ws_expose_entity(
 ) -> None:
     """Expose an entity to an assistant."""
     entity_ids: list[str] = msg["entity_ids"]
-
-    if blocked := next(
-        (
-            entity_id
-            for entity_id in entity_ids
-            if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES
-        ),
-        None,
-    ):
-        connection.send_error(
-            msg["id"], websocket_api.ERR_NOT_ALLOWED, f"can't expose '{blocked}'"
-        )
-        return
 
     for entity_id in entity_ids:
         for assistant in msg["assistants"]:

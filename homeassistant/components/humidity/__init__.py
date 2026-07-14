@@ -1,6 +1,4 @@
-"""Integration for humidity triggers."""
-
-from __future__ import annotations
+"""Integration for humidity triggers and conditions."""
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv

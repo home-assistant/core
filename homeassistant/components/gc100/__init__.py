@@ -1,7 +1,5 @@
 """Support for controlling Global Cache gc100."""
 
-from __future__ import annotations
-
 import gc100
 import voluptuous as vol
 

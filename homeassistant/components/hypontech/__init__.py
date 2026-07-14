@@ -1,7 +1,5 @@
 """The Hypontech Cloud integration."""
 
-from __future__ import annotations
-
 from hyponcloud import AuthenticationError, HyponCloud, RequestError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -9,9 +7,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import CONF_OEM, DEFAULT_OEM
 from .coordinator import HypontechConfigEntry, HypontechDataCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
+_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HypontechConfigEntry) -> bool:
@@ -21,6 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HypontechConfigEntry) ->
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
         session,
+        oem=int(entry.data.get(CONF_OEM, DEFAULT_OEM)),
     )
     try:
         await hypontech_cloud.connect()

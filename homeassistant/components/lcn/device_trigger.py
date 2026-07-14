@@ -1,6 +1,6 @@
 """Provides device triggers for LCN."""
 
-from __future__ import annotations
+from typing import Any
 
 import voluptuous as vol
 
@@ -77,7 +77,7 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    event_data = {
+    event_data: dict[str, Any] = {
         CONF_DEVICE_ID: config[CONF_DEVICE_ID],
         **{
             key: config[key]

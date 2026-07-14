@@ -1,4 +1,17 @@
 {
+  "entity": {
+    "sensor": {
+      "storage_load_consumption_solar_storage": {
+        "default": "mdi:lightning-bolt"
+      },
+      "total_money_today": {
+        "default": "mdi:cash"
+      },
+      "total_money_total": {
+        "default": "mdi:cash"
+      }
+    }
+  },
   "services": {
     "read_ac_charge_times": {
       "service": "mdi:battery-clock-outline"

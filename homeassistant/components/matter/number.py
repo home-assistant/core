@@ -1,10 +1,8 @@
 """Matter Number Inputs."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
@@ -17,12 +15,11 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    PERCENTAGE,
     EntityCategory,
     Platform,
     UnitOfLength,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -30,17 +27,17 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import get_matter
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Number Input from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.NUMBER, async_add_entities)
 
 
@@ -67,7 +64,8 @@ class MatterRangeNumberEntityDescription(
 
     # command: a custom callback to create the command to send to the device
     # the callback's argument will be the converted device value from ha_to_device
-    # if omitted the command will just be a write_attribute command to the primary attribute
+    # if omitted the command will just be a write_attribute
+    # command to the primary attribute
     command: Callable[[int], ClusterCommand] | None = None
 
 
@@ -76,6 +74,7 @@ class MatterNumber(MatterEntity, NumberEntity):
 
     entity_description: MatterNumberEntityDescription
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         sendvalue = int(value)
@@ -84,6 +83,7 @@ class MatterNumber(MatterEntity, NumberEntity):
         await self.write_attribute(value=sendvalue)
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
@@ -93,10 +93,11 @@ class MatterNumber(MatterEntity, NumberEntity):
 
 
 class MatterRangeNumber(MatterEntity, NumberEntity):
-    """Representation of a Matter Attribute as a Number entity with min and max values."""
+    """Matter Attribute as a Number entity with min and max."""
 
     entity_description: MatterRangeNumberEntityDescription
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         send_value = self.entity_description.ha_to_device(value)
@@ -112,9 +113,11 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
-        # get the value from the primary attribute and convert it to the HA value if needed
+        # get the value from the primary attribute and convert
+        # it to the HA value if needed
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
         if value_convert := self.entity_description.device_to_ha:
             value = value_convert(value)
@@ -144,6 +147,7 @@ class MatterLevelControlNumber(MatterEntity, NumberEntity):
 
     entity_description: MatterNumberEntityDescription
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set level value."""
         send_value = int(value)
@@ -156,6 +160,7 @@ class MatterLevelControlNumber(MatterEntity, NumberEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
@@ -179,7 +184,6 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=lambda x: 255 if x is None else x,
             ha_to_device=lambda x: None if x == 255 else int(x),
             native_step=1,
-            native_unit_of_measurement=None,
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnLevel,),
@@ -200,7 +204,6 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=lambda x: 255 if x is None else x,
             ha_to_device=lambda x: None if x == 255 else int(x),
             native_step=1,
-            native_unit_of_measurement=None,
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.StartUpCurrentLevel,),
@@ -351,7 +354,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
             key="pump_setpoint",
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             translation_key="pump_setpoint",
             native_max_value=100,
             native_min_value=0.5,
@@ -361,7 +364,7 @@ DISCOVERY_SCHEMAS = [
                     None if x is None else min(x, 200) / 2
                 )  # Matter range (1-200, capped at 200)
             ),
-            ha_to_device=lambda x: round(x * 2),  # HA range 0.5–100.0%
+            ha_to_device=lambda x: round(x * 2),  # HA range 0.5-100.0%
             mode=NumberMode.SLIDER,
         ),
         entity_class=MatterLevelControlNumber,
@@ -374,7 +377,8 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterNumberEntityDescription(
             key="PIROccupiedToUnoccupiedDelay",
             entity_category=EntityCategory.CONFIG,
-            translation_key="hold_time",  # pir_occupied_to_unoccupied_delay for old revisions
+            # pir_occupied_to_unoccupied_delay for old revisions
+            translation_key="hold_time",
             native_max_value=65534,
             native_min_value=0,
             native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -399,6 +403,73 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.OccupancySensing.Attributes.HoldTime,),
+        # HoldTime is shared by PIR-specific numbers as a required attribute.
+        # Keep discovery open so this generic schema does not block them.
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="OccupancySensingPIRUnoccupiedToOccupiedDelay",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="detection_delay",
+            native_max_value=65534,
+            native_min_value=0,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            clusters.OccupancySensing.Attributes.PIRUnoccupiedToOccupiedDelay,
+            # This attribute is mandatory when
+            # PIRUnoccupiedToOccupiedDelay is present
+            clusters.OccupancySensing.Attributes.HoldTime,
+        ),
+        featuremap_contains=clusters.OccupancySensing.Bitmaps.Feature.kPassiveInfrared,
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="OccupancySensingPIRUnoccupiedToOccupiedThreshold",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="detection_threshold",
+            native_max_value=254,
+            native_min_value=1,
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            clusters.OccupancySensing.Attributes.PIRUnoccupiedToOccupiedThreshold,
+            clusters.OccupancySensing.Attributes.HoldTime,
+        ),
+        featuremap_contains=clusters.OccupancySensing.Bitmaps.Feature.kPassiveInfrared,
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterRangeNumberEntityDescription(
+            key="BooleanStateConfigurationCurrentSensitivityLevel",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="sensitivity_level",
+            native_min_value=1,
+            native_step=1,
+            device_to_ha=lambda x: x + 1,
+            ha_to_device=lambda x: int(x) - 1,
+            max_attribute=(
+                clusters.BooleanStateConfiguration.Attributes.SupportedSensitivityLevels
+            ),
+            mode=NumberMode.SLIDER,
+        ),
+        entity_class=MatterRangeNumber,
+        required_attributes=(
+            clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
+            clusters.BooleanStateConfiguration.Attributes.SupportedSensitivityLevels,
+        ),
+        featuremap_contains=(
+            clusters.BooleanStateConfiguration.Bitmaps.Feature.kSensitivityLevel
+        ),
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
@@ -445,7 +516,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterRangeNumberEntityDescription(
             key="speaker_setpoint",
             translation_key="speaker_setpoint",
-            native_unit_of_measurement=PERCENTAGE,
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
             command=lambda value: clusters.LevelControl.Commands.MoveToLevel(
                 level=int(value)
             ),

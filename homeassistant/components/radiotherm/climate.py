@@ -1,8 +1,6 @@
 """Support for Radio Thermostat wifi-enabled home thermostats."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import radiotherm
 
@@ -17,13 +15,11 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN
-from .coordinator import RadioThermUpdateCoordinator
+from .coordinator import RadioThermConfigEntry, RadioThermUpdateCoordinator
 from .entity import RadioThermostatEntity
 
 ATTR_FAN_ACTION = "fan_action"
@@ -101,12 +97,11 @@ def round_temp(temperature):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RadioThermConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate for a radiotherm device."""
-    coordinator: RadioThermUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([RadioThermostat(coordinator)])
+    async_add_entities([RadioThermostat(entry.runtime_data)])
 
 
 class RadioThermostat(RadioThermostatEntity, ClimateEntity):
@@ -134,6 +129,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
         self._attr_preset_modes = PRESET_MODES
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Turn fan on/off."""
         if (code := FAN_MODE_TO_CODE.get(fan_mode)) is None:
@@ -148,6 +144,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         self.device.fmode = code
 
     @callback
+    @override
     def _process_data(self) -> None:
         """Update and validate the data from the thermostat."""
         data = self.data.tstat
@@ -178,6 +175,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
             elif self.hvac_action == HVACAction.HEATING:
                 self._attr_target_temperature = data["t_heat"]
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -200,6 +198,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
             elif self.hvac_action == HVACAction.HEATING:
                 self.device.t_heat = temperature
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set operation mode (auto, cool, heat, off)."""
         await self.hass.async_add_executor_job(self._set_hvac_mode, hvac_mode)
@@ -217,6 +216,7 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         elif hvac_mode == HVACMode.HEAT:
             self.device.t_heat = self.target_temperature
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set Preset mode (Home, Alternate, Away, Holiday)."""
         if preset_mode not in PRESET_MODES:

@@ -1,10 +1,8 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from boschshcpy.device import SHCDevice
 
@@ -15,10 +13,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -60,13 +57,13 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
     HUMIDITY_SENSOR: SHCSensorEntityDescription(
         key=HUMIDITY_SENSOR,
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda device: device.humidity,
     ),
     PURITY_SENSOR: SHCSensorEntityDescription(
         key=PURITY_SENSOR,
         translation_key=PURITY_SENSOR,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         value_fn=lambda device: device.purity,
     ),
     AIR_QUALITY_SENSOR: SHCSensorEntityDescription(
@@ -114,7 +111,7 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
         key=VALVE_TAPPET_SENSOR,
         translation_key=VALVE_TAPPET_SENSOR,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_fn=lambda device: device.position,
         attributes_fn=lambda device: {
             "valve_tappet_state": device.valvestate.name,
@@ -217,11 +214,13 @@ class SHCSensor(SHCEntity, SensorEntity):
         self._attr_unique_id = f"{device.serial}_{entity_description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._device)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self.entity_description.attributes_fn is not None:

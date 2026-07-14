@@ -4,8 +4,6 @@ DOMAIN = "ollama"
 
 DEFAULT_NAME = "Ollama"
 
-CONF_MODEL = "model"
-CONF_PROMPT = "prompt"
 CONF_THINK = "think"
 
 CONF_KEEP_ALIVE = "keep_alive"
@@ -17,7 +15,6 @@ DEFAULT_TIMEOUT = 5.0  # seconds
 CONF_NUM_CTX = "num_ctx"
 DEFAULT_NUM_CTX = 8192
 MIN_NUM_CTX = 2048
-MAX_NUM_CTX = 131072
 DEFAULT_THINK = False
 
 CONF_MAX_HISTORY = "max_history"

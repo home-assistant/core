@@ -1,7 +1,5 @@
 """The Kaleidescape integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from kaleidescape import Device as KaleidescapeDevice, KaleidescapeError

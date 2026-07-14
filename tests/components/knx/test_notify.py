@@ -37,7 +37,9 @@ async def test_notify_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
         notify.SERVICE_SEND_MESSAGE,
         {
             "entity_id": "notify.test",
-            notify.ATTR_MESSAGE: "I love KNX, but this text is too long for KNX, poor KNX",
+            notify.ATTR_MESSAGE: (
+                "I love KNX, but this text is too long for KNX, poor KNX"
+            ),
         },
     )
     await knx.assert_write(

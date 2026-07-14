@@ -1,11 +1,9 @@
 """Calculates mold growth indication from temperature and humidity."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import logging
 import math
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -18,12 +16,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_UNIQUE_ID,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -195,6 +193,7 @@ class MoldIndicator(SensorEntity):
         self._async_setup_sensor()
         return self._call_on_remove_callbacks
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self._async_setup_sensor()
@@ -214,12 +213,7 @@ class MoldIndicator(SensorEntity):
         # Replay current state of source entities
         for entity_id in self._entities.values():
             state = self.hass.states.get(entity_id)
-            state_event: Event[EventStateChangedData] = Event(
-                "", {"entity_id": entity_id, "new_state": state, "old_state": None}
-            )
-            self._async_mold_indicator_sensor_state_listener(
-                state_event, update_state=False
-            )
+            self._update_cached_values(entity_id, state)
 
         self._recalculate()
 
@@ -228,8 +222,18 @@ class MoldIndicator(SensorEntity):
             self._preview_callback(calculated_state.state, calculated_state.attributes)
 
     @callback
+    def _update_cached_values(self, entity_id: str, new_state: State | None) -> None:
+        """Update cached sensor values from a state."""
+        if entity_id == self._entities[CONF_INDOOR_TEMP]:
+            self._indoor_temp = self._get_temperature_from_state(new_state)
+        elif entity_id == self._entities[CONF_OUTDOOR_TEMP]:
+            self._outdoor_temp = self._get_temperature_from_state(new_state)
+        elif entity_id == self._entities[CONF_INDOOR_HUMIDITY]:
+            self._indoor_hum = self._get_humidity_from_state(new_state)
+
+    @callback
     def _async_mold_indicator_sensor_state_listener(
-        self, event: Event[EventStateChangedData], update_state: bool = True
+        self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state changes for dependent sensors."""
         entity_id = event.data["entity_id"]
@@ -242,16 +246,7 @@ class MoldIndicator(SensorEntity):
             new_state,
         )
 
-        # update state depending on which sensor changed
-        if entity_id == self._entities[CONF_INDOOR_TEMP]:
-            self._indoor_temp = self._get_temperature_from_state(new_state)
-        elif entity_id == self._entities[CONF_OUTDOOR_TEMP]:
-            self._outdoor_temp = self._get_temperature_from_state(new_state)
-        elif entity_id == self._entities[CONF_INDOOR_HUMIDITY]:
-            self._indoor_hum = self._get_humidity_from_state(new_state)
-
-        if not update_state:
-            return
+        self._update_cached_values(entity_id, new_state)
 
         self._recalculate()
 
@@ -303,7 +298,9 @@ class MoldIndicator(SensorEntity):
             )
             return None
 
-        return validator(value, state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+        return validator(
+            value, state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        )
 
     def _get_temperature_from_state(self, state: State | None) -> float | None:
         """Get temperature value in Celsius from state."""
@@ -419,6 +416,7 @@ class MoldIndicator(SensorEntity):
         _LOGGER.debug("Mold indicator humidity: %s", self.native_value)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self._is_metric:

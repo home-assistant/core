@@ -1,21 +1,22 @@
 """The WeatherflowCloud integration."""
 
-from __future__ import annotations
-
 import asyncio
-from dataclasses import dataclass
 
 from weatherflow4py.api import WeatherFlowRestAPI
 from weatherflow4py.ws import WeatherFlowWebsocketAPI
+from websockets.exceptions import WebSocketException
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.ssl import client_context
 
-from .const import DOMAIN, LOGGER
+from .const import LOGGER
 from .coordinator import (
+    WeatherFlowCloudConfigEntry,
     WeatherFlowCloudUpdateCoordinatorREST,
+    WeatherFlowCoordinators,
     WeatherFlowObservationCoordinator,
     WeatherFlowWindCoordinator,
 )
@@ -23,16 +24,9 @@ from .coordinator import (
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WEATHER]
 
 
-@dataclass
-class WeatherFlowCoordinators:
-    """Data Class for Entry Data."""
-
-    rest: WeatherFlowCloudUpdateCoordinatorREST
-    wind: WeatherFlowWindCoordinator
-    observation: WeatherFlowObservationCoordinator
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: WeatherFlowCloudConfigEntry
+) -> bool:
     """Set up WeatherFlowCloud from a config entry."""
 
     LOGGER.debug("Initializing WeatherFlowCloudDataUpdateCoordinatorREST coordinator")
@@ -76,34 +70,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         stations=stations,
     )
 
-    # Run setup method
-    await asyncio.gather(
-        websocket_wind_coordinator.async_setup(),
-        websocket_observation_coordinator.async_setup(),
-    )
+    async def _async_disconnect_websocket() -> None:
+        """Disconnect the WeatherFlow websocket."""
+        await websocket_api.stop_all_listeners()
+        await websocket_api.close()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = WeatherFlowCoordinators(
+    # Connect once because both websocket coordinators share this API instance.
+    try:
+        await websocket_api.connect(client_context())
+    except (OSError, WebSocketException) as err:
+        raise ConfigEntryNotReady("Error connecting to WeatherFlow websocket") from err
+
+    entry.async_on_unload(_async_disconnect_websocket)
+
+    try:
+        await asyncio.gather(
+            websocket_wind_coordinator.async_setup(),
+            websocket_observation_coordinator.async_setup(),
+        )
+    except (OSError, WebSocketException) as err:
+        raise ConfigEntryNotReady("Error setting up WeatherFlow websocket") from err
+
+    entry.runtime_data = WeatherFlowCoordinators(
         rest_data_coordinator,
         websocket_wind_coordinator,
         websocket_observation_coordinator,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Websocket disconnect handler
-    async def _async_disconnect_websocket() -> None:
-        await websocket_api.stop_all_listeners()
-        await websocket_api.close()
-
-    # Register a websocket shutdown handler
-    entry.async_on_unload(_async_disconnect_websocket)
-
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: WeatherFlowCloudConfigEntry
+) -> bool:
     """Unload a config entry."""
-
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

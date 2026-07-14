@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from switchbot_api import Device, Remote, SwitchBotAPI
 
@@ -12,22 +12,20 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData
-from .const import DOMAIN
+from . import SwitchbotCloudConfigEntry
+from .const import DOMAIN, SwitchbotCloudDeviceLockState
 from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 
@@ -47,6 +45,8 @@ RELAY_SWITCH_2PM_SENSOR_TYPE_POWER = "Power"
 RELAY_SWITCH_2PM_SENSOR_TYPE_VOLTAGE = "Voltage"
 RELAY_SWITCH_2PM_SENSOR_TYPE_CURRENT = "ElectricCurrent"
 RELAY_SWITCH_2PM_SENSOR_TYPE_ELECTRICITY = "UsedElectricity"
+
+LOCK_SENSOR_TYPE_LOCK_STATE = "lockState"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -77,14 +77,14 @@ HUMIDITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_HUMIDITY,
     device_class=SensorDeviceClass.HUMIDITY,
     state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=PERCENTAGE,
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
 )
 
 BATTERY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_BATTERY,
     device_class=SensorDeviceClass.BATTERY,
     state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=PERCENTAGE,
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
 )
 
 POWER_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
@@ -119,7 +119,7 @@ CO2_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_CO2,
     device_class=SensorDeviceClass.CO2,
     state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+    native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
 )
 
 POWER_CONSUMPTION_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
@@ -164,6 +164,21 @@ LIGHTLEVEL_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key="lightLevel",
     translation_key="light_level",
     state_class=SensorStateClass.MEASUREMENT,
+)
+
+
+LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
+    key=LOCK_SENSOR_TYPE_LOCK_STATE,
+    device_class=SensorDeviceClass.ENUM,
+    translation_key="lock_state",
+    options=[
+        value.name.lower() for value in SwitchbotCloudDeviceLockState.get_states()
+    ],
+    value_fn=lambda value: (
+        SwitchbotCloudDeviceLockState(value).name.lower()
+        if value in SwitchbotCloudDeviceLockState.get_values()
+        else None
+    ),
 )
 
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
@@ -225,7 +240,10 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock": (BATTERY_DESCRIPTION,),
     "Smart Lock Lite": (BATTERY_DESCRIPTION,),
     "Smart Lock Pro": (BATTERY_DESCRIPTION,),
-    "Smart Lock Ultra": (BATTERY_DESCRIPTION,),
+    "Smart Lock Ultra": (
+        BATTERY_DESCRIPTION,
+        LOCK_SENSOR_TYPE_LOCK_STATE_DESCRIPTION,
+    ),
     "Smart Lock Vision": (BATTERY_DESCRIPTION,),
     "Smart Lock Vision Pro": (BATTERY_DESCRIPTION,),
     "Lock Vision": (BATTERY_DESCRIPTION,),
@@ -250,26 +268,34 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Contact Sensor": (BATTERY_DESCRIPTION,),
     "Water Detector": (BATTERY_DESCRIPTION,),
     "Humidifier": (TEMPERATURE_DESCRIPTION,),
-    "Climate Panel": (
+    "Home Climate Panel": (
         TEMPERATURE_DESCRIPTION,
         HUMIDITY_DESCRIPTION,
         BATTERY_DESCRIPTION,
     ),
     "Smart Radiator Thermostat": (BATTERY_DESCRIPTION,),
     "AI Art Frame": (BATTERY_DESCRIPTION,),
+    "WeatherStation": (
+        BATTERY_DESCRIPTION,
+        TEMPERATURE_DESCRIPTION,
+        HUMIDITY_DESCRIPTION,
+    ),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
-    data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
+    data = config.runtime_data
     entities: list[SwitchBotCloudSensor] = []
     for device, coordinator in data.devices.sensors:
-        for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]:
+        if device.device_type not in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES:
+            continue
+        descriptions = SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]
+        for description in descriptions:
             if device.device_type == "Relay Switch 2PM":
                 entities.append(
                     SwitchBotCloudRelaySwitch2PMSensor(
@@ -305,12 +331,12 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
         value = self.coordinator.data.get(self.entity_description.key)
-
         self._attr_native_value = self.entity_description.value_fn(value)
 
 
@@ -339,6 +365,7 @@ class SwitchBotCloudRelaySwitch2PMSensor(SwitchBotCloudSensor):
             name=f"{device.device_name} Channel {channel}",
         )
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if not self.coordinator.data:

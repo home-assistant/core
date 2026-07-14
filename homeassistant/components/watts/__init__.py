@@ -1,7 +1,5 @@
 """The Watts Vision + integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from http import HTTPStatus
 import logging
@@ -14,8 +12,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    config_validation as cv,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, SUPPORTED_DEVICE_TYPES
 from .coordinator import (
@@ -23,10 +26,19 @@ from .coordinator import (
     WattsVisionDeviceData,
     WattsVisionHubCoordinator,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SWITCH]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Watts Vision component."""
+    async_setup_services(hass)
+    return True
 
 
 @dataclass

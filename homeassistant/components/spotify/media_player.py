@@ -1,12 +1,10 @@
 """Support for interacting with Spotify Connect."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 import datetime as dt
 import logging
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate, override
 
 from spotifyaio import (
     Episode,
@@ -137,6 +135,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         return self.coordinator.data.current_playback
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return the supported features."""
         if self.coordinator.current_user.product != ProductType.PREMIUM:
@@ -146,6 +145,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         return SUPPORT_SPOTIFY
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """Return the playback state."""
         if not self.currently_playing:
@@ -155,6 +155,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         return MediaPlayerState.PAUSED
 
     @property
+    @override
     def volume_level(self) -> float | None:
         """Return the device volume."""
         if not self.currently_playing:
@@ -163,23 +164,27 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
 
     @property
     @ensure_item
+    @override
     def media_content_id(self, item: Item) -> str:  # noqa: PLR0206
         """Return the media URL."""
         return item.uri
 
     @property
     @ensure_item
+    @override
     def media_content_type(self, item: Item) -> str:  # noqa: PLR0206
         """Return the media type."""
         return MediaType.PODCAST if item.type == ItemType.EPISODE else MediaType.MUSIC
 
     @property
     @ensure_item
+    @override
     def media_duration(self, item: Item) -> int:  # noqa: PLR0206
         """Duration of current playing media in seconds."""
         return round(item.duration_ms / 1000)
 
     @property
+    @override
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         if not self.currently_playing or self.currently_playing.progress_ms is None:
@@ -187,6 +192,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         return round(self.currently_playing.progress_ms / 1000)
 
     @property
+    @override
     def media_position_updated_at(self) -> dt.datetime | None:
         """When was the position of the current playing media valid."""
         if not self.currently_playing:
@@ -195,6 +201,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
 
     @property
     @ensure_item
+    @override
     def media_image_url(self, item: Item) -> str | None:  # noqa: PLR0206
         """Return the media image URL."""
         if item.type == ItemType.EPISODE:
@@ -213,12 +220,14 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
 
     @property
     @ensure_item
+    @override
     def media_title(self, item: Item) -> str:  # noqa: PLR0206
         """Return the media title."""
         return item.name
 
     @property
     @ensure_item
+    @override
     def media_artist(self, item: Item) -> str:  # noqa: PLR0206
         """Return the media artist."""
         if item.type == ItemType.EPISODE:
@@ -232,6 +241,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
 
     @property
     @ensure_item
+    @override
     def media_album_name(self, item: Item) -> str | None:  # noqa: PLR0206
         """Return the media album."""
         if item.type == ItemType.EPISODE:
@@ -243,6 +253,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
 
     @property
     @ensure_item
+    @override
     def media_track(self, item: Item) -> int | None:  # noqa: PLR0206
         """Track number of current playing media, music track only."""
         if item.type == ItemType.EPISODE:
@@ -252,6 +263,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         return item.track_number
 
     @property
+    @override
     def media_playlist(self) -> str | None:
         """Title of Playlist currently playing."""
         if self.coordinator.data.dj_playlist:
@@ -261,6 +273,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         return self.coordinator.data.playlist.name
 
     @property
+    @override
     def source(self) -> str | None:
         """Return the current playback device."""
         if not self.currently_playing:
@@ -268,11 +281,13 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         return self.currently_playing.device.name
 
     @property
+    @override
     def source_list(self) -> list[str] | None:
         """Return a list of source devices."""
         return [device.name for device in self.devices.data]
 
     @property
+    @override
     def shuffle(self) -> bool | None:
         """Shuffling state."""
         if not self.currently_playing:
@@ -280,6 +295,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         return self.currently_playing.shuffle
 
     @property
+    @override
     def repeat(self) -> RepeatMode | None:
         """Return current repeat mode."""
         if not self.currently_playing:
@@ -287,36 +303,43 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         return REPEAT_MODE_MAPPING_TO_HA.get(self.currently_playing.repeat_mode)
 
     @async_refresh_after
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         await self.coordinator.client.set_volume(int(volume * 100))
 
     @async_refresh_after
+    @override
     async def async_media_play(self) -> None:
         """Start or resume playback."""
         await self.coordinator.client.start_playback()
 
     @async_refresh_after
+    @override
     async def async_media_pause(self) -> None:
         """Pause playback."""
         await self.coordinator.client.pause_playback()
 
     @async_refresh_after
+    @override
     async def async_media_previous_track(self) -> None:
         """Skip to previous track."""
         await self.coordinator.client.previous_track()
 
     @async_refresh_after
+    @override
     async def async_media_next_track(self) -> None:
         """Skip to next track."""
         await self.coordinator.client.next_track()
 
     @async_refresh_after
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         await self.coordinator.client.seek_track(int(position * 1000))
 
     @async_refresh_after
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -367,6 +390,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         await self.coordinator.client.start_playback(**kwargs)
 
     @async_refresh_after
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select playback device."""
         for device in self.devices.data:
@@ -377,17 +401,20 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
                 return
 
     @async_refresh_after
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
         await self.coordinator.client.set_shuffle(state=shuffle)
 
     @async_refresh_after
+    @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         if repeat not in REPEAT_MODE_MAPPING_TO_SPOTIFY:
             raise ValueError(f"Unsupported repeat mode: {repeat}")
         await self.coordinator.client.set_repeat(REPEAT_MODE_MAPPING_TO_SPOTIFY[repeat])
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -409,6 +436,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
             return
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()

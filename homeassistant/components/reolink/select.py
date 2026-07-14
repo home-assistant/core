@@ -1,11 +1,9 @@
 """Component providing support for Reolink select entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from reolink_aio.api import (
     BinningModeEnum,
@@ -187,6 +185,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="status_led",
         cmd_key="GetPowerLed",
+        cmd_id=208,
         translation_key="doorbell_led",
         entity_category=EntityCategory.CONFIG,
         get_options=lambda api, ch: api.doorbell_led_list(ch),
@@ -234,6 +233,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="main_frame_rate",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="main_frame_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -246,6 +246,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="sub_frame_rate",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="sub_frame_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -258,6 +259,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="main_bit_rate",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="main_bit_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -270,6 +272,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="sub_bit_rate",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="sub_bit_rate",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -282,6 +285,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="main_encoding",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="main_encoding",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -293,6 +297,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="sub_encoding",
         cmd_key="GetEnc",
+        cmd_id=56,
         translation_key="sub_encoding",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -318,6 +323,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="post_rec_time",
         cmd_key="GetRec",
+        cmd_id=54,
         translation_key="post_rec_time",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -342,6 +348,7 @@ HOST_SELECT_ENTITIES = (
     ReolinkHostSelectEntityDescription(
         key="packing_time",
         cmd_key="GetRec",
+        cmd_id=54,
         translation_key="packing_time",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -472,6 +479,7 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
             self._attr_options = entity_description.get_options
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         if self.entity_description.value is None:
@@ -489,6 +497,7 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
         return option
 
     @raise_translated_error
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.method(self._host.api, self._channel, option)
@@ -511,11 +520,13 @@ class ReolinkHostSelectEntity(ReolinkHostCoordinatorEntity, SelectEntity):
         self._attr_options = entity_description.get_options(self._host.api)
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         return self.entity_description.value(self._host.api)
 
     @raise_translated_error
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.method(self._host.api, option)
@@ -539,11 +550,13 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
         self._attr_options = entity_description.get_options
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         return self.entity_description.value(self._chime)
 
     @raise_translated_error
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.method(self._chime, option)
@@ -567,11 +580,13 @@ class ReolinkHostChimeSelectEntity(ReolinkHostChimeCoordinatorEntity, SelectEnti
         self._attr_options = entity_description.get_options
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option."""
         return self.entity_description.value(self._chime)
 
     @raise_translated_error
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.method(self._chime, option)

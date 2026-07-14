@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "is_closed": {
+      "condition": "mdi:window-closed"
+    },
+    "is_open": {
+      "condition": "mdi:window-open"
+    }
+  },
   "triggers": {
     "closed": {
       "trigger": "mdi:window-closed"

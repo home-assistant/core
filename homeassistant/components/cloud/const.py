@@ -1,7 +1,5 @@
 """Constants for the cloud component."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import TYPE_CHECKING, Any
 
@@ -48,6 +46,9 @@ PREF_TTS_DEFAULT_VOICE = "tts_default_voice"
 PREF_GOOGLE_CONNECTED = "google_connected"
 PREF_REMOTE_ALLOW_REMOTE_ENABLE = "remote_allow_remote_enable"
 PREF_ENABLE_CLOUD_ICE_SERVERS = "cloud_ice_servers_enabled"
+PREF_ONBOARDED_ITEMS = "onboarded_items"
+PREF_ONBOARDING_POSTPONED_UNTIL = "onboarding_postponed_until"
+ONBOARDING_ITEMS = {"remote", "backup", "voice", "streaming"}
 DEFAULT_TTS_DEFAULT_VOICE = ("en-US", "JennyNeural")
 DEFAULT_DISABLE_2FA = False
 DEFAULT_ALEXA_REPORT_STATE = True

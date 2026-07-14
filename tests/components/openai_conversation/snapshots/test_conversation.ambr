@@ -71,8 +71,6 @@
           ]),
           'success': list([
           ]),
-          'targets': list([
-          ]),
         }),
         'response_type': 'action_done',
         'speech': dict({
@@ -197,7 +195,7 @@
     }),
     dict({
       'call_id': 'mock-tool-call-id',
-      'output': '{"speech":{"plain":{"speech":"12:00 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"12:00:00"},"data":{"targets":[],"success":[],"failed":[]}}',
+      'output': '{"speech":{"plain":{"speech":"12:00 PM","extra_data":null}},"response_type":"action_done","speech_slots":{"time":"12:00:00"},"data":{"success":[],"failed":[]}}',
       'type': 'function_call_output',
     }),
     dict({
@@ -298,6 +296,27 @@
       'tool_calls': None,
     }),
   ])
+# ---
+# name: test_model_args[subentry_options0]
+  dict({
+    'include': list([
+      'reasoning.encrypted_content',
+    ]),
+    'max_output_tokens': 3000,
+    'model': 'gpt-5.6-sol',
+    'prompt_cache_retention': '24h',
+    'reasoning': dict({
+      'effort': 'low',
+      'mode': 'pro',
+      'summary': 'auto',
+    }),
+    'service_tier': 'auto',
+    'store': False,
+    'stream': True,
+    'text': dict({
+      'verbosity': 'medium',
+    }),
+  })
 # ---
 # name: test_web_search[False]
   list([

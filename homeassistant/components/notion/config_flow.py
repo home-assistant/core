@@ -1,10 +1,8 @@
 """Config flow to configure the Notion integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, override
 
 from aionotion.errors import InvalidCredentialsError, NotionError
 import voluptuous as vol
@@ -110,6 +108,7 @@ class NotionFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

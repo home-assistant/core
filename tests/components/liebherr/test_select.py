@@ -1,6 +1,7 @@
 """Test the Liebherr select platform."""
 
 import copy
+import dataclasses
 from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -281,11 +282,15 @@ async def test_select_current_option_none_mode(
     assert state.state == "low"
 
     # Simulate update where mode is None
-    state_with_none_mode = copy.deepcopy(MOCK_DEVICE_STATE)
-    for control in state_with_none_mode.controls:
-        if isinstance(control, HydroBreezeControl):
-            control.current_mode = None
-            break
+    none_mode_controls = [
+        dataclasses.replace(control, current_mode=None)
+        if isinstance(control, HydroBreezeControl)
+        else control
+        for control in MOCK_DEVICE_STATE.controls
+    ]
+    state_with_none_mode = dataclasses.replace(
+        MOCK_DEVICE_STATE, controls=none_mode_controls
+    )
 
     mock_liebherr_client.get_device_state.side_effect = lambda *a, **kw: copy.deepcopy(
         state_with_none_mode

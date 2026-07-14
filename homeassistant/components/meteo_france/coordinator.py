@@ -1,7 +1,9 @@
 """Support for Meteo-France weather data."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.model import CurrentPhenomenons, Forecast, Rain
@@ -13,6 +15,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+type MeteoFranceConfigEntry = ConfigEntry[MeteoFranceData]
+
+
+@dataclass
+class MeteoFranceData:
+    """Data for the Meteo-France integration."""
+
+    forecast_coordinator: MeteoFranceForecastUpdateCoordinator
+    rain_coordinator: MeteoFranceRainUpdateCoordinator | None
+    alert_coordinator: MeteoFranceAlertUpdateCoordinator | None
+
+
 SCAN_INTERVAL_RAIN = timedelta(minutes=5)
 SCAN_INTERVAL = timedelta(minutes=15)
 
@@ -20,12 +34,12 @@ SCAN_INTERVAL = timedelta(minutes=15)
 class MeteoFranceForecastUpdateCoordinator(DataUpdateCoordinator[Forecast]):
     """Coordinator for Meteo-France forecast data."""
 
-    config_entry: ConfigEntry
+    config_entry: MeteoFranceConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: MeteoFranceConfigEntry,
         client: MeteoFranceClient,
     ) -> None:
         """Initialize the coordinator."""
@@ -40,6 +54,7 @@ class MeteoFranceForecastUpdateCoordinator(DataUpdateCoordinator[Forecast]):
         self._latitude = entry.data[CONF_LATITUDE]
         self._longitude = entry.data[CONF_LONGITUDE]
 
+    @override
     async def _async_update_data(self) -> Forecast:
         """Get data from Meteo-France forecast."""
         return await self.hass.async_add_executor_job(
@@ -50,12 +65,12 @@ class MeteoFranceForecastUpdateCoordinator(DataUpdateCoordinator[Forecast]):
 class MeteoFranceRainUpdateCoordinator(DataUpdateCoordinator[Rain]):
     """Coordinator for Meteo-France rain data."""
 
-    config_entry: ConfigEntry
+    config_entry: MeteoFranceConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: MeteoFranceConfigEntry,
         client: MeteoFranceClient,
     ) -> None:
         """Initialize the coordinator."""
@@ -70,6 +85,7 @@ class MeteoFranceRainUpdateCoordinator(DataUpdateCoordinator[Rain]):
         self._latitude = entry.data[CONF_LATITUDE]
         self._longitude = entry.data[CONF_LONGITUDE]
 
+    @override
     async def _async_update_data(self) -> Rain:
         """Get data from Meteo-France rain."""
         return await self.hass.async_add_executor_job(
@@ -80,12 +96,12 @@ class MeteoFranceRainUpdateCoordinator(DataUpdateCoordinator[Rain]):
 class MeteoFranceAlertUpdateCoordinator(DataUpdateCoordinator[CurrentPhenomenons]):
     """Coordinator for Meteo-France alert data."""
 
-    config_entry: ConfigEntry
+    config_entry: MeteoFranceConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: MeteoFranceConfigEntry,
         client: MeteoFranceClient,
         department: str,
     ) -> None:
@@ -100,6 +116,7 @@ class MeteoFranceAlertUpdateCoordinator(DataUpdateCoordinator[CurrentPhenomenons
         self._client = client
         self._department = department
 
+    @override
     async def _async_update_data(self) -> CurrentPhenomenons:
         """Get data from Meteo-France alert."""
         return await self.hass.async_add_executor_job(
