@@ -29,10 +29,12 @@ from homeassistant.components.google_assistant.http import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import (
+    MockConfigEntry,
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
@@ -341,6 +343,49 @@ async def test_secure_device_pin_config(hass: HomeAssistant) -> None:
     config = GoogleConfig(hass, secure_config)
 
     assert config.secure_devices_pin == secure_pin
+
+
+async def test_should_expose_with_label(hass: HomeAssistant) -> None:
+    """Test the google config should expose method with label."""
+    MockConfigEntry(domain="test", entry_id="1234").add_to_hass(hass)
+    config = GoogleConfig(
+        hass,
+        GOOGLE_ASSISTANT_SCHEMA(
+            {
+                "project_id": "1234",
+                "expose_by_label": "google_assistant",
+            }
+        ),
+    )
+    await config.async_initialize()
+
+    # Entity with label
+    ent_reg = er.async_get(hass)
+    entry = ent_reg.async_get_or_create("light", "test", "1234")
+    ent_reg.async_update_entity(entry.entity_id, labels={"google_assistant"})
+    assert config.should_expose("light.test_1234") is True
+
+    # Entity without label
+    ent_reg.async_get_or_create("light", "test", "5678")
+    assert config.should_expose("light.test_5678") is False
+
+    # Entity with device that has label
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id="1234",
+        identifiers={("test", "device_id")},
+    )
+    dev_reg.async_update_device(device.id, labels={"google_assistant"})
+    entry = ent_reg.async_get_or_create("light", "test", "9012", device_id=device.id)
+    assert config.should_expose("light.test_9012") is True
+
+    # Entity with device that doesn't have label
+    device2 = dev_reg.async_get_or_create(
+        config_entry_id="1234",
+        identifiers={("test", "device_id2")},
+    )
+    ent_reg.async_get_or_create("light", "test", "3456", device_id=device2.id)
+    assert config.should_expose("light.test_3456") is False
 
 
 async def test_missing_service_account(hass: HomeAssistant) -> None:
