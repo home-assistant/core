@@ -25,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.state import async_reproduce_state
 
 from . import (
     FAKE_MAC,
@@ -350,15 +351,15 @@ async def test_color_light_rejects_tv_sync_pseudo_effect(hass: HomeAssistant) ->
 async def test_color_light_without_color_state(hass: HomeAssistant) -> None:
     """Test a regular color light pushing states without color values or a scene.
 
-    Only TV sync products report the pseudo effect; other lights fall back
-    to a supported color mode and keep the last known mode afterwards.
+    Only TV sync products report the pseudo effect; other lights report the
+    unknown color mode and keep the last known mode afterwards.
     """
     bulb = _mocked_wizlight_without_color_state(FAKE_RGBWW_BULB, dimming=True)
     await async_setup_integration(hass, wizlight=bulb)
     entity_id = "light.mock_title"
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
+    assert state.attributes[ATTR_COLOR_MODE] == "unknown"
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] is None
     assert state.attributes[ATTR_EFFECT] is None
 
@@ -401,13 +402,21 @@ async def test_light_without_color_state_or_effect_support(
 ) -> None:
     """Test a colorless state on a color light that does not support effects.
 
-    The pseudo effect is not allowed here, so the light must fall back to
-    one of its supported color modes.
+    The pseudo effect is not allowed here; without any known color data the
+    light must report the unknown color mode, which stays reproducible.
     """
     bulb = _mocked_wizlight_without_color_state(FAKE_RGBWW_NO_EFFECT_BULB, dimming=True)
     await async_setup_integration(hass, wizlight=bulb)
-    state = hass.states.get("light.mock_title")
+    entity_id = "light.mock_title"
+    state = hass.states.get(entity_id)
     assert state.state == STATE_ON
-    assert state.attributes[ATTR_COLOR_MODE] == "color_temp"
+    assert state.attributes[ATTR_COLOR_MODE] == "unknown"
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] is None
     assert ATTR_EFFECT not in state.attributes
+
+    # A snapshot taken in this state must stay reproducible (scene support):
+    # it carries no color values, but it must still turn the light on
+    snapshot = hass.states.get(entity_id)
+    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "state": False})
+    await async_reproduce_state(hass, [snapshot])
+    bulb.turn_on.assert_called_once()

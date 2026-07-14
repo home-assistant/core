@@ -32,15 +32,6 @@ TV_SYNC_MODULES = ("DMORGB", "MHORGB")
 # Pseudo effect reported for TV sync products while they are syncing
 EFFECT_TV_SYNC = "TV Sync"
 
-# Fallback order when the device state does not indicate an active color mode
-COLOR_MODE_FALLBACK_PRIORITY = (
-    ColorMode.COLOR_TEMP,
-    ColorMode.RGBWW,
-    ColorMode.RGBW,
-    ColorMode.BRIGHTNESS,
-    ColorMode.ONOFF,
-)
-
 
 def _async_pilot_builder(**kwargs: Any) -> PilotBuilder:
     """Create the PilotBuilder for turn on."""
@@ -152,9 +143,9 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             ):
                 self._attr_effect = effect = EFFECT_TV_SYNC
             elif self._attr_color_mode not in color_modes:
-                self._attr_color_mode = self._last_color_mode or next(
-                    mode for mode in COLOR_MODE_FALLBACK_PRIORITY if mode in color_modes
-                )
+                # UNKNOWN passes color mode validation and stays reproducible,
+                # unlike a value-dependent color mode without its value
+                self._attr_color_mode = self._last_color_mode or ColorMode.UNKNOWN
         if effect is not None:
             if brightness is not None:
                 self._attr_color_mode = ColorMode.BRIGHTNESS
