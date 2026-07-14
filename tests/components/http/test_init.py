@@ -1564,9 +1564,8 @@ async def test_stable_config_ssl_peer_cert_failure_fails_setup(
 ) -> None:
     """A stable config whose SSL peer certificate is unusable fails setup.
 
-    An unusable stable SSL configuration must fail setup (activating recovery
-    mode on a real boot) instead of being mistaken for a bind failure and
-    running without an HTTP server.
+    An unusable stable SSL configuration must fail setup, activating recovery
+    mode on a real boot.
     """
     cert_path, key_path, _ = await hass.async_add_executor_job(
         _setup_empty_ssl_pem_files, tmp_path
@@ -1710,13 +1709,18 @@ async def test_recovery_mode_bind_failure_falls_back_to_default_config(
     stable_sock.close()
 
 
-async def test_recovery_mode_default_config_bind_failure_runs_without_server(
+async def test_recovery_mode_default_config_bind_failure_fails_setup(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     caplog: pytest.LogCaptureFixture,
     mock_create_server_sockets: Mock,
 ) -> None:
-    """Recovery keeps running without a TCP listener if defaults cannot bind."""
+    """Setup fails in recovery mode when even the default config cannot bind.
+
+    The fallback chain is exhausted; failing setup makes the failure visible
+    to the outside (e.g. the Supervisor rolls back a Core update whose API
+    does not come up).
+    """
     hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
     hass.config.recovery_mode = True
 
@@ -1724,15 +1728,11 @@ async def test_recovery_mode_default_config_bind_failure_runs_without_server(
         errno.EADDRINUSE, "Address already in use"
     )
 
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_start()
-    await hass.async_block_till_done()
+    assert not await async_setup_component(hass, DOMAIN, {})
 
     assert f"Failed to create HTTP server at port {default_server_port()}" in (
         caplog.text
     )
-    assert f"Not listening on port {default_server_port()}" in caplog.text
-    assert hass.http.sites == []
 
 
 async def test_pending_config_promote_cancels_revert(

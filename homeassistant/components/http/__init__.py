@@ -179,14 +179,15 @@ async def _async_fallback_config(
     store: HTTPConfigStore,
     conf: ConfData,
     err: HomeAssistantError | OSError,
-) -> ConfData | None:
+) -> ConfData:
     """Return the next config to try after ``conf`` could not be applied.
 
     Implements the fallback chain pending -> stable -> default config, where
-    the last step is only taken in recovery mode. Raises when setup should
-    fail instead, which activates recovery mode on a real boot. Returns None
-    when there is nothing left to fall back to and Home Assistant should run
-    without a TCP listener.
+    the last step is only taken in recovery mode. Raises when there is no
+    (acceptable) fallback left, failing setup: on a normal boot this
+    activates recovery mode, in recovery mode it makes the failure visible
+    to the outside (e.g. the Supervisor rolls back a Core update whose API
+    does not come up).
     """
     if store.revert_deadline is not None:
         # An unconfirmed pending config is under trial and cannot even be
@@ -212,20 +213,15 @@ async def _async_fallback_config(
         ) from err
 
     if conf is _DEFAULT_CONFIG:
-        # Nothing left to fall back to; run without a TCP listener (the
-        # Supervisor Unix socket may still be served).
-        _LOGGER.error(
-            "Failed to create HTTP server at port %d: %s",
-            conf[CONF_SERVER_PORT],
-            err,
-        )
-        return None
+        # The chain is exhausted; nothing left to fall back to.
+        raise HomeAssistantError(
+            f"Failed to create HTTP server at port {conf[CONF_SERVER_PORT]}: {err}"
+        ) from err
 
     if CONF_SSL_PEER_CERTIFICATE in conf:
         # With peer certificate verification configured, connections must
-        # never be accepted without a verified client certificate. Do not
-        # fall back to a config without it, even though that leaves recovery
-        # mode without an HTTP server.
+        # never be accepted without a verified client certificate; there is
+        # no acceptable fallback config.
         raise err
 
     # The config cannot be applied in recovery mode; fall back to the
@@ -297,11 +293,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except (HomeAssistantError, OSError) as err:
             store = await async_get_and_load_store(hass)
             trial_reverted = store.revert_deadline is not None
-            if (
-                fallback_conf := await _async_fallback_config(hass, store, conf, err)
-            ) is None:
-                break
-            conf = fallback_conf
+            conf = await _async_fallback_config(hass, store, conf, err)
             server = _make_server(conf)
             continue
         if trial_reverted:
@@ -777,14 +769,9 @@ class HomeAssistantHTTP:
         )
         await self.runner.setup()
 
-        if self._sockets is None:
-            # Binding failed during setup; run without a TCP listener (the
-            # Supervisor Unix socket may still be served).
-            _LOGGER.error(
-                "Not listening on port %d because binding failed during setup",
-                self.server_port,
-            )
-            return
+        # Setup either binds the sockets or fails, so they are always
+        # available here.
+        assert self._sockets is not None
 
         for sock in self._sockets:
             site = web.SockSite(self.runner, sock, ssl_context=self.context)
