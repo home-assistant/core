@@ -5,6 +5,7 @@ import logging
 
 import caldav
 from caldav.lib.error import DAVError
+import icalendar
 
 from homeassistant.core import HomeAssistant
 
@@ -72,8 +73,8 @@ async def async_get_calendars(
     return calendars
 
 
-def get_attr_value(obj: caldav.CalendarObjectResource, attribute: str) -> str | None:
-    """Return the value of the CalDav object attribute if defined."""
-    if hasattr(obj, attribute):
-        return getattr(obj, attribute).value
+def get_attr_value(component: icalendar.cal.Component, attribute: str) -> str | None:
+    """Return the value of an iCalendar component property as a string."""
+    if (value := component.get(attribute.upper().replace("_", "-"))) is not None:
+        return str(value.dt) if hasattr(value, "dt") else str(value)
     return None

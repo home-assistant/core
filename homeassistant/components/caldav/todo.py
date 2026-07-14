@@ -72,28 +72,27 @@ def _get_todo_items(calendar: caldav.Calendar) -> list[TodoItem]:
 
 def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
     """Convert a caldav Todo into a TodoItem."""
+    vtodo = next(iter(resource.icalendar_instance.walk("VTODO")), None)
     if (
-        not hasattr(resource.instance, "vtodo")
-        or not (todo := resource.instance.vtodo)
-        or (uid := get_attr_value(todo, "uid")) is None
-        or (summary := get_attr_value(todo, "summary")) is None
+        vtodo is None
+        or (uid := get_attr_value(vtodo, "uid")) is None
+        or (summary := get_attr_value(vtodo, "summary")) is None
     ):
         return None
     due: date | datetime | None = None
-    if due_value := get_attr_value(todo, "due"):
-        if isinstance(due_value, datetime):
-            due = dt_util.as_local(due_value)
-        elif isinstance(due_value, date):
-            due = due_value
+    if (due_prop := vtodo.get("DUE")) is not None:
+        due = due_prop.dt
+        if isinstance(due, datetime):
+            due = dt_util.as_local(due)
     return TodoItem(
         uid=uid,
         summary=summary,
         status=TODO_STATUS_MAP.get(
-            get_attr_value(todo, "status") or "",
+            get_attr_value(vtodo, "status") or "",
             TodoItemStatus.NEEDS_ACTION,
         ),
         due=due,
-        description=get_attr_value(todo, "description"),
+        description=get_attr_value(vtodo, "description"),
     )
 
 
