@@ -698,6 +698,9 @@ bond-async==0.2.1
 # homeassistant.components.bosch_alarm
 bosch-alarm-mode2==0.4.10
 
+# homeassistant.components.bosch_shc_camera
+bosch-shc-camera-client==0.5.4
+
 # homeassistant.components.bosch_shc
 boschshcpy==0.3.5
 
@@ -817,6 +820,7 @@ decora-wifi==1.4
 # homeassistant.components.ecovacs
 deebot-client==18.4.0
 
+# homeassistant.components.bosch_shc_camera
 # homeassistant.components.ihc
 # homeassistant.components.ohmconnect
 # homeassistant.components.sonos
@@ -1004,6 +1008,9 @@ fing_agent_api==1.1.0
 
 # homeassistant.components.fints
 fints==3.1.0
+
+# homeassistant.components.bosch_shc_camera
+firebase-messaging==0.4.5
 
 # homeassistant.components.fish_audio
 fish-audio-sdk==1.1.0
@@ -3056,6 +3063,9 @@ slixmpp==1.13.2
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.5.5
+
+# homeassistant.components.bosch_shc_camera
+smbprotocol==1.17.0
 
 # homeassistant.components.snapcast
 snapcast==2.3.8
