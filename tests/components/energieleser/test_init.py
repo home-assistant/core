@@ -8,9 +8,11 @@ from energieleser import (
     EnergieleserUnknownDeviceError,
     StromleserOneDevice,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.energieleser.const import CONF_SW_VERSION, DOMAIN
+from homeassistant.components.energieleser.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -18,7 +20,7 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .conftest import STROMLESER_DEVICE_ID, STROMLESER_SW_VERSION
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_energieleser_client")
@@ -99,6 +101,7 @@ async def test_meter_locked_repair_issue(
     mock_locked_stromleser_device: StromleserOneDevice,
     mock_stromleser_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test repair issue is created when meter is locked and deleted when unlocked."""
     mock_energieleser_client.get_device.return_value = mock_locked_stromleser_device
@@ -120,8 +123,8 @@ async def test_meter_locked_repair_issue(
     }
 
     mock_energieleser_client.get_device.return_value = mock_stromleser_device
-    coordinator = mock_stromleser_config_entry.runtime_data
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
