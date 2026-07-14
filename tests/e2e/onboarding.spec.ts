@@ -5,7 +5,6 @@ test("fresh instance redirects to onboarding and renders the UI", async ({
 }) => {
   await page.goto("/");
 
-  // A fresh (un-onboarded) instance redirects the root to the onboarding page.
   await expect(page).toHaveURL(/\/onboarding\.html/);
   await expect(page.locator("ha-onboarding")).toBeVisible();
 });
