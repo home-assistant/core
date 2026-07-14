@@ -102,15 +102,6 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
             self._cancel_motion_refresh = None
 
     @property
-    def is_open(self) -> bool | None:
-        """Return whether the cover is fully open."""
-        if self.motor.state == STATE_UP:
-            return True
-        if self.motor.state == STATE_DOWN:
-            return False
-        return None
-
-    @property
     @override
     def is_closed(self) -> bool | None:
         """Return whether the cover is fully closed."""
@@ -167,9 +158,12 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         Await motor.stop() before touching the local motion state so a
         failed command leaves the cover reporting as still moving —
         otherwise HA would say "stopped" while the physical shade
-        continues to travel.
+        continues to travel. Pass ``waitForUpdate=False`` so the call
+        returns as soon as the command is sent; the registered device
+        listener will push the observed STOP state when pygaposa's
+        background poll picks it up.
         """
-        await self.motor.stop(True)
+        await self.motor.stop(False)
         self._last_command = COMMAND_STOP
         self._last_command_time = None
         if self._cancel_motion_refresh is not None:

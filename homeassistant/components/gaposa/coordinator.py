@@ -68,10 +68,12 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
     @override
     async def _async_update_data(self) -> dict[str, Motor]:
         """Refresh motor state from the Gaposa cloud."""
-        # pygaposa fires each device listener from inside update() as it
-        # polls each device. Gate _on_device_polled so those intermediate
-        # callbacks don't publish N partial updates before we return the
-        # fully flattened result.
+        # Gaposa.update() no longer fires per-device listeners itself
+        # (pygaposa 0.2.5 defaults notifyListeners=False). The gate is
+        # still needed to suppress command-driven listener pushes from
+        # pygaposa's fire-and-forget post-command polls that might run
+        # concurrently with a scheduled update() — otherwise each one
+        # publishes an intermediate flatten before we return.
         self._updating = True
         try:
             async with timeout(10):

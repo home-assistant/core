@@ -112,7 +112,7 @@ async def test_stop_cover_calls_motor_stop(
         {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY},
         blocking=True,
     )
-    living_room_motor.stop.assert_called_once_with(True)
+    living_room_motor.stop.assert_called_once_with(False)
 
 
 async def test_stop_ends_motion_window(
