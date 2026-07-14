@@ -45,7 +45,6 @@ async def async_setup_entry(
     async_add_entities([entity])
 
 
-# pylint: disable-next=home-assistant-missing-feature-implementation
 class Volumio(MediaPlayerEntity):
     """Volumio Player Object."""
 
@@ -58,7 +57,6 @@ class Volumio(MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.NEXT_TRACK
-        | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PLAY_MEDIA

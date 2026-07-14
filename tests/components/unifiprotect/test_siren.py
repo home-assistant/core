@@ -590,10 +590,10 @@ async def test_siren_unavailable_on_delete_event(
 ) -> None:
     """Entity becomes UNAVAILABLE when the siren is removed via a WS delete event.
 
-    When the public bootstrap sends new_obj=None (device deleted), data.py
-    dispatches the last-known Siren object (old_obj) to subscriptions.
-    The entity then checks self._siren; if it is no longer in the bootstrap
-    it must override _attr_available to False.
+    On a delete event (new_obj=None) data.py dispatches None to the public
+    subscriptions for the old object's mac. The entity re-reads self._siren;
+    since it is no longer in the bootstrap it must override _attr_available
+    to False.
     """
     await init_entry(hass, ufp_with_siren, [])
 

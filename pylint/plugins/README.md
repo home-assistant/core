@@ -133,6 +133,7 @@ Every check has a code following the
 | `W7416` | [`home-assistant-missing-has-entity-name`](#w7416-home-assistant-missing-has-entity-name) | Entity class should set `_attr_has_entity_name = True` |
 | `W7428` | [`home-assistant-missing-feature-implementation`](#w7428-home-assistant-missing-feature-implementation) | Entity advertises a supported feature whose backing method is not implemented |
 | `W7429` | [`home-assistant-unnecessary-format-mac`](#w7429-home-assistant-unnecessary-format-mac) | `format_mac()` is unnecessary with `CONNECTION_NETWORK_MAC` |
+| `W7430` | [`home-assistant-serial-port-selector-usb-dependency`](#w7430-home-assistant-serial-port-selector-usb-dependency) | Config flow using `SerialPortSelector` must declare `usb` in `dependencies` |
 
 
 ## `home_assistant_logger` checker
@@ -911,3 +912,17 @@ rule on those after confirming they are never instantiated directly. Group
 platform entities advertise their members' features while service calls are
 expanded to the members, so they never handle the services themselves —
 disable the rule on those classes (see `group/lock.py`).
+
+
+## `home_assistant_serial_port_selector_usb_dependency` checker
+
+Detects config flows using `SerialPortSelector` whose `manifest.json` does
+not declare `usb` as a hard dependency.
+
+### `W7430`: `home-assistant-serial-port-selector-usb-dependency`
+
+`SerialPortSelector` populates its port list via the `usb/list_serial_ports`
+websocket command, which is only registered when the `usb` integration is set
+up. The selector therefore requires `usb` as a hard dependency
+(`"dependencies": ["usb"]`); `after_dependencies` is not sufficient because it
+does not force `usb` to be set up.

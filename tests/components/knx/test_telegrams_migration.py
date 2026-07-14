@@ -86,3 +86,47 @@ async def test_migrate_telegrams_json_to_sqlite(
 
     # Verify legacy file removal
     assert not os.path.exists(legacy_path)
+
+
+async def test_migrate_telegrams_json_missing_keys(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test migrating telegrams from legacy JSON missing fields (e.g., data_secure)."""
+    store = Store[dict[str, Any]](hass, version=1, key="knx/telegrams_history.json")
+    legacy_path = store.path
+
+    legacy_data = [
+        {
+            "destination": "3/2/100",
+            "source": "1.0.6",
+            "direction": "Incoming",
+            "payload": [0],
+            "telegramtype": "GroupValueWrite",
+            "timestamp": "2026-05-07T23:34:45.127015+02:00",
+            "value": 0,
+        }
+    ]
+
+    await store.async_save(legacy_data)
+
+    await knx.setup_integration()
+    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+
+    await hass.async_block_till_done()
+
+    # Verify migration
+    assert telegrams_module.store is not None
+    result = await telegrams_module.store.query(TelegramQuery(order_descending=False))
+    assert len(result.telegrams) == 1
+
+    # Check that data_secure defaults to False/None as appropriate, and others default to None or empty string
+    assert result.telegrams[0].destination == "3/2/100"
+    assert result.telegrams[0].data_secure is False
+    assert result.telegrams[0].source_name == ""
+    assert result.telegrams[0].destination_name == ""
+    assert result.telegrams[0].dpt_main is None
+    assert result.telegrams[0].dpt_sub is None
+
+    # Verify legacy file removal
+    assert not os.path.exists(legacy_path)
