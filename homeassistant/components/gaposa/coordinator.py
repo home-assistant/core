@@ -11,7 +11,7 @@ from pygaposa import Device, FirebaseAuthException, Gaposa, GaposaAuthException,
 
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -65,7 +65,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
                     self.config_entry.data[CONF_PASSWORD],
                 )
         except (GaposaAuthException, FirebaseAuthException) as exc:
-            raise ConfigEntryNotReady("Gaposa authentication failed") from exc
+            raise ConfigEntryAuthFailed("Gaposa authentication failed") from exc
         except (ClientError, TimeoutError, OSError) as exc:
             raise ConfigEntryNotReady(f"Error connecting to Gaposa: {exc}") from exc
 
@@ -82,13 +82,13 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
         try:
             async with timeout(10):
                 await self.gaposa.update()
-        except (
-            GaposaAuthException,
-            FirebaseAuthException,
-            ClientError,
-            TimeoutError,
-            OSError,
-        ) as exc:
+        except (GaposaAuthException, FirebaseAuthException) as exc:
+            # Signal reauth (if configured) instead of tight retry —
+            # a fast retry loop cannot recover from bad credentials.
+            raise ConfigEntryAuthFailed(
+                f"Gaposa authentication failed: {exc}"
+            ) from exc
+        except (ClientError, TimeoutError, OSError) as exc:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
             raise UpdateFailed(f"Error talking to Gaposa: {exc}") from exc
         finally:

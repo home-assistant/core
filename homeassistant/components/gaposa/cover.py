@@ -72,6 +72,7 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         """Initialize the cover."""
         super().__init__(coordinator, context=motor_id)
         self._motor_id = motor_id
+        self._motor = motor
         self._last_command: str | None = None
         self._last_command_time: datetime | None = None
         self._attr_unique_id = motor_id
@@ -84,8 +85,14 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
 
     @property
     def motor(self) -> Motor:
-        """Return the current Motor object from coordinator data."""
-        return self.coordinator.data[self._motor_id]
+        """Return the current Motor object from coordinator data.
+
+        Falls back to the initial Motor instance if the motor has
+        disappeared from a refresh — property callers on an
+        unavailable entity (e.g. logging in async_write_ha_state)
+        should not raise KeyError.
+        """
+        return self.coordinator.data.get(self._motor_id, self._motor)
 
     @property
     @override

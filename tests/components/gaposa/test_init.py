@@ -37,27 +37,41 @@ async def test_unload_closes_gaposa_client(
 
 
 @pytest.mark.parametrize(
-    ("target", "exc"),
+    ("target", "exc", "expected_state"),
     [
-        ("update", OSError("boom")),
-        ("login", OSError("cloud unreachable")),
-        ("update", GaposaAuthException("credentials rejected")),
-        ("update", FirebaseAuthException("credentials rejected")),
+        ("update", OSError("boom"), ConfigEntryState.SETUP_RETRY),
+        ("login", OSError("cloud unreachable"), ConfigEntryState.SETUP_RETRY),
+        (
+            "update",
+            GaposaAuthException("credentials rejected"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            "update",
+            FirebaseAuthException("credentials rejected"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
     ],
 )
-async def test_setup_failure_retries_and_closes(
+async def test_setup_failure_closes_client(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_gaposa: MagicMock,
     target: str,
     exc: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Any failure during setup enters SETUP_RETRY and releases the client."""
+    """Any failure during setup releases the client.
+
+    Transient errors (network) enter SETUP_RETRY; auth errors enter
+    SETUP_ERROR so Home Assistant surfaces a reauth prompt instead of
+    silently retrying with bad credentials.
+    """
     getattr(mock_gaposa, target).side_effect = exc
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_state
     mock_gaposa.close.assert_called_once()
