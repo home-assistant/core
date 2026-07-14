@@ -64,7 +64,7 @@
       "message": "Media sources are not supported on this device."
     },
     "missing_homeassistant_url": {
-      "message": "Failed to determine Home Assistant URL"
+      "message": "Failed to determine Home Assistant URL. Please make sure you have an internal URL set."
     },
     "unsupported_media_type": {
       "message": "Unsupported media type: {media_type}"
