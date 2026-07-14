@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
+from homeassistant.components.gridx.config_flow import _NoSystemsFoundError
 from homeassistant.components.gridx.const import CONF_OEM, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -15,6 +16,31 @@ from homeassistant.data_entry_flow import FlowResultType
 from .conftest import OEM, PASSWORD, USERNAME
 
 from tests.common import MockConfigEntry
+
+
+def _http_status_error(status_code: int) -> httpx.HTTPStatusError:
+    """Build an httpx.HTTPStatusError with the given status code."""
+    response = MagicMock()
+    response.status_code = status_code
+    return httpx.HTTPStatusError(
+        str(status_code), request=MagicMock(), response=response
+    )
+
+
+ERROR_CASES = [
+    pytest.param(
+        PermissionError("bad credentials"), "invalid_auth", id="permission-error"
+    ),
+    pytest.param(_http_status_error(401), "invalid_auth", id="http-401"),
+    pytest.param(_http_status_error(500), "cannot_connect", id="http-500"),
+    pytest.param(httpx.HTTPError("timeout"), "cannot_connect", id="httpx-error"),
+    pytest.param(
+        ConnectionError("network down"), "cannot_connect", id="connection-error"
+    ),
+    pytest.param(TimeoutError("timeout"), "cannot_connect", id="timeout"),
+    pytest.param(_NoSystemsFoundError(), "no_systems", id="no-systems"),
+    pytest.param(RuntimeError("unexpected"), "unknown", id="unexpected"),
+]
 
 
 @pytest.fixture
@@ -57,29 +83,14 @@ async def test_user_step_success(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user_step_invalid_auth(hass: HomeAssistant) -> None:
-    """Test that an auth failure shows the invalid_auth error."""
+@pytest.mark.parametrize(("side_effect", "expected_error"), ERROR_CASES)
+async def test_user_step_errors(
+    hass: HomeAssistant, side_effect: Exception, expected_error: str
+) -> None:
+    """Validation errors in the user step show the matching form error."""
     with patch(
         "homeassistant.components.gridx.config_flow._validate_credentials",
-        new=AsyncMock(side_effect=PermissionError("bad credentials")),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: "wrong", CONF_OEM: OEM},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
-    """Test that a network error shows the cannot_connect error."""
-    with patch(
-        "homeassistant.components.gridx.config_flow._validate_credentials",
-        new=AsyncMock(side_effect=ConnectionError("network down")),
+        new=AsyncMock(side_effect=side_effect),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -90,7 +101,7 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": expected_error}
 
 
 async def test_user_step_no_systems(hass: HomeAssistant) -> None:
@@ -175,30 +186,6 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
     assert updated_entry.data[CONF_PASSWORD] == "new-password"
 
 
-async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
-    """Test re-authentication flow error handling for invalid auth."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
-        unique_id=USERNAME.lower(),
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.gridx.config_flow._validate_credentials",
-        new=AsyncMock(side_effect=PermissionError("bad credentials")),
-    ):
-        result = await entry.start_reauth_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "wrong"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
 async def test_reconfigure_success(hass: HomeAssistant) -> None:
     """Test successful reconfiguration flow."""
     entry = MockConfigEntry(
@@ -271,8 +258,11 @@ async def test_reconfigure_updates_unique_id_on_username_change(
     assert updated_entry.data[CONF_USERNAME] == new_username
 
 
-async def test_reconfigure_cannot_connect(hass: HomeAssistant) -> None:
-    """Test reconfiguration flow error handling for connectivity failures."""
+@pytest.mark.parametrize(("side_effect", "expected_error"), ERROR_CASES)
+async def test_reauth_errors(
+    hass: HomeAssistant, side_effect: Exception, expected_error: str
+) -> None:
+    """Validation errors during reauth show the matching form error."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
@@ -282,31 +272,61 @@ async def test_reconfigure_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.gridx.config_flow._validate_credentials",
-        new=AsyncMock(side_effect=ConnectionError("network down")),
+        new=AsyncMock(side_effect=side_effect),
+    ):
+        result = await entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "new-password"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+
+
+@pytest.mark.parametrize(("side_effect", "expected_error"), ERROR_CASES)
+async def test_reconfigure_errors(
+    hass: HomeAssistant, side_effect: Exception, expected_error: str
+) -> None:
+    """Validation errors during reconfigure show the matching form error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
+        unique_id=USERNAME.lower(),
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.gridx.config_flow._validate_credentials",
+        new=AsyncMock(side_effect=side_effect),
     ):
         result = await entry.start_reconfigure_flow(hass)
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_USERNAME: USERNAME,
-                CONF_PASSWORD: PASSWORD,
-                CONF_OEM: OEM,
-            },
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
         )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": expected_error}
 
 
-async def test_user_step_http_status_401(hass: HomeAssistant) -> None:
-    """HTTPStatusError 401 from validate_credentials shows invalid_auth."""
-    response = MagicMock()
-    response.status_code = 401
-    err = httpx.HTTPStatusError("401", request=MagicMock(), response=response)
-    with patch(
-        "homeassistant.components.gridx.config_flow._validate_credentials",
-        new=AsyncMock(side_effect=err),
+async def test_validate_credentials_closes_client_on_connector_error(
+    hass: HomeAssistant,
+) -> None:
+    """The httpx client is closed when connector creation fails."""
+    httpx_client = MagicMock()
+    httpx_client.aclose = AsyncMock()
+    with (
+        patch(
+            "homeassistant.components.gridx.config_flow.create_async_httpx_client",
+            return_value=httpx_client,
+        ),
+        patch(
+            "homeassistant.components.gridx.config_flow.async_create_connector",
+            new=AsyncMock(side_effect=PermissionError("bad credentials")),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
@@ -318,84 +338,4 @@ async def test_user_step_http_status_401(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_user_step_http_status_500(hass: HomeAssistant) -> None:
-    """HTTPStatusError 500 from validate_credentials shows cannot_connect."""
-    response = MagicMock()
-    response.status_code = 500
-    err = httpx.HTTPStatusError("500", request=MagicMock(), response=response)
-    with patch(
-        "homeassistant.components.gridx.config_flow._validate_credentials",
-        new=AsyncMock(side_effect=err),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_user_step_httpx_error(hass: HomeAssistant) -> None:
-    """httpx.HTTPError from validate_credentials shows cannot_connect."""
-    with patch(
-        "homeassistant.components.gridx.config_flow._validate_credentials",
-        new=AsyncMock(side_effect=httpx.HTTPError("timeout")),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_user_step_unexpected_error(hass: HomeAssistant) -> None:
-    """Unexpected error from validate_credentials shows unknown."""
-    with patch(
-        "homeassistant.components.gridx.config_flow._validate_credentials",
-        new=AsyncMock(side_effect=RuntimeError("unexpected")),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unknown"}
-
-
-async def test_reauth_http_error(hass: HomeAssistant) -> None:
-    """httpx.HTTPError during reauth shows cannot_connect."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
-        unique_id=USERNAME.lower(),
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.gridx.config_flow._validate_credentials",
-        new=AsyncMock(side_effect=httpx.HTTPError("timeout")),
-    ):
-        result = await entry.start_reauth_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "new-password"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": "cannot_connect"}
+    httpx_client.aclose.assert_awaited_once()

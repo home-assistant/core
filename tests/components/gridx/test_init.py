@@ -106,3 +106,20 @@ async def test_setup_runtime_error(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_first_refresh_failure_closes_connector(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_gridx_connector: MagicMock,
+) -> None:
+    """The connector is closed when the first coordinator refresh fails."""
+    mock_gridx_connector.retrieve_live_data = AsyncMock(
+        side_effect=httpx.HTTPError("connection failed")
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_gridx_connector.close.assert_awaited_once()
