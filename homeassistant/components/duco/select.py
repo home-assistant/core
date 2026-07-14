@@ -10,7 +10,6 @@ from duco_connectivity import (
     KnownActionName,
     Node,
     NodeListActionItemList,
-    NodeType,
     VentilationState,
 )
 
@@ -19,26 +18,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, VENTILATION_CAPABLE_NODE_TYPES
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
-
-SUPPORTED_SELECT_NODE_TYPES = {
-    NodeType.BOX,
-    NodeType.VLV,
-    NodeType.VLVRH,
-    NodeType.VLVVOC,
-    NodeType.VLVCO2,
-    NodeType.VLVCO2RH,
-    NodeType.EAV,
-    NodeType.EAVRH,
-    NodeType.EAVVOC,
-    NodeType.EAVCO2,
-}
 
 
 def _get_ventilation_options(action: ActionItem) -> tuple[str, ...] | None:
@@ -86,7 +72,7 @@ async def async_setup_entry(
 
             # Duco advertises SetVentilationState broadly, so keep the select
             # limited to the box and known valve node families.
-            if node.general.node_type not in SUPPORTED_SELECT_NODE_TYPES:
+            if node.general.node_type not in VENTILATION_CAPABLE_NODE_TYPES:
                 continue
 
             options = options_by_node.get(node.node_id)

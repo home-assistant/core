@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__package__)
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Set up services for the Plex component."""
+    """Set up services for the Plex integration."""
 
     async def async_refresh_library_service(service_call: ServiceCall) -> None:
         await hass.async_add_executor_job(refresh_library, hass, service_call)
