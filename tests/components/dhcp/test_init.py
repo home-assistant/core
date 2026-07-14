@@ -640,7 +640,7 @@ async def test_discovered_service_info(hass: HomeAssistant) -> None:
     assert dhcp.async_discovered_service_info(hass) == []
 
     saved_callback(aiodhcpwatcher.DHCPRequest("4.3.2.2", "happy", "44:44:33:11:23:12"))
-    saved_callback(aiodhcpwatcher.DHCPRequest("4.3.2.1", "sad", "44:44:33:11:23:13"))
+    saved_callback(aiodhcpwatcher.DHCPRequest("4.3.2.1", "Sad", "44:44:33:11:23:13"))
 
     assert dhcp.async_discovered_service_info(hass) == [
         DhcpServiceInfo(
