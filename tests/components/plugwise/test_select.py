@@ -224,7 +224,7 @@ async def test_anna_dhw_mode_select(
     init_integration: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test setting Anna Opentherm dhw_mode Select to comfort."""
+    """Test setting Anna OpenTherm dhw_mode Select to comfort."""
 
     entity_entry = entity_registry.async_get("select.opentherm_dhw_mode")
     assert entity_entry is not None
