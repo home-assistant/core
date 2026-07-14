@@ -675,12 +675,13 @@ class HomeAssistantHTTP:
                 )
                 context = None
             else:
+                # Fall through: a configured peer certificate must still be
+                # enforced on the emergency context.
                 _LOGGER.critical(
                     "Home Assistant is running in recovery mode with an emergency self"
                     " signed ssl certificate because the configured SSL certificate was"
                     " not usable"
                 )
-                return context
 
         if self.ssl_peer_certificate:
             if context is None:

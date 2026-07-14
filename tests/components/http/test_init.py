@@ -8,6 +8,7 @@ import logging
 import os
 from pathlib import Path
 import socket
+import ssl
 from typing import Any
 from unittest.mock import ANY, Mock, patch
 
@@ -572,6 +573,40 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
         await hass.async_block_till_done()
     assert "Could not create an emergency self signed ssl certificate" in caplog.text
     assert len(mock_builder.mock_calls) == 1
+
+
+async def test_emergency_ssl_certificate_enforces_peer_certificate(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the emergency cert still enforces client certificate verification.
+
+    When the configured SSL certificate is broken and recovery mode falls
+    back to the emergency self-signed certificate, a configured peer
+    certificate must still be applied - connections must never be accepted
+    without client certificate verification once it is configured.
+    """
+    cert_path, key_path = await hass.async_add_executor_job(
+        _setup_broken_ssl_pem_files, tmp_path
+    )
+    hass_storage[DOMAIN] = _stable_http_storage(
+        {
+            "ssl_certificate": str(cert_path),
+            "ssl_key": str(key_path),
+            "ssl_peer_certificate": str(cert_path),
+        }
+    )
+    hass.config.recovery_mode = True
+
+    with patch("ssl.SSLContext.load_verify_locations") as mock_load_verify:
+        assert await async_setup_component(hass, DOMAIN, {}) is True
+
+    assert "emergency self signed ssl certificate" in caplog.text
+    mock_load_verify.assert_called_once_with(str(cert_path))
+    assert hass.http.context is not None
+    assert hass.http.context.verify_mode is ssl.CERT_REQUIRED
 
 
 async def test_cors_defaults(hass: HomeAssistant) -> None:
