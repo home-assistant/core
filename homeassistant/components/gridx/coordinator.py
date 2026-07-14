@@ -1,7 +1,7 @@
 """Data update coordinators for the GridX integration."""
 
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, override
 
 import httpx
 
@@ -40,14 +40,29 @@ async def _fetch_live(connector: GridxConnector) -> dict[str, Any]:
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
             ) from err
-        raise UpdateFailed(f"Error fetching GridX live data: {err}") from err
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="update_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
     except httpx.HTTPError as err:
-        raise UpdateFailed(f"Error fetching GridX live data: {err}") from err
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="update_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
     except (RuntimeError, TypeError, ValueError) as err:
-        raise UpdateFailed(f"Error fetching GridX live data: {err}") from err
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="update_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     if not results:
-        raise UpdateFailed("GridX returned no live data")
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="no_data",
+        )
     return results[0]
 
 
@@ -74,14 +89,29 @@ async def _fetch_historical(connector: GridxConnector) -> GridxHistoricalData:
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
             ) from err
-        raise UpdateFailed(f"Error fetching GridX historical data: {err}") from err
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="update_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
     except httpx.HTTPError as err:
-        raise UpdateFailed(f"Error fetching GridX historical data: {err}") from err
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="update_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
     except (RuntimeError, TypeError, ValueError) as err:
-        raise UpdateFailed(f"Error fetching GridX historical data: {err}") from err
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="update_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     if not results:
-        raise UpdateFailed("GridX returned no historical data")
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key="no_data",
+        )
 
     total: dict[str, Any] = {}
     for result in results:
@@ -122,6 +152,7 @@ class GridxLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self._connector = connector
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch live data."""
         return await _fetch_live(self._connector)
@@ -148,6 +179,7 @@ class GridxHistoricalCoordinator(DataUpdateCoordinator[GridxHistoricalData]):
         )
         self._connector = connector
 
+    @override
     async def _async_update_data(self) -> GridxHistoricalData:
         """Fetch historical totals."""
         return await _fetch_historical(self._connector)

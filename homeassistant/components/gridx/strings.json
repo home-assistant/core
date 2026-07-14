@@ -195,6 +195,12 @@
     },
     "invalid_auth": {
       "message": "Authentication failed. Please check your credentials."
+    },
+    "no_data": {
+      "message": "GridX returned no data."
+    },
+    "update_failed": {
+      "message": "Error fetching GridX data: {error}"
     }
   }
 }

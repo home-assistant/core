@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -592,6 +592,7 @@ class GridxLiveSensorEntity(CoordinatorEntity[GridxLiveCoordinator], SensorEntit
         )
 
     @property
+    @override
     def native_value(self) -> StateType | None:
         """Return the sensor value by calling the description's value_fn."""
         try:
@@ -625,6 +626,7 @@ class GridxHistoricalSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> StateType | None:
         """Return the sensor value by calling the description's value_fn."""
         try:
@@ -633,6 +635,7 @@ class GridxHistoricalSensorEntity(
             return None
 
     @property
+    @override
     def last_reset(self) -> datetime | None:
         """Return last_reset for TOTAL state-class historical sensors."""
         if self.entity_description.state_class != SensorStateClass.TOTAL:
