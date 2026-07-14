@@ -368,8 +368,8 @@ class WhirlpoolTimeSensorBase(WhirlpoolEntity, RestoreSensor, ABC):
         """Update status of Whirlpool."""
         await self._appliance.fetch_data()
 
-    @override
     @property
+    @override
     def native_value(self) -> datetime | None:
         """Calculate the time stamp for completion."""
         now = utcnow()
