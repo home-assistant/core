@@ -46,7 +46,7 @@ async def test_floorplan_image(
     fake_devices: list[FakeDevice],
 ) -> None:
     """Test floor plan map image is correctly set up."""
-    assert len(hass.states.async_all("image")) == 5
+    assert len(hass.states.async_all("image")) == 6
 
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
     # Load the image on demand
@@ -132,7 +132,7 @@ async def test_map_status_change(
     fake_vacuum: FakeDevice,
 ) -> None:
     """Test floor plan map image is correctly updated on status change."""
-    assert len(hass.states.async_all("image")) == 5
+    assert len(hass.states.async_all("image")) == 6
 
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
     client = await hass_client()
@@ -182,6 +182,7 @@ async def test_map_status_change(
                 "image.roborock_s7_2_upstairs",
                 "image.roborock_s7_maxv_downstairs",
                 "image.roborock_s7_maxv_upstairs",
+                "image.roborock_q7_map",
                 "image.roborock_q10_s5_map",
             },
         ),
@@ -193,6 +194,7 @@ async def test_map_status_change(
                 # Expect default names based on map flags
                 "image.roborock_s7_maxv_map_0",
                 "image.roborock_s7_maxv_map_1",
+                "image.roborock_q7_map",
                 "image.roborock_q10_s5_map",
             },
         ),
@@ -274,3 +276,60 @@ async def test_q10_map_image(
     resp = await client.get(f"/api/image_proxy/{entity_id}")
     assert resp.status == HTTPStatus.OK
     assert await resp.read() == b"\x89PNG-q10-new"
+
+
+async def test_q7_map_image(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+    fake_q7_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the coordinator-driven Q7 map image."""
+    entity_id = "image.roborock_q7_map"
+    assert hass.states.get(entity_id) is not None
+
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    map_content_trait = fake_q7_vacuum.b01_q7_properties.map_content
+
+    # Seed initial image before the first coordinator refresh picks it up
+    map_content_trait.image_content = b"\x89PNG-q7"
+
+    # The initial image is served via the proxy
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"\x89PNG-q7"
+
+    # A coordinator tick that does not change image_content must not update the entity
+    state = hass.states.get(entity_id)
+    assert state is not None
+    last_updated = state.state
+    freezer.tick(timedelta(seconds=65))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == last_updated
+
+    # The device pushes an updated map image
+    map_content_trait.image_content = b"\x89PNG-q7-new"
+    freezer.tick(timedelta(seconds=65))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != last_updated
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"\x89PNG-q7-new"
+
+    # Setting image_content to None keeps the last cached image
+    map_content_trait.image_content = None
+    freezer.tick(timedelta(seconds=65))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"\x89PNG-q7-new"

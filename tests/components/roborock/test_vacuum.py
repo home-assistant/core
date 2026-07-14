@@ -5,10 +5,11 @@ from unittest.mock import Mock, call
 
 import pytest
 from roborock import RoborockException
+from roborock.data.b01_q7.b01_q7_containers import Q7MapListEntry
 from roborock.data.b01_q10.b01_q10_code_mappings import B01_Q10_DP, YXFanLevel
 from roborock.roborock_typing import RoborockCommand
 from syrupy.assertion import SnapshotAssertion
-from vacuum_map_parser_base.map_data import Point
+from vacuum_map_parser_base.map_data import MapData, Point
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
@@ -247,7 +248,6 @@ async def test_get_maps(
 @pytest.mark.parametrize(
     "entity_id",
     [
-        Q7_ENTITY_ID,
         Q10_ENTITY_ID,
     ],
 )
@@ -609,6 +609,7 @@ def fake_q7_vacuum_api_fixture(
         api.return_to_dock.side_effect = send_message_exception
         api.find_me.side_effect = send_message_exception
         api.set_fan_speed.side_effect = send_message_exception
+        api.clean_segments.side_effect = send_message_exception
         api.send.side_effect = send_message_exception
     return api
 
@@ -798,6 +799,200 @@ async def test_q7_activity_none_status(
     vacuum = hass.states.get(Q7_ENTITY_ID)
     assert vacuum
     assert vacuum.state == "unknown"
+
+
+async def test_q7_get_maps(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test that get_maps returns map data for Q7."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    api = fake_q7_vacuum.b01_q7_properties
+
+    # Set up map trait with map list
+    api.map.map_list = [
+        Q7MapListEntry(id=1, cur=True),
+        Q7MapListEntry(id=2, cur=False),
+    ]
+    api.map.current_map_id = 1
+
+    # Set up map content with room names
+    map_data = MapData()
+    map_data.additional_parameters = {"room_names": {10: "Living room", 11: "Bedroom"}}
+    api.map_content.map_data = map_data
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        GET_MAPS_SERVICE_NAME,
+        {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        Q7_ENTITY_ID: {
+            "maps": [
+                {
+                    "flag": 1,
+                    "name": "Map 1",
+                    "rooms": {"10": "Living room", "11": "Bedroom"},
+                },
+                {"flag": 2, "name": "Map 2", "rooms": {}},
+            ]
+        }
+    }
+
+
+async def test_q7_get_maps_empty(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test that get_maps returns empty list when no maps."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    api = fake_q7_vacuum.b01_q7_properties
+    api.map.map_list = []
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        GET_MAPS_SERVICE_NAME,
+        {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {Q7_ENTITY_ID: {"maps": []}}
+
+
+async def test_q7_get_maps_exception(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test that get_maps raises HomeAssistantError on failure."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    api = fake_q7_vacuum.b01_q7_properties
+    api.map.refresh.side_effect = RoborockException()
+
+    with pytest.raises(
+        HomeAssistantError, match="Something went wrong creating the map"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            GET_MAPS_SERVICE_NAME,
+            {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_q7_get_segments(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that async_get_segments returns rooms from the Q7 map."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    api = fake_q7_vacuum.b01_q7_properties
+
+    # Set up map content with room names
+    map_data = MapData()
+    map_data.additional_parameters = {"room_names": {10: "Living room", 11: "Bedroom"}}
+    api.map_content.map_data = map_data
+    api.map.current_map_id = 1
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": Q7_ENTITY_ID}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {
+        "segments": [
+            {"id": "10", "name": "Living room", "group": "Map 1"},
+            {"id": "11", "name": "Bedroom", "group": "Map 1"},
+        ]
+    }
+
+
+async def test_q7_get_segments_no_data(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that async_get_segments returns empty list when no map data."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    api = fake_q7_vacuum.b01_q7_properties
+    api.map_content.map_data = None
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "vacuum/get_segments", "entity_id": Q7_ENTITY_ID}
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == {"segments": []}
+
+
+async def test_q7_clean_segments(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test that clean_area service calls clean_segments with correct room ids."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+
+    entity_registry.async_update_entity_options(
+        Q7_ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            "area_mapping": {"living_room": ["10"]},
+            "last_seen_segments": [
+                {"id": "10", "name": "Living room", "group": "Map 1"},
+            ],
+        },
+    )
+
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_CLEAN_AREA,
+        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
+        blocking=True,
+    )
+
+    assert fake_q7_vacuum.b01_q7_properties.clean_segments.call_count == 1
+    assert fake_q7_vacuum.b01_q7_properties.clean_segments.call_args == call([10])
+
+
+@pytest.mark.parametrize("send_message_exception", [RoborockException()])
+async def test_q7_clean_segments_failed(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fake_q7_vacuum: FakeDevice,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test that a clean_segments failure raises HomeAssistantError."""
+    entity_registry.async_update_entity_options(
+        Q7_ENTITY_ID,
+        VACUUM_DOMAIN,
+        {
+            "area_mapping": {"living_room": ["10"]},
+            "last_seen_segments": [
+                {"id": "10", "name": "Living room", "group": "Map 1"},
+            ],
+        },
+    )
+
+    with pytest.raises(HomeAssistantError, match="Error while calling clean_segments"):
+        await hass.services.async_call(
+            VACUUM_DOMAIN,
+            SERVICE_CLEAN_AREA,
+            {ATTR_ENTITY_ID: Q7_ENTITY_ID, "cleaning_area_id": ["living_room"]},
+            blocking=True,
+        )
 
 
 @pytest.fixture(name="q10_vacuum_api", autouse=False)

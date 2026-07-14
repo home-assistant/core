@@ -165,6 +165,20 @@ def create_b01_q7_trait() -> Mock:
     b01_trait.set_clean_path_preference = AsyncMock()
     b01_trait.set_water_level = AsyncMock()
     b01_trait.send = AsyncMock()
+
+    # Map traits for Q7
+    b01_trait.map = AsyncMock()
+    b01_trait.map.refresh = AsyncMock()
+    b01_trait.map.map_list = []
+    b01_trait.map.current_map_id = None
+
+    b01_trait.map_content = AsyncMock()
+    b01_trait.map_content.refresh = AsyncMock()
+    b01_trait.map_content.image_content = None
+    b01_trait.map_content.map_data = None
+
+    b01_trait.clean_segments = AsyncMock()
+
     return b01_trait
 
 

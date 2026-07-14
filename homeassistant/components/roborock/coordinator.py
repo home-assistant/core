@@ -677,6 +677,11 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             )
+        try:
+            await self.api.map.refresh()
+            await self.api.map_content.refresh()
+        except RoborockException as ex:
+            _LOGGER.debug("Failed to update Q7 map: %s", ex)
         return data
 
 
