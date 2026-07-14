@@ -29,6 +29,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: RymProConfigEntry) -> bo
             token = await rympro.login(data[CONF_EMAIL], data[CONF_PASSWORD], "ha")
         except UnauthorizedError as error:
             raise ConfigEntryAuthFailed from error
+        except CannotConnectError as error:
+            raise ConfigEntryNotReady from error
         hass.config_entries.async_update_entry(
             entry,
             data={**data, CONF_TOKEN: token},
