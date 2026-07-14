@@ -2388,6 +2388,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "gatus": {
+      "name": "Gatus",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "gaviota": {
       "name": "Gaviota",
       "integration_type": "virtual",
