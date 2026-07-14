@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import get_options
+from . import BoschCameraConfigEntry, get_options
 from .base import _BoschEntityBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BoschCameraConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up button entities for each camera."""

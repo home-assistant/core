@@ -32,6 +32,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 from bosch_shc_camera_client.auth_utils import async_digest_request
+
 from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
@@ -45,6 +46,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import (
+    BoschCameraConfigEntry,
     BoschCameraCoordinator,
     _is_safe_bosch_url,
     get_options,
@@ -114,7 +116,7 @@ def _rotate_jpeg_180(jpeg_bytes: bytes) -> bytes:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BoschCameraConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up camera entities — one per discovered Bosch camera."""

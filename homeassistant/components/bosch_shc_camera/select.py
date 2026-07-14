@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BoschCameraCoordinator
+from . import BoschCameraConfigEntry, BoschCameraCoordinator
 from .const import CONF_ENABLE_PTZ_CONTROLS, DOMAIN
 from .guards import _is_gen2_indoor, _warn_if_privacy_on
 
@@ -66,7 +66,7 @@ PAN_PRESET_ANGLES: dict[str, int] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BoschCameraConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator: BoschCameraCoordinator = config_entry.runtime_data

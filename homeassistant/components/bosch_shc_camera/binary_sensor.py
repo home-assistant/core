@@ -19,9 +19,9 @@ Device class:
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 import logging
 import time as _time
-from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
@@ -34,7 +34,11 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, BoschCameraCoordinator  # type: ignore[attr-defined]
+from . import (  # type: ignore[attr-defined]
+    DOMAIN,
+    BoschCameraConfigEntry,
+    BoschCameraCoordinator,
+)
 from .const import (
     DEFAULT_MOTION_ACTIVE_WINDOW,
     MOTION_ACTIVE_WINDOW_MAX,
@@ -56,7 +60,7 @@ EVENT_ACTIVE_WINDOW = DEFAULT_MOTION_ACTIVE_WINDOW
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BoschCameraConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up binary sensor entities for each camera."""

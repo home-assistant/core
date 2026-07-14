@@ -30,11 +30,11 @@ import aiohttp
 from bosch_shc_camera_client.auth_utils import (
     async_digest_request as async_digest_request,  # re-export: mypy --no-implicit-reexport (coordinator.py imports it via `from . import`)
 )
+
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import (
@@ -42,8 +42,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession as async_get_clientsession,  # re-export: mypy --no-implicit-reexport (coordinator.py imports it via `from . import`)
 )
@@ -54,19 +53,16 @@ from .cloud_ssl import (
     async_get_bosch_cloud_session as async_get_bosch_cloud_session,  # re-export: mypy --no-implicit-reexport (services.py/live_connection.py/token_auth.py import it via `from . import`)
 )
 from .coordinator import (
+    BoschCameraConfigEntry as BoschCameraConfigEntry,  # re-export: mypy --no-implicit-reexport (platform modules import it via `from . import`)
     BoschCameraCoordinator as BoschCameraCoordinator,  # re-export: mypy --no-implicit-reexport (platform modules import it via `from . import`)
-)
-from .coordinator import (
     _is_safe_bosch_url as _is_safe_bosch_url,  # re-export: mypy --no-implicit-reexport (camera.py imports it via `from . import`)
-)
-from .coordinator import (
     get_options as get_options,  # re-export: mypy --no-implicit-reexport (button.py/image.py/sensor.py/switch.py import it via `from . import`)
 )
 from .services import _register_services
 from .tls_proxy import (
     pre_warm_rtsp as pre_warm_rtsp,  # re-export: mypy --no-implicit-reexport (live_connection.py imports it via `from . import`)
+    stop_all_proxies,
 )
-from .tls_proxy import stop_all_proxies
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -269,8 +265,7 @@ def _rehydrate_cams_from_registry(
     registry, the device name is repaired in place so newly-registered
     entities pick up the correct slug.
     """
-    from homeassistant.helpers import device_registry as dr
-    from homeassistant.helpers import entity_registry as er
+    from homeassistant.helpers import device_registry as dr, entity_registry as er
 
     ereg = er.async_get(hass)
     dreg = dr.async_get(hass)
@@ -335,14 +330,10 @@ def _redact_creds(d: dict[str, Any]) -> dict[str, Any]:
 
 from .const import (
     ALL_PLATFORMS,
+    CLOUD_API as CLOUD_API,  # re-export: mypy --no-implicit-reexport (services.py imports it via `from . import`)
+    DEFAULT_OPTIONS as DEFAULT_OPTIONS,  # re-export: mypy --no-implicit-reexport (config_flow.py imports it via `from . import`)
     DOMAIN,
     LIVE_SESSION_TTL,  # noqa: F401  # re-exported for tests
-)
-from .const import (
-    CLOUD_API as CLOUD_API,  # re-export: mypy --no-implicit-reexport (services.py imports it via `from . import`)
-)
-from .const import (
-    DEFAULT_OPTIONS as DEFAULT_OPTIONS,  # re-export: mypy --no-implicit-reexport (config_flow.py imports it via `from . import`)
 )
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -468,8 +459,7 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
         # Integration reloaded while HA is already up
         await _register_lovelace_resources()
     else:
-        from homeassistant.core import Event as _Event
-        from homeassistant.core import callback as _callback
+        from homeassistant.core import Event as _Event, callback as _callback
 
         @_callback  # type: ignore[untyped-decorator]
         def _on_ha_started(_event: _Event) -> None:
@@ -555,7 +545,7 @@ async def _migrate_doubled_prefix_entity_ids(
     return len(renamed)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) -> bool:
     """Migrate config entries to the current schema version.
 
     v1 → v2 (2026-05-17, v12.4.3): DEFAULT_OPTIONS['stream_connection_type']
@@ -628,7 +618,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) -> bool:
     coordinator = BoschCameraCoordinator(hass, entry)
 
     # Post-update feedback prompt — one-time per integration version. When the
@@ -1690,7 +1680,7 @@ async def _async_cancel_coordinator_tasks(coord: "BoschCameraCoordinator") -> No
         raise _cancelled_during_cleanup
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) -> bool:
     coord = getattr(entry, "runtime_data", None)
     if coord:
         await _async_cancel_coordinator_tasks(coord)
@@ -1698,7 +1688,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return bool(await hass.config_entries.async_unload_platforms(entry, ALL_PLATFORMS))
 
 
-async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_options_updated(hass: HomeAssistant, entry: BoschCameraConfigEntry) -> None:
     """Reload the config entry only when the *options* actually change.
 
     This listener fires on ANY config-entry update — including the frequent

@@ -28,7 +28,12 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import DOMAIN, BoschCameraCoordinator, get_options  # type: ignore[attr-defined]
+from . import (  # type: ignore[attr-defined]
+    DOMAIN,
+    BoschCameraConfigEntry,
+    BoschCameraCoordinator,
+    get_options,
+)
 from .models import get_display_name
 from .snapshot_store import load_snapshot
 
@@ -39,7 +44,7 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BoschCameraConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up one image entity per discovered Bosch camera."""

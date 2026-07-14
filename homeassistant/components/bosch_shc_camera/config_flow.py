@@ -77,6 +77,7 @@ from urllib.parse import parse_qs, urlencode
 
 import aiohttp
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -273,7 +274,11 @@ def _flatten_sections(user_input: dict[str, Any]) -> dict[str, Any]:
     return flat
 
 
-from . import DEFAULT_OPTIONS, DOMAIN  # type: ignore[attr-defined]
+from . import (  # type: ignore[attr-defined]
+    DEFAULT_OPTIONS,
+    DOMAIN,
+    BoschCameraConfigEntry,
+)
 from .const import (
     CONF_AI_ACTIVE_CONDITION_ENTITY,
     CONF_AI_ACTIVE_CONDITION_STATE,
@@ -808,7 +813,7 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):  # type: 
     @staticmethod
     @callback  # type: ignore[untyped-decorator]
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: BoschCameraConfigEntry,
     ) -> config_entries.OptionsFlow:
         return BoschCameraOptionsFlow(config_entry)
 

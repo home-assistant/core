@@ -50,7 +50,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import BoschCameraCoordinator, get_options
+from . import BoschCameraConfigEntry, BoschCameraCoordinator, get_options
 from .cloud_ssl import async_get_bosch_cloud_session
 from .const import DOMAIN, STREAM_START_SKIPPED
 from .guards import _INDOOR_HW, _get_cam_lock, _is_gen2_indoor, _warn_if_privacy_on
@@ -184,7 +184,7 @@ class _BoschSwitchBase(CoordinatorEntity, SwitchEntity):  # type: ignore[misc]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BoschCameraConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switch entities for each camera."""

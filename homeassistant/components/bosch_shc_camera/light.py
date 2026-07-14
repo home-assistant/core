@@ -31,7 +31,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CLOUD_API, DOMAIN  # type: ignore[attr-defined]
+from . import CLOUD_API, DOMAIN, BoschCameraConfigEntry  # type: ignore[attr-defined]
 from .cloud_ssl import async_get_bosch_cloud_session
 from .guards import _warn_if_privacy_on
 
@@ -42,7 +42,7 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BoschCameraConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator = config_entry.runtime_data

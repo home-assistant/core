@@ -26,6 +26,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import BoschCameraConfigEntry
 from .base import _BoschEntityBase
 from .guards import _get_cam_lock, _is_gen2_indoor, _warn_if_privacy_on
 
@@ -36,7 +37,7 @@ PARALLEL_UPDATES = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BoschCameraConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator = config_entry.runtime_data

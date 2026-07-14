@@ -12,12 +12,12 @@ fcm, shc, rcp, smb, etc.).
 """
 
 import asyncio
+from collections.abc import Coroutine
+from datetime import UTC, datetime, timedelta
 import logging
 import ssl
 import threading
 import time
-from collections.abc import Coroutine
-from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
@@ -36,10 +36,7 @@ from homeassistant.util import dt as dt_util
 from . import recorder as nvr_recorder
 from .camera_list import fetch_camera_list
 from .camera_status import poll_statuses
-from .cloud_ssl import (
-    async_bosch_cloud_session_cm,
-    async_get_bosch_cloud_ssl_context,
-)
+from .cloud_ssl import async_bosch_cloud_session_cm, async_get_bosch_cloud_ssl_context
 from .const import (
     CLOUD_API,
     DEFAULT_OPTIONS,
@@ -54,18 +51,10 @@ from .event_dispatch import build_data_and_dispatch
 from .event_polling import poll_events
 from .fcm import (
     FCMCoordinatorMixin,
-)
-from .fcm import (
     async_ensure_fcm_supervisor as _fcm_async_ensure_supervisor,
 )
-from .frigate_endpoint import (
-    FrigateCoordinatorMixin,
-    FrontDoorRunner,
-)
-from .go2rtc_client import (
-    ensure_go2rtc_schemes_fresh,
-    unregister_go2rtc_stream,
-)
+from .frigate_endpoint import FrigateCoordinatorMixin, FrontDoorRunner
+from .go2rtc_client import ensure_go2rtc_schemes_fresh, unregister_go2rtc_stream
 from .live_connection import try_live_connection_inner
 from .lock_utils import get_or_create_lock
 from .rcp import async_update_rcp_data
@@ -95,11 +84,7 @@ from .slow_tier import (
     _poll_cam_info_caches,
     _poll_slow_tier_endpoints,
 )
-from .smb import (
-    smb_available,
-    smb_dependent_features,
-    sync_smb_cleanup,
-)
+from .smb import smb_available, smb_dependent_features, sync_smb_cleanup
 from .stream_lifecycle import (
     go2rtc_consumer_count,
     handle_stream_worker_error,
@@ -122,10 +107,7 @@ from .tls_proxy_wiring import (
     stop_tls_proxy_wiring,
 )
 from .token_auth import TokenAuthCoordinatorMixin
-from .viewing_front_door import (
-    start_viewing_front_door,
-    stop_viewing_front_door,
-)
+from .viewing_front_door import start_viewing_front_door, stop_viewing_front_door
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -959,9 +941,6 @@ class BoschCameraCoordinator(
         # limited by _MAINTENANCE_REACTIVE_COOLDOWN_S). Cleared explicitly only
         # when the fetcher returns a fresh window — transient community-site
         # outages leave the previous value in place so the sensor stays stable.
-        from .maintenance import (
-            MaintenanceWindow,
-        )  # local import: avoid module-load order issues
 
         self._maintenance_cache: MaintenanceWindow | None = None
         self._maintenance_last_fetch: float = float("-inf")
@@ -1609,9 +1588,7 @@ class BoschCameraCoordinator(
         # ...) working the same way it did before BoschCameraCoordinator
         # moved out of __init__.py — those patches target the package's own
         # namespace, matching the pattern already used in live_connection.py.
-        from . import (
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         token = self.token
         if not token and not self.refresh_token:
@@ -2178,9 +2155,7 @@ class BoschCameraCoordinator(
         # "custom_components.bosch_shc_camera.async_get_clientsession", ...)
         # working the same way it did before BoschCameraCoordinator moved
         # out of __init__.py — matches the live_connection.py pattern.
-        from . import (
-            async_get_clientsession as async_get_clientsession,
-        )
+        from . import async_get_clientsession as async_get_clientsession
         from .maintenance import async_fetch_maintenance
 
         now = time.monotonic()
@@ -3660,9 +3635,7 @@ class BoschCameraCoordinator(
         # ...) working the same way it did before BoschCameraCoordinator
         # moved out of __init__.py — those patches target the package's own
         # namespace, matching the pattern already used in live_connection.py.
-        from . import (
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         # Fast path: cache hit without acquiring the lock (hot path after first fetch)
         cached = self._fresh_snap_cache.get(cam_id)
@@ -3828,9 +3801,7 @@ class BoschCameraCoordinator(
         # below and the live_connection.py precedent — matters here even
         # though only one call site remains, so a future third caller isn't
         # tempted to reintroduce the top-level-only inconsistency.
-        from . import (
-            async_digest_request as async_digest_request,
-        )
+        from . import async_digest_request as async_digest_request
 
         session = async_get_clientsession(self.hass, verify_ssl=False)
         try:
@@ -4394,9 +4365,7 @@ class BoschCameraCoordinator(
         # ...) working the same way it did before BoschCameraCoordinator
         # moved out of __init__.py — those patches target the package's own
         # namespace, matching the pattern already used in live_connection.py.
-        from . import (
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         params: dict[str, str] = {
             "command": command,
@@ -4470,8 +4439,6 @@ class BoschCameraCoordinator(
         # out of __init__.py — matches the live_connection.py pattern.
         from . import (
             async_digest_request as async_digest_request,
-        )
-        from . import (
             async_get_clientsession as async_get_clientsession,
         )
 
@@ -4687,9 +4654,7 @@ class BoschCameraCoordinator(
         # ...) working the same way it did before BoschCameraCoordinator
         # moved out of __init__.py — those patches target the package's own
         # namespace, matching the pattern already used in live_connection.py.
-        from . import (
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         token = self.token
         headers = {
@@ -4752,3 +4717,6 @@ class BoschCameraCoordinator(
             return False
 
     # SMB/NAS upload, download, cleanup, and disk-check functions are in smb.py
+
+
+type BoschCameraConfigEntry = ConfigEntry[BoschCameraCoordinator]

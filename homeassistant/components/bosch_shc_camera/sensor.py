@@ -14,8 +14,8 @@ Creates sensor entities per camera:
                                   only for cameras with featureSupport.light = True
 """
 
-import logging
 from datetime import UTC, datetime
+import logging
 from typing import Any, ClassVar
 
 from homeassistant.components.sensor import (
@@ -49,7 +49,7 @@ def _event_is_today_local(ts_str: str | None) -> bool:
     return local_dt.date() == now_local.date()
 
 
-from . import BoschCameraCoordinator, get_options
+from . import BoschCameraConfigEntry, BoschCameraCoordinator, get_options
 from .const import CONF_ENABLE_AI_DESCRIPTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ PARALLEL_UPDATES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BoschCameraConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor entities for each camera."""
