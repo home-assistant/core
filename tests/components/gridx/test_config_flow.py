@@ -93,6 +93,28 @@ async def test_user_step_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_user_step_no_systems(hass: HomeAssistant) -> None:
+    """Test that an account without systems shows the no_systems error."""
+    connector = MagicMock()
+    connector.retrieve_live_data = AsyncMock(return_value=[])
+    connector.close = AsyncMock()
+    with patch(
+        "homeassistant.components.gridx.config_flow.async_create_connector",
+        new=AsyncMock(return_value=connector),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_systems"}
+    connector.close.assert_awaited_once()
+
+
 async def test_user_step_duplicate(
     hass: HomeAssistant,
     mock_setup_entry: MagicMock,

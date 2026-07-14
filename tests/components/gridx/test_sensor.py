@@ -176,6 +176,21 @@ async def test_historical_sensor_value_fn_value_error(
     assert state.state == STATE_UNKNOWN
 
 
+async def test_historical_sensor_last_reset_set(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
+    """last_reset attribute is set for TOTAL state-class historical sensors."""
+    entry = setup_integration
+    registry = er.async_get(hass)
+    entity_id = registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{entry.unique_id}_hist_photovoltaic"
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.attributes.get("last_reset") is not None
+
+
 async def test_historical_sensor_last_reset_no_data(
     hass: HomeAssistant, setup_integration: MockConfigEntry
 ) -> None:
@@ -187,7 +202,7 @@ async def test_historical_sensor_last_reset_no_data(
 
     registry = er.async_get(hass)
     entity_id = registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{entry.unique_id}_hist_selfConsumptionRate"
+        "sensor", DOMAIN, f"{entry.unique_id}_hist_photovoltaic"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
@@ -207,7 +222,7 @@ async def test_historical_sensor_last_reset_missing_key(
 
     registry = er.async_get(hass)
     entity_id = registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{entry.unique_id}_hist_selfConsumptionRate"
+        "sensor", DOMAIN, f"{entry.unique_id}_hist_photovoltaic"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
