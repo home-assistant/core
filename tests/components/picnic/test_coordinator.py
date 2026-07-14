@@ -92,6 +92,13 @@ async def _setup_with_delivery(
         ),
         pytest.param(
             "CURRENT",
+            (timedelta(minutes=30, seconds=30), timedelta(minutes=50)),
+            (timedelta(minutes=30, seconds=30), timedelta(minutes=50)),
+            DELIVERY_UPDATE_INTERVAL,
+            id="next_poll_never_sooner_than_delivery_interval",
+        ),
+        pytest.param(
+            "CURRENT",
             (timedelta(hours=-4), timedelta(hours=-3)),
             (timedelta(hours=-4), timedelta(hours=-3)),
             DEFAULT_UPDATE_INTERVAL,

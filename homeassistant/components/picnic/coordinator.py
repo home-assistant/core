@@ -112,7 +112,10 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             return DELIVERY_UPDATE_INTERVAL
 
         if now < window_start:
-            return min(DEFAULT_UPDATE_INTERVAL, window_start - now)
+            return max(
+                DELIVERY_UPDATE_INTERVAL,
+                min(DEFAULT_UPDATE_INTERVAL, window_start - now),
+            )
 
         return DEFAULT_UPDATE_INTERVAL
 
