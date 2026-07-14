@@ -1027,6 +1027,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/lifx/ @Djelibeybi
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
+/homeassistant/components/linknlink/ @acmen0102
+/tests/components/linknlink/ @acmen0102
 /homeassistant/components/linkplay/ @Velleman
 /tests/components/linkplay/ @Velleman
 /homeassistant/components/linux_battery/ @fabaff

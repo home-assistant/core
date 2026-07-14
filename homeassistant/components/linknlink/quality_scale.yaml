@@ -84,4 +84,3 @@ rules:
     status: exempt
     comment: The integration communicates over UDP and does not use HTTP.
   strict-typing: done
-

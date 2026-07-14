@@ -38,18 +38,17 @@ class LinknLinkEntity(CoordinatorEntity[LinknLinkCoordinator]):
                 name=device.name,
                 serial_number=device.mac,
             )
-            return
-
-        child = coordinator.data.children[subdevice_id]
-        self._attr_unique_id = f"{device.id}_{subdevice_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{device.id}_{subdevice_id}")},
-            manufacturer="LinknLink",
-            model=child.type or child.pid or None,
-            name=child.name or child.type or subdevice_id,
-            serial_number=subdevice_id,
-            via_device=(DOMAIN, device.id),
-        )
+        else:
+            child = coordinator.data.children[subdevice_id]
+            self._attr_unique_id = f"{device.id}_{subdevice_id}_{description.key}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, f"{device.id}_{subdevice_id}")},
+                manufacturer="LinknLink",
+                model=child.type or child.pid or None,
+                name=child.name or child.type or subdevice_id,
+                serial_number=subdevice_id,
+                via_device=(DOMAIN, device.id),
+            )
 
     @property
     def source_value(self) -> Any:

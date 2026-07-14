@@ -1,7 +1,6 @@
 """Fixtures for LinknLink tests."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 from aiolinknlink import UltraDevice, UltraSession, UltraState, UltraSubDeviceState
@@ -9,6 +8,7 @@ import pytest
 
 from homeassistant.components.linknlink.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -53,7 +53,7 @@ STATE = UltraState(
             fields={"envtemp": 24.0, "pir_detected": True, "power": True},
         )
     },
-    updated_at=datetime.now(UTC),
+    updated_at=dt_util.utcnow(),
 )
 
 

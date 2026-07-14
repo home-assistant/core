@@ -3869,6 +3869,12 @@
       "integration_type": "virtual",
       "supported_by": "shelly"
     },
+    "linknlink": {
+      "name": "LinknLink",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "linkplay": {
       "name": "LinkPlay",
       "integration_type": "hub",
