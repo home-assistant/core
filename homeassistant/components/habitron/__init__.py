@@ -97,6 +97,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HabitronConfigEntry) ->
     if not unload_ok:
         return False
 
+    entry.runtime_data.async_clear_router_issue()
     await entry.runtime_data.smart_hub.async_close()
 
     return True
