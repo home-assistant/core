@@ -3,6 +3,15 @@
 from unittest.mock import MagicMock
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+
+def entity_unique_ids(entity_registry: er.EntityRegistry, entry_id: str) -> set[str]:
+    """Return the unique ids of all entities for the config entry."""
+    return {
+        entry.unique_id
+        for entry in er.async_entries_for_config_entry(entity_registry, entry_id)
+    }
 
 
 async def fire_hub_update(hass: HomeAssistant, hub: MagicMock) -> None:
