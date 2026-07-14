@@ -1,6 +1,10 @@
 """Tests for the OKOK Scale integration."""
 
+from home_assistant_bluetooth import BluetoothServiceInfoBleak
+
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
+
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 NOT_OKOK_SERVICE_INFO = BluetoothServiceInfo(
     name="Not it",
@@ -14,14 +18,35 @@ NOT_OKOK_SERVICE_INFO = BluetoothServiceInfo(
 
 OKOK_F0_ADDRESS = "50:FB:19:01:23:45"
 OKOK_F0_TITLE = "OKOK Scale (2345)"
-OKOK_F0_SERVICE_INFO = BluetoothServiceInfo(
+OKOK_F0_SERVICE_INFO = BluetoothServiceInfoBleak(
     name=OKOK_F0_ADDRESS,
     address=OKOK_F0_ADDRESS,
+    device=generate_ble_device(OKOK_F0_ADDRESS, OKOK_F0_ADDRESS),
     rssi=-60,
     manufacturer_data={61695: bytes.fromhex("02045403000000000000000050fb19012345")},
-    service_data={},
-    service_uuids=[],
+    service_data={
+        "00002a19-0000-1000-8000-00805f9b34fb": bytes.fromhex("00"),
+        "00002a9c-0000-1000-8000-00805f9b34fb": bytes.fromhex(
+            "0603e50701300000000000360000000400000000"
+        ),
+    },
+    service_uuids=[
+        "00002a19-0000-1000-8000-00805f9b34fb",
+        "00002a9c-0000-1000-8000-00805f9b34fb",
+    ],
     source="local",
+    advertisement=generate_advertisement_data(
+        manufacturer_data={
+            61695: bytes.fromhex("02045403000000000000000050fb19012345")
+        },
+        service_uuids=[
+            "00002a19-0000-1000-8000-00805f9b34fb",
+            "00002a9c-0000-1000-8000-00805f9b34fb",
+        ],
+    ),
+    time=0,
+    connectable=True,
+    tx_power=-127,
 )
 
 OKOK_20_ADDRESS = "50:FB:19:67:89:AB"

@@ -130,3 +130,40 @@ async def test_sleepy_device_keeps_state(
     mass = hass.states.get("sensor.okok_scale_2345_weight")
     assert mass.state == "85.2"
     assert mass.attributes[ATTR_ASSUMED_STATE] is True
+
+
+# @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_battery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test receiving battery percentage."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not hass.states.async_all("sensor")
+
+    assert len(hass.states.async_all()) == 0
+    inject_bluetooth_service_info(hass, OKOK_F0_SERVICE_INFO)
+    await hass.async_block_till_done()
+    # assert len(hass.states.async_all()) == 4
+
+    state = hass.states.get("sensor.okok_scale_2345_weight")
+    assert state.state == "85.2"
+    assert state.name == "OKOK Scale (2345) Weight"
+
+    # state = hass.states.get(f"sensor.okok_scale_2345_signal_strength")
+    # assert state.state == str(-60)
+    # assert state.name == "OKOK Scale (2345) Signal strength"
+
+    # assert hass.states == []
+    # state = hass.states.get(f"sensor.okok_scale_2345_impedance")
+    # assert state.state == "0"
+    # assert state.name == "OKOK Scale (2345) Impdance"
+
+    # state = hass.states.get("sensor.okok_scale_2345_battery")
+    # assert state.state == "0"
+    # assert state.name == "OKOK Scale (2345) Battery"
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
