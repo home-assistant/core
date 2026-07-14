@@ -1739,7 +1739,7 @@ oemthermostat==1.1.1
 ohme==1.9.1
 
 # homeassistant.components.okokscale
-okokscale==0.0.3
+okokscale==0.0.4
 
 # homeassistant.components.ollama
 ollama==0.6.2
