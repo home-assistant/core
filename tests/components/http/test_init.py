@@ -92,7 +92,7 @@ def mock_create_server() -> Generator[Mock]:
     ) as mock_create:
         yield mock_create
 
-    # Close servers that were bound but never served (no-op if served).
+    # Close any server that is not already closed (closing twice is a no-op).
     for server in servers:
         server.close()
 
@@ -1539,6 +1539,7 @@ async def test_pending_config_reverted_in_place_on_bind_failure(
         caplog.text
     )
     stable_server.close()
+    await stable_server.wait_closed()
 
 
 async def test_pending_config_reverted_in_place_on_ssl_failure(
@@ -1788,6 +1789,7 @@ async def test_recovery_mode_bind_failure_falls_back_to_default_config(
         {"server_port": 80}
     )
     default_server.close()
+    await default_server.wait_closed()
 
 
 async def test_recovery_mode_default_config_bind_failure_fails_setup(
