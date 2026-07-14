@@ -335,7 +335,9 @@ def _purge_stale_sensor_restore_keys(
 
 
 def _async_recover_interrupted_s400_migration(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    coordinator: XiaomiActiveBluetoothProcessorCoordinator,
 ) -> None:
     """Finish the legacy "impedance" -> "impedance_low" rename, if safe.
 
@@ -343,7 +345,10 @@ def _async_recover_interrupted_s400_migration(
     reads as current, so an attempt interrupted between the config
     entry's fast save and the entity registry's much slower one (see
     _async_purge_phantom_s400_impedance_entity) would otherwise never
-    complete for this step.
+    complete for this step. Runs after the coordinator exists so a
+    device unknown to both the entity and device registries can still
+    be identified from the restore cache's own descriptions, before
+    that evidence is cleared by the cache purge below.
 
     Deliberately does not attempt the other step (an original,
     un-renamed "impedance_low" awaiting promotion to "impedance_high"):
@@ -370,7 +375,7 @@ def _async_recover_interrupted_s400_migration(
     legacy_entity_id = entity_registry.async_get_entity_id(
         Platform.SENSOR, DOMAIN, old_legacy_id
     )
-    if legacy_entity_id is None or not _async_is_known_s400(hass, address):
+    if legacy_entity_id is None or not _async_is_known_s400(hass, address, coordinator):
         return
 
     low_id = f"{address}-impedance_low"
@@ -395,6 +400,12 @@ def _async_purge_phantom_s400_impedance_entity(
     has had a chance to run first, since a lingering "-impedance" entity
     is otherwise indistinguishable from one whose rename was interrupted
     by a crash and is still awaiting recovery.
+
+    Requires low_entity.previous_unique_id == legacy_unique_id as the
+    sole proof: an "-impedance_high" entity existing is not enough, since
+    the corrected library can create one natively from live data,
+    independent of any rename, which would otherwise misidentify a
+    legitimate, still-un-recovered legacy entity as a phantom.
     """
     if entry.version != 1 or entry.minor_version < 2:
         return
@@ -406,19 +417,13 @@ def _async_purge_phantom_s400_impedance_entity(
     entity_registry = er.async_get(hass)
     legacy_unique_id = f"{address}-impedance"
 
-    high_entity_exists = (
-        entity_registry.async_get_entity_id(
-            Platform.SENSOR, DOMAIN, f"{address}-impedance_high"
-        )
-        is not None
-    )
     low_entity_id = entity_registry.async_get_entity_id(
         Platform.SENSOR, DOMAIN, f"{address}-impedance_low"
     )
     low_entity = (
         entity_registry.async_get(low_entity_id) if low_entity_id is not None else None
     )
-    renamed_entity_exists = high_entity_exists or (
+    renamed_entity_exists = (
         low_entity is not None and low_entity.previous_unique_id == legacy_unique_id
     )
     if not renamed_entity_exists:
@@ -435,7 +440,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Xiaomi BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
-    _async_recover_interrupted_s400_migration(hass, entry)
 
     kwargs = {}
     if bindkey := entry.data.get("bindkey"):
@@ -495,6 +499,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry=entry,
     )
     entry.runtime_data = coordinator
+    # Must run before the cache purge below: recovery needs to see the
+    # restore cache's own evidence before that purge clears it.
+    _async_recover_interrupted_s400_migration(hass, entry, coordinator)
     # Must run before async_forward_entry_setups: that call is what makes
     # the sensor platform register its processor and consume
     # coordinator.restore_data, so any stale entries need to be gone first.

@@ -880,6 +880,54 @@ async def test_recover_interrupted_migration_skipped_for_v1v2(
     await hass.async_block_till_done()
 
 
+async def test_purge_phantom_spares_legacy_entity_with_native_high(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a native "impedance_high" alone never proves "-impedance" is a phantom.
+
+    The corrected library can create "impedance_high" natively from live
+    data, independent of any rename. A genuine, still-un-recovered
+    legacy "-impedance" entity coexisting with it (the exact pair
+    _async_recover_interrupted_s400_migration deliberately leaves alone)
+    must survive -- only "impedance_low".previous_unique_id proves a
+    rename actually happened.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=2
+    )
+    entry.add_to_hass(hass)
+    device = _async_setup_device(device_registry, entry, model=S400_MODEL)
+    legacy_entity_id = _async_add_entity(
+        entity_registry, entry, device.id, f"{S400_ADDRESS}-impedance"
+    )
+    _async_add_entity(
+        entity_registry,
+        entry,
+        device.id,
+        f"{S400_ADDRESS}-impedance_low",
+        original_name="Impedance Low",
+    )
+    _async_add_entity(
+        entity_registry,
+        entry,
+        device.id,
+        f"{S400_ADDRESS}-impedance_high",
+        original_name="Impedance High",
+    )
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    after = entity_registry.async_get(legacy_entity_id)
+    assert after is not None
+    assert after.unique_id == f"{S400_ADDRESS}-impedance"
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_purge_phantom_removes_entity_despite_purge_marker(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -902,11 +950,16 @@ async def test_purge_phantom_removes_entity_despite_purge_marker(
     )
     entry.add_to_hass(hass)
     device = _async_setup_device(device_registry, entry)
-    _async_add_entity(
+    real_entity_id = _async_add_entity(
         entity_registry,
         entry,
         device.id,
-        f"{S400_ADDRESS}-impedance_low",
+        f"{S400_ADDRESS}-impedance",
+        original_name="Impedance",
+    )
+    entity_registry.async_update_entity(
+        real_entity_id,
+        new_unique_id=f"{S400_ADDRESS}-impedance_low",
         original_name="Impedance Low",
     )
     _seed_restore_data(hass, entry)
