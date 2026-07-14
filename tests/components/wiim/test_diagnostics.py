@@ -1,6 +1,7 @@
 """Tests for WiiM diagnostics."""
 
-from unittest.mock import AsyncMock, MagicMock
+import pytest
+from unittest.mock import AsyncMock
 
 from wiim.models import WiimDeviceDiagnostics
 
@@ -13,11 +14,11 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_wiim_controller")
 async def test_config_entry_diagnostics_redacts_identifiers(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wiim_device: AsyncMock,
-    mock_wiim_controller: MagicMock,
 ) -> None:
     """Test config entry diagnostics include safe runtime data."""
     mock_wiim_device.as_diagnostics.return_value = WiimDeviceDiagnostics(
