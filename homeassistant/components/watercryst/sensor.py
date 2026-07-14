@@ -122,7 +122,7 @@ async def async_setup_entry(
 class WatercrystSensorEntity[_T: DataUpdateCoordinator[Any]](
     CoordinatorEntity[_T], SensorEntity, WatercrystEntity
 ):
-    """Biocat device sensor base class."""
+    """BIOCAT device sensor base class."""
 
     def __init__(
         self,

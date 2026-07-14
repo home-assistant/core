@@ -1,7 +1,7 @@
-"""Constants for the WATERCryst Biocat integration."""
+"""Constants for the WATERCryst BIOCAT integration."""
 
 DOMAIN = "watercryst"
-DEFAULT_NAME = "Biocat Device"
+DEFAULT_NAME = "BIOCAT Device"
 
 CONF_BSN = "bsn"
 CONF_ESN = "esn"

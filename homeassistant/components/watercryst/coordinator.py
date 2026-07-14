@@ -1,4 +1,4 @@
-"""Biocat device data update coordinators."""
+"""BIOCAT device data update coordinators."""
 
 from asyncio import timeout
 from datetime import timedelta

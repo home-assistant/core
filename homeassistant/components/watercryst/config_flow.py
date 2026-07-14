@@ -51,7 +51,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]):
         # firmware version and user specified device name.
         info = await client.get_device_info()
 
-        # Biocat serial entered by the user must match the
+        # BIOCAT serial entered by the user must match the
         # serial associated with the given API key.
         if info.biocat_serial != bsn:
             raise WrongDeviceSerial
@@ -86,7 +86,7 @@ class WatercrystConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step.
 
-        The user enters the Biocat serial number and the API key.
+        The user enters the BIOCAT serial number and the API key.
         """
 
         errors: dict[str, str] = {}
@@ -151,4 +151,4 @@ class UnknownError(HomeAssistantError):
 
 
 class WrongDeviceSerial(HomeAssistantError):
-    """Error to indicate that the entered Biocat serial is incorrect."""
+    """Error to indicate that the entered BIOCAT serial is incorrect."""

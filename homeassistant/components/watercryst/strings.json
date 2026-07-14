@@ -51,16 +51,16 @@
         "name": "Last water tap volume"
       },
       "ml_state": {
-        "name": "Microleakage state"
+        "name": "Microleakage measurement state"
       },
       "mode_id": {
-        "name": "Mode"
+        "name": "Device mode"
       },
       "pause_leakage_protection_until_utc": {
         "name": "Pause leakage protection until"
       },
       "pressure": {
-        "name": "Pressure"
+        "name": "Water pressure"
       },
       "water_temp": {
         "name": "Water temperature"

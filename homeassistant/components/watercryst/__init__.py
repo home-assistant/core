@@ -47,7 +47,7 @@ type WatercrystConfigEntry = ConfigEntry[RuntimeData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -> bool:
-    """Set up a WATERCryst Biocat device from a config entry."""
+    """Set up a WATERCryst BIOCAT device from a config entry."""
 
     bsn: str = entry.data[CONF_BSN]
     key: str = entry.data[CONF_API_KEY]
