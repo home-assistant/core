@@ -286,9 +286,6 @@ async def test_speedtest_sensor_empty_data(
     coordinator = config_entry_setup.runtime_data.speedtest_coordinator
 
     # Verify native_value returns None when coordinator.data is None
-    coordinator.data = None
-    sensor_state = hass.states.get("sensor.unifi_network_speedtest_download_eth0")
-    # Actually wait, sensor is already updated. Let's force an update
     coordinator.async_set_updated_data(None)
     await hass.async_block_till_done()
 
