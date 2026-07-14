@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from pywizlight import PilotBuilder, PilotParser, wizlight
 from pywizlight.bulblibrary import BulbType
 
@@ -32,11 +33,13 @@ from . import (
     FAKE_RGBWW_BULB,
     FAKE_RGBWW_NO_EFFECT_BULB,
     FAKE_TURNABLE_BULB,
-    FAKE_TV_SYNC_BOX,
     _mocked_wizlight,
     async_push_update,
     async_setup_integration,
+    fake_tv_sync_bulb_type,
 )
+
+TV_SYNC_MODULE_NAMES = ["ESP27_MHORGB_01", "ESP24_DMORGB_01"]
 
 
 async def test_light_unique_id(
@@ -257,13 +260,18 @@ def _mocked_wizlight_without_color_state(
     return bulb
 
 
-async def test_tv_sync_product_without_color_state(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("module_name", TV_SYNC_MODULE_NAMES)
+async def test_tv_sync_product_without_color_state(
+    hass: HomeAssistant, module_name: str
+) -> None:
     """Test a TV sync product pushing states without color values or a scene.
 
     TV ambient light products (DMORGB/MHORGB) do this while syncing to
     the TV; without a fallback the light would never report a color mode.
     """
-    bulb = _mocked_wizlight_without_color_state(FAKE_TV_SYNC_BOX, dimming=True)
+    bulb = _mocked_wizlight_without_color_state(
+        fake_tv_sync_bulb_type(module_name), dimming=True
+    )
     await async_setup_integration(hass, wizlight=bulb)
     entity_id = "light.mock_title"
     state = hass.states.get(entity_id)
@@ -311,11 +319,14 @@ async def test_tv_sync_product_without_color_state(hass: HomeAssistant) -> None:
     assert pilot.pilot_params == {"dimming": 50}
 
 
+@pytest.mark.parametrize("module_name", TV_SYNC_MODULE_NAMES)
 async def test_tv_sync_product_without_color_state_or_brightness(
-    hass: HomeAssistant,
+    hass: HomeAssistant, module_name: str
 ) -> None:
     """Test a TV sync product pushing a state with neither color values nor dimming."""
-    bulb = _mocked_wizlight_without_color_state(FAKE_TV_SYNC_BOX, dimming=False)
+    bulb = _mocked_wizlight_without_color_state(
+        fake_tv_sync_bulb_type(module_name), dimming=False
+    )
     await async_setup_integration(hass, wizlight=bulb)
     state = hass.states.get("light.mock_title")
     assert state.state == STATE_ON
