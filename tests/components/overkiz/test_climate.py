@@ -208,18 +208,18 @@ async def test_thermostat_heating_set_temperature(
         mock_client,
         device_url=THERMOSTAT_HEATING.device_url,
         command_name="setDerogation",
-        parameters=[20.0, "furtherNotice"],
+        parameters=[20.0, "further_notice"],
     )
 
 
 @pytest.mark.parametrize(
     ("preset_mode", "parameters"),
     [
-        pytest.param("away", ["away", "furtherNotice"], id="away"),
-        pytest.param("comfort", ["comfort", "furtherNotice"], id="comfort"),
-        pytest.param("eco", ["eco", "furtherNotice"], id="eco"),
+        pytest.param("away", ["away", "further_notice"], id="away"),
+        pytest.param("comfort", ["comfort", "further_notice"], id="comfort"),
+        pytest.param("eco", ["eco", "further_notice"], id="eco"),
         # Manual re-sends the current temperature to enter the derogation
-        pytest.param("manual", [26.6, "furtherNotice"], id="manual"),
+        pytest.param("manual", [26.6, "further_notice"], id="manual"),
     ],
 )
 async def test_thermostat_heating_set_preset_mode(
