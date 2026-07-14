@@ -5,7 +5,6 @@ from infrared_protocols.codes.generic.led import Generic13KeyCode, Generic24KeyC
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, LEDIrDeviceType
 
@@ -15,7 +14,7 @@ CODES = {
 }
 
 
-class LEDIrBaseEntity(InfraredEmitterConsumerEntity, Entity):
+class LEDIrBaseEntity(InfraredEmitterConsumerEntity):
     """Base entity for LED Infrared."""
 
     _attr_assumed_state = True
