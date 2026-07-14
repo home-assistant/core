@@ -364,31 +364,6 @@ async def test_atlantic_io_set_operation_mode(
     )
 
 
-async def test_atlantic_io_set_temperature(
-    hass: HomeAssistant,
-    mock_client: MockOverkizClient,
-    setup_overkiz_integration: SetupOverkizIntegration,
-) -> None:
-    """Test setting the target temperature sends setTargetTemperature then a refresh."""
-    await setup_overkiz_integration(fixture=DHW_ATLANTIC_IO.fixture)
-
-    await hass.services.async_call(
-        "water_heater",
-        "set_temperature",
-        {"entity_id": DHW_ATLANTIC_IO.entity_id, ATTR_TEMPERATURE: 55.0},
-        blocking=True,
-    )
-
-    assert_commands_call(
-        mock_client,
-        device_url=DHW_ATLANTIC_IO.device_url,
-        commands=[
-            ("setTargetTemperature", [55.0]),
-            ("refreshTargetTemperature", None),
-        ],
-    )
-
-
 async def test_atlantic_io_set_operation_mode_performance(
     hass: HomeAssistant,
     mock_client: MockOverkizClient,

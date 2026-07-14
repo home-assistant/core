@@ -1,6 +1,6 @@
 """Support for AtlanticDomesticHotWaterProductionIOComponent."""
 
-from typing import Any, cast, override
+from typing import cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from pyoverkiz.models import Command
@@ -11,13 +11,11 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 
 from ..const import DOMAIN
 from ..entity import OverkizEntity
 
-DEFAULT_MIN_TEMP: float = 50.0
-DEFAULT_MAX_TEMP: float = 62.0
 BOOST_MODE_DURATION: int = 7
 
 STATE_AUTO = "auto"
@@ -39,33 +37,14 @@ class AtlanticDomesticHotWaterProductionIOComponent(OverkizEntity, WaterHeaterEn
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
     _attr_supported_features = (
-        WaterHeaterEntityFeature.TARGET_TEMPERATURE
-        | WaterHeaterEntityFeature.OPERATION_MODE
-        | WaterHeaterEntityFeature.AWAY_MODE
+        WaterHeaterEntityFeature.OPERATION_MODE | WaterHeaterEntityFeature.AWAY_MODE
     )
     _attr_operation_list = [*OPERATION_MODE_TO_OVERKIZ, STATE_PERFORMANCE]
 
-    @property
-    @override
-    def min_temp(self) -> float:
-        """Return the minimum temperature."""
-        if min_temp := self.device.states.get(
-            OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
-        ):
-            return cast(float, min_temp.value_as_float)
-
-        return DEFAULT_MIN_TEMP
-
-    @property
-    @override
-    def max_temp(self) -> float:
-        """Return the maximum temperature."""
-        if max_temp := self.device.states.get(
-            OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
-        ):
-            return cast(float, max_temp.value_as_float)
-
-        return DEFAULT_MAX_TEMP
+    # Target temperature is intentionally read-only. The device only accepts a
+    # capacity-dependent set of discrete setpoints (e.g. on a 270 L tank: 50/54/58/62 °C,
+    # one per "number of showers"), but the API advertises the setpoint as continuous with
+    # no step or bounds, so any in-between value is silently ignored by the device.
 
     @property
     @override
@@ -84,20 +63,6 @@ class AtlanticDomesticHotWaterProductionIOComponent(OverkizEntity, WaterHeaterEn
             return target_temp.value_as_float
 
         return None
-
-    @override
-    async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
-        temperature = kwargs[ATTR_TEMPERATURE]
-        await self.executor.async_execute_commands(
-            [
-                Command(
-                    name=OverkizCommand.SET_TARGET_TEMPERATURE,
-                    parameters=[temperature],
-                ),
-                Command(name=OverkizCommand.REFRESH_TARGET_TEMPERATURE),
-            ],
-        )
 
     @property
     def is_boost_mode_on(self) -> bool:
