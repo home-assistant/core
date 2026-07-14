@@ -41,11 +41,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: The hub does not require authentication.
-  test-coverage:
-    status: done
-    comment: >
-      Investigate whether the `_spec_hub` helper in `test_init.py` can be
-      replaced by the conftest base mock.
+  test-coverage: done
 
   # Gold
   devices:
@@ -69,7 +65,7 @@ rules:
   entity-translations: todo
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: Integration has no repair scenarios.
@@ -80,6 +76,4 @@ rules:
   inject-websession:
     status: exempt
     comment: Integration uses a local TCP socket (via pynobo); no HTTP client is used.
-  strict-typing:
-    status: todo
-    comment: Requires release of pynobo 1.9.0
+  strict-typing: todo
