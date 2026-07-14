@@ -314,7 +314,7 @@ async def test_migrate_property_unique_ids_rename(
     entity_registry.async_get_or_create(
         "select",
         DOMAIN,
-        "test_serial-old_format",
+        "test_serial-0-program_select",
         config_entry=config_entry,
         device_id=device.id,
         original_name="select",
@@ -327,7 +327,7 @@ async def test_migrate_property_unique_ids_rename(
         await init_integration(hass, config_entry)
 
     assert not entity_registry.async_get_entity_id(
-        "select", DOMAIN, "test_serial-old_format"
+        "select", DOMAIN, "test_serial-0-program_select"
     )
     assert entity_registry.async_get_entity_id(
         "select", DOMAIN, "test_serial-SelectedProgram"
@@ -360,7 +360,7 @@ async def test_migrate_property_unique_ids_remove_stale(
     entity_registry.async_get_or_create(
         "select",
         DOMAIN,
-        "test_serial-old_format",
+        "test_serial-0-program_select",
         config_entry=config_entry,
         device_id=device.id,
         original_name="select",
@@ -373,7 +373,7 @@ async def test_migrate_property_unique_ids_remove_stale(
         await init_integration(hass, config_entry)
 
     assert not entity_registry.async_get_entity_id(
-        "select", DOMAIN, "test_serial-old_format"
+        "select", DOMAIN, "test_serial-0-program_select"
     )
     assert entity_registry.async_get_entity_id(
         "select", DOMAIN, "test_serial-SelectedProgram"
@@ -563,7 +563,7 @@ async def test_migrate_property_unique_ids_rename_sensor(
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
-        "test_serial-old_format",
+        "test_serial-0",
         config_entry=config_entry,
         device_id=device.id,
         original_name="LightSensor",
@@ -575,9 +575,42 @@ async def test_migrate_property_unique_ids_rename_sensor(
     ):
         await init_integration(hass, config_entry)
 
-    assert not entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, "test_serial-old_format"
-    )
+    assert not entity_registry.async_get_entity_id("sensor", DOMAIN, "test_serial-0")
     assert entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "test_serial-LightValue"
+    )
+
+
+async def test_migrate_property_unique_ids_skips_colliding_channel(
+    hass: HomeAssistant,
+    config_entry: VelbusConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    controller: MagicMock,
+) -> None:
+    """Test that a regular channel whose name matches a property is left unchanged."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "1")},
+        serial_number="test_serial",
+    )
+    # A regular channel (number >=1) whose original_name coincidentally matches a property
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "test_serial-3",
+        config_entry=config_entry,
+        device_id=device.id,
+        original_name="LightSensor",
+    )
+
+    with patch(
+        "homeassistant.components.velbus.get_property_key_map",
+        return_value=_PROPERTY_KEY_MAP,
+    ):
+        await init_integration(hass, config_entry)
+
+    assert entity_registry.async_get_entity_id("sensor", DOMAIN, "test_serial-3")
+    assert not entity_registry.async_get_entity_id(
         "sensor", DOMAIN, "test_serial-LightValue"
     )

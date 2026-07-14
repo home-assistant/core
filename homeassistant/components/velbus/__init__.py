@@ -118,26 +118,26 @@ async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> No
             )
             continue
 
+        # Properties always use channel number 0; a regular channel is >=1. This guards
+        # against rewriting an ordinary channel whose name matches a property name.
+        if entry.unique_id not in (f"{serial}-0", f"{serial}-0-program_select"):
+            continue
+
         expected_unique_id = f"{serial}-{property_key}"
-        if entry.unique_id != expected_unique_id:
-            if ent_reg.async_get_entity_id(entry.domain, DOMAIN, expected_unique_id):
-                # Target unique_id already exists (created by new code) — remove stale entry
-                _LOGGER.debug(
-                    "Removing stale entity %s with outdated unique_id %s",
-                    entry.entity_id,
-                    entry.unique_id,
-                )
-                ent_reg.async_remove(entry.entity_id)
-            else:
-                _LOGGER.debug(
-                    "Migrating unique_id %s → %s", entry.unique_id, expected_unique_id
-                )
-                ent_reg.async_update_entity(
-                    entry.entity_id, new_unique_id=expected_unique_id
-                )
+        if ent_reg.async_get_entity_id(entry.domain, DOMAIN, expected_unique_id):
+            # Target unique_id already exists (created by new code) — remove stale entry
+            _LOGGER.debug(
+                "Removing stale entity %s with outdated unique_id %s",
+                entry.entity_id,
+                entry.unique_id,
+            )
+            ent_reg.async_remove(entry.entity_id)
         else:
             _LOGGER.debug(
-                "Unique_id is ok: %s = %s", entry.unique_id, expected_unique_id
+                "Migrating unique_id %s → %s", entry.unique_id, expected_unique_id
+            )
+            ent_reg.async_update_entity(
+                entry.entity_id, new_unique_id=expected_unique_id
             )
 
 
