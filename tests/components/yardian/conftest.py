@@ -44,16 +44,15 @@ def mock_yardian_client() -> Generator[AsyncMock]:
     """Mock the Yardian client used by the integration and config flow."""
     with (
         patch(
-            "homeassistant.components.yardian.AsyncYardianClient",
+            "homeassistant.components.yardian.AsyncYardianClient", autospec=True
         ) as client_cls,
         patch(
             "homeassistant.components.yardian.config_flow.AsyncYardianClient",
             new=client_cls,
         ),
     ):
-        client = AsyncMock()
+        client = client_cls.return_value
         client_cls.create = AsyncMock(return_value=client)
-        client_cls.return_value = client
 
         client.fetch_device_info.return_value = {
             "name": "fake_name",

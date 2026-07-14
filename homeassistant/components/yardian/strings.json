@@ -22,9 +22,6 @@
   },
   "entity": {
     "binary_sensor": {
-      "freeze_prevent": {
-        "name": "Freeze prevent"
-      },
       "standby": {
         "name": "Standby"
       },
