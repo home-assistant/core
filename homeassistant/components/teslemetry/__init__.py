@@ -24,10 +24,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.bluetooth import (
-    async_ble_device_from_address,
-    async_request_active_scan,
-)
+from homeassistant.components.bluetooth import async_ble_device_from_address
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -265,12 +262,11 @@ def _setup_subentry_removal_reload(
 ) -> None:
     """Reload the entry when a subentry is removed to drop its routing.
 
-    A vehicle's Bluetooth routing is resolved once at setup from the subentry's
-    stored address. Removing the subentry forgets that address and disables
-    local routing (the virtual key stays on the vehicle for re-pairing); this
-    only takes effect on the next reload. Only a removal triggers this; data
-    updates from pairing reload themselves, and entry-data updates (e.g. token
-    refreshes) must not.
+    A paired vehicle's BLE address is read from the subentry at setup. Removing
+    the subentry forgets that address and disables local routing (the virtual
+    key stays on the vehicle for re-pairing); this only takes effect on the
+    next reload. Only a removal triggers this; data updates from pairing reload
+    themselves, and entry-data updates (e.g. token refreshes) must not.
     """
     known = set(entry.subentries)
 
@@ -336,39 +332,20 @@ async def _async_resolve_vehicle_api(
     subentry_id: str,
     vin: str,
     cloud_vehicle: Vehicle,
-    *,
-    active_scan_done: bool,
-) -> tuple[Vehicle | VehicleRouter, bool]:
+) -> Vehicle | VehicleRouter:
     """Return the API a vehicle's platforms should call.
 
-    When the subentry has been paired (its data carries a BLE ``address``) and the
-    vehicle is in Bluetooth range, wrap the cloud Vehicle in a VehicleRouter that
-    tries the local VehicleBluetooth first and fails over to cloud per command.
-    Otherwise, and for a vehicle out of BLE range at setup, return the plain
-    cloud Vehicle unchanged.
-
-    ``active_scan_done`` tracks whether this setup call already requested a
-    bounded active scan; the discovery cache is a passive listener, so on a
-    cold start this can run before the first advertisement even when the car
-    is nearby. Only the first cache miss per setup pays that bounded cost -
-    one sweep sees every nearby advertisement, not just one address - and the
-    caller threads the returned flag into later vehicles so they skip it.
+    An unpaired vehicle (its subentry carries no BLE ``address``) uses the cloud
+    Vehicle. A paired vehicle always gets a VehicleRouter, whether or not it is
+    in range right now: the router's health check re-reads Home Assistant's
+    Bluetooth discovery cache on every command, so a vehicle that drives away
+    and comes back resumes local routing on its own. A vehicle out of range is
+    skipped by the health check, sending the command straight to cloud without
+    attempting Bluetooth.
     """
     address = entry.subentries[subentry_id].data.get(CONF_ADDRESS)
     if not address:
-        return cloud_vehicle, active_scan_done
-
-    ble_device = async_ble_device_from_address(hass, address, connectable=True)
-    if ble_device is None and not active_scan_done:
-        await async_request_active_scan(hass)
-        active_scan_done = True
-        ble_device = async_ble_device_from_address(hass, address, connectable=True)
-
-    if ble_device is None:
-        LOGGER.warning(
-            "Bluetooth vehicle %s (%s) not in range; using cloud only", vin, address
-        )
-        return cloud_vehicle, active_scan_done
+        return cloud_vehicle
 
     parent = await async_get_ble_parent(hass)
     # verify + raise_unconfirmed=False so an ambiguous BLE timeout resolves as a
@@ -377,12 +354,24 @@ async def _async_resolve_vehicle_api(
     # command-only use does not hold the link open and keep the car awake.
     bluetooth_vehicle = parent.vehicles.createBluetooth(
         vin,
-        device=ble_device,
         confirmation="verify",
         raise_unconfirmed=False,
         keepalive_interval=None,
     )
-    return VehicleRouter(bluetooth_vehicle, cloud_vehicle), active_scan_done
+
+    @callback
+    def _in_range() -> bool:
+        """Report whether the vehicle is currently reachable over Bluetooth."""
+        device = async_ble_device_from_address(hass, address, connectable=True)
+        if device is None:
+            return False
+        # The library does not pass establish_connection a ble_device_callback,
+        # so nothing else refreshes the handle; do it here, the one moment it is
+        # known fresh and a connect may immediately follow.
+        bluetooth_vehicle.set_device(device)
+        return True
+
+    return VehicleRouter(bluetooth_vehicle, cloud_vehicle, health=_in_range)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
@@ -456,10 +445,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     # Create the stream (created lazily when first vehicle is found)
     stream: TeslemetryStream | None = None
 
-    # Whether this setup already paid for a bounded active scan to cover a
-    # cold discovery cache; see _async_resolve_vehicle_api.
-    active_scan_done = False
-
     # Remember each device identifier we create
     current_devices: set[tuple[str, str]] = set()
 
@@ -524,13 +509,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
             # Route commands through Bluetooth first when the subentry has been
             # paired; otherwise this returns the plain cloud Vehicle.
-            vehicle_api, active_scan_done = await _async_resolve_vehicle_api(
+            vehicle_api = await _async_resolve_vehicle_api(
                 hass,
                 entry,
                 subentry_id,
                 vin,
                 vehicle,
-                active_scan_done=active_scan_done,
             )
 
             vehicles.append(

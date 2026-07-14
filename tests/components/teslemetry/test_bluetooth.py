@@ -1,8 +1,10 @@
 """Test the Teslemetry Bluetooth routing and subentry pairing flow."""
 
 import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from copy import deepcopy
-from unittest.mock import ANY, AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.exc import BleakError
 import pytest
@@ -33,6 +35,8 @@ from tests.common import MockConfigEntry
 
 VIN = "LRW3F7EK4NC700000"
 ADDRESS = "AA:BB:CC:DD:EE:FF"
+CLOUD_RESULT = {"response": {"result": True, "reason": "cloud"}}
+BLE_RESULT = {"response": {"result": True, "reason": "bluetooth"}}
 
 
 def _entry_with_ble() -> MockConfigEntry:
@@ -83,7 +87,6 @@ async def test_vehicle_router_with_bluetooth(hass: HomeAssistant) -> None:
     # a non-idempotent command to cloud; keepalive is off for command-only use.
     mock_parent.return_value.vehicles.createBluetooth.assert_called_once_with(
         VIN,
-        device=ANY,
         confirmation="verify",
         raise_unconfirmed=False,
         keepalive_interval=None,
@@ -104,67 +107,180 @@ async def test_vehicle_cloud_without_bluetooth(hass: HomeAssistant) -> None:
     assert not isinstance(vehicle.api, VehicleRouter)
 
 
-async def test_vehicle_bluetooth_out_of_range(hass: HomeAssistant) -> None:
-    """A paired vehicle out of BLE range falls back to cloud only for this run."""
-    entry = _entry_with_ble()
-    entry.add_to_hass(hass)
+@asynccontextmanager
+async def _paired_entry(
+    hass: HomeAssistant, ble_lookup: MagicMock
+) -> AsyncIterator[tuple[VehicleRouter, AsyncMock, AsyncMock]]:
+    """Set up a BLE-paired entry, yielding its router and both backends.
 
-    with (
-        patch(
-            "homeassistant.components.teslemetry.async_ble_device_from_address",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
-        ) as mock_parent,
-        patch("homeassistant.components.teslemetry.PLATFORMS", []),
-    ):
-        mock_parent.return_value.get_private_key = AsyncMock()
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    vehicle = entry.runtime_data.vehicles[0]
-    assert not isinstance(vehicle.api, VehicleRouter)
-
-
-async def test_vehicle_router_after_cold_cache_active_scan(hass: HomeAssistant) -> None:
-    """A paired vehicle missing from a cold discovery cache is found via one scan.
-
-    async_ble_device_from_address() only reads the passive discovery cache;
-    on a cold Home Assistant start the first advertisement may not have
-    arrived yet even though the car is in range. A bounded active scan and
-    retry must still route it locally instead of permanently falling back to
-    cloud for the entry's whole lifetime.
+    ``ble_lookup`` stands in for the Bluetooth discovery cache and stays patched
+    for the caller's commands, so a test can move the vehicle in and out of
+    range between them by changing its return value.
     """
     entry = _entry_with_ble()
     entry.add_to_hass(hass)
-    mock_ble_device = MagicMock(return_value=None)
-
-    async def _active_scan(hass: HomeAssistant) -> None:
-        mock_ble_device.return_value = MagicMock()
+    bluetooth_vehicle = AsyncMock()
+    bluetooth_vehicle.set_device = MagicMock()
 
     with (
         patch(
             "homeassistant.components.teslemetry.async_ble_device_from_address",
-            mock_ble_device,
+            ble_lookup,
         ),
-        patch(
-            "homeassistant.components.teslemetry.async_request_active_scan",
-            AsyncMock(side_effect=_active_scan),
-        ) as mock_active_scan,
         patch(
             "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
         ) as mock_parent,
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
-        mock_parent.return_value.vehicles.createBluetooth.return_value = MagicMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = (
+            bluetooth_vehicle
+        )
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    vehicle = entry.runtime_data.vehicles[0]
-    mock_active_scan.assert_awaited_once()
-    assert isinstance(vehicle.api, VehicleRouter)
+        router = entry.runtime_data.vehicles[0].api
+        cloud = AsyncMock(return_value=CLOUD_RESULT)
+        router.secondary.flash_lights = cloud
+        yield router, bluetooth_vehicle, cloud
+
+
+async def test_vehicle_bluetooth_out_of_range(hass: HomeAssistant) -> None:
+    """A paired vehicle out of range still gets a router, and skips Bluetooth.
+
+    Being away is not a reason to bind the vehicle to cloud for the session; it
+    is a reason for this command to go to cloud. The health check reports out of
+    range, so the router skips the Bluetooth backend entirely rather than paying
+    a connect timeout before failing over.
+    """
+    async with _paired_entry(hass, MagicMock(return_value=None)) as (
+        router,
+        bluetooth_vehicle,
+        cloud,
+    ):
+        assert isinstance(router, VehicleRouter)
+
+        assert await router.flash_lights() == CLOUD_RESULT
+
+        cloud.assert_awaited_once()
+        bluetooth_vehicle.flash_lights.assert_not_called()
+
+
+async def test_vehicle_router_resumes_bluetooth_when_vehicle_returns(
+    hass: HomeAssistant,
+) -> None:
+    """A vehicle away at setup routes locally again once it comes home.
+
+    No reload and no user action: the router re-reads the discovery cache per
+    command, so the first command after the car returns goes over Bluetooth.
+    """
+    ble_lookup = MagicMock(return_value=None)
+
+    async with _paired_entry(hass, ble_lookup) as (router, bluetooth_vehicle, cloud):
+        bluetooth_vehicle.flash_lights.return_value = BLE_RESULT
+
+        assert await router.flash_lights() == CLOUD_RESULT
+        bluetooth_vehicle.flash_lights.assert_not_called()
+
+        ble_lookup.return_value = MagicMock()
+
+        assert await router.flash_lights() == BLE_RESULT
+        bluetooth_vehicle.flash_lights.assert_awaited_once()
+        cloud.assert_awaited_once()
+
+
+async def test_vehicle_router_falls_back_when_vehicle_leaves(
+    hass: HomeAssistant,
+) -> None:
+    """A vehicle in range at setup routes to cloud once it drives away."""
+    ble_lookup = MagicMock(return_value=MagicMock())
+
+    async with _paired_entry(hass, ble_lookup) as (router, bluetooth_vehicle, cloud):
+        bluetooth_vehicle.flash_lights.return_value = BLE_RESULT
+
+        assert await router.flash_lights() == BLE_RESULT
+        cloud.assert_not_called()
+
+        ble_lookup.return_value = None
+
+        assert await router.flash_lights() == CLOUD_RESULT
+        cloud.assert_awaited_once()
+        bluetooth_vehicle.flash_lights.assert_awaited_once()
+
+
+async def test_vehicle_router_refreshes_device_handle(hass: HomeAssistant) -> None:
+    """Each command refreshes the BLE handle from the cache before connecting.
+
+    The library does not pass establish_connection a ble_device_callback, so a
+    handle that went stale between commands is only replaced because the health
+    check sets the current one.
+    """
+    first_device = MagicMock()
+    second_device = MagicMock()
+    ble_lookup = MagicMock(return_value=first_device)
+
+    async with _paired_entry(hass, ble_lookup) as (router, bluetooth_vehicle, _cloud):
+        await router.flash_lights()
+        bluetooth_vehicle.set_device.assert_called_once_with(first_device)
+
+        ble_lookup.return_value = second_device
+        await router.flash_lights()
+
+        bluetooth_vehicle.set_device.assert_called_with(second_device)
+
+
+async def test_vehicle_router_fails_over_on_stale_cache_hit(
+    hass: HomeAssistant,
+) -> None:
+    """A cache entry outliving the vehicle costs one failed attempt, not a failure.
+
+    The discovery cache keeps returning a device for minutes after a vehicle
+    leaves, so the health check can report in range when it is not. The command
+    still lands, on cloud, via the router's normal per-command failover.
+    """
+    async with _paired_entry(hass, MagicMock(return_value=MagicMock())) as (
+        router,
+        bluetooth_vehicle,
+        cloud,
+    ):
+        bluetooth_vehicle.flash_lights.side_effect = BluetoothTransportError()
+
+        assert await router.flash_lights() == CLOUD_RESULT
+
+        bluetooth_vehicle.flash_lights.assert_awaited_once()
+        cloud.assert_awaited_once()
+
+
+async def test_vehicle_paired_but_never_seen(hass: HomeAssistant) -> None:
+    """A paired vehicle never seen by Bluetooth is built without a device handle.
+
+    The backend is constructed for every paired vehicle, in range or not, so it
+    starts with no device. Every command is gated to cloud until the cache first
+    returns one, which is what keeps the library's "device has not been set"
+    guard out of reach.
+    """
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            MagicMock(return_value=None),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = AsyncMock()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        "device"
+        not in mock_parent.return_value.vehicles.createBluetooth.call_args.kwargs
+    )
 
 
 @pytest.mark.parametrize(
@@ -198,6 +314,39 @@ async def test_unload_disconnects_bluetooth(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    bluetooth_vehicle.disconnect.assert_awaited_once()
+
+
+async def test_unload_never_connected_bluetooth(hass: HomeAssistant) -> None:
+    """Unloading a paired vehicle that was never in range does not raise.
+
+    Every paired vehicle now carries a router, so unload reaches the disconnect
+    even for a backend that never opened a link.
+    """
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    bluetooth_vehicle = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = (
+            bluetooth_vehicle
+        )
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
