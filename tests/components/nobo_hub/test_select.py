@@ -154,7 +154,7 @@ async def test_week_profile_push_update(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_zone_removed_marks_week_profile_unavailable(
+async def test_zone_removed_removes_week_profile_entity(
     hass: HomeAssistant,
     mock_nobo_hub: MagicMock,
 ) -> None:

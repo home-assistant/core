@@ -197,7 +197,7 @@ async def test_set_preset_with_override_type_now(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_zone_removed_marks_unavailable(
+async def test_zone_removed_removes_entity(
     hass: HomeAssistant,
     mock_nobo_hub: MagicMock,
 ) -> None:

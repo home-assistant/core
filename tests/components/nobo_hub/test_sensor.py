@@ -58,7 +58,7 @@ async def test_temperature_push_update(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_component_removed_marks_unavailable(
+async def test_component_removed_removes_entity(
     hass: HomeAssistant,
     mock_nobo_hub: MagicMock,
 ) -> None:
