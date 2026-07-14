@@ -270,7 +270,6 @@ async def test_all_number(
             },
         ),
         (
-            # raw = (value - offset) / scale = (25.0 - 5) / 0.1 = 200
             25.0,
             [200],
             ("write_register", {"value": 200}),
@@ -288,8 +287,6 @@ async def test_all_number(
             },
         ),
         (
-            # unswapped registers would be struct.unpack(">HH", struct.pack(">i", 32)) = (0, 32);
-            # word swap reverses that order before writing.
             32,
             list(reversed(struct.unpack(">HH", struct.pack(">i", 32)))),
             (
