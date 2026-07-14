@@ -157,6 +157,37 @@ _MSG = "home-assistant-missing-feature-implementation"
     """,
             id="dynamic_call_declaration_is_skipped",
         ),
+        pytest.param(
+            """
+    from homeassistant.components.cover import CoverEntity, CoverEntityFeature
+
+    class MyCover(CoverEntity):
+        def __init__(self):
+            self._attr_supported_features: CoverEntityFeature = CoverEntityFeature.OPEN
+
+        async def async_open_cover(self, **kwargs):
+            pass
+    """,
+            id="annotated_assignment_implemented",
+        ),
+        pytest.param(
+            """
+    from homeassistant.components.water_heater import (
+        WaterHeaterEntity,
+        WaterHeaterEntityFeature,
+    )
+
+    class MyWaterHeater(WaterHeaterEntity):
+        _attr_supported_features = WaterHeaterEntityFeature.ON_OFF
+
+        async def async_turn_on(self):
+            pass
+
+        async def async_turn_off(self):
+            pass
+    """,
+            id="multi_service_flag_both_implemented",
+        ),
     ],
 )
 def test_supported_features_good(
@@ -229,6 +260,33 @@ def test_supported_features_good(
             {"STOP"},
             id="valve_base_entity_in_submodule_missing",
         ),
+        pytest.param(
+            """
+    from homeassistant.components.cover import CoverEntity, CoverEntityFeature
+
+    class MyCover(CoverEntity):
+        def __init__(self):
+            self._attr_supported_features: CoverEntityFeature = CoverEntityFeature.OPEN
+    """,
+            {"OPEN"},
+            id="annotated_assignment_missing",
+        ),
+        pytest.param(
+            """
+    from homeassistant.components.water_heater import (
+        WaterHeaterEntity,
+        WaterHeaterEntityFeature,
+    )
+
+    class MyWaterHeater(WaterHeaterEntity):
+        _attr_supported_features = WaterHeaterEntityFeature.ON_OFF
+
+        async def async_turn_on(self):
+            pass
+    """,
+            {"ON_OFF"},
+            id="multi_service_flag_one_missing",
+        ),
     ],
 )
 def test_supported_features_bad(
@@ -242,4 +300,21 @@ def test_supported_features_bad(
     walk_checker(linter, enforce_supported_features_checker, root_node)
     messages = linter.release_messages()
     assert {msg.args[0] for msg in messages} == expected_features
+    assert len(messages) == len(expected_features)
     assert all(msg.msg_id == _MSG for msg in messages)
+
+
+def test_supported_features_skips_test_modules(
+    linter: UnittestLinter,
+    enforce_supported_features_checker: BaseChecker,
+) -> None:
+    """Entity stubs defined in test modules are intentional and not checked."""
+    code = """
+    from homeassistant.components.cover import CoverEntity, CoverEntityFeature
+
+    class MockCover(CoverEntity):
+        _attr_supported_features = CoverEntityFeature.OPEN
+    """
+    root_node = astroid.parse(code, "tests.components.cover.test_init")
+    with assert_no_messages(linter):
+        walk_checker(linter, enforce_supported_features_checker, root_node)

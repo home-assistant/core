@@ -134,9 +134,13 @@ def enforce_supported_features_implemented() -> Generator[None]:
         yield
     if violations:
         details = "\n".join(
-            f"{violation['entity_class']} declares {violation['domain']} feature "
-            f"{violation['feature']} but implements none of: "
-            f"{', '.join(violation['methods'])}"
+            violation["probe_error"]
+            if "probe_error" in violation
+            else (
+                f"{violation['entity_class']} declares {violation['domain']} feature "
+                f"{violation['feature']} but implements none of: "
+                f"{', '.join(violation['methods'])}"
+            )
             for violation in violations
         )
         pytest.fail(

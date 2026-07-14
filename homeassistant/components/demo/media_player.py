@@ -239,6 +239,13 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         self.schedule_update_ha_state()
 
     @override
+    def media_seek(self, position: float) -> None:
+        """Seek the media to a specific location."""
+        self._progress = int(position)
+        self._progress_updated_at = dt_util.utcnow()
+        self.schedule_update_ha_state()
+
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         self._progress = self.media_position
@@ -437,6 +444,32 @@ class DemoGroupPlayer(AbstractDemoPlayer):
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.TURN_OFF
     )
+
+    @override
+    def play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Play a piece of media."""
+        self._attr_media_content_id = media_id
+        self.schedule_update_ha_state()
+
+    @override
+    def media_seek(self, position: float) -> None:
+        """Seek the media to a specific location."""
+        self._attr_media_position = int(position)
+        self.schedule_update_ha_state()
+
+    @override
+    def join_players(self, group_members: list[str]) -> None:
+        """Join `group_members` as a player group with the current player."""
+        self._attr_group_members = [self.entity_id, *group_members]
+        self.schedule_update_ha_state()
+
+    @override
+    def unjoin_player(self) -> None:
+        """Remove this player from any group."""
+        self._attr_group_members = []
+        self.schedule_update_ha_state()
 
 
 class DemoSearchPlayer(AbstractDemoPlayer):

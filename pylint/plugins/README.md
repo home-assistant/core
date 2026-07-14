@@ -864,7 +864,10 @@ Entity platforms tie each `supported_features` flag to a service handler via
 `component.async_register_entity_service(SERVICE, schema, "async_method",
 [XEntityFeature.FLAG])`. If an entity advertises `FLAG` but implements neither
 `async_method` nor its sync counterpart, the corresponding service raises
-`NotImplementedError` (or silently does nothing) at runtime.
+`NotImplementedError` (or silently does nothing) at runtime. A flag may gate
+several services (e.g. water_heater `ON_OFF` gates both `turn_on` and
+`turn_off`); each backing method is required. Classes defined in test modules
+are not checked, since test doubles omit implementations intentionally.
 
 The feature → method mapping is derived **per platform** at lint time by
 reading the platform's `async_register_entity_service` calls, so it stays in

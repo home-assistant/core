@@ -29,15 +29,59 @@ from contextlib import contextmanager
 from enum import Flag
 from functools import cache
 import importlib
+import traceback
 import types
 
 # ``pylint/plugins`` is on sys.path via pyproject ``[tool.pytest] pythonpath``,
 # so the checker's fallback-aware map can be reused verbatim.
-from pylint_home_assistant.checkers.supported_features import _platform_feature_map
+from pylint_home_assistant.checkers.supported_features import platform_feature_map
 
 from homeassistant.helpers.entity_platform import EntityPlatform
 
 _COMPONENTS_ROOT = "homeassistant.components"
+
+# Existing violations, to be fixed in per-integration follow-up PRs. Each is a
+# real bug: the entity advertises the feature, but calling the corresponding
+# service raises NotImplementedError. Do not add new entries; fix the entity.
+KNOWN_VIOLATIONS: set[tuple[str, str, str]] = {
+    ("homeassistant.components.abode.cover.AbodeCover", "cover", "STOP"),
+    (
+        "homeassistant.components.hdmi_cec.media_player.CecPlayerEntity",
+        "media_player",
+        "PLAY_MEDIA",
+    ),
+    (
+        "homeassistant.components.homekit_controller.cover.HomeKitWindowCover",
+        "cover",
+        "CLOSE_TILT",
+    ),
+    (
+        "homeassistant.components.homekit_controller.cover.HomeKitWindowCover",
+        "cover",
+        "OPEN_TILT",
+    ),
+    (
+        "homeassistant.components.homematicip_cloud.cover.HomematicipGarageDoorModule",
+        "cover",
+        "SET_POSITION",
+    ),
+    (
+        "homeassistant.components.samsungtv.media_player.SamsungTVDevice",
+        "media_player",
+        "STOP",
+    ),
+    ("homeassistant.components.template.cover.StateCoverEntity", "cover", "STOP_TILT"),
+    (
+        "homeassistant.components.template.cover.TriggerCoverEntity",
+        "cover",
+        "STOP_TILT",
+    ),
+    (
+        "homeassistant.components.wmspro.cover.WebControlProSlatRotate",
+        "cover",
+        "STOP_TILT",
+    ),
+}
 
 
 @cache
@@ -82,7 +126,7 @@ def _is_implemented(cls: type, candidates: frozenset[str], domain: str) -> bool:
 
 def check_entity(entity: object, domain: str) -> list[tuple[str, frozenset[str]]]:
     """Return ``(flag, acceptable_methods)`` for declared-but-unimplemented features."""
-    feature_map = _platform_feature_map(domain)
+    feature_map = platform_feature_map(domain)
     if not feature_map:
         return []
     supported = getattr(entity, "supported_features", None)
@@ -95,15 +139,18 @@ def check_entity(entity: object, domain: str) -> list[tuple[str, frozenset[str]]
 
     cls = type(entity)
     violations: list[tuple[str, frozenset[str]]] = []
-    for flag, methods in feature_map.items():
+    for flag, units in feature_map.items():
         member = getattr(enum, flag, None)
         if member is None:
             continue
         bit = int(member)
         if supported & bit != bit:
             continue
-        if not _is_implemented(cls, methods, domain):
-            violations.append((flag, methods))
+        violations.extend(
+            (flag, methods)
+            for methods in units
+            if not _is_implemented(cls, methods, domain)
+        )
     return violations
 
 
@@ -118,10 +165,12 @@ def collect_via_add_hook(
     class is defined under *module_prefixes* are checked, so test doubles
     defined in test modules are ignored. Group platform entities are exempt:
     service calls targeting a group are expanded to its members, so the group
-    never handles them itself.
+    never handles them itself. A crash in the probe itself is collected as a
+    ``probe_error`` entry rather than swallowed, so the enforcement cannot
+    silently stop working.
     """
     collected: list[dict] = []
-    seen: set[tuple[str, str, str]] = set()
+    seen: set[tuple[str, ...]] = set()
     original = EntityPlatform._async_add_entity
 
     async def _patched(self, entity, *args, **kwargs):  # type: ignore[no-untyped-def]
@@ -132,21 +181,27 @@ def collect_via_add_hook(
                 return
             if cls.__module__.startswith(f"{_COMPONENTS_ROOT}.group."):
                 return
+            class_name = f"{cls.__module__}.{cls.__qualname__}"
             for flag, methods in check_entity(entity, self.domain):
-                key = (f"{cls.__module__}.{cls.__qualname__}", self.domain, flag)
+                if (class_name, self.domain, flag) in KNOWN_VIOLATIONS:
+                    continue
+                key = (class_name, self.domain, flag, *sorted(methods))
                 if key in seen:
                     continue
                 seen.add(key)
                 collected.append(
                     {
-                        "entity_class": key[0],
+                        "entity_class": class_name,
                         "domain": self.domain,
                         "feature": flag,
                         "methods": sorted(methods),
                     }
                 )
-        except Exception:  # noqa: BLE001 - a probe must never break a test
-            pass
+        except Exception:  # noqa: BLE001 - surfaced via a probe_error entry
+            error = traceback.format_exc()
+            if ("probe_error", error) not in seen:
+                seen.add(("probe_error", error))
+                collected.append({"probe_error": error})
 
     EntityPlatform._async_add_entity = _patched  # type: ignore[method-assign]
     try:

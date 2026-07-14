@@ -289,10 +289,13 @@ def _resolve_requirement(
 
 
 @cache
-def _platform_feature_map(platform: str) -> dict[str, frozenset[str]]:
-    """Map ``FEATURE_FLAG_NAME -> {acceptable method names}`` for a platform.
+def platform_feature_map(platform: str) -> dict[str, tuple[frozenset[str], ...]]:
+    """Map ``FEATURE_FLAG_NAME -> required method units`` for a platform.
 
-    Derived from the platform's ``async_register_entity_service`` calls.
+    Derived from the platform's ``async_register_entity_service`` calls. Each
+    unit is the sync/async method pair backing one service, and a flag may
+    gate several services (e.g. water_heater ``ON_OFF`` gates both ``turn_on``
+    and ``turn_off``), so an entity must implement every unit.
     """
     try:
         module = MANAGER.ast_from_module_name(f"{_COMPONENTS_ROOT}.{platform}")
@@ -300,7 +303,7 @@ def _platform_feature_map(platform: str) -> dict[str, frozenset[str]]:
         return {}
 
     base_methods = _base_methods(module, f"{_COMPONENTS_ROOT}.{platform}")
-    result: dict[str, frozenset[str]] = {}
+    result: dict[str, list[frozenset[str]]] = {}
 
     for call in module.nodes_of_class(nodes.Call):
         callee = call.func
@@ -309,12 +312,12 @@ def _platform_feature_map(platform: str) -> dict[str, frozenset[str]]:
         if len(call.args) < 4:
             continue
         flag = _single_flag_name(call.args[3])
-        if flag is None or flag in result:
+        if flag is None:
             continue
         methods = _resolve_requirement(call.args[2], base_methods)
-        if methods:
-            result[flag] = methods
-    return result
+        if methods and methods not in result.setdefault(flag, []):
+            result[flag].append(methods)
+    return {flag: tuple(units) for flag, units in result.items()}
 
 
 def _single_flag_name(node: nodes.NodeNG) -> str | None:
@@ -413,7 +416,9 @@ def _declared_flags(class_node: nodes.ClassDef) -> set[str] | None:
                 if node.value is None or not consume(node.value):
                     return None
 
-    for assign in class_node.nodes_of_class((nodes.Assign, nodes.AugAssign)):
+    for assign in class_node.nodes_of_class(
+        (nodes.Assign, nodes.AnnAssign, nodes.AugAssign)
+    ):
         target = (
             assign.targets[0] if isinstance(assign, nodes.Assign) else assign.target
         )
@@ -424,7 +429,11 @@ def _declared_flags(class_node: nodes.ClassDef) -> set[str] | None:
             and target.expr.name == "self"
         ):
             continue
-        if isinstance(assign, nodes.AugAssign) or not consume(assign.value):
+        if (
+            isinstance(assign, nodes.AugAssign)
+            or assign.value is None
+            or not consume(assign.value)
+        ):
             return None
 
     return flags if found else None
@@ -473,6 +482,11 @@ class HassEnforceSupportedFeaturesChecker(BaseChecker):
 
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Check an entity class' declared features against implementations."""
+        root_name = node.root().name
+        # Test modules define intentional stubs (e.g. to exercise the
+        # NotImplementedError path), so only integration code is checked.
+        if root_name == "tests" or root_name.startswith("tests."):
+            return
         if node.qname() in self._same_module_ancestors:
             return
         if not inherits_from_entity(node):
@@ -480,20 +494,20 @@ class HassEnforceSupportedFeaturesChecker(BaseChecker):
         platform = _platform_of(node)
         if platform is None:
             return
-        feature_map = _platform_feature_map(platform)
+        feature_map = platform_feature_map(platform)
         if not feature_map:
             return
         declared = _declared_flags(node)
         if not declared:
             return
         for flag in sorted(declared):
-            candidates = feature_map.get(flag)
-            if candidates and not _is_implemented(node, candidates, platform):
-                self.add_message(
-                    "home-assistant-missing-feature-implementation",
-                    node=node,
-                    args=(flag, " / ".join(sorted(candidates))),
-                )
+            for candidates in feature_map.get(flag, ()):
+                if not _is_implemented(node, candidates, platform):
+                    self.add_message(
+                        "home-assistant-missing-feature-implementation",
+                        node=node,
+                        args=(flag, " / ".join(sorted(candidates))),
+                    )
 
 
 def register(linter: PyLinter) -> None:
