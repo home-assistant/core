@@ -905,11 +905,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
             follower_udn = self._wiim_data.entity_id_to_udn_map.get(member_entity_id)
             if follower_udn is None:
-                LOGGER.warning(
-                    "Unable to resolve group member entity_id %s to a UDN",
-                    member_entity_id,
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_grouping_entity",
+                    translation_placeholders={"entity_id": member_entity_id},
                 )
-                continue
 
             if follower_udn == target_device.udn:
                 LOGGER.debug(

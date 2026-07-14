@@ -55,6 +55,7 @@ import homeassistant.components.wiim as wiim_component
 from homeassistant.components.wiim.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from . import fire_general_update, fire_transport_update, setup_integration
 
@@ -934,7 +935,6 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
             ATTR_GROUP_MEMBERS: [
                 MEDIA_PLAYER_ENTITY_ID,
                 follower_entity_id,
-                "media_player.unknown_wiim_device",
             ],
         },
         blocking=True,
@@ -985,21 +985,6 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
 
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_JOIN,
-        {
-            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
-            ATTR_GROUP_MEMBERS: [
-                MEDIA_PLAYER_ENTITY_ID,
-                "media_player.unknown_wiim_device",
-            ],
-        },
-        blocking=True,
-    )
-
-    mock_wiim_controller.async_join_group.assert_not_awaited()
-
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
         SERVICE_UNJOIN,
         {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
         blocking=True,
@@ -1008,3 +993,30 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
     mock_wiim_controller.async_ungroup_device.assert_awaited_once_with(
         mock_wiim_device.udn
     )
+
+
+async def test_join_service_invalid_member_uses_translation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+) -> None:
+    """Test joining an invalid member raises a translated validation error."""
+    await setup_integration(hass, mock_config_entry)
+    invalid_entity_id = "media_player.unknown_wiim_device"
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                ATTR_GROUP_MEMBERS: [invalid_entity_id],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_grouping_entity"
+    assert exc_info.value.translation_placeholders == {"entity_id": invalid_entity_id}
+    mock_wiim_controller.async_join_group.assert_not_awaited()
