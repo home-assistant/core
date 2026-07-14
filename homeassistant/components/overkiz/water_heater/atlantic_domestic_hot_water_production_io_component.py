@@ -19,11 +19,8 @@ from ..entity import OverkizEntity
 DEFAULT_MIN_TEMP: float = 50.0
 DEFAULT_MAX_TEMP: float = 62.0
 
-# The device stores a "number of showers" and derives the setpoint from it, so it only
-# accepts a fixed set of temperatures spaced 4 °C apart (e.g. on a 270 L tank: 50/54/58/62 °C
-# for 4/5/6/7 showers). The API exposes the setpoint as a continuous value with no step or
-# bounds, so constrain the UI to that 4 °C grid; any off-grid value is silently ignored by the
-# device. The exact min/max/step can vary with tank capacity.
+# io:AtlanticDomesticHotWaterProductionIOComponent only accepts setpoints spaced 4 °C apart
+# (a "number of showers", e.g. 50/54/58/62 °C on a 270 L tank); off-grid values are ignored.
 TARGET_TEMPERATURE_STEP: float = 4.0
 
 BOOST_MODE_DURATION: int = 7
