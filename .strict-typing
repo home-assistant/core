@@ -255,6 +255,7 @@ homeassistant.components.guntamatic.*
 homeassistant.components.habitica.*
 homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
+homeassistant.components.harman_luxury.*
 homeassistant.components.hdfury.*
 homeassistant.components.heos.*
 homeassistant.components.here_travel_time.*
@@ -336,6 +337,7 @@ homeassistant.components.lawn_mower.*
 homeassistant.components.lcn.*
 homeassistant.components.ld2410_ble.*
 homeassistant.components.led_ble.*
+homeassistant.components.led_infrared.*
 homeassistant.components.lektrico.*
 homeassistant.components.letpot.*
 homeassistant.components.lg_infrared.*

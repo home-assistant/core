@@ -349,6 +349,14 @@ async def test_number_camera_mic_volume_unavailable_without_public(
 ) -> None:
     """The migrated mic volume number is unavailable without a public object."""
 
+    # The default fixture mirrors every camera into the public bootstrap;
+    # prime it empty to model a camera the public API does not know yet.
+    async def _prime_empty() -> Mock:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_empty)
     await init_entry(hass, ufp, [camera])
 
     _, entity_id = await ids_from_device_description(
