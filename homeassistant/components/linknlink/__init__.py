@@ -28,6 +28,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LinknLinkConfigEntry) ->
     coordinator = LinknLinkCoordinator(hass, entry, client, device)
 
     await coordinator.async_config_entry_first_refresh()
+    assert coordinator.session is not None
+    device.model = coordinator.session.device.model
     entry.runtime_data = coordinator
 
     dr.async_get(hass).async_get_or_create(

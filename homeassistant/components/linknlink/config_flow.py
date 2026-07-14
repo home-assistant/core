@@ -48,7 +48,7 @@ class LinknLinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     model=DISPLAY_MODEL_ULTRA,
                 )
                 try:
-                    await UltraClient(default_port=port).connect(device)
+                    session = await UltraClient(default_port=port).connect(device)
                 except UltraError:
                     errors["base"] = "cannot_connect"
                 except Exception:  # noqa: BLE001
@@ -58,7 +58,7 @@ class LinknLinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "unknown"
                 else:
                     return self.async_create_entry(
-                        title=DISPLAY_MODEL_ULTRA,
+                        title=session.device.model,
                         data={
                             CONF_HOST: user_input[CONF_HOST],
                             CONF_MAC: mac,

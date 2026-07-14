@@ -1,8 +1,9 @@
 """Tests for the LinknLink config flow."""
 
+from dataclasses import replace
 from unittest.mock import AsyncMock
 
-from aiolinknlink import UltraConnectionError
+from aiolinknlink import DISPLAY_MODEL_ULTRA2, UltraConnectionError
 import pytest
 
 from homeassistant.components.linknlink.const import DOMAIN
@@ -11,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import HOST, MAC, PORT
+from .conftest import DEVICE, HOST, MAC, PORT, SESSION
 
 from tests.common import MockConfigEntry
 
@@ -19,6 +20,9 @@ from tests.common import MockConfigEntry
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(hass: HomeAssistant, mock_linknlink_client: AsyncMock) -> None:
     """Test the complete user flow."""
+    mock_linknlink_client.connect.return_value = replace(
+        SESSION, device=replace(DEVICE, model=DISPLAY_MODEL_ULTRA2)
+    )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -32,7 +36,7 @@ async def test_full_flow(hass: HomeAssistant, mock_linknlink_client: AsyncMock) 
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "eMotion Ultra"
+    assert result["title"] == DISPLAY_MODEL_ULTRA2
     assert result["data"] == {CONF_HOST: HOST, CONF_MAC: MAC, CONF_PORT: PORT}
     assert result["result"].unique_id == MAC
     mock_linknlink_client.connect.assert_awaited_once()
