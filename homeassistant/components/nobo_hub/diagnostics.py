@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from pynobo import ComponentInfo
+
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
 from homeassistant.core import HomeAssistant
@@ -23,7 +25,7 @@ _MODEL_FIELDS = (
 )
 
 
-def _component_to_dict(component: dict[str, Any]) -> dict[str, Any]:
+def _component_to_dict(component: ComponentInfo) -> dict[str, Any]:
     formatted = dict(component)
     if (model := formatted.get("model")) is not None:
         formatted["model"] = {
