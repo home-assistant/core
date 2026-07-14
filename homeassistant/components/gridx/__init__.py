@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GridxConfigEntry) -> boo
     password: str = entry.data[CONF_PASSWORD]
     oem: str = entry.data[CONF_OEM]
 
-    config = load_oem_config(oem, username, password)
+    config = await hass.async_add_executor_job(load_oem_config, oem, username, password)
     httpx_client = create_async_httpx_client(
         hass,
         auto_cleanup=False,

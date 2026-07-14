@@ -1,11 +1,13 @@
 """Client helpers for the GridX integration."""
 
-from importlib import import_module
 from importlib.resources import files
 import json
 from typing import Any, Protocol
 
+from gridx_connector.async_connector import AsyncGridboxConnector
 import httpx
+
+from .const import LOGGER
 
 
 class GridxConnector(Protocol):
@@ -40,12 +42,10 @@ async def async_create_connector(
     config: dict[str, Any],
     httpx_client: httpx.AsyncClient,
 ) -> GridxConnector:
-    """Create a GridX connector without importing the dependency at module import time."""
-    connector_module = import_module("gridx_connector.async_connector")
-    async_gridbox_connector = connector_module.AsyncGridboxConnector
-
-    connector: GridxConnector = await async_gridbox_connector.create(
+    """Create and initialize a GridX connector."""
+    connector: GridxConnector = await AsyncGridboxConnector.create(
         config,
+        logger=LOGGER,
         httpx_client=httpx_client,
         owns_httpx_client=True,
     )

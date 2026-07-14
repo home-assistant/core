@@ -34,7 +34,7 @@ async def _validate_credentials(
         ConnectionError: On network / timeout issues.
         httpx.HTTPError: On HTTP errors from the underlying client.
     """
-    config = load_oem_config(oem, username, password)
+    config = await hass.async_add_executor_job(load_oem_config, oem, username, password)
     httpx_client = create_async_httpx_client(
         hass,
         auto_cleanup=False,
