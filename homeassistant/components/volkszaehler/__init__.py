@@ -58,7 +58,6 @@ async def async_setup_entry(
                 subentry.data[CONF_UUID],
                 host=entry.data[CONF_HOST],
                 port=entry.data[CONF_PORT],
-                middleware=False,
             )
         )
         await vz_data.async_update()
