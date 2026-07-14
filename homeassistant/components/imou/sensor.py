@@ -1,5 +1,6 @@
 """Support for Imou sensor entities."""
 
+from dataclasses import dataclass
 from typing import override
 
 from pyimouapi.const import PARAM_STATE_VARIANT, STATE_VARIANT_NUMERIC
@@ -8,6 +9,7 @@ from pyimouapi.ha_device import ImouHaDevice
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.const import (
@@ -30,82 +32,101 @@ from .entity import ImouEntity
 
 PARALLEL_UPDATES = 0
 
-SENSOR_TYPES = (
-    PARAM_STATUS,
-    "battery",
-    "storage_used",
-    "temperature_current",
-    "humidity_current",
-    "power",
-    "voltage",
-    "current",
-    "switch_cnt",
-    "use_electricity",
-    "use_time",
-)
-
 STATUS_OPTIONS = ["online", "offline", "sleep", "upgrading"]
 
-SENSOR_UNITS: dict[str, str] = {
-    "battery": PERCENTAGE,
-    "temperature_current": UnitOfTemperature.CELSIUS,
-    "humidity_current": PERCENTAGE,
-    "power": UnitOfPower.WATT,
-    "voltage": UnitOfElectricPotential.VOLT,
-    "current": UnitOfElectricCurrent.AMPERE,
-    "use_electricity": UnitOfEnergy.KILO_WATT_HOUR,
-    "use_time": UnitOfTime.MINUTES,
-    "storage_used": PERCENTAGE,
-}
 
-SENSOR_DEVICE_CLASS: dict[str, SensorDeviceClass] = {
-    "battery": SensorDeviceClass.BATTERY,
-    "temperature_current": SensorDeviceClass.TEMPERATURE,
-    "humidity_current": SensorDeviceClass.HUMIDITY,
-    "power": SensorDeviceClass.POWER,
-    "voltage": SensorDeviceClass.VOLTAGE,
-    "current": SensorDeviceClass.CURRENT,
-    "use_electricity": SensorDeviceClass.ENERGY,
-    "use_time": SensorDeviceClass.DURATION,
-    PARAM_STATUS: SensorDeviceClass.ENUM,
-}
+@dataclass(frozen=True, kw_only=True)
+class ImouSensorEntityDescription(SensorEntityDescription):
+    """Describes an Imou sensor entity."""
 
-SENSOR_STATE_CLASS: dict[str, SensorStateClass] = {
-    "battery": SensorStateClass.MEASUREMENT,
-    "temperature_current": SensorStateClass.MEASUREMENT,
-    "humidity_current": SensorStateClass.MEASUREMENT,
-    "power": SensorStateClass.MEASUREMENT,
-    "voltage": SensorStateClass.MEASUREMENT,
-    "current": SensorStateClass.MEASUREMENT,
-    "use_electricity": SensorStateClass.TOTAL_INCREASING,
-    "use_time": SensorStateClass.TOTAL_INCREASING,
-    "switch_cnt": SensorStateClass.TOTAL,
-    "storage_used": SensorStateClass.MEASUREMENT,
-}
 
-SENSOR_ENTITY_CATEGORY: dict[str, EntityCategory] = {
-    "battery": EntityCategory.DIAGNOSTIC,
-    "storage_used": EntityCategory.DIAGNOSTIC,
-    PARAM_STATUS: EntityCategory.DIAGNOSTIC,
-}
-
-SENSOR_DISPLAY_PRECISION: dict[str, int] = {
-    "battery": 0,
-    "temperature_current": 1,
-    "humidity_current": 1,
-    "storage_used": 0,
+SENSOR_DESCRIPTIONS: dict[str, ImouSensorEntityDescription] = {
+    PARAM_STATUS: ImouSensorEntityDescription(
+        key=PARAM_STATUS,
+        translation_key=PARAM_STATUS,
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=STATUS_OPTIONS,
+    ),
+    "battery": ImouSensorEntityDescription(
+        key="battery",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=0,
+    ),
+    "storage_used": ImouSensorEntityDescription(
+        key="storage_used",
+        translation_key="storage_used",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        suggested_display_precision=0,
+    ),
+    "temperature_current": ImouSensorEntityDescription(
+        key="temperature_current",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    "humidity_current": ImouSensorEntityDescription(
+        key="humidity_current",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    "power": ImouSensorEntityDescription(
+        key="power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "voltage": ImouSensorEntityDescription(
+        key="voltage",
+        device_class=SensorDeviceClass.VOLTAGE,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "current": ImouSensorEntityDescription(
+        key="current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "switch_cnt": ImouSensorEntityDescription(
+        key="switch_cnt",
+        translation_key="switch_cnt",
+        state_class=SensorStateClass.TOTAL,
+    ),
+    "use_electricity": ImouSensorEntityDescription(
+        key="use_electricity",
+        translation_key="use_electricity",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    "use_time": ImouSensorEntityDescription(
+        key="use_time",
+        translation_key="use_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
 }
 
 
 def _iter_sensors(
     coordinator: ImouDataUpdateCoordinator,
-) -> list[tuple[str, ImouHaDevice]]:
-    """Return (sensor_type, device) pairs for supported sensors."""
+) -> list[tuple[ImouSensorEntityDescription, ImouHaDevice]]:
+    """Return (description, device) pairs for supported sensors."""
     return [
-        (sensor_type, device)
+        (SENSOR_DESCRIPTIONS[sensor_type], device)
         for device in coordinator.devices
         for sensor_type in device.sensors
-        if sensor_type in SENSOR_TYPES
+        if sensor_type in SENSOR_DESCRIPTIONS
     ]
 
 
@@ -120,8 +141,8 @@ async def async_setup_entry(
     def _add_sensors(new_devices: list[ImouHaDevice]) -> None:
         device_keys = {imou_device_identifier(device) for device in new_devices}
         async_add_entities(
-            ImouSensor(coordinator, sensor_type, device)
-            for sensor_type, device in _iter_sensors(coordinator)
+            ImouSensor(coordinator, description, device)
+            for description, device in _iter_sensors(coordinator)
             if imou_device_identifier(device) in device_keys
         )
 
@@ -139,20 +160,19 @@ async def async_setup_entry(
 class ImouSensor(ImouEntity, SensorEntity):
     """Imou sensor entity."""
 
+    entity_description: ImouSensorEntityDescription
+
     def __init__(
         self,
         coordinator: ImouDataUpdateCoordinator,
-        entity_type: str,
+        description: ImouSensorEntityDescription,
         device: ImouHaDevice,
     ) -> None:
         """Initialize the Imou sensor entity."""
-        super().__init__(coordinator, entity_type, device)
-        if device_class := SENSOR_DEVICE_CLASS.get(entity_type):
-            self._attr_device_class = device_class
-        if entity_category := SENSOR_ENTITY_CATEGORY.get(entity_type):
-            self._attr_entity_category = entity_category
-        if entity_type == PARAM_STATUS:
-            self._attr_options = STATUS_OPTIONS
+        super().__init__(coordinator, description.key, device)
+        self.entity_description = description
+        # Prefer description.translation_key (may be None for device-class names).
+        self._attr_translation_key = description.translation_key
 
     @property
     def _is_numeric_variant(self) -> bool:
@@ -164,30 +184,15 @@ class ImouSensor(ImouEntity, SensorEntity):
 
     @property
     @override
-    def state_class(self) -> SensorStateClass | None:
-        """Return state class for numeric sensor values."""
-        if not self._is_numeric_variant:
-            return None
-        return SENSOR_STATE_CLASS.get(self._entity_type)
-
-    @property
-    @override
     def native_value(self) -> StateType:
-        """Return the sensor value."""
-        return self.device.sensors[self._entity_type][PARAM_STATE]
+        """Return the sensor value.
 
-    @property
-    @override
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit when the sensor value is numeric."""
+        Numeric sensors only expose numeric values; error codes such as
+        storage_used e1/e2 become None (unknown) instead of mixing enum states.
+        """
+        value = self.device.sensors[self._entity_type][PARAM_STATE]
+        if self.entity_description.device_class == SensorDeviceClass.ENUM:
+            return value
         if not self._is_numeric_variant:
             return None
-        return SENSOR_UNITS.get(self._entity_type)
-
-    @property
-    @override
-    def suggested_display_precision(self) -> int | None:
-        """Return display precision for numeric sensor values."""
-        if not self._is_numeric_variant:
-            return None
-        return SENSOR_DISPLAY_PRECISION.get(self._entity_type)
+        return value

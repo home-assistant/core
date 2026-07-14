@@ -36,7 +36,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'battery',
+    'translation_key': None,
     'unique_id': 'd1$battery',
     'unit_of_measurement': '%',
   })
@@ -94,7 +94,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'current',
+    'translation_key': None,
     'unique_id': 'd1$current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
@@ -263,7 +263,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'humidity_current',
+    'translation_key': None,
     'unique_id': 'd1$humidity_current',
     'unit_of_measurement': '%',
   })
@@ -321,7 +321,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'power',
+    'translation_key': None,
     'unique_id': 'd1$power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
@@ -500,7 +500,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature_current',
+    'translation_key': None,
     'unique_id': 'd1$temperature_current',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -616,7 +616,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'voltage',
+    'translation_key': None,
     'unique_id': 'd1$voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })

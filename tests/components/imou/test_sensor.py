@@ -16,7 +16,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.imou.const import PARAM_STATE, PARAM_STATUS
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -70,7 +70,7 @@ async def test_setup_ignores_unknown_sensor_types(
     sensor_entries = [entry for entry in entries if entry.domain == SENSOR_DOMAIN]
     assert len(sensor_entries) == 2
     battery_entries = [
-        entry for entry in sensor_entries if entry.translation_key == PARAM_BATTERY
+        entry for entry in sensor_entries if entry.unique_id == "d1$battery"
     ]
     assert len(battery_entries) == 1
 
@@ -193,12 +193,12 @@ async def test_storage_used_numeric_has_percentage_unit(
     indirect=True,
 )
 @pytest.mark.usefixtures("init_integration")
-async def test_storage_used_enum_suppresses_numeric_metadata(
+async def test_storage_used_error_codes_are_unknown(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Enum storage_used values suppress unit, state class, and precision."""
+    """Storage error codes do not mix into the numeric storage_used state."""
     storage_entry = next(
         entry
         for entry in er.async_entries_for_config_entry(
@@ -208,10 +208,6 @@ async def test_storage_used_enum_suppresses_numeric_metadata(
     )
     state = hass.states.get(storage_entry.entity_id)
     assert state is not None
-    assert state.state == "e1"
-    assert "unit_of_measurement" not in state.attributes
-    assert "state_class" not in state.attributes
-    assert (
-        storage_entry.options.get("sensor", {}).get("suggested_display_precision")
-        is None
-    )
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("unit_of_measurement") == "%"
+    assert state.attributes.get("state_class") == "measurement"
