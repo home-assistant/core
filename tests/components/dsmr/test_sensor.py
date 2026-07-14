@@ -1907,26 +1907,16 @@ def _create_power_only_telegram(power: str) -> Telegram:
 
 async def _setup_dsmr_for_averaging(
     hass: HomeAssistant,
-    request: pytest.FixtureRequest,
     connection_factory: MagicMock,
-    protocol: MagicMock,
     time_between_update: int,
 ) -> Callable[[Telegram | None], None]:
     """Set up a DSMR config entry and return the telegram push callback.
 
-    The mocked connection is kept open (``wait_closed`` blocks) so the
-    background reconnect loop does not push empty telegrams that would reset the
-    values accumulated for averaging while the test is running. A finalizer
-    releases the connection so the entry can unload cleanly on teardown.
+    The connection fixture keeps the mocked connection open (``wait_closed``
+    blocks until fixture teardown), so the background reconnect loop does not
+    push empty telegrams that would reset the values accumulated for averaging
+    while the test is running.
     """
-    closed = asyncio.Event()
-    request.addfinalizer(closed.set)
-
-    async def wait_closed() -> None:
-        await closed.wait()
-
-    protocol.wait_closed = wait_closed
-
     mock_entry = MockConfigEntry(
         domain="dsmr",
         unique_id="/dev/ttyUSB0",
@@ -1957,7 +1947,6 @@ async def _advance_to_next_update(
 
 async def test_power_readings_are_averaged_over_the_update_interval(
     hass: HomeAssistant,
-    request: pytest.FixtureRequest,
     freezer: FrozenDateTimeFactory,
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
@@ -1967,10 +1956,10 @@ async def test_power_readings_are_averaged_over_the_update_interval(
     accumulated and their mean is published by the interval timer, instead of
     dropping the readings that arrive between two updates.
     """
-    (connection_factory, _transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     telegram_callback = await _setup_dsmr_for_averaging(
-        hass, request, connection_factory, protocol, time_between_update=UPDATE_INTERVAL
+        hass, connection_factory, time_between_update=UPDATE_INTERVAL
     )
 
     # First telegram creates the entities and sets the initial value.
@@ -2007,7 +1996,6 @@ async def test_power_readings_are_averaged_over_the_update_interval(
 
 async def test_averaged_sensor_unavailable_without_readings_in_interval(
     hass: HomeAssistant,
-    request: pytest.FixtureRequest,
     freezer: FrozenDateTimeFactory,
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
@@ -2019,10 +2007,10 @@ async def test_averaged_sensor_unavailable_without_readings_in_interval(
     the sensor becomes unavailable; it recovers once a reading returns. A
     non-averaged sensor present in the same telegrams keeps reporting throughout.
     """
-    (connection_factory, _transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     telegram_callback = await _setup_dsmr_for_averaging(
-        hass, request, connection_factory, protocol, time_between_update=UPDATE_INTERVAL
+        hass, connection_factory, time_between_update=UPDATE_INTERVAL
     )
 
     # Establish and publish an average for the first window: mean(2, 4, 6) == 4.
@@ -2065,15 +2053,14 @@ async def test_averaged_sensor_unavailable_without_readings_in_interval(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_current_and_voltage_readings_are_averaged(
     hass: HomeAssistant,
-    request: pytest.FixtureRequest,
     freezer: FrozenDateTimeFactory,
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test that current and voltage readings are averaged like power."""
-    (connection_factory, _transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     telegram_callback = await _setup_dsmr_for_averaging(
-        hass, request, connection_factory, protocol, time_between_update=UPDATE_INTERVAL
+        hass, connection_factory, time_between_update=UPDATE_INTERVAL
     )
 
     telegram_callback(_create_current_and_voltage_telegram("1.0", "230.0"))
@@ -2096,15 +2083,14 @@ async def test_current_and_voltage_readings_are_averaged(
 
 async def test_averaged_power_value_is_rounded_to_default_precision(
     hass: HomeAssistant,
-    request: pytest.FixtureRequest,
     freezer: FrozenDateTimeFactory,
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test that the averaged power value is rounded to the default precision."""
-    (connection_factory, _transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     telegram_callback = await _setup_dsmr_for_averaging(
-        hass, request, connection_factory, protocol, time_between_update=UPDATE_INTERVAL
+        hass, connection_factory, time_between_update=UPDATE_INTERVAL
     )
 
     telegram_callback(_create_power_and_energy_telegram("1.0", "100.0"))
@@ -2125,15 +2111,14 @@ async def test_averaged_power_value_is_rounded_to_default_precision(
 
 async def test_non_power_readings_are_not_averaged(
     hass: HomeAssistant,
-    request: pytest.FixtureRequest,
     freezer: FrozenDateTimeFactory,
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test that non-averaged readings keep their last value instead of averaging."""
-    (connection_factory, _transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     telegram_callback = await _setup_dsmr_for_averaging(
-        hass, request, connection_factory, protocol, time_between_update=UPDATE_INTERVAL
+        hass, connection_factory, time_between_update=UPDATE_INTERVAL
     )
 
     telegram_callback(_create_power_and_energy_telegram("1.0", "10.0"))
@@ -2162,7 +2147,6 @@ async def test_non_power_readings_are_not_averaged(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_non_averaged_value_survives_later_partial_telegram(
     hass: HomeAssistant,
-    request: pytest.FixtureRequest,
     freezer: FrozenDateTimeFactory,
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
@@ -2172,10 +2156,10 @@ async def test_non_averaged_value_survives_later_partial_telegram(
     at the timer tick even if the last telegram of the interval is a partial one
     that omits the object, instead of falling back to the previous value.
     """
-    (connection_factory, _transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     telegram_callback = await _setup_dsmr_for_averaging(
-        hass, request, connection_factory, protocol, time_between_update=UPDATE_INTERVAL
+        hass, connection_factory, time_between_update=UPDATE_INTERVAL
     )
 
     # First telegram creates the entities and sets the initial energy value.
@@ -2198,14 +2182,13 @@ async def test_non_averaged_value_survives_later_partial_telegram(
 
 async def test_no_averaging_when_update_interval_is_zero(
     hass: HomeAssistant,
-    request: pytest.FixtureRequest,
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
     """Test that with a zero interval every telegram is published unchanged."""
-    (connection_factory, _transport, protocol) = dsmr_connection_fixture
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
 
     telegram_callback = await _setup_dsmr_for_averaging(
-        hass, request, connection_factory, protocol, time_between_update=0
+        hass, connection_factory, time_between_update=0
     )
 
     telegram_callback(_create_power_and_energy_telegram("5.0", "100.0"))
