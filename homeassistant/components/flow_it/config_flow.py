@@ -8,8 +8,7 @@ from flow_it_api.exceptions import FlowItAuthError, FlowItConnectionError
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
@@ -43,7 +42,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class FlowItConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Flow-it."""
 
     def __init__(self) -> None:
