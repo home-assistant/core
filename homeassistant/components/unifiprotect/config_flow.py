@@ -499,10 +499,11 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> tuple[ProtectApiClient | None, dict[str, str]]:
         """Validate a public-API-only (API-key) connection's auth and version.
 
-        Returns the primed client (identity not yet resolved) and any errors.
-        Callers that need the NVR identity should use
-        ``_async_get_public_nvr_identity`` instead; this alone is enough for
-        reauth, which intentionally does not re-check identity.
+        Returns the validated client (auth and version checked via
+        ``get_meta_info``; the public bootstrap is not primed and the identity
+        is not resolved) and any errors. Callers that need the NVR identity
+        should use ``_async_get_public_nvr_identity`` instead; this alone is
+        enough for reauth, which intentionally does not re-check identity.
         """
         public_api_session = async_get_clientsession(self.hass)
         host = user_input[CONF_HOST]

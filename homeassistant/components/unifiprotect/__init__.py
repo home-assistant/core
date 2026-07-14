@@ -132,7 +132,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
             "cloud_user",
             is_fixable=True,
             is_persistent=False,
-            learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#local-user",
+            learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#full-access",
             severity=IssueSeverity.ERROR,
             translation_key="cloud_user",
             data={"entry_id": entry.entry_id},
