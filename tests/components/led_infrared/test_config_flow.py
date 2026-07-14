@@ -100,11 +100,9 @@ async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
-async def test_flow_reconfigure(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
+async def test_flow_reconfigure(hass: HomeAssistant) -> None:
     """Test reconfigure flow."""
-    MockConfigEntry(
+    config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="LED Infrared via Test IR emitter",
         entry_id="1234567890",
