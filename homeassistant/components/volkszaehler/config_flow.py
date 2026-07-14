@@ -69,8 +69,6 @@ async def _async_validate_input_errors(
 def _is_uuid_configured(hass: HomeAssistant, uuid: str) -> bool:
     """Return if a Volkszaehler channel UUID is already configured."""
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.unique_id == uuid:
-            return True
         if any(
             subentry.unique_id == uuid
             for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_CHANNEL)

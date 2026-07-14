@@ -254,7 +254,7 @@ async def test_user_duplicate_uuid_from_entry_unique_id(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -269,6 +269,33 @@ async def test_user_duplicate_uuid_from_entry_unique_id(
     assert result["reason"] == "already_configured"
 
     assert mock_api.get_data.call_count == 1
+
+
+async def test_import_same_host_different_port_creates_new_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: AsyncMock,
+) -> None:
+    """Test import with same host and different port creates a new entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    import_data = {
+        CONF_UUID: "import-uuid-new-port",
+        CONF_HOST: "localhost",
+        CONF_PORT: 8080,
+        CONF_PLATFORM: "volkszaehler",
+    }
+    await async_setup_component(hass, "sensor", {"sensor": import_data})
+
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 2
+    assert any(
+        entry.data == {CONF_HOST: "localhost", CONF_PORT: 8080} for entry in entries
+    )
+
+    assert mock_api.get_data.call_count == 3
 
 
 async def test_subentry_duplicate_uuid(
