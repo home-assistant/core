@@ -155,7 +155,7 @@ async def test_setup_config_entry(
         options={
             "name": TEST_TRACKER.object_id,
             **TEST_MINIMUM_REQUIREMENTS,
-            "advanced_options": {"location_accuracy": "{{ 10 }}"},
+            "additional_options": {"location_accuracy": "{{ 10 }}"},
             "template_type": device_tracker.DOMAIN,
         },
         title="My template",
