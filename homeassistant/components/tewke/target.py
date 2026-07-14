@@ -46,7 +46,9 @@ class TewkeTargetLight(TewkeEntity, LightEntity):
         super().__init__(coordinator)
         self._target_index = target.index
         self._attr_name = target.name
-        hardware_id = coordinator.data["config"].hardware_id
+        config = coordinator.data["config"]
+        assert config is not None
+        hardware_id = config.hardware_id
         self._attr_unique_id = f"{hardware_id}_target_{target.index}"
         if target.is_dimmable:
             self._attr_color_mode = ColorMode.BRIGHTNESS

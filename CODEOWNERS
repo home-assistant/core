@@ -1830,6 +1830,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/teslemetry/ @Bre77
 /homeassistant/components/tessie/ @Bre77
 /tests/components/tessie/ @Bre77
+/homeassistant/components/tewke/ @1NFR4R3D
+/tests/components/tewke/ @1NFR4R3D
 /homeassistant/components/text/ @home-assistant/core
 /tests/components/text/ @home-assistant/core
 /homeassistant/components/thermobeacon/ @bdraco

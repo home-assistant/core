@@ -39,7 +39,9 @@ class TewkeRestartButton(TewkeEntity, ButtonEntity):
     def __init__(self, coordinator: TewkeCoordinator) -> None:
         """Initialise the restart button entity."""
         super().__init__(coordinator)
-        hardware_id = coordinator.data["config"].hardware_id
+        config = coordinator.data["config"]
+        assert config is not None
+        hardware_id = config.hardware_id
         self._attr_unique_id = f"{hardware_id}_restart"
 
     async def async_press(self) -> None:

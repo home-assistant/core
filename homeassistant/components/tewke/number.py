@@ -49,7 +49,9 @@ class TewkeEnergyOverrideNumber(TewkeEntity, NumberEntity):
     def __init__(self, coordinator: TewkeCoordinator) -> None:
         """Initialise the energy override number entity."""
         super().__init__(coordinator)
-        hardware_id = coordinator.data["config"].hardware_id
+        config = coordinator.data["config"]
+        assert config is not None
+        hardware_id = config.hardware_id
         self._attr_unique_id = f"{hardware_id}_energy_override"
 
     @property

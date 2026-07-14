@@ -196,7 +196,9 @@ class TewkeSensor(TewkeEntity, SensorEntity):
         """Initialise the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        hardware_id = coordinator.data["config"].hardware_id
+        config = coordinator.data["config"]
+        assert config is not None
+        hardware_id = config.hardware_id
         self._attr_unique_id = f"{hardware_id}_sensor_{description.key}"
 
     @property
@@ -267,7 +269,9 @@ class TewkeRadarSensor(TewkeEntity, SensorEntity):
         """Initialise the radar sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        hardware_id = coordinator.data["config"].hardware_id
+        config = coordinator.data["config"]
+        assert config is not None
+        hardware_id = config.hardware_id
         self._attr_unique_id = f"{hardware_id}_{description.key}"
 
     @property
@@ -322,7 +326,9 @@ class TewkeEnergySensor(TewkeEntity, SensorEntity):
         """Initialise the energy sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        hardware_id = coordinator.data["config"].hardware_id
+        config = coordinator.data["config"]
+        assert config is not None
+        hardware_id = config.hardware_id
         self._attr_unique_id = f"{hardware_id}_{description.key}"
 
     @property
