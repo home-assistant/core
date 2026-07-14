@@ -17,7 +17,6 @@ CODES = {
 class LEDIrBaseEntity(InfraredEmitterConsumerEntity):
     """Base entity for LED Infrared."""
 
-    _attr_assumed_state = True
     _attr_has_entity_name = True
 
     def __init__(

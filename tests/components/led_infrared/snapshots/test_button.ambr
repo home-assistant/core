@@ -39,7 +39,6 @@
 # name: test_setup[button.led_infrared_via_test_ir_emitter_brightness_down-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Brightness down',
     }),
     'context': <ANY>,
@@ -90,7 +89,6 @@
 # name: test_setup[button.led_infrared_via_test_ir_emitter_brightness_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Brightness up',
     }),
     'context': <ANY>,
