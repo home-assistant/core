@@ -246,9 +246,9 @@ async def test_subentry_unsupported_model(
     )
     await hass.async_block_till_done()
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -300,9 +300,9 @@ async def test_subentry_reasoning_effort_list(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -354,9 +354,9 @@ async def test_subentry_reasoning_summary_visibility(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -403,7 +403,7 @@ async def test_subentry_reasoning_summary_options(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
@@ -450,7 +450,7 @@ async def test_subentry_reasoning_summary_default_sanitized_on_model_switch(
             CONF_LLM_HASS_API: ["assist"],
         },
     )
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
@@ -515,9 +515,9 @@ async def test_subentry_service_tier_list(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -561,9 +561,9 @@ async def test_subentry_unsupported_reasoning_effort(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -1144,9 +1144,9 @@ async def test_subentry_web_search_user_location(
         },
     )
     assert subentry_flow["type"] is FlowResultType.FORM
-    assert subentry_flow["step_id"] == "advanced"
+    assert subentry_flow["step_id"] == "additional"
 
-    # Configure advanced step
+    # Configure additional step
     subentry_flow = await hass.config_entries.subentries.async_configure(
         subentry_flow["flow_id"],
         {
@@ -1292,12 +1292,12 @@ async def test_ai_task_subentry_not_loaded(
     assert result.get("reason") == "entry_not_loaded"
 
 
-async def test_creating_ai_task_subentry_advanced(
+async def test_creating_ai_task_subentry_additional(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
 ) -> None:
-    """Test creating an AI task subentry with advanced settings."""
+    """Test creating an AI task subentry with additional settings."""
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "ai_task_data"),
         context={"source": config_entries.SOURCE_USER},
@@ -1306,7 +1306,7 @@ async def test_creating_ai_task_subentry_advanced(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "init"
 
-    # Go to advanced settings
+    # Go to additional settings
     result2 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {
@@ -1316,9 +1316,9 @@ async def test_creating_ai_task_subentry_advanced(
     )
 
     assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "advanced"
+    assert result2.get("step_id") == "additional"
 
-    # Configure advanced settings
+    # Configure additional settings
     result3 = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {

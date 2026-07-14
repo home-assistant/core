@@ -1,11 +1,11 @@
 """deCONZ services."""
 
-from typing import TYPE_CHECKING
-
+from pydeconz import errors
 from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -14,13 +14,9 @@ from homeassistant.helpers import (
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from .const import CONF_BRIDGE_ID, DOMAIN, LOGGER
+from .const import CONF_BRIDGE_ID, DOMAIN
 from .hub import DeconzHub
 from .util import get_master_hub
-
-if TYPE_CHECKING:
-    from . import DeconzConfigEntry
-
 
 DECONZ_SERVICES = "deconz_services"
 
@@ -68,27 +64,34 @@ def async_setup_services(hass: HomeAssistant) -> None:
         service_data = service_call.data
 
         if CONF_BRIDGE_ID in service_data:
-            found_hub = False
             bridge_id = normalize_bridge_id(service_data[CONF_BRIDGE_ID])
 
-            entry: DeconzConfigEntry
-            for entry in hass.config_entries.async_loaded_entries(DOMAIN):
-                possible_hub = entry.runtime_data
-                if possible_hub.bridgeid == bridge_id:
-                    hub = possible_hub
-                    found_hub = True
-                    break
+            hub: DeconzHub | None = next(
+                (
+                    entry.runtime_data
+                    for entry in hass.config_entries.async_loaded_entries(DOMAIN)
+                    if entry.runtime_data.bridgeid == bridge_id
+                ),
+                None,
+            )
 
-            if not found_hub:
-                LOGGER.error("Could not find the gateway %s", bridge_id)
-                return
+            if hub is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="gateway_not_found",
+                    translation_placeholders={
+                        "bridge_id": bridge_id,
+                    },
+                )
+
         else:
             try:
                 hub = get_master_hub(hass)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
-            except ValueError:
-                LOGGER.error("No master gateway available")
-                return
+            except ValueError as err:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="no_master_gateway",
+                ) from err
 
         if service == SERVICE_CONFIGURE_DEVICE:
             await async_configure_service(hub, service_data)
@@ -132,19 +135,38 @@ async def async_configure_service(hub: DeconzHub, data: ReadOnlyDict) -> None:
     if entity_id:
         try:
             field = hub.deconz_ids[entity_id] + field
-        except KeyError:
-            LOGGER.error("Could not find the entity %s", entity_id)
-            return
+        except KeyError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="entity_not_found",
+                translation_placeholders={
+                    "entity_id": entity_id,
+                },
+            ) from err
 
-    await hub.api.request("put", field, json=data)
+    try:
+        await hub.api.request("put", field, json=data)
+    except (TimeoutError, errors.pydeconzException) as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="configure_failed",
+        ) from err
 
 
 async def async_refresh_devices_service(hub: DeconzHub) -> None:
     """Refresh available devices from deCONZ."""
     hub.ignore_state_updates = True
-    await hub.api.refresh_state()
-    hub.load_ignored_devices()
-    hub.ignore_state_updates = False
+
+    try:
+        await hub.api.refresh_state()
+        hub.load_ignored_devices()
+    except (TimeoutError, errors.pydeconzException) as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="device_refresh_failed",
+        ) from err
+    finally:
+        hub.ignore_state_updates = False
 
 
 async def async_remove_orphaned_entries_service(hub: DeconzHub) -> None:
@@ -183,6 +205,7 @@ async def async_remove_orphaned_entries_service(hub: DeconzHub) -> None:
             if entry.device_id in devices_to_be_removed:
                 devices_to_be_removed.remove(entry.device_id)
             continue
+
         # Remove entities that are not available
         entities_to_be_removed.append(entry.entity_id)
 
@@ -195,7 +218,9 @@ async def async_remove_orphaned_entries_service(hub: DeconzHub) -> None:
         if (
             len(
                 er.async_entries_for_device(
-                    entity_registry, device_id, include_disabled_entities=True
+                    entity_registry,
+                    device_id,
+                    include_disabled_entities=True,
                 )
             )
             == 0

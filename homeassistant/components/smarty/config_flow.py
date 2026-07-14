@@ -1,7 +1,7 @@
 """Config flow for Smarty integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysmarty2 import Smarty
 import voluptuous as vol
@@ -29,6 +29,7 @@ class SmartyConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             return "cannot_connect"
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

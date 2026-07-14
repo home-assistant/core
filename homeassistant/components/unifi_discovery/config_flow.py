@@ -1,7 +1,7 @@
 """Config flow for UniFi Discovery."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 class UnifiDiscoveryFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for UniFi Discovery."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -23,6 +24,7 @@ class UnifiDiscoveryFlowHandler(ConfigFlow, domain=DOMAIN):
         async_start_discovery(self.hass)
         return self.async_abort(reason="discovery_started")
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -33,6 +35,7 @@ class UnifiDiscoveryFlowHandler(ConfigFlow, domain=DOMAIN):
         async_start_discovery(self.hass)
         return self.async_abort(reason="discovery_started")
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
