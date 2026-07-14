@@ -1,0 +1,63 @@
+# serializer version: 1
+# name: test_all_entities[update.pve1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.pve1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'proxmoxve',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 16>,
+    'translation_key': 'node_update',
+    'unique_id': '1234_node/pve1_node_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[update.pve1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'display_precision': 0,
+      'entity_picture': '/api/brands/integration/proxmoxve/icon.png',
+      'friendly_name': 'pve1',
+      'in_progress': False,
+      'installed_version': '9.1.6',
+      'latest_version': '9.1.9-p4-d1',
+      'release_summary': 'A total of 5 package update(s) are pending installation: of these 4 relate to Proxmox and 1 to other updates. Please visit the [Proxmox VE node](https://127.0.0.1:8006/#v1:0:=node/pve1) for details on the pending updates and to upgrade to 9.1.9.',
+      'release_url': None,
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 16>,
+      'title': None,
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.pve1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
