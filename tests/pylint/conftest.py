@@ -24,6 +24,9 @@ from pylint_home_assistant.checkers.sorted_platforms import (
     HassEnforceSortedPlatformsChecker,
 )
 from pylint_home_assistant.checkers.super_call import HassEnforceSuperCallChecker
+from pylint_home_assistant.checkers.supported_features import (
+    HassEnforceSupportedFeaturesChecker,
+)
 from pylint_home_assistant.checkers.type_hints import HassTypeHintChecker
 from pylint_home_assistant.checkers.utcnow import HassEnforceUtcnowChecker
 from pylint_home_assistant.helpers.integration import clear_caches
@@ -66,6 +69,14 @@ def enforce_sorted_platforms_checker_fixture(linter: UnittestLinter) -> BaseChec
     enforce_sorted_platforms_checker = HassEnforceSortedPlatformsChecker(linter)
     enforce_sorted_platforms_checker.module = "homeassistant.components.pylint_test"
     return enforce_sorted_platforms_checker
+
+
+@pytest.fixture(name="enforce_supported_features_checker")
+def enforce_supported_features_checker_fixture(linter: UnittestLinter) -> BaseChecker:
+    """Fixture to provide a supported features checker."""
+    checker = HassEnforceSupportedFeaturesChecker(linter)
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
 
 
 @pytest.fixture(name="enforce_class_module_checker")

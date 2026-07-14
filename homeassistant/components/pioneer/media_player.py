@@ -61,6 +61,7 @@ def setup_platform(
         add_entities([pioneer])
 
 
+# pylint: disable-next=home-assistant-missing-feature-implementation
 class PioneerDevice(MediaPlayerEntity):
     """Representation of a Pioneer device."""
 

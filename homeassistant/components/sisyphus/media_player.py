@@ -40,6 +40,7 @@ async def async_setup_platform(
     add_entities([SisyphusPlayer(table_holder.name, host, table)], True)
 
 
+# pylint: disable-next=home-assistant-missing-feature-implementation
 class SisyphusPlayer(MediaPlayerEntity):
     """Representation of a Sisyphus table as a media player device."""
 

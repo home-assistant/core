@@ -131,6 +131,7 @@ Every check has a code following the
 | `W7413` | [`home-assistant-missing-config-entry-unloading`](#w7413-home-assistant-missing-config-entry-unloading) | Integration should implement `async_unload_entry` |
 | `W7415` | [`home-assistant-sequential-executor-jobs`](#w7415-home-assistant-sequential-executor-jobs) | Sequential `async_add_executor_job` calls should be grouped |
 | `W7416` | [`home-assistant-missing-has-entity-name`](#w7416-home-assistant-missing-has-entity-name) | Entity class should set `_attr_has_entity_name = True` |
+| `W7428` | [`home-assistant-missing-feature-implementation`](#w7428-home-assistant-missing-feature-implementation) | Entity advertises a supported feature whose backing method is not implemented |
 | `W7429` | [`home-assistant-unnecessary-format-mac`](#w7429-home-assistant-unnecessary-format-mac) | `format_mac()` is unnecessary with `CONNECTION_NETWORK_MAC` |
 
 
@@ -849,3 +850,64 @@ Tuples used for direct comparison against `device.connections` (e.g.
 the `in` operator, set intersection) are not flagged because those
 comparisons bypass the device registry normalization and genuinely
 need `format_mac()` to match the stored normalized format.
+
+
+## `home_assistant_supported_features` checker
+
+Verifies that an entity which advertises a `supported_features` flag also
+implements the method that flag gates.
+
+### `W7428`: `home-assistant-missing-feature-implementation`
+
+Entity platforms tie each `supported_features` flag to a service handler via
+`component.async_register_entity_service(SERVICE, schema, "async_method",
+[XEntityFeature.FLAG])`. If an entity advertises `FLAG` but implements neither
+`async_method` nor its sync counterpart, the corresponding service raises
+`NotImplementedError` (or silently does nothing) at runtime.
+
+The feature → method mapping is derived **per platform** at lint time by
+reading the platform's `async_register_entity_service` calls, so it stays in
+sync with the platform code instead of being hard-coded. The check is
+deliberately conservative and only enforces a flag when the backing method can
+be proven:
+
+- Only **single-flag** registrations are considered. Combined requirements
+  such as `[CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE]` gate
+  convenience methods (`async_toggle`) that the base class already implements.
+- The handler must resolve to an **abstract stub** — a base method whose body
+  is `raise NotImplementedError` / empty, reached either directly, through the
+  sync/async executor wrapper, or through one level of a pure dispatcher (e.g.
+  `async_handle_set_preset_mode_service` → `async_set_preset_mode`). Base
+  methods with real fallback logic (e.g. climate's `async_turn_on`, which turns
+  on by setting an HVAC mode) are treated as already implemented and skipped.
+- On the declaration side only **static** `_attr_supported_features`
+  assignments are inspected — class body or plain
+  `self._attr_supported_features = ...` assignments, with flags from all such
+  assignments (including ones in conditional branches) unioned, since any of
+  them may be advertised at runtime. A `supported_features` property, an
+  augmented assignment, or a value computed from a variable/call is treated as
+  unknown and skipped, so the checker never guesses.
+
+Known coverage gaps (all conservative skips, never false alarms):
+
+- **Dispatchers with feature-gated fallbacks**: a base handler with a real
+  conditional branch (e.g. valve's `async_handle_open_valve`, which falls back
+  to `async_set_valve_position` when `SET_POSITION` is supported) is treated
+  as a working base implementation. This leaves valve `OPEN`/`CLOSE`, fan
+  `TURN_ON`/`SET_SPEED`, and water_heater `OPERATION_MODE` unenforced, even
+  though an entity lacking the fallback feature can still hit
+  `NotImplementedError`.
+- **Handlers inherited from outside the platform package**: fan `TURN_OFF`
+  resolves to `ToggleEntity.async_turn_off` in `helpers/entity.py`, which the
+  per-platform method collection does not see.
+- **Keyword/function registrations**: platforms passing `required_features=`
+  as a keyword with a module-level function as the handler (calendar, todo,
+  weather) cannot be tied to an entity method and are skipped entirely.
+
+Because it relies on static declarations, it will not flag features assigned
+dynamically. Abstract in-integration base classes that declare a feature and
+leave the method to a subclass in another module may be flagged; disable the
+rule on those after confirming they are never instantiated directly. Group
+platform entities advertise their members' features while service calls are
+expanded to the members, so they never handle the services themselves —
+disable the rule on those classes (see `group/lock.py`).

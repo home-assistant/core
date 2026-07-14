@@ -99,6 +99,9 @@ def async_create_preview_lock(
     )
 
 
+# Service calls targeting a group are expanded to its members, so the group
+# advertises member features without handling the services itself.
+# pylint: disable-next=home-assistant-missing-feature-implementation
 class LockGroup(GroupEntity, LockEntity):
     """Representation of a lock group."""
 
