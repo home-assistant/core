@@ -2109,7 +2109,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.18.1
+pydaikin==2.18.2
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
