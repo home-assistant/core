@@ -59,15 +59,6 @@ SENSOR_DESCRIPTIONS: tuple[YardianBinarySensorEntityDescription, ...] = (
             coordinator.data.oper_info.get("iStandby", 0)
         ),
     ),
-    YardianBinarySensorEntityDescription(
-        key="freeze_prevent",
-        translation_key="freeze_prevent",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda coordinator: bool(
-            coordinator.data.oper_info.get("fFreezePrevent", 0)
-        ),
-    ),
 )
 
 

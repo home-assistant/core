@@ -63,7 +63,7 @@ def mock_yardian_client() -> Generator[AsyncMock]:
             iSensorDelay=5,
             iWaterHammerDuration=2,
             iStandby=1,
-            fFreezePrevent=1,
+            fFreezePrevent=-460.0,
         )
 
         yield client
