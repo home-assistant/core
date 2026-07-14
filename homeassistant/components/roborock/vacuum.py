@@ -555,8 +555,8 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
         room_names: dict[str, str] = {}
         for raw_key, raw_value in raw_room_names.items():
             try:
-                int(raw_key)
-            except TypeError, ValueError:
+                room_id = int(raw_key)
+            except TypeError, ValueError, OverflowError:
                 _LOGGER.error("Skipping invalid room id %r in room_names data", raw_key)
                 continue
             if not isinstance(raw_value, str):
@@ -566,7 +566,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                     type(raw_value).__name__,
                 )
                 continue
-            room_names[str(int(raw_key))] = raw_value
+            room_names[str(room_id)] = raw_value
 
         return room_names
 
