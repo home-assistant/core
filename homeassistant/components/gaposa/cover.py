@@ -157,13 +157,19 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
 
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
-        """Stop the cover and collapse the motion window immediately."""
+        """Stop the cover and collapse the motion window immediately.
+
+        Await motor.stop() before touching the local motion state so a
+        failed command leaves the cover reporting as still moving —
+        otherwise HA would say "stopped" while the physical shade
+        continues to travel.
+        """
+        await self.motor.stop(True)
         self._last_command = COMMAND_STOP
         self._last_command_time = None
         if self._cancel_motion_refresh is not None:
             self._cancel_motion_refresh()
             self._cancel_motion_refresh = None
-        await self.motor.stop(True)
         await self.coordinator.async_request_refresh()
         self.async_write_ha_state()
 

@@ -44,6 +44,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
         )
         self.devices: list[Device] = []
         self._listener: Callable[[], None] | None = None
+        self._updating = False
 
     @override
     async def _async_setup(self) -> None:
@@ -67,6 +68,11 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
     @override
     async def _async_update_data(self) -> dict[str, Motor]:
         """Refresh motor state from the Gaposa cloud."""
+        # pygaposa fires each device listener from inside update() as it
+        # polls each device. Gate _on_device_polled so those intermediate
+        # callbacks don't publish N partial updates before we return the
+        # fully flattened result.
+        self._updating = True
         try:
             async with timeout(10):
                 await self.gaposa.update()
@@ -79,6 +85,8 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
         ) as exc:
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
             raise UpdateFailed(f"Error talking to Gaposa: {exc}") from exc
+        finally:
+            self._updating = False
 
         # pygaposa polls the Firestore REST API internally after commands
         # (every 2 s for ~20 s). Register a listener on each device so
@@ -124,7 +132,13 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
         This fires during pygaposa's rapid post-command polling (every ~2 s)
         and pushes the latest motor state to all coordinator subscribers
         without waiting for the next scheduled coordinator refresh.
+
+        Suppressed while a scheduled update is in progress — pygaposa fires
+        this callback per device inside update(), and we'd otherwise publish
+        one intermediate flatten per device before returning the final data.
         """
+        if self._updating:
+            return
         _LOGGER.debug("Gaposa device polled, pushing new data")
         self.async_set_updated_data(self._get_data_from_devices())
 
