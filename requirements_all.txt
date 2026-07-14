@@ -99,7 +99,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.3
 
 # homeassistant.components.vicare
-PyViCare==2.60.2
+PyViCare==2.61.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -1077,6 +1077,9 @@ gardena-bluetooth==2.8.1
 # homeassistant.components.google_assistant_sdk
 gassist-text==0.0.14
 
+# homeassistant.components.gatus
+gatus-api==1.0.3
+
 # homeassistant.components.google
 gcal-sync==8.0.0
 
@@ -1598,7 +1601,7 @@ mitsubishi-comfort==0.3.2
 moat-ble==0.1.1
 
 # homeassistant.components.modbus_connection
-modbus-connection[tmodbus]==3.4.1
+modbus-connection[tmodbus]==3.6.0
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
@@ -2109,7 +2112,7 @@ pycsspeechtts==1.0.8
 pycync==0.5.0
 
 # homeassistant.components.daikin
-pydaikin==2.18.1
+pydaikin==2.18.2
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -2454,7 +2457,7 @@ pyotgw==2.2.3
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz[nexity]==2.0.4
+pyoverkiz[nexity]==2.1.0
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
