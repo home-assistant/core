@@ -43,6 +43,7 @@ from homeassistant.components.media_player import (
     SERVICE_UNJOIN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
+    BrowseError,
     BrowseMedia,
     MediaClass,
     MediaPlayerEntityFeature,
@@ -851,6 +852,35 @@ async def test_browse_media_service_includes_media_sources_when_supported(
         "Queue",
         "song.mp3",
     ]
+
+
+async def test_browse_media_invalid_path_uses_translation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+) -> None:
+    """Test invalid browse paths raise a translated error."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(BrowseError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_BROWSE_MEDIA,
+            {
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
+                ATTR_MEDIA_CONTENT_ID: "wiim_library/invalid",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_browse_path"
+    assert exc_info.value.translation_placeholders == {
+        "media_content_id": "wiim_library/invalid"
+    }
 
 
 async def test_join_and_unjoin_services_use_resolved_member_udns(
