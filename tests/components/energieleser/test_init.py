@@ -119,7 +119,6 @@ async def test_meter_locked_repair_issue(
         "device_name": mock_stromleser_config_entry.title,
     }
 
-    # Simulate meter unlocking on next update
     mock_energieleser_client.get_device.return_value = mock_stromleser_device
     coordinator = mock_stromleser_config_entry.runtime_data
     await coordinator.async_refresh()

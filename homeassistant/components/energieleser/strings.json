@@ -106,7 +106,7 @@
   },
   "issues": {
     "meter_locked": {
-      "description": "The electricity meter connected to {device_name} is not providing high-resolution data. You need to unlock the meter by entering the PIN provided by your electricity company or grid operator. See the linked instructions for more details.",
+      "description": "The electricity meter connected to {device_name} is not providing high-resolution data. You need to unlock the physical meter by entering the PIN (provided by your electricity company or grid operator) directly on the meter. Once the meter is unlocked, high-resolution data will be provided and this issue will resolve itself automatically. See the linked instructions for details on how to enter the PIN.",
       "title": "Meter PIN Required"
     }
   }
