@@ -309,6 +309,33 @@ def _remove_stale_subentries(
             hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
 
 
+def _prune_energy_subentries(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    scopes: list[Scope],
+    energysites: list[TeslemetryEnergyData],
+) -> None:
+    """Remove energy-site subentries whose site is no longer present.
+
+    Skipped without the energy scope: setup then skips every energy product, so
+    an empty site list means the inventory was never resolved rather than that
+    the sites are gone. Pruning against it would delete the local gateway
+    credentials a user paired.
+    """
+    if Scope.ENERGY_DEVICE_DATA not in scopes:
+        return
+    _remove_stale_subentries(
+        hass,
+        entry,
+        SUBENTRY_TYPE_ENERGY_SITE,
+        {
+            energysite.subentry_id
+            for energysite in energysites
+            if energysite.subentry_id is not None
+        },
+    )
+
+
 async def _async_get_rsa_key_pem(hass: HomeAssistant) -> bytes:
     """Return the integration's RSA private key PEM, generating it if needed.
 
@@ -641,16 +668,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 remove_config_entry_id=entry.entry_id,
             )
 
-    _remove_stale_subentries(
-        hass,
-        entry,
-        SUBENTRY_TYPE_ENERGY_SITE,
-        {
-            energysite.subentry_id
-            for energysite in energysites
-            if energysite.subentry_id is not None
-        },
-    )
+    _prune_energy_subentries(hass, entry, scopes, energysites)
 
     entry.runtime_data = TeslemetryData(
         vehicles=vehicles,
