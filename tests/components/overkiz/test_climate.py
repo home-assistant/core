@@ -1,16 +1,24 @@
 """Tests for the Overkiz climate platform."""
 
 from collections.abc import Generator
+from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import OverkizState
 from pyoverkiz.models import Event
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.climate import ATTR_HVAC_ACTION, HVACAction
-from homeassistant.const import Platform
+from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_HVAC_ACTION,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.const import ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
 from .helpers import (
@@ -21,11 +29,38 @@ from .helpers import (
     device_unavailable_event,
 )
 
+from tests.common import snapshot_platform
+
+# io:HeatingValveIOComponent
 VALVE = FixtureDevice(
     "setup/cloud_nexity_rail_din_europe.json",
     "io://1234-5678-1698/15702199#1",
     "climate.maple_residence_garden_radiator",
 )
+# modbuslink:AtlanticElectricalHeaterWithAdjustableTemperatureSetpointMBLComponent
+COZYTOUCH = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch.json",
+    "modbuslink://1234-5678-5643/1#1",
+    "climate.living_room_heater",
+)
+
+# Hitachi Yutaki 2-zone air-to-water heat pump
+YUTAKI_ZONE_1 = FixtureDevice(
+    "setup/cloud_hi_kumo_europe.json",
+    "modbus://1234-5678-2284/5416194/1#2",
+    "climate.somfy_tahoma_switch_yutaki_zone_1",
+)
+YUTAKI_ZONE_2 = FixtureDevice(
+    "setup/cloud_hi_kumo_europe.json",
+    "modbus://1234-5678-2284/5416194/1#3",
+    "climate.somfy_tahoma_switch_yutaki_zone_2",
+)
+
+SNAPSHOT_FIXTURES = [
+    VALVE,
+    COZYTOUCH,
+    YUTAKI_ZONE_1,
+]
 
 
 @pytest.fixture(autouse=True)
@@ -33,6 +68,25 @@ def fixture_platforms() -> Generator[None]:
     """Limit platforms to climate only."""
     with patch("homeassistant.components.overkiz.PLATFORMS", [Platform.CLIMATE]):
         yield
+
+
+@pytest.mark.parametrize(
+    "device",
+    SNAPSHOT_FIXTURES,
+    ids=[Path(device.fixture).name for device in SNAPSHOT_FIXTURES],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_climate_entities_snapshot(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    device: FixtureDevice,
+) -> None:
+    """Test representative real setups via snapshot."""
+    config_entry = await setup_overkiz_integration(fixture=device.fixture)
+
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_valve_hvac_action_none_state(
@@ -106,3 +160,21 @@ async def test_events_for_unknown_device_url(
     # Should not crash; valve entity should still be available
     state = hass.states.get(VALVE.entity_id)
     assert state is not None
+
+
+async def test_hitachi_air_to_water_heating_zone_2(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the second heating zone reads its own Zone2 states."""
+    await setup_overkiz_integration(fixture=YUTAKI_ZONE_2.fixture)
+
+    zone_1 = hass.states.get(YUTAKI_ZONE_1.entity_id)
+    assert zone_1 is not None
+    assert zone_1.attributes[ATTR_CURRENT_TEMPERATURE] == 18.5
+
+    zone_2 = hass.states.get(YUTAKI_ZONE_2.entity_id)
+    assert zone_2 is not None
+    assert zone_2.state == HVACMode.AUTO
+    assert zone_2.attributes[ATTR_CURRENT_TEMPERATURE] == 20.5
+    assert zone_2.attributes[ATTR_TEMPERATURE] == 21.0

@@ -57,6 +57,17 @@
         "name": "Upper oven stop"
       }
     },
+    "light": {
+      "oven_light": {
+        "name": "Light"
+      },
+      "oven_light_lower": {
+        "name": "Lower oven light"
+      },
+      "oven_light_upper": {
+        "name": "Upper oven light"
+      }
+    },
     "select": {
       "refrigerator_temperature_level": {
         "name": "Temperature level"
