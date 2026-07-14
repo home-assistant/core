@@ -228,10 +228,7 @@ async def test_anna_dhw_mode_select(
 
     entity_entry = entity_registry.async_get("select.opentherm_dhw_mode")
     assert entity_entry is not None
-    assert (
-        entity_entry.unique_id
-        == "cd0e6156b1f04d5f952349ffbe397481-select_dhw_mode"
-    )
+    assert entity_entry.unique_id == "cd0e6156b1f04d5f952349ffbe397481-select_dhw_mode"
 
     await hass.services.async_call(
         SELECT_DOMAIN,
