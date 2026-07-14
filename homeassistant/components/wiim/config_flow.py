@@ -43,6 +43,22 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _discovered_info: WiimProbeResult | None = None
 
+    def _async_show_host_form(
+        self,
+        *,
+        step_id: str,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
+    ) -> ConfigFlowResult:
+        """Show a host input form."""
+        return self.async_show_form(
+            step_id=step_id,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors or {},
+        )
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -70,12 +86,38 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
-            ),
-            errors=errors,
+        return self._async_show_host_form(
+            step_id="user", user_input=user_input, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle user initiated reconfiguration."""
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is None:
+            return self._async_show_host_form(
+                step_id="reconfigure",
+                user_input={CONF_HOST: reconfigure_entry.data[CONF_HOST]},
+            )
+
+        errors: dict[str, str] = {}
+        try:
+            device_info = await _async_probe_wiim_host(self.hass, user_input[CONF_HOST])
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        else:
+            if reconfigure_entry.unique_id != device_info.udn:
+                errors["base"] = "wrong_device"
+            else:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data={**reconfigure_entry.data, CONF_HOST: device_info.host},
+                )
+
+        return self._async_show_host_form(
+            step_id="reconfigure", user_input=user_input, errors=errors
         )
 
     @override

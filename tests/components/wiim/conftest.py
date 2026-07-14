@@ -125,6 +125,7 @@ def mock_wiim_device() -> Generator[AsyncMock]:
         mock.async_get_queue_snapshot = AsyncMock(
             return_value=WiimQueueSnapshot(items=())
         )
+        mock.as_diagnostics = MagicMock()
         mock.build_loop_mode = MagicMock(
             return_value=LoopMode.SHUFFLE_DISABLE_REPEAT_NONE
         )

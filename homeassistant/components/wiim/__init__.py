@@ -51,7 +51,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
     try:
         local_host = get_homeassistant_local_host(hass)
     except InvalidHomeAssistantURLError as err:
-        raise ConfigEntryNotReady("Failed to determine Home Assistant URL") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="missing_homeassistant_url",
+        ) from err
 
     try:
         wiim_device = await async_create_wiim_device(
@@ -62,16 +65,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
             polling_interval=DEFAULT_AVAILABILITY_POLLING_INTERVAL,
         )
     except WiimRequestException as err:
-        raise ConfigEntryNotReady(f"HTTP API request failed for {host}: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="http_api_request_failed",
+            translation_placeholders={"host": host, "error": str(err)},
+        ) from err
     except WiimDeviceException as err:
-        raise ConfigEntryNotReady(f"Device setup failed for {host}: {err}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_setup_failed",
+            translation_placeholders={"host": host, "error": str(err)},
+        ) from err
 
     await controller.add_device(wiim_device)
 
     entry.runtime_data = wiim_device
     LOGGER.info(
-        "WiiM device %s (UDN: %s) linked to HASS."
-        " Name: '%s', HTTP: %s, UPnP Location: %s",
+        "WiiM device %s (UDN: %s) linked to HASS. Name: '%s', HTTP: %s, UPnP Location: %s",
         entry.entry_id,
         wiim_device.udn,
         wiim_device.name,
