@@ -51,6 +51,7 @@ type NumberType = Literal[
 ]
 
 type SelectType = Literal[
+    "dhw_mode",
     "select_dhw_mode",
     "select_gateway_mode",
     "select_regulation_mode",
