@@ -659,7 +659,7 @@ async def test_restore_state(
         1,
         config={
             "default_entity_id": TEST_IMAGE.entity_id,
-            "url": "{{ states('sensor.test_state') }}",
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
         },
     )
 

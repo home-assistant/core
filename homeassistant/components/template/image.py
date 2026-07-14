@@ -176,7 +176,7 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity, RestoreEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     _attr_image_url: str | None = None
     _restore_state_extra_data = ImageExtraStoredData
-    _restore_state_properties = ("_cached_image",)
+    _restore_state_properties = ("_attr_image_last_updated",)
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
