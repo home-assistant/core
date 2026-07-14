@@ -5,6 +5,11 @@
         "default": "mdi:microphone"
       }
     },
+    "number": {
+      "group_volume": {
+        "default": "mdi:volume-high"
+      }
+    },
     "sensor": {
       "audio_input_format": {
         "default": "mdi:import"
