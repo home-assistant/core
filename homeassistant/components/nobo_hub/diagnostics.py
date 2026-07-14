@@ -2,9 +2,9 @@
 
 from typing import Any
 
-from pynobo import ComponentInfo
+from pynobo import ComponentInfo, nobo
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.const import CONF_IP_ADDRESS, CONF_MAC
 from homeassistant.core import HomeAssistant
 
@@ -26,11 +26,12 @@ _MODEL_FIELDS = (
 
 
 def _component_to_dict(component: ComponentInfo) -> dict[str, Any]:
-    formatted = dict(component)
-    if (model := formatted.get("model")) is not None:
-        formatted["model"] = {
-            field: getattr(model, field, None) for field in _MODEL_FIELDS
-        }
+    model = component["model"]
+    formatted: dict[str, Any] = dict(component)
+    formatted["model"] = {field: getattr(model, field, None) for field in _MODEL_FIELDS}
+    if model.type == nobo.Model.UNKNOWN:
+        # Unknown models carry the serial number in the name.
+        formatted["model"]["name"] = REDACTED
     return formatted
 
 
