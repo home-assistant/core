@@ -1543,7 +1543,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 config_entry_id=config_entry_id,
             )
             if deleted_device is None:
-                # Fall back to an orphaned tombstone (its owning config entry was removed,
+                # Fall back to an orphan (its owning config entry was removed,
                 # so it is keyed under config_entry_id=None) - re-adding an integration
                 # should restore the device id, area, labels and name rather than create a
                 # fresh device.
@@ -1993,21 +1993,21 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # we might want to merge the information from it into the non-deleted device.
         # On a move, the device's whole retained identity newly appears in the target
         # config entry; added_identifiers/added_connections are empty on a retained-
-        # identity move, so match the target entry's tombstone by the full identity.
-        tombstone_identifiers: set[tuple[str, str]] | None
-        tombstone_connections: set[tuple[str, str]] | None
+        # identity move, so match the target entry's deleted device by the full identity.
+        match_identifiers: set[tuple[str, str]] | None
+        match_connections: set[tuple[str, str]] | None
         if effective_config_entry_id != old.config_entry_id:
-            tombstone_identifiers = new.identifiers
-            tombstone_connections = new.connections
+            match_identifiers = new.identifiers
+            match_connections = new.connections
         else:
-            tombstone_identifiers = added_identifiers
-            tombstone_connections = added_connections
+            match_identifiers = added_identifiers
+            match_connections = added_connections
         for deleted_device in self.deleted_devices.get_entries(
-            tombstone_identifiers, tombstone_connections
+            match_identifiers, match_connections
         ):
             # get_entries matches across config entries, but identifiers/connections are
-            # unique per config entry - only remove the tombstone owned by this device's
-            # config entry, so another entry can still restore its device from its own.
+            # unique per config entry - only remove the deleted device owned by this
+            # device's config entry, so another entry can still restore its own.
             if (
                 deleted_device.config_entry_id == effective_config_entry_id
                 and deleted_device.id in self.deleted_devices
@@ -2397,7 +2397,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     name_by_user=device["name_by_user"],
                     orphaned_timestamp=device["orphaned_timestamp"],
                     # .get for composite lineage: absent in pre-1.13 stores and in beta
-                    # 1.13 stores written before the tombstone gained these fields.
+                    # 1.13 stores written before the deleted device gained these fields.
                     composite_device_id=device.get("composite_device_id"),
                     composite_primary_config_entry=device.get(
                         "composite_primary_config_entry"

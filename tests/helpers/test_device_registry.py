@@ -2315,14 +2315,14 @@ async def test_clear_config_entry_removes_device_with_pending_move(
     assert device_registry.async_get_device(identifiers={("test", "1")}) is None
 
 
-async def test_move_to_config_entry_clears_target_entry_tombstone(
+async def test_move_to_config_entry_clears_target_entry_deleted_device(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Moving a device into a config entry clears a matching tombstone it holds.
+    """Moving a device into a config entry clears a matching deleted device it holds.
 
-    A retained-identity move adds no new identifiers/connections, so the tombstone the
+    A retained-identity move adds no new identifiers/connections, so the deleted device the
     target entry kept for the same identity must still be removed - otherwise the active
-    device and the tombstone share the target entry's per-identity slot.
+    device and the deleted device share the target entry's per-identity slot.
     """
     entry_a = MockConfigEntry()
     entry_a.add_to_hass(hass)
@@ -2337,7 +2337,7 @@ async def test_move_to_config_entry_clears_target_entry_tombstone(
     )
     assert device_a.id != device_b.id
 
-    # Leave a tombstone owned by entry_b with the shared identity
+    # Leave a deleted device owned by entry_b with the shared identity
     device_registry.async_remove_device(device_b.id)
     assert device_b.id in device_registry.deleted_devices
 
@@ -2347,7 +2347,7 @@ async def test_move_to_config_entry_clears_target_entry_tombstone(
     )
 
     assert device_registry.async_get(device_a.id).config_entry_id == entry_b.entry_id
-    # The tombstone entry_b held for the same identity is cleared, not left immortal
+    # The deleted device entry_b held for the same identity is cleared, not left immortal
     assert device_b.id not in device_registry.deleted_devices
 
 
@@ -2432,14 +2432,14 @@ async def test_add_current_config_entry_is_noop(
     assert device.id not in device_registry.devices
 
 
-async def test_reregister_restores_orphaned_tombstone(
+async def test_reregister_restores_orphan(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Re-adding an integration restores an orphaned tombstone.
+    """Re-adding an integration restores its orphan.
 
     async_clear_config_entry orphans deleted devices (config_entry_id=None) and keeps them
     for 30 days; a later async_get_or_create under a new config entry must restore that
-    tombstone (id, labels, name) rather than create a fresh device.
+    orphan (id, labels, name) rather than create a fresh device.
     """
     entry = MockConfigEntry()
     entry.add_to_hass(hass)
@@ -2450,7 +2450,7 @@ async def test_reregister_restores_orphaned_tombstone(
         device.id, name_by_user="Custom", labels={"label1"}
     )
 
-    # Removing the config entry orphans the tombstone (config_entry_id=None)
+    # Removing the config entry orphans the deleted device (config_entry_id=None)
     device_registry.async_clear_config_entry(entry.entry_id)
     assert device_registry.deleted_devices[device.id].config_entry_id is None
 
@@ -4087,10 +4087,10 @@ async def test_move_to_config_entry_with_colliding_identity_raises(
         )
 
 
-async def test_add_identifier_keeps_other_config_entry_tombstone(
+async def test_add_identifier_keeps_other_config_entry_deleted_device(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Adding an identifier does not delete a matching tombstone of another config entry.
+    """Adding an identifier does not delete a matching deleted device of another entry.
 
     Deleted devices are per config entry now, so a device in entry A merging an
     identifier must not wipe entry B's deleted-device metadata (its restore data).
@@ -4110,12 +4110,12 @@ async def test_add_identifier_keeps_other_config_entry_tombstone(
     device_b_id = device_b.id
     device_registry.async_remove_device(device_b.id)
 
-    # entry A's device merges the identifier entry B's tombstone also has
+    # entry A's device merges the identifier entry B's deleted device also has
     device_registry.async_update_device(
         device_a.id, merge_identifiers={("test", "shared")}
     )
 
-    # entry B's tombstone survives, so re-registering restores its id and metadata
+    # entry B's deleted device survives, so re-registering restores its id and metadata
     restored_b = device_registry.async_get_or_create(
         config_entry_id=entry_b.entry_id, identifiers={("test", "shared")}
     )
@@ -4424,7 +4424,7 @@ async def test_composite_lineage_survives_remove_and_restore(
 ) -> None:
     """A migrated split keeps its composite_device_id across removal and restore.
 
-    The tombstone carries the composite lineage, so re-registering the split still
+    The deleted device carries the composite lineage, so re-registering the split still
     resolves from the pre-migration composite id (e.g. for a legacy automation).
     """
     entry_a = MockConfigEntry(domain="dom_a")
@@ -4478,7 +4478,7 @@ async def test_composite_lineage_survives_remove_and_restore(
     assert split_a is not None
     assert split_a.composite_device_id == old_id
 
-    # Remove the split; the tombstone keeps the composite lineage
+    # Remove the split; the deleted device keeps the composite lineage
     registry.async_remove_device(split_a.id)
     assert registry.deleted_devices[split_a.id].composite_device_id == old_id
 
