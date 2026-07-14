@@ -2278,7 +2278,7 @@ class ConfigEntries:
         dev_reg = dr.async_get(self.hass)
         ent_reg = er.async_get(self.hass)
 
-        dev_reg.async_clear_config_entry(entry_id)
+        dev_reg.async_clear_config_entry(entry_id, entry.domain)
         ent_reg.async_clear_config_entry(entry_id)
 
         # If the configuration entry is removed during reauth, it should
@@ -2694,7 +2694,7 @@ class ConfigEntries:
         dev_reg = dr.async_get(self.hass)
         ent_reg = er.async_get(self.hass)
 
-        dev_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
+        dev_reg.async_clear_config_subentry(entry.entry_id, subentry_id, entry.domain)
         ent_reg.async_clear_config_subentry(entry.entry_id, subentry_id)
         return result
 

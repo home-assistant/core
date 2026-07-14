@@ -621,6 +621,11 @@ class DeletedDeviceEntry:
     composite_device_id: str | None = attr.ib(default=None)
     composite_primary_config_entry: str | None = attr.ib(default=None)
     split_at: datetime | None = attr.ib(default=None)
+    # Domain of the config entry that owned this device, set when the device is
+    # orphaned (its config entry removed) so a re-added config entry only restores
+    # an orphan from the same integration. None for non-orphaned deleted devices
+    # and legacy stores.
+    orphaned_domain: str | None = attr.ib(default=None)
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @property
@@ -713,6 +718,7 @@ class DeletedDeviceEntry:
                     "modified_at": self.modified_at,
                     "name_by_user": self.name_by_user,
                     "orphaned_timestamp": self.orphaned_timestamp,
+                    "orphaned_domain": self.orphaned_domain,
                 }
             )
         )
@@ -940,6 +946,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         device["composite_device_id"] = None
                         device["composite_primary_config_entry"] = None
                         device["split_at"] = None
+                        device["orphaned_domain"] = None
                         split_deleted_devices.append(device)
                         continue
                     # A deleted device that belonged to several config entries or
@@ -960,6 +967,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         split["composite_device_id"] = old_id
                         split["composite_primary_config_entry"] = None
                         split["split_at"] = migrated_at
+                        split["orphaned_domain"] = None
                         split_deleted_devices.append(split)
                 old_data["deleted_devices"] = split_deleted_devices
 
@@ -1143,11 +1151,101 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
         ]
 
 
+class DeletedDeviceRegistryItems(DeviceRegistryItems[DeletedDeviceEntry]):
+    """Container for deleted device registry entries.
+
+    A deleted device that still belongs to a config entry is indexed by config entry id in
+    the base class, like an active device. An orphaned deleted device (its config entry
+    removed) has no config entry id and would collide with every other orphan in the base
+    config_entry_id=None slot, so orphans are kept out of the base index and tracked in a
+    separate index keyed by device id, which is unique so orphans never shadow each other.
+    Orphans are matched on restore by get_orphaned_entry.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the container."""
+        super().__init__()
+        self._orphaned_connections: dict[
+            tuple[str, str], dict[str, DeletedDeviceEntry]
+        ] = {}
+        self._orphaned_identifiers: dict[
+            tuple[str, str], dict[str, DeletedDeviceEntry]
+        ] = {}
+
+    @override
+    def _index_entry(self, key: str, entry: DeletedDeviceEntry) -> None:
+        """Index an entry, keeping orphans in the separate id-keyed index."""
+        if entry.config_entry_id is not None:
+            super()._index_entry(key, entry)
+            return
+        for connection in entry.connections:
+            self._orphaned_connections.setdefault(connection, {})[entry.id] = entry
+        for identifier in entry.identifiers:
+            self._orphaned_identifiers.setdefault(identifier, {})[entry.id] = entry
+
+    @override
+    def _unindex_entry(
+        self, key: str, replacement_entry: DeletedDeviceEntry | None = None
+    ) -> None:
+        """Unindex an entry from the base or the orphan index."""
+        entry = self.data[key]
+        if entry.config_entry_id is not None:
+            super()._unindex_entry(key, replacement_entry)
+            return
+        for connection in entry.connections:
+            if connection in self._orphaned_connections:
+                del self._orphaned_connections[connection][entry.id]
+                if not self._orphaned_connections[connection]:
+                    del self._orphaned_connections[connection]
+        for identifier in entry.identifiers:
+            if identifier in self._orphaned_identifiers:
+                del self._orphaned_identifiers[identifier][entry.id]
+                if not self._orphaned_identifiers[identifier]:
+                    del self._orphaned_identifiers[identifier]
+
+    def get_orphaned_entry(
+        self,
+        identifiers: set[tuple[str, str]] | None,
+        connections: set[tuple[str, str]] | None,
+        domain: str | None,
+    ) -> DeletedDeviceEntry | None:
+        """Return an orphan to restore for a device of the given domain.
+
+        Prefer an orphan recorded for this domain; otherwise fall back to the domain-less
+        orphan (carried over by the migration) that overlaps the lookup most, so it is not
+        missed among several that share identifiers or connections.
+        """
+        orphans: dict[str, DeletedDeviceEntry] = {}
+        for identifier in identifiers or ():
+            orphans.update(self._orphaned_identifiers.get(identifier, {}))
+        for connection in _normalize_connections(connections or set()):
+            orphans.update(self._orphaned_connections.get(connection, {}))
+        if domain is not None:
+            for entry in orphans.values():
+                if entry.orphaned_domain == domain:
+                    return entry
+        wanted_identifiers = identifiers or set()
+        wanted_connections = connections or set()
+        best: DeletedDeviceEntry | None = None
+        best_overlap = 0
+        # Sort by id so the choice is stable when several orphans overlap equally.
+        for entry in sorted(orphans.values(), key=lambda entry: entry.id):
+            if entry.orphaned_domain is not None:
+                continue
+            overlap = len(entry.identifiers & wanted_identifiers) + len(
+                entry.connections & wanted_connections
+            )
+            if overlap > best_overlap:
+                best = entry
+                best_overlap = overlap
+        return best
+
+
 class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     """Class to hold a registry of devices."""
 
     devices: ActiveDeviceRegistryItems
-    deleted_devices: DeviceRegistryItems[DeletedDeviceEntry]
+    deleted_devices: DeletedDeviceRegistryItems
     _device_data: dict[str, DeviceEntry]
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -1547,14 +1645,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 config_entry_id=config_entry_id,
             )
             if deleted_device is None:
-                # Fall back to an orphan (its owning config entry was removed,
-                # so it is keyed under config_entry_id=None) - re-adding an integration
-                # should restore the device id, area, labels and name rather than create a
-                # fresh device.
-                deleted_device = self.deleted_devices.get_entry(
-                    connections=connections,
-                    identifiers=identifiers,
-                    config_entry_id=None,
+                # Fall back to an orphan (its owning config entry was removed)
+                # so re-adding an integration restores the device id, area, labels and name
+                # rather than create a fresh device. Matching on the recorded domain keeps
+                # a chance identifier/connection collision from restoring another
+                # integration's device.
+                deleted_device = self.deleted_devices.get_orphaned_entry(
+                    identifiers, connections, config_entry.domain
                 )
             if deleted_device is None:
                 area_id: str | None = None
@@ -2315,7 +2412,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         data = await self._store.async_load()
 
         devices = ActiveDeviceRegistryItems()
-        deleted_devices: DeviceRegistryItems[DeletedDeviceEntry] = DeviceRegistryItems()
+        deleted_devices = DeletedDeviceRegistryItems()
 
         if data is not None:
             for device in data["devices"]:
@@ -2400,6 +2497,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     modified_at=datetime.fromisoformat(device["modified_at"]),
                     name_by_user=device["name_by_user"],
                     orphaned_timestamp=device["orphaned_timestamp"],
+                    orphaned_domain=device["orphaned_domain"],
                     composite_device_id=device["composite_device_id"],
                     composite_primary_config_entry=device[
                         "composite_primary_config_entry"
@@ -2438,8 +2536,54 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         }
 
     @callback
-    def async_clear_config_entry(self, config_entry_id: str) -> None:
+    def _resolve_orphan_domain(
+        self, config_entry_id: str, domain: str | None
+    ) -> str | None:
+        """Return the domain to record on devices orphaned from a config entry."""
+        if domain is not None:
+            return domain
+        if (
+            entry := self.hass.config_entries.async_get_entry(config_entry_id)
+        ) is not None:
+            return entry.domain
+        return None
+
+    @callback
+    def _async_orphan_deleted_device(
+        self, deleted_device: DeletedDeviceEntry, domain: str | None, now_time: float
+    ) -> None:
+        """Mark a deleted device as orphaned, remembering its former domain."""
+        if domain is not None:
+            # Orphans are indexed by their recorded domain, so two orphans of the
+            # same domain sharing an identifier or connection would collide. When a
+            # device from the same integration is orphaned, drop any existing orphan
+            # it overlaps so the newest one wins deterministically instead of shadowing
+            # it.
+            for existing in list(self.deleted_devices.values()):
+                if (
+                    existing.config_entry_id is None
+                    and existing.orphaned_domain == domain
+                    and (
+                        existing.connections & deleted_device.connections
+                        or existing.identifiers & deleted_device.identifiers
+                    )
+                ):
+                    del self.deleted_devices[existing.id]
+        self.deleted_devices[deleted_device.id] = attr.evolve(
+            deleted_device,
+            config_entry_id=None,
+            config_subentry_id=None,
+            orphaned_timestamp=now_time,
+            orphaned_domain=domain,
+        )
+        self.async_schedule_save()
+
+    @callback
+    def async_clear_config_entry(
+        self, config_entry_id: str, domain: str | None = None
+    ) -> None:
         """Clear config entry from registry entries."""
+        domain = self._resolve_orphan_domain(config_entry_id, domain)
         now_time = time.time()
         for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
             self.async_remove_device(device.id)
@@ -2455,21 +2599,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         for deleted_device in list(self.deleted_devices.values()):
             if deleted_device.config_entry_id != config_entry_id:
                 continue
-            # The deleted device's owning config entry is being removed, mark it as
-            # orphaned by clearing its config entry and adding a timestamp
-            self.deleted_devices[deleted_device.id] = attr.evolve(
-                deleted_device,
-                config_entry_id=None,
-                config_subentry_id=None,
-                orphaned_timestamp=now_time,
-            )
-            self.async_schedule_save()
+            self._async_orphan_deleted_device(deleted_device, domain, now_time)
 
     @callback
     def async_clear_config_subentry(
-        self, config_entry_id: str, config_subentry_id: str
+        self, config_entry_id: str, config_subentry_id: str, domain: str | None = None
     ) -> None:
         """Clear config subentry from registry entries."""
+        domain = self._resolve_orphan_domain(config_entry_id, domain)
         now_time = time.time()
         for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
             if device.config_subentry_id != config_subentry_id:
@@ -2481,15 +2618,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 or deleted_device.config_subentry_id != config_subentry_id
             ):
                 continue
-            # The deleted device's owning config subentry is being removed, mark it as
-            # orphaned by clearing its config entry and adding a timestamp
-            self.deleted_devices[deleted_device.id] = attr.evolve(
-                deleted_device,
-                config_entry_id=None,
-                config_subentry_id=None,
-                orphaned_timestamp=now_time,
-            )
-            self.async_schedule_save()
+            self._async_orphan_deleted_device(deleted_device, domain, now_time)
 
     @callback
     def async_purge_expired_orphaned_devices(self) -> None:
