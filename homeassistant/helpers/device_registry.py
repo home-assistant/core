@@ -937,6 +937,9 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         )
                         device["config_entry_id"] = config_entry_id
                         device["config_subentry_id"] = subentry_id
+                        device["composite_device_id"] = None
+                        device["composite_primary_config_entry"] = None
+                        device["split_at"] = None
                         split_deleted_devices.append(device)
                         continue
                     # A deleted device that belonged to several config entries or
@@ -955,6 +958,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                             config_entry_id: [subentry_id]
                         }
                         split["composite_device_id"] = old_id
+                        split["composite_primary_config_entry"] = None
                         split["split_at"] = migrated_at
                         split_deleted_devices.append(split)
                 old_data["deleted_devices"] = split_deleted_devices
@@ -2396,15 +2400,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     modified_at=datetime.fromisoformat(device["modified_at"]),
                     name_by_user=device["name_by_user"],
                     orphaned_timestamp=device["orphaned_timestamp"],
-                    # .get for composite lineage: absent in pre-1.13 stores and in beta
-                    # 1.13 stores written before the deleted device gained these fields.
-                    composite_device_id=device.get("composite_device_id"),
-                    composite_primary_config_entry=device.get(
+                    composite_device_id=device["composite_device_id"],
+                    composite_primary_config_entry=device[
                         "composite_primary_config_entry"
-                    ),
+                    ],
                     split_at=(
                         datetime.fromisoformat(device["split_at"])
-                        if device.get("split_at")
+                        if device["split_at"]
                         else None
                     ),
                 )
