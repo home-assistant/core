@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, override
 
 from aiohttp import web
 import voluptuous as vol
@@ -88,6 +88,7 @@ class ActiveConnection:
         self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<ActiveConnection {self.get_description(None)}>"

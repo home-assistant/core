@@ -1,7 +1,7 @@
 """Config flow for drop_connect integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from dropmqttapi.discovery import DropDiscovery
 
@@ -31,6 +31,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     _drop_discovery: DropDiscovery | None = None
 
+    @override
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> ConfigFlowResult:
@@ -92,6 +93,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

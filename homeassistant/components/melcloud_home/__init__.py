@@ -8,7 +8,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(

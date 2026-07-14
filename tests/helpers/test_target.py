@@ -1,6 +1,7 @@
 """Test service helpers."""
 
 import asyncio
+from collections.abc import Mapping
 
 import pytest
 
@@ -16,7 +17,7 @@ from homeassistant.const import (
     STATE_ON,
     EntityCategory,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -805,16 +806,20 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
     hass: HomeAssistant,
 ) -> None:
     """Test on_entities_update callback reports added and removed entities."""
-    entity_updates: list[tuple[set[str], set[str]]] = []
+    entity_updates: list[tuple[set[str], set[str], set[str]]] = []
 
     @callback
     def state_change_callback(event: target.TargetStateChangedData) -> None:
         """Handle state change events."""
 
     @callback
-    def on_entities_update(added: set[str], removed: set[str]) -> None:
+    def on_entities_update(
+        added: set[str],
+        removed: set[str],
+        entity_states: Mapping[str, State | None],
+    ) -> None:
         """Track entity set changes."""
-        entity_updates.append((added, removed))
+        entity_updates.append((added, removed, set(entity_states)))
 
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
@@ -844,9 +849,10 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
         on_entities_update=on_entities_update,
     )
 
-    # Initial setup fires on_entities_update with all entities as "added"
+    # Initial setup fires on_entities_update with all entities as "added".
+    # The states mapping covers the currently targeted entities.
     assert len(entity_updates) == 1
-    assert entity_updates[-1] == ({entity_a.entity_id}, set())
+    assert entity_updates[-1] == ({entity_a.entity_id}, set(), {entity_a.entity_id})
     entity_updates.clear()
 
     # Add label to entity_b → added
@@ -854,7 +860,11 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
     await hass.async_block_till_done()
 
     assert len(entity_updates) == 1
-    assert entity_updates[-1] == ({entity_b.entity_id}, set())
+    assert entity_updates[-1] == (
+        {entity_b.entity_id},
+        set(),
+        {entity_a.entity_id, entity_b.entity_id},
+    )
     entity_updates.clear()
 
     # Remove label from entity_a → removed
@@ -862,7 +872,7 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
     await hass.async_block_till_done()
 
     assert len(entity_updates) == 1
-    assert entity_updates[-1] == (set(), {entity_a.entity_id})
+    assert entity_updates[-1] == (set(), {entity_a.entity_id}, {entity_b.entity_id})
     entity_updates.clear()
 
     # Remove label from entity_b → removed
@@ -870,7 +880,7 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
     await hass.async_block_till_done()
 
     assert len(entity_updates) == 1
-    assert entity_updates[-1] == (set(), {entity_b.entity_id})
+    assert entity_updates[-1] == (set(), {entity_b.entity_id}, set())
     entity_updates.clear()
 
     # Re-add both labels at once — entity_a first, then entity_b
@@ -880,8 +890,12 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
     await hass.async_block_till_done()
 
     assert len(entity_updates) == 2
-    assert entity_updates[0] == ({entity_a.entity_id}, set())
-    assert entity_updates[1] == ({entity_b.entity_id}, set())
+    assert entity_updates[0] == ({entity_a.entity_id}, set(), {entity_a.entity_id})
+    assert entity_updates[1] == (
+        {entity_b.entity_id},
+        set(),
+        {entity_a.entity_id, entity_b.entity_id},
+    )
     entity_updates.clear()
 
     # After unsubscribing, no more callbacks
@@ -903,7 +917,11 @@ async def test_async_track_target_selector_cancels_update_task_on_unsubscribe(
     def state_change_callback(event: target.TargetStateChangedData) -> None:
         """Handle state change events."""
 
-    async def on_entities_update(added: set[str], removed: set[str]) -> None:
+    async def on_entities_update(
+        added: set[str],
+        removed: set[str],
+        entity_states: Mapping[str, State | None],
+    ) -> None:
         nonlocal cancelled
         started.set()
         try:

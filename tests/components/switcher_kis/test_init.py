@@ -1,5 +1,6 @@
 """Test cases for the switcher_kis component."""
 
+from dataclasses import replace
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
@@ -19,6 +20,8 @@ from .consts import (
     DUMMY_DEVICE_ID4,
     DUMMY_DEVICE_ID10,
     DUMMY_HEATER_DEVICE,
+    DUMMY_IP_ADDRESS1,
+    DUMMY_PLUG_DEVICE,
     DUMMY_SWITCHER_DEVICES,
     DUMMY_TOKEN as TOKEN,
     DUMMY_USERNAME as USERNAME,
@@ -128,6 +131,34 @@ async def test_update_fail_token_needed(
     entity_id = f"sensor.{slugify(device.name)}_power"
     state = hass.states.get(entity_id)
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_ip_change_logged(
+    hass: HomeAssistant,
+    mock_bridge,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a broadcast from a new ip address is logged for an existing device."""
+    entry = await init_integration(hass)
+    assert mock_bridge
+
+    mock_bridge.mock_callbacks([DUMMY_PLUG_DEVICE])
+    await hass.async_block_till_done()
+
+    assert len(entry.runtime_data) == 1
+    coordinator = entry.runtime_data[DUMMY_PLUG_DEVICE.device_id]
+    assert coordinator.data.ip_address == DUMMY_IP_ADDRESS1
+
+    new_ip = "192.168.100.200"
+    moved_device = replace(DUMMY_PLUG_DEVICE, ip_address=new_ip)
+    mock_bridge.mock_callbacks([moved_device])
+    await hass.async_block_till_done()
+
+    assert (
+        f"Switcher device {DUMMY_PLUG_DEVICE.device_id} changed ip from"
+        f" {DUMMY_IP_ADDRESS1} to {new_ip}" in caplog.text
+    )
+    assert coordinator.data.ip_address == new_ip
 
 
 async def test_entry_unload(hass: HomeAssistant, mock_bridge) -> None:

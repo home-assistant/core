@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -44,10 +44,10 @@
 # name: test_gen24[sensor.inverter_name_ac_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Inverter name AC current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter name AC current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_name_ac_current',
@@ -64,7 +64,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -102,10 +102,10 @@
 # name: test_gen24[sensor.inverter_name_ac_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Inverter name AC power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter name AC power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_name_ac_power',
@@ -122,7 +122,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -160,10 +160,10 @@
 # name: test_gen24[sensor.inverter_name_ac_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Inverter name AC voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter name AC voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_name_ac_voltage',
@@ -180,7 +180,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -218,10 +218,10 @@
 # name: test_gen24[sensor.inverter_name_dc_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Inverter name DC current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter name DC current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_name_dc_current',
@@ -238,7 +238,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -276,10 +276,10 @@
 # name: test_gen24[sensor.inverter_name_dc_current_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Inverter name DC current 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter name DC current 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_name_dc_current_2',
@@ -296,7 +296,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -334,10 +334,10 @@
 # name: test_gen24[sensor.inverter_name_dc_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Inverter name DC voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter name DC voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_name_dc_voltage',
@@ -354,7 +354,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -392,10 +392,10 @@
 # name: test_gen24[sensor.inverter_name_dc_voltage_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Inverter name DC voltage 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter name DC voltage 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_name_dc_voltage_2',
@@ -445,7 +445,7 @@
 # name: test_gen24[sensor.inverter_name_error_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inverter name Error code',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter name Error code',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_name_error_code',
@@ -462,7 +462,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_error',
         'ac_voltage_too_high',
         'ac_voltage_too_low',
@@ -594,9 +594,9 @@
 # name: test_gen24[sensor.inverter_name_error_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Inverter name Error message',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter name Error message',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_error',
         'ac_voltage_too_high',
         'ac_voltage_too_low',
@@ -710,7 +710,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -748,10 +748,10 @@
 # name: test_gen24[sensor.inverter_name_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Inverter name Frequency',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter name Frequency',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_name_frequency',
@@ -801,7 +801,7 @@
 # name: test_gen24[sensor.inverter_name_inverter_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inverter name Inverter state',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter name Inverter state',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_name_inverter_state',
@@ -851,7 +851,7 @@
 # name: test_gen24[sensor.inverter_name_status_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Inverter name Status code',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter name Status code',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_name_status_code',
@@ -868,7 +868,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'startup',
         'running',
         'standby',
@@ -912,9 +912,9 @@
 # name: test_gen24[sensor.inverter_name_status_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Inverter name Status message',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter name Status message',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'startup',
         'running',
         'standby',
@@ -940,7 +940,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -978,10 +978,10 @@
 # name: test_gen24[sensor.inverter_name_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Inverter name Total energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Inverter name Total energy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.inverter_name_total_energy',
@@ -998,7 +998,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1036,10 +1036,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_apparent_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Apparent power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Apparent power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_apparent_power',
@@ -1056,7 +1056,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1094,10 +1094,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_apparent_power_phase_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Apparent power phase 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Apparent power phase 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_apparent_power_phase_1',
@@ -1114,7 +1114,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1152,10 +1152,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_apparent_power_phase_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Apparent power phase 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Apparent power phase 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_apparent_power_phase_2',
@@ -1172,7 +1172,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1210,10 +1210,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_apparent_power_phase_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Apparent power phase 3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Apparent power phase 3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_apparent_power_phase_3',
@@ -1230,7 +1230,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1268,10 +1268,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_current_phase_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Smart Meter TS 65A-3 Current phase 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Current phase 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_current_phase_1',
@@ -1288,7 +1288,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1326,10 +1326,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_current_phase_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Smart Meter TS 65A-3 Current phase 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Current phase 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_current_phase_2',
@@ -1346,7 +1346,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1384,10 +1384,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_current_phase_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Smart Meter TS 65A-3 Current phase 3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Current phase 3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_current_phase_3',
@@ -1404,7 +1404,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1442,10 +1442,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_frequency_phase_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Smart Meter TS 65A-3 Frequency phase average',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Frequency phase average',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_frequency_phase_average',
@@ -1495,7 +1495,7 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_meter_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smart Meter TS 65A-3 Meter location',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Meter location',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_meter_location',
@@ -1512,7 +1512,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'feed_in',
         'consumption_path',
         'external_generator',
@@ -1553,9 +1553,9 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_meter_location_description-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Smart Meter TS 65A-3 Meter location description',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Meter location description',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'feed_in',
         'consumption_path',
         'external_generator',
@@ -1578,7 +1578,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1613,9 +1613,9 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_power_factor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Smart Meter TS 65A-3 Power factor',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Power factor',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_power_factor',
@@ -1632,7 +1632,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1667,9 +1667,9 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_power_factor_phase_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Smart Meter TS 65A-3 Power factor phase 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Power factor phase 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_power_factor_phase_1',
@@ -1686,7 +1686,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1721,9 +1721,9 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_power_factor_phase_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Smart Meter TS 65A-3 Power factor phase 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Power factor phase 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_power_factor_phase_2',
@@ -1740,7 +1740,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1775,9 +1775,9 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_power_factor_phase_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Smart Meter TS 65A-3 Power factor phase 3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Power factor phase 3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_power_factor_phase_3',
@@ -1794,7 +1794,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1829,9 +1829,9 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_reactive_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smart Meter TS 65A-3 Reactive energy consumed',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'varh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive energy consumed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'varh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_energy_consumed',
@@ -1848,7 +1848,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1883,9 +1883,9 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_reactive_energy_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smart Meter TS 65A-3 Reactive energy produced',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'varh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive energy produced',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'varh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_energy_produced',
@@ -1902,7 +1902,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1940,10 +1940,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_reactive_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Reactive power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_power',
@@ -1960,7 +1960,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1998,10 +1998,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_reactive_power_phase_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Reactive power phase 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive power phase 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_power_phase_1',
@@ -2018,7 +2018,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2056,10 +2056,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_reactive_power_phase_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Reactive power phase 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive power phase 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_power_phase_2',
@@ -2076,7 +2076,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2114,10 +2114,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_reactive_power_phase_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Reactive power phase 3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive power phase 3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_power_phase_3',
@@ -2134,7 +2134,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2172,10 +2172,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Smart Meter TS 65A-3 Real energy consumed',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real energy consumed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_energy_consumed',
@@ -2192,7 +2192,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2230,10 +2230,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_energy_minus-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Smart Meter TS 65A-3 Real energy minus',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real energy minus',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_energy_minus',
@@ -2250,7 +2250,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2288,10 +2288,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_energy_plus-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Smart Meter TS 65A-3 Real energy plus',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real energy plus',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_energy_plus',
@@ -2308,7 +2308,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2346,10 +2346,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_energy_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Smart Meter TS 65A-3 Real energy produced',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real energy produced',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_energy_produced',
@@ -2366,7 +2366,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2404,10 +2404,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Smart Meter TS 65A-3 Real power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_power',
@@ -2424,7 +2424,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2462,10 +2462,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_power_phase_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Smart Meter TS 65A-3 Real power phase 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real power phase 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_power_phase_1',
@@ -2482,7 +2482,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2520,10 +2520,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_power_phase_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Smart Meter TS 65A-3 Real power phase 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real power phase 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_power_phase_2',
@@ -2540,7 +2540,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2578,10 +2578,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_real_power_phase_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Smart Meter TS 65A-3 Real power phase 3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real power phase 3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_power_phase_3',
@@ -2598,7 +2598,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2636,10 +2636,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_voltage_phase_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smart Meter TS 65A-3 Voltage phase 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Voltage phase 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_voltage_phase_1',
@@ -2656,7 +2656,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2694,10 +2694,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_voltage_phase_1_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smart Meter TS 65A-3 Voltage phase 1-2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Voltage phase 1-2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_voltage_phase_1_2',
@@ -2714,7 +2714,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2752,10 +2752,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_voltage_phase_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smart Meter TS 65A-3 Voltage phase 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Voltage phase 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_voltage_phase_2',
@@ -2772,7 +2772,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2810,10 +2810,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_voltage_phase_2_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smart Meter TS 65A-3 Voltage phase 2-3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Voltage phase 2-3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_voltage_phase_2_3',
@@ -2830,7 +2830,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2868,10 +2868,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_voltage_phase_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smart Meter TS 65A-3 Voltage phase 3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Voltage phase 3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_voltage_phase_3',
@@ -2888,7 +2888,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2926,10 +2926,10 @@
 # name: test_gen24[sensor.smart_meter_ts_65a_3_voltage_phase_3_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smart Meter TS 65A-3 Voltage phase 3-1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Voltage phase 3-1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_voltage_phase_3_1',
@@ -2979,7 +2979,7 @@
 # name: test_gen24[sensor.solarnet_meter_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Meter mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Meter mode',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_meter_mode',
@@ -2996,7 +2996,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3034,10 +3034,10 @@
 # name: test_gen24[sensor.solarnet_power_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power grid',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power grid',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_grid',
@@ -3054,7 +3054,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3092,10 +3092,10 @@
 # name: test_gen24[sensor.solarnet_power_grid_export-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power grid export',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power grid export',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_grid_export',
@@ -3112,7 +3112,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3150,10 +3150,10 @@
 # name: test_gen24[sensor.solarnet_power_grid_import-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power grid import',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power grid import',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_grid_import',
@@ -3170,7 +3170,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3208,10 +3208,10 @@
 # name: test_gen24[sensor.solarnet_power_load-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power load',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power load',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_load',
@@ -3228,7 +3228,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3266,10 +3266,10 @@
 # name: test_gen24[sensor.solarnet_power_load_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power load consumed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power load consumed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_load_consumed',
@@ -3286,7 +3286,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3324,10 +3324,10 @@
 # name: test_gen24[sensor.solarnet_power_load_generated-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power load generated',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power load generated',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_load_generated',
@@ -3344,7 +3344,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3382,10 +3382,10 @@
 # name: test_gen24[sensor.solarnet_power_photovoltaics-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power photovoltaics',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power photovoltaics',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_photovoltaics',
@@ -3402,7 +3402,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3437,9 +3437,9 @@
 # name: test_gen24[sensor.solarnet_relative_autonomy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Relative autonomy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Relative autonomy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_relative_autonomy',
@@ -3456,7 +3456,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3491,9 +3491,9 @@
 # name: test_gen24[sensor.solarnet_relative_self_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Relative self-consumption',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Relative self-consumption',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_relative_self_consumption',
@@ -3510,7 +3510,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3548,10 +3548,10 @@
 # name: test_gen24[sensor.solarnet_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'SolarNet Total energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Total energy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_total_energy',
@@ -3568,7 +3568,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3606,10 +3606,10 @@
 # name: test_gen24_storage[sensor.byd_battery_box_premium_hv_dc_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'BYD Battery-Box Premium HV DC current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BYD Battery-Box Premium HV DC current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.byd_battery_box_premium_hv_dc_current',
@@ -3626,7 +3626,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3664,10 +3664,10 @@
 # name: test_gen24_storage[sensor.byd_battery_box_premium_hv_dc_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'BYD Battery-Box Premium HV DC voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BYD Battery-Box Premium HV DC voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.byd_battery_box_premium_hv_dc_voltage',
@@ -3717,8 +3717,8 @@
 # name: test_gen24_storage[sensor.byd_battery_box_premium_hv_designed_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'BYD Battery-Box Premium HV Designed capacity',
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BYD Battery-Box Premium HV Designed capacity',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.byd_battery_box_premium_hv_designed_capacity',
@@ -3768,8 +3768,8 @@
 # name: test_gen24_storage[sensor.byd_battery_box_premium_hv_maximum_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'BYD Battery-Box Premium HV Maximum capacity',
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BYD Battery-Box Premium HV Maximum capacity',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.byd_battery_box_premium_hv_maximum_capacity',
@@ -3786,7 +3786,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3821,10 +3821,10 @@
 # name: test_gen24_storage[sensor.byd_battery_box_premium_hv_state_of_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'BYD Battery-Box Premium HV State of charge',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BYD Battery-Box Premium HV State of charge',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.byd_battery_box_premium_hv_state_of_charge',
@@ -3841,7 +3841,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3879,10 +3879,10 @@
 # name: test_gen24_storage[sensor.byd_battery_box_premium_hv_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'BYD Battery-Box Premium HV Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'BYD Battery-Box Premium HV Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.byd_battery_box_premium_hv_temperature',
@@ -3899,7 +3899,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3937,10 +3937,10 @@
 # name: test_gen24_storage[sensor.gen24_storage_ac_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Gen24 Storage AC current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen24 Storage AC current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gen24_storage_ac_current',
@@ -3957,7 +3957,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -3995,10 +3995,10 @@
 # name: test_gen24_storage[sensor.gen24_storage_ac_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Gen24 Storage AC power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen24 Storage AC power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gen24_storage_ac_power',
@@ -4015,7 +4015,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4053,10 +4053,10 @@
 # name: test_gen24_storage[sensor.gen24_storage_ac_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Gen24 Storage AC voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen24 Storage AC voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gen24_storage_ac_voltage',
@@ -4073,7 +4073,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4111,10 +4111,10 @@
 # name: test_gen24_storage[sensor.gen24_storage_dc_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Gen24 Storage DC current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen24 Storage DC current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gen24_storage_dc_current',
@@ -4131,7 +4131,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4169,10 +4169,10 @@
 # name: test_gen24_storage[sensor.gen24_storage_dc_current_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Gen24 Storage DC current 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen24 Storage DC current 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gen24_storage_dc_current_2',
@@ -4189,7 +4189,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4227,10 +4227,10 @@
 # name: test_gen24_storage[sensor.gen24_storage_dc_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Gen24 Storage DC voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen24 Storage DC voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gen24_storage_dc_voltage',
@@ -4247,7 +4247,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4285,10 +4285,10 @@
 # name: test_gen24_storage[sensor.gen24_storage_dc_voltage_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Gen24 Storage DC voltage 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen24 Storage DC voltage 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gen24_storage_dc_voltage_2',
@@ -4338,7 +4338,7 @@
 # name: test_gen24_storage[sensor.gen24_storage_error_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gen24 Storage Error code',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen24 Storage Error code',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gen24_storage_error_code',
@@ -4355,7 +4355,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_error',
         'ac_voltage_too_high',
         'ac_voltage_too_low',
@@ -4487,9 +4487,9 @@
 # name: test_gen24_storage[sensor.gen24_storage_error_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Gen24 Storage Error message',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen24 Storage Error message',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_error',
         'ac_voltage_too_high',
         'ac_voltage_too_low',
@@ -4603,7 +4603,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4641,10 +4641,10 @@
 # name: test_gen24_storage[sensor.gen24_storage_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Gen24 Storage Frequency',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen24 Storage Frequency',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gen24_storage_frequency',
@@ -4694,7 +4694,7 @@
 # name: test_gen24_storage[sensor.gen24_storage_inverter_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gen24 Storage Inverter state',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen24 Storage Inverter state',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gen24_storage_inverter_state',
@@ -4744,7 +4744,7 @@
 # name: test_gen24_storage[sensor.gen24_storage_status_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gen24 Storage Status code',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen24 Storage Status code',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gen24_storage_status_code',
@@ -4761,7 +4761,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'startup',
         'running',
         'standby',
@@ -4805,9 +4805,9 @@
 # name: test_gen24_storage[sensor.gen24_storage_status_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Gen24 Storage Status message',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen24 Storage Status message',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'startup',
         'running',
         'standby',
@@ -4833,7 +4833,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4871,10 +4871,10 @@
 # name: test_gen24_storage[sensor.gen24_storage_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Gen24 Storage Total energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gen24 Storage Total energy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gen24_storage_total_energy',
@@ -4891,7 +4891,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4929,10 +4929,10 @@
 # name: test_gen24_storage[sensor.ohmpilot_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Ohmpilot Energy consumed',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohmpilot Energy consumed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ohmpilot_energy_consumed',
@@ -4949,7 +4949,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -4987,10 +4987,10 @@
 # name: test_gen24_storage[sensor.ohmpilot_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Ohmpilot Power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohmpilot Power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ohmpilot_power',
@@ -5040,7 +5040,7 @@
 # name: test_gen24_storage[sensor.ohmpilot_state_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohmpilot State code',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohmpilot State code',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ohmpilot_state_code',
@@ -5057,7 +5057,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'up_and_running',
         'keep_minimum_temperature',
         'legionella_protection',
@@ -5099,9 +5099,9 @@
 # name: test_gen24_storage[sensor.ohmpilot_state_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Ohmpilot State message',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohmpilot State message',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'up_and_running',
         'keep_minimum_temperature',
         'legionella_protection',
@@ -5125,7 +5125,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5163,10 +5163,10 @@
 # name: test_gen24_storage[sensor.ohmpilot_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Ohmpilot Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohmpilot Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ohmpilot_temperature',
@@ -5183,7 +5183,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5221,10 +5221,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_apparent_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Apparent power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Apparent power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_apparent_power',
@@ -5241,7 +5241,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5279,10 +5279,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_apparent_power_phase_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Apparent power phase 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Apparent power phase 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_apparent_power_phase_1',
@@ -5299,7 +5299,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5337,10 +5337,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_apparent_power_phase_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Apparent power phase 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Apparent power phase 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_apparent_power_phase_2',
@@ -5357,7 +5357,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5395,10 +5395,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_apparent_power_phase_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'apparent_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Apparent power phase 3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'apparent_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Apparent power phase 3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfApparentPower.VOLT_AMPERE: 'VA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_apparent_power_phase_3',
@@ -5415,7 +5415,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5453,10 +5453,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_current_phase_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Smart Meter TS 65A-3 Current phase 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Current phase 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_current_phase_1',
@@ -5473,7 +5473,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5511,10 +5511,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_current_phase_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Smart Meter TS 65A-3 Current phase 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Current phase 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_current_phase_2',
@@ -5531,7 +5531,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5569,10 +5569,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_current_phase_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Smart Meter TS 65A-3 Current phase 3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Current phase 3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_current_phase_3',
@@ -5589,7 +5589,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5627,10 +5627,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_frequency_phase_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Smart Meter TS 65A-3 Frequency phase average',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Frequency phase average',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_frequency_phase_average',
@@ -5680,7 +5680,7 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_meter_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smart Meter TS 65A-3 Meter location',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Meter location',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_meter_location',
@@ -5697,7 +5697,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'feed_in',
         'consumption_path',
         'external_generator',
@@ -5738,9 +5738,9 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_meter_location_description-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Smart Meter TS 65A-3 Meter location description',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Meter location description',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'feed_in',
         'consumption_path',
         'external_generator',
@@ -5763,7 +5763,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5798,9 +5798,9 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_power_factor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Smart Meter TS 65A-3 Power factor',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Power factor',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_power_factor',
@@ -5817,7 +5817,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5852,9 +5852,9 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_power_factor_phase_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Smart Meter TS 65A-3 Power factor phase 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Power factor phase 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_power_factor_phase_1',
@@ -5871,7 +5871,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5906,9 +5906,9 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_power_factor_phase_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Smart Meter TS 65A-3 Power factor phase 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Power factor phase 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_power_factor_phase_2',
@@ -5925,7 +5925,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -5960,9 +5960,9 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_power_factor_phase_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Smart Meter TS 65A-3 Power factor phase 3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power_factor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Power factor phase 3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_power_factor_phase_3',
@@ -5979,7 +5979,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6014,9 +6014,9 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_reactive_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smart Meter TS 65A-3 Reactive energy consumed',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'varh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive energy consumed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'varh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_energy_consumed',
@@ -6033,7 +6033,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6068,9 +6068,9 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_reactive_energy_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Smart Meter TS 65A-3 Reactive energy produced',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'varh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive energy produced',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'varh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_energy_produced',
@@ -6087,7 +6087,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6125,10 +6125,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_reactive_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Reactive power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_power',
@@ -6145,7 +6145,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6183,10 +6183,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_reactive_power_phase_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Reactive power phase 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive power phase 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_power_phase_1',
@@ -6203,7 +6203,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6241,10 +6241,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_reactive_power_phase_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Reactive power phase 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive power phase 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_power_phase_2',
@@ -6261,7 +6261,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6299,10 +6299,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_reactive_power_phase_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'reactive_power',
-      'friendly_name': 'Smart Meter TS 65A-3 Reactive power phase 3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'reactive_power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Reactive power phase 3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 'var'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_reactive_power_phase_3',
@@ -6319,7 +6319,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6357,10 +6357,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_energy_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Smart Meter TS 65A-3 Real energy consumed',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real energy consumed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_energy_consumed',
@@ -6377,7 +6377,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6415,10 +6415,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_energy_minus-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Smart Meter TS 65A-3 Real energy minus',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real energy minus',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_energy_minus',
@@ -6435,7 +6435,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6473,10 +6473,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_energy_plus-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Smart Meter TS 65A-3 Real energy plus',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real energy plus',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_energy_plus',
@@ -6493,7 +6493,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6531,10 +6531,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_energy_produced-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Smart Meter TS 65A-3 Real energy produced',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real energy produced',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_energy_produced',
@@ -6551,7 +6551,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6589,10 +6589,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Smart Meter TS 65A-3 Real power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_power',
@@ -6609,7 +6609,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6647,10 +6647,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_power_phase_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Smart Meter TS 65A-3 Real power phase 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real power phase 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_power_phase_1',
@@ -6667,7 +6667,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6705,10 +6705,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_power_phase_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Smart Meter TS 65A-3 Real power phase 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real power phase 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_power_phase_2',
@@ -6725,7 +6725,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6763,10 +6763,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_real_power_phase_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Smart Meter TS 65A-3 Real power phase 3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Real power phase 3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_real_power_phase_3',
@@ -6783,7 +6783,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6821,10 +6821,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_voltage_phase_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smart Meter TS 65A-3 Voltage phase 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Voltage phase 1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_voltage_phase_1',
@@ -6841,7 +6841,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6879,10 +6879,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_voltage_phase_1_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smart Meter TS 65A-3 Voltage phase 1-2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Voltage phase 1-2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_voltage_phase_1_2',
@@ -6899,7 +6899,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6937,10 +6937,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_voltage_phase_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smart Meter TS 65A-3 Voltage phase 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Voltage phase 2',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_voltage_phase_2',
@@ -6957,7 +6957,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -6995,10 +6995,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_voltage_phase_2_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smart Meter TS 65A-3 Voltage phase 2-3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Voltage phase 2-3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_voltage_phase_2_3',
@@ -7015,7 +7015,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7053,10 +7053,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_voltage_phase_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smart Meter TS 65A-3 Voltage phase 3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Voltage phase 3',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_voltage_phase_3',
@@ -7073,7 +7073,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7111,10 +7111,10 @@
 # name: test_gen24_storage[sensor.smart_meter_ts_65a_3_voltage_phase_3_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Smart Meter TS 65A-3 Voltage phase 3-1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Smart Meter TS 65A-3 Voltage phase 3-1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.smart_meter_ts_65a_3_voltage_phase_3_1',
@@ -7164,7 +7164,7 @@
 # name: test_gen24_storage[sensor.solarnet_meter_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Meter mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Meter mode',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_meter_mode',
@@ -7181,7 +7181,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7219,10 +7219,10 @@
 # name: test_gen24_storage[sensor.solarnet_power_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power battery',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_battery',
@@ -7239,7 +7239,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7277,10 +7277,10 @@
 # name: test_gen24_storage[sensor.solarnet_power_battery_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power battery charge',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power battery charge',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_battery_charge',
@@ -7297,7 +7297,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7335,10 +7335,10 @@
 # name: test_gen24_storage[sensor.solarnet_power_battery_discharge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power battery discharge',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power battery discharge',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_battery_discharge',
@@ -7355,7 +7355,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7393,10 +7393,10 @@
 # name: test_gen24_storage[sensor.solarnet_power_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power grid',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power grid',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_grid',
@@ -7413,7 +7413,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7451,10 +7451,10 @@
 # name: test_gen24_storage[sensor.solarnet_power_grid_export-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power grid export',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power grid export',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_grid_export',
@@ -7471,7 +7471,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7509,10 +7509,10 @@
 # name: test_gen24_storage[sensor.solarnet_power_grid_import-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power grid import',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power grid import',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_grid_import',
@@ -7529,7 +7529,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7567,10 +7567,10 @@
 # name: test_gen24_storage[sensor.solarnet_power_load-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power load',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power load',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_load',
@@ -7587,7 +7587,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7625,10 +7625,10 @@
 # name: test_gen24_storage[sensor.solarnet_power_load_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power load consumed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power load consumed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_load_consumed',
@@ -7645,7 +7645,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7683,10 +7683,10 @@
 # name: test_gen24_storage[sensor.solarnet_power_load_generated-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power load generated',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power load generated',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_load_generated',
@@ -7703,7 +7703,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7741,10 +7741,10 @@
 # name: test_gen24_storage[sensor.solarnet_power_photovoltaics-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power photovoltaics',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power photovoltaics',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_photovoltaics',
@@ -7761,7 +7761,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7796,9 +7796,9 @@
 # name: test_gen24_storage[sensor.solarnet_relative_autonomy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Relative autonomy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Relative autonomy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_relative_autonomy',
@@ -7815,7 +7815,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7850,9 +7850,9 @@
 # name: test_gen24_storage[sensor.solarnet_relative_self_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Relative self-consumption',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Relative self-consumption',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_relative_self_consumption',
@@ -7869,7 +7869,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7907,10 +7907,10 @@
 # name: test_gen24_storage[sensor.solarnet_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'SolarNet Total energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Total energy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_total_energy',
@@ -7927,7 +7927,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -7965,10 +7965,10 @@
 # name: test_primo_s0[sensor.primo_3_0_1_ac_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Primo 3.0-1 AC current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 3.0-1 AC current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_3_0_1_ac_current',
@@ -7985,7 +7985,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8023,10 +8023,10 @@
 # name: test_primo_s0[sensor.primo_3_0_1_ac_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Primo 3.0-1 AC power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 3.0-1 AC power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_3_0_1_ac_power',
@@ -8043,7 +8043,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8081,10 +8081,10 @@
 # name: test_primo_s0[sensor.primo_3_0_1_ac_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Primo 3.0-1 AC voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 3.0-1 AC voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_3_0_1_ac_voltage',
@@ -8101,7 +8101,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8139,10 +8139,10 @@
 # name: test_primo_s0[sensor.primo_3_0_1_dc_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Primo 3.0-1 DC current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 3.0-1 DC current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_3_0_1_dc_current',
@@ -8159,7 +8159,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8197,10 +8197,10 @@
 # name: test_primo_s0[sensor.primo_3_0_1_dc_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Primo 3.0-1 DC voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 3.0-1 DC voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_3_0_1_dc_voltage',
@@ -8217,7 +8217,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8255,10 +8255,10 @@
 # name: test_primo_s0[sensor.primo_3_0_1_energy_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Primo 3.0-1 Energy day',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 3.0-1 Energy day',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_3_0_1_energy_day',
@@ -8275,7 +8275,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8313,10 +8313,10 @@
 # name: test_primo_s0[sensor.primo_3_0_1_energy_year-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Primo 3.0-1 Energy year',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 3.0-1 Energy year',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_3_0_1_energy_year',
@@ -8366,7 +8366,7 @@
 # name: test_primo_s0[sensor.primo_3_0_1_error_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Primo 3.0-1 Error code',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 3.0-1 Error code',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_3_0_1_error_code',
@@ -8383,7 +8383,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_error',
         'ac_voltage_too_high',
         'ac_voltage_too_low',
@@ -8515,9 +8515,9 @@
 # name: test_primo_s0[sensor.primo_3_0_1_error_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Primo 3.0-1 Error message',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 3.0-1 Error message',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_error',
         'ac_voltage_too_high',
         'ac_voltage_too_low',
@@ -8631,7 +8631,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8669,10 +8669,10 @@
 # name: test_primo_s0[sensor.primo_3_0_1_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Primo 3.0-1 Frequency',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 3.0-1 Frequency',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_3_0_1_frequency',
@@ -8722,7 +8722,7 @@
 # name: test_primo_s0[sensor.primo_3_0_1_led_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Primo 3.0-1 LED color',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 3.0-1 LED color',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_3_0_1_led_color',
@@ -8772,7 +8772,7 @@
 # name: test_primo_s0[sensor.primo_3_0_1_led_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Primo 3.0-1 LED state',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 3.0-1 LED state',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_3_0_1_led_state',
@@ -8822,7 +8822,7 @@
 # name: test_primo_s0[sensor.primo_3_0_1_status_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Primo 3.0-1 Status code',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 3.0-1 Status code',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_3_0_1_status_code',
@@ -8839,7 +8839,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'startup',
         'running',
         'standby',
@@ -8883,9 +8883,9 @@
 # name: test_primo_s0[sensor.primo_3_0_1_status_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Primo 3.0-1 Status message',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 3.0-1 Status message',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'startup',
         'running',
         'standby',
@@ -8911,7 +8911,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -8949,10 +8949,10 @@
 # name: test_primo_s0[sensor.primo_3_0_1_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Primo 3.0-1 Total energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 3.0-1 Total energy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_3_0_1_total_energy',
@@ -8969,7 +8969,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9007,10 +9007,10 @@
 # name: test_primo_s0[sensor.primo_5_0_1_ac_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Primo 5.0-1 AC current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 5.0-1 AC current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_5_0_1_ac_current',
@@ -9027,7 +9027,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9065,10 +9065,10 @@
 # name: test_primo_s0[sensor.primo_5_0_1_ac_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Primo 5.0-1 AC power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 5.0-1 AC power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_5_0_1_ac_power',
@@ -9085,7 +9085,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9123,10 +9123,10 @@
 # name: test_primo_s0[sensor.primo_5_0_1_ac_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Primo 5.0-1 AC voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 5.0-1 AC voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_5_0_1_ac_voltage',
@@ -9143,7 +9143,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9181,10 +9181,10 @@
 # name: test_primo_s0[sensor.primo_5_0_1_dc_current-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Primo 5.0-1 DC current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'current',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 5.0-1 DC current',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricCurrent.AMPERE: 'A'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_5_0_1_dc_current',
@@ -9201,7 +9201,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9239,10 +9239,10 @@
 # name: test_primo_s0[sensor.primo_5_0_1_dc_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Primo 5.0-1 DC voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'voltage',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 5.0-1 DC voltage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_5_0_1_dc_voltage',
@@ -9259,7 +9259,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9297,10 +9297,10 @@
 # name: test_primo_s0[sensor.primo_5_0_1_energy_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Primo 5.0-1 Energy day',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 5.0-1 Energy day',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_5_0_1_energy_day',
@@ -9317,7 +9317,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9355,10 +9355,10 @@
 # name: test_primo_s0[sensor.primo_5_0_1_energy_year-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Primo 5.0-1 Energy year',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 5.0-1 Energy year',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_5_0_1_energy_year',
@@ -9408,7 +9408,7 @@
 # name: test_primo_s0[sensor.primo_5_0_1_error_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Primo 5.0-1 Error code',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 5.0-1 Error code',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_5_0_1_error_code',
@@ -9425,7 +9425,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_error',
         'ac_voltage_too_high',
         'ac_voltage_too_low',
@@ -9557,9 +9557,9 @@
 # name: test_primo_s0[sensor.primo_5_0_1_error_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Primo 5.0-1 Error message',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 5.0-1 Error message',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'no_error',
         'ac_voltage_too_high',
         'ac_voltage_too_low',
@@ -9673,7 +9673,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9711,10 +9711,10 @@
 # name: test_primo_s0[sensor.primo_5_0_1_frequency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'frequency',
-      'friendly_name': 'Primo 5.0-1 Frequency',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'frequency',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 5.0-1 Frequency',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfFrequency.HERTZ: 'Hz'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_5_0_1_frequency',
@@ -9764,7 +9764,7 @@
 # name: test_primo_s0[sensor.primo_5_0_1_led_color-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Primo 5.0-1 LED color',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 5.0-1 LED color',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_5_0_1_led_color',
@@ -9814,7 +9814,7 @@
 # name: test_primo_s0[sensor.primo_5_0_1_led_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Primo 5.0-1 LED state',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 5.0-1 LED state',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_5_0_1_led_state',
@@ -9864,7 +9864,7 @@
 # name: test_primo_s0[sensor.primo_5_0_1_status_code-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Primo 5.0-1 Status code',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 5.0-1 Status code',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_5_0_1_status_code',
@@ -9881,7 +9881,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'startup',
         'running',
         'standby',
@@ -9925,9 +9925,9 @@
 # name: test_primo_s0[sensor.primo_5_0_1_status_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Primo 5.0-1 Status message',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 5.0-1 Status message',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'startup',
         'running',
         'standby',
@@ -9953,7 +9953,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -9991,10 +9991,10 @@
 # name: test_primo_s0[sensor.primo_5_0_1_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Primo 5.0-1 Total energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Primo 5.0-1 Total energy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.primo_5_0_1_total_energy',
@@ -10044,7 +10044,7 @@
 # name: test_primo_s0[sensor.s0_meter_at_inverter_1_meter_location-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'S0 Meter at inverter 1 Meter location',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S0 Meter at inverter 1 Meter location',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.s0_meter_at_inverter_1_meter_location',
@@ -10061,7 +10061,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'feed_in',
         'consumption_path',
         'external_generator',
@@ -10102,9 +10102,9 @@
 # name: test_primo_s0[sensor.s0_meter_at_inverter_1_meter_location_description-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'S0 Meter at inverter 1 Meter location description',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S0 Meter at inverter 1 Meter location description',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'feed_in',
         'consumption_path',
         'external_generator',
@@ -10127,7 +10127,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10165,10 +10165,10 @@
 # name: test_primo_s0[sensor.s0_meter_at_inverter_1_real_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'S0 Meter at inverter 1 Real power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'S0 Meter at inverter 1 Real power',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.s0_meter_at_inverter_1_real_power',
@@ -10185,7 +10185,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10220,9 +10220,9 @@
 # name: test_primo_s0[sensor.solarnet_co2_factor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet CO₂ factor',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'kg/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet CO₂ factor',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'kg/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_co2_factor',
@@ -10239,7 +10239,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10277,10 +10277,10 @@
 # name: test_primo_s0[sensor.solarnet_energy_day-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'SolarNet Energy day',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Energy day',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_energy_day',
@@ -10297,7 +10297,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10335,10 +10335,10 @@
 # name: test_primo_s0[sensor.solarnet_energy_year-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'SolarNet Energy year',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Energy year',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_energy_year',
@@ -10355,7 +10355,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10390,9 +10390,9 @@
 # name: test_primo_s0[sensor.solarnet_grid_export_tariff-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Grid export tariff',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'BRL/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Grid export tariff',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BRL/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_grid_export_tariff',
@@ -10409,7 +10409,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10444,9 +10444,9 @@
 # name: test_primo_s0[sensor.solarnet_grid_import_tariff-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Grid import tariff',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'BRL/kWh',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Grid import tariff',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'BRL/kWh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_grid_import_tariff',
@@ -10496,7 +10496,7 @@
 # name: test_primo_s0[sensor.solarnet_meter_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Meter mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Meter mode',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_meter_mode',
@@ -10513,7 +10513,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10551,10 +10551,10 @@
 # name: test_primo_s0[sensor.solarnet_power_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power grid',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power grid',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_grid',
@@ -10571,7 +10571,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10609,10 +10609,10 @@
 # name: test_primo_s0[sensor.solarnet_power_grid_export-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power grid export',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power grid export',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_grid_export',
@@ -10629,7 +10629,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10667,10 +10667,10 @@
 # name: test_primo_s0[sensor.solarnet_power_grid_import-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power grid import',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power grid import',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_grid_import',
@@ -10687,7 +10687,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10725,10 +10725,10 @@
 # name: test_primo_s0[sensor.solarnet_power_load-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power load',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power load',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_load',
@@ -10745,7 +10745,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10783,10 +10783,10 @@
 # name: test_primo_s0[sensor.solarnet_power_load_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power load consumed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power load consumed',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_load_consumed',
@@ -10803,7 +10803,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10841,10 +10841,10 @@
 # name: test_primo_s0[sensor.solarnet_power_load_generated-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power load generated',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power load generated',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_load_generated',
@@ -10861,7 +10861,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10899,10 +10899,10 @@
 # name: test_primo_s0[sensor.solarnet_power_photovoltaics-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'SolarNet Power photovoltaics',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Power photovoltaics',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_power_photovoltaics',
@@ -10919,7 +10919,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -10954,9 +10954,9 @@
 # name: test_primo_s0[sensor.solarnet_relative_autonomy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Relative autonomy',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Relative autonomy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_relative_autonomy',
@@ -10973,7 +10973,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11008,9 +11008,9 @@
 # name: test_primo_s0[sensor.solarnet_relative_self_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SolarNet Relative self-consumption',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Relative self-consumption',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_relative_self_consumption',
@@ -11027,7 +11027,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -11065,10 +11065,10 @@
 # name: test_primo_s0[sensor.solarnet_total_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'SolarNet Total energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SolarNet Total energy',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.solarnet_total_energy',

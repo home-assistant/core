@@ -917,8 +917,8 @@ class ESPHomeManager:
         # Remove this after 2026.4
         if not (
             stale_entry_entity_id := ent_reg.async_get_entity_id(
-                DOMAIN,
                 Platform.BINARY_SENSOR,
+                DOMAIN,
                 f"{self.entry_data.device_info.mac_address}-assist_in_progress",
             )
         ):
@@ -1417,13 +1417,14 @@ async def async_replace_device(
     upper_mac = new_mac.upper()
     old_upper_mac = old_mac.upper()
     for entity in er.async_entries_for_config_entry(ent_reg, entry.entry_id):
-        # <upper_mac>-<entity type>-<object_id>
-        old_unique_id = entity.unique_id.split("-")
-        new_unique_id = "-".join([upper_mac, *old_unique_id[1:]])
-        if entity.unique_id != new_unique_id and entity.unique_id.startswith(
-            old_upper_mac
-        ):
-            ent_reg.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
+        # The mac is the leading segment of the unique id in every format,
+        # so swap the prefix without parsing the rest.
+        if entity.unique_id.startswith(old_upper_mac):
+            new_unique_id = upper_mac + entity.unique_id[len(old_upper_mac) :]
+            if new_unique_id != entity.unique_id:
+                ent_reg.async_update_entity(
+                    entity.entity_id, new_unique_id=new_unique_id
+                )
 
     domain_data = DomainData.get(hass)
     store = domain_data.get_or_create_store(hass, entry)

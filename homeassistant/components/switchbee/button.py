@@ -1,5 +1,7 @@
 """Support for SwitchBee scenario button."""
 
+from typing import override
+
 from switchbee.api.central_unit import SwitchBeeError
 from switchbee.device import ApiStateCommand, DeviceType
 
@@ -29,6 +31,7 @@ async def async_setup_entry(
 class SwitchBeeButton(SwitchBeeEntity, ButtonEntity):
     """Representation of an Switchbee button."""
 
+    @override
     async def async_press(self) -> None:
         """Fire the scenario in the SwitchBee hub."""
         try:

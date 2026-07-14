@@ -1,17 +1,24 @@
 """Config flow for Overkiz integration."""
 
 from collections.abc import Mapping
-from typing import Any, cast
+import logging
+from typing import Any, cast, override
 
 from aiohttp import ClientConnectorCertificateError, ClientError
 from pyoverkiz.auth.credentials import (
     LocalTokenCredentials,
+    RexelTokenCredentials,
     UsernamePasswordCredentials,
 )
-from pyoverkiz.client import OverkizClient
-from pyoverkiz.const import SERVERS_WITH_LOCAL_API, SUPPORTED_SERVERS
+from pyoverkiz.client import GatewayCandidate, OverkizClient
+from pyoverkiz.const import (
+    REXEL_OAUTH_CLIENT_ID,
+    SERVERS_WITH_LOCAL_API,
+    SUPPORTED_SERVERS,
+)
 from pyoverkiz.enums import APIType, Server
 from pyoverkiz.exceptions import (
+    ApplicationNotAllowedError,
     BadCredentialsError,
     CozyTouchBadCredentialsError,
     MaintenanceError,
@@ -25,7 +32,11 @@ from pyoverkiz.obfuscate import obfuscate_id
 from pyoverkiz.utils import create_local_server_config, is_overkiz_gateway
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -33,16 +44,34 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_API_TYPE, CONF_HUB, DEFAULT_SERVER, DOMAIN, LOGGER
+from .const import (
+    CONF_API_TYPE,
+    CONF_GATEWAY_ID,
+    CONF_HUB,
+    DEFAULT_SERVER,
+    DOMAIN,
+    LOGGER,
+)
+
+LOCAL_API_DOCS_URL = (
+    "https://www.home-assistant.io/integrations/overkiz/#local-api-support"
+)
+TOKEN_DOCS_URL = (
+    "https://www.home-assistant.io/integrations/overkiz/#login-to-overkiz-local-api"
+)
 
 
-class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
+class OverkizConfigFlow(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
+):
     """Handle a config flow for Overkiz (by Somfy)."""
 
+    DOMAIN = DOMAIN
     VERSION = 1
     MINOR_VERSION = 2
 
@@ -51,6 +80,15 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
     _user: str | None = None
     _server: str = DEFAULT_SERVER
     _host: str = "gateway-xxxx-xxxx-xxxx.local:8443"
+
+    _rexel_gateways: list[GatewayCandidate]
+    _rexel_oauth_data: dict[str, Any]
+
+    @property
+    @override
+    def logger(self) -> logging.Logger:
+        """Return logger."""
+        return LOGGER
 
     async def async_validate_input(self, user_input: dict[str, Any]) -> dict[str, Any]:
         """Validate user credentials."""
@@ -88,6 +126,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return user_input
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -99,6 +138,10 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
             # Users can choose between local or cloud API.
             if self._server in SERVERS_WITH_LOCAL_API:
                 return await self.async_step_local_or_cloud()
+
+            # Rexel authenticates via OAuth2 (Azure AD B2C with PKCE).
+            if self._server == Server.REXEL:
+                return await self.async_step_pick_implementation()
 
             return await self.async_step_cloud()
 
@@ -123,6 +166,10 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
             if self._api_type == APIType.LOCAL:
                 return await self.async_step_local()
 
+            # Rexel authenticates via OAuth2 (Azure AD B2C with PKCE).
+            if self._server == Server.REXEL:
+                return await self.async_step_pick_implementation()
+
             return await self.async_step_cloud()
 
         return self.async_show_form(
@@ -137,7 +184,20 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
+            description_placeholders={"local_api_docs": LOCAL_API_DOCS_URL},
         )
+
+    @override
+    async def async_step_pick_implementation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Start the Rexel OAuth2 flow, re-importing the credential if removed."""
+        await async_import_client_credential(
+            self.hass,
+            DOMAIN,
+            ClientCredential(REXEL_OAUTH_CLIENT_ID, "", name="Rexel"),
+        )
+        return await super().async_step_pick_implementation(user_input)
 
     async def async_step_cloud(
         self, user_input: dict[str, Any] | None = None
@@ -154,6 +214,8 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_validate_input(user_input)
             except TooManyRequestsError:
                 errors["base"] = "too_many_requests"
+            except ApplicationNotAllowedError:
+                errors["base"] = "application_not_allowed"
             except (BadCredentialsError, NotAuthenticatedError) as exception:
                 # If authentication with CozyTouch auth server is
                 # valid, but token is invalid for Overkiz API
@@ -232,7 +294,8 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the local authentication step via config flow."""
         errors = {}
         description_placeholders = {
-            "somfy_developer_mode_docs": "https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode#getting-started"
+            "local_api_docs": LOCAL_API_DOCS_URL,
+            "token_docs": TOKEN_DOCS_URL,
         }
 
         if user_input:
@@ -296,6 +359,85 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
+        """Resolve the gateway after a successful Rexel OAuth2 authorization."""
+        self._rexel_oauth_data = data
+
+        # Gateway discovery uses Bearer-only endpoints, so the client needs just
+        # the access token: no login() and no gateway_id yet.
+        session = async_create_clientsession(self.hass)
+        client = OverkizClient(
+            server=Server.REXEL,
+            credentials=RexelTokenCredentials(
+                access_token=data["token"]["access_token"]
+            ),
+            session=session,
+        )
+
+        try:
+            self._rexel_gateways = await client.discover_gateways()
+        except TimeoutError, ClientError:
+            return self.async_abort(reason="cannot_connect")
+
+        if not self._rexel_gateways:
+            return self.async_abort(reason="no_gateways")
+
+        if len(self._rexel_gateways) == 1:
+            return await self._async_create_rexel_entry(self._rexel_gateways[0])
+
+        return await self.async_step_select_gateway()
+
+    async def async_step_select_gateway(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user pick a gateway on a multi-gateway Rexel account."""
+        if user_input:
+            gateway = next(
+                candidate
+                for candidate in self._rexel_gateways
+                if candidate.gateway_id == user_input[CONF_GATEWAY_ID]
+            )
+            return await self._async_create_rexel_entry(gateway)
+
+        return self.async_show_form(
+            step_id="select_gateway",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_GATEWAY_ID): vol.In(
+                        {
+                            candidate.gateway_id: candidate.label
+                            or candidate.gateway_id
+                            for candidate in self._rexel_gateways
+                        }
+                    ),
+                }
+            ),
+        )
+
+    async def _async_create_rexel_entry(
+        self, gateway: GatewayCandidate
+    ) -> ConfigFlowResult:
+        """Persist the token bundle and resolved gateway as a config entry."""
+        await self.async_set_unique_id(gateway.gateway_id, raise_on_progress=False)
+
+        data = {
+            **self._rexel_oauth_data,
+            CONF_HUB: Server.REXEL,
+            CONF_GATEWAY_ID: gateway.gateway_id,
+        }
+
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="reauth_wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
+
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(title=gateway.label or "Rexel", data=data)
+
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -307,6 +449,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         LOGGER.debug("DHCP discovery detected gateway %s", obfuscate_id(gateway_id))
         return await self._process_discovery(gateway_id)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -351,7 +494,8 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._api_type == APIType.LOCAL:
             self._host = entry_data[CONF_HOST]
             self._verify_ssl = entry_data[CONF_VERIFY_SSL]
-        else:
+        # Rexel cloud reauth re-runs the OAuth2 flow; there is no stored username.
+        elif self._server != Server.REXEL:
             self._user = entry_data[CONF_USERNAME]
 
         return await self.async_step_user(dict(entry_data))

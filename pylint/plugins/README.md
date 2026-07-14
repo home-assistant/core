@@ -107,8 +107,11 @@ Every check has a code following the
 | `W7426` | [`home-assistant-tests-direct-async-unload-entry`](#w7426-home-assistant-tests-direct-async-unload-entry) | Tests should not call an integration's `async_unload_entry` directly |
 | `C7414` | [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow) | Use `homeassistant.util.dt.utcnow` instead of `datetime.now(UTC)` |
 | `C7425` | [`home-assistant-enforce-now`](#c7425-home-assistant-enforce-now) | Use `homeassistant.util.dt.now` instead of `datetime.now(<tz>)` |
+| `C7427` | [`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now) | Use `homeassistant.util.dt.naive_now` instead of `datetime.now()` |
 | `W7423` | [`home-assistant-missing-entity-unique-id`](#w7423-home-assistant-missing-entity-unique-id) | Entity class does not statically guarantee a non-None unique id |
 | `W7424` | [`home-assistant-entity-unique-id-static`](#w7424-home-assistant-entity-unique-id-static) | Entity class sets `_attr_unique_id` to a static string at class level |
+| `W7425` | [`home-assistant-entity-unique-id-redundant-domain`](#w7425-home-assistant-entity-unique-id-redundant-domain) | Entity unique ID references the `DOMAIN` constant or includes the integration's domain as a string-literal delimited segment |
+| `W7427` | [`home-assistant-entity-unique-id-redundant-platform`](#w7427-home-assistant-entity-unique-id-redundant-platform) | Entity unique ID includes the entity platform name (e.g. `sensor`, `light`) as a delimited string-literal segment |
 | `C7412` | [`home-assistant-entity-description-redundant-default`](#c7412-home-assistant-entity-description-redundant-default) | Setting an EntityDescription field to its default value is redundant |
 | `C7413` | [`home-assistant-duplicate-const`](#c7413-home-assistant-duplicate-const) | Constant duplicates one in `homeassistant.const` with the same value |
 | `E7405` | [`home-assistant-action-swallowed-exception`](#e7405-home-assistant-action-swallowed-exception) | Action handler must not swallow exceptions |
@@ -129,6 +132,7 @@ Every check has a code following the
 | `W7415` | [`home-assistant-sequential-executor-jobs`](#w7415-home-assistant-sequential-executor-jobs) | Sequential `async_add_executor_job` calls should be grouped |
 | `W7416` | [`home-assistant-missing-has-entity-name`](#w7416-home-assistant-missing-has-entity-name) | Entity class should set `_attr_has_entity_name = True` |
 | `W7429` | [`home-assistant-unnecessary-format-mac`](#w7429-home-assistant-unnecessary-format-mac) | `format_mac()` is unnecessary with `CONNECTION_NETWORK_MAC` |
+| `W7430` | [`home-assistant-serial-port-selector-usb-dependency`](#w7430-home-assistant-serial-port-selector-usb-dependency) | Config flow using `SerialPortSelector` must declare `usb` in `dependencies` |
 
 
 ## `home_assistant_logger` checker
@@ -486,8 +490,27 @@ helper returns an aware `datetime` in the given time zone (defaulting to
 `DEFAULT_TIME_ZONE`), keeping the codebase consistent in how the current
 local time is obtained. The UTC case (`datetime.now(UTC)`) is handled by
 the [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow)
-checker, and `datetime.now()` with no argument is not flagged since it
-returns a naive local `datetime`.
+checker, and `datetime.now()` with no argument is handled by the
+[`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now)
+checker.
+
+
+## `home_assistant_enforce_naive_now` checker
+
+Ensures the Home Assistant helper is used to get the current naive local time.
+
+### `C7427`: `home-assistant-enforce-naive-now`
+
+Use `homeassistant.util.dt.naive_now()` instead of `datetime.datetime.now()`
+called without a time zone argument. The helper returns a naive `datetime` in
+system local time, keeping the codebase consistent in how the current naive
+local time is obtained and documenting that a naive `datetime` is intentional.
+An explicit `None` argument (`datetime.now(None)` or `datetime.now(tz=None)`)
+returns a naive `datetime` too and is flagged. The aware cases
+(`datetime.now(<tz>)` and `datetime.now(UTC)`) are handled by the
+[`home-assistant-enforce-now`](#c7425-home-assistant-enforce-now) and
+[`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow)
+checkers.
 
 
 ## `home_assistant_entity_unique_id` checker
@@ -537,6 +560,75 @@ The rule fires when:
 Resolve by either computing the id per instance (config-entry id,
 serial, MAC, etc.) or declaring the integration as
 `single_config_entry: true` when there is genuinely only one instance.
+
+
+## `home_assistant_entity_unique_id_format` checker
+
+Hosts format-related checks on the value an entity uses for its unique
+ID (`_attr_unique_id` assignments and `unique_id` property/method
+returns). Migrating unique_ids after an integration has shipped risks
+disrupting existing users, so the antipatterns must be caught before
+they ship. Unlike the gated `entity-unique-id` quality-scale checks,
+these checks are **not** gated on `quality_scale.yaml` claims. Both
+checks inspect every class inheriting from `Entity` in their
+respective scopes (including shared bases and mixins/abstract bases
+subclassed by other classes in the same module); see the per-rule
+sections below for the module scope.
+
+### `W7425`: `home-assistant-entity-unique-id-redundant-domain`
+
+The entity registry already keys uniqueness on `(domain, platform,
+unique_id)` where `platform` is the integration's name (as declared
+by the `"domain"` field in `manifest.json`). Any occurrence of the
+integration's name in the unique_id duplicates information already
+present in the registry key.
+
+The rule fires in every integration module (entity-platform modules,
+`entity.py`, `__init__.py`, ...) when the value used for the entity's
+unique id either:
+
+- references the `DOMAIN` name at any depth (e.g.
+  `f"{DOMAIN}_{entry.entry_id}"`), or
+- contains the integration's domain (read from `manifest.json`) as a
+  delimited segment of any string literal (including f-string literal
+  parts), e.g. `f"myhub-{device_id}"` in an integration whose manifest
+  declares `"domain": "myhub"`. A segment is considered delimited when
+  bordered by a non-alphanumeric character (`_`, `-`, `.`, `:`, space,
+  ...) or a string boundary; letters and digits adjacent to the
+  segment make it part of a longer identifier, so substrings like
+  `"myhubitat_..."` or `"myhub2"` don't match.
+
+Three locations are scanned: class-body `_attr_unique_id` assignments,
+`self._attr_unique_id = ...` assignments inside method bodies, and
+`return` values inside a `unique_id` property/method override.
+Aliased imports (`from .const import DOMAIN as MY_DOMAIN`) are not
+scanned.
+
+### `W7427`: `home-assistant-entity-unique-id-redundant-platform`
+
+In `(domain, platform, unique_id)` the `domain` field is the entity
+platform (e.g. `sensor`, `light`, `binary_sensor` — derived from the
+module the entity lives in), so embedding that name as a delimited
+segment of the unique id duplicates information already in the
+registry key.
+
+The rule fires when the value used for the entity's unique id
+contains the current module's platform name as a delimited segment of
+any string literal. The same boundary rules as `W7425` apply: a
+segment is considered delimited when bordered by a non-alphanumeric
+character (`_`, `-`, `.`, `:`, space, ...) or a string boundary, so
+unrelated substrings like `"highlight-..."` or `"light2"` don't match
+`light`.
+
+Scope is narrower than `W7425`: only files whose integration
+sub-module path keys off a known entity platform name are checked.
+Both single-file platform modules (`sensor.py`, `light.py`, ...) and
+platform packages (`sensor/__init__.py`, `sensor/helpers.py`, ...)
+are in scope. `entity.py`, `__init__.py` at the integration root, and
+other helper sub-modules are out of scope because the platform
+context is ambiguous there. The three in-class scan locations are
+the same as for `W7425`.
+
 
 ## `home_assistant_entity_description_defaults` checker
 
@@ -758,3 +850,17 @@ Tuples used for direct comparison against `device.connections` (e.g.
 the `in` operator, set intersection) are not flagged because those
 comparisons bypass the device registry normalization and genuinely
 need `format_mac()` to match the stored normalized format.
+
+
+## `home_assistant_serial_port_selector_usb_dependency` checker
+
+Detects config flows using `SerialPortSelector` whose `manifest.json` does
+not declare `usb` as a hard dependency.
+
+### `W7430`: `home-assistant-serial-port-selector-usb-dependency`
+
+`SerialPortSelector` populates its port list via the `usb/list_serial_ports`
+websocket command, which is only registered when the `usb` integration is set
+up. The selector therefore requires `usb` as a hard dependency
+(`"dependencies": ["usb"]`); `after_dependencies` is not sufficient because it
+does not force `usb` to be set up.

@@ -9,9 +9,10 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import IntEnum
 from functools import partial
-from typing import Any
+from typing import Any, override
+from urllib.parse import urlparse
 
-from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
+from dsmr_parser.clients.protocol import create_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import (
     create_rfxtrx_dsmr_reader,
     create_rfxtrx_tcp_dsmr_reader,
@@ -62,6 +63,7 @@ from .const import (
     DOMAIN,
     DSMR_PROTOCOL,
     LOGGER,
+    RFXTRX_DSMR_PROTOCOL,
 )
 
 EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
@@ -734,33 +736,55 @@ def _create_reader_factory(
     entry: DsmrConfigEntry,
     telegram_callback: Callable[[Telegram | None], None],
 ) -> partial[Any]:
-    """Create the asyncio reader factory for the configured connection."""
+    """Create the asyncio reader factory for the configured connection.
+
+    A port starting with "/" is a local serial device, which doesn't need a
+    liveness check; anything else is a network connection that can drop
+    silently, so it gets a keep-alive watchdog that closes the connection
+    (triggering a reconnect) when no telegram arrives in time.
+    """
     dsmr_version = entry.data[CONF_DSMR_VERSION]
-    protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
+
+    # Legacy network entries stored host and port separately; combine them into
+    # the single socket://host:port form newer entries already use, in memory
+    # only, so the stored entry stays untouched and rolling back to an older
+    # Home Assistant version keeps working.
+    port = entry.data[CONF_PORT]
     if CONF_HOST in entry.data:
-        if protocol == DSMR_PROTOCOL:
-            create_reader = create_tcp_dsmr_reader
-        else:
-            create_reader = create_rfxtrx_tcp_dsmr_reader
+        port = f"socket://{entry.data[CONF_HOST]}:{port}"
+
+    protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
+    if protocol == RFXTRX_DSMR_PROTOCOL:
+        if port.startswith("/"):
+            return partial(
+                create_rfxtrx_dsmr_reader,
+                port,
+                dsmr_version,
+                telegram_callback,
+                loop=hass.loop,
+            )
+        # The RFXtrx serial reader has no keep-alive support, so the network
+        # host and port are fed to the dedicated TCP reader instead.
+        address = urlparse(port)
         return partial(
-            create_reader,
-            entry.data[CONF_HOST],
-            entry.data[CONF_PORT],
+            create_rfxtrx_tcp_dsmr_reader,
+            address.hostname,
+            address.port,
             dsmr_version,
             telegram_callback,
             loop=hass.loop,
             keep_alive_interval=60,
         )
-    if protocol == DSMR_PROTOCOL:
-        create_reader = create_dsmr_reader
-    else:
-        create_reader = create_rfxtrx_dsmr_reader
+    # create_dsmr_reader opens both local devices and any URL (socket://,
+    # esphome://, ...); the only difference is the keep-alive watchdog.
+    keep_alive = {} if port.startswith("/") else {"keep_alive_interval": 60}
     return partial(
-        create_reader,
-        entry.data[CONF_PORT],
+        create_dsmr_reader,
+        port,
         dsmr_version,
         telegram_callback,
         loop=hass.loop,
+        **keep_alive,
     )
 
 
@@ -864,7 +888,7 @@ async def async_setup_entry(
             receive_telegram({})
 
             try:
-                transport, protocol = await hass.loop.create_task(reader_factory())
+                transport, protocol = await reader_factory()
 
                 if transport:
                     # Register listener to close transport on HA shutdown
@@ -1099,11 +1123,13 @@ class DSMREntity(SensorEntity):
         return value
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the last publish produced a value to report."""
         return self._available
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the calculated state of sensor."""
         return self._value

@@ -1,7 +1,7 @@
 """Support for SleepIQ outlet lights."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from asyncsleepiq import SleepIQBed, SleepIQLight
 
@@ -45,19 +45,22 @@ class SleepIQLightEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], LightEn
         self.light = light
         super().__init__(coordinator, bed)
         self._attr_name = f"SleepNumber {bed.name} Light {light.outlet_id}"
-        self._attr_unique_id = f"{bed.id}-light-{light.outlet_id}"
+        self._attr_unique_id = f"{bed.id}-light-{light.outlet_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         await self.light.turn_on()
         self._handle_coordinator_update()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
         await self.light.turn_off()
         self._handle_coordinator_update()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update light attributes."""
         self._attr_is_on = self.light.is_on

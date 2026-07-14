@@ -3,7 +3,11 @@
 import logging
 
 from aiowebdav2.client import Client
-from aiowebdav2.exceptions import UnauthorizedError
+from aiowebdav2.exceptions import (
+    ConnectionExceptionError,
+    NoConnectionError,
+    UnauthorizedError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
@@ -34,6 +38,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bo
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_username_password",
+        ) from err
+    except (ConnectionExceptionError, NoConnectionError, TimeoutError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
         ) from err
 
     # Check if we can connect to the WebDAV server

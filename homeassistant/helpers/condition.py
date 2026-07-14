@@ -3,8 +3,7 @@
 import abc
 import asyncio
 from collections import deque
-from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
-from contextlib import contextmanager
+from collections.abc import Callable, Container, Coroutine, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
@@ -31,8 +30,6 @@ from typing import (
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ABOVE,
     CONF_AFTER,
     CONF_ATTRIBUTE,
@@ -51,13 +48,21 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
+    CONF_ZONE,
     ENTITY_MATCH_ALL,
     ENTITY_MATCH_ANY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     WEEKDAYS,
+    EntityStateAttribute,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import (
+    HomeAssistant,
+    State,
+    callback,
+    split_entity_id,
+    valid_entity_id,
+)
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -115,6 +120,9 @@ from .trace import (
 )
 from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
 
+if TYPE_CHECKING:
+    from homeassistant.components.recorder import Recorder
+
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
 VALIDATE_CONFIG_FORMAT = "{}_validate_config"
@@ -150,9 +158,6 @@ INPUT_ENTITY_ID = re.compile(
 
 CONDITION_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any] | None]] = HassKey(
     "condition_description_cache"
-)
-CONDITION_DISABLED_CONDITIONS: HassKey[set[str]] = HassKey(
-    "condition_disabled_conditions"
 )
 CONDITION_PLATFORM_SUBSCRIPTIONS: HassKey[
     list[Callable[[set[str]], Coroutine[Any, Any, None]]]
@@ -195,27 +200,10 @@ _CONDITIONS_DESCRIPTION_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the condition helper."""
-    from homeassistant.components import automation, labs  # noqa: PLC0415
-
     hass.data[CONDITION_DESCRIPTION_CACHE] = {}
-    hass.data[CONDITION_DISABLED_CONDITIONS] = set()
     hass.data[CONDITION_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[CONDITIONS] = {}
-
-    async def new_triggers_conditions_listener(
-        _event_data: labs.EventLabsUpdatedData,
-    ) -> None:
-        """Handle new_triggers_conditions flag change."""
-        # Invalidate the cache
-        hass.data[CONDITION_DESCRIPTION_CACHE] = {}
-        hass.data[CONDITION_DISABLED_CONDITIONS] = set()
-
-    labs.async_subscribe_preview_feature(
-        hass,
-        automation.DOMAIN,
-        automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        new_triggers_conditions_listener,
-    )
+    hass.data[_DATA_HISTORY_PRIMING_MANAGER] = _HistoryPrimingManager(hass)
 
     await async_process_integration_platforms(
         hass, "condition", _register_condition_platform, wait_for_platforms=True
@@ -242,11 +230,9 @@ async def _register_condition_platform(
 ) -> None:
     """Register a condition platform and notify listeners.
 
-    If the condition platform does not provide any conditions, or it is disabled,
+    If the condition platform does not provide any conditions,
     listeners will not be notified.
     """
-    from homeassistant.components import automation  # noqa: PLC0415
-
     new_conditions: set[str] = set()
     conditions = hass.data[CONDITIONS]
 
@@ -271,10 +257,6 @@ async def _register_condition_platform(
             "Integration %s does not provide condition support, skipping",
             integration_domain,
         )
-        return
-
-    if automation.is_disabled_experimental_condition(hass, integration_domain):
-        _LOGGER.debug("Conditions for integration %s are disabled", integration_domain)
         return
 
     # We don't use gather here because gather adds additional overhead
@@ -387,6 +369,7 @@ class LegacyConditionChecker(ConditionChecker):
         super().__init__(hass)
         self._checker = checker
 
+    @override
     def _async_check(self, variables: TemplateVarsType = None, **kwargs: Any) -> bool:
         return self._checker(self._hass, variables)
 
@@ -394,6 +377,7 @@ class LegacyConditionChecker(ConditionChecker):
 class DisabledConditionChecker(ConditionChecker):
     """Condition checker for disabled conditions."""
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> None:
         return None
 
@@ -406,6 +390,7 @@ class CompoundConditionChecker(ConditionChecker):
         super().__init__(hass)
         self._conditions = conditions
 
+    @override
     def _async_unload(self) -> None:
         """Clean up child conditions."""
         for condition in self._conditions:
@@ -467,6 +452,87 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
         },
     }
 )
+
+
+_DATA_HISTORY_PRIMING_MANAGER: HassKey[_HistoryPrimingManager] = HassKey(
+    "condition_history_priming_manager"
+)
+
+
+class _HistoryPrimingManager:
+    """Serialize and coalesce the recorder reads that prime condition durations.
+
+    At startup many conditions may prime at once. Letting each hit the recorder
+    independently would force a separate commit per condition and run every read
+    on the shared DB executor in parallel — a flood. So the reads run one at a
+    time, and a single commit flush is shared by each "generation" of conditions
+    that arrive while the previous flush is running.
+
+    The flush a condition relies on must begin after that condition started
+    tracking its entities, or the read could miss a change still queued in the
+    recorder and compute too generous an anchor. A condition therefore never
+    relies on a flush that was already running when it arrived (the lobby); it
+    waits that one out and joins the next, re-attempting if the flush it waited
+    for was cancelled before completing. This mirrors `ReloadServiceHelper`
+    minus its target de-duplication, which does not apply because each condition
+    reads its own entities.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the manager."""
+        self._hass = hass
+        self._flush_condition = asyncio.Condition()
+        self._flushing = False
+        self._flush_ok = False
+        self._query_lock = asyncio.Lock()
+
+    async def async_prime[_T](
+        self, job: Callable[[Recorder], Coroutine[Any, Any, _T]]
+    ) -> _T:
+        """Flush the recorder, then run `job`, coordinated with other primings."""
+        await self._async_flush()
+        async with self._query_lock:
+            return await job(get_instance(self._hass))
+
+    async def _async_flush(self) -> None:
+        """Return once a recorder flush that began no earlier than this call ends.
+
+        The first condition of a generation performs the flush; the rest rely on
+        it.
+        """
+        async with self._flush_condition:
+            # Lobby: a flush already running began before we arrived, so it may
+            # not capture our entity's queued changes. Wait it out, don't rely on
+            # it.
+            if self._flushing:
+                await self._flush_condition.wait()
+
+        while True:
+            async with self._flush_condition:
+                if not self._flushing:
+                    # First past the lobby this generation: we run the flush.
+                    self._flushing = True
+                    break
+                # A peer began a fresh flush after we cleared the lobby; wait for
+                # it.
+                await self._flush_condition.wait()
+                if self._flush_ok:
+                    return
+                # The flush we waited for was cancelled before completing (its owner
+                # timed out): loop and start or wait for a fresh one rather than read
+                # against a queue that was never flushed.
+
+        instance = get_instance(self._hass)
+        flushed = False
+        try:
+            if (commit_future := instance.async_get_commit_future()) is not None:
+                await commit_future
+            flushed = True
+        finally:
+            async with self._flush_condition:
+                self._flushing = False
+                self._flush_ok = flushed
+                self._flush_condition.notify_all()
 
 
 class EntityConditionBase(Condition):
@@ -593,7 +659,10 @@ class EntityConditionBase(Condition):
         self._on_unload.append(unsub)
 
     async def _async_on_entities_update(
-        self, added: set[str], removed: set[str]
+        self,
+        added: set[str],
+        removed: set[str],
+        _entity_states: Mapping[str, State | None],
     ) -> None:
         """Handle changes to the tracked entity set.
 
@@ -668,28 +737,34 @@ class EntityConditionBase(Condition):
             assert self._duration is not None
         lookback = min(self._duration, MAX_HISTORY_PRIMING_LOOKBACK)
         start_time = dt_util.utcnow() - lookback
-        instance = get_instance(self._hass)
-        try:
-            async with asyncio.timeout(HISTORY_PRIMING_TIMEOUT):
-                # The history query only sees committed rows. Wait for the
-                # recorder to flush its queue first.
-                if (commit_future := instance.async_get_commit_future()) is not None:
-                    await commit_future
-                historical_states = await instance.async_add_executor_job(
-                    ft.partial(
-                        history.get_significant_states,
-                        self._hass,
-                        start_time,
-                        entity_ids=list(anchors),
-                        include_start_time_state=True,
-                        # Mandatory: the default (True) drops attribute-only
-                        # changes for entities outside SIGNIFICANT_DOMAINS, which
-                        # are exactly the transitions attribute-based conditions
-                        # depend on.
-                        significant_changes_only=False,
-                        minimal_response=False,
-                    )
+
+        async def _read_history(
+            instance: Recorder,
+        ) -> dict[str, list[State | dict[str, Any]]]:
+            # The history query only sees committed rows; the priming manager
+            # flushes the recorder queue before running this.
+            return await instance.async_add_executor_job(
+                ft.partial(
+                    history.get_significant_states,
+                    self._hass,
+                    start_time,
+                    entity_ids=list(anchors),
+                    include_start_time_state=True,
+                    # Mandatory: the default (True) drops attribute-only changes
+                    # for entities outside SIGNIFICANT_DOMAINS, which are exactly
+                    # the transitions attribute-based conditions depend on.
+                    significant_changes_only=False,
+                    minimal_response=False,
                 )
+            )
+
+        manager = self._hass.data[_DATA_HISTORY_PRIMING_MANAGER]
+        try:
+            # The timeout also covers waiting for our turn, so under a flood of
+            # primings a condition falls back to its conservative anchor rather
+            # than blocking on the queue indefinitely.
+            async with asyncio.timeout(HISTORY_PRIMING_TIMEOUT):
+                historical_states = await manager.async_prime(_read_history)
         except (SQLAlchemyError, TimeoutError) as err:
             # Best effort: keep the conservative anchors rather than failing.
             _LOGGER.debug("Error priming condition durations from history: %s", err)
@@ -783,6 +858,7 @@ class EntityConditionBase(Condition):
             for state in states
         )
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test state condition."""
         targeted_entities = async_extract_referenced_entity_ids(
@@ -810,6 +886,7 @@ class EntityStateConditionBase(EntityConditionBase):
     _states: set[str | bool]
 
     @property
+    @override
     def _needs_duration_tracking(self) -> bool:
         """Single-state conditions with no attribute tracking can use last_changed."""
         if len(self._states) != 1:
@@ -825,6 +902,7 @@ class EntityStateConditionBase(EntityConditionBase):
             return entity_state.state
         return entity_state.attributes.get(domain_spec.value_source)
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
         return self._get_tracked_value(entity_state) in self._states
@@ -916,7 +994,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
             # Entity not found
             return None
         if not self._is_valid_unit(
-            entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            entity_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         ):
             # Entity unit does not match the expected unit
             return None
@@ -934,12 +1012,13 @@ class EntityNumericalConditionBase(EntityConditionBase):
         domain_spec = self._domain_specs[entity_state.domain]
         if domain_spec.value_source is None:
             if not self._is_valid_unit(
-                entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                entity_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
             ):
                 return None
             return entity_state.state
         return entity_state.attributes.get(domain_spec.value_source)
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state is within the specified range."""
         try:
@@ -1013,6 +1092,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
     _base_unit: str | None  # Base unit for the tracked value
     _unit_converter: type[BaseUnitConverter]
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
         super().__init_subclass__(**kwargs)
@@ -1020,8 +1100,9 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
 
     def _get_entity_unit(self, entity_state: State) -> str | None:
         """Get the unit of an entity from its state."""
-        return entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        return entity_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
+    @override
     def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
         """Get threshold value from float or entity state."""
         if threshold is None:
@@ -1045,13 +1126,14 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
         try:
             return self._unit_converter.convert(
                 value,
-                entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+                entity_state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT),
                 self._base_unit,
             )
         except HomeAssistantError:
             # Unit conversion failed (i.e. incompatible units), treat as invalid number
             return None
 
+    @override
     def _get_tracked_value(self, entity_state: State) -> Any:
         """Get the tracked numerical value from a state."""
         domain_spec = self._domain_specs[entity_state.domain]
@@ -1151,25 +1233,42 @@ def condition_trace_update_result(**kwargs: Any) -> None:
     node.update_result(**kwargs)
 
 
-@contextmanager
-def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement]:
+class trace_condition:
     """Trace condition evaluation."""
-    should_pop = True
-    trace_element = trace_stack_top(trace_stack_cv)
-    if trace_element and trace_element.reuse_by_child:
-        should_pop = False
-        trace_element.reuse_by_child = False
-    else:
-        trace_element = condition_trace_append(variables, trace_path_get())
-        trace_stack_push(trace_stack_cv, trace_element)
-    try:
-        yield trace_element
-    except Exception as ex:
-        trace_element.set_error(ex)
-        raise
-    finally:
-        if should_pop:
-            trace_stack_pop(trace_stack_cv)
+
+    __slots__ = ("_should_pop", "_trace_element", "_variables")
+
+    _should_pop: bool
+    _trace_element: TraceElement
+
+    def __init__(self, variables: TemplateVarsType) -> None:
+        """Store the variables for the trace element."""
+        self._variables = variables
+
+    def __enter__(self) -> TraceElement:
+        """Start tracing the condition evaluation."""
+        should_pop = True
+        trace_element = trace_stack_top(trace_stack_cv)
+        if trace_element and trace_element.reuse_by_child:
+            should_pop = False
+            trace_element.reuse_by_child = False
+        else:
+            trace_element = condition_trace_append(self._variables, trace_path_get())
+            trace_stack_push(trace_stack_cv, trace_element)
+        self._should_pop = should_pop
+        self._trace_element = trace_element
+        return trace_element
+
+    def __exit__(
+        self, exc_type: object, exc_val: BaseException | None, exc_tb: object
+    ) -> None:
+        """Finish tracing the condition evaluation."""
+        try:
+            if exc_val is not None and isinstance(exc_val, Exception):
+                self._trace_element.set_error(exc_val)
+        finally:
+            if self._should_pop:
+                trace_stack_pop(trace_stack_cv)
 
 
 @overload
@@ -1203,20 +1302,11 @@ def trace_condition_function(
 async def _async_get_condition_platform(
     hass: HomeAssistant, condition_key: str
 ) -> tuple[str, ConditionProtocol | None]:
-    from homeassistant.components import automation  # noqa: PLC0415
-
     platform_and_sub_type = condition_key.split(".")
     platform: str | None = platform_and_sub_type[0]
     platform = _PLATFORM_ALIASES.get(platform, platform)
     if platform is None:
         return "", None
-
-    if automation.is_disabled_experimental_condition(hass, platform):
-        raise vol.Invalid(
-            f"Condition '{condition_key}' requires the experimental 'New triggers and "
-            "conditions' feature to be enabled in Home Assistant Labs settings "
-            f"(feature flag: '{automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG}')"
-        )
 
     try:
         integration = await async_get_integration(hass, platform)
@@ -1314,6 +1404,7 @@ class AndConditionChecker(CompoundConditionChecker):
     """Condition checker for 'and' compound conditions."""
 
     @callback
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test and condition."""
         errors = []
@@ -1348,6 +1439,7 @@ class OrConditionChecker(CompoundConditionChecker):
     """Condition checker for 'or' compound conditions."""
 
     @callback
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test or condition."""
         errors = []
@@ -1382,6 +1474,7 @@ class NotConditionChecker(CompoundConditionChecker):
     """Condition checker for 'not' compound conditions."""
 
     @callback
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test not condition."""
         errors = []
@@ -1780,7 +1873,7 @@ def time(
         ):
             after = datetime.strptime(after_entity.state, "%H:%M:%S").time()
         elif (
-            after_entity.attributes.get(ATTR_DEVICE_CLASS)
+            after_entity.attributes.get(EntityStateAttribute.DEVICE_CLASS)
             in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME)
         ) and after_entity.state not in (
             STATE_UNAVAILABLE,
@@ -1810,7 +1903,7 @@ def time(
             except ValueError:
                 return False
         elif (
-            before_entity.attributes.get(ATTR_DEVICE_CLASS)
+            before_entity.attributes.get(EntityStateAttribute.DEVICE_CLASS)
             in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME)
         ) and before_entity.state not in (
             STATE_UNAVAILABLE,
@@ -2049,6 +2142,27 @@ def async_extract_entities(config: ConfigType | Template) -> set[str]:
             to_process.extend(config["conditions"])
             continue
 
+        if condition == "time":
+            # The before and after options can be a time or an entity id.
+            for key in (CONF_AFTER, CONF_BEFORE):
+                if isinstance(value := config.get(key), str) and valid_entity_id(value):
+                    referenced.add(value)
+            continue
+
+        if condition == "zone":
+            options = config.get(CONF_OPTIONS, {})
+            referenced.update(options.get(CONF_ENTITY_ID, []))
+            referenced.update(options.get(CONF_ZONE, []))
+
+        elif condition in (
+            "zone.in_zone",
+            "zone.not_in_zone",
+            "zone.occupancy_is_detected",
+            "zone.occupancy_is_not_detected",
+        ):
+            if zone_entity_id := config.get(CONF_OPTIONS, {}).get(CONF_ZONE):
+                referenced.add(zone_entity_id)
+
         entity_ids = config.get(CONF_ENTITY_ID)
 
         if isinstance(entity_ids, str):
@@ -2173,8 +2287,6 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any] | None]:
     """Return descriptions (i.e. user documentation) for all conditions."""
-    from homeassistant.components import automation  # noqa: PLC0415
-
     descriptions_cache = hass.data[CONDITION_DESCRIPTION_CACHE]
 
     conditions = hass.data[CONDITIONS]
@@ -2183,12 +2295,7 @@ async def async_get_all_descriptions(
     all_conditions = set(conditions)
     previous_all_conditions = set(descriptions_cache)
     # If the conditions are the same, we can return the cache
-
-    # mypy complains: Invalid index type "HassKey[set[str]]" for "HassDict"
-    if (
-        previous_all_conditions | hass.data[CONDITION_DISABLED_CONDITIONS]  # type: ignore[index]
-        == all_conditions
-    ):
+    if previous_all_conditions == all_conditions:
         return descriptions_cache
 
     # Files we loaded for missing descriptions
@@ -2228,10 +2335,6 @@ async def async_get_all_descriptions(
     new_descriptions_cache = descriptions_cache.copy()
     for missing_condition in missing_conditions:
         domain = conditions[missing_condition]
-        if automation.is_disabled_experimental_condition(hass, domain):
-            hass.data[CONDITION_DISABLED_CONDITIONS].add(missing_condition)
-            continue
-
         if (
             yaml_description := new_conditions_descriptions.get(domain, {}).get(
                 missing_condition

@@ -6,6 +6,7 @@ import queue
 import socket
 import threading
 import time
+from typing import override
 
 import voluptuous as vol
 
@@ -151,6 +152,7 @@ class GraphiteFeeder(threading.Thread):
         except OSError:
             _LOGGER.exception("Failed to send data to graphite")
 
+    @override
     def run(self):
         """Run the process to export the data."""
         while True:

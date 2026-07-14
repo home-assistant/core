@@ -3,14 +3,14 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -75,7 +75,7 @@ def repair_issue_cleanup(hass: HomeAssistant, avm_wrapper: AvmWrapper) -> None:
     if (
         (
             entity_button := entity_registry.async_get_entity_id(
-                "button", DOMAIN, f"{avm_wrapper.unique_id}-cleanup"
+                Platform.BUTTON, DOMAIN, f"{avm_wrapper.unique_id}-cleanup"
             )
         )
         and (entity_entry := entity_registry.async_get(entity_button))
@@ -102,7 +102,7 @@ def repair_issue_firmware_update(hass: HomeAssistant, avm_wrapper: AvmWrapper) -
     if (
         (
             entity_button := entity_registry.async_get_entity_id(
-                "button", DOMAIN, f"{avm_wrapper.unique_id}-firmware_update"
+                Platform.BUTTON, DOMAIN, f"{avm_wrapper.unique_id}-firmware_update"
             )
         )
         and (entity_entry := entity_registry.async_get(entity_button))
@@ -184,6 +184,7 @@ class FritzButton(ButtonEntity):
             name=device_friendly_name,
         )
 
+    @override
     async def async_press(self) -> None:
         """Triggers Fritz!Box service."""
         if self.entity_description.key == "cleanup":
@@ -248,6 +249,7 @@ class FritzBoxWOLButton(FritzDeviceBase, ButtonEntity):
         self._attr_unique_id = f"{self._mac}_wake_on_lan"
         self._is_available = True
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         if self.mac_address:
