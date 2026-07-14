@@ -3,12 +3,16 @@
 This registers HTTP endpoints that support the Streamable HTTP protocol as
 well as the older SSE as a transport layer.
 
-The Streamable HTTP protocol uses a single HTTP endpoint:
+The Streamable HTTP protocol uses these HTTP endpoints:
 
-- /api/mcp_server: The Streamable HTTP endpoint currently implements the
+- /api/mcp: The Streamable HTTP endpoint currently implements the
   stateless protocol for simplicity. This receives client requests and
   sends them to the MCP server, then waits for a response to send back to
-  the client.
+  the client. This serves the configured LLM APIs and does not require
+  admin access.
+- /api/mcp/<API ID>: The same Streamable HTTP endpoint, but exposing a
+  specific LLM API selected by its ID. These endpoints require admin access,
+  except for the Assist API.
 
 The older SSE protocol has two HTTP endpoints:
 
@@ -43,6 +47,7 @@ from homeassistant.components import conversation
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.const import CONF_LLM_HASS_API, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import llm
 
 from .const import DOMAIN
@@ -67,6 +72,7 @@ def async_register(hass: HomeAssistant) -> None:
     hass.http.register_view(ModelContextProtocolSSEView())
     hass.http.register_view(ModelContextProtocolMessagesView())
     hass.http.register_view(ModelContextProtocolStreamableView())
+    hass.http.register_view(ModelContextProtocolStreamableApiView())
 
 
 def async_get_config_entry(hass: HomeAssistant) -> MCPServerConfigEntry:
@@ -112,6 +118,11 @@ class Streams:
 @asynccontextmanager
 async def create_streams() -> AsyncGenerator[Streams]:
     """Create a new pair of streams for MCP server communication."""
+    read_stream: MemoryObjectReceiveStream[SessionMessage | Exception]
+    read_stream_writer: MemoryObjectSendStream[SessionMessage | Exception]
+    write_stream: MemoryObjectSendStream[SessionMessage]
+    write_stream_reader: MemoryObjectReceiveStream[SessionMessage]
+
     read_stream_writer, read_stream = anyio.create_memory_object_stream(0)
     write_stream, write_stream_reader = anyio.create_memory_object_stream(0)
     streams = Streams(
@@ -127,7 +138,7 @@ async def create_streams() -> AsyncGenerator[Streams]:
 
 
 async def create_mcp_server(
-    hass: HomeAssistant, context: Context, entry: MCPServerConfigEntry
+    hass: HomeAssistant, context: Context, llm_api_id: str | list[str]
 ) -> tuple[Server, InitializationOptions]:
     """Initialize the MCP server to ensure it's ready to handle requests."""
     llm_context = llm.LLMContext(
@@ -137,7 +148,6 @@ async def create_mcp_server(
         assistant=conversation.DOMAIN,
         device_id=None,
     )
-    llm_api_id = entry.data[CONF_LLM_HASS_API]
     server = await create_server(hass, llm_api_id, llm_context)
     options = await hass.async_add_executor_job(
         server.create_initialization_options  # Reads package for version info
@@ -165,7 +175,9 @@ class ModelContextProtocolSSEView(HomeAssistantView):
         entry = async_get_config_entry(hass)
         session_manager = entry.runtime_data
 
-        server, options = await create_mcp_server(hass, self.context(request), entry)
+        server, options = await create_mcp_server(
+            hass, self.context(request), entry.data[CONF_LLM_HASS_API]
+        )
 
         async with (
             create_streams() as streams,
@@ -231,65 +243,92 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
         return web.Response(status=200)
 
 
+async def _async_handle_streamable_message(
+    request: web.Request, context: Context, llm_api_id: str | list[str]
+) -> web.StreamResponse:
+    """Process a single JSON-RPC message for the given LLM API."""
+    hass = request.app[KEY_HASS]
+
+    # The request must include a JSON-RPC message
+    if CONTENT_TYPE_JSON not in request.headers.get("accept", ""):
+        raise HTTPBadRequest(text=f"Client must accept {CONTENT_TYPE_JSON}")
+    if request.content_type != CONTENT_TYPE_JSON:
+        raise HTTPBadRequest(text=f"Content-Type must be {CONTENT_TYPE_JSON}")
+    try:
+        json_data = await request.json()
+        message = types.JSONRPCMessage.model_validate(json_data)
+    except ValueError as err:
+        _LOGGER.debug("Failed to parse message as JSON-RPC message: %s", err)
+        raise HTTPBadRequest(text="Request must be a JSON-RPC message") from err
+
+    _LOGGER.debug("Received client message: %s", message)
+
+    # For notifications and responses only, return 202 Accepted
+    if not isinstance(message.root, JSONRPCRequest):
+        _LOGGER.debug("Notification or response received, returning 202")
+        return web.Response(status=HTTPStatus.ACCEPTED)
+
+    # The MCP server runs as a background task for the duration of the
+    # request. We open a buffered stream pair to communicate with it. The
+    # request is sent to the MCP server and we wait for a single response
+    # then shut down the server.
+    server, options = await create_mcp_server(hass, context, llm_api_id)
+
+    async with create_streams() as streams:
+
+        async def run_server() -> None:
+            await server.run(
+                streams.read_stream, streams.write_stream, options, stateless=True
+            )
+
+        async with asyncio.timeout(TIMEOUT), anyio.create_task_group() as tg:
+            tg.start_soon(run_server)
+
+            await streams.read_stream_writer.send(SessionMessage(message))
+            session_message = await anext(streams.write_stream_reader)
+            tg.cancel_scope.cancel()
+
+        _LOGGER.debug("Sending response: %s", session_message)
+        return web.json_response(
+            data=session_message.message.model_dump(by_alias=True, exclude_none=True),
+        )
+
+
 class ModelContextProtocolStreamableView(HomeAssistantView):
-    """Model Context Protocol Streamable HTTP endpoint."""
+    """Model Context Protocol Streamable HTTP endpoint.
+
+    This serves the configured LLM APIs and does not require admin access.
+    """
 
     name = f"{DOMAIN}:streamable"
     url = STREAMABLE_API
 
-    async def get(self, request: web.Request) -> web.StreamResponse:
-        """Handle unsupported methods."""
-        return web.Response(
-            status=HTTPStatus.METHOD_NOT_ALLOWED, text="Only POST method is supported"
-        )
-
     async def post(self, request: web.Request) -> web.StreamResponse:
-        """Process JSON-RPC messages for the Model Context Protocol."""
+        """Process JSON-RPC messages for the configured LLM APIs."""
         hass = request.app[KEY_HASS]
         entry = async_get_config_entry(hass)
+        return await _async_handle_streamable_message(
+            request, self.context(request), entry.data[CONF_LLM_HASS_API]
+        )
 
-        # The request must include a JSON-RPC message
-        if CONTENT_TYPE_JSON not in request.headers.get("accept", ""):
-            raise HTTPBadRequest(text=f"Client must accept {CONTENT_TYPE_JSON}")
-        if request.content_type != CONTENT_TYPE_JSON:
-            raise HTTPBadRequest(text=f"Content-Type must be {CONTENT_TYPE_JSON}")
-        try:
-            json_data = await request.json()
-            message = types.JSONRPCMessage.model_validate(json_data)
-        except ValueError as err:
-            _LOGGER.debug("Failed to parse message as JSON-RPC message: %s", err)
-            raise HTTPBadRequest(text="Request must be a JSON-RPC message") from err
 
-        _LOGGER.debug("Received client message: %s", message)
+class ModelContextProtocolStreamableApiView(HomeAssistantView):
+    """Model Context Protocol Streamable HTTP endpoint for a specific LLM API.
 
-        # For notifications and responses only, return 202 Accepted
-        if not isinstance(message.root, JSONRPCRequest):
-            _LOGGER.debug("Notification or response received, returning 202")
-            return web.Response(status=HTTPStatus.ACCEPTED)
+    The LLM API is selected by its ID in the URL. These endpoints require
+    admin access, except for the Assist API.
+    """
 
-        # The MCP server runs as a background task for the duration of the
-        # request. We open a buffered stream pair to communicate with it. The
-        # request is sent to the MCP server and we wait for a single response
-        # then shut down the server.
-        server, options = await create_mcp_server(hass, self.context(request), entry)
+    name = f"{DOMAIN}:streamable_api"
+    url = f"{STREAMABLE_API}/{{api_id}}"
 
-        async with create_streams() as streams:
-
-            async def run_server() -> None:
-                await server.run(
-                    streams.read_stream, streams.write_stream, options, stateless=True
-                )
-
-            async with asyncio.timeout(TIMEOUT), anyio.create_task_group() as tg:
-                tg.start_soon(run_server)
-
-                await streams.read_stream_writer.send(SessionMessage(message))
-                session_message = await anext(streams.write_stream_reader)
-                tg.cancel_scope.cancel()
-
-            _LOGGER.debug("Sending response: %s", session_message)
-            return web.json_response(
-                data=session_message.message.model_dump(
-                    by_alias=True, exclude_none=True
-                ),
-            )
+    async def post(self, request: web.Request, api_id: str) -> web.StreamResponse:
+        """Process JSON-RPC messages for the LLM API identified by api_id."""
+        hass = request.app[KEY_HASS]
+        if api_id != llm.LLM_API_ASSIST and not request["hass_user"].is_admin:
+            raise Unauthorized
+        if api_id not in {api.id for api in llm.async_get_apis(hass)}:
+            raise HTTPNotFound(text=f"Unknown LLM API '{api_id}'")
+        return await _async_handle_streamable_message(
+            request, self.context(request), api_id
+        )

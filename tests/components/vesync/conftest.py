@@ -331,6 +331,29 @@ async def fan_config_entry(
     return entry
 
 
+@pytest.fixture(name="pedestal_fan_config_entry")
+async def pedestal_fan_config_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, config
+) -> MockConfigEntry:
+    """Create a mock VeSync config entry for `CoreBreeze 432S`."""
+    entry = MockConfigEntry(
+        title="VeSync",
+        domain=DOMAIN,
+        data=config[DOMAIN],
+        unique_id="TESTACCOUNTID",
+        version=1,
+        minor_version=3,
+    )
+    entry.add_to_hass(hass)
+
+    device_name = "CoreBreeze 432S"
+    mock_multiple_device_responses(aioclient_mock, [device_name])
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return entry
+
+
 @pytest.fixture(name="switch_old_id_config_entry")
 async def switch_old_id_config_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, config

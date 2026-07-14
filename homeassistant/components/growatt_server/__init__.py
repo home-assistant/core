@@ -23,6 +23,7 @@ Error handling pattern for reauth:
   → raise ConfigEntryAuthFailed
 - All other errors → ConfigEntryError (setup) or UpdateFailed (coordinator)
 """
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from collections.abc import Mapping
 import datetime
@@ -71,7 +72,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Growatt Server component."""
+    """Set up the Growatt Server integration."""
     # Register services
     async_setup_services(hass)
     return True

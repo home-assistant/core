@@ -6,7 +6,6 @@ from typing import Any, Self, override
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_EDITABLE,
     CONF_ICON,
     CONF_ID,
     CONF_MAXIMUM,
@@ -19,6 +18,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
+
+from .const import CounterEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -205,14 +206,14 @@ class Counter(collection.CollectionEntity, RestoreEntity):
     def extra_state_attributes(self) -> dict:
         """Return the state attributes."""
         ret = {
-            ATTR_EDITABLE: self.editable,
-            ATTR_INITIAL: self._config[CONF_INITIAL],
-            ATTR_STEP: self._config[CONF_STEP],
+            CounterEntityStateAttribute.EDITABLE: self.editable,
+            CounterEntityStateAttribute.INITIAL: self._config[CONF_INITIAL],
+            CounterEntityStateAttribute.STEP: self._config[CONF_STEP],
         }
         if self._config[CONF_MINIMUM] is not None:
-            ret[CONF_MINIMUM] = self._config[CONF_MINIMUM]
+            ret[CounterEntityStateAttribute.MINIMUM] = self._config[CONF_MINIMUM]
         if self._config[CONF_MAXIMUM] is not None:
-            ret[CONF_MAXIMUM] = self._config[CONF_MAXIMUM]
+            ret[CounterEntityStateAttribute.MAXIMUM] = self._config[CONF_MAXIMUM]
         return ret
 
     @property

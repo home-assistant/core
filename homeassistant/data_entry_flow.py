@@ -490,11 +490,11 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             )
 
         if flow.flow_id not in self._progress:
-            # The flow was removed during the step, raise UnknownFlow
-            # unless the result is an abort. Uses `!=` (not `is not`) because
-            # this runs before the legacy-string normalization below, and
-            # out-of-tree flow handlers may still return raw "abort".
-            if result["type"] != FlowResultType.ABORT:  # type: ignore[ha-enum-identity-compare,unused-ignore]
+            # The flow was removed during the step, raise UnknownFlow unless
+            # the result is an abort. Compares against the string value
+            # because this runs before the legacy-string normalization
+            # below, and out-of-tree flow handlers may still return raw "abort".
+            if result["type"] != FlowResultType.ABORT.value:
                 raise UnknownFlow
             return result
 
