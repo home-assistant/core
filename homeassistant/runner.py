@@ -278,25 +278,29 @@ def _enable_posix_spawn() -> None:
 
 
 def _patch_aiodns_to_disable_edns() -> None:
-    """Disable EDNS cookies in aiodns by setting default flags to 0.
+    """Disable DNS cookies in aiodns by setting default flags to 0.
 
-    c-ares 1.33.0+ enables EDNS cookies by default which can cause timeouts
+    c-ares 1.33.0+ enables DNS cookies by default which can cause timeouts
     with some DNS servers. We disable EDNS (and thus cookies) by default
     unless flags are explicitly set.
+
+    This process-wide monkeypatch compensates for current aiodns/pycares/c-ares
+    resolver behavior and can be removed once the resolver layer handles this
+    case more gracefully.
     """
     try:
-        import aiodns
+        import aiodns  # noqa: PLC0415
     except ImportError:
         return
 
     original_init = aiodns.DNSResolver.__init__
 
-    def new_init(self, *args: Any, **kwargs: Any) -> None:
-        if "flags" not in kwargs:
+    def new_init(self: Any, *args: Any, **kwargs: Any) -> None:
+        if kwargs.get("flags") is None:
             kwargs["flags"] = 0
         original_init(self, *args, **kwargs)
 
-    aiodns.DNSResolver.__init__ = new_init
+    aiodns.DNSResolver.__init__ = new_init  # type: ignore[method-assign]
 
 
 def run(runtime_config: RuntimeConfig) -> int:
