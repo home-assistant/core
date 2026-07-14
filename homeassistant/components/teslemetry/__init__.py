@@ -16,7 +16,7 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
-from tesla_fleet_api.tesla import VehicleRouter
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.teslemetry import Teslemetry, Vehicle
 from teslemetry_stream import TeslemetryStream
 

@@ -5,7 +5,7 @@ from typing import Any, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope, SunRoofCommand, Trunk, WindowCommand
-from tesla_fleet_api.tesla import VehicleRouter
+from tesla_fleet_api.router import VehicleRouter
 from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import Signal
 from teslemetry_stream.const import WindowState
