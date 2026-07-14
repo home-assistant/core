@@ -11,7 +11,7 @@ from flow_it_api.exceptions import (
     FlowItConnectionError,
     FlowItResponseError,
 )
-from flow_it_api.models import MachineStatusResponse
+from flow_it_api.models import MachineData, MachineStatusResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -61,6 +61,16 @@ class FlowItCoordinator(DataUpdateCoordinator[FlowItCoordinatorData]):
             config_entry=config_entry,
         )
         self.vmc = vmc
+
+        async def _on_ws_data(data: MachineData) -> None:
+            """Handle data from WebSocket."""
+            _LOGGER.debug("Received WebSocket update")
+            if self.data:
+                self.data.state.data = data
+                self.async_set_updated_data(self.data)
+
+        self.vmc.register_websocket_callback(_on_ws_data)
+        self.vmc.websocket.start()
 
     @override
     async def _async_update_data(self) -> FlowItCoordinatorData:

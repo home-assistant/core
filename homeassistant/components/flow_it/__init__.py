@@ -3,7 +3,6 @@
 import logging
 
 from flow_it_api.client import FlowItVMCMachine
-from flow_it_api.models import MachineData
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
@@ -32,16 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlowItConfigEntry) -> bo
     coordinator = FlowItCoordinator(hass, entry, vmc)
 
     await coordinator.async_config_entry_first_refresh()
-
-    async def on_ws_data(data: MachineData) -> None:
-        """Handle data from WebSocket."""
-        _LOGGER.debug("Received WebSocket update")
-        if coordinator.data:
-            coordinator.data.state.data = data
-            coordinator.async_set_updated_data(coordinator.data)
-
-    vmc.register_websocket_callback(on_ws_data)
-    vmc.websocket.start()
 
     entry.runtime_data = FlowItData(
         vmc=vmc,
