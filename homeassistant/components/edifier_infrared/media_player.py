@@ -8,6 +8,7 @@ from infrared_protocols.codes.edifier.r1280t import EdifierR1280TCode
 from infrared_protocols.codes.edifier.r1700bt import EdifierR1700BTCode
 from infrared_protocols.codes.edifier.rc20g import EdifierRC20GCode
 from infrared_protocols.codes.edifier.s360db import EdifierS360DBCode
+from infrared_protocols.codes.edifier.s3000pro import EdifierS3000ProCode
 
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
 from homeassistant.components.media_player import (
@@ -91,6 +92,19 @@ COMMAND_SET_COMMANDS: dict[
         MediaPlayerEntityFeature.PAUSE: (EdifierRC20GCode.PLAY_PAUSE,),
         MediaPlayerEntityFeature.NEXT_TRACK: (EdifierRC20GCode.FORWARD,),
         MediaPlayerEntityFeature.PREVIOUS_TRACK: (EdifierRC20GCode.PREVIOUS,),
+    },
+    EdifierCommandSet.S3000PRO: {
+        MediaPlayerEntityFeature.TURN_ON: (EdifierS3000ProCode.POWER,),
+        MediaPlayerEntityFeature.TURN_OFF: (EdifierS3000ProCode.POWER,),
+        MediaPlayerEntityFeature.VOLUME_STEP: (
+            (EdifierS3000ProCode.VOLUME_UP,),
+            (EdifierS3000ProCode.VOLUME_DOWN,),
+        ),
+        MediaPlayerEntityFeature.VOLUME_MUTE: (EdifierS3000ProCode.MUTE,),
+        MediaPlayerEntityFeature.PLAY: (EdifierS3000ProCode.PLAY_PAUSE,),
+        MediaPlayerEntityFeature.PAUSE: (EdifierS3000ProCode.PLAY_PAUSE,),
+        MediaPlayerEntityFeature.NEXT_TRACK: (EdifierS3000ProCode.NEXT,),
+        MediaPlayerEntityFeature.PREVIOUS_TRACK: (EdifierS3000ProCode.PREVIOUS,),
     },
 }
 

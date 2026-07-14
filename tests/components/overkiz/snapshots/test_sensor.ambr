@@ -57,6 +57,229 @@
     'state': '21.1',
   })
 # ---
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_bathroom_towel_dryer_discrete_rssi_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'verylow',
+        'low',
+        'normal',
+        'good',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_home_bathroom_towel_dryer_discrete_rssi_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Discrete RSSI level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:wifi',
+    'original_name': 'Discrete RSSI level',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'discrete_rssi_level',
+    'unique_id': 'io://1234-5678-5643/5237136#1-core:DiscreteRSSILevelState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_bathroom_towel_dryer_discrete_rssi_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom Towel Dryer Discrete RSSI level',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'verylow',
+        'low',
+        'normal',
+        'good',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_bathroom_towel_dryer_discrete_rssi_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_bathroom_towel_dryer_priority_lock_originator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_bathroom_towel_dryer_priority_lock_originator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Priority lock originator',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:lock',
+    'original_name': 'Priority lock originator',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'priority_lock_originator',
+    'unique_id': 'io://1234-5678-5643/5237136#1-io:PriorityLockOriginatorState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_bathroom_towel_dryer_priority_lock_originator-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom Towel Dryer Priority lock originator',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_bathroom_towel_dryer_priority_lock_originator',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_bathroom_towel_dryer_priority_lock_timer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_bathroom_towel_dryer_priority_lock_timer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Priority lock timer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:lock-clock',
+    'original_name': 'Priority lock timer',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-5643/5237136#1-core:PriorityLockTimerState',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_bathroom_towel_dryer_priority_lock_timer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom Towel Dryer Priority lock timer',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:lock-clock',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_bathroom_towel_dryer_priority_lock_timer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_bathroom_towel_dryer_rssi_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_home_bathroom_towel_dryer_rssi_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'RSSI level',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'RSSI level',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-5643/5237136#1-core:RSSILevelState',
+    'unit_of_measurement': 'dB',
+  })
+# ---
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_bathroom_towel_dryer_rssi_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom Towel Dryer RSSI level',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_bathroom_towel_dryer_rssi_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '74',
+  })
+# ---
 # name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_bottom_tank_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

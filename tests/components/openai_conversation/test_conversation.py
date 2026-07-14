@@ -21,6 +21,7 @@ from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_PRO_MODE,
     CONF_REASONING_SUMMARY,
     CONF_SERVICE_TIER,
     CONF_STORE_RESPONSES,
@@ -817,3 +818,46 @@ async def test_flex_tier_retry(
     )
     assert mock_create_stream.mock_calls[0][2]["service_tier"] == "flex"
     assert mock_create_stream.mock_calls[1][2]["service_tier"] == "default"
+
+
+@pytest.mark.parametrize(
+    "subentry_options", [{CONF_CHAT_MODEL: "gpt-5.6-sol", CONF_PRO_MODE: True}]
+)
+async def test_model_args(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    snapshot: SnapshotAssertion,
+    subentry_options: dict,
+) -> None:
+    """Test model arguments for various configuration."""
+
+    subentry = next(
+        entry
+        for entry in mock_config_entry.subentries.values()
+        if entry.subentry_type == "conversation"
+    )
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data=subentry_options,
+    )
+    await hass.async_block_till_done()
+
+    mock_create_stream.return_value = [
+        create_message_item(id="msg_A", text="Hi!", output_index=0),
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Hello",
+        None,
+        Context(),
+        agent_id="conversation.openai_conversation",
+    )
+
+    model_args = mock_create_stream.call_args.kwargs.copy()
+    model_args.pop("input")
+    assert model_args.pop("user") == result.conversation_id
+    assert model_args == snapshot

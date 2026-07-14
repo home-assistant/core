@@ -4,7 +4,7 @@ import logging
 from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, UnitOfLength
+from homeassistant.const import EntityStateAttribute, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -147,8 +147,8 @@ class GeonetnzVolcanoSensor(SensorEntity):
                 (ATTR_EXTERNAL_ID, self._external_id),
                 (ATTR_ACTIVITY, self._activity),
                 (ATTR_HAZARDS, self._hazards),
-                (ATTR_LONGITUDE, self._longitude),
-                (ATTR_LATITUDE, self._latitude),
+                (EntityStateAttribute.LONGITUDE, self._longitude),
+                (EntityStateAttribute.LATITUDE, self._latitude),
                 (ATTR_DISTANCE, self._distance),
                 (ATTR_LAST_UPDATE, self._feed_last_update),
                 (ATTR_LAST_UPDATE_SUCCESSFUL, self._feed_last_update_successful),

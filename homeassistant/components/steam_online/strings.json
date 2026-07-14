@@ -95,13 +95,27 @@
           "snooze": "Snooze"
         },
         "state_attributes": {
+          "created": { "name": "Account created" },
           "game": { "name": "Game" },
           "game_icon": { "name": "Game icon" },
           "game_id": { "name": "Game ID" },
           "game_image_header": { "name": "Game header image" },
           "game_image_main": { "name": "Game image" },
           "last_online": { "name": "Last online" },
-          "level": { "name": "Level" }
+          "level": { "name": "Level" },
+          "real_name": { "name": "Real name" }
+        }
+      },
+      "last_online": {
+        "name": "Last online"
+      },
+      "level": {
+        "name": "Level"
+      },
+      "now_playing": {
+        "name": "Now playing",
+        "state_attributes": {
+          "app_id": { "name": "Steam App ID" }
         }
       }
     }

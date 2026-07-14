@@ -1,0 +1,95 @@
+name: E2E tests
+
+# yamllint disable-line rule:truthy
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Image tag or digest to test (e.g. dev, 2026.7.1, 2026.8.0b0, sha256:0a1b2c3d…)"
+        default: "dev"
+        required: true
+
+env:
+  STARTUP_TIMEOUT_SECONDS: 300
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.version }}
+  cancel-in-progress: true
+
+jobs:
+  boot_check:
+    name: Boot check ${{ matrix.arch }} core image
+    if: github.repository_owner == 'home-assistant'
+    runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runs-on: ubuntu-24.04
+          - arch: aarch64
+            runs-on: ubuntu-24.04-arm
+    env:
+      IMAGE: ghcr.io/home-assistant/home-assistant${{ startsWith(inputs.version, 'sha256:') && '@' || ':' }}${{ inputs.version }}
+      BASE_URL: http://localhost:8123
+      CURL_OPTS: --silent --max-time 10
+    steps:
+      - name: Pull image
+        id: pull
+        run: |
+          docker pull "$IMAGE"
+          docker image inspect -f 'Testing {{index .RepoDigests 0}} ({{.Os}}/{{.Architecture}}), created {{.Created}}' "$IMAGE"
+
+      - name: Start container
+        run: |
+          docker run -d --name homeassistant -p 8123:8123 "$IMAGE"
+
+      - name: Wait for Home Assistant to start
+        run: |
+          timeout=$((SECONDS + STARTUP_TIMEOUT_SECONDS))
+          while ! curl $CURL_OPTS --fail --output /dev/null "$BASE_URL/"; do
+            if [ "$(docker inspect -f '{{.State.Running}}' homeassistant)" != "true" ]; then
+              echo "::error::Container exited before Home Assistant started"
+              exit 1
+            fi
+            if [ "$SECONDS" -ge "$timeout" ]; then
+              echo "::error::Home Assistant did not respond on port 8123 within ${STARTUP_TIMEOUT_SECONDS}s"
+              exit 1
+            fi
+            sleep 5
+          done
+
+      - name: Check frontend is served
+        run: |
+          # Pre-onboarding, / redirects to /onboarding.html; --location follows it
+          status=$(curl $CURL_OPTS --location --output /dev/null --write-out '%{http_code}' "$BASE_URL/")
+          if [ "$status" -ne 200 ]; then
+            echo "::error::Expected HTTP 200 from frontend, got $status"
+            exit 1
+          fi
+
+      - name: Check onboarding API responds
+        run: |
+          curl $CURL_OPTS --fail "$BASE_URL/api/onboarding" \
+            | jq -e 'type == "array" and length > 0'
+
+      - name: Check container is still running
+        run: |
+          if [ "$(docker inspect -f '{{.State.Running}}' homeassistant)" != "true" ]; then
+            echo "::error::Container is no longer running after checks"
+            exit 1
+          fi
+
+      - name: Dump container logs
+        if: always() && steps.pull.outcome == 'success'
+        run: docker logs homeassistant > homeassistant.log 2>&1 || true
+
+      - name: Upload container logs
+        if: always() && steps.pull.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: container-logs-${{ matrix.arch }}
+          path: homeassistant.log

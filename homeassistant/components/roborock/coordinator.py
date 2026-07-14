@@ -490,6 +490,26 @@ class RoborockDataUpdateCoordinatorA01[
         return self._device
 
 
+ZEO_REQUEST_PROTOCOLS = [
+    RoborockZeoProtocol.STATE,
+    RoborockZeoProtocol.COUNTDOWN,
+    RoborockZeoProtocol.WASHING_LEFT,
+    RoborockZeoProtocol.ERROR,
+    RoborockZeoProtocol.TIMES_AFTER_CLEAN,
+    RoborockZeoProtocol.DETERGENT_EMPTY,
+    RoborockZeoProtocol.SOFTENER_EMPTY,
+    RoborockZeoProtocol.DETERGENT_TYPE,
+    RoborockZeoProtocol.SOFTENER_TYPE,
+    RoborockZeoProtocol.MODE,
+    RoborockZeoProtocol.PROGRAM,
+    RoborockZeoProtocol.TEMP,
+    RoborockZeoProtocol.RINSE_TIMES,
+    RoborockZeoProtocol.SPIN_LEVEL,
+    RoborockZeoProtocol.DRYING_MODE,
+    RoborockZeoProtocol.SOUND_SET,
+]
+
+
 class RoborockWashingMachineUpdateCoordinator(
     RoborockDataUpdateCoordinatorA01[RoborockZeoProtocol]
 ):
@@ -505,25 +525,11 @@ class RoborockWashingMachineUpdateCoordinator(
         """Initialize."""
         super().__init__(hass, config_entry, device)
         self.api = api
-        self.request_protocols: list[RoborockZeoProtocol] = []
-        # This currently only supports the washing machine protocols
+        supported_schema_ids = device.product.supported_schema_ids
         self.request_protocols = [
-            RoborockZeoProtocol.STATE,
-            RoborockZeoProtocol.COUNTDOWN,
-            RoborockZeoProtocol.WASHING_LEFT,
-            RoborockZeoProtocol.ERROR,
-            RoborockZeoProtocol.TIMES_AFTER_CLEAN,
-            RoborockZeoProtocol.DETERGENT_EMPTY,
-            RoborockZeoProtocol.SOFTENER_EMPTY,
-            RoborockZeoProtocol.DETERGENT_TYPE,
-            RoborockZeoProtocol.SOFTENER_TYPE,
-            RoborockZeoProtocol.MODE,
-            RoborockZeoProtocol.PROGRAM,
-            RoborockZeoProtocol.TEMP,
-            RoborockZeoProtocol.RINSE_TIMES,
-            RoborockZeoProtocol.SPIN_LEVEL,
-            RoborockZeoProtocol.DRYING_MODE,
-            RoborockZeoProtocol.SOUND_SET,
+            protocol
+            for protocol in ZEO_REQUEST_PROTOCOLS
+            if not supported_schema_ids or protocol in supported_schema_ids
         ]
 
     @override
@@ -538,6 +544,16 @@ class RoborockWashingMachineUpdateCoordinator(
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             ) from ex
+
+
+DYAD_REQUEST_PROTOCOLS = [
+    RoborockDyadDataProtocol.STATUS,
+    RoborockDyadDataProtocol.POWER,
+    RoborockDyadDataProtocol.MESH_LEFT,
+    RoborockDyadDataProtocol.BRUSH_LEFT,
+    RoborockDyadDataProtocol.ERROR,
+    RoborockDyadDataProtocol.TOTAL_RUN_TIME,
+]
 
 
 class RoborockWetDryVacUpdateCoordinator(
@@ -555,14 +571,11 @@ class RoborockWetDryVacUpdateCoordinator(
         """Initialize."""
         super().__init__(hass, config_entry, device)
         self.api = api
-        # This currenltly only supports the WetDryVac protocols
-        self.request_protocols: list[RoborockDyadDataProtocol] = [
-            RoborockDyadDataProtocol.STATUS,
-            RoborockDyadDataProtocol.POWER,
-            RoborockDyadDataProtocol.MESH_LEFT,
-            RoborockDyadDataProtocol.BRUSH_LEFT,
-            RoborockDyadDataProtocol.ERROR,
-            RoborockDyadDataProtocol.TOTAL_RUN_TIME,
+        supported_schema_ids = device.product.supported_schema_ids
+        self.request_protocols = [
+            protocol
+            for protocol in DYAD_REQUEST_PROTOCOLS
+            if not supported_schema_ids or protocol in supported_schema_ids
         ]
 
     @override
