@@ -204,11 +204,13 @@ def test_server_context_modern() -> None:
         for cipher in context.get_ciphers()
         if cipher["protocol"] == "TLSv1.3"
     ]
-    assert sorted(tls13_ciphers) == [
+    # Exact equality is not portable: system OpenSSL config (e.g. Fedora/RHEL
+    # crypto-policies) may add other AEAD TLS 1.3 suites such as CCM.
+    assert {
         "TLS_AES_128_GCM_SHA256",
         "TLS_AES_256_GCM_SHA384",
         "TLS_CHACHA20_POLY1305_SHA256",
-    ]
+    } <= set(tls13_ciphers)
 
 
 def test_server_context_intermediate() -> None:
@@ -221,11 +223,12 @@ def test_server_context_intermediate() -> None:
         for cipher in context.get_ciphers()
         if cipher["protocol"] == "TLSv1.3"
     ]
-    assert sorted(tls13_ciphers) == [
+    # Same as modern: TLS 1.3 suites come from OpenSSL defaults / system config.
+    assert {
         "TLS_AES_128_GCM_SHA256",
         "TLS_AES_256_GCM_SHA384",
         "TLS_CHACHA20_POLY1305_SHA256",
-    ]
+    } <= set(tls13_ciphers)
 
     tls12_ciphers = [
         cipher["name"]

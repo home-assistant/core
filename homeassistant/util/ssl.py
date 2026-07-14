@@ -174,7 +174,9 @@ def server_context_modern() -> ssl.SSLContext:
     if hasattr(ssl, "OP_NO_COMPRESSION"):
         context.options |= ssl.OP_NO_COMPRESSION
 
-    # set_ciphers() cannot set TLS 1.3 suites; OpenSSL defaults match this profile
+    # set_ciphers() cannot configure TLS 1.3 suites; OpenSSL's upstream
+    # defaults are exactly the Mozilla modern suites (the system OpenSSL
+    # config may add other AEAD TLS 1.3 suites)
 
     return context
 
