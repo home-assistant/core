@@ -80,9 +80,17 @@ async def test_default_prompt(
 
 
 @pytest.mark.parametrize(
-    ("web_search", "expected_server_tools"),
-    [(True, [{"type": "openrouter:web_search"}]), (False, None)],
-    ids=["web_search_enabled", "web_search_disabled"],
+    ("web_search", "expected_server_tools", "expected_model_suffix"),
+    [
+        ("plugin", None, ":online"),
+        (
+            "tool",
+            [{"type": "openrouter:web_search", "parameters": {"engine": "auto"}}],
+            "",
+        ),
+        ("off", None, ""),
+    ],
+    ids=["web_search_plugin_enabled", "web_search_enabled", "web_search_disabled"],
 )
 async def test_web_search(
     hass: HomeAssistant,
@@ -91,6 +99,7 @@ async def test_web_search(
     mock_chat_log: MockChatLog,  # noqa: F811
     web_search: bool,
     expected_server_tools: dict[str, str] | None,
+    expected_model_suffix: str,
 ) -> None:
     """Test that web search adds :online suffix to model."""
     await setup_integration(hass, mock_config_entry)
