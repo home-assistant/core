@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    DHW_MODE,
     LOCATION,
     SELECT_DHW_MODE,
     SELECT_GATEWAY_MODE,
@@ -34,6 +35,12 @@ class PlugwiseSelectEntityDescription(SelectEntityDescription):
 
 
 SELECT_TYPES = (
+    PlugwiseSelectEntityDescription(
+        key=DHW_MODE,
+        translation_key=SELECT_DHW_MODE,
+        entity_category=EntityCategory.CONFIG,
+        options_key="dhw_modes",
+    ),
     PlugwiseSelectEntityDescription(
         key=SELECT_SCHEDULE,
         translation_key=SELECT_SCHEDULE,
@@ -84,7 +91,7 @@ async def async_setup_entry(
             PlugwiseSelectEntity(coordinator, device_id, description)
             for device_id in coordinator.new_devices
             for description in SELECT_TYPES
-            if coordinator.data[device_id].get(description.options_key)
+            if coordinator.data[device_id].get(description.key)
         )
 
     _add_entities()
