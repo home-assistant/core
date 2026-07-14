@@ -2265,6 +2265,42 @@ async def test_reconfigure_flip_to_api_key(
     assert ufp_reauth_entry.data[CONF_API_KEY] == "new-api-key"
 
 
+async def test_reconfigure_flip_to_full(
+    hass: HomeAssistant,
+    bootstrap: Bootstrap,
+    nvr: NVR,
+    ufp_public_only_entry: MockConfigEntry,
+    mock_api_bootstrap: Mock,
+    mock_api_meta_info: Mock,
+    mock_setup: AsyncMock,
+) -> None:
+    """Reconfiguring a public-only entry to full access stores local credentials.
+
+    The reverse of ``test_reconfigure_flip_to_api_key``: the API-key-only entry
+    gains a local user, so the reload switches to the full client and platform
+    set (validated by the full-access setup and public-only tests separately).
+    """
+    ufp_public_only_entry.add_to_hass(hass)
+    nvr.mac = _async_unifi_mac_from_hass(MAC_ADDR)
+    bootstrap.nvr = nvr
+
+    result = await ufp_public_only_entry.start_reconfigure_flow(hass)
+    result = await _advance_menu(hass, result, "reconfigure_full")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {**RECONFIGURE_USER_INPUT, CONF_API_KEY: "new-api-key"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    # The entry is now full access: the local user is stored alongside the key.
+    assert ufp_public_only_entry.data[CONF_USERNAME] == DEFAULT_USERNAME
+    assert ufp_public_only_entry.data[CONF_PASSWORD] == DEFAULT_PASSWORD
+    assert ufp_public_only_entry.data[CONF_API_KEY] == "new-api-key"
+
+
 async def test_reconfigure_flip_wrong_nvr(
     hass: HomeAssistant,
     ufp_reauth_entry: MockConfigEntry,
