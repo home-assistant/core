@@ -11,7 +11,12 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import create_wall_connector_entry, get_lifetime_mock, get_vitals_mock
+from .conftest import (
+    create_wall_connector_entry,
+    get_lifetime_mock,
+    get_vitals_mock,
+    get_wifi_status_mock,
+)
 
 
 async def test_init_success(
@@ -20,7 +25,10 @@ async def test_init_success(
     """Test setup and that we get the device info, including firmware version."""
 
     entry = await create_wall_connector_entry(
-        hass, vitals_data=get_vitals_mock(), lifetime_data=get_lifetime_mock()
+        hass,
+        vitals_data=get_vitals_mock(),
+        lifetime_data=get_lifetime_mock(),
+        wifi_status_data=get_wifi_status_mock(),
     )
 
     assert entry.state is ConfigEntryState.LOADED
@@ -46,7 +54,10 @@ async def test_load_unload(hass: HomeAssistant) -> None:
     """Config entry can be unloaded."""
 
     entry = await create_wall_connector_entry(
-        hass, vitals_data=get_vitals_mock(), lifetime_data=get_lifetime_mock()
+        hass,
+        vitals_data=get_vitals_mock(),
+        lifetime_data=get_lifetime_mock(),
+        wifi_status_data=get_wifi_status_mock(),
     )
     assert entry.state is ConfigEntryState.LOADED
 

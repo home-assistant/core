@@ -16,6 +16,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_HOME,
     STATE_NOT_HOME,
     EntityCategory,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -422,8 +423,8 @@ class TrackerEntity(
         attr.update(super().state_attributes)
 
         if self.latitude is not None and self.longitude is not None:
-            attr[TrackerEntityStateAttribute.LATITUDE] = self.latitude
-            attr[TrackerEntityStateAttribute.LONGITUDE] = self.longitude
+            attr[EntityStateAttribute.LATITUDE] = self.latitude
+            attr[EntityStateAttribute.LONGITUDE] = self.longitude
             attr[TrackerEntityStateAttribute.GPS_ACCURACY] = self.location_accuracy
 
         return attr

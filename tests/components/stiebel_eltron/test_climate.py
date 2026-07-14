@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from pymodbus.exceptions import ModbusException
+from modbus_connection import ModbusError
 from pystiebeleltron.lwz import OperatingMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -145,7 +145,7 @@ async def test_climate_entity_set_hvac_mode_handles_api_exception(
     """Test setting HVAC mode handles API exception."""
     await _setup_integration(hass, mock_config_entry)
 
-    mock_lwz_api.set_operation.side_effect = ModbusException("write failed")
+    mock_lwz_api.set_operation.side_effect = ModbusError("write failed")
     with pytest.raises(HomeAssistantError):
         await async_set_hvac_mode(hass, HVACMode.AUTO, CLIMATE_ENTITY_ID)
 
@@ -158,7 +158,7 @@ async def test_climate_entity_set_preset_mode_handles_api_exception(
     """Test setting preset mode handles API exception."""
     await _setup_integration(hass, mock_config_entry)
 
-    mock_lwz_api.set_operation.side_effect = ModbusException("write failed")
+    mock_lwz_api.set_operation.side_effect = ModbusError("write failed")
     with pytest.raises(HomeAssistantError):
         await async_set_preset_mode(hass, PRESET_COMFORT, CLIMATE_ENTITY_ID)
 
@@ -172,7 +172,7 @@ async def test_climate_entity_set_temperature_handles_api_exception(
 
     await _setup_integration(hass, mock_config_entry)
 
-    mock_lwz_api.set_target_temp.side_effect = ModbusException("write failed")
+    mock_lwz_api.set_target_temp.side_effect = ModbusError("write failed")
     with pytest.raises(HomeAssistantError):
         await async_set_temperature(hass, 24.0, CLIMATE_ENTITY_ID)
 
