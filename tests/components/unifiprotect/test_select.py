@@ -1,6 +1,7 @@
 """Test the UniFi Protect select platform."""
 
 from copy import copy
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -226,6 +227,13 @@ async def test_select_camera_hdr_mode_unavailable_without_public(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ) -> None:
     """The migrated HDR mode select is unavailable without a public object."""
+
+    async def _prime_without_camera() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_without_camera)
 
     await init_entry(hass, ufp, [doorbell])
 
