@@ -96,6 +96,15 @@ class HbtnCoordinator(DataUpdateCoordinator[int]):
         self._update_router_issue()
         return crc
 
+    def async_clear_router_issue(self) -> None:
+        """Delete this entry's router repair issue on unload.
+
+        Without this, an entry removed while ``sys_ok`` is false would leave a
+        stale repair warning: no later coordinator tick can clear it.
+        """
+        issue_id = f"router_system_error_{self.comm.router.uid}"
+        ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+
     def _update_router_issue(self) -> None:
         """Mirror the router's system-error flag into the issue registry.
 

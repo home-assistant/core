@@ -50,6 +50,22 @@ async def test_coordinator_router_system_error_repair_issue(
     assert registry.async_get_issue(DOMAIN, "router_system_error_rt_1") is None
 
 
+async def test_coordinator_clears_router_issue_on_unload(
+    hass: HomeAssistant,
+) -> None:
+    """``async_clear_router_issue`` removes a still-open issue on unload."""
+    comm = _make_comm(hass)
+    comm.router = MagicMock(uid="rt_1", sys_ok=False)
+    coord = HbtnCoordinator(hass, MagicMock(), comm)
+    registry = ir.async_get(hass)
+
+    await coord._async_update_data()
+    assert registry.async_get_issue(DOMAIN, "router_system_error_rt_1") is not None
+
+    coord.async_clear_router_issue()
+    assert registry.async_get_issue(DOMAIN, "router_system_error_rt_1") is None
+
+
 async def test_coordinator_timeout_raises_update_failed(
     hass: HomeAssistant,
 ) -> None:
