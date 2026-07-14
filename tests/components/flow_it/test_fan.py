@@ -19,6 +19,8 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+ENTITY_ID = "fan.00_11_22_33_44_55"
+
 
 @pytest.mark.parametrize(
     ("service", "speed"),
@@ -38,7 +40,7 @@ async def test_fan_turn_on_off(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "fan.00_11_22_33_44_55"
+    entity_id = ENTITY_ID
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON
@@ -61,7 +63,7 @@ async def test_fan_set_percentage(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "fan.00_11_22_33_44_55"
+    entity_id = ENTITY_ID
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -81,7 +83,7 @@ async def test_fan_set_percentage_zero(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "fan.00_11_22_33_44_55"
+    entity_id = ENTITY_ID
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -101,7 +103,7 @@ async def test_fan_set_preset_mode(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = "fan.00_11_22_33_44_55"
+    entity_id = ENTITY_ID
 
     await hass.services.async_call(
         FAN_DOMAIN,
