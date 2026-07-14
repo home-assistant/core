@@ -892,6 +892,13 @@ class NetatmoRoomSensor(NetatmoRoomEntity, SensorEntity):
     @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
+        if not self.device.reachable:
+            if self.available:
+                self._attr_available = False
+            self.async_write_ha_state()
+            return
+
+        self._attr_available = True
         self._attr_native_value = getattr(self.device, self.entity_description.key)
 
         self.async_write_ha_state()
