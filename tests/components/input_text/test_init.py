@@ -297,7 +297,7 @@ async def test_reload(
         autospec=True,
         return_value={
             DOMAIN: {
-                "test_2": {"initial": "test reloaded", ATTR_MIN: 12},
+                "test_2": {"initial": "test reloaded", ATTR_MIN: 6},
                 "test_3": {"initial": "test 3", ATTR_MAX: 21},
             }
         },
@@ -326,7 +326,7 @@ async def test_reload(
     assert state_1 is None
     assert state_2 is not None
     assert state_3 is not None
-    assert state_2.attributes[ATTR_MIN] == 12
+    assert state_2.attributes[ATTR_MIN] == 6
     assert state_3.attributes[ATTR_MAX] == 21
 
 

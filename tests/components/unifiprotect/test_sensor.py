@@ -15,6 +15,7 @@ from uiprotect.data import (
     Sensor,
 )
 from uiprotect.data.nvr import EventMetadata
+from uiprotect.data.public_devices import SensorFeatureCapability
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
@@ -92,6 +93,36 @@ async def test_sensor_sensor_remove(
     assert_entity_counts(hass, Platform.SENSOR, 12, 9)
     await adopt_devices(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+
+
+async def test_sensor_sense_capability_creation_filter(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A capability map limits sensor entity creation to the advertised capabilities."""
+    setup_public_sensor(
+        ufp,
+        capabilities={SensorFeatureCapability.OPEN, SensorFeatureCapability.TAMPER},
+    )
+    await init_entry(hass, ufp, [sensor_all])
+
+    for key, created in (
+        ("battery_level", True),
+        ("door_last_trip_time", True),
+        ("tampering_last_trip_time", True),
+        ("temperature_level", False),
+        ("humidity_level", False),
+        ("light_level", False),
+        ("alarm_sound", False),
+        ("motion_last_trip_time", False),
+    ):
+        description = next(d for d in SENSE_SENSORS if d.key == key)
+        _, entity_id = await ids_from_device_description(
+            hass, Platform.SENSOR, sensor_all, description
+        )
+        assert (entity_registry.async_get(entity_id) is not None) is created, key
 
 
 async def test_sensor_setup_sensor(
@@ -661,22 +692,32 @@ async def test_sensor_precision(
     assert hass.states.get(entity_id).state == "17.49"
 
 
-async def test_aiport_no_camera_sensor_entities(
+async def test_aiport_no_sensor_entities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     aiport: AiPort,
 ) -> None:
-    """Test that AI Port devices do not create camera-specific sensor entities."""
+    """AI Port devices create no entities (support dropped)."""
     await init_entry(hass, ufp, [aiport])
 
-    # AI Port should only create base device sensors, not camera-specific sensors
-    # The exact count may vary, but camera motion/detection sensors should not exist
-    entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
+    assert not [e for e in entities if e.unique_id.startswith(f"{aiport.mac}_")]
 
-    # Check no camera-specific sensors like motion detection exist
-    for entity in entities:
-        if entity.domain == Platform.SENSOR:
-            # Camera-specific sensors should not exist for AI Port
-            assert "detected_object" not in entity.unique_id
-            assert "last_motion" not in entity.unique_id
+
+async def test_aiport_no_sensor_entities_on_runtime_adopt(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+    aiport: AiPort,
+) -> None:
+    """An AI Port adopted while running still creates no entities."""
+    await init_entry(hass, ufp, [sensor_all])
+
+    aiport._api = ufp.api
+    aiport.feature_flags = Mock(is_ptz=False)
+    await adopt_devices(hass, ufp, [aiport])
+
+    entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
+    assert not [e for e in entities if e.unique_id.startswith(f"{aiport.mac}_")]

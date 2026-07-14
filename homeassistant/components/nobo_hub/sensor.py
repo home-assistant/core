@@ -28,15 +28,26 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up any temperature sensors connected to the Nobø Ecohub."""
-
-    # Setup connection with hub
     hub = config_entry.runtime_data
 
-    async_add_entities(
-        NoboTemperatureSensor(component["serial"], hub)
-        for component in hub.components.values()
-        if component[ATTR_MODEL].has_temp_sensor
-    )
+    known_components: set[str] = set()
+
+    @callback
+    def _add_sensors(_hub: nobo) -> None:
+        """Add temperature sensors for components added to the hub."""
+        new_components = [
+            serial
+            for serial, component in hub.components.items()
+            if component[ATTR_MODEL].has_temp_sensor and serial not in known_components
+        ]
+        known_components.update(new_components)
+        async_add_entities(
+            NoboTemperatureSensor(serial, hub) for serial in new_components
+        )
+
+    _add_sensors(hub)
+    hub.register_callback(_add_sensors)
+    config_entry.async_on_unload(lambda: hub.deregister_callback(_add_sensors))
 
 
 class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
@@ -69,14 +80,17 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
         )
         self._read_state()
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Available when the hub is connected and the component still exists."""
+        return super().available and self._id in self._nobo.components
+
     @callback
     @override
     def _read_state(self) -> None:
-        """Copy the current hub state onto the entity attributes."""
-        if self._id not in self._nobo.components:
-            # Component removed via the Nobø app; mark unavailable.
-            self._attr_available = False
+        """Read the current state from the hub. This is a local call."""
+        if not self.available:
             return
-        self._attr_available = True
         value = self._nobo.get_current_component_temperature(self._id)
         self._attr_native_value = None if value is None else float(value)
