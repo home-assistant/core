@@ -10,7 +10,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_OPERATION_MODE,
+    ATTR_TARGET_TEMP_STEP,
     STATE_ECO,
     STATE_PERFORMANCE,
 )
@@ -327,6 +330,23 @@ async def test_hitachi_turn_off_uses_stop(
 
 
 # --- DHWP V1 (io:AtlanticDomesticHotWaterProductionIOComponent) ---
+async def test_atlantic_io_temperature_range(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the setpoint falls back to 50-62 °C with a 4 °C step.
+
+    The fixture has no manual-mode min/max states, so min/max use the defaults.
+    """
+    await setup_overkiz_integration(fixture=DHW_ATLANTIC_IO.fixture)
+
+    state = hass.states.get(DHW_ATLANTIC_IO.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_MIN_TEMP] == 50.0
+    assert state.attributes[ATTR_MAX_TEMP] == 62.0
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == 4.0
+
+
 @pytest.mark.parametrize(
     ("operation_mode", "expected_param"),
     [
