@@ -382,6 +382,38 @@ async def test_disconnected_hub_does_not_remove_devices(
     assert device_identifiers(device_registry, entry_id) == before
 
 
+@pytest.mark.parametrize(
+    "platforms",
+    [[Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]],
+    indirect=True,
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_disconnect_does_not_readd_entities_on_reconnect(
+    hass: HomeAssistant,
+    mock_nobo_hub: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A stale empty topology while disconnected must not forget known ids.
+
+    Otherwise the reconcile would clear the known-id sets and re-add every
+    entity on reconnect, colliding with the still-registered unique ids.
+    """
+    saved_zones = dict(mock_nobo_hub.zones)
+    saved_components = dict(mock_nobo_hub.components)
+
+    mock_nobo_hub.connected = False
+    mock_nobo_hub.zones.clear()
+    mock_nobo_hub.components.clear()
+    await fire_hub_update(hass, mock_nobo_hub)
+
+    mock_nobo_hub.connected = True
+    mock_nobo_hub.zones.update(saved_zones)
+    mock_nobo_hub.components.update(saved_components)
+    await fire_hub_update(hass, mock_nobo_hub)
+
+    assert "already exists" not in caplog.text
+
+
 @pytest.mark.usefixtures("mock_nobo_class")
 async def test_stale_device_pruned_at_setup(
     hass: HomeAssistant,
