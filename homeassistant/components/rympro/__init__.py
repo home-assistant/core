@@ -2,7 +2,7 @@
 
 import logging
 
-from pyrympro import CannotConnectError, RymPro, UnauthorizedError
+from pyrympro import CannotConnectError, OperationError, RymPro, UnauthorizedError
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -22,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RymProConfigEntry) -> bo
     rympro.set_token(data[CONF_TOKEN])
     try:
         await rympro.account_info()
-    except CannotConnectError as error:
+    except (CannotConnectError, OperationError) as error:
         raise ConfigEntryNotReady from error
     except UnauthorizedError:
         try:
