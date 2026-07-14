@@ -76,6 +76,12 @@ class PowerwallLookupError(Exception):
     """
 
 
+_PENDING_STATES = (
+    AuthorizedClientState.PENDING,
+    AuthorizedClientState.PENDING_VERIFICATION,
+)
+
+
 def _is_gateway_unreachable(err: TeslaFleetError | ClientResponseError) -> bool:
     """Return whether err is a 502 Bad Gateway from an energy gateway command.
 
@@ -271,7 +277,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
         try:
             self._discovered_host = await self._energy_site.find_gateway_address() or ""
-        except TeslaFleetError as err:
+        except (ClientResponseError, TeslaFleetError) as err:
             LOGGER.debug("Gateway address discovery failed: %s", err)
             self._discovered_host = ""
 
@@ -296,7 +302,13 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             # without re-registering it (re-adding would reset a pending key).
             if client.state == AuthorizedClientState.VERIFIED:
                 return await self.async_step_credentials()
-            return await self.async_step_pair()
+            if client.state in _PENDING_STATES:
+                return await self.async_step_pair()
+            # The typed accessor preserves an unrecognized state verbatim. Such
+            # a read is not usable, so treat it as a lookup failure rather than
+            # resuming pairing on a state we cannot reason about.
+            LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
+            return self.async_abort(reason="cannot_connect")
 
         try:
             # Not revoked on removal by design; see the class docstring.
@@ -351,9 +363,15 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             return await self.async_step_credentials()
         if client.state == AuthorizedClientState.PENDING:
             return self.async_show_form(step_id="pair", errors={"base": "key_pending"})
-        return self.async_show_form(
-            step_id="pair", errors={"base": "key_pending_verification"}
-        )
+        if client.state == AuthorizedClientState.PENDING_VERIFICATION:
+            return self.async_show_form(
+                step_id="pair", errors={"base": "key_pending_verification"}
+            )
+        # Only an explicit PENDING_VERIFICATION may claim the approval is still
+        # being verified; an unrecognized state is a failed read, and reporting
+        # it as pending would trap the user in the form retrying forever.
+        LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
+        return self.async_show_form(step_id="pair", errors={"base": "cannot_connect"})
 
     async def _find_authorized_client(self) -> AuthorizedClient | None:
         """Return our RSA key's authorized-client entry on the gateway, or None.

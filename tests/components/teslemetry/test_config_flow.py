@@ -963,6 +963,99 @@ async def test_energy_subentry_pair_submit_still_pending(
     add_client.assert_not_awaited()
 
 
+_UNKNOWN_CLIENT_STATES = [
+    pytest.param(None, id="none"),
+    pytest.param(99, id="unknown_int"),
+    pytest.param("bogus", id="unknown_str"),
+]
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+@pytest.mark.parametrize("state", _UNKNOWN_CLIENT_STATES)
+async def test_energy_subentry_unknown_state_aborts_as_lookup_failure(
+    hass: HomeAssistant,
+    state: object,
+) -> None:
+    """An unrecognized client state aborts rather than resuming pairing.
+
+    The typed accessor preserves a missing or unrecognized state verbatim, so a
+    key in such a state cannot be reasoned about; resuming approval on it would
+    leave the user working an unusable read.
+    """
+    entry = await setup_platform(hass)
+    subentry_id = _energy_subentry_id(entry)
+
+    unknown = AuthorizedClients(
+        clients=[
+            AuthorizedClient(public_key=_TEST_PUBLIC_KEY_B64, state=state, raw={})
+        ],
+        raw=None,
+    )
+    add_client = AsyncMock(return_value={})
+    with (
+        patch.object(
+            TeslemetryEnergySite,
+            "find_authorized_clients",
+            AsyncMock(return_value=unknown),
+        ),
+        patch.object(TeslemetryEnergySite, "add_authorized_client", add_client),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    add_client.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+@pytest.mark.parametrize("state", _UNKNOWN_CLIENT_STATES)
+async def test_energy_subentry_pair_submit_unknown_state(
+    hass: HomeAssistant,
+    state: object,
+) -> None:
+    """An unrecognized state on submit reports a lookup failure, not pending verification.
+
+    Reporting it as pending verification would tell the user to keep waiting for
+    an approval that no longer has a readable state.
+    """
+    entry = await setup_platform(hass)
+    subentry_id = _energy_subentry_id(entry)
+
+    pending = AuthorizedClients(
+        clients=[
+            AuthorizedClient(
+                public_key=_TEST_PUBLIC_KEY_B64,
+                state=AuthorizedClientState.PENDING,
+                raw={},
+            )
+        ],
+        raw=None,
+    )
+    unknown = AuthorizedClients(
+        clients=[
+            AuthorizedClient(public_key=_TEST_PUBLIC_KEY_B64, state=state, raw={})
+        ],
+        raw=None,
+    )
+
+    with patch.object(
+        TeslemetryEnergySite,
+        "find_authorized_clients",
+        AsyncMock(side_effect=[pending, unknown]),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "pair"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 @pytest.mark.usefixtures("mock_rsa_key")
 async def test_energy_subentry_pair_submit_verified_advances_to_credentials(
     hass: HomeAssistant,
