@@ -28,11 +28,6 @@ POWERWALL_KEY_FILE = "tesla_powerwall.key"
 # hass.data key caching the RSA private key PEM shared across energy sites.
 RSA_PARENT_KEY = f"{DOMAIN}_rsa_parent"
 
-# Number of list_authorized_clients() polls, and the delay between them, while
-# waiting for the user to approve the pending key on the Powerwall.
-KEY_PAIRING_POLL_ATTEMPTS = 10
-KEY_PAIRING_POLL_INTERVAL = 2
-
 ENERGY_HISTORY_FIELDS = [
     "solar_energy_exported",
     "generator_energy_exported",
