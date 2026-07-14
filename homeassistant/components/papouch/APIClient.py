@@ -1,6 +1,8 @@
 import logging
 
 import aiohttp
+import defusedxml.ElementTree as ET
+from .const import ENCODING
 
 INFO_URL = "is.xml"
 DATA_URL = "fresh.xml"
@@ -35,15 +37,18 @@ class PapouchApiClient:
         """Fetching settings about a device."""
         return await self._fetch(SETTINGS_URL)
 
-    async def send_command(
-        self, cmd_type: str, output_id: str, time: int | None = None
-    ) -> None:
+    async def send_command(self, cmd_type: str, output_id: str) -> None:
         """Send a GET command to the Quido device."""
         params = {"type": cmd_type, "id": output_id}
-        if time:
-            params["time"] = time
 
         async with self.session.get(self.base_url + SET_URL, params=params) as response:
             if response.status != 200:
                 _LOGGER.error("Failed to send command to Quido: %s", response.status)
-        # TODO: maybe Quido will send message that status will be 0
+
+            raw_xml = await response.text(encoding=ENCODING)
+            root = ET.fromstring(raw_xml)
+
+            status = root.attrib.get("status")
+            if status == "error":
+                _LOGGER.error("Quido returned an error: %s", raw_xml)
+                return

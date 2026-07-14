@@ -12,12 +12,13 @@ from homeassistant.helpers.typing import ConfigType
 
 from .APIClient import PapouchApiClient
 from .coordinator import PapouchDataUpdateCoordinator
+from .devices import PapouchDevice, Quido
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "papouch"
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 type PapouchConfigEntry = ConfigEntry[PapouchApiClient]
 
@@ -31,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
     session = async_get_clientsession(hass)
     api_client = PapouchApiClient(entry.data["ip_address"], session)
 
-    coordinator = PapouchDataUpdateCoordinator(hass, api_client, entry)
+    coordinator = PapouchDataUpdateCoordinator(hass, api_client, entry, Quido)
 
     await coordinator.async_config_entry_first_refresh()
 
