@@ -1,6 +1,6 @@
 """Data update coordinator for caldav."""
 
-from datetime import date, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 import logging
 import re
 from typing import TYPE_CHECKING, Any, override
@@ -25,6 +25,13 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 OFFSET = "!!"
 
 
+def _get_vevent(event: caldav.CalendarObjectResource) -> icalendar.cal.Component | None:
+    """Return the VEVENT component of a caldav object, or None if it has none."""
+    if (instance := event.icalendar_instance) is None:
+        return None
+    return next(iter(instance.walk("VEVENT")), None)
+
+
 def _as_list(value: Any) -> list[Any]:
     """Wrap a single icalendar property value in a list, or return it as-is."""
     if value is None:
@@ -32,9 +39,37 @@ def _as_list(value: Any) -> list[Any]:
     return value if isinstance(value, list) else [value]
 
 
-def _get_vevent(event: caldav.CalendarObjectResource) -> icalendar.cal.Component | None:
-    """Return the VEVENT component of a caldav object, or None if it has none."""
-    return next(iter(event.icalendar_instance.walk("VEVENT")), None)
+def _as_datetime(value: Any) -> datetime | None:
+    """Return a date or datetime as a datetime, with dates at midnight."""
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, date):
+        return datetime.combine(value, time.min)
+    return None
+
+
+def _build_rrule(
+    recur: icalendar.prop.vRecur, dtstart: date | datetime
+) -> dateutil_rrule.rrule:
+    """Build a dateutil rrule from an icalendar RRULE/EXRULE value."""
+    if (
+        (until := recur.get("UNTIL"))
+        and isinstance(dtstart, datetime)
+        and dtstart.tzinfo is not None
+        and isinstance(until[0], datetime)
+        and until[0].tzinfo is None
+    ):
+        # dateutil requires UNTIL in UTC when DTSTART is timezone-aware. A naive
+        # UNTIL is interpreted in DTSTART's timezone (as vobject did), not UTC.
+        recur = icalendar.prop.vRecur(
+            {
+                **recur,
+                "UNTIL": [until[0].replace(tzinfo=dtstart.tzinfo).astimezone(UTC)],
+            }
+        )
+    rule = dateutil_rrule.rrulestr(recur.to_ical().decode(), dtstart=dtstart)
+    assert isinstance(rule, dateutil_rrule.rrule)
+    return rule
 
 
 def _rruleset(vevent: icalendar.cal.Component) -> dateutil_rrule.rruleset | None:
@@ -44,25 +79,17 @@ def _rruleset(vevent: icalendar.cal.Component) -> dateutil_rrule.rruleset | None
     dtstart = vevent["DTSTART"].dt
     ruleset = dateutil_rrule.rruleset()
     for rrule in _as_list(vevent.get("RRULE")):
-        rule_str = rrule.to_ical().decode()
-        if isinstance(dtstart, datetime) and dtstart.tzinfo is not None:
-            # dateutil requires UNTIL in UTC when DTSTART is timezone-aware; some
-            # servers send a naive UNTIL, which vobject tolerated.
-            rule_str = ";".join(
-                f"{part}Z"
-                if part.upper().startswith("UNTIL=") and not part.endswith("Z")
-                else part
-                for part in rule_str.split(";")
-            )
-        rule = dateutil_rrule.rrulestr(rule_str, dtstart=dtstart)
-        assert isinstance(rule, dateutil_rrule.rrule)
-        ruleset.rrule(rule)
+        ruleset.rrule(_build_rrule(rrule, dtstart))
     for rdate in _as_list(vevent.get("RDATE")):
         for value in _as_list(rdate.dts):
-            ruleset.rdate(value.dt)
+            if (occurrence := _as_datetime(value.dt)) is not None:
+                ruleset.rdate(occurrence)
+    for exrule in _as_list(vevent.get("EXRULE")):
+        ruleset.exrule(_build_rrule(exrule, dtstart))
     for exdate in _as_list(vevent.get("EXDATE")):
         for value in _as_list(exdate.dts):
-            ruleset.exdate(value.dt)
+            if (occurrence := _as_datetime(value.dt)) is not None:
+                ruleset.exdate(occurrence)
     return ruleset
 
 

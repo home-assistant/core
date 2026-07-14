@@ -8,6 +8,7 @@ from typing import Any, cast, override
 
 import caldav
 from caldav.lib.error import DAVError, NotFoundError
+import icalendar
 import requests
 
 from homeassistant.components.todo import (
@@ -60,19 +61,18 @@ async def async_setup_entry(
     )
 
 
-def _get_todo_items(calendar: caldav.Calendar) -> list[TodoItem]:
-    """Fetch and parse todo items."""
-    results = calendar.search(todo=True, include_completed=True)
-    return [
-        todo_item
-        for resource in results
-        if (todo_item := _todo_item(resource)) is not None
-    ]
+def _get_vtodo(
+    resource: caldav.CalendarObjectResource,
+) -> icalendar.cal.Component | None:
+    """Return the VTODO component of a caldav object, or None if it has none."""
+    if (instance := resource.icalendar_instance) is None:
+        return None
+    return next(iter(instance.walk("VTODO")), None)
 
 
 def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
     """Convert a caldav Todo into a TodoItem."""
-    vtodo = next(iter(resource.icalendar_instance.walk("VTODO")), None)
+    vtodo = _get_vtodo(resource)
     if (
         vtodo is None
         or (uid := get_attr_value(vtodo, "uid")) is None
@@ -94,6 +94,16 @@ def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
         due=due,
         description=get_attr_value(vtodo, "description"),
     )
+
+
+def _get_todo_items(calendar: caldav.Calendar) -> list[TodoItem]:
+    """Fetch and parse todo items."""
+    results = calendar.search(todo=True, include_completed=True)
+    return [
+        todo_item
+        for resource in results
+        if (todo_item := _todo_item(resource)) is not None
+    ]
 
 
 class WebDavTodoListEntity(TodoListEntity):

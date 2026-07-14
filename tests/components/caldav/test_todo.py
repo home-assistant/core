@@ -171,6 +171,12 @@ def compact_ics(ics: str) -> list[str]:
     ]
 
 
+def test_todo_item_without_data() -> None:
+    """Test a to-do resource with no data is skipped rather than raising."""
+    resource = Todo(client=None, url="0.ics", data=None, parent=None, id="0")
+    assert caldav_todo._todo_item(resource) is None
+
+
 @pytest.mark.parametrize(
     ("todos", "expected_state"),
     [
