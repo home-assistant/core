@@ -240,13 +240,7 @@ async def test_device_listener_pushes_state(
     mock_gaposa: MagicMock,
     mock_motors: list[MagicMock],
 ) -> None:
-    """The listener registered on each device pushes fresh state without a full poll.
-
-    pygaposa fires the callback registered via ``device.addListener``
-    after post-command polls. Grab that callback off the mock, mutate
-    a motor's state, and confirm the entity reflects it once the
-    listener fires.
-    """
+    """A device listener firing publishes fresh motor state without a full coordinator poll."""
     device = mock_gaposa.clients[0][0].devices[0]
     assert device.addListener.called
     listener = device.addListener.call_args[0][0]

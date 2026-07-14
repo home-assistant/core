@@ -131,15 +131,17 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator[dict[str, Motor]]):
         return data
 
     def _on_device_polled(self) -> None:
-        """Called by pygaposa after each internal poll of a device document.
+        """Called by pygaposa's command-driven poll of a device document.
 
-        This fires during pygaposa's rapid post-command polling (every ~2 s)
-        and pushes the latest motor state to all coordinator subscribers
-        without waiting for the next scheduled coordinator refresh.
+        Fires during the rapid post-command polling triggered by
+        motor.up/down/stop (every ~2 s for ~20 s) and pushes the
+        latest motor state to all coordinator subscribers without
+        waiting for the next scheduled coordinator refresh.
 
-        Suppressed while a scheduled update is in progress — pygaposa fires
-        this callback per device inside update(), and we'd otherwise publish
-        one intermediate flatten per device before returning the final data.
+        Scheduled updates don't fire this — pygaposa's Gaposa.update()
+        defaults notifyListeners=False — but the _updating gate is
+        kept as a safety net in case a command-driven poll fires
+        while a scheduled refresh is also in flight.
         """
         if self._updating:
             return

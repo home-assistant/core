@@ -195,8 +195,11 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         if self._cancel_motion_refresh is not None:
             self._cancel_motion_refresh()
             self._cancel_motion_refresh = None
-        await self.coordinator.async_request_refresh()
         self.async_write_ha_state()
+        # No account-wide async_request_refresh here — pygaposa's
+        # own command-driven poll fires the device listener and
+        # publishes the observed STOP state; scheduling a MOTION_DELAY
+        # refresh is a belt-and-braces fallback.
         self._schedule_refresh_after_motion()
 
     @callback

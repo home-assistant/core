@@ -8,9 +8,6 @@ DEFAULT_GATEWAY_NAME = "Gaposa Gateway"
 STATE_UP = "UP"
 STATE_DOWN = "DOWN"
 
-# Command strings recorded on a cover entity to remember what the
-# last user-initiated action was. They are compared in is_opening /
-# is_closing to decide whether the cover should report as moving.
 COMMAND_UP = "UP"
 COMMAND_DOWN = "DOWN"
 COMMAND_STOP = "STOP"
