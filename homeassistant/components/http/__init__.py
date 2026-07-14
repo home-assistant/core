@@ -202,27 +202,24 @@ async def _async_fallback_config(
         await store.async_abort_trial()
         return store.stable
 
-    if not hass.config.recovery_mode:
-        # Fail setup so recovery mode can take over with a reachable
-        # configuration. An unusable SSL configuration already carries a
-        # descriptive HomeAssistantError.
+    if (
+        # In normal mode, fail setup so recovery mode can take over with a
+        # reachable configuration.
+        not hass.config.recovery_mode
+        # The chain is exhausted; nothing left to fall back to.
+        or conf is _DEFAULT_CONFIG
+        # With peer certificate verification configured, connections must
+        # never be accepted without a verified client certificate; there is
+        # no acceptable fallback config.
+        or CONF_SSL_PEER_CERTIFICATE in conf
+    ):
+        # An unusable SSL configuration already carries a descriptive
+        # HomeAssistantError.
         if isinstance(err, HomeAssistantError):
             raise err
         raise HomeAssistantError(
             f"Failed to create HTTP server at port {conf[CONF_SERVER_PORT]}: {err}"
         ) from err
-
-    if conf is _DEFAULT_CONFIG:
-        # The chain is exhausted; nothing left to fall back to.
-        raise HomeAssistantError(
-            f"Failed to create HTTP server at port {conf[CONF_SERVER_PORT]}: {err}"
-        ) from err
-
-    if CONF_SSL_PEER_CERTIFICATE in conf:
-        # With peer certificate verification configured, connections must
-        # never be accepted without a verified client certificate; there is
-        # no acceptable fallback config.
-        raise err
 
     # The config cannot be applied in recovery mode; fall back to the
     # default config so the recovery UI stays reachable.
