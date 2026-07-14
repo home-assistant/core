@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pygaposa import Motor
+from pygaposa import Client, Device, Gaposa, Motor
+from pygaposa.client import User
 import pytest
 
 from homeassistant.components.gaposa.const import DOMAIN
@@ -37,17 +38,15 @@ def _make_mock_motor(motor_id: str, name: str, state: str = "UP") -> MagicMock:
 
 def _make_mock_device(serial: str, motors: list[MagicMock]) -> MagicMock:
     """Return a MagicMock shaped like a pygaposa Device."""
-    device = MagicMock()
+    device = MagicMock(spec=Device)
     device.serial = serial
     device.motors = motors
-    device.addListener = MagicMock()
-    device.removeListener = MagicMock()
     return device
 
 
 def _make_mock_client(devices: list[MagicMock], client_id: str) -> MagicMock:
     """Return a MagicMock shaped like a pygaposa Client."""
-    client = MagicMock()
+    client = MagicMock(spec=Client)
     client.id = client_id
     client.devices = devices
     return client
@@ -71,9 +70,9 @@ def mock_gaposa(mock_motors: list[MagicMock]) -> Generator[MagicMock]:
     """
     device = _make_mock_device(TEST_DEVICE_SERIAL, mock_motors)
     client = _make_mock_client([device], TEST_CLIENT_ID)
-    user = MagicMock()
+    user = MagicMock(spec=User)
     user.uid = TEST_USER_UID
-    instance = MagicMock()
+    instance = MagicMock(spec=Gaposa)
     instance.login = AsyncMock()
     instance.update = AsyncMock()
     instance.close = AsyncMock()
