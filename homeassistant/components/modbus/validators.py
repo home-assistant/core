@@ -205,6 +205,15 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def number_unsupported_params_validator(config: dict[str, Any]) -> dict[str, Any]:
+    """Reject count/structure keys not supported by number entities."""
+    name = config[CONF_NAME]
+    for key in (CONF_COUNT, CONF_STRUCTURE):
+        if config.get(key) is not None:
+            raise vol.Invalid(f"{name}: `{key}` is not supported for number entities")
+    return config
+
+
 def number_min_max_validator(config: dict[str, Any]) -> dict[str, Any]:
     """Check min/max are consistent and can be encoded for the number entity."""
     name = config[CONF_NAME]

@@ -640,6 +640,32 @@ async def test_no_discovery_info_number(
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
                         CONF_ADDRESS: 51,
+                        CONF_DATA_TYPE: DataType.INT16,
+                        CONF_COUNT: 2,
+                    }
+                ]
+            },
+            id="unsupported_count",
+        ),
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_STRUCTURE: ">i",
+                    }
+                ]
+            },
+            id="unsupported_structure",
+        ),
+        pytest.param(
+            {
+                CONF_NUMBERS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
                         CONF_MIN_VALUE: 100,
                         CONF_MAX_VALUE: 0,
                     }

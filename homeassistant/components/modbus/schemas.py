@@ -168,6 +168,7 @@ from .validators import (
     nan_validator,
     not_zero_value,
     number_min_max_validator,
+    number_unsupported_params_validator,
     register_int_list_validator,
     struct_validator,
 )
@@ -508,6 +509,7 @@ NUMBER_SCHEMA = vol.All(
             ),
         }
     ),
+    number_unsupported_params_validator,
     struct_validator,
     number_min_max_validator,
 )
