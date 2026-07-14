@@ -64,7 +64,7 @@ class LinknLinkEntity(CoordinatorEntity[LinknLinkCoordinator]):
     @override
     def available(self) -> bool:
         """Return whether the entity is available."""
-        if not super().available:
+        if not super().available or not self.coordinator.data.online:
             return False
         if self._subdevice_id is None:
             return self.entity_description.key in self.coordinator.data.values

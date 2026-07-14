@@ -333,7 +333,7 @@ aiolifx-themes==1.0.4
 aiolifx==1.2.2
 
 # homeassistant.components.linknlink
-aiolinknlink==0.1.0
+aiolinknlink==0.1.1
 
 # homeassistant.components.lookin
 aiolookin==1.0.0
