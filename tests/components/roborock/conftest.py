@@ -166,7 +166,6 @@ def create_b01_q7_trait() -> Mock:
     b01_trait.set_water_level = AsyncMock()
     b01_trait.send = AsyncMock()
 
-    # Map traits for Q7
     b01_trait.map = AsyncMock()
     b01_trait.map.refresh = AsyncMock()
     b01_trait.map.map_list = []

@@ -566,7 +566,7 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
                     type(raw_value).__name__,
                 )
                 continue
-            room_names[str(raw_key)] = raw_value
+            room_names[str(int(raw_key))] = raw_value
 
         return room_names
 
@@ -606,7 +606,9 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
             return []
         map_trait = self.coordinator.api.map
         map_name = (
-            f"Map {map_trait.current_map_id}" if map_trait.current_map_id else "Map"
+            f"Map {map_trait.current_map_id}"
+            if map_trait.current_map_id is not None
+            else "Map"
         )
         return [
             Segment(id=room_id, name=name, group=map_name)

@@ -292,8 +292,10 @@ async def test_q7_map_image(
     assert fake_q7_vacuum.b01_q7_properties is not None
     map_content_trait = fake_q7_vacuum.b01_q7_properties.map_content
 
-    # Seed initial image before the first coordinator refresh picks it up
     map_content_trait.image_content = b"\x89PNG-q7"
+    freezer.tick(timedelta(seconds=65))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     # The initial image is served via the proxy
     client = await hass_client()

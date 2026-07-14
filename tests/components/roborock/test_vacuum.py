@@ -810,14 +810,12 @@ async def test_q7_get_maps(
     assert fake_q7_vacuum.b01_q7_properties is not None
     api = fake_q7_vacuum.b01_q7_properties
 
-    # Set up map trait with map list
     api.map.map_list = [
         Q7MapListEntry(id=1, cur=True),
         Q7MapListEntry(id=2, cur=False),
     ]
     api.map.current_map_id = 1
 
-    # Set up map content with room names
     map_data = MapData()
     map_data.additional_parameters = {"room_names": {10: "Living room", 11: "Bedroom"}}
     api.map_content.map_data = map_data
@@ -895,7 +893,6 @@ async def test_q7_get_segments(
     assert fake_q7_vacuum.b01_q7_properties is not None
     api = fake_q7_vacuum.b01_q7_properties
 
-    # Set up map content with room names
     map_data = MapData()
     map_data.additional_parameters = {"room_names": {10: "Living room", 11: "Bedroom"}}
     api.map_content.map_data = map_data
