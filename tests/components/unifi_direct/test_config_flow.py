@@ -105,6 +105,32 @@ async def test_user_flow_success_with_multiple_hosts(
     }
 
 
+async def test_user_flow_success_without_port(
+    hass: HomeAssistant, mock_setup_entry, mock_unifiap
+) -> None:
+    """Test a successful config flow when port is omitted in user input."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOSTS: [
+                {
+                    CONF_HOST: "192.168.1.2",
+                    CONF_USERNAME: "admin",
+                    CONF_PASSWORD: "password",
+                }
+            ]
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "UniFi AP (192.168.1.2)"
+
+
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant, mock_setup_entry, mock_unifiap
 ) -> None:

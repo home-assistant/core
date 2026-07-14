@@ -74,7 +74,7 @@ def validate_connection_data(data: dict[str, Any]) -> None:
                 target=host_config[CONF_HOST],
                 username=host_config[CONF_USERNAME],
                 password=host_config[CONF_PASSWORD],
-                port=host_config[CONF_PORT],
+                port=host_config.get(CONF_PORT, DEFAULT_SSH_PORT),
             )
             ap.get_clients()
         except (UniFiAPConnectionException, UniFiAPDataException) as err:

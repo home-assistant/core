@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DEFAULT_SSH_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class UniFiDirectDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                 target=host_config[CONF_HOST],
                 username=host_config[CONF_USERNAME],
                 password=host_config[CONF_PASSWORD],
-                port=host_config[CONF_PORT],
+                port=host_config.get(CONF_PORT, DEFAULT_SSH_PORT),
             )
             for host_config in self.host_configs
         ]
