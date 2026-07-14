@@ -1,0 +1,356 @@
+{
+  "entity": {
+    "switch": {
+      "live_stream": {
+        "default": "mdi:video-wireless-outline",
+        "state": {
+          "on": "mdi:video-wireless"
+        }
+      },
+      "privacy_mode": {
+        "default": "mdi:eye",
+        "state": {
+          "on": "mdi:eye-off"
+        }
+      },
+      "audio": {
+        "default": "mdi:volume-off",
+        "state": {
+          "on": "mdi:volume-high"
+        }
+      },
+      "camera_light": {
+        "default": "mdi:led-off",
+        "state": {
+          "on": "mdi:led-on"
+        }
+      },
+      "front_light": {
+        "default": "mdi:spotlight-beam"
+      },
+      "wallwasher": {
+        "default": "mdi:wall-sconce-flat"
+      },
+      "notifications": {
+        "default": "mdi:bell-off",
+        "state": {
+          "on": "mdi:bell"
+        }
+      },
+      "motion_detection": {
+        "default": "mdi:motion-sensor"
+      },
+      "record_sound": {
+        "default": "mdi:record-rec"
+      },
+      "auto_follow": {
+        "default": "mdi:target-account"
+      },
+      "intercom": {
+        "default": "mdi:microphone-off",
+        "state": {
+          "on": "mdi:microphone"
+        }
+      },
+      "privacy_sound": {
+        "default": "mdi:volume-off",
+        "state": {
+          "on": "mdi:volume-high"
+        }
+      },
+      "timestamp_overlay": {
+        "default": "mdi:clock-remove-outline",
+        "state": {
+          "on": "mdi:clock-outline"
+        }
+      },
+      "status_led": {
+        "default": "mdi:led-off",
+        "state": {
+          "on": "mdi:led-on"
+        }
+      },
+      "motion_light": {
+        "default": "mdi:motion-sensor"
+      },
+      "ambient_light": {
+        "default": "mdi:lightbulb-auto"
+      },
+      "soft_light_fading": {
+        "default": "mdi:transition"
+      },
+      "intrusion_detection": {
+        "default": "mdi:shield-off-outline",
+        "state": {
+          "on": "mdi:shield-lock"
+        }
+      },
+      "alarm_system_arm": {
+        "default": "mdi:shield-off-outline",
+        "state": {
+          "on": "mdi:shield-lock"
+        }
+      },
+      "notification_type_movement": {
+        "default": "mdi:motion-sensor"
+      },
+      "notification_type_person": {
+        "default": "mdi:account-eye"
+      },
+      "notification_type_audio": {
+        "default": "mdi:volume-high"
+      },
+      "notification_type_trouble": {
+        "default": "mdi:alert-circle"
+      },
+      "notification_type_camera_alarm": {
+        "default": "mdi:alarm-light"
+      },
+      "notification_type_trouble_email": {
+        "default": "mdi:email-alert"
+      },
+      "glass_break_detection": {
+        "default": "mdi:glass-fragile"
+      },
+      "fire_alarm_detection": {
+        "default": "mdi:smoke-detector"
+      },
+      "alarm_mode": {
+        "default": "mdi:alarm-light"
+      },
+      "pre_alarm": {
+        "default": "mdi:led-on"
+      },
+      "image_rotation_180": {
+        "default": "mdi:image-auto-adjust"
+      },
+      "panic_alarm": {
+        "default": "mdi:alarm-light"
+      },
+      "nvr_recording": {
+        "default": "mdi:record-rec"
+      },
+      "external_stream": {
+        "default": "mdi:share-variant-outline"
+      }
+    },
+    "sensor": {
+      "status": {
+        "default": "mdi:camera-off",
+        "state": {
+          "online": "mdi:camera"
+        }
+      },
+      "fcm_push_status": {
+        "default": "mdi:bell-off",
+        "state": {
+          "fcm_push": "mdi:bell-ring",
+          "polling": "mdi:timer-sand",
+          "disabled": "mdi:bell-off"
+        }
+      },
+      "stream_status": {
+        "default": "mdi:video-off",
+        "state": {
+          "streaming": "mdi:video",
+          "streaming_remote": "mdi:video-wireless",
+          "warming_up": "mdi:video-box",
+          "connecting": "mdi:video-box"
+        }
+      },
+      "last_event": {
+        "default": "mdi:motion-sensor"
+      },
+      "events_today": {
+        "default": "mdi:counter"
+      },
+      "wifi_signal": {
+        "default": "mdi:wifi"
+      },
+      "firmware_version": {
+        "default": "mdi:chip"
+      },
+      "ambient_light": {
+        "default": "mdi:brightness-6"
+      },
+      "led_dimmer": {
+        "default": "mdi:brightness-6"
+      },
+      "clock_offset": {
+        "default": "mdi:clock-alert-outline"
+      },
+      "motion_sensitivity": {
+        "default": "mdi:motion-sensor"
+      },
+      "last_event_type": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "movement_events_today": {
+        "default": "mdi:run"
+      },
+      "audio_events_today": {
+        "default": "mdi:volume-vibrate"
+      },
+      "push_status": {
+        "default": "mdi:bell-ring-outline"
+      },
+      "cloud_maintenance": {
+        "default": "mdi:cloud-alert"
+      },
+      "unread_events": {
+        "default": "mdi:email-alert"
+      },
+      "commissioned": {
+        "default": "mdi:check-network"
+      },
+      "schedule_rules": {
+        "default": "mdi:calendar-clock"
+      },
+      "alarm_catalog": {
+        "default": "mdi:alarm-light"
+      },
+      "motion_zones": {
+        "default": "mdi:vector-square"
+      },
+      "tls_cert": {
+        "default": "mdi:certificate"
+      },
+      "network_services": {
+        "default": "mdi:server-network"
+      },
+      "iva_analytics": {
+        "default": "mdi:brain"
+      },
+      "privacy_masks": {
+        "default": "mdi:eye-off"
+      },
+      "ambient_schedule": {
+        "default": "mdi:lightbulb-auto"
+      },
+      "alarm_state": {
+        "default": "mdi:alarm-light-outline"
+      },
+      "nvr_state": {
+        "default": "mdi:record-rec"
+      },
+      "ai_description": {
+        "default": "mdi:image-text"
+      },
+      "onvif_scopes": {
+        "default": "mdi:video-box"
+      },
+      "rcp_version": {
+        "default": "mdi:protocol"
+      },
+      "cloud_feature_flags": {
+        "default": "mdi:flag-checkered"
+      }
+    },
+    "number": {
+      "pan_position": {
+        "default": "mdi:pan-horizontal"
+      },
+      "speaker_level": {
+        "default": "mdi:volume-medium"
+      },
+      "audio_volume": {
+        "default": "mdi:volume-high"
+      },
+      "front_light_intensity": {
+        "default": "mdi:brightness-6"
+      },
+      "lens_elevation": {
+        "default": "mdi:arrow-up-down"
+      },
+      "microphone_level": {
+        "default": "mdi:microphone"
+      },
+      "white_balance": {
+        "default": "mdi:thermometer-lines"
+      },
+      "top_led_brightness": {
+        "default": "mdi:arrow-up-bold"
+      },
+      "bottom_led_brightness": {
+        "default": "mdi:arrow-down-bold"
+      },
+      "motion_light_sensitivity": {
+        "default": "mdi:motion-sensor"
+      },
+      "darkness_threshold": {
+        "default": "mdi:weather-night"
+      },
+      "power_led_brightness": {
+        "default": "mdi:led-on"
+      },
+      "alarm_delay": {
+        "default": "mdi:timer-alert"
+      },
+      "alarm_activation_delay": {
+        "default": "mdi:timer-sand"
+      },
+      "pre_alarm_delay": {
+        "default": "mdi:led-on"
+      },
+      "intrusion_sensitivity": {
+        "default": "mdi:shield-alert"
+      },
+      "intrusion_distance": {
+        "default": "mdi:map-marker-distance"
+      }
+    },
+    "select": {
+      "video_quality": {
+        "default": "mdi:video-high-definition"
+      },
+      "motion_sensitivity": {
+        "default": "mdi:motion-sensor"
+      },
+      "fcm_push_mode": {
+        "default": "mdi:cellphone-arrow-down"
+      },
+      "stream_mode": {
+        "default": "mdi:home-network"
+      },
+      "detection_mode": {
+        "default": "mdi:shield-home-outline"
+      },
+      "pan_preset": {
+        "default": "mdi:pan-horizontal"
+      }
+    },
+    "binary_sensor": {
+      "motion": {
+        "default": "mdi:motion-sensor"
+      },
+      "audio_alarm_binary": {
+        "default": "mdi:volume-high"
+      },
+      "person_detected": {
+        "default": "mdi:account-alert"
+      }
+    },
+    "button": {
+      "refresh_snapshot": {
+        "default": "mdi:camera-refresh"
+      },
+      "soft_reset": {
+        "default": "mdi:restart"
+      },
+      "hard_reset": {
+        "default": "mdi:restart-alert"
+      }
+    },
+    "light": {
+      "top_led_light": {
+        "default": "mdi:arrow-up-bold-circle"
+      },
+      "bottom_led_light": {
+        "default": "mdi:arrow-down-bold-circle"
+      },
+      "front_light_entity": {
+        "default": "mdi:spotlight-beam"
+      }
+    }
+  }
+}

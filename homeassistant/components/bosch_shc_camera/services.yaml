@@ -1,0 +1,493 @@
+trigger_snapshot:
+  name: Trigger Snapshot Refresh
+  description: >
+    Force an immediate snapshot refresh. Without arguments, refreshes all Bosch
+    Smart Home cameras; pass a camera entity to refresh only that one. Useful to
+    get an up-to-date image on demand without waiting for the next scheduled poll
+    interval.
+  fields:
+    entity_id:
+      name: Camera
+      description: >
+        Optional. Limit the refresh to a single camera entity. Omit to refresh
+        all cameras. The Lovelace card passes its own camera so a dashboard with
+        many cameras does not refresh every camera on every tile's tick.
+      required: false
+      example: camera.bosch_terrasse
+      selector:
+        entity:
+          integration: bosch_shc_camera
+          domain: camera
+
+open_live_connection:
+  name: Open Live Stream Connection
+  description: >
+    Try to establish a live proxy stream connection for a specific Bosch camera.
+    Cycles through all known ConnectionType enum values until one succeeds.
+    On success, the camera entity's stream_source attribute is populated with the
+    RTSP URL and HA's stream component can render a live video feed.
+    On failure, check the HA log for mitmproxy capture instructions to find
+    the correct ConnectionType enum value.
+  fields:
+    camera_id:
+      name: Camera ID
+      description: >
+        The cloud ID of the camera.
+        Find it in the camera entity's extra_state_attributes.
+        Example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      required: true
+      example: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+      selector:
+        text:
+
+create_rule:
+  name: Create Schedule Rule
+  description: >
+    Create a cloud-side schedule rule for a camera (notification/privacy schedule).
+  fields:
+    camera_id:
+      name: Camera ID
+      required: true
+      selector:
+        text:
+    name:
+      name: Rule Name
+      required: false
+      default: "HA Rule"
+      selector:
+        text:
+    start_time:
+      name: Start Time
+      description: "HH:MM:SS format"
+      required: false
+      default: "00:00:00"
+      selector:
+        text:
+    end_time:
+      name: End Time
+      description: "HH:MM:SS format"
+      required: false
+      default: "23:59:00"
+      selector:
+        text:
+    weekdays:
+      name: Weekdays
+      description: "List of weekday numbers (0=Sunday, 6=Saturday)"
+      required: false
+      default: [0, 1, 2, 3, 4, 5, 6]
+      selector:
+        object:
+    is_active:
+      name: Active
+      required: false
+      default: true
+      selector:
+        boolean:
+
+delete_rule:
+  name: Delete Schedule Rule
+  description: >
+    Delete a cloud-side schedule rule by ID.
+  fields:
+    camera_id:
+      name: Camera ID
+      required: true
+      selector:
+        text:
+    rule_id:
+      name: Rule ID
+      description: "The UUID of the rule to delete (see rules sensor attributes)"
+      required: true
+      selector:
+        text:
+
+update_rule:
+  name: Update Schedule Rule
+  description: >
+    Update an existing cloud-side schedule rule (change name, times, weekdays,
+    or activate/deactivate). Only provide the fields you want to change.
+  fields:
+    camera_id:
+      name: Camera ID
+      required: true
+      selector:
+        text:
+    rule_id:
+      name: Rule ID
+      description: "The UUID of the rule to update (see rules sensor attributes)"
+      required: true
+      selector:
+        text:
+    name:
+      name: Rule Name
+      required: false
+      selector:
+        text:
+    start_time:
+      name: Start Time
+      description: "HH:MM:SS format"
+      required: false
+      selector:
+        text:
+    end_time:
+      name: End Time
+      description: "HH:MM:SS format"
+      required: false
+      selector:
+        text:
+    weekdays:
+      name: Weekdays
+      description: "List of weekday numbers (0=Sunday, 6=Saturday)"
+      required: false
+      selector:
+        object:
+    is_active:
+      name: Active
+      required: false
+      selector:
+        boolean:
+
+set_motion_zones:
+  name: Set Motion Detection Zones
+  description: >
+    Set motion detection zones for a camera. Each zone is a rectangle defined by
+    normalized coordinates (0.0–1.0): x, y (top-left corner), w (width), h (height).
+    Send an empty list to clear all zones.
+    NOTE: Motion settings may revert due to firmware IVA enforcement on Gen1 cameras.
+  fields:
+    camera_id:
+      name: Camera ID
+      required: true
+      selector:
+        text:
+    zones:
+      name: Zones
+      description: >
+        List of zone objects, each with x, y, w, h (all 0.0–1.0).
+        Example: [{"x": 0.0, "y": 0.0, "w": 0.5, "h": 1.0}]
+      required: true
+      selector:
+        object:
+
+get_motion_zones:
+  name: Get Motion Detection Zones
+  description: >
+    Read current motion detection zones from the Bosch cloud API.
+    Results are shown as a persistent notification.
+  fields:
+    camera_id:
+      name: Camera ID
+      required: true
+      selector:
+        text:
+
+share_camera:
+  name: Share Camera with Friend
+  description: >
+    Share one or more cameras with a friend for a specified number of days.
+    The friend must have been invited first (use invite_friend).
+  fields:
+    friend_id:
+      name: Friend ID
+      description: "The UUID of the friend (from list_friends)"
+      required: true
+      selector:
+        text:
+    camera_ids:
+      name: Camera IDs
+      description: "List of camera UUIDs to share, or a single UUID string"
+      required: true
+      selector:
+        object:
+    days:
+      name: Duration (Days)
+      description: "Number of days the share is valid (default: 30)"
+      required: false
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 365
+          mode: box
+
+delete_motion_zone:
+  name: Delete Single Motion Zone
+  description: >
+    Delete a single motion detection zone by index (0-based).
+    Fetches current zones, removes the one at the given index, and re-POSTs.
+  fields:
+    camera_id:
+      name: Camera ID
+      required: true
+      selector:
+        text:
+    zone_index:
+      name: Zone Index
+      description: "0-based index of the zone to delete"
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: box
+
+get_lighting_schedule:
+  name: Get Lighting Schedule
+  description: >
+    Read the full lighting schedule configuration (on/off times, motion trigger,
+    darkness threshold). Results shown as persistent notification. Outdoor cameras only.
+  fields:
+    camera_id:
+      name: Camera ID
+      required: true
+      selector:
+        text:
+
+set_lighting_schedule:
+  name: Set Lighting Schedule
+  description: >
+    Set the LED lighting schedule (on/off time, motion trigger, darkness threshold)
+    for a camera with LED light. Outdoor cameras only. Any field left empty keeps
+    its current value.
+  fields:
+    camera_id:
+      name: Camera ID
+      required: true
+      selector:
+        text:
+    on_time:
+      name: On Time
+      description: Time the light turns on (HH:MM or HH:MM:SS).
+      example: "18:00"
+      selector:
+        text:
+    off_time:
+      name: Off Time
+      description: Time the light turns off (HH:MM or HH:MM:SS).
+      example: "23:00"
+      selector:
+        text:
+    motion:
+      name: Light On Motion
+      description: Also turn the light on when motion is detected.
+      selector:
+        boolean:
+    threshold:
+      name: Darkness Threshold
+      description: Ambient-light threshold (0.0–1.0) below which the schedule engages.
+      selector:
+        number:
+          min: 0.0
+          max: 1.0
+          step: 0.05
+
+get_privacy_masks:
+  name: Get Privacy Masks
+  description: >
+    Read current privacy mask zones from the Bosch cloud API.
+    Results are shown as a persistent notification.
+  fields:
+    camera_id:
+      name: Camera ID
+      required: true
+      selector:
+        text:
+
+set_privacy_masks:
+  name: Set Privacy Masks
+  description: >
+    Set privacy mask zones for a camera. Each mask is a rectangle defined by
+    normalized coordinates (0.0–1.0): x, y (top-left corner), w (width), h (height).
+    Send an empty list to clear all masks.
+  fields:
+    camera_id:
+      name: Camera ID
+      required: true
+      selector:
+        text:
+    masks:
+      name: Masks
+      description: >
+        List of mask objects, each with x, y, w, h (all 0.0–1.0).
+        Example: [{"x": 0.0, "y": 0.0, "w": 0.3, "h": 0.3}]
+      required: true
+      selector:
+        object:
+
+rename_camera:
+  name: Rename Camera
+  description: >
+    Rename a Bosch camera via the cloud API. The new name appears in the Bosch app
+    and in all HA entity names after the next coordinator refresh.
+  fields:
+    camera_id:
+      name: Camera ID
+      description: "The cloud ID of the camera (UUID from entity attributes)"
+      required: true
+      selector:
+        text:
+    new_name:
+      name: New Name
+      description: "The new display name for the camera"
+      required: true
+      selector:
+        text:
+
+invite_friend:
+  name: Invite Friend (Camera Sharing)
+  description: >
+    Send a camera sharing invitation to an email address.
+    The recipient receives an email with a link to accept.
+  fields:
+    email:
+      name: Email Address
+      required: true
+      selector:
+        text:
+
+list_friends:
+  name: List Friends (Camera Sharing)
+  description: >
+    List all friends and their camera sharing status.
+    Results are logged and returned as a persistent notification.
+  fields: {}
+
+remove_friend:
+  name: Remove Friend
+  description: >
+    Remove a friend and revoke all their camera shares.
+  fields:
+    friend_id:
+      name: Friend ID
+      description: "The UUID of the friend (from list_friends)"
+      required: true
+      selector:
+        text:
+
+send_event_webhook:
+  name: Send Event Webhook
+  description: >
+    Manually trigger a webhook POST for a specific camera event. Useful for
+    testing webhook delivery without waiting for a real camera event.
+    The integration must have enable_webhook_delivery ON and webhook_url set.
+  fields:
+    entity_id:
+      name: Camera Entity
+      description: >
+        Entity ID of the camera (e.g. camera.bosch_terrasse).
+        Used to resolve the camera name for the payload.
+      required: false
+      example: "camera.bosch_terrasse"
+      selector:
+        entity:
+          domain: camera
+    event_type:
+      name: Event Type
+      description: >
+        Type of event to simulate: MOVEMENT, AUDIO_ALARM, PERSON, or INTRUSION.
+      required: true
+      default: "MOVEMENT"
+      example: "MOVEMENT"
+      selector:
+        select:
+          options:
+            - "MOVEMENT"
+            - "AUDIO_ALARM"
+            - "PERSON"
+            - "INTRUSION"
+
+migrate_flat_events:
+  name: Migrate Flat Event Files
+  description: >
+    Move event files saved in the legacy flat layout (camera/file.mp4) into the
+    date-hierarchy layout (camera/year/month/day/file.mp4). Safe to run multiple
+    times — skips files whose destination already exists. Results shown as a
+    persistent notification.
+  fields: {}
+
+delete_event:
+  name: Delete Event File(s)
+  description: >
+    Delete one or more local event files. Either provide an exact file path,
+    or provide a camera name with an optional date filter to delete all matching
+    events for that camera/day.
+  fields:
+    file_path:
+      name: File Path
+      description: >
+        Absolute path to a single event file to delete
+        (e.g. /config/bosch_events/Innenbereich/2026/05/07/Innenbereich_2026-05-07_22-09-56_MOVEMENT_C6501509.mp4).
+        If provided, camera and date are ignored.
+      required: false
+      selector:
+        text:
+    camera:
+      name: Camera Name
+      description: >
+        Name of the camera folder (e.g. Innenbereich). Deletes all event files
+        for this camera. Use with date to limit to a specific day.
+      required: false
+      selector:
+        text:
+    date:
+      name: Date (optional)
+      description: "Date filter in YYYY-MM-DD format. Only used together with camera."
+      required: false
+      example: "2026-05-06"
+      selector:
+        text:
+describe_snapshot:
+  name: Describe Snapshot
+  description: >
+    Ask Home Assistant's AI Task integration to describe the current camera
+    snapshot in natural language. The result is stored on the per-camera
+    sensor (sensor.<camera>_ai_description) and returned as a response.
+    Requires the ai_task integration to be configured with at least one
+    AI entity (e.g. Google AI, OpenAI).
+  fields:
+    camera_id:
+      name: Camera ID
+      description: >
+        Bosch cloud camera ID (UUID). Use either camera_id or entity_id.
+      required: false
+      example: "11111111-2222-3333-4444-555555555555"
+      selector:
+        text:
+    entity_id:
+      name: Camera Entity
+      description: >
+        Camera entity ID (e.g. camera.bosch_terrasse). Use either entity_id
+        or camera_id.
+      required: false
+      example: "camera.bosch_terrasse"
+      selector:
+        entity:
+          domain: camera
+    instructions:
+      name: Instructions
+      description: >
+        Custom prompt / instructions for the AI. Overrides the
+        ai_describe_prompt option for this call only. The language directive
+        is appended automatically unless you include your own language instruction.
+      required: false
+      selector:
+        text:
+          multiline: true
+    language:
+      name: Language
+      description: >
+        Language for the AI response. Overrides the ai_describe_language option
+        for this call only. Examples: Deutsch, English, Français, Italiano,
+        Español, Nederlands, Polski. Defaults to the option value (Deutsch).
+      required: false
+      selector:
+        text:
+    ai_task_entity:
+      name: AI Task Entity
+      description: >
+        AI Task entity to use (e.g. ai_task.google_ai). Leave empty to use
+        HA's preferred default AI entity.
+      required: false
+      selector:
+        entity:
+          domain: ai_task

@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <!-- Bosch red gradient: top-left dark red → bottom-right brighter red -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#b71c1c"/>
+      <stop offset="100%" style="stop-color:#e53935"/>
+    </linearGradient>
+    <!-- Subtle inner glow for camera lens -->
+    <radialGradient id="lensGrad" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" style="stop-color:#ef9a9a;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#b71c1c;stop-opacity:1"/>
+    </radialGradient>
+    <!-- HA orange gradient -->
+    <linearGradient id="haGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffb300"/>
+      <stop offset="100%" style="stop-color:#ff6f00"/>
+    </linearGradient>
+    <clipPath id="roundedClip">
+      <rect x="0" y="0" width="256" height="256" rx="52" ry="52"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background: rounded square with red gradient (matches Bosch app icon) -->
+  <rect x="0" y="0" width="256" height="256" rx="52" ry="52" fill="url(#bgGrad)"/>
+
+  <!-- Subtle top-left highlight -->
+  <ellipse cx="60" cy="50" rx="90" ry="60" fill="white" opacity="0.07"/>
+
+  <!-- ── Bosch-style camera outline frame ─────────────────────── -->
+  <!-- Outer rounded rectangle (white stroke, like the Bosch app icon frame) -->
+  <rect x="28" y="62" width="186" height="132" rx="28" ry="28"
+        fill="none" stroke="white" stroke-width="13" opacity="1"/>
+
+  <!-- ── Video camera body inside the frame ──────────────────── -->
+  <!-- Camera body rectangle -->
+  <rect x="52" y="90" width="108" height="76" rx="13" ry="13" fill="white"/>
+
+  <!-- Camera lens (red, with gradient, inside white body) -->
+  <rect x="66" y="104" width="80" height="48" rx="7" ry="7" fill="url(#lensGrad)"/>
+
+  <!-- Lens vertical highlight line (matches Bosch icon detail) -->
+  <rect x="101" y="110" width="9" height="36" rx="4" ry="4" fill="white" opacity="0.85"/>
+
+  <!-- Camera play-triangle / lens left indicator (like Bosch icon) -->
+  <polygon points="52,108 52,148 38,128" fill="white"/>
+
+  <!-- Viewfinder bump on top of camera -->
+  <rect x="158" y="80" width="22" height="16" rx="5" ry="5" fill="white"/>
+
+  <!-- ── Home Assistant badge ─────────────────────────────────── -->
+  <!-- Orange circle badge, bottom-right -->
+  <circle cx="199" cy="195" r="32" fill="url(#haGrad)"/>
+  <!-- White ring around badge -->
+  <circle cx="199" cy="195" r="32" fill="none" stroke="white" stroke-width="4"/>
+
+  <!-- HA house icon (simplified, matches HA logo language) -->
+  <!-- Roof -->
+  <polygon points="199,166 221,186 177,186" fill="white"/>
+  <!-- House body -->
+  <rect x="180" y="185" width="38" height="28" rx="3" ry="3" fill="white"/>
+  <!-- Door -->
+  <rect x="191" y="196" width="16" height="17" rx="3" ry="3" fill="url(#haGrad)"/>
+  <!-- HA center circle dot on roof peak -->
+  <circle cx="199" cy="181" r="5" fill="white"/>
+</svg>
