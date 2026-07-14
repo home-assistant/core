@@ -141,6 +141,59 @@ async def test_stop_leaves_state_unknown_until_poll(
     assert hass.states.get(BEDROOM_ENTITY).state == STATE_UNKNOWN
 
 
+async def test_stop_on_idle_cover_keeps_state(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Stopping an idle cover should not park it in STATE_UNKNOWN.
+
+    Living room is idle at STATE_OPEN. A stop with no motion in
+    flight is a no-op, so the entity should remain at STATE_OPEN
+    rather than falsely reporting unknown for MOTION_DELAY seconds.
+    """
+    assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_OPEN
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY},
+        blocking=True,
+    )
+    assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_OPEN
+
+
+async def test_reopen_after_stop_reports_opening(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
+    """Re-opening a cover during the post-stop window should show STATE_OPENING.
+
+    Living room starts at STATE_OPEN with motor.state=UP. Close
+    starts motion; a stop then arms the post-stop window; a fresh
+    open must arm a new motion window and switch to STATE_OPENING
+    even though motor.state is still UP and _last_command is STOP.
+    """
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY},
+        blocking=True,
+    )
+    assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: LIVING_ROOM_ENTITY},
+        blocking=True,
+    )
+    assert hass.states.get(LIVING_ROOM_ENTITY).state == STATE_OPENING
+
+
 async def test_reversal_mid_motion_switches_direction(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:

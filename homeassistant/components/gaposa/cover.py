@@ -156,16 +156,24 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         self._last_command = command
         self._last_command_time = dt_util.utcnow()
 
+    def _is_idle_at(self, endpoint: str) -> bool:
+        """True if the cover is at ``endpoint`` and no command is in flight."""
+        return (
+            self.motor.state == endpoint
+            and not self._is_moving()
+            and not self._is_post_stop_pending()
+        )
+
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.motor.up(False)
-        # Trigger the motion window unless the cover is already at
-        # the top and idle. Reversing mid-close needs a fresh motion
-        # window too — pygaposa may not have polled since the last
-        # command, so motor.state can still read UP while the cover
-        # is physically moving down.
-        if self.motor.state != STATE_UP or self.is_closing:
+        # Skip the motion window only when the cover is genuinely
+        # idle at the top. Reversals mid-close and reopens during
+        # the post-stop window both need a fresh motion state —
+        # pygaposa may not have polled since the last command, so
+        # motor.state alone is not enough to tell.
+        if not self._is_idle_at(STATE_UP):
             self._begin_motion(COMMAND_UP)
             self._schedule_refresh_after_motion()
         self.async_write_ha_state()
@@ -174,7 +182,7 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.motor.down(False)
-        if self.motor.state != STATE_DOWN or self.is_opening:
+        if not self._is_idle_at(STATE_DOWN):
             self._begin_motion(COMMAND_DOWN)
             self._schedule_refresh_after_motion()
         self.async_write_ha_state()
@@ -187,7 +195,12 @@ class GaposaCover(CoordinatorEntity[DataUpdateCoordinatorGaposa], CoverEntity):
         so a failed command leaves the cover still reporting as
         moving rather than falsely stopped.
         """
+        was_active = self._is_moving() or self._is_post_stop_pending()
         await self.motor.stop(False)
+        if not was_active:
+            # Stop on an already-idle cover — don't park the entity
+            # in STATE_UNKNOWN just to observe a no-op.
+            return
         self._last_command = COMMAND_STOP
         # Timestamp arms _is_post_stop_pending so is_closed reports
         # unknown until the post-command poll updates motor.state.
