@@ -2,12 +2,22 @@
   "config": {
     "abort": {
       "already_configured": "This device has already been configured with this infrared entity.",
-      "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
+      "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "missing_infrared_entity": "Select an infrared emitter."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]"
+        },
+        "data_description": {
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]"
+        },
+        "title": "Reconfigure LED Infrared device"
+      },
       "user": {
         "data": {
           "device_type": "[%key:common::generic::device_type%]",
