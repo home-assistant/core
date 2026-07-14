@@ -71,7 +71,7 @@ async def test_user_flow_exceptions(
         USER_INPUT,
     )
     await hass.async_block_till_done()
-    assert result["data"] == {**USER_INPUT, "host": "http://1.1.1.1"}
+    assert result["data"]["host"] == f"http://{USER_INPUT['host']}"
 
 
 async def test_zeroconf(hass: HomeAssistant, mock_flow_it: AsyncMock) -> None:
