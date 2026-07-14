@@ -415,8 +415,8 @@ async def test_create_conversation_agent_web_search(
     hass: HomeAssistant,
     mock_open_router_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    web_search: bool,
-    expected_web_search: bool,
+    web_search: str,
+    expected_web_search: str,
 ) -> None:
     """Test creating a conversation agent with web search enabled/disabled."""
     await setup_integration(hass, mock_config_entry)
@@ -449,15 +449,15 @@ async def test_create_conversation_agent_web_search(
 
 @pytest.mark.parametrize(
     ("current_web_search", "expected_default"),
-    [(True, True), (False, False)],
+    [("plugin", "plugin"), ("off", "off")],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_conversation_subentry_web_search_default(
     hass: HomeAssistant,
     mock_open_router_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    current_web_search: bool,
-    expected_default: bool,
+    current_web_search: str,
+    expected_default: str,
 ) -> None:
     """Test web_search field default reflects existing value when reconfiguring."""
     await setup_integration(hass, mock_config_entry)
