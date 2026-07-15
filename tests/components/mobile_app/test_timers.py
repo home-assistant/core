@@ -9,17 +9,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent as intent_helper
 
 
-@pytest.mark.xfail(
-    reason=(
-        "Voice timers now require a timer_list entity for the device "
-        "(created automatically for assist_satellite entities). mobile_app "
-        "registers for timer events but has no assist_satellite entity, so "
-        "it has no timer_list entity yet and starting a timer raises "
-        "TimersNotSupportedError. Tracked as a known gap to fix by giving "
-        "mobile_app devices a timer_list entity the same way."
-    ),
-    strict=True,
-)
 @pytest.mark.parametrize(
     ("intent_args", "message"),
     [

@@ -24,7 +24,7 @@ from wyoming.tts import Synthesize, SynthesizeVoice
 from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
-from homeassistant.components import assist_pipeline, ffmpeg, intent, tts
+from homeassistant.components import assist_pipeline, ffmpeg, tts
 from homeassistant.components.assist_pipeline import PipelineEvent
 from homeassistant.components.assist_satellite import (
     AssistSatelliteAnnouncement,
@@ -33,8 +33,14 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteEntityDescription,
     AssistSatelliteEntityFeature,
 )
+from homeassistant.components.timer_list import (
+    TimerListEvent,
+    TimerListEventType,
+    TimerStatus,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 from homeassistant.util.ulid import ulid_now
 
 from .const import SAMPLE_CHANNELS, SAMPLE_WIDTH
@@ -162,12 +168,16 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
+        # The timer list entity forwards timer events here to be sent to the
+        # satellite over its (connection-scoped) client.
+        self.config_entry.runtime_data.satellite = self
         self.start_satellite()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
+        self.config_entry.runtime_data.satellite = None
         self.stop_satellite()
 
     @callback
@@ -433,10 +443,6 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         """Run and maintain a connection to satellite."""
         _LOGGER.debug("Running satellite task")
 
-        unregister_timer_handler = intent.async_register_timer_handler(
-            self.hass, self.device.device_id, self._handle_timer
-        )
-
         try:
             while self.is_running:
                 try:
@@ -469,8 +475,6 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                     # Wait to restart
                     await self.on_restart()
         finally:
-            unregister_timer_handler()
-
             # Cancel any pipeline still running on final teardown.
             await self._cancel_running_pipeline()
 
@@ -906,35 +910,39 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         self.tts_response_finished()
 
     @callback
-    def _handle_timer(
-        self, event_type: intent.TimerEventType, timer: intent.TimerInfo
-    ) -> None:
+    def handle_timer_event(self, timer_event: TimerListEvent) -> None:
         """Forward timer events to satellite."""
         if self._client is None:
             # Satellite disconnected, drop timer event
             return
 
-        _LOGGER.debug("Timer event: type=%s, info=%s", event_type, timer)
+        _LOGGER.debug("Timer event: %s", timer_event)
+        item = timer_event.item
+        total_seconds = int(item.duration.total_seconds())
+        start_minutes, start_seconds = divmod(total_seconds, 60)
+        start_hours, start_minutes = divmod(start_minutes, 60)
+        seconds_left = round(item.remaining_at(dt_util.utcnow()).total_seconds())
+
         event: Event | None = None
-        if event_type == intent.TimerEventType.STARTED:
+        if timer_event.event_type == TimerListEventType.STARTED:
             event = TimerStarted(
-                id=timer.id,
-                total_seconds=timer.seconds,
-                name=timer.name,
-                start_hours=timer.start_hours,
-                start_minutes=timer.start_minutes,
-                start_seconds=timer.start_seconds,
+                id=item.timer_id,
+                total_seconds=seconds_left,
+                name=item.name,
+                start_hours=start_hours,
+                start_minutes=start_minutes,
+                start_seconds=start_seconds,
             ).event()
-        elif event_type == intent.TimerEventType.UPDATED:
+        elif timer_event.event_type == TimerListEventType.UPDATED:
             event = TimerUpdated(
-                id=timer.id,
-                is_active=timer.is_active,
-                total_seconds=timer.seconds,
+                id=item.timer_id,
+                is_active=item.status == TimerStatus.ACTIVE,
+                total_seconds=seconds_left,
             ).event()
-        elif event_type == intent.TimerEventType.CANCELLED:
-            event = TimerCancelled(id=timer.id).event()
-        elif event_type == intent.TimerEventType.FINISHED:
-            event = TimerFinished(id=timer.id).event()
+        elif timer_event.event_type == TimerListEventType.CANCELLED:
+            event = TimerCancelled(id=item.timer_id).event()
+        elif timer_event.event_type == TimerListEventType.FINISHED:
+            event = TimerFinished(id=item.timer_id).event()
 
         if event is not None:
             # Send timer event to satellite

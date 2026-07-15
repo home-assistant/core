@@ -15,7 +15,7 @@ import wave
 from voip_utils import SIP_PORT, RtpDatagramProtocol
 from voip_utils.sip import SipEndpoint, get_sip_endpoint
 
-from homeassistant.components import intent, tts
+from homeassistant.components import tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.assist_satellite import (
     AssistSatelliteAnnouncement,
@@ -24,8 +24,8 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteEntityDescription,
     AssistSatelliteEntityFeature,
 )
-from homeassistant.components.intent import TimerEventType, TimerInfo
 from homeassistant.components.network import async_get_source_ip
+from homeassistant.components.timer_list import TimerListEvent, TimerListEventType
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -164,14 +164,9 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
+        # The timer list entity for this device forwards timer events here (see
+        # timer_list.py) once the protocol is set.
         self.voip_device.protocol = self
-
-        assert self.device_entry is not None
-        self.async_on_remove(
-            intent.async_register_timer_handler(
-                self.hass, self.device_entry.id, self.async_handle_timer_event
-            )
-        )
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -189,19 +184,17 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         raise NotImplementedError
 
     @callback
-    def async_handle_timer_event(
-        self,
-        event_type: TimerEventType,
-        timer_info: TimerInfo,
-    ) -> None:
+    def async_handle_timer_event(self, event: TimerListEvent) -> None:
         """Handle timer event."""
-        if event_type != TimerEventType.FINISHED:
+        if event.event_type != TimerListEventType.FINISHED:
             return
 
-        if timer_info.name:
-            message = f"{timer_info.name} finished"
+        item = event.item
+        if item.name:
+            message = f"{item.name} finished"
         else:
-            message = f"{timedelta(seconds=timer_info.created_seconds)} timer finished"
+            duration = timedelta(seconds=int(item.duration.total_seconds()))
+            message = f"{duration} timer finished"
 
         async def announce_message():
             announcement = await self._resolve_announcement_media_id(message, None)

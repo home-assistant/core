@@ -27,7 +27,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
@@ -110,6 +110,36 @@ def timer_to_dict(item: TimerItem, now: datetime) -> dict[str, Any]:
         "finished_at": item.finished_at.isoformat() if item.finished_at else None,
         "remaining": item.remaining_at(now).total_seconds(),
     }
+
+
+@callback
+def async_get_timer_list_entity(
+    hass: HomeAssistant, device_id: str | None
+) -> TimerListEntity | None:
+    """Return the timer list entity associated with a device, if any.
+
+    The list is provided by the device's own integration, so it may live on any
+    platform; resolve it by device association rather than assuming the
+    ``timer_list`` platform owns it.
+    """
+    if device_id is None:
+        return None
+
+    entity_registry = er.async_get(hass)
+    entity_id = next(
+        (
+            entry.entity_id
+            for entry in er.async_entries_for_device(
+                entity_registry, device_id, include_disabled_entities=True
+            )
+            if entry.domain == DOMAIN
+        ),
+        None,
+    )
+    if entity_id is None:
+        return None
+
+    return hass.data[DATA_COMPONENT].get_entity(entity_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
