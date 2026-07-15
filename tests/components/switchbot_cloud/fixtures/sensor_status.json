@@ -31,7 +31,8 @@
     "nightStatus": "off",
     "oscillation": "on",
     "verticalOscillation": "on",
-    "fanSpeed": 3
+    "fanSpeed": 3,
+    "battery": 22
   },
   {
     "deviceId": "A1C3E5F7D9B0",
@@ -43,7 +44,8 @@
     "nightStatus": "off",
     "oscillation": "on",
     "verticalOscillation": "on",
-    "fanSpeed": 3
+    "fanSpeed": 3,
+    "battery": 22
   },
   {
     "deviceId": "9B0D2F4A6C8E",
