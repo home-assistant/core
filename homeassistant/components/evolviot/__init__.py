@@ -2,29 +2,31 @@
 
 from typing import Any
 
-from pyevolviot import EvolvIOTApi, normalize_api_base_url
+from pyevolviot import (
+    EvolvIOTApi,
+    EvolvIOTApiError,
+    EvolvIOTAuthError,
+    normalize_api_base_url,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_ACCESS_TOKEN,
     CONF_API_BASE_URL,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
     CONF_REFRESH_TOKEN,
     CONF_VERIFY_SSL,
-    DATA_API,
-    DATA_COORDINATOR,
-    DATA_KNOWN_ENTITIES,
-    DOMAIN,
     PLATFORMS,
 )
 from .coordinator import EvolvIOTDataUpdateCoordinator
 
+type EvolvIOTConfigEntry = ConfigEntry[EvolvIOTDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: EvolvIOTConfigEntry) -> bool:
     """Set up EvolvIOT from a config entry."""
 
     async def async_token_updated(token_data: dict[str, Any]) -> None:
@@ -44,30 +46,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         normalize_api_base_url(entry.data[CONF_API_BASE_URL]),
         entry.data[CONF_ACCESS_TOKEN],
         refresh_token=entry.data.get(CONF_REFRESH_TOKEN),
-        client_id=entry.data.get(CONF_CLIENT_ID),
-        client_secret=entry.data.get(CONF_CLIENT_SECRET),
         verify_ssl=verify_ssl,
         token_update_callback=async_token_updated,
     )
     coordinator = EvolvIOTDataUpdateCoordinator(hass, api, entry)
-    await coordinator.async_load_cache()
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_setup()
+    except EvolvIOTAuthError as err:
+        raise ConfigEntryAuthFailed("Invalid EvolvIOT credentials") from err
+    except EvolvIOTApiError as err:
+        raise ConfigEntryNotReady("Could not connect to EvolvIOT") from err
 
-    runtime_data = {
-        DATA_API: api,
-        DATA_COORDINATOR: coordinator,
-        DATA_KNOWN_ENTITIES: {},
-    }
-    entry.runtime_data = runtime_data
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = runtime_data
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EvolvIOTConfigEntry) -> bool:
     """Unload EvolvIOT config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -1,157 +1,79 @@
 """Test the EvolvIOT switch platform."""
 
-from unittest.mock import AsyncMock, Mock
+import pytest
 
 from homeassistant.components.evolviot.const import DOMAIN
-from homeassistant.components.evolviot.coordinator import EvolvIOTDataUpdateCoordinator
-from homeassistant.components.evolviot.switch import EvolvIOTSwitch
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
-
-
-def _mock_coordinator(hass: HomeAssistant) -> EvolvIOTDataUpdateCoordinator:
-    """Return a coordinator with switch data."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-    coordinator = EvolvIOTDataUpdateCoordinator(hass, AsyncMock(), entry)
-    coordinator.data = {
-        "user_id": "user-123",
-        "entities": {
-            "switch.evolviot_switch": {
-                "entity_id": "switch.evolviot_switch",
-                "unique_id": "SWITCH123/power",
-                "domain": "switch",
-                "name": "Living Room Switch",
-                "device": {
-                    "id": "SWITCH123",
-                    "name": "Living Room",
-                    "manufacturer": "EvolvIOT",
-                    "model": "Switch",
-                },
-                "control": {"key": "power"},
-            }
-        },
-        "states": {
-            "switch.evolviot_switch": {
-                "entity_id": "switch.evolviot_switch",
-                "available": True,
-                "state": "on",
-                "raw_value": 1,
-            }
-        },
-    }
-    return coordinator
+from .conftest import UNIQUE_ID, MockEvolvIOTWebSocket
 
 
-async def test_switch_properties(hass: HomeAssistant) -> None:
-    """Test switch properties."""
-    coordinator = _mock_coordinator(hass)
+@pytest.mark.usefixtures("setup_integration")
+async def test_switch_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test switch setup from WebSocket ready data."""
+    entity_id = entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, UNIQUE_ID)
 
-    entity = EvolvIOTSwitch(
-        coordinator,
-        coordinator.entities["switch.evolviot_switch"],
+    state = hass.states.get(entity_id)
+
+    assert state is not None
+    assert state.state == STATE_OFF
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_switch_push_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_websocket: MockEvolvIOTWebSocket,
+) -> None:
+    """Test WebSocket state pushes update the switch."""
+    entity_id = entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, UNIQUE_ID)
+
+    await mock_websocket.emit_state("on")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state is not None
+    assert state.state == STATE_ON
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_switch_sends_commands(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_websocket: MockEvolvIOTWebSocket,
+) -> None:
+    """Test switch commands are sent through pyevolviot."""
+    entity_id = entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, UNIQUE_ID)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {"entity_id": entity_id},
+        blocking=True,
     )
 
-    assert entity.unique_id == "SWITCH123/power"
-    assert entity.name == "Living Room Switch"
-    assert entity.available
-    assert entity.is_on
-    assert entity.extra_state_attributes["evolviot_entity_id"] == (
-        "switch.evolviot_switch"
-    )
-    assert entity.extra_state_attributes["raw_value"] == 1
-    assert entity.extra_state_attributes["connection_mode"] == "cloud"
+    assert mock_websocket.commands[-1] == ("switch.evolviot_switch", "turn_on")
+    state = hass.states.get(entity_id)
 
+    assert state is not None
+    assert state.state == STATE_ON
 
-async def test_switch_unavailable_without_state(hass: HomeAssistant) -> None:
-    """Test switch is unavailable without state."""
-    coordinator = _mock_coordinator(hass)
-    coordinator.data["states"] = {}
-    entity = EvolvIOTSwitch(
-        coordinator,
-        coordinator.entities["switch.evolviot_switch"],
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {"entity_id": entity_id},
+        blocking=True,
     )
 
-    assert not entity.available
-    assert entity.is_on is None
-    assert entity.extra_state_attributes["connection_mode"] == "offline"
+    assert mock_websocket.commands[-1] == ("switch.evolviot_switch", "turn_off")
+    state = hass.states.get(entity_id)
 
-
-async def test_switch_sends_commands(hass: HomeAssistant) -> None:
-    """Test switch commands."""
-    coordinator = _mock_coordinator(hass)
-    entity = EvolvIOTSwitch(
-        coordinator,
-        coordinator.entities["switch.evolviot_switch"],
-    )
-    entity._async_send_command = AsyncMock()
-
-    await entity.async_turn_on()
-    entity._async_send_command.assert_awaited_once_with({"command": "turn_on"})
-
-    entity._async_send_command.reset_mock()
-
-    await entity.async_turn_off()
-    entity._async_send_command.assert_awaited_once_with({"command": "turn_off"})
-
-
-async def test_switch_sends_cloud_command(hass: HomeAssistant) -> None:
-    """Test switch sends cloud command when local command is unavailable."""
-    coordinator = _mock_coordinator(hass)
-    coordinator.api.async_command = AsyncMock()
-    entity = EvolvIOTSwitch(
-        coordinator,
-        coordinator.entities["switch.evolviot_switch"],
-    )
-    entity.async_write_ha_state = Mock()
-    entity._schedule_refresh = Mock()
-
-    await entity.async_turn_on()
-
-    coordinator.api.async_command.assert_awaited_once_with(
-        "switch.evolviot_switch",
-        {"command": "turn_on"},
-    )
-    assert coordinator.states["switch.evolviot_switch"]["state"] == "on"
-    entity.async_write_ha_state.assert_called_once()
-    entity._schedule_refresh.assert_called_once()
-
-
-async def test_switch_builds_local_command(hass: HomeAssistant) -> None:
-    """Test local command metadata is built."""
-    coordinator = _mock_coordinator(hass)
-    entity_data = coordinator.entities["switch.evolviot_switch"]
-    entity_data["device"]["local_control"] = {
-        "device_secret": "secret",
-        "endpoint": "control",
-    }
-    entity = EvolvIOTSwitch(coordinator, entity_data)
-
-    assert entity._local_command({"command": "turn_on"}) == {
-        "uid": "user-123",
-        "device_id": "SWITCH123",
-        "endpoint": "power",
-        "device_secret": "secret",
-        "switch_name": "power",
-        "value": 1,
-    }
-    assert entity._local_command_value({"command": "turn_off"}) == 0
-    assert entity._local_command_value({"command": "toggle"}) is None
-
-
-async def test_switch_sends_preferred_local_command(hass: HomeAssistant) -> None:
-    """Test switch sends preferred local command when local status is available."""
-    coordinator = _mock_coordinator(hass)
-    entity_data = coordinator.entities["switch.evolviot_switch"]
-    entity_data["device"]["local_control"] = {"device_secret": "secret"}
-    coordinator.data["states"]["switch.evolviot_switch"]["local_available"] = True
-    entity = EvolvIOTSwitch(coordinator, entity_data)
-    entity.async_write_ha_state = Mock()
-    entity._schedule_refresh = Mock()
-    entity._async_send_prefer_local = AsyncMock()
-
-    await entity.async_turn_on()
-
-    entity._async_send_prefer_local.assert_awaited_once()
-    entity._schedule_refresh.assert_called_once()
+    assert state is not None
+    assert state.state == STATE_OFF
