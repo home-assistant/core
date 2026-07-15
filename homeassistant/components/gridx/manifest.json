@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["gridx_connector"],
   "quality_scale": "bronze",
-  "requirements": ["gridx-connector==3.0.2"]
+  "requirements": ["gridx-connector==3.0.5"]
 }
