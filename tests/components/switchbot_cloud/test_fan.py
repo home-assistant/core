@@ -158,6 +158,49 @@ async def test_turn_off(
         (STANDING_FAN_INFO, "fan.standing_fan_1"),
     ],
 )
+async def test_power_state(
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    device_info: Device,
+    entry_id: str,
+) -> None:
+    """Test turning on the fan."""
+    mock_list_devices.return_value = [
+        device_info,
+    ]
+    mock_get_status.side_effect = [
+        {"powerState": "Off", "mode": "direct", "fanSpeed": "0"},
+        {"powerState": "On", "mode": "direct", "fanSpeed": "0"},
+        {"powerState": "On", "mode": "direct", "fanSpeed": "0"},
+    ]
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    entity_id = entry_id
+    state = hass.states.get(entity_id)
+
+    assert state.state == STATE_OFF
+
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+    ):
+        await hass.services.async_call(
+            FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+    mock_send_command.assert_called()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("device_info", "entry_id"),
+    [
+        (CIRCULATOR_FAN_INFO, "fan.fan_1"),
+        (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
+        (STANDING_FAN_INFO, "fan.standing_fan_1"),
+    ],
+)
 async def test_set_percentage(
     hass: HomeAssistant,
     mock_list_devices,

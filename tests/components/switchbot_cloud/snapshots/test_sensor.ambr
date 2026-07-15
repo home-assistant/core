@@ -106,7 +106,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '22',
   })
 # ---
 # name: test_coordinator_data[Battery Circulator Fan][sensor.test_device_name_1_battery-entry]
@@ -3318,7 +3318,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '22',
   })
 # ---
 # name: test_coordinator_data[Water Detector][sensor.test_device_name_1_battery-entry]
