@@ -3,7 +3,8 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
-from uiprotect.data import DeviceState, Light, WSAction
+import pytest
+from uiprotect.data import DeviceState, Light, Permission, WSAction
 from uiprotect.data.public_devices import PublicLightDeviceSettings
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
@@ -246,7 +247,10 @@ async def test_light_setup_public_only(
 
 
 async def test_light_added_after_setup_public_only(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    light: Light,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """In public-only mode a light added later is discovered from its frame.
 
@@ -279,6 +283,17 @@ async def test_light_added_after_setup_public_only(
     state = hass.states.get("light.test_light")
     assert state
     assert state.state != STATE_UNAVAILABLE
+
+    # A re-delivered add frame (e.g. the light was removed and re-added while
+    # its entity is still registered) is skipped before the platform has to
+    # reject the duplicate unique_id with an error.
+    msg = public_device_ws_message(public)
+    msg.action = WSAction.ADD
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+    assert "already exists" not in caplog.text
 
 
 async def test_light_turn_on_with_brightness_public_only(
@@ -320,6 +335,19 @@ async def test_light_turn_on_with_brightness_public_only(
     assert isinstance(settings, PublicLightDeviceSettings)
     assert settings.led_level == 3  # 128/255 * 6 ≈ 3
     assert settings.pir_duration == public.light_device_settings.pir_duration
+
+
+async def test_light_setup_no_perm(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """A light the auth user cannot write to gets no entity in hybrid mode."""
+
+    ufp.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "light:read:*"})
+    ]
+
+    await init_entry(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.LIGHT, 0, 0)
 
 
 async def test_light_setup_defers_to_adopt_without_private(

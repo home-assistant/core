@@ -13,7 +13,7 @@ from uiprotect.data.public_devices import PublicLight
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -34,6 +34,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up lights for UniFi Protect integration."""
     data = entry.runtime_data
+    platform = entity_platform.async_get_current_platform()
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
@@ -54,8 +55,14 @@ async def async_setup_entry(
 
     @callback
     def _add_new_public_device(device: PublicDeviceModel) -> None:
-        if isinstance(device, PublicLight):
-            async_add_entities([ProtectLight(data, device, None)])
+        if not isinstance(device, PublicLight):
+            return
+        # A re-added light overlaps the entity kept from before its removal;
+        # the platform rejects the duplicate unique_id with an error, so add
+        # only if the mac is not represented yet.
+        if any(e.unique_id == device.mac for e in platform.entities.values()):
+            return
+        async_add_entities([ProtectLight(data, device, None)])
 
     data.async_subscribe_adopt(_add_new_device)
     entry.async_on_unload(
@@ -114,6 +121,9 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         public API does not cover and is ``None`` in public-only mode.
         """
         self._private = private
+        # Seed the public object; ``async_added_to_hass`` re-reads it from the
+        # bootstrap so an update between construction and add is not missed.
+        self._ufp_public_obj = public
         # The base tracks the private device in hybrid (unchanged behaviour) and
         # the public device in public-only, so it always has a mac to key on.
         super().__init__(data, cast(ProtectDeviceType, private or public))
