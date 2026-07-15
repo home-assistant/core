@@ -2,10 +2,21 @@ rules:
   # Bronze
   action-setup: done
   appropriate-polling: done
-  brands: done
+  brands:
+    status: todo
+    comment: >-
+      The brand/ folder was removed from this Core tree. Actual brand
+      icons/logos must still be submitted to and accepted by the separate
+      home-assistant/brands repo — has not happened yet.
   common-modules: done
   config-flow: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: todo
+    comment: >-
+      test_config_flow.py covers: duplicate-abort, full auto-login flow,
+      token-exchange failure, reauth. Missing: manual_login/manual_paste
+      fallback flow and async_step_reconfigure — both exist in
+      config_flow.py but have no dedicated test.
   dependency-transparency: done
   docs-actions: done
   docs-conditions:
@@ -14,9 +25,18 @@ rules:
   docs-triggers:
     status: exempt
     comment: This integration does not have any triggers.
-  docs-high-level-description: done
-  docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-high-level-description:
+    status: todo
+    comment: >-
+      No page for this integration exists on home-assistant.io yet
+      (manifest documentation URL is a placeholder, not a submitted/merged
+      doc page). Applies to every docs-* rule in this file.
+  docs-installation-instructions:
+    status: todo
+    comment: No home-assistant.io docs page exists yet.
+  docs-removal-instructions:
+    status: todo
+    comment: No home-assistant.io docs page exists yet.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -28,59 +48,98 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters: done
-  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: todo
+    comment: No home-assistant.io docs page exists yet.
+  docs-installation-parameters:
+    status: todo
+    comment: No home-assistant.io docs page exists yet.
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
   test-coverage:
-    status: done
-    comment: |
-      99% line-coverage across 6023 tests / 53 source files (2026-07-13).
-      All entity platforms at 100%: camera, image, switch, sensor, binary_sensor,
-      light, number, select, button, update, config_flow, diagnostics,
-      local_rcp, media_source, models, smb, cf_unbuffer, snapshot_store.
-      Remaining misses (101 lines): __init__.py 21 (shutdown/error edges),
-      recorder.py 22 (watch-loop daemon paths), switch.py 18, fcm.py 10,
-      rcp.py 15, tls_proxy.py 8 (daemon-thread coverage tooling limit),
-      shc.py 6, select.py 1.
-      Bug-finding suites surfaced 17 production bugs across sprints
-      (sentinel violations, race conditions, resource leaks, SSRF guards).
+    status: todo
+    comment: >-
+      144 test functions / 261 snapshots exist, but no coverage-percentage
+      tool has actually been run against this tree this session (no
+      .coveragerc / stored coverage report / CI run available to verify
+      against). A previously-claimed "99%" figure could not be
+      re-substantiated and is not carried forward without a fresh run.
 
   # Gold
   devices: done
   diagnostics: done
   discovery:
     status: exempt
-    comment: Bosch cloud is the source of truth; devices added via OAuth flow. No local discovery applicable.
+    comment: Bosch cloud is the source of truth; devices added via OAuth flow. No local discovery protocol applies.
   discovery-update-info:
     status: exempt
     comment: See discovery.
-  docs-data-update: done
-  docs-examples: done
-  docs-known-limitations: done
-  docs-supported-devices: done
-  docs-supported-functions: done
-  docs-troubleshooting: done
-  docs-use-cases: done
-  dynamic-devices: done
+  docs-data-update:
+    status: todo
+    comment: No home-assistant.io docs page exists yet.
+  docs-examples:
+    status: todo
+    comment: No home-assistant.io docs page exists yet.
+  docs-known-limitations:
+    status: todo
+    comment: No home-assistant.io docs page exists yet.
+  docs-supported-devices:
+    status: todo
+    comment: No home-assistant.io docs page exists yet.
+  docs-supported-functions:
+    status: todo
+    comment: No home-assistant.io docs page exists yet.
+  docs-troubleshooting:
+    status: todo
+    comment: No home-assistant.io docs page exists yet.
+  docs-use-cases:
+    status: todo
+    comment: No home-assistant.io docs page exists yet.
+  dynamic-devices:
+    status: todo
+    comment: >-
+      A camera removed from the Bosch account is cleaned up
+      (dev_reg.async_remove_device), but a camera newly added to the
+      account is not picked up at runtime — async_add_entities is only
+      called once at platform setup, so a config entry reload is required.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: done
+  exception-translations:
+    status: todo
+    comment: >-
+      switch.py's privacy-mode-blocks-stream ServiceValidationError fixed
+      this session (now uses translation_domain/translation_key). Two
+      remaining raw f-string HomeAssistantError raises in camera.py
+      (play_stream / async_handle_async_webrtc_offer, both "stream
+      unavailable - privacy mode is ON") are still unfixed: camera.py has
+      a pre-existing, unrelated ruff C901 complexity violation
+      (_async_camera_image_impl, 50 > 25) that blocks this repo's
+      pre-commit hook on ANY change to the file, so fixing these 2 sites
+      needs that complexity debt paid down first, out of scope this
+      session.
   icon-translations: done
   reconfiguration-flow: done
   repair-issues: done
   stale-devices: done
 
   # Platinum
-  async-dependency:
-    status: done
-    comment: All requests imports removed; HTTP via aiohttp (auth_utils.async_digest_request) and stdlib urllib (sync cloud downloads). Verified 2026-05-12.
-  inject-websession: done
+  async-dependency: done
+  inject-websession:
+    status: todo
+    comment: >-
+      cloud_ssl.py builds its own aiohttp.ClientSession(connector=...)
+      directly (cached in hass.data, closed on EVENT_HOMEASSISTANT_STOP)
+      instead of going through
+      homeassistant.helpers.aiohttp_client.async_create_clientsession(hass,
+      ...), which is what this rule requires even for a pinned custom SSL
+      context. Bypasses HA's own session/connector-pool bookkeeping.
   strict-typing:
     status: done
-    comment: pyproject.toml mypy --strict configured; 0 errors across 24 source files (was 593 baseline). ~80 targeted # type: ignore for HA-stub gaps. Verified 2026-05-12.
+    comment: >-
+      .strict-typing entry present; 0 mypy --strict errors attributable to
+      homeassistant/components/bosch_shc_camera (re-verified 2026-07-15).

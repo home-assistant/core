@@ -516,6 +516,9 @@
     "privacy_blocked": {
       "message": "{action}: feature unavailable while Privacy mode is active"
     },
+    "stream_privacy_active_switch": {
+      "message": "Cannot start stream for {camera} — privacy mode is active. Turn off privacy mode first."
+    },
     "unexpected_error": {
       "message": "{action} failed: {error}"
     },
