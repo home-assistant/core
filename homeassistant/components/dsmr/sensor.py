@@ -838,8 +838,7 @@ async def async_setup_entry(
     def _publish_updates(now: datetime | None = None) -> None:
         """Publish the values collected so far and update Home Assistant."""
         for entity in entities:
-            entity.calculate_value()
-            if entity.hass:
+            if entity.calculate_value() and entity.hass:
                 entity.async_write_ha_state()
 
     @callback
@@ -994,6 +993,7 @@ class DSMREntity(SensorEntity):
         self._dsmr_version = entry.data[CONF_DSMR_VERSION]
         self._value: StateType = None
         self._available: bool = True
+        self._pending_publish: bool = False
 
         # Only average when a non-zero update interval is configured
         self._is_averaged_sensor = entity_description.average and bool(
@@ -1049,6 +1049,7 @@ class DSMREntity(SensorEntity):
 
         if not telegram:
             self._reset_average()
+            self._pending_publish = True
             return
 
         dsmr_object = get_dsmr_object(
@@ -1059,6 +1060,7 @@ class DSMREntity(SensorEntity):
 
         if not self._is_averaged_sensor:
             self._value = self._convert_value(dsmr_object.value)
+            self._pending_publish = True
             return
 
         try:
@@ -1082,8 +1084,18 @@ class DSMREntity(SensorEntity):
         self._value_count = 0
 
     @callback
-    def calculate_value(self) -> None:
-        """Recalculate the value to report from the data collected so far."""
+    def calculate_value(self) -> bool:
+        """Recalculate the value to report from the data collected so far.
+
+        Return True when the state must be published: non-averaged sensors only
+        after a new reading or a connection state change, so timer ticks do not
+        rewrite an unchanged cached value (which would fire spurious events for
+        force_update sensors); averaged sensors on every tick, as their mean or
+        availability changes with each window.
+        """
+        pending = self._pending_publish
+        self._pending_publish = False
+
         # A missing telegram marks the entity unavailable; an empty telegram
         # (just (re)connected, no data yet) reports unknown. Either way drop any
         # partially accumulated average.
@@ -1091,14 +1103,14 @@ class DSMREntity(SensorEntity):
             self._reset_average()
             self._value = None
             self._available = self.telegram is not None
-            return
+            return pending
 
         # Non-averaged sensors cache their latest value in accumulate_data as
         # telegrams arrive, so it is already up to date and survives a partial
         # telegram that omits the object.
         if not self._is_averaged_sensor:
             self._available = True
-            return
+            return pending
 
         # Averaged sensors report the mean of the values collected during the
         # interval; with no readings collected the sensor is unavailable.
@@ -1108,6 +1120,7 @@ class DSMREntity(SensorEntity):
                 float(self._value_sum / self._value_count), DEFAULT_PRECISION
             )
         self._reset_average()
+        return True
 
     def _convert_value(self, value: str | float) -> StateType:
         """Convert a raw telegram reading into the value reported by the sensor."""

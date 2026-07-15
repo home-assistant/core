@@ -21,6 +21,7 @@ from dsmr_parser.obis_references import (
     ELECTRICITY_EXPORTED_TOTAL,
     ELECTRICITY_IMPORTED_TOTAL,
     ELECTRICITY_USED_TARIFF_1,
+    ELECTRICITY_USED_TARIFF_3,
     GAS_METER_READING,
     HOURLY_GAS_METER_READING,
     INSTANTANEOUS_CURRENT_L1,
@@ -2173,6 +2174,76 @@ async def test_non_averaged_value_survives_later_partial_telegram(
     # the stale 10 from before: the partial telegram must not drop the reading.
     await _advance_to_next_update(hass, freezer)
     assert hass.states.get(ENERGY_ENTITY_ID).state == "50.0"
+
+
+async def test_force_update_sensor_not_rewritten_without_new_reading(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test a force_update sensor is only rewritten after a new reading.
+
+    The EON HU tariff totals use force_update, so rewriting their cached value
+    on every timer tick would fire state-change events every interval even when
+    telegrams (or their objects) stop arriving. Ticks without a new reading must
+    not rewrite the state; a fresh reading (even an unchanged one) must.
+    """
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr",
+        unique_id="/dev/ttyUSB0",
+        data={
+            "port": "/dev/ttyUSB0",
+            "dsmr_version": "5EONHU",
+            "serial_id": "1234",
+        },
+        options={"time_between_update": UPDATE_INTERVAL},
+    )
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    tariff_telegram = Telegram()
+    tariff_telegram.add(
+        ELECTRICITY_USED_TARIFF_3,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal("100.0"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+        ),
+        "ELECTRICITY_USED_TARIFF_3",
+    )
+    telegram_callback(tariff_telegram)
+    await hass.async_block_till_done()
+
+    tariff_entity_id = "sensor.electricity_meter_energy_consumption_tarif_3"
+    state = hass.states.get(tariff_entity_id)
+    assert state.state == "100.0"
+    last_updated = state.last_updated
+
+    # Ticks without any telegram must not rewrite the cached value: with
+    # force_update every rewrite would fire a state-change event.
+    await _advance_to_next_update(hass, freezer)
+    await _advance_to_next_update(hass, freezer)
+    state = hass.states.get(tariff_entity_id)
+    assert state.state == "100.0"
+    assert state.last_updated == last_updated
+
+    # Telegrams resume but omit the tariff object: still no rewrite.
+    telegram_callback(_create_power_only_telegram("5.0"))
+    await hass.async_block_till_done()
+    await _advance_to_next_update(hass, freezer)
+    state = hass.states.get(tariff_entity_id)
+    assert state.last_updated == last_updated
+
+    # A fresh reading with the same value is published again (force_update).
+    telegram_callback(tariff_telegram)
+    await hass.async_block_till_done()
+    await _advance_to_next_update(hass, freezer)
+    state = hass.states.get(tariff_entity_id)
+    assert state.state == "100.0"
+    assert state.last_updated > last_updated
 
 
 async def test_no_averaging_when_update_interval_is_zero(
