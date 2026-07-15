@@ -170,7 +170,7 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
             entry_data = user_input.copy()
             options = entry_data.pop(SECTION_OPTIONS)
             errors = await self.hass.async_add_executor_job(
-                validate_input, {**entry_data, **options}
+                validate_input, entry_data, options
             )
             if not errors:
                 return self.async_create_entry(
@@ -224,7 +224,7 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
             errors = await self.hass.async_add_executor_job(
-                validate_input, {**user_input, **entry.options}
+                validate_input, user_input, dict(entry.options)
             )
             if not errors:
                 return self.async_update_and_abort(
@@ -256,7 +256,7 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             errors = await self.hass.async_add_executor_job(
-                validate_input, {**entry.data, **user_input, **entry.options}
+                validate_input, {**entry.data, **user_input}, dict(entry.options)
             )
             if not errors:
                 return self.async_update_and_abort(
@@ -279,7 +279,9 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
         options = {CONF_TIMEOUT: import_info.pop(CONF_TIMEOUT, DEFAULT_TIMEOUT)}
         self._async_abort_entries_match(import_info)
 
-        errors = await self.hass.async_add_executor_job(validate_input, import_info)
+        errors = await self.hass.async_add_executor_job(
+            validate_input, import_info, options
+        )
         if not errors:
             title = (
                 import_info.get(CONF_NAME)
@@ -304,7 +306,9 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason=errors["base"])
 
 
-def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
+def validate_input(
+    user_input: dict[str, Any], options: dict[str, Any]
+) -> dict[str, str]:
     """Validate the user input allows us to connect."""
     errors: dict[str, str] = {}
     ssl_context = create_client_context() if user_input[CONF_VERIFY_SSL] else None
@@ -314,14 +318,14 @@ def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
             mail = SMTP_SSL(
                 user_input[CONF_SERVER],
                 user_input[CONF_PORT],
-                timeout=user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+                timeout=options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
                 context=ssl_context,
             )
         else:
             mail = SMTP(
                 user_input[CONF_SERVER],
                 user_input[CONF_PORT],
-                timeout=user_input.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+                timeout=options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
             )
         mail.ehlo_or_helo_if_needed()
         if user_input[CONF_ENCRYPTION] == "starttls":
