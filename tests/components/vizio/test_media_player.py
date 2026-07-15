@@ -383,18 +383,26 @@ async def test_services(
     await _test_service(
         hass,
         MP_DOMAIN,
-        "volume_up",
+        "set_volume",
         SERVICE_VOLUME_SET,
         {ATTR_MEDIA_VOLUME_LEVEL: 1},
-        steps=50,  # From 50% to 100% = 50 steps (TV max volume 100, starting at 50)
+        100,  # TV max volume is 100
     )
     await _test_service(
         hass,
         MP_DOMAIN,
-        "volume_down",
+        "set_volume",
+        SERVICE_VOLUME_SET,
+        {ATTR_MEDIA_VOLUME_LEVEL: 0.35},
+        35,  # Absolute set does not depend on the previously known level
+    )
+    await _test_service(
+        hass,
+        MP_DOMAIN,
+        "set_volume",
         SERVICE_VOLUME_SET,
         {ATTR_MEDIA_VOLUME_LEVEL: 0},
-        steps=100,  # From 100% (after previous vol_up) to 0% = 100 steps
+        0,
     )
     await _test_service(
         hass, MP_DOMAIN, "send_key", SERVICE_MEDIA_NEXT_TRACK, None, RemoteKey.CH_UP
