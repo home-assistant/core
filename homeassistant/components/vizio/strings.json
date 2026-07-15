@@ -62,6 +62,16 @@
     }
   },
   "services": {
+    "send_text": {
+      "description": "Types text into the focused on-screen field, such as a search box or PIN entry. Only ASCII characters are supported.",
+      "fields": {
+        "text": {
+          "description": "The text to type.",
+          "name": "Text"
+        }
+      },
+      "name": "Send text"
+    },
     "update_setting": {
       "description": "Updates the value of a setting on a Vizio media player device.",
       "fields": {

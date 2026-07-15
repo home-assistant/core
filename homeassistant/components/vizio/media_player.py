@@ -283,6 +283,10 @@ class VizioDevice(CoordinatorEntity[VizioDeviceCoordinator], MediaPlayerEntity):
             self._device.set_setting(setting_type, setting_name, new_value)
         )
 
+    async def async_send_text(self, text: str) -> None:
+        """Type text into the focused on-screen field when send_text is called."""
+        await async_device_command(self._device.send_text(text))
+
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity is added."""

@@ -41,7 +41,10 @@ from homeassistant.components.vizio.const import (
     DEFAULT_VOLUME_STEP,
     DOMAIN,
 )
-from homeassistant.components.vizio.services import SERVICE_UPDATE_SETTING
+from homeassistant.components.vizio.services import (
+    SERVICE_SEND_TEXT,
+    SERVICE_UPDATE_SETTING,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -51,6 +54,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -873,3 +877,42 @@ async def test_sound_mode_list_cached(
         attr = hass.states.get(ENTITY_ID).attributes
         # Sound mode list should still be the original cached list
         assert attr["sound_mode_list"] == EQ_LIST
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_send_text(
+    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+) -> None:
+    """Test the send_text service types text on the device."""
+    await setup_integration(hass, mock_tv_config_entry)
+
+    with patch("homeassistant.components.vizio.Vizio.send_text") as mock_send_text:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_TEXT,
+            {ATTR_ENTITY_ID: ENTITY_ID, "text": "stranger things"},
+            blocking=True,
+        )
+    mock_send_text.assert_called_once_with("stranger things")
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_update")
+async def test_send_text_device_error(
+    hass: HomeAssistant, mock_tv_config_entry: MockConfigEntry
+) -> None:
+    """Test send_text surfaces device errors as HomeAssistantError."""
+    await setup_integration(hass, mock_tv_config_entry)
+
+    with (
+        patch(
+            "homeassistant.components.vizio.Vizio.send_text",
+            side_effect=VizioConnectionError("cannot connect"),
+        ),
+        pytest.raises(HomeAssistantError, match="Failed to send command"),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_TEXT,
+            {ATTR_ENTITY_ID: ENTITY_ID, "text": "abc"},
+            blocking=True,
+        )
