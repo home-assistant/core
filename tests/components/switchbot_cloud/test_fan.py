@@ -43,7 +43,6 @@ from tests.common import async_load_json_object_fixture, snapshot_platform
 @pytest.mark.parametrize(
     ("device_info", "entry_id"),
     [
-        (AIR_PURIFIER_INFO, "fan.air_purifier_1"),
         (CIRCULATOR_FAN_INFO, "fan.fan_1"),
         (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
         (STANDING_FAN_INFO, "fan.standing_fan_1"),
@@ -167,8 +166,8 @@ async def test_turn_off(
 )
 async def test_power_state(
     hass: HomeAssistant,
-    mock_list_devices,
-    mock_get_status,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
     device_info: Device,
     entry_id: str,
 ) -> None:
@@ -206,6 +205,7 @@ async def test_power_state(
         (CIRCULATOR_FAN_INFO, "fan.fan_1"),
         (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
         (STANDING_FAN_INFO, "fan.standing_fan_1"),
+        (BATTERY_CIRCULATOR_FAN_2_PRO_INFO, "fan.device_1"),
     ],
 )
 async def test_set_percentage(
