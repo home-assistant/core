@@ -35,7 +35,7 @@ class ExposedEntitiesExtension(BaseTemplateExtension):
         # extension is imported very early during bootstrap.
         from homeassistant.components.homeassistant.exposed_entities import (  # noqa: PLC0415
             DATA_EXPOSED_ENTITIES,
-            async_should_expose,
+            async_get_should_expose,
         )
 
         exposed_entities = self.hass.data[DATA_EXPOSED_ENTITIES]
@@ -47,5 +47,5 @@ class ExposedEntitiesExtension(BaseTemplateExtension):
             for entity_id in dict.fromkeys(
                 chain(exposed_entities.entities, entity_registry.entities)
             )
-            if async_should_expose(self.hass, "conversation", entity_id)
+            if async_get_should_expose(self.hass, "conversation", entity_id)
         ]

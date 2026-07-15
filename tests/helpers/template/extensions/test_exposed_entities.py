@@ -58,6 +58,24 @@ async def test_assist_exposed_entities_only_conversation(
     assert info.rate_limit is None
 
 
+async def test_assist_exposed_entities_default_exposure_is_read_only(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test entities exposed only by default are returned without mutating state."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    # conversation exposes new entities by default and "light" is a default
+    # exposed domain, so this entity is exposed without any explicit setting.
+    entry = entity_registry.async_get_or_create("light", "test", "entity1")
+
+    info = render_to_info(hass, "{{ assist_exposed_entities() }}")
+    assert_result_info(info, [entry.entity_id])
+    assert info.rate_limit is None
+
+    # Rendering must not persist the derived should_expose value.
+    assert "conversation" not in entity_registry.async_get(entry.entity_id).options
+
+
 async def test_assist_exposed_entities_not_in_registry(hass: HomeAssistant) -> None:
     """Test assist_exposed_entities includes entities not in the registry."""
     assert await async_setup_component(hass, "homeassistant", {})
