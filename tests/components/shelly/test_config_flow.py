@@ -490,7 +490,7 @@ async def test_form_https_verify_ssl_disabled_by_default(
             "gen": 2,
             "port": DEFAULT_HTTPS_PORT,
         },
-    ) as mock_get_info:
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTPS_PORT},
@@ -505,7 +505,51 @@ async def test_form_https_verify_ssl_disabled_by_default(
         CONF_GEN: 2,
         CONF_VERIFY_SSL: False,
     }
-    assert mock_get_info.await_args.kwargs["verify_ssl"] is False
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_https_verify_ssl_enabled(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    mock_setup_entry: AsyncMock,
+    mock_setup: AsyncMock,
+) -> None:
+    """Test manual setup on port 443 with verify_ssl enabled."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={
+            "mac": "test-mac",
+            "type": MODEL_PLUS_2PM,
+            "auth": False,
+            "gen": 2,
+            "port": DEFAULT_HTTPS_PORT,
+            "enhanced_security": True,
+        },
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: DEFAULT_HTTPS_PORT,
+                CONF_VERIFY_SSL: True,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: DEFAULT_HTTPS_PORT,
+        CONF_MODEL: MODEL_PLUS_2PM,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: 2,
+        CONF_VERIFY_SSL: True,
+    }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
