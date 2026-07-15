@@ -1082,6 +1082,31 @@ class BoschCameraCoordinator(
         # the entire integration.
         self._nvr_drain_task: asyncio.Task[None] | None = None
 
+        # Annotation-only declarations (PEP 526, no assignment — these stay
+        # genuinely lazily-created via getattr/hasattr at their call sites,
+        # exactly as before) for attributes mypy --strict otherwise flags as
+        # attr-defined now that this class is properly typed everywhere it's
+        # used: they're only ever set dynamically from other modules
+        # (__init__.py's persistence bootstrap, shc.py's connector cache,
+        # switch.py/light.py's lazy per-feature lock dicts, tick_housekeeping.py's
+        # persisted-snapshot dedup, stream_lifecycle.py's dispatch coalescing).
+        self._maint_notified_store: Store[dict[str, str]]
+        self._cloud_alert_store: Store[dict[str, Any]]
+        self._lan_ips_store: Store[dict[str, str]]
+        self._hw_version_store: Store[dict[str, str]]
+        self._local_creds_store: Store[dict[str, Any]]
+        self._lan_ips_snapshot: dict[str, str]
+        self._hw_version_snapshot: dict[str, str]
+        self._local_creds_snapshot: dict[str, dict[str, Any]]
+        self._stream_log_listener: logging.Handler | None
+        self._stream_worker_dispatch_pending: set[str]
+        self._shc_connector: aiohttp.TCPConnector | None
+        self._shc_connector_key: tuple[str, str] | None
+        self._last_topdown_brightness: dict[str, dict[str, int]]
+        self._audio_detection_locks: dict[str, asyncio.Lock]
+        self._lighting_switch_locks: dict[str, asyncio.Lock]
+        self._panic_alarm_cache: dict[str, bool]
+
     def get_model_config(self, cam_id: str) -> Any:
         """Return CameraModelConfig for a camera (from models.py)."""
         from .models import get_model_config
