@@ -18,6 +18,5 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a GridX config entry."""
     return {
         "config_entry": async_redact_data(dict(entry.data), TO_REDACT),
-        "live_data": entry.runtime_data.live_coordinator.data,
-        "historical_data": entry.runtime_data.hist_coordinator.data,
+        "live_data": entry.runtime_data.coordinator.data,
     }

@@ -44,18 +44,14 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold
   devices: done
   diagnostics: done
-  discovery:
-    status: exempt
-    comment: Cloud polling integration; devices cannot be discovered on the local network.
-  discovery-update-info:
-    status: exempt
-    comment: Not applicable for cloud polling without local discovery.
+  discovery: todo
+  discovery-update-info: todo
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -72,7 +68,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: done
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: No user-actionable repair issues applicable.

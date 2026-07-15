@@ -8,8 +8,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 
 from .client import async_create_connector, load_oem_config
-from .const import API_BASE_URL, CONF_OEM, DOMAIN
-from .coordinator import GridxHistoricalCoordinator, GridxLiveCoordinator
+from .const import API_BASE_URL, DOMAIN
+from .coordinator import GridxLiveCoordinator
 from .types import GridxConfigEntry, GridxData
 
 PLATFORMS = [Platform.SENSOR]
@@ -19,9 +19,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GridxConfigEntry) -> boo
     """Set up GridX from a config entry."""
     username: str = entry.data[CONF_USERNAME]
     password: str = entry.data[CONF_PASSWORD]
-    oem: str = entry.data[CONF_OEM]
 
-    config = await hass.async_add_executor_job(load_oem_config, oem, username, password)
+    config = await hass.async_add_executor_job(load_oem_config, username, password)
     httpx_client = create_async_httpx_client(
         hass,
         auto_cleanup=False,
@@ -61,20 +60,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: GridxConfigEntry) -> boo
             translation_key="cannot_connect",
         ) from err
 
-    live_coordinator = GridxLiveCoordinator(hass, entry, connector)
-    hist_coordinator = GridxHistoricalCoordinator(hass, entry, connector)
+    coordinator = GridxLiveCoordinator(hass, entry, connector)
 
     try:
-        await live_coordinator.async_config_entry_first_refresh()
-        await hist_coordinator.async_config_entry_first_refresh()
+        await coordinator.async_config_entry_first_refresh()
     except Exception:
         await connector.close()
         raise
 
     entry.runtime_data = GridxData(
         connector=connector,
-        live_coordinator=live_coordinator,
-        hist_coordinator=hist_coordinator,
+        coordinator=coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

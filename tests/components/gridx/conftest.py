@@ -7,7 +7,6 @@ import pytest
 
 USERNAME = "test@example.com"
 PASSWORD = "test-password"
-OEM = "eon-home"
 
 MOCK_LIVE_DATA = {
     "photovoltaic": 1512,
@@ -36,31 +35,12 @@ MOCK_LIVE_DATA = {
     },
 }
 
-MOCK_HIST_DATA = [
-    {
-        "total": {
-            "photovoltaic": 8500,
-            "consumption": 4200,
-            "production": 8500,
-            "feedIn": 4300,
-            "supply": 0,
-            "selfConsumption": 4200,
-            "selfSupply": 4200,
-            "totalConsumption": 4200,
-            "directConsumptionHousehold": 4200,
-            "selfConsumptionRate": 0.494,
-            "selfSufficiencyRate": 1.0,
-        }
-    }
-]
-
 
 @pytest.fixture
 def mock_gridx_connector() -> Generator[MagicMock]:
     """Mock GridboxConnector so tests never hit the real network."""
     connector = MagicMock()
     connector.retrieve_live_data = AsyncMock(return_value=[MOCK_LIVE_DATA])
-    connector.retrieve_historical_data = AsyncMock(return_value=MOCK_HIST_DATA)
     connector.close = AsyncMock()
 
     with (

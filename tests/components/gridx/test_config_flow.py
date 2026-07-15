@@ -7,15 +7,13 @@ import httpx
 import pytest
 
 from homeassistant.components.gridx.config_flow import _NoSystemsFoundError
-from homeassistant.components.gridx.const import CONF_OEM, DOMAIN
+from homeassistant.components.gridx.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import OEM, PASSWORD, USERNAME
-
-from tests.common import MockConfigEntry
+from .conftest import PASSWORD, USERNAME
 
 
 def _http_status_error(status_code: int) -> httpx.HTTPStatusError:
@@ -70,7 +68,7 @@ async def test_user_step_success(
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -78,7 +76,6 @@ async def test_user_step_success(
     assert result["data"] == {
         CONF_USERNAME: USERNAME,
         CONF_PASSWORD: PASSWORD,
-        CONF_OEM: OEM,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -97,7 +94,7 @@ async def test_user_step_errors(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -118,7 +115,7 @@ async def test_user_step_no_systems(hass: HomeAssistant) -> None:
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -140,7 +137,7 @@ async def test_user_step_duplicate(
         )
         await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
 
         # Second attempt with the same username
@@ -149,167 +146,11 @@ async def test_user_step_duplicate(
         )
         result2 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
-
-
-async def test_reauth_success(hass: HomeAssistant) -> None:
-    """Test successful re-authentication flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
-        unique_id=USERNAME.lower(),
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.gridx.config_flow._validate_credentials",
-        new=AsyncMock(),
-    ):
-        result = await entry.start_reauth_flow(hass)
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "new-password"},
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-
-    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert updated_entry is not None
-    assert updated_entry.data[CONF_PASSWORD] == "new-password"
-
-
-async def test_reconfigure_success(hass: HomeAssistant) -> None:
-    """Test successful reconfiguration flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
-        unique_id=USERNAME.lower(),
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.gridx.config_flow._validate_credentials",
-        new=AsyncMock(),
-    ):
-        result = await entry.start_reconfigure_flow(hass)
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reconfigure"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: USERNAME,
-                CONF_PASSWORD: "new-password",
-                CONF_OEM: OEM,
-            },
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert updated_entry is not None
-    assert updated_entry.data[CONF_PASSWORD] == "new-password"
-    assert updated_entry.data[CONF_OEM] == OEM
-
-
-async def test_reconfigure_updates_unique_id_on_username_change(
-    hass: HomeAssistant,
-) -> None:
-    """Test that reconfigure updates unique_id and title when username changes."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
-        unique_id=USERNAME.lower(),
-        title=USERNAME,
-    )
-    entry.add_to_hass(hass)
-
-    new_username = "changed@example.com"
-    with patch(
-        "homeassistant.components.gridx.config_flow._validate_credentials",
-        new=AsyncMock(),
-    ):
-        result = await entry.start_reconfigure_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: new_username,
-                CONF_PASSWORD: "new-password",
-                CONF_OEM: OEM,
-            },
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert updated_entry is not None
-    assert updated_entry.unique_id == new_username.lower()
-    assert updated_entry.title == new_username
-    assert updated_entry.data[CONF_USERNAME] == new_username
-
-
-@pytest.mark.parametrize(("side_effect", "expected_error"), ERROR_CASES)
-async def test_reauth_errors(
-    hass: HomeAssistant, side_effect: Exception, expected_error: str
-) -> None:
-    """Validation errors during reauth show the matching form error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
-        unique_id=USERNAME.lower(),
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.gridx.config_flow._validate_credentials",
-        new=AsyncMock(side_effect=side_effect),
-    ):
-        result = await entry.start_reauth_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "new-password"},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": expected_error}
-
-
-@pytest.mark.parametrize(("side_effect", "expected_error"), ERROR_CASES)
-async def test_reconfigure_errors(
-    hass: HomeAssistant, side_effect: Exception, expected_error: str
-) -> None:
-    """Validation errors during reconfigure show the matching form error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
-        unique_id=USERNAME.lower(),
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.gridx.config_flow._validate_credentials",
-        new=AsyncMock(side_effect=side_effect),
-    ):
-        result = await entry.start_reconfigure_flow(hass)
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
-    assert result["errors"] == {"base": expected_error}
 
 
 async def test_validate_credentials_closes_client_on_connector_error(
@@ -333,7 +174,7 @@ async def test_validate_credentials_closes_client_on_connector_error(
         )
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
 
     assert result["type"] is FlowResultType.FORM

@@ -1,23 +1,18 @@
-"""Tests for the GridX coordinators."""
+"""Tests for the GridX coordinator."""
 
 from unittest.mock import AsyncMock, MagicMock
 
 import httpx
 import pytest
 
-from homeassistant.components.gridx.const import CONF_OEM, DOMAIN
-from homeassistant.components.gridx.coordinator import (
-    GridxHistoricalCoordinator,
-    GridxLiveCoordinator,
-    _fetch_historical,
-    _fetch_live,
-)
+from homeassistant.components.gridx.const import DOMAIN
+from homeassistant.components.gridx.coordinator import GridxLiveCoordinator, _fetch_live
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .conftest import MOCK_HIST_DATA, MOCK_LIVE_DATA, OEM, PASSWORD, USERNAME
+from .conftest import MOCK_LIVE_DATA, PASSWORD, USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -27,7 +22,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return a mock GridX config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         title=USERNAME,
     )
     entry.add_to_hass(hass)
@@ -127,84 +122,6 @@ async def test_live_coordinator_auth_error(
         await _fetch_live(connector)
 
 
-async def test_historical_coordinator_success(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test that historical coordinator returns total + last_reset."""
-    connector = MagicMock()
-    connector.retrieve_historical_data = AsyncMock(return_value=MOCK_HIST_DATA)
-
-    coord = GridxHistoricalCoordinator(hass, config_entry, connector)
-    await coord.async_refresh()
-
-    assert coord.data["total"]["photovoltaic"] == 8500
-    assert "last_reset" in coord.data
-
-
-async def test_historical_coordinator_aggregates_multiple_systems(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Aggregate historical totals across multiple systems."""
-    connector = MagicMock()
-    connector.retrieve_historical_data = AsyncMock(
-        return_value=[
-            {
-                "total": {
-                    "photovoltaic": 100,
-                    "gridMeterReadingPositive": 1.5,
-                    "selfConsumptionRate": 0.4,
-                    "unit": "Wh",
-                    "mode": "single",
-                }
-            },
-            {
-                "total": {
-                    "photovoltaic": 250,
-                    "gridMeterReadingPositive": 2.5,
-                    "selfConsumptionRate": 0.6,
-                    "mode": 1,
-                }
-            },
-            {"total": "invalid"},
-        ]
-    )
-
-    data = await _fetch_historical(connector)
-
-    assert data["total"]["photovoltaic"] == 350
-    assert data["total"]["gridMeterReadingPositive"] == pytest.approx(4.0)
-    # Rates are averaged, not summed
-    assert data["total"]["selfConsumptionRate"] == pytest.approx(0.5)
-    assert data["total"]["unit"] == "Wh"
-    # Non-numeric first value should not be overwritten by later numeric values.
-    assert data["total"]["mode"] == "single"
-    assert "last_reset" in data
-
-
-async def test_historical_coordinator_empty_response(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test that an empty historical response raises UpdateFailed."""
-    connector = MagicMock()
-    connector.retrieve_historical_data = AsyncMock(return_value=[])
-
-    with pytest.raises(UpdateFailed):
-        await _fetch_historical(connector)
-
-
-async def test_historical_coordinator_auth_error(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Test that a PermissionError in historical fetch raises ConfigEntryAuthFailed."""
-    connector = MagicMock()
-    connector.retrieve_historical_data = AsyncMock(
-        side_effect=PermissionError("expired")
-    )
-
-    with pytest.raises(ConfigEntryAuthFailed):
-        await _fetch_historical(connector)
-
-
 async def test_live_coordinator_http_401(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -255,57 +172,3 @@ async def test_live_coordinator_runtime_error(
 
     with pytest.raises(UpdateFailed):
         await _fetch_live(connector)
-
-
-async def test_historical_coordinator_http_401(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """HTTPStatusError with 401 raises ConfigEntryAuthFailed in historical coordinator."""
-    response = MagicMock()
-    response.status_code = 401
-    err = httpx.HTTPStatusError("401", request=MagicMock(), response=response)
-    connector = MagicMock()
-    connector.retrieve_historical_data = AsyncMock(side_effect=err)
-
-    with pytest.raises(ConfigEntryAuthFailed):
-        await _fetch_historical(connector)
-
-
-async def test_historical_coordinator_http_status_500(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """HTTPStatusError with 500 raises UpdateFailed in historical coordinator."""
-    response = MagicMock()
-    response.status_code = 500
-    err = httpx.HTTPStatusError("500", request=MagicMock(), response=response)
-    connector = MagicMock()
-    connector.retrieve_historical_data = AsyncMock(side_effect=err)
-
-    with pytest.raises(UpdateFailed):
-        await _fetch_historical(connector)
-
-
-async def test_historical_coordinator_http_error(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """httpx.HTTPError raises UpdateFailed in historical coordinator."""
-    connector = MagicMock()
-    connector.retrieve_historical_data = AsyncMock(
-        side_effect=httpx.HTTPError("connection failed")
-    )
-
-    with pytest.raises(UpdateFailed):
-        await _fetch_historical(connector)
-
-
-async def test_historical_coordinator_runtime_error(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """RuntimeError raises UpdateFailed in historical coordinator."""
-    connector = MagicMock()
-    connector.retrieve_historical_data = AsyncMock(
-        side_effect=RuntimeError("unexpected")
-    )
-
-    with pytest.raises(UpdateFailed):
-        await _fetch_historical(connector)

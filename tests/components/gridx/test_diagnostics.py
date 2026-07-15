@@ -4,14 +4,14 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.gridx.const import CONF_OEM, DOMAIN
+from homeassistant.components.gridx.const import DOMAIN
 from homeassistant.components.gridx.diagnostics import (
     async_get_config_entry_diagnostics,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_HIST_DATA, MOCK_LIVE_DATA, OEM, PASSWORD, USERNAME
+from .conftest import MOCK_LIVE_DATA, PASSWORD, USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -23,14 +23,13 @@ async def setup_integration(
     """Load the GridX integration with a mocked connector."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         title=USERNAME,
         unique_id=USERNAME.lower(),
     )
     entry.add_to_hass(hass)
 
     mock_gridx_connector.retrieve_live_data.return_value = [MOCK_LIVE_DATA]
-    mock_gridx_connector.retrieve_historical_data.return_value = MOCK_HIST_DATA
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -46,4 +45,3 @@ async def test_diagnostics_redacts_password(
     assert result["config_entry"][CONF_USERNAME] == "**REDACTED**"
     assert result["config_entry"][CONF_PASSWORD] == "**REDACTED**"
     assert result["live_data"] == MOCK_LIVE_DATA
-    assert result["historical_data"]["total"] == MOCK_HIST_DATA[0]["total"]

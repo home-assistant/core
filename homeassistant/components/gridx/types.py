@@ -2,10 +2,11 @@
 
 from dataclasses import dataclass
 
+from gridx_connector.async_connector import AsyncGridboxConnector
+
 from homeassistant.config_entries import ConfigEntry
 
-from .client import GridxConnector
-from .coordinator import GridxHistoricalCoordinator, GridxLiveCoordinator
+from .coordinator import GridxLiveCoordinator
 
 type GridxConfigEntry = ConfigEntry[GridxData]
 
@@ -14,6 +15,5 @@ type GridxConfigEntry = ConfigEntry[GridxData]
 class GridxData:
     """Runtime data stored on the config entry."""
 
-    connector: GridxConnector
-    live_coordinator: GridxLiveCoordinator
-    hist_coordinator: GridxHistoricalCoordinator
+    connector: AsyncGridboxConnector
+    coordinator: GridxLiveCoordinator

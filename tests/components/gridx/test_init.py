@@ -5,12 +5,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from homeassistant.components.gridx.const import CONF_OEM, DOMAIN
+from homeassistant.components.gridx.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .conftest import OEM, PASSWORD, USERNAME
+from .conftest import PASSWORD, USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -20,7 +20,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return a mock GridX config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD, CONF_OEM: OEM},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         title=USERNAME,
         unique_id=USERNAME.lower(),
     )

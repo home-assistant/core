@@ -37,13 +37,7 @@
       "direct_consumption_rate": {
         "default": "mdi:percent"
       },
-      "ev_current_l1": {
-        "default": "mdi:current-ac"
-      },
-      "ev_current_l2": {
-        "default": "mdi:current-ac"
-      },
-      "ev_current_l3": {
+      "ev_current_phase": {
         "default": "mdi:current-ac"
       },
       "ev_power": {
@@ -72,48 +66,6 @@
       },
       "heatpump_power": {
         "default": "mdi:heat-pump"
-      },
-      "hist_consumption": {
-        "default": "mdi:home-lightning-bolt"
-      },
-      "hist_direct_consumption_ev": {
-        "default": "mdi:car-electric"
-      },
-      "hist_direct_consumption_heat_pump": {
-        "default": "mdi:heat-pump"
-      },
-      "hist_direct_consumption_heater": {
-        "default": "mdi:radiator"
-      },
-      "hist_direct_consumption_household": {
-        "default": "mdi:home-lightning-bolt"
-      },
-      "hist_feed_in": {
-        "default": "mdi:transmission-tower-export"
-      },
-      "hist_photovoltaic": {
-        "default": "mdi:solar-power"
-      },
-      "hist_production": {
-        "default": "mdi:lightning-bolt-circle"
-      },
-      "hist_self_consumption": {
-        "default": "mdi:home-battery"
-      },
-      "hist_self_consumption_rate": {
-        "default": "mdi:percent"
-      },
-      "hist_self_sufficiency_rate": {
-        "default": "mdi:home-circle"
-      },
-      "hist_self_supply": {
-        "default": "mdi:battery-charging-wireless"
-      },
-      "hist_supply": {
-        "default": "mdi:transmission-tower-import"
-      },
-      "hist_total_consumption": {
-        "default": "mdi:home-lightning-bolt"
       },
       "photovoltaic": {
         "default": "mdi:solar-power"
