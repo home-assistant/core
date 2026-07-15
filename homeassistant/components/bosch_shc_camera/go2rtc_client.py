@@ -43,7 +43,7 @@ import logging
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import aiohttp
 
@@ -76,7 +76,7 @@ async def _get_go2rtc_session(
     keep working without every one of them growing a
     `_go2rtc_session`/`_go2rtc_session_lock` attribute.
     """
-    existing = getattr(coordinator, "_go2rtc_session", None)
+    existing: aiohttp.ClientSession | None = getattr(coordinator, "_go2rtc_session", None)
     if existing is not None and not existing.closed:
         return existing
     if getattr(coordinator, "_go2rtc_teardown_done", False):
@@ -100,7 +100,10 @@ async def _get_go2rtc_session(
         # Double-check inside the lock — another coroutine may have already
         # created it while we awaited the lock (register/unregister/
         # consumer-count can all fire concurrently across cameras).
-        existing = getattr(coordinator, "_go2rtc_session", None)
+        existing = cast(
+            "aiohttp.ClientSession | None",
+            getattr(coordinator, "_go2rtc_session", None),
+        )
         if existing is not None and not existing.closed:
             return existing
         if getattr(coordinator, "_go2rtc_teardown_done", False):

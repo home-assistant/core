@@ -26,6 +26,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -192,7 +193,7 @@ class _BoschSensorBase(CoordinatorEntity[BoschCameraCoordinator], SensorEntity):
 
     @property
     @override
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         return {
             "identifiers": {(DOMAIN, self._cam_id)},
             "name": f"Bosch {self._cam_title}",

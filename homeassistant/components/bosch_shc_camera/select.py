@@ -19,6 +19,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -147,7 +148,7 @@ class BoschVideoQualitySelect(
 
     @property
     @override
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         cam_data = self.coordinator.data.get(self._cam_id, {})
         cam_info = cam_data.get("info", {})
         return {
@@ -246,7 +247,7 @@ class BoschNvrModeSelect(
 
     @property
     @override
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         cam_data = self.coordinator.data.get(self._cam_id, {})
         cam_info = cam_data.get("info", {})
         return {
@@ -327,7 +328,7 @@ class BoschMotionSensitivitySelect(
 
     @property
     @override
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         cam_data = self.coordinator.data.get(self._cam_id, {})
         cam_info = cam_data.get("info", {})
         return {
@@ -425,7 +426,7 @@ class BoschFcmPushModeSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEn
 
     @property
     @override
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         cam_data = self.coordinator.data.get(self._cam_id, {})
         cam_info = cam_data.get("info", {})
         cam_title = cam_info.get("title", self._cam_id)
@@ -510,7 +511,7 @@ class BoschStreamModeSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEnt
 
     @property
     @override
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         cam_data = self.coordinator.data.get(self._cam_id, {})
         cam_info = cam_data.get("info", {})
         return {
@@ -571,7 +572,7 @@ class BoschDetectionModeSelect(CoordinatorEntity[BoschCameraCoordinator], Select
 
     @property
     @override
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         cam_data = self.coordinator.data.get(self._cam_id, {})
         cam_info = cam_data.get("info", {})
         return {
@@ -670,7 +671,7 @@ class BoschPanPresetSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEnti
 
     @property
     @override
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         cam_data = self.coordinator.data.get(self._cam_id, {})
         cam_info = cam_data.get("info", {})
         return {

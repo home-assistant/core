@@ -27,6 +27,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -177,7 +178,7 @@ class _BoschLightBase(
 
     @property
     @override
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         return {
             "identifiers": {(DOMAIN, self._cam_id)},
             "name": f"Bosch {self._cam_title}",
