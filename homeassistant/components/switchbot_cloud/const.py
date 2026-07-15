@@ -38,7 +38,15 @@ HUMIDITY_LEVELS = {
 }
 
 
-NIGHT_LIGHT_PARAMETERS_MAP = {"Off": "off", "Bright": "1", "Dark": "2"}
+NIGHT_LIGHT_OFF = "off"
+NIGHT_LIGHT_BRIGHT = "bright"
+NIGHT_LIGHT_SOFT = "soft"
+
+NIGHT_LIGHT_PARAMETERS_MAP = {
+    NIGHT_LIGHT_OFF: "off",
+    NIGHT_LIGHT_BRIGHT: "1",
+    NIGHT_LIGHT_SOFT: "2",
+}
 
 
 class AirPurifierMode(Enum):
