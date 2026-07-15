@@ -205,9 +205,6 @@ EXCEPTIONS = {
 # fmt: off
 TODO = {
     "TravisPy": AwesomeVersion("0.3.5"),  # None -- GPL -- ['GNU General Public License v3 (GPLv3)']
-    "aiocache": AwesomeVersion(
-        "0.12.3"
-    ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
 }
 # fmt: on
 

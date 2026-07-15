@@ -1,5 +1,6 @@
 """Tests for the Novy Hood light platform."""
 
+import pytest
 from rf_protocols.codes.novy.cooker_hood import NovyCookerHoodButton
 
 from homeassistant.components.light import (
@@ -26,10 +27,10 @@ from tests.components.radio_frequency.common import MockRadioFrequencyEntity
 ENTITY_ID = "light.novy_cooker_hood_light"
 
 
+@pytest.mark.usefixtures("init_novy_cooker_hood")
 async def test_turn_on_and_off_send_light_once_each(
     hass: HomeAssistant,
     mock_rf_entity: MockRadioFrequencyEntity,
-    init_novy_cooker_hood: MockConfigEntry,
 ) -> None:
     """Turn on sends a light toggle and flips is_on; turn off does the same."""
     state = hass.states.get(ENTITY_ID)
@@ -88,10 +89,9 @@ async def test_restore_state(
     assert state.state == STATE_ON
 
 
+@pytest.mark.usefixtures("mock_rf_entity", "init_novy_cooker_hood")
 async def test_entity_follows_transmitter_availability(
     hass: HomeAssistant,
-    mock_rf_entity: MockRadioFrequencyEntity,
-    init_novy_cooker_hood: MockConfigEntry,
 ) -> None:
     """The light becomes unavailable when the transmitter does, and back."""
     await assert_availability_follows_source_entity(
