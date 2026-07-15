@@ -50,18 +50,21 @@ async def test_night_light_coordinator_data_is_none(
 
 
 @pytest.mark.parametrize(
-    ("key_type", "expected"),
+    ("device", "key_type", "expected"),
     [
-        ("on", "1"),
-        ("off", "off"),
-        ("bright", "1"),
-        ("soft", "2"),
+        ("Standing Fan", "on", "1"),
+        ("Standing Fan", "off", "off"),
+        ("Standing Fan", "bright", "1"),
+        ("Standing Fan", "soft", "2"),
+        ("Battery Circulator Fan 2 Pro", "bright", "0"),
+        ("Battery Circulator Fan 2 Pro", "soft", "1"),
     ],
 )
 async def test_night_light_options(
     hass: HomeAssistant,
     mock_list_devices: AsyncMock,
     mock_get_status: AsyncMock,
+    device: str,
     key_type: str,
     expected: str,
 ) -> None:
@@ -71,7 +74,7 @@ async def test_night_light_options(
             version="V1.0",
             deviceId="device-id-1",
             deviceName="device-1",
-            deviceType="Standing Fan",
+            deviceType=device,
             hubDeviceId="test-hub-id",
         ),
     ]
@@ -79,7 +82,7 @@ async def test_night_light_options(
     mock_get_status.side_effect = [
         {
             "deviceId": "B0E9FEDEB68C",
-            "deviceType": "Standing Fan",
+            "deviceType": device,
             "power": "on",
             "fanSpeed": 3,
             "mode": "direct",
