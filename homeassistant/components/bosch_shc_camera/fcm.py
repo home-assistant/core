@@ -314,9 +314,10 @@ class _QuietFcmPushClient:
             )
             return None
 
-        class _Patched(FcmPushClient):  # type: ignore[misc]
+        class _Patched(FcmPushClient):
             """FcmPushClient with the run_state-before-log fix for issue #33."""
 
+            @override
             async def _listen(self) -> None:
                 """Override _listen to set RESETTING state before the error-log decision.
 
@@ -334,7 +335,7 @@ class _QuietFcmPushClient:
 
                     while self.do_listen:
                         try:
-                            if self.run_state == FcmPushClientRunState.RESETTING:  # type: ignore[has-type]  # external FcmPushClient attr (untyped base)
+                            if self.run_state is FcmPushClientRunState.RESETTING:
                                 await asyncio.sleep(1)
                             elif msg := await self._receive_msg():
                                 await self._handle_message(msg)
@@ -346,7 +347,7 @@ class _QuietFcmPushClient:
                             # Without this line, the first OS error always takes the
                             # _logger.exception() branch even though the connection
                             # is about to be gracefully reset.
-                            if self.run_state not in (  # type: ignore[has-type]  # external FcmPushClient attr (untyped base)
+                            if self.run_state not in (
                                 FcmPushClientRunState.RESETTING,
                                 FcmPushClientRunState.STOPPING,
                                 FcmPushClientRunState.STOPPED,
@@ -363,7 +364,7 @@ class _QuietFcmPushClient:
                                         ssl.SSLError,
                                     ),
                                 )
-                                and self.run_state == FcmPushClientRunState.RESETTING
+                                and self.run_state is FcmPushClientRunState.RESETTING
                             ):
                                 if (
                                     isinstance(osex, ssl.SSLError)
@@ -427,7 +428,7 @@ def _get_fcm_push_client_class() -> type | None:
         try:
             from firebase_messaging import FcmPushClient
 
-            return FcmPushClient  # type: ignore[no-any-return]  # value is correct at runtime; HA/external source is Any-typed
+            return FcmPushClient
         except ImportError:
             return None
     return result  # type: ignore[return-value]  # False-sentinel already replaced before this point
@@ -524,10 +525,11 @@ async def _async_start_fcm_push_locked(coordinator: Any) -> bool:
 
     # FcmPushClientConfig landed in firebase-messaging 0.4; guard defensively
     # so older installs still start (without the hardening).
+    fcm_push_client_config_cls: type[Any] | None
     try:
-        from firebase_messaging import FcmPushClientConfig
+        from firebase_messaging import FcmPushClientConfig as fcm_push_client_config_cls
     except ImportError:  # pragma: no cover — 0.4+ ships this symbol
-        FcmPushClientConfig = None
+        fcm_push_client_config_cls = None
 
     # Determine push mode — only "auto" (use OSS FCM key) or "polling" (skip FCM).
     # Legacy values "ios"/"android" from older versions coerce to "auto".
@@ -621,8 +623,8 @@ async def _async_start_fcm_push_locked(coordinator: Any) -> bool:
             "credentials": saved_fcm_creds,
             "credentials_updated_callback": _on_creds_updated,
         }
-        if FcmPushClientConfig is not None:
-            fcm_kwargs["config"] = FcmPushClientConfig(
+        if fcm_push_client_config_cls is not None:
+            fcm_kwargs["config"] = fcm_push_client_config_cls(
                 abort_on_sequential_error_count=None,
             )
         coordinator._fcm_client = FcmPushClient(**fcm_kwargs)
