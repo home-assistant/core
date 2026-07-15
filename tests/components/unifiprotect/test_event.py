@@ -157,6 +157,7 @@ async def test_doorbell_ring(
     [
         pytest.param(EventType.SMART_DETECT, id="zone"),
         pytest.param(EventType.SMART_DETECT_LINE, id="line"),
+        pytest.param(EventType.SMART_DETECT_LOITER, id="loiter"),
     ],
 )
 async def test_package_detected(
@@ -1788,6 +1789,7 @@ async def test_motion_detection_event(
     [
         pytest.param(EventType.SMART_DETECT, id="zone"),
         pytest.param(EventType.SMART_DETECT_LINE, id="line"),
+        pytest.param(EventType.SMART_DETECT_LOITER, id="loiter"),
     ],
 )
 async def test_smart_detection_event(
@@ -1800,8 +1802,9 @@ async def test_smart_detection_event(
 ) -> None:
     """The smart-detection event entity fires per object type with the full type set.
 
-    Both smartDetectZone and smartDetectLine events carry smart detections, so
-    a standalone line-crossing event must fire the entity too.
+    smartDetectZone, smartDetectLine, and smartDetectLoiterZone events all carry
+    smart detections, so a standalone line-crossing or loitering event must fire
+    the entity too.
     """
     setup_public_camera(ufp)
     await init_entry(hass, ufp, [doorbell, unadopted_camera])

@@ -81,11 +81,16 @@ class ProtectEventEntityDescription(ProtectEventMixin, EventEntityDescription):
     entity_class: type[ProtectDeviceEntity]
 
 
-# Protect emits overlapping ``smartDetectZone`` and ``smartDetectLine`` frames,
-# and a line-crossing detection can arrive as a standalone ``smartDetectLine``
-# event — both types carry smart detections (mirroring the private
-# ``CAMERA_EVENT_ATTR_MAP``), so smart-detect entities subscribe to both.
-_SMART_DETECT_EVENT_TYPES = (EventType.SMART_DETECT, EventType.SMART_DETECT_LINE)
+# Protect emits overlapping ``smartDetectZone``, ``smartDetectLine``, and
+# ``smartDetectLoiterZone`` frames for the same underlying detection, and a
+# line-crossing or loitering detection can arrive as a standalone event of its
+# own type — all three carry the same ``smartDetectTypes`` payload per the
+# public API schema, so smart-detect entities subscribe to all of them.
+_SMART_DETECT_EVENT_TYPES = (
+    EventType.SMART_DETECT,
+    EventType.SMART_DETECT_LINE,
+    EventType.SMART_DETECT_LOITER,
+)
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
