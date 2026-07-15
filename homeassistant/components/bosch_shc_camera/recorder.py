@@ -80,13 +80,13 @@ _STOP_GRACE_SECONDS = TIMEOUT_RECORDER_GRACE
 
 # When the NVR switch is toggled on right after Live Stream ON, the TLS
 # proxy URL is still empty until the RTSP DESCRIBE handshake completes
-# (~3–10 s on Gen2). Poll for it before giving up.
+# (~3-10 s on Gen2). Poll for it before giving up.
 _PROXY_URL_WAIT_STEPS = 24
 _PROXY_URL_WAIT_INTERVAL = 0.5
 
 # ── Phase 4: pre-roll buffer tunables ────────────────────────────────────────
 _PREROLL_SEGMENT_SECONDS = 10  # short segments for fine-grained pre-roll
-_PREROLL_MAX_SEGMENTS = 5  # keep last 5 × 10 s = 50 s max in tmpfs
+_PREROLL_MAX_SEGMENTS = 5  # keep last 5 x 10 s = 50 s max in tmpfs
 _PREROLL_MIN_SIZE_BYTES = 1024  # discard sub-1 KB corrupt segments
 
 # ── Staging-drain watcher tunables ───────────────────────────────────────────
@@ -384,7 +384,7 @@ async def _watch_preroll_recorder(
     """Periodic prune loop — keeps the pre-roll ring buffer bounded while running.
 
     Fires every _PREROLL_SEGMENT_SECONDS (10 s) and discards the oldest
-    segments so the buffer never grows past max_segs × 10 s. Exits cleanly
+    segments so the buffer never grows past max_segs x 10 s. Exits cleanly
     when the process exits or is cancelled.
     """
     while True:
@@ -1126,7 +1126,7 @@ async def start_recorder(
         )
         return
     # Poll for the TLS-proxy URL: when the NVR switch is toggled on right
-    # after the Live Stream switch, the RTSP DESCRIBE handshake (~3–10 s on
+    # after the Live Stream switch, the RTSP DESCRIBE handshake (~3-10 s on
     # Gen2) may still be in flight and ``_live_connections[cam_id].rtspsUrl``
     # is still empty. The coordinator tick would eventually retry, but the
     # immediate UI toggle would record an unwarranted WARNING every tick

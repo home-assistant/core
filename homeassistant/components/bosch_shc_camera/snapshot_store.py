@@ -44,7 +44,7 @@ _CAM_ID_RE = re.compile(
 )
 
 # Sanity bounds for snapshot byte sizes.
-# Bosch snapshots are 50–800 KiB typically; 100 B is the smallest valid JPEG.
+# Bosch snapshots are 50-800 KiB typically; 100 B is the smallest valid JPEG.
 _MIN_JPEG_BYTES = 100
 _MAX_JPEG_BYTES = 10 * 1024 * 1024  # 10 MiB hard cap
 

@@ -436,7 +436,7 @@ class BoschCameraCoordinator(
         # RCP data caches — keyed by cam_id, populated via RCP protocol over cloud proxy
         self.rcp_dimmer_cache: CacheFieldView[int | None] = CacheFieldView(
             self._sessions, "rcp_dimmer_cache"
-        )  # LED dimmer value 0–100
+        )  # LED dimmer value 0-100
         self.rcp_privacy_cache: CacheFieldView[int | None] = CacheFieldView(
             self._sessions, "rcp_privacy_cache"
         )  # privacy mask byte[1] (1=ON)
@@ -884,7 +884,7 @@ class BoschCameraCoordinator(
         # failure burst" and time-decayed back to 0 — the watchdog's
         # record_stream_success() never fires when no HLS consumer is
         # connected, so without time decay the counter would stick at 1 after
-        # the first rescue and the next 401 burst (typically 8–14 min later)
+        # the first rescue and the next 401 burst (typically 8-14 min later)
         # would skip straight to REMOTE.
         self.local_rescue_attempts: dict[str, int] = {}
         self.local_rescue_at: dict[
@@ -1475,7 +1475,7 @@ class BoschCameraCoordinator(
     # Grace period after a local RCP write during which LAN-ping failures are
     # treated as still-reachable: the camera rotates Digest creds + tears down
     # its cloud TLS session after each write, and the LAN HTTPS endpoint is
-    # briefly unresponsive (~5–15 s observed). 30 s leaves margin without
+    # briefly unresponsive (~5-15 s observed). 30 s leaves margin without
     # masking a real network outage.
     LOCAL_WRITE_GRACE_S: float = 30.0
 
@@ -1505,7 +1505,7 @@ class BoschCameraCoordinator(
         """True while firmware install is in progress for `cam_id`.
 
         Reads `_firmware_cache[cam_id]['updating']` populated by the slow-tier
-        firmware poll. The camera reboots during the install (typically 3–7 min)
+        firmware poll. The camera reboots during the install (typically 3-7 min)
         so dependent entities should flip to unavailable for that window. The
         camera-status sensor surfaces the same state as the enum value
         ``"updating"``.
@@ -1629,9 +1629,7 @@ class BoschCameraCoordinator(
         # ...) working the same way it did before BoschCameraCoordinator
         # moved out of __init__.py — those patches target the package's own
         # namespace, matching the pattern already used in live_connection.py.
-        from . import (  # noqa: PLC0415
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import async_get_bosch_cloud_session  # noqa: PLC0415
 
         token = self.token
         if not token and not self.refresh_token:
@@ -1942,7 +1940,7 @@ class BoschCameraCoordinator(
         # "custom_components.bosch_shc_camera.ir", ...) working the same
         # way it did before BoschCameraCoordinator moved out of __init__.py
         # — matches the pattern already used in live_connection.py.
-        from . import ir as ir  # noqa: PLC0415
+        from . import ir  # noqa: PLC0415
 
         for cam_id, notif in self.notifications_cache.items():
             if not notif:
@@ -2009,7 +2007,7 @@ class BoschCameraCoordinator(
         # "custom_components.bosch_shc_camera.ir", ...) working the same
         # way it did before BoschCameraCoordinator moved out of __init__.py
         # — matches the pattern already used in live_connection.py.
-        from . import ir as ir  # noqa: PLC0415
+        from . import ir  # noqa: PLC0415
 
         for cam_id, fw in self.firmware_cache.items():
             if not fw:
@@ -2083,7 +2081,7 @@ class BoschCameraCoordinator(
         # "custom_components.bosch_shc_camera.ir", ...) working the same
         # way it did before BoschCameraCoordinator moved out of __init__.py
         # — matches the pattern already used in live_connection.py.
-        from . import ir as ir  # noqa: PLC0415
+        from . import ir  # noqa: PLC0415
 
         features = smb_dependent_features(self.options)
 
@@ -2225,9 +2223,7 @@ class BoschCameraCoordinator(
         # "custom_components.bosch_shc_camera.async_get_clientsession", ...)
         # working the same way it did before BoschCameraCoordinator moved
         # out of __init__.py — matches the live_connection.py pattern.
-        from . import (  # noqa: PLC0415
-            async_get_clientsession as async_get_clientsession,
-        )
+        from . import async_get_clientsession  # noqa: PLC0415
 
         now = time.monotonic()
         if (
@@ -3025,7 +3021,7 @@ class BoschCameraCoordinator(
              `warming_up` with `live_rtsps=null` for >7 min while keepalive
              was already running (gen=2, 480s into session).
           3. cam_id in `_stream_warming` for >300 s — hard timeout. Pre-warm
-             worst case is ~120 s (CAMERA_EYES outdoor 8 retries × 15 s).
+             worst case is ~120 s (CAMERA_EYES outdoor 8 retries x 15 s).
              Anything longer is stuck — clear and let the next toggle reset
              cleanly rather than blocking privacy/snapshot UI forever.
         """
@@ -3050,7 +3046,7 @@ class BoschCameraCoordinator(
             self.get_session(cam_id).warming_started = float("-inf")
             return False
         # Scenario 3: warming for >180 s — hard timeout. Pre-warm worst case is
-        # ~150 s (CAMERA_EYES outdoor: 8 retries × 13 s + 35 s min_total_wait +
+        # ~150 s (CAMERA_EYES outdoor: 8 retries x 13 s + 35 s min_total_wait +
         # buffer). 180 s leaves a small safety margin without holding the
         # privacy toggle hostage for 5 minutes on a stuck warm-up.
         # -inf (not 0) as the missing-key default (SENTINEL_RULE): an entry in
@@ -3214,7 +3210,7 @@ class BoschCameraCoordinator(
         # snap.jpg with HTTP 200 and 0 bytes (camera blocks live frames while
         # the shutter / privacy mask is engaged). Skip the network call entirely
         # rather than burning a PUT /connection + snap.jpg round-trip every
-        # coordinator tick (~5–8 calls per minute across 4 cameras) just to
+        # coordinator tick (~5-8 calls per minute across 4 cameras) just to
         # log "empty response (privacy mode ON?)" each time. The camera entity
         # falls back to its cached frame or _PLACEHOLDER_JPEG. Detected via the
         # cached `privacy_mode` boolean populated in the same /v11/video_inputs
@@ -3227,7 +3223,7 @@ class BoschCameraCoordinator(
             return None
 
         # Reuse the pooled, application-lifetime Bosch cloud session instead of
-        # opening a fresh TCP+TLS connection on every snapshot poll (~5–8 calls/
+        # opening a fresh TCP+TLS connection on every snapshot poll (~5-8 calls/
         # min across 4 cameras). Connection pooling removes a full TLS handshake
         # per tick. The CM does NOT close the shared session. 2026-06-18 (perf).
         async with async_bosch_cloud_session_cm(self.hass) as session:
@@ -3286,7 +3282,7 @@ class BoschCameraCoordinator(
                 if not url_entry:
                     return None
 
-                # ── RCP 0x099e: 320×180 JPEG (Gen1 only) ──
+                # ── RCP 0x099e: 320x180 JPEG (Gen1 only) ──
                 # Gen1 (INDOOR/OUTDOOR/CAMERA_360) returns a JPEG via the proxy RCP
                 # endpoint. Gen2 (HOME_Eyes_*) responds with non-JPEG payload —
                 # 0x0a88 only reports the *configured* snapshot resolution, not that
@@ -3447,11 +3443,11 @@ class BoschCameraCoordinator(
                 t_end = _parse_t(time_end_raw)
                 now_t = dt_util.now().time().replace(microsecond=0)
                 if t_end >= t_start:
-                    # Normal window: e.g. 08:00–22:00. start==end is a zero-width
+                    # Normal window: e.g. 08:00-22:00. start==end is a zero-width
                     # window (allowed only at that exact second) — matches live.
                     time_allowed = t_start <= now_t <= t_end
                 else:
-                    # Overnight window: e.g. 22:00–06:00
+                    # Overnight window: e.g. 22:00-06:00
                     time_allowed = now_t >= t_start or now_t <= t_end
             except ValueError, IndexError, TypeError:
                 _LOGGER.debug(
@@ -3700,9 +3696,7 @@ class BoschCameraCoordinator(
         # ...) working the same way it did before BoschCameraCoordinator
         # moved out of __init__.py — those patches target the package's own
         # namespace, matching the pattern already used in live_connection.py.
-        from . import (  # noqa: PLC0415
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import async_get_bosch_cloud_session  # noqa: PLC0415
 
         # Fast path: cache hit without acquiring the lock (hot path after first fetch)
         cached = self._fresh_snap_cache.get(cam_id)
@@ -3862,7 +3856,7 @@ class BoschCameraCoordinator(
         # below and the live_connection.py precedent — matters here even
         # though only one call site remains, so a future third caller isn't
         # tempted to reintroduce the top-level-only inconsistency.
-        from . import async_digest_request as async_digest_request  # noqa: PLC0415
+        from . import async_digest_request  # noqa: PLC0415
 
         session = async_get_clientsession(self.hass, verify_ssl=False)
         try:
@@ -4427,9 +4421,7 @@ class BoschCameraCoordinator(
         # ...) working the same way it did before BoschCameraCoordinator
         # moved out of __init__.py — those patches target the package's own
         # namespace, matching the pattern already used in live_connection.py.
-        from . import (  # noqa: PLC0415
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import async_get_bosch_cloud_session  # noqa: PLC0415
 
         params: dict[str, str] = {
             "command": command,
@@ -4501,10 +4493,7 @@ class BoschCameraCoordinator(
         # "custom_components.bosch_shc_camera.async_get_clientsession", ...)
         # working the same way it did before BoschCameraCoordinator moved
         # out of __init__.py — matches the live_connection.py pattern.
-        from . import (  # noqa: PLC0415
-            async_digest_request as async_digest_request,
-            async_get_clientsession as async_get_clientsession,
-        )
+        from . import async_digest_request, async_get_clientsession  # noqa: PLC0415
 
         if self._is_rcp_lan_denied(cam_id, opcode_hex):
             return None
@@ -4605,7 +4594,7 @@ class BoschCameraCoordinator(
             )
 
     def clock_offset(self, cam_id: str) -> float | None:
-        """Return clock offset in seconds (camera time − server time), or None."""
+        """Return clock offset in seconds (camera time - server time), or None."""
         return self.rcp_clock_offset_cache.get(cam_id)
 
     def rcp_lan_ip(self, cam_id: str) -> str | None:
@@ -4712,9 +4701,7 @@ class BoschCameraCoordinator(
         # ...) working the same way it did before BoschCameraCoordinator
         # moved out of __init__.py — those patches target the package's own
         # namespace, matching the pattern already used in live_connection.py.
-        from . import (  # noqa: PLC0415
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import async_get_bosch_cloud_session  # noqa: PLC0415
 
         token = self.token
         headers = {

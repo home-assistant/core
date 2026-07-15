@@ -280,7 +280,7 @@ DEFAULT_OPTIONS = {
     "ai_max_per_day": 100,
     # Activation time window for AUTO AI analyses (on-motion + notify-include).
     # "HH:MM" or "HH:MM:SS". Both empty = no time gate (always active).
-    # If end < start the window spans midnight (e.g. 22:00–06:00).
+    # If end < start the window spans midnight (e.g. 22:00-06:00).
     "ai_active_time_start": "",
     "ai_active_time_end": "",
     # Condition-entity gate: entity_id whose state must match ai_active_condition_state

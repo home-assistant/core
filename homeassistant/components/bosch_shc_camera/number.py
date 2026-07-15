@@ -164,7 +164,7 @@ class BoschPanNumber(_BoschEntityBase, NumberEntity):
 
 # ─────────────────────────────────────────────────────────────────────────────
 class BoschSpeakerLevelNumber(_BoschEntityBase, NumberEntity):
-    """Number entity to control the intercom speaker volume (0–100).
+    """Number entity to control the intercom speaker volume (0-100).
 
     Reads from coordinator.audio_cache[cam_id]["speakerLevel"].
     Writes via PUT /v11/video_inputs/{id}/audio with full body preserved —
@@ -242,7 +242,7 @@ class BoschSpeakerLevelNumber(_BoschEntityBase, NumberEntity):
 
 # ─────────────────────────────────────────────────────────────────────────────
 class BoschAudioVolumeNumber(_BoschEntityBase, NumberEntity):
-    """Card playback volume (0–100 %) for this camera's live audio.
+    """Card playback volume (0-100 %) for this camera's live audio.
 
     Virtual preference — there is NO Bosch API for volume (loudness is a browser
     property). This entity is the automatable, cross-session source of truth that
@@ -297,9 +297,9 @@ class BoschAudioVolumeNumber(_BoschEntityBase, NumberEntity):
 
 # ─────────────────────────────────────────────────────────────────────────────
 class BoschFrontLightIntensityNumber(_BoschEntityBase, NumberEntity):
-    """Number entity: front light brightness (0–100%).
+    """Number entity: front light brightness (0-100%).
 
-    Maps to frontLightIntensity (0.0–1.0) in PUT /v11/video_inputs/{id}/lighting_override.
+    Maps to frontLightIntensity (0.0-1.0) in PUT /v11/video_inputs/{id}/lighting_override.
     Only for cameras with featureSupport.light = True (outdoor cameras).
     Disabled by default — enable in Settings → Entities.
     """
@@ -861,7 +861,7 @@ class BoschAlarmDelayNumber(_BoschAlarmDelayBase):
     """Number: siren duration (alarm_settings.alarmDelayInSeconds).
 
     How long the 75 dB siren stays active when triggered.
-    Observed range from capture: 52–76s.
+    Observed range from capture: 52-76s.
     """
 
     _field = "alarmDelayInSeconds"
@@ -878,7 +878,7 @@ class BoschAlarmDelayNumber(_BoschAlarmDelayBase):
 class BoschAlarmActivationDelayNumber(_BoschAlarmDelayBase):
     """Number: siren activation delay (alarm_settings.alarmActivationDelaySeconds).
 
-    Time between detection and siren activation. Observed: 1–180s.
+    Time between detection and siren activation. Observed: 1-180s.
     """
 
     _field = "alarmActivationDelaySeconds"
@@ -896,7 +896,7 @@ class BoschPreAlarmDelayNumber(_BoschAlarmDelayBase):
     """Number: pre-alarm duration (alarm_settings.preAlarmDelayInSeconds).
 
     How long the LED warning stays active before the siren fires.
-    Observed: 30–38s.
+    Observed: 30-38s.
     """
 
     _field = "preAlarmDelayInSeconds"
@@ -916,9 +916,9 @@ class BoschPreAlarmDelayNumber(_BoschAlarmDelayBase):
 
 
 class BoschIntrusionSensitivityNumber(_BoschGen2NumberBase):
-    """Number: intrusion detection sensitivity 0–7 (Gen2 only).
+    """Number: intrusion detection sensitivity 0-7 (Gen2 only).
 
-    FW 9.40+ raised the range from 0–5 to 0–7 (confirmed via captures 2026-04-28:
+    FW 9.40+ raised the range from 0-5 to 0-7 (confirmed via captures 2026-04-28:
     value=3 seen, comment in api-findings.md §5 "sensitivity bis 7 (vorher 5)").
     Reads from coordinator.intrusion_config_cache[cam_id]["sensitivity"].
     Writes via PUT /v11/video_inputs/{id}/intrusionDetectionConfig — full body is
@@ -980,7 +980,7 @@ class BoschIntrusionSensitivityNumber(_BoschGen2NumberBase):
 
 
 class BoschIntrusionDistanceNumber(_BoschGen2NumberBase):
-    """Number: intrusion detection range in metres 1–8 (Gen2 only).
+    """Number: intrusion detection range in metres 1-8 (Gen2 only).
 
     Reads from coordinator.intrusion_config_cache[cam_id]["distance"].
     Writes via PUT /v11/video_inputs/{id}/intrusionDetectionConfig — full body preserved.

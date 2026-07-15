@@ -120,13 +120,7 @@ class TokenAuthCoordinatorMixin:
         # same way it did before this method moved out of __init__.py —
         # those patches target the package's own namespace, not
         # token_auth.py's.
-        # rename-reexport (issue_registry as ir): mypy --no-implicit-reexport
-        # only recognizes identical-name re-export at the source; the alias
-        # is intentional and correct at runtime.
-        from . import (  # noqa: PLC0415
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-            ir as ir,
-        )
+        from . import async_get_bosch_cloud_session, ir  # noqa: PLC0415
 
         # Real circular import if hoisted (verified): config_flow.py itself
         # does `from . import DEFAULT_OPTIONS, DOMAIN, BoschCameraConfigEntry`
@@ -328,10 +322,7 @@ class TokenAuthCoordinatorMixin:
         # "custom_components.bosch_shc_camera.ir.async_create_issue")
         # working the same way it did before this method moved out of
         # __init__.py.
-        # rename-reexport (issue_registry as ir): mypy --no-implicit-reexport
-        # only recognizes identical-name re-export at the source; the alias
-        # is intentional and correct at runtime.
-        from . import ir as ir  # noqa: PLC0415
+        from . import ir  # noqa: PLC0415
 
         if self._token_alert_sent:
             return

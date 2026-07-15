@@ -151,7 +151,7 @@ class BoschCameraLastSnapshotImage(
         cam = self._coordinator.camera_entities.get(self._cam_id)
         if cam is not None:
             cached = cam.cached_image
-            # Don't serve the 1×1 placeholder as a real snapshot image.
+            # Don't serve the 1x1 placeholder as a real snapshot image.
             if cached and len(cached) > 200:
                 return cached  # type: ignore[no-any-return]  # value is correct at runtime; HA/external source is Any-typed
         return None

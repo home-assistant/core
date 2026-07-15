@@ -76,7 +76,7 @@ def _register_services(hass: HomeAssistant) -> None:
         `entity_id`: refresh only that camera's image — and skip the full
         coordinator tick. The Lovelace card passes its own camera on mount /
         tab-switch / its 60 s timer, so a dashboard with N cameras would
-        otherwise fire N×(all cameras) image refreshes (and N coordinator ticks)
+        otherwise fire Nx(all cameras) image refreshes (and N coordinator ticks)
         and hammer Bosch's ~3-concurrent-session budget. The periodic coordinator
         poll keeps event/state data fresh independently.
         """
@@ -137,10 +137,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (  # noqa: PLC0415
-            CLOUD_API as CLOUD_API,
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import CLOUD_API, async_get_bosch_cloud_session  # noqa: PLC0415
 
         cam_id = call.data.get("camera_id", "")
         if not cam_id:
@@ -202,10 +199,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (  # noqa: PLC0415
-            CLOUD_API as CLOUD_API,
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import CLOUD_API, async_get_bosch_cloud_session  # noqa: PLC0415
 
         cam_id = call.data.get("camera_id", "")
         rule_id = call.data.get("rule_id", "")
@@ -250,10 +244,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (  # noqa: PLC0415
-            CLOUD_API as CLOUD_API,
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import CLOUD_API, async_get_bosch_cloud_session  # noqa: PLC0415
 
         cam_id = call.data.get("camera_id", "")
         rule_id = call.data.get("rule_id", "")
@@ -346,16 +337,13 @@ def _register_services(hass: HomeAssistant) -> None:
                 break
 
     async def handle_set_motion_zones(call: ServiceCall) -> None:
-        """Set motion detection zones for a camera (normalized coordinates 0.0–1.0)."""
+        """Set motion detection zones for a camera (normalized coordinates 0.0-1.0)."""
         # Local import (not top-level): keeps unittest.mock.patch(
         # "custom_components.bosch_shc_camera.async_get_bosch_cloud_session"/
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (  # noqa: PLC0415
-            CLOUD_API as CLOUD_API,
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import CLOUD_API, async_get_bosch_cloud_session  # noqa: PLC0415
 
         cam_id = call.data.get("camera_id", "")
         zones = call.data.get("zones", [])
@@ -457,10 +445,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (  # noqa: PLC0415
-            CLOUD_API as CLOUD_API,
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import CLOUD_API, async_get_bosch_cloud_session  # noqa: PLC0415
 
         cam_id = call.data.get("camera_id", "")
         if not cam_id:
@@ -538,10 +523,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (  # noqa: PLC0415
-            CLOUD_API as CLOUD_API,
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import CLOUD_API, async_get_bosch_cloud_session  # noqa: PLC0415
 
         friend_id = call.data.get("friend_id", "")
         camera_ids = call.data.get("camera_ids", [])
@@ -627,10 +609,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (  # noqa: PLC0415
-            CLOUD_API as CLOUD_API,
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import CLOUD_API, async_get_bosch_cloud_session  # noqa: PLC0415
 
         cam_id = call.data.get("camera_id", "")
         if not cam_id:
@@ -704,16 +683,13 @@ def _register_services(hass: HomeAssistant) -> None:
                 break
 
     async def handle_set_privacy_masks(call: ServiceCall) -> None:
-        """Set privacy mask zones for a camera (normalized coordinates 0.0–1.0)."""
+        """Set privacy mask zones for a camera (normalized coordinates 0.0-1.0)."""
         # Local import (not top-level): keeps unittest.mock.patch(
         # "custom_components.bosch_shc_camera.async_get_bosch_cloud_session"/
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (  # noqa: PLC0415
-            CLOUD_API as CLOUD_API,
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import CLOUD_API, async_get_bosch_cloud_session  # noqa: PLC0415
 
         cam_id = call.data.get("camera_id", "")
         masks = call.data.get("masks", [])
@@ -814,10 +790,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (  # noqa: PLC0415
-            CLOUD_API as CLOUD_API,
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import CLOUD_API, async_get_bosch_cloud_session  # noqa: PLC0415
 
         cam_id = call.data.get("camera_id", "")
         zone_index = call.data.get("zone_index", -1)
@@ -888,10 +861,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (  # noqa: PLC0415
-            CLOUD_API as CLOUD_API,
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import CLOUD_API, async_get_bosch_cloud_session  # noqa: PLC0415
 
         cam_id = call.data.get("camera_id", "")
         if not cam_id:
@@ -973,10 +943,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (  # noqa: PLC0415
-            CLOUD_API as CLOUD_API,
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import CLOUD_API, async_get_bosch_cloud_session  # noqa: PLC0415
 
         cam_id = call.data.get("camera_id", "")
         if not cam_id:
@@ -1099,10 +1066,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (  # noqa: PLC0415
-            CLOUD_API as CLOUD_API,
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import CLOUD_API, async_get_bosch_cloud_session  # noqa: PLC0415
 
         cam_id = call.data.get("camera_id", "")
         new_name = call.data.get("new_name", "")
@@ -1158,10 +1122,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (  # noqa: PLC0415
-            CLOUD_API as CLOUD_API,
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import CLOUD_API, async_get_bosch_cloud_session  # noqa: PLC0415
 
         email = call.data.get("email", "")
         if not email:
@@ -1228,10 +1189,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (  # noqa: PLC0415
-            CLOUD_API as CLOUD_API,
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import CLOUD_API, async_get_bosch_cloud_session  # noqa: PLC0415
 
         for entry in hass.config_entries.async_loaded_entries(DOMAIN):
             coord = entry.runtime_data
@@ -1294,10 +1252,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (  # noqa: PLC0415
-            CLOUD_API as CLOUD_API,
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import CLOUD_API, async_get_bosch_cloud_session  # noqa: PLC0415
 
         friend_id = call.data.get("friend_id", "")
         if not friend_id:

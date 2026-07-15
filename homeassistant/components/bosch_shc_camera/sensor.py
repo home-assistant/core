@@ -8,9 +8,9 @@ Creates sensor entities per camera:
                                   attributes: ssid, ip_address, mac_address
   • {Name} Firmware Version    — firmware version string from /v11/video_inputs
                                   attributes: up_to_date
-  • {Name} Ambient Light Level — ambient light sensor level (0.0–1.0) as percentage
+  • {Name} Ambient Light Level — ambient light sensor level (0.0-1.0) as percentage
                                   from GET /v11/video_inputs/{id}/ambient_light_sensor_level
-  • {Name} LED Dimmer          — LED dimmer value 0–100% via RCP protocol (0x0c22)
+  • {Name} LED Dimmer          — LED dimmer value 0-100% via RCP protocol (0x0c22)
                                   only for cameras with featureSupport.light = True
 """
 
@@ -470,10 +470,10 @@ class BoschFirmwareVersionSensor(_BoschSensorBase):
 
 # ─────────────────────────────────────────────────────────────────────────────
 class BoschAmbientLightSensor(_BoschSensorBase):
-    """Sensor: ambient light level as a percentage (0–100%).
+    """Sensor: ambient light level as a percentage (0-100%).
 
     Data source: GET /v11/video_inputs/{id}/ambient_light_sensor_level (fetched by coordinator).
-    The API returns a float 0.0–1.0 which is converted to 0–100%.
+    The API returns a float 0.0-1.0 which is converted to 0-100%.
     """
 
     def __init__(
@@ -492,7 +492,7 @@ class BoschAmbientLightSensor(_BoschSensorBase):
         level = self.coordinator.ambient_light_cache.get(self._cam_id)
         if level is None:
             return None
-        # Convert 0.0–1.0 float to 0–100 integer percentage
+        # Convert 0.0-1.0 float to 0-100 integer percentage
         return round(float(level) * 100)
 
     @property
@@ -506,7 +506,7 @@ class BoschAmbientLightSensor(_BoschSensorBase):
 
 # ─────────────────────────────────────────────────────────────────────────────
 class BoschLedDimmerSensor(_BoschSensorBase):
-    """Sensor: LED dimmer value 0–100% read via RCP protocol (command 0x0c22).
+    """Sensor: LED dimmer value 0-100% read via RCP protocol (command 0x0c22).
 
     Data source: RCP command 0x0c22 (T_WORD) via cloud proxy (rcp.xml).
     Only registered for cameras with featureSupport.light = True.
@@ -1055,7 +1055,7 @@ class BoschMotionZonesSensor(_BoschSensorBase):
 
     Displays total number of zones across all sources.
     Attributes contain zone data for overlay visualization:
-      - cloud_zones: Gen1 rectangular zones (x/y/w/h normalized 0.0–1.0)
+      - cloud_zones: Gen1 rectangular zones (x/y/w/h normalized 0.0-1.0)
       - gen2_zones: Gen2 polygon zones (points array, trigger, color)
       - zones/coordinates: RCP firmware data (fallback)
     """
@@ -1292,7 +1292,7 @@ class BoschPrivateAreasSensor(_BoschSensorBase):
 
     Displays number of privacy masks. Attributes contain mask data
     for overlay visualization on the camera image.
-      - cloud_privacy_masks: Gen1 rectangular masks (x/y/w/h normalized 0.0–1.0)
+      - cloud_privacy_masks: Gen1 rectangular masks (x/y/w/h normalized 0.0-1.0)
       - gen2_private_areas: Gen2 polygon masks (points array, color)
     """
 

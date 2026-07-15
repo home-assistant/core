@@ -142,7 +142,7 @@ async def build_data_and_dispatch(
                     # too, but it never runs when FCM is disabled, so the
                     # polling path must prune here as well — otherwise it
                     # grows one entry per event forever. Drop entries older
-                    # than 2× the 60s dedup window.
+                    # than 2x the 60s dedup window.
                     if len(coordinator.alert_sent_ids) > 64:
                         # Mutate in place — a dict-comprehension rebind
                         # (coordinator.alert_sent_ids = {...}) would detach

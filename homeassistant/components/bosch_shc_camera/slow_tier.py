@@ -396,7 +396,7 @@ async def _poll_slow_tier_endpoints(
     # ── Parallel slow-tier fetch ──────────────────────────────
     # All endpoints are independent — fetch in parallel with
     # asyncio.gather() instead of sequentially.
-    # Reduces slow-tier from ~13×5s = 65s to ~5s (single timeout).
+    # Reduces slow-tier from ~13x5s = 65s to ~5s (single timeout).
     hw = ctx.hw
     pan_limit = ctx.pan_limit
 

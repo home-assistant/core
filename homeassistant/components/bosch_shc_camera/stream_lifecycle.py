@@ -305,7 +305,7 @@ async def handle_stream_worker_error(
         # Time-decay the rescue counter: rescues older than 5 min belong
         # to a previous failure burst. Without this the counter sticks at
         # 1 (record_stream_success never fires when no HLS consumer is
-        # connected) and the next legitimate 401 burst — typically 8–14
+        # connected) and the next legitimate 401 burst — typically 8-14
         # min later when Bosch rotates again — skips straight to REMOTE.
         _local_rescue_ttl_sec = 300
         now_mono = time.monotonic()

@@ -95,7 +95,7 @@ def _rotate_jpeg_180(jpeg_bytes: bytes) -> bytes:
     """Rotate a JPEG image by 180° using PIL. Sync — call via executor.
 
     Used by async_camera_image when the user enabled the Bild 180° drehen
-    switch (ceiling-mounted indoor cameras). Typical 1280×720 JPEG: ~15-30 ms
+    switch (ceiling-mounted indoor cameras). Typical 1280x720 JPEG: ~15-30 ms
     with libjpeg-turbo. Returns the original bytes if rotation fails.
     """
     try:
@@ -137,7 +137,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     • Image is refreshed on startup, on stream stop, and every 30 minutes
     """
 
-    # 1×1 black JPEG — prevents HTTP 500 when no cached image available
+    # 1x1 black JPEG — prevents HTTP 500 when no cached image available
     _PLACEHOLDER_JPEG = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00\xff\xdb\x00C\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\t\t\x08\n\x0c\x14\r\x0c\x0b\x0b\x0c\x19\x12\x13\x0f\x14\x1d\x1a\x1f\x1e\x1d\x1a\x1c\x1c $.' \",#\x1c\x1c(7),01444\x1f'9=82<.342\xff\xc0\x00\x0b\x08\x00\x01\x00\x01\x01\x01\x11\x00\xff\xc4\x00\x14\x00\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xc4\x00\x14\x10\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\xda\x00\x08\x01\x01\x00\x00?\x00T\xdf\xb2\x80\x01\xff\xd9"
     _attr_has_entity_name = True
     # The (redacted) stream/proxy URLs rotate on every reconnect, so recording
@@ -203,8 +203,8 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         self.coordinator.camera_entities[self._cam_id] = self
 
         # Restore the last-persisted snapshot from disk so HA can serve a real
-        # image immediately — before the first live fetch completes (~2–4 s).
-        # This prevents the 1×1 black placeholder from flashing on a cold start.
+        # image immediately — before the first live fetch completes (~2-4 s).
+        # This prevents the 1x1 black placeholder from flashing on a cold start.
         persisted = await load_snapshot(self.hass, self._cam_id)
         if persisted:
             self.cached_image = persisted
@@ -315,7 +315,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             # live snap is fetching. This ensures the card shows a real image
             # within ~1s of startup/stream-stop, instead of waiting 5-15s for
             # the PUT /connection + snap.jpg round-trip.
-            # Guard: only seed when we hold nothing but the 1×1 black placeholder
+            # Guard: only seed when we hold nothing but the 1x1 black placeholder
             # (not self.cached_image checked `not bytes`, but placeholder is
             # truthy — use identity check).
             if self.cached_image is self._PLACEHOLDER_JPEG:
@@ -350,7 +350,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             # event picture after a transient live-fetch failure on the proactive
             # refresh tick (privacy OFF). Also skip when streaming (path-1 live
             # proxy snap.jpg already provides a current frame).
-            # The placeholder (1×1 black) does NOT count as a real frame — on a
+            # The placeholder (1x1 black) does NOT count as a real frame — on a
             # genuine cold start we still want to seed from the event image.
             _has_real_frame = (
                 bool(self.cached_image)
@@ -548,7 +548,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     @property
     @override
     def available(self) -> bool:
-        # Firmware install reboots the camera (3–7 min). Mark unavailable so
+        # Firmware install reboots the camera (3-7 min). Mark unavailable so
         # automations and the UI don't poll a dead endpoint or surface stale
         # snapshots as live state.
         is_updating = getattr(self.coordinator, "is_updating", None)
@@ -878,7 +878,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
 
     # ── RCP thumbnail fallback ────────────────────────────────────────────────
     def _yuv422_to_jpeg(self, data: bytes) -> bytes | None:
-        """Convert a 320×180 YUV422 (YUYV) raw frame to JPEG bytes using numpy+Pillow."""
+        """Convert a 320x180 YUV422 (YUYV) raw frame to JPEG bytes using numpy+Pillow."""
         try:
             # numpy is not a declared requirement of this integration (only
             # pulled in transitively by other components) — lazy import so
@@ -916,8 +916,8 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     async def _async_rcp_thumbnail(self) -> bytes | None:
         """Fetch a thumbnail via RCP, falling back from JPEG to raw YUV422.
 
-        Tries 320×180 JPEG (0x099e) first, then falls back to 320×180
-        YUV422 raw frame (0x0c98) converted to JPEG. Resolution confirmed via RCP 0x0a88 READ (returns 0x00000140/0x000000B4 = 320×180).
+        Tries 320x180 JPEG (0x099e) first, then falls back to 320x180
+        YUV422 raw frame (0x0c98) converted to JPEG. Resolution confirmed via RCP 0x0a88 READ (returns 0x00000140/0x000000B4 = 320x180).
         Uses the cached live proxy connection (if available) to reach the
         camera's RCP endpoint. Much faster than snap.jpg (~instant vs ~1.5 s)
         and used as a fallback when the proxy snap.jpg fetch fails.
@@ -942,7 +942,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
 
         rcp_base = f"https://{proxy_host}/{proxy_hash}/rcp.xml"
 
-        # Try 320×180 JPEG via RCP 0x099e (resolution confirmed by 0x0a88 = 320×180)
+        # Try 320x180 JPEG via RCP 0x099e (resolution confirmed by 0x0a88 = 320x180)
         raw: bytes | None = await self.coordinator.rcp_read(
             rcp_base, "0x099e", session_id
         )
@@ -954,7 +954,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             )
             return raw
 
-        # Fallback: 320×180 YUV422 raw frame → convert to JPEG
+        # Fallback: 320x180 YUV422 raw frame → convert to JPEG
         raw = await self.coordinator.rcp_read(rcp_base, "0x0c98", session_id)
         if raw and len(raw) == 115200:
             jpeg = self._yuv422_to_jpeg(raw)
@@ -1030,7 +1030,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         1. Cloud proxy live snap  — if a live connection has been opened
            (proxy-NN.live.cbs.boschsecurity.com snap.jpg, no auth needed)
            Updated every coordinator tick while live switch is ON.
-           1b. RCP thumbnail fallback — 320×180 JPEG via RCP 0x099e, used when
+           1b. RCP thumbnail fallback — 320x180 JPEG via RCP 0x099e, used when
                snap.jpg fetch fails with any error (timeout, network, etc.)
         2. Cloud proxy on-demand  — PUT /connection REMOTE + RCP 0x099e / snap.jpg.
            If no cached image: fetches fresh synchronously (~3 s for snap.jpg,
@@ -1049,7 +1049,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         proxy serves the fresh image on the next request instead of its 60s cache.
 
         width/height: passed by HA when the card requests ?width=N. We use this to
-        prefer the 320×180 RCP thumbnail on mobile/small displays (avoids 150 KB
+        prefer the 320x180 RCP thumbnail on mobile/small displays (avoids 150 KB
         snap.jpg when the card only needs a 400 px thumbnail).
         """
         # Verifying Bosch-cloud session: REMOTE proxy snap.jpg fetches below are
@@ -1282,7 +1282,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
                 not self.cached_image or self.cached_image is self._PLACEHOLDER_JPEG
             ) and cache_stale:
                 # First load — must wait synchronously. The placeholder is a real
-                # (truthy) 1×1 black JPEG, so `not self.cached_image` alone never
+                # (truthy) 1x1 black JPEG, so `not self.cached_image` alone never
                 # fires while we still hold it — use the identity check too (mirror
                 # of _async_trigger_image_refresh). Without this, a cold-boot proxy
                 # request (HA Companion app on restart, before the async disk-restore
@@ -1295,7 +1295,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
                 # On true first load _last_image_fetch is the boot sentinel, so
                 # cache_stale is True and this still fetches immediately.
                 # For mobile/thumbnail requests (width ≤ 640): try RCP 0x099e first
-                # (320×180 JPEG, ~3 KB, ~100 ms with cached session) before the slow
+                # (320x180 JPEG, ~3 KB, ~100 ms with cached session) before the slow
                 # full proxy path (PUT /connection + snap.jpg, ~3 s cold).
                 if prefer_small:
                     rcp_img = await self._async_rcp_thumbnail()
@@ -1424,7 +1424,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         # ── 3. Cached image (fallback for cameras whose REMOTE snap.jpg needs auth) ──
         # For cameras like CAMERA_360 the cloud fetch above returns None;
         # _async_trigger_image_refresh keeps this cache warm via LOCAL connection.
-        # The placeholder is a real (truthy) 1×1 black JPEG, so `if
+        # The placeholder is a real (truthy) 1x1 black JPEG, so `if
         # self.cached_image:` alone would intercept it here too, before tier 4
         # (the actual last resort) ever runs on a genuine cold start — use the
         # identity check too, mirroring the tier-2 guard above.

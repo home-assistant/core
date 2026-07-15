@@ -8,7 +8,7 @@ Features (all toggleable in Options):
   • Status + event sensors    — ONLINE/OFFLINE, last event timestamp, events-today count
   • Snapshot trigger buttons  — force immediate refresh; "Open Live Stream" button
   • Auto-download             — background download of all event files to a local folder
-  • Live stream               — full 30fps H.264 1920×1080 + AAC audio via rtsps://:443
+  • Live stream               — full 30fps H.264 1920x1080 + AAC audio via rtsps://:443
                                  ConnectionType "REMOTE" → proxy-NN:443/{hash}/rtsp_tunnel
 
 Installation:

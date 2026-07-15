@@ -44,10 +44,10 @@ async def try_live_connection_inner(
     # this module, so a top-level `from . import _redact_creds` here would
     # be a real circular import.
     from . import (  # noqa: PLC0415
-        _redact_creds as _redact_creds,
-        async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        nvr_recorder as nvr_recorder,
-        pre_warm_rtsp as pre_warm_rtsp,
+        _redact_creds,
+        async_get_bosch_cloud_session,
+        nvr_recorder,
+        pre_warm_rtsp,
     )
 
     if force_reset:
@@ -156,7 +156,7 @@ async def try_live_connection_inner(
         # ── TCP pre-check: skip LOCAL if camera is LAN-unreachable ──────
         # When AUTO mode has both LOCAL and REMOTE as candidates and we
         # know the camera's LAN IP, a 1.5s TCP ping decides immediately —
-        # saving 45–100s of pre-warm timeout for cameras on a different
+        # saving 45-100s of pre-warm timeout for cameras on a different
         # network/VLAN or that are powered off. Result is cached 60s so
         # repeated stream starts don't each trigger a fresh ping.
         if "LOCAL" in candidates and "REMOTE" in candidates:
@@ -713,7 +713,7 @@ async def try_live_connection_inner(
                             # privacy toggle for ~25s on Indoor / ~100s on
                             # Outdoor while the encoder warm-up they paid for
                             # has already definitively failed. Regression
-                            # 2026-05-19 (Innenbereich): TLS proxy reset 3×,
+                            # 2026-05-19 (Innenbereich): TLS proxy reset 3x,
                             # warm-up held the privacy switch hostage.
                             _LOGGER.warning(
                                 "LOCAL pre-warm failed for %s without REMOTE fallback — "

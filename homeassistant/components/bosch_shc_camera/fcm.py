@@ -1197,7 +1197,7 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                 continue
             # Evict entries older than 120s on every call. Original
             # `if len(_sent) > 32` guard could starve eviction during
-            # burst-event scenarios (4 cams × dense events all within
+            # burst-event scenarios (4 cams x dense events all within
             # 120 s window → cache grows past 32 but eviction loop finds
             # nothing to evict, so it grows unbounded). Plain age-based
             # cleanup on every call has O(len) cost which is fine — len
@@ -1392,7 +1392,7 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                     # with the RTSP OPTIONS keepalive on the camera's single TLS
                     # control channel.  On Gen2 the 30-s RTSP session timeout means
                     # a delayed OPTIONS response (>30 s) tears down the producer →
-                    # 5–10 s stream freeze.  Path B (alert step-2 in async_send_alert)
+                    # 5-10 s stream freeze.  Path B (alert step-2 in async_send_alert)
                     # already pushes the Bosch event image (with AI overlay) into
                     # _cached_image via the same cloud session that fetches the
                     # notification snapshot — no extra camera-side TLS request needed.

@@ -3,7 +3,7 @@
 Bosch announces planned maintenance in the community board "Wartungsarbeiten"
 and active incidents in "Statusmeldungen". Both boards expose RSS feeds; this
 module fetches them, parses the latest items, and surfaces a single best-match
-announcement so the UI can show a specific reason ("Bosch-Wartung 07:00–10:00
+announcement so the UI can show a specific reason ("Bosch-Wartung 07:00-10:00
 MESZ") instead of a generic "unavailable" state when the cloud returns 5xx.
 
 There is no machine-readable status API from Bosch — the iOS app reaches the
@@ -56,7 +56,7 @@ _BROWSER_UA = (
 
 # Date: 19.05.2026 / 19.5.2026 / 19. 5. 2026
 _DATE_RE = re.compile(r"(\d{1,2})\.\s*(\d{1,2})\.\s*(20\d{2})")
-# Time range: "07:00 und 10:00 Uhr (MESZ)", "von 07:00 bis 10:00 Uhr", "07:00 – 10:00 Uhr"
+# Time range: "07:00 und 10:00 Uhr (MESZ)", "von 07:00 bis 10:00 Uhr", "07:00 - 10:00 Uhr"
 _TIME_RANGE_RE = re.compile(
     r"(\d{1,2}):(\d{2})\s*(?:Uhr\s*)?"
     r"(?:bis|und|–|-|—|to)\s*"
@@ -154,7 +154,7 @@ def _parse_window(
 ) -> tuple[datetime | None, datetime | None]:
     """Extract (start, end) datetimes from German announcement text.
 
-    Strategy: find first DD.MM.YYYY date and first HH:MM–HH:MM range. If only
+    Strategy: find first DD.MM.YYYY date and first HH:MM-HH:MM range. If only
     the time range is found, fall back to the pub_date's date — useful when the
     title contains the date in a separate field and the body only has times.
     Returns (None, None) if neither yields a usable window.
