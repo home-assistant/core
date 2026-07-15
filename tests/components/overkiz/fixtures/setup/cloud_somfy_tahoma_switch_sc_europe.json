@@ -3483,6 +3483,1116 @@
       "widget": "ZigbeeStack",
       "oid": "08fa5c0f-95ba-410a-8a66-4cb55c0d508c",
       "uiClass": "ProtocolGateway"
+    },
+    {
+      "label": "Thermostat",
+      "uiClass": "HeatingSystem",
+      "deviceURL": "io://1234-5678-5010/386310#1",
+      "shortcut": false,
+      "controllableName": "io:HeatingThermostatIOComponent",
+      "creationTime": 1759678031000,
+      "lastUpdateTime": 1759678031000,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "addLockLevel",
+            "nparams": 2
+          },
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          },
+          {
+            "commandName": "delayedStopIdentify",
+            "nparams": 1
+          },
+          {
+            "commandName": "getName",
+            "nparams": 0
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "removeLockLevel",
+            "nparams": 1
+          },
+          {
+            "commandName": "resetLockLevels",
+            "nparams": 0
+          },
+          {
+            "commandName": "setName",
+            "nparams": 1
+          },
+          {
+            "commandName": "setTimeProgramById",
+            "nparams": 2
+          },
+          {
+            "commandName": "startIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "stopIdentify",
+            "nparams": 0
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          },
+          {
+            "commandName": "exitDerogation",
+            "nparams": 0
+          },
+          {
+            "commandName": "setAllModeTemperatures",
+            "nparams": 4
+          },
+          {
+            "commandName": "setDerogation",
+            "nparams": 2
+          },
+          {
+            "commandName": "setThermostatSettings",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ActiveTimeProgramState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:BatteryLevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["full", "low", "normal", "verylow"],
+            "qualifiedName": "core:BatteryState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:ComfortRoomTemperatureState"
+          },
+          {
+            "eventBased": true,
+            "type": "DataState",
+            "qualifiedName": "core:CommandLockLevelsState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:DerogatedTargetTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:DerogationEndDateTimeState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:DerogationStartDateTimeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:EcoTargetTemperatureState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ErrorsState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:FrostProtectionRoomTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["enable", "disable"],
+            "qualifiedName": "core:HeatingAnticipationState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:MaxSetpointState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:MinSetpointState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["closed", "open"],
+            "qualifiedName": "core:OpenClosedValveState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["active", "inactive"],
+            "qualifiedName": "core:OpenWindowDetectionActivationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "antifreeze",
+              "auto",
+              "away",
+              "eco",
+              "frostprotection",
+              "manual",
+              "max",
+              "normal",
+              "off",
+              "on",
+              "prog",
+              "program",
+              "boost"
+            ],
+            "qualifiedName": "core:OperatingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["enable", "disable"],
+            "qualifiedName": "core:PermanentDisplayState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["dead", "lowBattery", "maintenanceRequired", "noDefect"],
+            "qualifiedName": "core:SensorDefectState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetRoomTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureHysteresisState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TemperatureOffsetConfigurationState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["cooling", "heating", "heatingAndCooling"],
+            "qualifiedName": "core:ThermalConfigurationState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:TimeProgram1State"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:TimeProgram2State"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "io:AwayModeTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "awayMode",
+              "comfort",
+              "eco",
+              "frostprotection",
+              "geofencingMode",
+              "manual",
+              "suddenDropMode"
+            ],
+            "qualifiedName": "io:CurrentHeatingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "awayMode",
+              "comfort",
+              "eco",
+              "frostprotection",
+              "geofencingMode",
+              "manual",
+              "suddenDropMode"
+            ],
+            "qualifiedName": "io:DerogationHeatingModeState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["date", "furtherNotice", "nextMode"],
+            "qualifiedName": "io:DerogationTypeState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "io:GeofencingModeTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["disabled", "enabled"],
+            "qualifiedName": "io:LockKeyActivationState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "io:ManualModeTargetTemperatureState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "io:OpenWindowDetectedTargetTemperatureState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "adjustment",
+              "finished",
+              "full_closed",
+              "full_open",
+              "pairing",
+              "reset"
+            ],
+            "qualifiedName": "io:ValveInstallationModeState"
+          }
+        ],
+        "dataProperties": [
+          {
+            "value": "500",
+            "qualifiedName": "core:identifyInterval"
+          }
+        ],
+        "widgetName": "ThermostatHeatingTemperatureInterface",
+        "uiProfiles": ["ThermostatTargetReader"],
+        "uiClass": "HeatingSystem",
+        "uiClassifiers": ["emitter"],
+        "qualifiedName": "io:HeatingThermostatIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "good"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 96.0
+        },
+        {
+          "name": "io:DerogationTypeState",
+          "type": 3,
+          "value": "further_notice"
+        },
+        {
+          "name": "io:DerogationHeatingModeState",
+          "type": 3,
+          "value": "manual"
+        },
+        {
+          "name": "core:DerogatedTargetTemperatureState",
+          "type": 2,
+          "value": 16.5
+        },
+        {
+          "name": "io:ManualModeTargetTemperatureState",
+          "type": 2,
+          "value": 16.5
+        },
+        {
+          "name": "core:DerogationStartDateTimeState",
+          "type": 5,
+          "value": 1779390409000
+        },
+        {
+          "name": "core:DerogationEndDateTimeState",
+          "type": 5,
+          "value": 4294967295000
+        },
+        {
+          "name": "core:ComfortRoomTemperatureState",
+          "type": 2,
+          "value": 21.0
+        },
+        {
+          "name": "io:AwayModeTargetTemperatureState",
+          "type": 2,
+          "value": 17.0
+        },
+        {
+          "name": "core:EcoTargetTemperatureState",
+          "type": 2,
+          "value": 19.0
+        },
+        {
+          "name": "io:GeofencingModeTargetTemperatureState",
+          "type": 2,
+          "value": 20.0
+        },
+        {
+          "name": "core:FrostProtectionRoomTemperatureState",
+          "type": 2,
+          "value": 8.0
+        },
+        {
+          "name": "io:OpenWindowDetectedTargetTemperatureState",
+          "type": 2,
+          "value": 17.0
+        },
+        {
+          "name": "io:ValveInstallationModeState",
+          "type": 3,
+          "value": "finished"
+        },
+        {
+          "name": "core:BatteryLevelState",
+          "type": 2,
+          "value": 100.0
+        },
+        {
+          "name": "core:TimeProgram1State",
+          "type": 11,
+          "value": {
+            "sunday": {
+              "timeslots": [
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 0,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 6,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "comfort",
+                  "from": {
+                    "hour": 6,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 21,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 21,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 24,
+                    "minute": 0
+                  }
+                }
+              ]
+            },
+            "saturday": {
+              "timeslots": [
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 0,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 6,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "comfort",
+                  "from": {
+                    "hour": 6,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 21,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 21,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 24,
+                    "minute": 0
+                  }
+                }
+              ]
+            },
+            "tuesday": {
+              "timeslots": [
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 0,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 6,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "comfort",
+                  "from": {
+                    "hour": 6,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 21,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 21,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 24,
+                    "minute": 0
+                  }
+                }
+              ]
+            },
+            "wednesday": {
+              "timeslots": [
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 0,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 6,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "comfort",
+                  "from": {
+                    "hour": 6,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 21,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 21,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 24,
+                    "minute": 0
+                  }
+                }
+              ]
+            },
+            "friday": {
+              "timeslots": [
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 0,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 6,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "comfort",
+                  "from": {
+                    "hour": 6,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 21,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 21,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 24,
+                    "minute": 0
+                  }
+                }
+              ]
+            },
+            "thursday": {
+              "timeslots": [
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 0,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 6,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "comfort",
+                  "from": {
+                    "hour": 6,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 21,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 21,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 24,
+                    "minute": 0
+                  }
+                }
+              ]
+            },
+            "monday": {
+              "timeslots": [
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 0,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 6,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "comfort",
+                  "from": {
+                    "hour": 6,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 21,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 21,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 24,
+                    "minute": 0
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "core:TimeProgram2State",
+          "type": 11,
+          "value": {
+            "sunday": {
+              "timeslots": [
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 0,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 6,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "comfort",
+                  "from": {
+                    "hour": 6,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 21,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 21,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 24,
+                    "minute": 0
+                  }
+                }
+              ]
+            },
+            "saturday": {
+              "timeslots": [
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 0,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 6,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "comfort",
+                  "from": {
+                    "hour": 6,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 21,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 21,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 24,
+                    "minute": 0
+                  }
+                }
+              ]
+            },
+            "tuesday": {
+              "timeslots": [
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 0,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 6,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "comfort",
+                  "from": {
+                    "hour": 6,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 21,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 21,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 24,
+                    "minute": 0
+                  }
+                }
+              ]
+            },
+            "wednesday": {
+              "timeslots": [
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 0,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 6,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "comfort",
+                  "from": {
+                    "hour": 6,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 21,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 21,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 24,
+                    "minute": 0
+                  }
+                }
+              ]
+            },
+            "friday": {
+              "timeslots": [
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 0,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 6,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "comfort",
+                  "from": {
+                    "hour": 6,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 21,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 21,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 24,
+                    "minute": 0
+                  }
+                }
+              ]
+            },
+            "thursday": {
+              "timeslots": [
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 0,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 6,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "comfort",
+                  "from": {
+                    "hour": 6,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 21,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 21,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 24,
+                    "minute": 0
+                  }
+                }
+              ]
+            },
+            "monday": {
+              "timeslots": [
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 0,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 6,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "comfort",
+                  "from": {
+                    "hour": 6,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 21,
+                    "minute": 0
+                  }
+                },
+                {
+                  "mode": "eco",
+                  "from": {
+                    "hour": 21,
+                    "minute": 0
+                  },
+                  "to": {
+                    "hour": 24,
+                    "minute": 0
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "core:OpenClosedValveState",
+          "type": 3,
+          "value": "open"
+        },
+        {
+          "name": "core:OperatingModeState",
+          "type": 3,
+          "value": "manual"
+        },
+        {
+          "name": "io:CurrentHeatingModeState",
+          "type": 3,
+          "value": "manual"
+        },
+        {
+          "name": "core:TargetRoomTemperatureState",
+          "type": 2,
+          "value": 16.5
+        },
+        {
+          "name": "core:TargetTemperatureState",
+          "type": 2,
+          "value": 16.5
+        },
+        {
+          "name": "core:OpenWindowDetectionActivationState",
+          "type": 3,
+          "value": "active"
+        },
+        {
+          "name": "io:LockKeyActivationState",
+          "type": 3,
+          "value": "disable"
+        },
+        {
+          "name": "core:PermanentDisplayState",
+          "type": 3,
+          "value": "enable"
+        },
+        {
+          "name": "core:ThermalConfigurationState",
+          "type": 3,
+          "value": "heating"
+        },
+        {
+          "name": "core:HeatingAnticipationState",
+          "type": 3,
+          "value": "disable"
+        },
+        {
+          "name": "core:ActiveTimeProgramState",
+          "type": 3,
+          "value": "none"
+        },
+        {
+          "name": "core:MaxSetpointState",
+          "type": 2,
+          "value": 26.0
+        },
+        {
+          "name": "core:MinSetpointState",
+          "type": 2,
+          "value": 5.0
+        },
+        {
+          "name": "core:TemperatureOffsetConfigurationState",
+          "type": 2,
+          "value": 0.0
+        },
+        {
+          "name": "core:TargetTemperatureHysteresisState",
+          "type": 2,
+          "value": 0.3
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "8ba89c86-a590-4a3c-b352-4b95e906e9c9",
+      "oid": "d241a2c8-713a-428a-9911-0f8226af676e",
+      "widget": "ThermostatHeatingTemperatureInterface",
+      "type": 1
+    },
+    {
+      "label": "Thermostat Temperature",
+      "uiClass": "TemperatureSensor",
+      "deviceURL": "io://1234-5678-5010/386310#2",
+      "shortcut": false,
+      "controllableName": "io:TemperatureIOSystemSensor",
+      "creationTime": 1759678031000,
+      "lastUpdateTime": 1759678031000,
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "DiscreteState",
+            "values": ["full", "low", "normal", "verylow"],
+            "qualifiedName": "core:BatteryState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:ErrorsState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["dead", "lowBattery", "maintenanceRequired", "noDefect"],
+            "qualifiedName": "core:SensorDefectState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:TemperatureState"
+          }
+        ],
+        "dataProperties": [],
+        "widgetName": "TemperatureSensor",
+        "uiProfiles": ["Temperature"],
+        "uiClass": "TemperatureSensor",
+        "qualifiedName": "io:TemperatureIOSystemSensor",
+        "type": "SENSOR"
+      },
+      "states": [
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:DiscreteRSSILevelState",
+          "type": 3,
+          "value": "good"
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 2,
+          "value": 96.0
+        },
+        {
+          "name": "core:TemperatureState",
+          "type": 2,
+          "value": 26.6
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:FirmwareRevision",
+          "type": 3,
+          "value": "5155003A14"
+        },
+        {
+          "name": "core:MinSensedValue",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        },
+        {
+          "name": "core:MaxSensedValue",
+          "type": 2,
+          "value": 655.35
+        },
+        {
+          "name": "core:PowerSourceType",
+          "type": 3,
+          "value": "battery"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "8ba89c86-a590-4a3c-b352-4b95e906e9c9",
+      "oid": "c32eb2cd-06de-4827-95fb-51ae49acf467",
+      "widget": "TemperatureSensor",
+      "type": 2
     }
   ],
   "zones": [],
