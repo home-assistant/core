@@ -38,7 +38,7 @@ pytest==9.0.3
 requests==2.34.2
 requests-mock==1.12.1
 respx==0.23.1
-syrupy==5.5.1
+syrupy==5.5.2
 tqdm==4.67.1
 types-aiofiles==24.1.0.20250822
 types-atomicwrites==1.4.5.1
