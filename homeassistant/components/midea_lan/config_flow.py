@@ -473,7 +473,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         # show available device list in UI
         if not self.available_device:
-            return await self.async_step_auto(error="no_devices")
+            return await self.async_step_search(error="no_devices")
 
         return self.async_show_form(
             step_id="auto",
