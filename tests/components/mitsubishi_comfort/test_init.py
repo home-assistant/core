@@ -292,10 +292,10 @@ async def test_setup_entry_skips_incomplete_devices(
 
     Without a password and cryptoSerial the local API cannot be authenticated,
     and without a MAC the device cannot be keyed in the address cache, so the
-    device is skipped (no coordinator, no entity) and the gap is logged. A
-    device with secrets but no MAC still has its record cached: the password
-    only comes from the rate-limited Socket.IO fetch, while the next status
-    fetch can supply the MAC.
+    device is skipped (no coordinator, no entity) and the gap is logged. Any
+    recovered field is still cached — discover_devices() consumes them
+    independently, and the password in particular may never be returned by
+    the throttled Socket.IO fetch again.
     """
     incomplete_info = DeviceInfo(
         serial="SERIAL002",
@@ -334,14 +334,19 @@ async def test_setup_entry_skips_incomplete_devices(
     assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL002") is None
     assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL003") is None
     assert (
-        "The cloud returned no credentials for 2 device(s): Attic, Bedroom"
-        in caplog.text
+        "The cloud returned incomplete local connection data for 2 device(s):"
+        " Attic, Bedroom" in caplog.text
     )
     assert mock_config_entry.data[CONF_CREDENTIALS] == {
         "SERIAL001": {
             "password": "dGVzdHBhc3M=",
             "crypto_serial": "0102030405060708090a",
             "mac": MOCK_MAC,
+        },
+        "SERIAL002": {
+            "password": "",
+            "crypto_serial": "",
+            "mac": "11:22:33:44:55:66",
         },
         "SERIAL003": {
             "password": "dGVzdHBhc3M=",
@@ -367,6 +372,56 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_setup_entry_registers_mac_less_devices_separately(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_setup_integration: tuple[AsyncMock, MagicMock],
+) -> None:
+    """Test MAC-less devices get their own registry entries, sans connection.
+
+    Connections are globally indexed, so registering an empty MAC would merge
+    every MAC-less device into the first one's registry entry.
+    """
+    mock_account, _ = mock_setup_integration
+    mock_account.discover_devices.return_value = {
+        "SERIAL002": DeviceInfo(
+            serial="SERIAL002",
+            label="Bedroom",
+            address="",
+            mac="",
+            unit_type="ductless",
+            password="dGVzdHBhc3M=",
+            crypto_serial="0102030405060708090a",
+        ),
+        "SERIAL003": DeviceInfo(
+            serial="SERIAL003",
+            label="Attic",
+            address="",
+            mac="",
+            unit_type="ductless",
+            password="dGVzdHBhc3M=",
+            crypto_serial="0102030405060708090a",
+        ),
+    }
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        unique_id="user-12345",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    bedroom = device_registry.async_get_device(identifiers={(DOMAIN, "SERIAL002")})
+    attic = device_registry.async_get_device(identifiers={(DOMAIN, "SERIAL003")})
+    assert bedroom is not None
+    assert attic is not None
+    assert bedroom.id != attic.id
+    assert not bedroom.connections
+    assert not attic.connections
 
 
 async def test_failed_unload_keeps_missing_address_issue(

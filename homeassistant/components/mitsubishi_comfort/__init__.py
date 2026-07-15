@@ -85,12 +85,16 @@ async def async_setup_entry(
     # device with its MAC so the manifest's "registered_devices" DHCP matcher
     # tracks it; DHCP discovery then supplies the IP via async_step_dhcp.
     device_registry = dr.async_get(hass)
-    owned_macs = {dr.format_mac(info.mac) for info in devices.values()}
+    owned_macs = {dr.format_mac(info.mac) for info in devices.values() if info.mac}
     for serial, info in devices.items():
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, serial)},
-            connections={(dr.CONNECTION_NETWORK_MAC, info.mac)},
+            # Connections are globally indexed: registering an empty MAC would
+            # merge every MAC-less device into one registry entry.
+            connections=(
+                {(dr.CONNECTION_NETWORK_MAC, info.mac)} if info.mac else set()
+            ),
             manufacturer="Mitsubishi",
             name=info.label,
             serial_number=serial,
@@ -132,10 +136,10 @@ async def async_setup_entry(
 
     coordinators: dict[str, MitsubishiComfortCoordinator] = {}
     no_address: list[str] = []
-    no_credentials: list[str] = []
+    incomplete: list[str] = []
     for serial, info in devices.items():
         if not is_fully_credentialed(info):
-            no_credentials.append(info.label)
+            incomplete.append(info.label)
             continue
         address = addresses.get(dr.format_mac(info.mac))
         if not address:
@@ -147,11 +151,11 @@ async def async_setup_entry(
             hass, entry, device, info.mac
         )
 
-    if no_credentials:
+    if incomplete:
         _LOGGER.debug(
-            "The cloud returned no credentials for %d device(s): %s",
-            len(no_credentials),
-            ", ".join(sorted(no_credentials)),
+            "The cloud returned incomplete local connection data for %d device(s): %s",
+            len(incomplete),
+            ", ".join(sorted(incomplete)),
         )
     # A device the cloud cannot locate stays unaddressable across restarts
     # until DHCP discovery reaches it or the user enters an IP in the repair
@@ -170,14 +174,14 @@ async def async_setup_entry(
         )
     else:
         ir.async_delete_issue(hass, DOMAIN, issue_id)
-    # The three buckets reconcile: set up + awaiting address + missing credentials
-    # equals the number of devices on the account.
+    # The three buckets reconcile: set up + awaiting address + incomplete local
+    # data equals the number of devices on the account.
     _LOGGER.debug(
-        "Set up %d of %d device(s); %d awaiting a LAN address, %d missing credentials",
+        "Set up %d of %d device(s); %d awaiting a LAN address, %d with incomplete local data",
         len(coordinators),
         len(devices),
         len(no_address),
-        len(no_credentials),
+        len(incomplete),
     )
 
     await asyncio.gather(

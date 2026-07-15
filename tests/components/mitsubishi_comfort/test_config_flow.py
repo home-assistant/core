@@ -76,15 +76,16 @@ async def test_user_step_success(
     mock_setup_entry.assert_called_once()
 
 
-async def test_user_step_skips_credential_less_devices(
+async def test_user_step_persists_partial_records(
     hass: HomeAssistant,
     mock_cloud_account: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test devices the cloud returned no credentials for are not persisted.
+    """Test partially discovered devices keep their recovered fields.
 
-    Only fully-credentialed devices are seeded, matching async_setup_entry's
-    caching, so the next setup is not handed unusable cached credentials.
+    discover_devices() consumes the password, cryptoSerial, and MAC
+    independently, so whatever discovery recovered is seeded for replay,
+    matching async_setup_entry's caching.
     """
     mock_cloud_account.discover_devices.return_value = {
         MOCK_SERIAL: DeviceInfo(
@@ -121,7 +122,12 @@ async def test_user_step_skips_credential_less_devices(
             "password": "dGVzdHBhc3M=",
             "crypto_serial": "0102030405060708090a",
             "mac": MOCK_MAC,
-        }
+        },
+        "SERIAL002": {
+            "password": "",
+            "crypto_serial": "",
+            "mac": "11:22:33:44:55:66",
+        },
     }
 
 
