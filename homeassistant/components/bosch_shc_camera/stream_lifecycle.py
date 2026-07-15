@@ -11,7 +11,7 @@ method for each that delegates here — these functions are exercised
 extensively from other coordinator-facing modules (switch.py, slow_tier.py,
 frigate_endpoint.py's `FrigateCoordinatorMixin`, live_connection.py) and
 from the shutdown path in `__init__.py` (`async_unload_entry`'s
-`getattr(coord, "_tear_down_live_stream", None)` duck-typed dispatch, kept
+`getattr(coord, "tear_down_live_stream", None)` duck-typed dispatch, kept
 for minimal SimpleNamespace test-fixture compatibility) as bound
 `coordinator._method(...)` calls, and from the test suite both as bound
 methods and via `BoschCameraCoordinator._method(coord, ...)` unbound-style
@@ -106,28 +106,28 @@ async def tear_down_live_stream(
     with a hard, still-true-regardless-of-session fact (privacy ON, user
     pressed stop) pass `None` (default) — always apply.
     """
-    async with coordinator._get_stream_lock(cam_id):
+    async with coordinator.get_stream_lock(cam_id):
         if (
             expected_generation is not None
-            and coordinator._get_session(cam_id).generation != expected_generation
+            and coordinator.get_session(cam_id).generation != expected_generation
         ):
             _LOGGER.debug(
                 "Teardown for %s skipped — session generation changed "
                 "(%s) since the caller decided to tear down (expected %s); "
                 "a newer rebuild superseded the stale trigger",
                 cam_id[:8],
-                coordinator._get_session(cam_id).generation,
+                coordinator.get_session(cam_id).generation,
                 expected_generation,
             )
             return
-        task = coordinator._renewal_tasks.pop(cam_id, None)
+        task = coordinator.renewal_tasks.pop(cam_id, None)
         if task and not task.done():
             task.cancel()
         # Cancel the idle reaper too. When the reaper itself triggers teardown
         # it has already returned (it schedules teardown as a separate task), so
         # this cancel is a no-op in that path; for all other teardown triggers
         # (switch off, privacy on, REMOTE fallback) it stops the reaper loop.
-        reaper = coordinator._reaper_tasks.pop(cam_id, None)
+        reaper = coordinator.reaper_tasks.pop(cam_id, None)
         if reaper and not reaper.done():
             reaper.cancel()
         # Step 1 — clear visible state FIRST. BoschLiveStreamSwitch.is_on
@@ -137,25 +137,25 @@ async def tear_down_live_stream(
         # Reset user intent too — privacy-on, health-watchdog REMOTE-escalation
         # and external teardowns all genuinely end the user's "live stream
         # wanted" intent.
-        coordinator._user_intent_streams.discard(cam_id)
-        coordinator._live_connections.pop(cam_id, None)
-        coordinator._live_opened_at.pop(cam_id, None)
-        coordinator._get_session(cam_id).idle_since = None
+        coordinator.user_intent_streams.discard(cam_id)
+        coordinator.live_connections.pop(cam_id, None)
+        coordinator.live_opened_at.pop(cam_id, None)
+        coordinator.get_session(cam_id).idle_since = None
         # Clear the warm-up flag proactively. is_stream_warming() would lazily
         # clear it (Scenario 1: no live conn), but a privacy-ON teardown is
         # immediately followed by a privacy cooldown check that calls
         # is_stream_warming — leaving it set risks blocking the very next
         # privacy toggle. Discard here so the toggle is never spuriously gated.
-        coordinator._stream_warming.discard(cam_id)
-        coordinator._get_session(cam_id).warming_started = float("-inf")
-        coordinator._stream_error_count.pop(cam_id, None)
-        coordinator._stream_error_at.pop(cam_id, None)
-        coordinator._stream_fell_back.pop(cam_id, None)
-        coordinator._local_rescue_attempts.pop(cam_id, None)
-        coordinator._local_rescue_at.pop(cam_id, None)
+        coordinator.stream_warming.discard(cam_id)
+        coordinator.get_session(cam_id).warming_started = float("-inf")
+        coordinator.stream_error_count.pop(cam_id, None)
+        coordinator.stream_error_at.pop(cam_id, None)
+        coordinator.stream_fell_back.pop(cam_id, None)
+        coordinator.local_rescue_attempts.pop(cam_id, None)
+        coordinator.local_rescue_at.pop(cam_id, None)
         # Push the cleared state to HA immediately so the UI flips to "off"
         # without waiting for the next coordinator refresh tick.
-        ls_entity = coordinator._live_stream_entities.get(cam_id)
+        ls_entity = coordinator.live_stream_entities.get(cam_id)
         if ls_entity is not None and getattr(ls_entity, "hass", None) is not None:
             try:
                 ls_entity.async_write_ha_state()
@@ -170,7 +170,7 @@ async def tear_down_live_stream(
         # but AFTER the visible state is corrected. Keep user-intent set
         # so the recorder auto-restarts when the LAN session comes back.
         # Concept §2.
-        if cam_id in coordinator._nvr_processes:
+        if cam_id in coordinator.nvr_processes:
             try:
                 await coordinator.stop_recorder(cam_id, clear_intent=False)
             except Exception as exc:
@@ -180,13 +180,13 @@ async def tear_down_live_stream(
                     cam_id[:8],
                     exc,
                 )
-        await coordinator._stop_tls_proxy(cam_id)
+        await coordinator.stop_tls_proxy(cam_id)
         # Viewing front-door (viewing_front_door.py) wraps this same TLS
         # proxy port — stop it right after the proxy so no stray client can
         # be relayed into a proxy that's already gone, and before the
         # go2rtc unregister below (same ordering rationale: tear the
         # publishing layers down inside-out).
-        await coordinator._stop_viewing_front_door(cam_id)
+        await coordinator.stop_viewing_front_door(cam_id)
         # Same for the REMOTE viewing-path front-door
         # (remote_viewing_front_door.py) — separate runner from the LOCAL
         # one above, but wraps the same per-cam TLS proxy port and must be
@@ -197,9 +197,9 @@ async def tear_down_live_stream(
         # `session_renewal.remote_session_terminator`'s pre-cap teardown
         # reaches the front-door: it calls `_tear_down_live_stream` directly
         # and needs no front-door-specific awareness of its own.
-        await coordinator._stop_remote_viewing_front_door(cam_id)
-        await coordinator._unregister_go2rtc_stream(cam_id)
-        cam_entity = coordinator._camera_entities.get(cam_id)
+        await coordinator.stop_remote_viewing_front_door(cam_id)
+        await coordinator.unregister_go2rtc_stream(cam_id)
+        cam_entity = coordinator.camera_entities.get(cam_id)
         if cam_entity is not None:
             stream = getattr(cam_entity, "stream", None)
             if stream is not None:
@@ -236,14 +236,14 @@ def schedule_stream_worker_error(
     # Coalesce: skip if an unhandled dispatch for this cam is already
     # in flight. Prevents a flood of identical restart attempts when
     # HA's auto-restart loop fires 5-6 times per minute.
-    pending = getattr(coordinator, "_stream_worker_dispatch_pending", None)
+    pending = getattr(coordinator, "stream_worker_dispatch_pending", None)
     if pending is None:
-        coordinator._stream_worker_dispatch_pending = pending = set()
+        coordinator.stream_worker_dispatch_pending = pending = set()
     if cam_id in pending:
         return
     pending.add(cam_id)
     coordinator.hass.async_create_task(
-        coordinator._handle_stream_worker_error(cam_id, msg)
+        coordinator.handle_stream_worker_error(cam_id, msg)
     )
 
 
@@ -274,11 +274,11 @@ async def handle_stream_worker_error(
     threshold (live bug 2026-05-27, Indoor Gen2: 4 errors, threshold 5,
     rescue never fired, frozen image until manual restart).
     """
-    pending = getattr(coordinator, "_stream_worker_dispatch_pending", None)
+    pending = getattr(coordinator, "stream_worker_dispatch_pending", None)
     try:
         coordinator.record_stream_error(cam_id)
         cfg = coordinator.get_model_config(cam_id)
-        live = coordinator._live_connections.get(cam_id, {})
+        live = coordinator.live_connections.get(cam_id, {})
         conn_type = live.get("_connection_type")
 
         # ── LOCAL rescue: HTTP 401 means Bosch rotated session creds ──
@@ -298,7 +298,7 @@ async def handle_stream_worker_error(
         # Threshold guard — but 401 bypasses it (see docstring).
         if (
             not is_auth_error
-            and coordinator._stream_error_count.get(cam_id, 0) < cfg.max_stream_errors
+            and coordinator.stream_error_count.get(cam_id, 0) < cfg.max_stream_errors
         ):
             return  # below threshold — let HA's auto-restart keep trying
         # Time-decay the rescue counter: rescues older than 5 min belong
@@ -308,22 +308,22 @@ async def handle_stream_worker_error(
         # min later when Bosch rotates again — skips straight to REMOTE.
         _LOCAL_RESCUE_TTL_SEC = 300
         now_mono = time.monotonic()
-        last_rescue = coordinator._local_rescue_at.get(cam_id, float("-inf"))
+        last_rescue = coordinator.local_rescue_at.get(cam_id, float("-inf"))
         if (
             last_rescue > float("-inf")
             and (now_mono - last_rescue) > _LOCAL_RESCUE_TTL_SEC
         ):
-            coordinator._local_rescue_attempts.pop(cam_id, None)
-            coordinator._local_rescue_at.pop(cam_id, None)
+            coordinator.local_rescue_attempts.pop(cam_id, None)
+            coordinator.local_rescue_at.pop(cam_id, None)
         if (
             conn_type == "LOCAL"
             and is_auth_error
-            and coordinator._local_rescue_attempts.get(cam_id, 0) < 1
+            and coordinator.local_rescue_attempts.get(cam_id, 0) < 1
         ):
             # Claim the rescue burst (one per cam at a time; decays after
             # _LOCAL_RESCUE_TTL_SEC). The burst itself retries internally.
-            coordinator._local_rescue_attempts[cam_id] = 1
-            coordinator._local_rescue_at[cam_id] = now_mono
+            coordinator.local_rescue_attempts[cam_id] = 1
+            coordinator.local_rescue_at[cam_id] = now_mono
             _LOGGER.warning(
                 "Stream worker auth-failed for %s on LOCAL — Bosch session "
                 "creds rotated; re-issuing fresh LOCAL session (LAN preserved)",
@@ -331,9 +331,9 @@ async def handle_stream_worker_error(
             )
             # Reset error counter so try_live_connection picks LOCAL again
             # (it filters LOCAL out once the counter is saturated).
-            coordinator._stream_error_count[cam_id] = 0
-            coordinator._stream_fell_back.pop(cam_id, None)
-            coordinator._live_connections.pop(cam_id, None)
+            coordinator.stream_error_count[cam_id] = 0
+            coordinator.stream_fell_back.pop(cam_id, None)
+            coordinator.live_connections.pop(cam_id, None)
             # Resilient rescue: a fresh PUT /connection can briefly race the
             # camera's own session teardown — observed live 2026-05-31 (Indoor
             # Gen2): the new TLS proxy got "SSL UNEXPECTED_EOF" / "Connection
@@ -401,7 +401,7 @@ async def handle_stream_worker_error(
         # REMOTE. force_reset stops the dead LOCAL proxy + clears live state
         # INSIDE the stream lock — same atomic teardown as the 401 rescue, so
         # this escalation can't race a concurrent renewal either (2026-06-01).
-        coordinator._stream_fell_back[cam_id] = True
+        coordinator.stream_fell_back[cam_id] = True
         result = await coordinator.try_live_connection(cam_id, force_reset=True)
         if result:
             _LOGGER.info(
@@ -424,7 +424,7 @@ async def go2rtc_consumer_count(
     reached on any known port (HA-bundled 11984 / legacy 1984) — None means
     "unknown", which the idle reaper treats as "no confirmed consumer".
     """
-    cam_entity = coordinator._camera_entities.get(cam_id)
+    cam_entity = coordinator.camera_entities.get(cam_id)
     if cam_entity is not None and cam_entity.entity_id:
         stream_name = cam_entity.entity_id
     else:
@@ -440,7 +440,7 @@ async def go2rtc_consumer_count(
                         if resp.status != 200:
                             continue
                         data = await resp.json(content_type=None)
-        except (TimeoutError, aiohttp.ClientError, ValueError, RuntimeError):
+        except TimeoutError, aiohttp.ClientError, ValueError, RuntimeError:
             # RuntimeError: the shared go2rtc session (or its connector)
             # can be mid-close/closed if this call raced coordinator
             # teardown — treat exactly like an unreachable endpoint.
@@ -471,9 +471,9 @@ async def has_active_consumer(coordinator: BoschCameraCoordinator, cam_id: str) 
     """
     from .cf_unbuffer import hls_access_age
 
-    if cam_id in coordinator._nvr_processes:
+    if cam_id in coordinator.nvr_processes:
         return True
-    cam_entity = coordinator._camera_entities.get(cam_id)
+    cam_entity = coordinator.camera_entities.get(cam_id)
     stream = getattr(cam_entity, "stream", None) if cam_entity is not None else None
     token = getattr(stream, "access_token", None) if stream is not None else None
     if token:
@@ -483,11 +483,11 @@ async def has_active_consumer(coordinator: BoschCameraCoordinator, cam_id: str) 
     # An external recorder (Frigate/BlueIris) connected to the persistent
     # front-door is a real consumer the reaper must not tear down.
     if (
-        coordinator._frigate_runner is not None
-        and coordinator._frigate_runner.active_count(cam_id) > 0
+        coordinator.frigate_runner is not None
+        and coordinator.frigate_runner.active_count(cam_id) > 0
     ):
         return True
-    count = await coordinator._go2rtc_consumer_count(cam_id)
+    count = await coordinator.go2rtc_consumer_count(cam_id)
     # None == go2rtc could not be reached on ANY known port (11984/1984) →
     # we CANNOT confirm the session is idle. Treating that "unknown" as
     # "no consumer" tore down LIVE viewers on any setup where go2rtc answers
@@ -526,32 +526,32 @@ async def idle_session_reaper(
     tracked exactly like `_auto_renew_local_session`: an OFF→ON cycle or
     full renewal bumps the generation and this loop exits.
     """
-    coordinator._get_session(cam_id).idle_since = None
+    coordinator.get_session(cam_id).idle_since = None
     try:
         while True:
             await asyncio.sleep(STREAM_IDLE_REAP_CHECK_SEC)
-            if coordinator._get_session(cam_id).generation != generation:
+            if coordinator.get_session(cam_id).generation != generation:
                 _LOGGER.debug("Idle reaper: %s — stale generation, exiting", cam_id[:8])
                 return  # OFF→ON / renewal started a newer session
-            live = coordinator._live_connections.get(cam_id)
+            live = coordinator.live_connections.get(cam_id)
             if not live:
                 _LOGGER.debug("Idle reaper: %s — session gone, exiting", cam_id[:8])
                 return  # session gone — nothing to reap
             if live.get("_connection_type") != "LOCAL":
                 _LOGGER.debug("Idle reaper: %s — no longer LOCAL, exiting", cam_id[:8])
                 return  # REMOTE now — reaper only governs LOCAL sessions
-            if await coordinator._has_active_consumer(cam_id):
-                if coordinator._get_session(cam_id).idle_since is not None:
+            if await coordinator.has_active_consumer(cam_id):
+                if coordinator.get_session(cam_id).idle_since is not None:
                     _LOGGER.debug(
                         "Idle reaper: %s — consumer back, idle timer reset",
                         cam_id[:8],
                     )
-                coordinator._get_session(cam_id).idle_since = None
+                coordinator.get_session(cam_id).idle_since = None
                 continue
             now = time.monotonic()
-            since = coordinator._get_session(cam_id).idle_since
+            since = coordinator.get_session(cam_id).idle_since
             if since is None:
-                coordinator._get_session(cam_id).idle_since = now
+                coordinator.get_session(cam_id).idle_since = now
                 _LOGGER.debug(
                     "Idle reaper: %s — no consumer, arming idle timer (%ds grace)",
                     cam_id[:8],
@@ -571,18 +571,18 @@ async def idle_session_reaper(
                     cam_id[:8],
                     now - since,
                 )
-                coordinator._get_session(cam_id).idle_since = None
+                coordinator.get_session(cam_id).idle_since = None
                 # Schedule teardown in its own task: _tear_down_live_stream
                 # cancels _reaper_tasks[cam_id] (i.e. THIS task), so awaiting
                 # it directly would deliver CancelledError mid-teardown. A
                 # fresh task runs teardown to completion; cancelling this
                 # (already-returning) reaper is then a no-op.
                 coordinator.hass.async_create_task(
-                    coordinator._tear_down_live_stream(
+                    coordinator.tear_down_live_stream(
                         cam_id, expected_generation=generation
                     ),
                     f"bosch_shc_camera_reap_teardown_{cam_id[:8]}",
                 )
                 return
     finally:
-        coordinator._get_session(cam_id).idle_since = None
+        coordinator.get_session(cam_id).idle_since = None

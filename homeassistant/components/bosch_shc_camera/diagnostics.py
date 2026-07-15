@@ -87,10 +87,10 @@ async def async_get_config_entry_diagnostics(
     now = time.monotonic()
     cameras: list[dict[str, Any]] = []
     if coord is not None and coord.data:
-        offline_since: dict[str, float] = getattr(coord, "_offline_since", {})
-        stream_error_count: dict[str, int] = getattr(coord, "_stream_error_count", {})
-        stream_fell_back: dict[str, bool] = getattr(coord, "_stream_fell_back", {})
-        session_stale: dict[str, bool] = getattr(coord, "_session_stale", {})
+        offline_since: dict[str, float] = getattr(coord, "offline_since", {})
+        stream_error_count: dict[str, int] = getattr(coord, "stream_error_count", {})
+        stream_fell_back: dict[str, bool] = getattr(coord, "stream_fell_back", {})
+        session_stale: dict[str, bool] = getattr(coord, "session_stale", {})
         for cam_id, cdata in coord.data.items():
             info = cdata.get("info", {})
             live = cdata.get("live", {})
@@ -120,10 +120,10 @@ async def async_get_config_entry_diagnostics(
                 )
             )
 
-    # Not a set[str] anymore — coord._stream_warming is a StreamWarmingView
+    # Not a set[str] anymore — coord.stream_warming is a StreamWarmingView
     # facade (session_state.py) since the Phase 1 coordinator rewrite. Sized
     # is the correct minimal type for the only operation used here, len().
-    stream_warming: Sized = getattr(coord, "_stream_warming", set())
+    stream_warming: Sized = getattr(coord, "stream_warming", set())
 
     return {
         "integration_version": INTEGRATION_VERSION,
@@ -136,9 +136,9 @@ async def async_get_config_entry_diagnostics(
         "coordinator": {
             "running": coord is not None,
             "last_update_success": getattr(coord, "last_update_success", None),
-            "fcm_running": getattr(coord, "_fcm_running", None),
-            "fcm_healthy": getattr(coord, "_fcm_healthy", None),
-            "auth_outage_count": getattr(coord, "_auth_outage_count", None),
+            "fcm_running": getattr(coord, "fcm_running", None),
+            "fcm_healthy": getattr(coord, "fcm_healthy", None),
+            "auth_outage_count": getattr(coord, "auth_outage_count", None),
             "scan_interval": getattr(
                 getattr(coord, "update_interval", None), "total_seconds", lambda: None
             )(),

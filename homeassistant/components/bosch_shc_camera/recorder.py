@@ -388,7 +388,7 @@ async def _watch_preroll_recorder(
             await asyncio.sleep(_PREROLL_SEGMENT_SECONDS)
         except asyncio.CancelledError:
             raise
-        proc = coordinator._nvr_preroll_processes.get(cam_id)
+        proc = coordinator.nvr_preroll_processes.get(cam_id)
         if proc is None or proc.returncode is not None:
             return
         try:
@@ -397,7 +397,7 @@ async def _watch_preroll_recorder(
                 cam_dir,
                 max_segs,
             )
-            coordinator._nvr_preroll_segment_counts[cam_id] = remaining
+            coordinator.nvr_preroll_segment_counts[cam_id] = remaining
         except Exception:  # best-effort prune-on-stop; non-fatal if cache dir missing  # noqa: S110 # best-effort cache prune, non-fatal if dir missing
             pass
 
@@ -407,13 +407,13 @@ async def _spawn_preroll_recorder_locked(
 ) -> None:
     """Spawn the pre-roll ffmpeg ring writer for one camera to tmpfs.
 
-    Callers MUST already hold ``coordinator._get_nvr_recorder_lock(cam_id)``
+    Callers MUST already hold ``coordinator.get_nvr_recorder_lock(cam_id)``
     — factored out of `start_preroll_recorder` so
     `finalize_and_restart_preroll_recorder` can respawn the ring without
     releasing the lock between its own stop and this spawn (would reopen
     the exact race issue #44 fixed).
     """
-    if getattr(coordinator, "_nvr_shutting_down", False):
+    if getattr(coordinator, "nvr_shutting_down", False):
         # Config-entry unload/HA-stop is tearing this coordinator down
         # (issue #47) — refuse to spawn a new ring writer that
         # stop_all_preroll()'s sweep, running concurrently, might not see.
@@ -422,7 +422,7 @@ async def _spawn_preroll_recorder_locked(
             cam_id[:8],
         )
         return
-    live = coordinator._live_connections.get(cam_id, {})
+    live = coordinator.live_connections.get(cam_id, {})
     if live.get("_connection_type") != "LOCAL":
         return
     rtsp_url = live.get("rtspsUrl") or live.get("rtspUrl") or ""
@@ -465,7 +465,7 @@ async def _spawn_preroll_recorder_locked(
         _LOGGER.warning("NVR pre-roll ffmpeg spawn failed for %s: %s", cam_name, err)
         return
 
-    coordinator._nvr_preroll_processes[cam_id] = proc
+    coordinator.nvr_preroll_processes[cam_id] = proc
     # Compute max_segs once; used for prune-on-spawn and periodic watcher.
     preroll_secs = int(opts.get("nvr_preroll_seconds", 0))
     max_segs = max(2, math.ceil(preroll_secs / _PREROLL_SEGMENT_SECONDS) + 1)
@@ -476,20 +476,20 @@ async def _spawn_preroll_recorder_locked(
             cam_dir,
             max_segs,
         )
-        coordinator._nvr_preroll_segment_counts[cam_id] = remaining
+        coordinator.nvr_preroll_segment_counts[cam_id] = remaining
     except Exception:  # best-effort prune-on-spawn; non-fatal if cache dir missing  # noqa: S110 # best-effort cache prune, non-fatal if dir missing
         pass
 
     # Start periodic prune watcher — keeps the ring buffer bounded while running.
-    if not hasattr(coordinator, "_nvr_preroll_tasks"):
-        coordinator._nvr_preroll_tasks = {}
+    if not hasattr(coordinator, "nvr_preroll_tasks"):
+        coordinator.nvr_preroll_tasks = {}
     task = coordinator.hass.async_create_background_task(
         _watch_preroll_recorder(coordinator, cam_id, cam_dir, max_segs),
         f"bosch_nvr_preroll_watch_{cam_id[:8]}",
     )
-    coordinator._bg_tasks.add(task)
-    task.add_done_callback(coordinator._bg_tasks.discard)
-    coordinator._nvr_preroll_tasks[cam_id] = task
+    coordinator.bg_tasks.add(task)
+    task.add_done_callback(coordinator.bg_tasks.discard)
+    coordinator.nvr_preroll_tasks[cam_id] = task
 
 
 async def start_preroll_recorder(
@@ -508,7 +508,7 @@ async def start_preroll_recorder(
     releases this lock before calling here, so holding it for this whole
     function cannot deadlock.
     """
-    async with coordinator._get_nvr_recorder_lock(cam_id):
+    async with coordinator.get_nvr_recorder_lock(cam_id):
         # This is a respawn (fresh creds / restart), not a genuine stop —
         # keep the accumulated ring buffer instead of wiping it (see
         # prune_cache docstring on stop_preroll_recorder).
@@ -542,13 +542,13 @@ async def stop_preroll_recorder(
     trust the newest segment file".
     """
     # Cancel the periodic prune watcher first.
-    tasks = getattr(coordinator, "_nvr_preroll_tasks", {})
+    tasks = getattr(coordinator, "nvr_preroll_tasks", {})
     watcher = tasks.pop(cam_id, None)
     if watcher is not None and not watcher.done():
         watcher.cancel()
 
-    coordinator._nvr_preroll_segment_counts.pop(cam_id, None)
-    proc = coordinator._nvr_preroll_processes.pop(cam_id, None)
+    coordinator.nvr_preroll_segment_counts.pop(cam_id, None)
+    proc = coordinator.nvr_preroll_processes.pop(cam_id, None)
     clean_exit = False
     if proc is not None and proc.returncode is None:
         try:
@@ -586,7 +586,7 @@ def _known_cam_ids_for_shutdown(coordinator: BoschCameraCoordinator) -> set[str]
     """All camera IDs that could plausibly have (or soon get) an NVR/ring
     ffmpeg process — used by the unload-time sweeps below.
 
-    A plain ``list(coordinator._nvr_processes.keys())`` snapshot (the
+    A plain ``list(coordinator.nvr_processes.keys())`` snapshot (the
     previous implementation) misses a camera whose ``start_recorder``/
     ``_spawn_preroll_recorder_locked`` call is still in flight and hasn't
     registered its process yet at snapshot time — issue #47's orphaned-
@@ -596,8 +596,8 @@ def _known_cam_ids_for_shutdown(coordinator: BoschCameraCoordinator) -> set[str]
     below will still serialize against — and thus catch — that in-flight
     spawn once it finishes registering.
     """
-    cam_ids = set(coordinator._nvr_processes) | set(coordinator._nvr_preroll_processes)
-    cam_ids |= set(getattr(coordinator, "_camera_entities", {}) or {})
+    cam_ids = set(coordinator.nvr_processes) | set(coordinator.nvr_preroll_processes)
+    cam_ids |= set(getattr(coordinator, "camera_entities", {}) or {})
     return cam_ids
 
 
@@ -613,7 +613,7 @@ async def stop_all_preroll(coordinator: BoschCameraCoordinator) -> None:
     camera unblocks and sees the freshly-spawned process.
     """
     for cam_id in _known_cam_ids_for_shutdown(coordinator):
-        async with coordinator._get_nvr_recorder_lock(cam_id):
+        async with coordinator.get_nvr_recorder_lock(cam_id):
             await stop_preroll_recorder(coordinator, cam_id)
 
 
@@ -657,8 +657,8 @@ async def finalize_and_restart_preroll_recorder(
     moov-atom guarantee, so the segment is discarded rather than trusted) —
     callers should silently fall back to the existing drop-newest behavior.
     """
-    async with coordinator._get_nvr_recorder_lock(cam_id):
-        proc = coordinator._nvr_preroll_processes.get(cam_id)
+    async with coordinator.get_nvr_recorder_lock(cam_id):
+        proc = coordinator.nvr_preroll_processes.get(cam_id)
         if proc is None or proc.returncode is not None:
             return None
         cam_dir = _preroll_cam_dir(coordinator, cam_id)
@@ -891,7 +891,7 @@ async def _capture_postroll(
     (camera not LOCAL, ffmpeg missing, timeout) just means the resulting clip
     falls back to pre-roll-only — never blocks or raises into the caller.
     """
-    live = coordinator._live_connections.get(cam_id, {})
+    live = coordinator.live_connections.get(cam_id, {})
     if live.get("_connection_type") != "LOCAL":
         return False
     rtsp_url = live.get("rtspsUrl") or live.get("rtspUrl") or ""
@@ -968,7 +968,7 @@ async def assemble_and_ship_motion_clip(
         )
         return False
 
-    lock = coordinator._get_nvr_clip_assembly_lock(cam_id)
+    lock = coordinator.get_nvr_clip_assembly_lock(cam_id)
     if lock.locked():
         _LOGGER.debug(
             "NVR motion clip: assembly already in progress for %s, skipping",
@@ -1094,7 +1094,7 @@ def should_record(
     """
     if not switch_on:
         return False
-    live = coordinator._live_connections.get(cam_id, {})
+    live = coordinator.live_connections.get(cam_id, {})
     if live.get("_connection_type") != "LOCAL":
         return False
     if not coordinator.is_camera_online(cam_id):
@@ -1131,7 +1131,7 @@ async def start_recorder(
     # instead of wiping it (issue #43 follow-up bug-hunt finding).
     await stop_recorder(coordinator, cam_id, prune_preroll_cache=False)
 
-    live = coordinator._live_connections.get(cam_id, {})
+    live = coordinator.live_connections.get(cam_id, {})
     if live.get("_connection_type") != "LOCAL":
         _LOGGER.debug(
             "NVR start skipped for %s — not LOCAL (gate should have caught this)",
@@ -1148,7 +1148,7 @@ async def start_recorder(
     if not rtsp_url.startswith("rtsp://"):
         for _ in range(_PROXY_URL_WAIT_STEPS):
             await asyncio.sleep(_PROXY_URL_WAIT_INTERVAL)
-            live = coordinator._live_connections.get(cam_id, {})
+            live = coordinator.live_connections.get(cam_id, {})
             if live.get("_connection_type") != "LOCAL":
                 return  # stream torn down while we were waiting
             rtsp_url = live.get("rtspsUrl") or live.get("rtspUrl") or ""
@@ -1229,8 +1229,8 @@ async def start_recorder(
     # live URL right before spawning (closing the window to a few
     # microseconds) and hold the same lock `_refresh_local_creds_from_heartbeat`
     # uses while mutating `_live_connections`, so the two can't interleave.
-    async with coordinator._get_nvr_recorder_lock(cam_id):
-        if getattr(coordinator, "_nvr_shutting_down", False):
+    async with coordinator.get_nvr_recorder_lock(cam_id):
+        if getattr(coordinator, "nvr_shutting_down", False):
             # Config-entry unload/HA-stop started while we were creating
             # staging dirs (issue #47) — refuse to spawn a process that
             # stop_all()'s concurrent sweep, serialized on this same lock,
@@ -1240,7 +1240,7 @@ async def start_recorder(
                 cam_id[:8],
             )
             return
-        live = coordinator._live_connections.get(cam_id, {})
+        live = coordinator.live_connections.get(cam_id, {})
         if live.get("_connection_type") != "LOCAL":
             return  # stream torn down while we were creating staging dirs
         fresh_rtsp_url = live.get("rtspsUrl") or live.get("rtspUrl") or rtsp_url
@@ -1263,11 +1263,11 @@ async def start_recorder(
             _LOGGER.warning("NVR ffmpeg spawn failed for %s: %s", cam_name, err)
             return
 
-        coordinator._nvr_processes[cam_id] = proc
+        coordinator.nvr_processes[cam_id] = proc
         # A fresh spawn is underway — clear any stale give-up/error state from a
         # prior crash-loop so the sensor doesn't keep showing "error" forever
         # after a successful restart (issue #42).
-        coordinator._nvr_error_state.pop(cam_id, None)
+        coordinator.nvr_error_state.pop(cam_id, None)
         # Do NOT reset the auth-retry counter when THIS spawn is itself an
         # auto-retry from the auth-failure branch below — a successful
         # subprocess *spawn* is not proof the credential is valid (the RTSP
@@ -1276,7 +1276,7 @@ async def start_recorder(
         # unreachable for a genuinely broken credential: each retry's own
         # respawn zeroed the counter the retry loop had just incremented.
         if not is_auto_retry:
-            coordinator._nvr_auth_retry_count.pop(cam_id, None)
+            coordinator.nvr_auth_retry_count.pop(cam_id, None)
     # Push an immediate entity update so `mini_nvr_state` (and anything else
     # reading these dicts) reflects "recording" the instant ffmpeg actually
     # spawns, instead of waiting for the next ~60s coordinator tick (issue
@@ -1289,8 +1289,8 @@ async def start_recorder(
         _watch_recorder(coordinator, cam_id, proc),
         f"bosch_nvr_watch_{cam_id[:8]}",
     )
-    coordinator._bg_tasks.add(task)
-    task.add_done_callback(coordinator._bg_tasks.discard)
+    coordinator.bg_tasks.add(task)
+    task.add_done_callback(coordinator.bg_tasks.discard)
 
     # Start pre-roll buffer if configured (nvr_preroll_seconds > 0).
     preroll_secs = int(opts.get("nvr_preroll_seconds") or 0)
@@ -1312,7 +1312,7 @@ async def stop_recorder(
     pre-roll ring buffer every time (issue #43 follow-up bug-hunt finding).
     """
     await stop_preroll_recorder(coordinator, cam_id, prune_cache=prune_preroll_cache)
-    proc = coordinator._nvr_processes.pop(cam_id, None)
+    proc = coordinator.nvr_processes.pop(cam_id, None)
     if proc is None:
         return
     # Push immediately — `_nvr_processes` (the sensor's source of truth) is
@@ -1369,7 +1369,7 @@ async def stop_all(coordinator: BoschCameraCoordinator) -> None:
     """
     await stop_all_preroll(coordinator)
     for cam_id in _known_cam_ids_for_shutdown(coordinator):
-        async with coordinator._get_nvr_recorder_lock(cam_id):
+        async with coordinator.get_nvr_recorder_lock(cam_id):
             await stop_recorder(coordinator, cam_id)
 
 
@@ -1391,9 +1391,9 @@ async def _watch_recorder(
     rc = await proc.wait()
     # If somebody already removed the proc from _nvr_processes (clean stop /
     # replacement) we're done — nothing to respawn.
-    if coordinator._nvr_processes.get(cam_id) is not proc:
+    if coordinator.nvr_processes.get(cam_id) is not proc:
         return
-    coordinator._nvr_processes.pop(cam_id, None)
+    coordinator.nvr_processes.pop(cam_id, None)
     # Push immediately — an unexpected ffmpeg exit is a real "recording"→
     # "idle" transition the instant it's detected, not something that should
     # wait for the next coordinator tick (issue #42 follow-up, same reasoning
@@ -1424,7 +1424,7 @@ async def _watch_recorder(
     )
 
     # Quick re-check: only respawn if we still want to record.
-    last = getattr(coordinator, "_nvr_user_intent", {}).get(cam_id, False)
+    last = getattr(coordinator, "nvr_user_intent", {}).get(cam_id, False)
     if not should_record(coordinator, cam_id, switch_on=last):
         _LOGGER.info("NVR not respawning for %s — gate now closed", cam_id[:8])
         return
@@ -1441,7 +1441,7 @@ async def _watch_recorder(
             cam_id[:8],
             (coordinator.options.get("nvr_base_path") or DEFAULT_BASE_PATH),
         )
-        coordinator._nvr_error_state[cam_id] = "disk full"
+        coordinator.nvr_error_state[cam_id] = "disk full"
         coordinator.async_update_listeners()
         try:
             hass = getattr(coordinator, "hass", None)
@@ -1483,8 +1483,8 @@ async def _watch_recorder(
     # counter or the give-up error state.
     _AUTH_MARKERS = ("401", "unauthorized")
     if any(marker in err_lower for marker in _AUTH_MARKERS):
-        retries = coordinator._nvr_auth_retry_count.get(cam_id, 0) + 1
-        coordinator._nvr_auth_retry_count[cam_id] = retries
+        retries = coordinator.nvr_auth_retry_count.get(cam_id, 0) + 1
+        coordinator.nvr_auth_retry_count[cam_id] = retries
         if retries > _MAX_CONSECUTIVE_AUTH_RETRIES:
             _LOGGER.error(
                 "NVR ffmpeg rejected with auth failures %d times in a row for "
@@ -1494,7 +1494,7 @@ async def _watch_recorder(
                 retries,
                 cam_id[:8],
             )
-            coordinator._nvr_error_state[cam_id] = (
+            coordinator.nvr_error_state[cam_id] = (
                 "repeated auth failures — not a rotation race"
             )
             coordinator.async_update_listeners()
@@ -1519,7 +1519,7 @@ async def _watch_recorder(
     # forever because _nvr_recent_crash is never written.
     # The *give-up* gate still requires two crashes within the window.
     now = time.monotonic()
-    prev_crash = coordinator._nvr_recent_crash.get(cam_id, float("-inf"))
+    prev_crash = coordinator.nvr_recent_crash.get(cam_id, float("-inf"))
     if (now - prev_crash) < _RESPAWN_WINDOW_SECONDS:
         _LOGGER.error(
             "NVR ffmpeg crashed twice within %.0fs for %s — giving up. "
@@ -1527,10 +1527,10 @@ async def _watch_recorder(
             _RESPAWN_WINDOW_SECONDS,
             cam_id[:8],
         )
-        coordinator._nvr_error_state[cam_id] = "ffmpeg crashed twice"
+        coordinator.nvr_error_state[cam_id] = "ffmpeg crashed twice"
         coordinator.async_update_listeners()
         return
-    coordinator._nvr_recent_crash[cam_id] = now
+    coordinator.nvr_recent_crash[cam_id] = now
 
     await asyncio.sleep(_RESPAWN_DELAY_SECONDS)
     if not should_record(coordinator, cam_id, switch_on=last):
@@ -1772,9 +1772,9 @@ def sync_drain_tick(
     staging_root = os.path.join(base_path, _STAGING_DIRNAME)
 
     # Per-camera retry counter survives across ticks via the coordinator.
-    if not hasattr(coordinator, "_nvr_drain_failures"):
-        coordinator._nvr_drain_failures = {}
-    failures: dict[str, int] = coordinator._nvr_drain_failures
+    if not hasattr(coordinator, "nvr_drain_failures"):
+        coordinator.nvr_drain_failures = {}
+    failures: dict[str, int] = coordinator.nvr_drain_failures
 
     promoted = uploaded = failed = 0
     pending = 0
@@ -1873,7 +1873,7 @@ def sync_drain_tick(
 
     # Persist the latest drain stats on the coordinator so the sensor can
     # render them. ``_nvr_drain_state`` is created on first tick.
-    state: dict[str, Any] = getattr(coordinator, "_nvr_drain_state", None) or {}
+    state: dict[str, Any] = getattr(coordinator, "nvr_drain_state", None) or {}
     state["target"] = target
     state["pending"] = pending
     state["promoted"] = promoted
@@ -1881,7 +1881,7 @@ def sync_drain_tick(
     state["failed"] = failed
     state["last_age_by_cam"] = last_age
     state["last_tick_ts"] = now_ts
-    coordinator._nvr_drain_state = state
+    coordinator.nvr_drain_state = state
 
     return {
         "promoted": promoted,
@@ -1891,7 +1891,7 @@ def sync_drain_tick(
     }
 
 
-async def _drain_staging_to_remote(coordinator: BoschCameraCoordinator) -> None:
+async def drain_staging_to_remote(coordinator: BoschCameraCoordinator) -> None:
     """Long-running watcher coroutine — one per coordinator (NOT per camera).
 
     Drives ``sync_drain_tick`` on a 30 s schedule via the HA executor pool so

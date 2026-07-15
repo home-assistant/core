@@ -15,7 +15,7 @@ readers (``camera.py``: ``in``/``not in`` on ``_stream_warming``, ``.get()``/
 ``_StreamWarmingView``/``_LiveOpenedAtView`` below are thin facades
 implementing exactly the subset of the ``set``/``dict`` protocol those call
 sites use, backed by the same ``_sessions`` store — so
-``coordinator._stream_warming``/``coordinator._live_opened_at`` keep
+``coordinator.stream_warming``/``coordinator.live_opened_at`` keep
 behaving exactly as before to every external caller, with zero changes
 needed in ``camera.py``/``switch.py``.
 
@@ -32,7 +32,7 @@ Slice 1 of the ``docs/stream-perf-stability-refactor-plan.md`` "Session-
 State-Facade — inkrementeller Migrationsplan" (Anhang 2026-07-13) folds in
 the diagnostic/write-lock timestamp fields: ``offline_seen_at`` and every
 ``*_set_at`` write-lock timestamp (13 of them — one per cloud-writable
-field guarded by ``BoschCameraCoordinator._is_write_locked``), plus three
+field guarded by ``BoschCameraCoordinator.is_write_locked``), plus three
 boolean "already logged/deferred this cycle" flags
 (``notif_disabled_logged``, ``fw_update_alerted``, ``slow_tier_deferred``).
 Generalizes the ``LiveOpenedAtView``/``StreamWarmingView`` pattern above
@@ -118,7 +118,7 @@ storage. The two `.pop()` call sites the module docstring above originally
 flagged (`camera.py`, `switch.py`) — since grown to more call sites across
 `stream_lifecycle.py`/`live_connection.py` too — all use the
 `.pop(cam_id, None)` two-arg form and keep working unchanged. The
-nested-subscript-write pattern (`live = coordinator._live_connections.get
+nested-subscript-write pattern (`live = coordinator.live_connections.get
 (cam_id); live["key"] = value`, used by `session_renewal.py`'s
 credential-rotation path) also keeps working unchanged: `CacheFieldView.
 __getitem__`/`.get()` return the SAME stored dict object, not a copy, so
@@ -593,7 +593,7 @@ class CacheFieldView(MutableMapping[str, _T]):
         # field's `get_or_create_session()` call elsewhere growing the
         # shared `_sessions` dict mid-loop cannot raise "dictionary
         # changed size during iteration" on a caller iterating THIS view
-        # (`for cid in coordinator._rcp_lan_ip_cache:` etc.) — the
+        # (`for cid in coordinator.rcp_lan_ip_cache:` etc.) — the
         # original dedicated per-field dict this replaces never had that
         # cross-field growth risk, so preserving eager materialization
         # keeps the exact same failure mode (none).

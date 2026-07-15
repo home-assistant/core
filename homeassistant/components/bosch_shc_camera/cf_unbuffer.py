@@ -95,7 +95,7 @@ def _note_hls_access(request: web.Request | None) -> None:
     try:
         parts = request.path.split("/")  # type: ignore[union-attr]
         token = parts[parts.index("hls") + 1]
-    except (AttributeError, ValueError, IndexError):
+    except AttributeError, ValueError, IndexError:
         return
     if not token:
         return

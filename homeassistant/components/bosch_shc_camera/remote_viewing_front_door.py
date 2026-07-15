@@ -185,7 +185,7 @@ class _PathRewriteRelay:
                     break
                 buf += chunk
                 buf = await self._drain_requests(buf)
-        except (asyncio.IncompleteReadError, ConnectionError, OSError):
+        except asyncio.IncompleteReadError, ConnectionError, OSError:
             pass
         finally:
             if not self._iw.is_closing():
@@ -231,7 +231,7 @@ class _PathRewriteRelay:
                     break
                 self._cw.write(chunk)
                 await self._cw.drain()
-        except (ConnectionError, OSError):
+        except ConnectionError, OSError:
             pass
         finally:
             if not self._cw.is_closing():
@@ -266,10 +266,10 @@ async def remote_resolve_inner(coordinator: Any, cam_id: str) -> RemoteTarget | 
     promoted to LOCAL (`session_renewal.promote_to_local`), or the inner
     TLS proxy/path haven't been recorded yet.
     """
-    live = coordinator._live_connections.get(cam_id, {})
+    live = coordinator.live_connections.get(cam_id, {})
     if live.get("_connection_type") != "REMOTE":
         return None
-    port = coordinator._tls_proxy_ports.get(cam_id)
+    port = coordinator.tls_proxy_ports.get(cam_id)
     path = live.get("_remote_path")
     if not (port and path):
         return None
@@ -298,9 +298,9 @@ async def start_remote_viewing_front_door(
     restart it — that would needlessly ECONNREFUSE a client racing the
     close->rebind gap for zero benefit).
     """
-    if coordinator._remote_viewing_front_door_runner is None:
-        coordinator._remote_viewing_front_door_runner = FrontDoorRunner()
-    runner = coordinator._remote_viewing_front_door_runner
+    if coordinator.remote_viewing_front_door_runner is None:
+        coordinator.remote_viewing_front_door_runner = FrontDoorRunner()
+    runner = coordinator.remote_viewing_front_door_runner
     if runner.has_server(cam_id):
         return (
             f"rtsp://127.0.0.1:{runner.port(cam_id)}/rtsp_tunnel"
@@ -312,7 +312,7 @@ async def start_remote_viewing_front_door(
             cam_id,
             config,
             lambda cid: remote_resolve_inner(coordinator, cid),
-            preferred_port=coordinator._remote_viewing_sticky_port.get(cam_id, 0),
+            preferred_port=coordinator.remote_viewing_sticky_port.get(cam_id, 0),
             relay_factory=_remote_relay_factory,
         )
     except OSError as err:
@@ -324,7 +324,7 @@ async def start_remote_viewing_front_door(
             cam_id[:8],
             err,
         )
-        coordinator._remote_viewing_sticky_port.pop(cam_id, None)
+        coordinator.remote_viewing_sticky_port.pop(cam_id, None)
         try:
             port = await runner.start_server(
                 cam_id,
@@ -343,7 +343,7 @@ async def start_remote_viewing_front_door(
                 err2,
             )
             return None
-    coordinator._remote_viewing_sticky_port[cam_id] = port
+    coordinator.remote_viewing_sticky_port[cam_id] = port
     return (
         f"rtsp://127.0.0.1:{port}/rtsp_tunnel?inst={inst}{audio_param}"
         f"&fmtp=1&maxSessionDuration={max_session_duration}"
@@ -352,5 +352,5 @@ async def start_remote_viewing_front_door(
 
 async def stop_remote_viewing_front_door(coordinator: Any, cam_id: str) -> None:
     """Stop the REMOTE viewing front-door listener for `cam_id`, if running."""
-    if coordinator._remote_viewing_front_door_runner is not None:
-        coordinator._remote_viewing_front_door_runner.stop_server(cam_id)
+    if coordinator.remote_viewing_front_door_runner is not None:
+        coordinator.remote_viewing_front_door_runner.stop_server(cam_id)

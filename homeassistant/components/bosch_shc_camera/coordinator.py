@@ -142,7 +142,7 @@ CAMERA_OFFLINE_ANNOUNCE_GRACE_SEC = 300.0  # 5 min
 # happens in the executor during HA startup, not inside the event loop).
 # Duplicated from __init__.py (both modules need it — __init__.py for the
 # feedback-hint/persistent_notification code in async_setup_entry, this module
-# for BoschCameraCoordinator.__init__'s self._integration_version — this is a
+# for BoschCameraCoordinator.__init__'s self.integration_version — this is a
 # self-contained leaf computation, not worth a shared-module round-trip for).
 try:
     import json as _json
@@ -254,12 +254,12 @@ class BoschCameraCoordinator(
 
     # SHC local-API circuit-breaker thresholds, mirrored from const.py.
     # Exposed as class attrs so shc.py + existing tests can read them as
-    # `coordinator._SHC_MAX_FAILS` without per-instance assignment.
-    _SHC_MAX_FAILS: int = SHC_MAX_FAILS
-    _SHC_RETRY_INTERVAL: int = SHC_RETRY_INTERVAL
+    # `coordinator.SHC_MAX_FAILS` without per-instance assignment.
+    SHC_MAX_FAILS: int = SHC_MAX_FAILS
+    SHC_RETRY_INTERVAL: int = SHC_RETRY_INTERVAL
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        self._entry = entry
+        self.entry = entry
         # Advanced diagnostic escape hatch (set via the manual-login/relogin
         # "Advanced" field) — NEVER defaulted to any specific host. Only ever
         # non-empty if a user explicitly typed a Bosch-confirmed alternate
@@ -295,13 +295,13 @@ class BoschCameraCoordinator(
         # Session-State-Facade Slice 3: CacheFieldView over self._sessions
         # (see session_state.py) — preserves the exact `dict[str, dict[str,
         # Any]]` get/setitem/pop/in contract external callers use.
-        self._live_connections: CacheFieldView[dict[str, Any]] = CacheFieldView(
+        self.live_connections: CacheFieldView[dict[str, Any]] = CacheFieldView(
             self._sessions, "live_connection"
         )
         # timestamp when session was opened — dict-like facade over
         # CameraSessionState.opened_at (external readers in camera.py use
         # .get()/.pop(), preserved via LiveOpenedAtView; see session_state.py)
-        self._live_opened_at = LiveOpenedAtView(self._sessions)
+        self.live_opened_at = LiveOpenedAtView(self._sessions)
         # Local-RCP+ state cache: per-cam {"privacy_mode": bool, "led_dimmer": int, "fetched_at": float, "source": "local"|"remote"}
         # Refreshed opportunistically after each successful PUT /connection.
         # Used as a refinement source for SHC-cache values when SHC is offline /
@@ -314,40 +314,40 @@ class BoschCameraCoordinator(
         )
         # In-memory stream type override — changed by BoschStreamModeSwitch without reload.
         # None = use options setting; "local" / "auto" / "remote" = override.
-        self._stream_type_override: str | None = None
+        self.stream_type_override: str | None = None
         # Per-camera audio setting — True = audio+video on (default), False = snapshot-only
-        self._audio_enabled: dict[str, bool] = {}
+        self.audio_enabled: dict[str, bool] = {}
         # Per-camera card playback volume 0-100 — the automatable, cross-session
         # source of truth the Lovelace card applies to its <video> (browser has
         # no backend volume knob; this is a virtual preference). Mirrors the
         # _audio_enabled pattern: in-memory, seeded to a default per camera.
-        self._audio_volume: dict[str, int] = {}
+        self.audio_volume: dict[str, int] = {}
         # Auto-renewal tasks and generation counters per camera.
         # The generation counter increments on every new stream start,
         # allowing stale renewal loops to detect they belong to an old session.
         # Legacy task dict — kept for backwards-compat with any external code
         # that inspects it, but never populated now (use _renewal_tasks).
         self._auto_renew_tasks: dict[str, asyncio.Task[None]] = {}
-        self._renewal_tasks: dict[str, asyncio.Task[None]] = {}
+        self.renewal_tasks: dict[str, asyncio.Task[None]] = {}
         # Idle-session reaper tasks (one per LOCAL session, generation-tracked
         # like _renewal_tasks). See _idle_session_reaper.
-        self._reaper_tasks: dict[str, asyncio.Task[None]] = {}
+        self.reaper_tasks: dict[str, asyncio.Task[None]] = {}
         # Camera entity references — registered on entity setup, used by button/service
-        self._camera_entities: dict[str, Any] = {}
+        self.camera_entities: dict[str, Any] = {}
         # Diagnostic counter — how many times a stale HA Stream's
         # `.stop()` has timed out (5s) for this cam_id, leaving its
         # underlying `stream_worker` thread running unobserved (HA's
         # `Stream` class exposes no public cancel API for a stuck worker
         # thread — see live_connection.py's stale-Stream handling). Used
         # only for WARNING-log context on repeat occurrences; never reset.
-        self._zombie_stream_worker_count: dict[str, int] = {}
+        self.zombie_stream_worker_count: dict[str, int] = {}
         # Live-stream switch entity references — registered by
         # BoschLiveStreamSwitch.async_added_to_hass. _tear_down_live_stream
         # uses this to push the cleared "off" state to HA immediately, so the
         # UI does not show a stale "on" until the next coordinator refresh
         # tick. Reported by Thomas 2026-05-19: privacy toggle left the
         # live-stream switch visibly on.
-        self._live_stream_entities: dict[str, Any] = {}
+        self.live_stream_entities: dict[str, Any] = {}
         # User-intent tracking for the live-stream switch. Decouples the
         # switch state from `_live_connections`: HA Core opens streams via
         # `async_create_stream` (Lovelace card preload, Cast, play_stream
@@ -361,11 +361,11 @@ class BoschCameraCoordinator(
         # Session-State-Facade Slice 3: BoolFieldView over self._sessions
         # (see session_state.py) — preserves the exact `set[str]` in/.add()/
         # .discard() contract external callers use.
-        self._user_intent_streams = BoolFieldView(self._sessions, "user_intent_stream")
+        self.user_intent_streams = BoolFieldView(self._sessions, "user_intent_stream")
         # Image entity references — registered on image platform setup
         # Keyed by cam_id; image entities call async_notify_refreshed() after
         # each disk-persist so WKWebView gets a fresh signed URL.
-        self._image_entities: dict[str, Any] = {}
+        self.image_entities: dict[str, Any] = {}
         # Per-type last-fetched timestamps (-inf = never → always fetch on first tick)
         self._last_status: float = float("-inf")  # force status check on first tick
         self._last_events: float = float("-inf")  # force event check on first tick
@@ -379,34 +379,34 @@ class BoschCameraCoordinator(
         # Session-State-Facade Slice 1: BoolFieldView over self._sessions (see
         # session_state.py) — preserves the exact `set[str]` in/add/discard
         # contract slow_tier.py already uses.
-        self._slow_tier_deferred = BoolFieldView(self._sessions, "slow_tier_deferred")
+        self.slow_tier_deferred = BoolFieldView(self._sessions, "slow_tier_deferred")
         # Per-cam monotonic timestamp of when the *current* unbroken deferral
         # started, so a continuously-active stream cannot starve diagnostics
         # forever: once now - start >= SLOW_TIER_MAX_DEFER_SEC we force one read
         # despite the stream. Entry cleared whenever the deferred fetch runs.
-        self._slow_tier_defer_since: dict[str, float] = {}
+        self.slow_tier_defer_since: dict[str, float] = {}
         # Cached data for types that are not re-fetched this tick
-        self._cached_status: dict[str, str] = {}
+        self.cached_status: dict[str, str] = {}
         # Per-cam time (monotonic) the cloud last returned HTTP 444 (session
         # quota / not-ready, e.g. a freshly re-paired camera). For a short window
         # after, WRITE paths skip the cloud and go straight to the LAN/SHC
         # fallback instead of re-hitting the cloud for another 444. -inf = never.
-        self._cloud_444_at: dict[str, float] = {}
-        self._cached_events: dict[str, list[Any]] = {}
+        self.cloud_444_at: dict[str, float] = {}
+        self.cached_events: dict[str, list[Any]] = {}
         # SHC local API state cache — keyed by cam_id
         # Each entry: {"device_id": str, "camera_light": bool|None, "privacy_mode": bool|None}
         # Session-State-Facade Slice 2: CacheFieldView over self._sessions.
-        self._shc_state_cache: CacheFieldView[dict[str, Any]] = CacheFieldView(
+        self.shc_state_cache: CacheFieldView[dict[str, Any]] = CacheFieldView(
             self._sessions, "shc_state_cache"
         )
-        self._shc_devices_raw: list[Any] = []  # cached GET /smarthome/devices response
-        self._last_shc_fetch: float = float(
+        self.shc_devices_raw: list[Any] = []  # cached GET /smarthome/devices response
+        self.last_shc_fetch: float = float(
             "-inf"
         )  # last SHC fetch (time.monotonic); -inf = never (SENTINEL_RULE)
         # SHC health tracking — skip SHC calls when offline to avoid latency
-        self._shc_available: bool = True  # assume available until proven otherwise
-        self._shc_fail_count: int = 0  # consecutive failures
-        self._shc_last_check: float = float(
+        self.shc_available: bool = True  # assume available until proven otherwise
+        self.shc_fail_count: int = 0  # consecutive failures
+        self.shc_last_check: float = float(
             "-inf"
         )  # last SHC probe (time.monotonic); -inf = never (SENTINEL_RULE)
         # _SHC_MAX_FAILS + _SHC_RETRY_INTERVAL are class-level constants
@@ -416,57 +416,57 @@ class BoschCameraCoordinator(
         # (see session_state.py) for every _rcp_*_cache/_pan_cache/etc.
         # below — preserves the exact `dict[str, T]` get/setitem/pop/in/len
         # contract external callers already use.
-        self._pan_cache: CacheFieldView[int | None] = CacheFieldView(
+        self.pan_cache: CacheFieldView[int | None] = CacheFieldView(
             self._sessions, "pan_cache"
         )
         # WiFi info cache — keyed by cam_id, populated from GET /wifiinfo
-        self._wifiinfo_cache: dict[str, dict[str, Any]] = {}
+        self.wifiinfo_cache: dict[str, dict[str, Any]] = {}
         # Ambient light sensor cache — keyed by cam_id, populated from GET /ambient_light_sensor_level
-        self._ambient_light_cache: dict[str, float | None] = {}
+        self.ambient_light_cache: dict[str, float | None] = {}
         # RCP data caches — keyed by cam_id, populated via RCP protocol over cloud proxy
-        self._rcp_dimmer_cache: CacheFieldView[int | None] = CacheFieldView(
+        self.rcp_dimmer_cache: CacheFieldView[int | None] = CacheFieldView(
             self._sessions, "rcp_dimmer_cache"
         )  # LED dimmer value 0–100
-        self._rcp_privacy_cache: CacheFieldView[int | None] = CacheFieldView(
+        self.rcp_privacy_cache: CacheFieldView[int | None] = CacheFieldView(
             self._sessions, "rcp_privacy_cache"
         )  # privacy mask byte[1] (1=ON)
-        self._rcp_clock_offset_cache: CacheFieldView[float | None] = CacheFieldView(
+        self.rcp_clock_offset_cache: CacheFieldView[float | None] = CacheFieldView(
             self._sessions, "rcp_clock_offset_cache"
         )  # camera clock offset vs server (seconds)
-        self._rcp_lan_ip_cache: CacheFieldView[str | None] = CacheFieldView(
+        self.rcp_lan_ip_cache: CacheFieldView[str | None] = CacheFieldView(
             self._sessions, "rcp_lan_ip_cache"
         )  # camera LAN IP via RCP 0x0a36
-        self._rcp_product_name_cache: CacheFieldView[str | None] = CacheFieldView(
+        self.rcp_product_name_cache: CacheFieldView[str | None] = CacheFieldView(
             self._sessions, "rcp_product_name_cache"
         )  # camera product name via RCP 0x0aea
-        self._rcp_bitrate_cache: CacheFieldView[list[int]] = CacheFieldView(
+        self.rcp_bitrate_cache: CacheFieldView[list[int]] = CacheFieldView(
             self._sessions, "rcp_bitrate_cache"
         )  # bitrate ladder kbps from 0x0c81
         # Phase 2 RCP caches
-        self._rcp_alarm_catalog_cache: CacheFieldView[list[dict[str, Any]]] = (
+        self.rcp_alarm_catalog_cache: CacheFieldView[list[dict[str, Any]]] = (
             CacheFieldView(self._sessions, "rcp_alarm_catalog_cache")
         )  # alarm types from 0x0c38
-        self._rcp_motion_zones_cache: CacheFieldView[list[dict[str, Any]]] = (
+        self.rcp_motion_zones_cache: CacheFieldView[list[dict[str, Any]]] = (
             CacheFieldView(self._sessions, "rcp_motion_zones_cache")
         )  # motion zones from 0x0c00
-        self._rcp_motion_coords_cache: CacheFieldView[list[dict[str, Any]]] = (
+        self.rcp_motion_coords_cache: CacheFieldView[list[dict[str, Any]]] = (
             CacheFieldView(self._sessions, "rcp_motion_coords_cache")
         )  # zone coords from 0x0c0a
-        self._rcp_tls_cert_cache: CacheFieldView[dict[str, Any]] = CacheFieldView(
+        self.rcp_tls_cert_cache: CacheFieldView[dict[str, Any]] = CacheFieldView(
             self._sessions, "rcp_tls_cert_cache"
         )  # TLS cert info from 0x0b91
-        self._rcp_network_services_cache: CacheFieldView[list[str]] = CacheFieldView(
+        self.rcp_network_services_cache: CacheFieldView[list[str]] = CacheFieldView(
             self._sessions, "rcp_network_services_cache"
         )  # network services from 0x0c62
-        self._rcp_iva_catalog_cache: CacheFieldView[list[dict[str, Any]]] = (
+        self.rcp_iva_catalog_cache: CacheFieldView[list[dict[str, Any]]] = (
             CacheFieldView(self._sessions, "rcp_iva_catalog_cache")
         )  # IVA analytics from 0x0b60
         # F4: ONVIF scopes cache — keyed by cam_id, from RCP 0x0a98 via LAN cbs-auth (300s slow-tier)
-        self._rcp_onvif_scopes_cache: CacheFieldView[dict[str, Any]] = CacheFieldView(
+        self.rcp_onvif_scopes_cache: CacheFieldView[dict[str, Any]] = CacheFieldView(
             self._sessions, "rcp_onvif_scopes_cache"
         )
         # F6: RCP protocol version cache — keyed by cam_id, from RCP 0xff00+0xff04 via LAN (300s slow-tier)
-        self._rcp_version_cache: CacheFieldView[str | None] = CacheFieldView(
+        self.rcp_version_cache: CacheFieldView[str | None] = CacheFieldView(
             self._sessions, "rcp_version_cache"
         )
         # Commands that consistently return error=0x90 (not supported via proxy).
@@ -488,7 +488,7 @@ class BoschCameraCoordinator(
         )
         # RCP session ID cache — keyed by proxy_hash, value (session_id, expires_monotonic)
         # Avoids 2 round-trip RCP handshake on every thumbnail/data fetch
-        self._rcp_session_cache: dict[str, tuple[str, float]] = {}
+        self.rcp_session_cache: dict[str, tuple[str, float]] = {}
         # Per-proxy_hash lock serializing RCP session opens. Bosch's cloud RCP
         # proxy only tolerates one live session per proxy_hash — two concurrent
         # openers (e.g. a privacy-mode toggle's snapshot trigger racing the
@@ -497,7 +497,7 @@ class BoschCameraCoordinator(
         # sessionid 0x00000000 ("proxy rejected"), seen live 2026-07-08.
         # Serializing on this lock makes the second caller await the first's
         # in-flight open and then read the now-populated cache instead.
-        self._rcp_session_locks: dict[str, asyncio.Lock] = {}
+        self.rcp_session_locks: dict[str, asyncio.Lock] = {}
         # Proxy URL cache — keyed by cam_id, value (urls[0], expires_monotonic)
         # Proxy leases last ~60s; cache for 50s to skip PUT /connection on warm refreshes
         self._proxy_url_cache: dict[str, tuple[str, float]] = {}
@@ -540,14 +540,14 @@ class BoschCameraCoordinator(
         self._ai_last_call: dict[str, float] = {}
         self._ai_day_count: int = 0
         self._ai_day_stamp: str = ""
-        self._ai_in_flight: int = 0
+        self.ai_in_flight: int = 0
         self._ai_budget_logged_day: str = ""
         # Persistent storage for the daily AI budget counter (survives restart/reload).
         self._ai_budget_store: Store[dict[str, Any]] = Store(
             hass, 1, f"{DOMAIN}_ai_budget"
         )
         # Last-seen event IDs per camera — used to detect new events for snapshot refresh
-        self._last_event_ids: dict[str, str] = {}
+        self.last_event_ids: dict[str, str] = {}
         # Epoch timestamp of coordinator start — used to reject event downloads for
         # events that predate this session (e.g. queued FCM pushes arriving after reload).
         self._download_started_at: float = time.time()
@@ -558,12 +558,12 @@ class BoschCameraCoordinator(
         # cache blocks the second alert dispatch when the ID was already
         # alerted within 60 s. Pruned to the 32 most recent entries to bound
         # memory.
-        self._alert_sent_ids: dict[str, float] = {}
+        self.alert_sent_ids: dict[str, float] = {}
         # FCM push client — near-instant event detection via Firebase Cloud Messaging
-        self._fcm_client = None  # FcmPushClient instance (or None if disabled)
-        self._fcm_token: str = ""  # FCM registration token
-        self._fcm_running: bool = False
-        self._fcm_last_push: float = float(
+        self.fcm_client = None  # FcmPushClient instance (or None if disabled)
+        self.fcm_token: str = ""  # FCM registration token
+        self.fcm_running: bool = False
+        self.fcm_last_push: float = float(
             "-inf"
         )  # monotonic time of last received push
         # Monotonic time the FCM listener last started successfully. Used by the
@@ -572,16 +572,16 @@ class BoschCameraCoordinator(
         # has been up for FCM_DELIVERY_DEAD_AFTER_SEC, so a still-warming-up start
         # is never falsely condemned, while a genuinely dead-from-start Bosch
         # registration is still caught once the grace elapses.
-        self._fcm_started_at: float = float("-inf")
-        self._fcm_healthy: bool = False  # True when FCM is connected and receiving
+        self.fcm_started_at: float = float("-inf")
+        self.fcm_healthy: bool = False  # True when FCM is connected and receiving
         # Set True by the event-poll path when it detects a new event that FCM
         # push never delivered (issue #36 silent-delivery-death). The supervisor
         # checks this flag at the top of each iteration and does a hard-heal
         # (purge + re-register) when it is set. Cleared by the supervisor.
-        self._fcm_force_hard_heal: bool = False
+        self.fcm_force_hard_heal: bool = False
         # The supervisor asyncio.Task that keeps the FCM listener alive. Created
         # by async_ensure_fcm_supervisor; cancelled by async_stop_fcm_supervisor.
-        self._fcm_supervisor_task: asyncio.Task[None] | None = None
+        self.fcm_supervisor_task: asyncio.Task[None] | None = None
         # Serialises every FCM start/stop/self-heal so the setup-time start
         # and the watchdog's self-heal can't run concurrently. Live bug
         # 2026-05-21: without the lock the initial async_start_fcm_push from
@@ -589,28 +589,28 @@ class BoschCameraCoordinator(
         # self-heal — two checkin_or_register() calls registered two device
         # tokens in 2 s; the first listener died with NoneType-in-_login
         # (orphaned client whose credentials were overwritten by the second).
-        self._fcm_start_lock: asyncio.Lock = asyncio.Lock()
-        self._fcm_push_mode: str = (
+        self.fcm_start_lock: asyncio.Lock = asyncio.Lock()
+        self.fcm_push_mode: str = (
             "unknown"  # "auto" once FCM listener is up, else "unknown"
         )
         # Lock serializing cross-thread FCM state writes.
         # _on_fcm_push fires in a Firebase thread; the event loop reads these fields.
-        self._fcm_lock: threading.Lock = threading.Lock()
+        self.fcm_lock: threading.Lock = threading.Lock()
         # Unread events count cache — keyed by cam_id, populated from GET /unread_events_count
-        self._unread_events_cache: dict[str, int] = {}
+        self.unread_events_cache: dict[str, int] = {}
         # Privacy sound override cache — keyed by cam_id, populated from GET /privacy_sound_override
-        self._privacy_sound_cache: dict[str, bool | None] = {}
+        self.privacy_sound_cache: dict[str, bool | None] = {}
         # Commissioned status cache — keyed by cam_id, populated from GET /commissioned
-        self._commissioned_cache: dict[str, dict[str, Any]] = {}
+        self.commissioned_cache: dict[str, dict[str, Any]] = {}
         # Feature flags — populated once from GET /v11/feature_flags
-        self._feature_flags: dict[str, bool] = {}
+        self.feature_flags: dict[str, bool] = {}
         # Protocol version check — run once at startup
-        self._protocol_checked: bool = False
-        self._integration_version = _INTEGRATION_VERSION
+        self.protocol_checked: bool = False
+        self.integration_version = _INTEGRATION_VERSION
         # Firmware update status cache — keyed by cam_id, from GET /firmware
-        self._firmware_cache: dict[str, dict[str, Any]] = {}
+        self.firmware_cache: dict[str, dict[str, Any]] = {}
         # SMB maintenance — last run timestamps (monotonic)
-        self._last_smb_cleanup: float = float(
+        self.last_smb_cleanup: float = float(
             "-inf"
         )  # float('-inf') → runs on first tick
         # True once the "smbprotocol not installed" Repairs issue's WARNING
@@ -623,7 +623,7 @@ class BoschCameraCoordinator(
         # Bosch auth-server outage tracking — distinct from hard failures.
         # 5xx from Keycloak = Bosch infrastructure problem, NOT user/config issue:
         # no reauth trigger, no escalation, just back off and retry.
-        self._auth_outage_count: int = 0  # consecutive 5xx responses
+        self.auth_outage_count: int = 0  # consecutive 5xx responses
         self._auth_outage_alert_sent: bool = False
         self._auth_outage_next_retry_ts: float = float("-inf")  # monotonic time gate
         # Cached LOCAL Digest credentials per camera — survives live-connection
@@ -633,7 +633,7 @@ class BoschCameraCoordinator(
         # reboot) but usually stable for minutes to hours.
         # {cam_id: {"user": str, "password": str, "host": str, "port": int, "ts": monotonic}}
         # Session-State-Facade Slice 2: CacheFieldView over self._sessions.
-        self._local_creds_cache: CacheFieldView[dict[str, Any]] = CacheFieldView(
+        self.local_creds_cache: CacheFieldView[dict[str, Any]] = CacheFieldView(
             self._sessions, "local_creds_cache"
         )
         # Serializes _ensure_valid_token so concurrent refreshes don't race
@@ -644,84 +644,84 @@ class BoschCameraCoordinator(
         # TimerHandle for the next scheduled proactive token refresh.
         # Held so async_unload_entry can cancel it — otherwise a config
         # reload leaks timers that still fire against a dead coordinator.
-        self._token_refresh_handle: asyncio.TimerHandle | None = None
+        self.token_refresh_handle: asyncio.TimerHandle | None = None
         # Strong references to fire-and-forget background tasks so the GC
         # does not cancel them mid-flight. Self-removing via done_callback.
-        self._bg_tasks: set[asyncio.Task[Any]] = set()
+        self.bg_tasks: set[asyncio.Task[Any]] = set()
         # Per-camera flag: set True after 3 consecutive session-renewal
         # failures (LOCAL auto-renew loop). Flipped back to False after
         # a successful renewal. Exposed via is_session_stale().
-        self._session_stale: dict[str, bool] = {}
+        self.session_stale: dict[str, bool] = {}
         # Timestamp overlay cache — keyed by cam_id, from GET /timestamp
-        self._timestamp_cache: dict[str, bool | None] = {}
+        self.timestamp_cache: dict[str, bool | None] = {}
         # Status LED cache — keyed by cam_id, from GET /ledlights (Gen2 only)
-        self._ledlights_cache: dict[str, bool | None] = {}
+        self.ledlights_cache: dict[str, bool | None] = {}
         # Lens elevation cache — keyed by cam_id, from GET /lens_elevation (Gen2 only)
-        self._lens_elevation_cache: dict[str, float | None] = {}
+        self.lens_elevation_cache: dict[str, float | None] = {}
         # Audio settings cache — keyed by cam_id, from GET /audio (Gen2 only)
         # Session-State-Facade Slice 2: CacheFieldView over self._sessions.
-        self._audio_cache: CacheFieldView[dict[str, Any]] = CacheFieldView(
+        self.audio_cache: CacheFieldView[dict[str, Any]] = CacheFieldView(
             self._sessions, "audio_cache"
         )
         # Motion light cache — keyed by cam_id, from GET /lighting/motion (Gen2 only)
-        self._motion_light_cache: dict[str, dict[str, Any]] = {}
+        self.motion_light_cache: dict[str, dict[str, Any]] = {}
         # Image rotation 180° flag — keyed by cam_id, indoor cameras only.
         # No API call — purely a client-side display flag for ceiling-mounted cams.
         # Read by camera.async_camera_image (rotates JPEG via PIL) and by the
         # Pan number entity (inverts sign so "right" stays "right" on screen).
         # State is owned by BoschImageRotation180Switch (RestoreEntity).
-        self._image_rotation_180: dict[str, bool] = {}
+        self.image_rotation_180: dict[str, bool] = {}
         # External stream URL exposure flag — keyed by cam_id, default False.
         # Owned by BoschExternalStreamSwitch (RestoreEntity). When True, the
         # per-camera BoschStreamUrlSensor + BoschStreamUrlSubSensor expose the
         # current LOCAL/REMOTE rtspsUrl (inst=1) and a derived inst=2 sub-stream
         # URL so users can paste them into Frigate / BlueIris configs.
         # Default OFF — opt-in per camera, avoids entity-spam.
-        self._external_stream_enabled: dict[str, bool] = {}
+        self.external_stream_enabled: dict[str, bool] = {}
         # Ambient lighting config cache — keyed by cam_id, from GET /lighting/ambient (Gen2 only)
-        self._ambient_lighting_cache: dict[str, dict[str, Any]] = {}
+        self.ambient_lighting_cache: dict[str, dict[str, Any]] = {}
         # Lighting switch cache — keyed by cam_id, from GET /lighting/switch (Gen2 only)
-        self._lighting_switch_cache: dict[str, dict[str, Any]] = {}
+        self.lighting_switch_cache: dict[str, dict[str, Any]] = {}
         # Global lighting config cache — keyed by cam_id, from GET /lighting (Gen2 only)
         # Contains: darknessThreshold (0.0-1.0), softLightFading (bool)
-        self._global_lighting_cache: dict[str, dict[str, Any]] = {}
+        self.global_lighting_cache: dict[str, dict[str, Any]] = {}
         # Notification type toggles cache — keyed by cam_id, from GET /notifications
-        self._notifications_cache: dict[str, dict[str, Any]] = {}
+        self.notifications_cache: dict[str, dict[str, Any]] = {}
         # Rules cache — keyed by cam_id, from GET /rules
-        self._rules_cache: dict[str, list[Any]] = {}
+        self.rules_cache: dict[str, list[Any]] = {}
         # Cloud motion zones cache — keyed by cam_id, from GET /motion_sensitive_areas
-        self._cloud_zones_cache: dict[str, list[Any]] = {}
+        self.cloud_zones_cache: dict[str, list[Any]] = {}
         # Cloud privacy masks cache — keyed by cam_id, from GET /privacy_masks
-        self._cloud_privacy_masks_cache: dict[str, list[Any]] = {}
+        self.cloud_privacy_masks_cache: dict[str, list[Any]] = {}
         # Lighting options cache — keyed by cam_id, from GET /lighting_options
-        self._lighting_options_cache: dict[str, dict[str, Any]] = {}
+        self.lighting_options_cache: dict[str, dict[str, Any]] = {}
         # Intrusion detection config cache — keyed by cam_id, from GET /intrusionDetectionConfig (Gen2 only)
-        self._intrusion_config_cache: dict[str, dict[str, Any]] = {}
+        self.intrusion_config_cache: dict[str, dict[str, Any]] = {}
         # Audio detection config cache — keyed by cam_id, from GET /audioDetectionConfig
         # (Gen2 Audio-Plus). Contains: detectGlassBreak, detectFireAlarm (both bool).
-        self._audio_detection_cache: dict[str, dict[str, Any]] = {}
+        self.audio_detection_cache: dict[str, dict[str, Any]] = {}
         # Alarm settings cache — from GET /alarm_settings (Gen2 Indoor II only).
         # Contains: alarmMode, alarmDelayInSeconds, alarmActivationDelaySeconds,
         #          preAlarmMode, preAlarmDelayInSeconds
-        self._alarm_settings_cache: dict[str, dict[str, Any]] = {}
+        self.alarm_settings_cache: dict[str, dict[str, Any]] = {}
         # Alarm status cache — from GET /alarmStatus (Gen2 Indoor II only).
-        self._alarm_status_cache: dict[str, dict[str, Any]] = {}
+        self.alarm_status_cache: dict[str, dict[str, Any]] = {}
         # Last observed alarmType per cam — for rising-edge detection of intrusion
         # events. Fires `bosch_shc_camera_intrusion` when alarmType transitions
         # from NONE/empty to a real alarm type (e.g. INTRUSION_DETECTED).
         self._last_alarm_type: dict[str, str] = {}
         # Intrusion system arming cache — derived from alarmStatus (armed/disarmed).
         # Set by BoschAlarmSystemArmSwitch on successful PUT /intrusionSystem/arming.
-        self._arming_cache: dict[str, bool] = {}
+        self.arming_cache: dict[str, bool] = {}
         # Status LED brightness cache (Gen2 Indoor II) — from GET /iconLedBrightness.
         # Value range: 0-4 (0 = off, 4 = max).
-        self._icon_led_brightness_cache: dict[str, int] = {}
+        self.icon_led_brightness_cache: dict[str, int] = {}
         # Gen2 polygon zones cache — keyed by cam_id, from GET /zones (Gen2 only)
         # Contains polygon zones with trigger: "PERSON", maskType, color fields
-        self._gen2_zones_cache: dict[str, list[Any]] = {}
+        self.gen2_zones_cache: dict[str, list[Any]] = {}
         # Gen2 private areas cache — keyed by cam_id, from GET /privateAreas (Gen2 only)
         # Contains privacy mask polygons with color: "#000000"
-        self._gen2_private_areas_cache: dict[str, list[Any]] = {}
+        self.gen2_private_areas_cache: dict[str, list[Any]] = {}
         # userToken cache — keyed by cam_id, from GET /credentials
         self._user_token_cache: dict[str, str] = {}
         # Separate timer for lighting/switch — polled every tick (60s) instead of slow tier (300s)
@@ -735,10 +735,10 @@ class BoschCameraCoordinator(
         # dict — preserves the exact `dict[str, float]` `.get()`/`[cam_id]=`/`in`
         # contract every external call site (shc.py/switch.py/select.py/light.py/
         # number.py/services.py/slow_tier.py) already uses, per session_state.py.
-        self._light_set_at = FloatFieldView(
+        self.light_set_at = FloatFieldView(
             self._sessions, "light_set_at"
         )  # lighting_override write timestamp
-        self._notif_set_at = FloatFieldView(
+        self.notif_set_at = FloatFieldView(
             self._sessions, "notif_set_at"
         )  # enable_notifications write timestamp
         # Tracks cam_ids for which a "notifications disabled" WARN has been logged.
@@ -751,42 +751,42 @@ class BoschCameraCoordinator(
         # logged. Cleared once the update installs (upToDate flips back to True)
         # so the INFO re-fires for the next update.
         self._fw_update_alerted = BoolFieldView(self._sessions, "fw_update_alerted")
-        self._privacy_set_at = FloatFieldView(
+        self.privacy_set_at = FloatFieldView(
             self._sessions, "privacy_set_at"
         )  # privacy write timestamp
-        self._privacy_sound_set_at = FloatFieldView(
+        self.privacy_sound_set_at = FloatFieldView(
             self._sessions, "privacy_sound_set_at"
         )  # privacy_sound_override write
-        self._timestamp_set_at = FloatFieldView(
+        self.timestamp_set_at = FloatFieldView(
             self._sessions, "timestamp_set_at"
         )  # timestamp overlay write
-        self._ledlights_set_at = FloatFieldView(
+        self.ledlights_set_at = FloatFieldView(
             self._sessions, "ledlights_set_at"
         )  # status LED write
-        self._arming_set_at = FloatFieldView(
+        self.arming_set_at = FloatFieldView(
             self._sessions, "arming_set_at"
         )  # alarm system arm/disarm write
-        self._intrusion_config_set_at = FloatFieldView(
+        self.intrusion_config_set_at = FloatFieldView(
             self._sessions, "intrusion_config_set_at"
         )  # intrusionDetectionConfig write
-        self._audio_detection_set_at = FloatFieldView(
+        self.audio_detection_set_at = FloatFieldView(
             self._sessions, "audio_detection_set_at"
         )  # audioDetectionConfig write (glass-break / fire-alarm)
-        self._motion_set_at = FloatFieldView(
+        self.motion_set_at = FloatFieldView(
             self._sessions, "motion_set_at"
         )  # motion sensitivity write
-        self._alarm_settings_set_at = FloatFieldView(
+        self.alarm_settings_set_at = FloatFieldView(
             self._sessions, "alarm_settings_set_at"
         )  # alarm_settings write
-        self._lighting_options_set_at = FloatFieldView(
+        self.lighting_options_set_at = FloatFieldView(
             self._sessions, "lighting_options_set_at"
         )  # lighting schedule write
         # firmware install-trigger write — held just long enough for the
         # optimistic `updating=True` (set by BoschFirmwareUpdate.async_install)
         # to survive one slow-tier poll cycle before Bosch's own backend
         # reports the real in-progress state.
-        self._firmware_set_at = FloatFieldView(self._sessions, "firmware_set_at")
-        self._WRITE_LOCK_SECS = (
+        self.firmware_set_at = FloatFieldView(self._sessions, "firmware_set_at")
+        self.WRITE_LOCK_SECS = (
             30.0  # seconds to hold write lock (Bosch cloud propagation can take 20s+)
         )
         # RCP-LAN denied-cache: (cam_id, opcode_hex) → monotonic timestamp when
@@ -797,15 +797,15 @@ class BoschCameraCoordinator(
         self._rcp_lan_denied_until: dict[tuple[str, str], float] = {}
         # Camera hardware version cache — keyed by cam_id, e.g. "CAMERA_360", "CAMERA_EYES"
         # Used for model-specific timing (encoder warm-up) and feature gating.
-        self._hw_version: dict[str, str] = {}
+        self.hw_version: dict[str, str] = {}
         # TLS proxy for LOCAL RTSPS streams — keyed by cam_id
         # FFmpeg can't handle RTSPS + Digest auth with self-signed certs.
         # The proxy accepts plain TCP and forwards to camera over TLS.
-        self._tls_proxy_ports: dict[str, int] = {}  # cam_id → local port
+        self.tls_proxy_ports: dict[str, int] = {}  # cam_id → local port
         # asyncio.Server objects backing each proxy (tls_proxy.py is
         # asyncio-native — no module-level socket state). Coordinator-owned
         # so unload can close them deterministically per config entry.
-        self._tls_proxy_servers: dict[str, asyncio.base_events.Server] = {}
+        self.tls_proxy_servers: dict[str, asyncio.base_events.Server] = {}
         # Set right before the defensive `stop_all_proxies` sweep in
         # `_async_cancel_coordinator_tasks` (mirrors `_go2rtc_teardown_done`)
         # so a straggler `start_tls_proxy_wiring` call racing that sweep
@@ -813,15 +813,15 @@ class BoschCameraCoordinator(
         # between per-cam teardown and platform unload) can't start a fresh
         # proxy that `stop_all_proxies`'s already-taken snapshot will never
         # see — orphaning it past config-entry unload.
-        self._tls_proxy_teardown_done = False
+        self.tls_proxy_teardown_done = False
         # ── Frigate / external-recorder persistent RTSP front-doors ───────────
         # Per-camera always-on credential-free RTSP endpoint (frigate_endpoint.py).
         # Owned per-camera by the High/Low BoschFrigate*Switch (RestoreEntity);
         # the front-door runner binds a sticky port and opens the Bosch session
         # lazily on the first recorder connect. Default OFF (opt-in).
-        self._frigate_runner: FrontDoorRunner | None = None
-        self._frigate_high_enabled: dict[str, bool] = {}
-        self._frigate_low_enabled: dict[str, bool] = {}
+        self.frigate_runner: FrontDoorRunner | None = None
+        self.frigate_high_enabled: dict[str, bool] = {}
+        self.frigate_low_enabled: dict[str, bool] = {}
         self._frigate_sticky_port: dict[
             str, int
         ] = {}  # cam_id → stable front-door port
@@ -830,8 +830,8 @@ class BoschCameraCoordinator(
         # Frigate front-door above, published via stream_source() for LOCAL
         # sessions — see viewing_front_door.py's module docstring for the
         # go2rtc native-registration-leak rationale.
-        self._viewing_front_door_runner: FrontDoorRunner | None = None
-        self._viewing_sticky_port: dict[
+        self.viewing_front_door_runner: FrontDoorRunner | None = None
+        self.viewing_sticky_port: dict[
             str, int
         ] = {}  # cam_id → stable viewing front-door port
         # ── REMOTE viewing-path front-door (remote_viewing_front_door.py) ──
@@ -841,14 +841,14 @@ class BoschCameraCoordinator(
         # REMOTE<->LOCAL transition that bypasses _tear_down_live_stream,
         # e.g. session_renewal.promote_to_local, could otherwise leave a
         # shared runner's listener bound with the wrong relay type).
-        self._remote_viewing_front_door_runner: FrontDoorRunner | None = None
-        self._remote_viewing_sticky_port: dict[
+        self.remote_viewing_front_door_runner: FrontDoorRunner | None = None
+        self.remote_viewing_sticky_port: dict[
             str, int
         ] = {}  # cam_id → stable REMOTE viewing front-door port
         # Auto-rebuild backoff: monotonic ts of last _on_tls_proxy_died rebuild.
         # Prevents a rebuild storm when the new proxy also immediately dies
         # because the camera is still flapping (WiFi jitter, brief Bosch FW glitch).
-        self._tls_proxy_rebuild_last: dict[str, float] = {}
+        self.tls_proxy_rebuild_last: dict[str, float] = {}
         # Stream error tracking — consecutive FFmpeg failures per camera.
         # After max_stream_errors, auto-fallback from LOCAL → REMOTE.
         # `_stream_error_at` records monotonic ts of the last record_stream_error
@@ -857,9 +857,9 @@ class BoschCameraCoordinator(
         # (router reboot, transient WLAN dropout) pins the cam to REMOTE forever
         # because record_stream_success only fires on a successful LOCAL stream
         # and AUTO has already stopped attempting LOCAL.
-        self._stream_error_count: dict[str, int] = {}
-        self._stream_error_at: dict[str, float] = {}
-        self._stream_fell_back: dict[
+        self.stream_error_count: dict[str, int] = {}
+        self.stream_error_at: dict[str, float] = {}
+        self.stream_fell_back: dict[
             str, bool
         ] = {}  # True = currently using REMOTE fallback
         # LOCAL session-cred rescue counter. When the HLS consumer goes idle
@@ -876,24 +876,24 @@ class BoschCameraCoordinator(
         # connected, so without time decay the counter would stick at 1 after
         # the first rescue and the next 401 burst (typically 8–14 min later)
         # would skip straight to REMOTE.
-        self._local_rescue_attempts: dict[str, int] = {}
-        self._local_rescue_at: dict[
+        self.local_rescue_attempts: dict[str, int] = {}
+        self.local_rescue_at: dict[
             str, float
         ] = {}  # cam_id → monotonic ts of last rescue
         # TCP reachability cache — (reachable, monotonic_ts). TTL 60s.
         # Populated by _async_local_tcp_ping (status loop) and stream pre-check.
-        self._lan_tcp_reachable: dict[str, tuple[bool, float]] = {}
+        self.lan_tcp_reachable: dict[str, tuple[bool, float]] = {}
         # issue #47: monotonic ts of the last time the AUTO-mode TCP
         # pre-check's "unreachable" verdict was deliberately overridden to
         # force a real LOCAL attempt anyway (chicken-and-egg breaker — see
         # LAN_RECHECK_FORCE_INTERVAL_SEC in const.py / live_connection.py).
-        self._lan_recheck_forced_at: dict[str, float] = {}
+        self.lan_recheck_forced_at: dict[str, float] = {}
         # Monotonic timestamp of the last successful local-RCP write per cam.
         # The camera briefly tears down its cloud session when Digest creds
         # rotate after an RCP write; we use this to suppress LAN-offline
         # false positives during that ~30 s window. Default `float('-inf')`
         # per SENTINEL_RULE so "never written" never satisfies the grace check.
-        self._local_write_at: dict[str, float] = {}
+        self.local_write_at: dict[str, float] = {}
         # During a cloud outage we kick a periodic ping of every known cam IP
         # so the card / switches have a recent reachability signal even though
         # the cloud-driven status loop is blocked. Tracks last outage-ping
@@ -902,10 +902,10 @@ class BoschCameraCoordinator(
         # Active LOCAL-promotion cooldown: monotonic ts of last attempt to lift
         # an active REMOTE-fallback stream onto LOCAL via Stream.update_source.
         # Prevents ping-pong if LAN is flapping in/out of reachability.
-        self._local_promote_at: dict[str, float] = {}
+        self.local_promote_at: dict[str, float] = {}
         # SSL context created lazily on first use (ssl.create_default_context
         # is blocking I/O — must not run in the event loop)
-        self._tls_ssl_ctx: ssl.SSLContext | None = None
+        self.tls_ssl_ctx: ssl.SSLContext | None = None
         # Shared, lazily-created plain-HTTP session for the localhost go2rtc
         # API (register/unregister/consumer-count). A completely different
         # trust domain from the Bosch-cloud TLS session in cloud_ssl.py, so
@@ -913,21 +913,21 @@ class BoschCameraCoordinator(
         # a fresh aiohttp.ClientSession() per call on all three go2rtc call
         # sites (Work Package 1, stream-perf-stability-refactor). Closed
         # once in _async_cancel_coordinator_tasks on unload/HA-stop.
-        self._go2rtc_session: aiohttp.ClientSession | None = None
-        self._go2rtc_session_lock = asyncio.Lock()
+        self.go2rtc_session: aiohttp.ClientSession | None = None
+        self.go2rtc_session_lock = asyncio.Lock()
         # Set True once _async_cancel_coordinator_tasks has closed the
         # session for good — guards _get_go2rtc_session against lazily
         # re-creating (and leaking) a new session for a stray post-teardown
         # caller. See _get_go2rtc_session's docstring/comment.
-        self._go2rtc_teardown_done = False
+        self.go2rtc_teardown_done = False
         # Offline tracking — per camera, monotonic timestamp when first detected offline.
         # Used to extend status check intervals for persistently offline cameras.
-        self._offline_since: dict[str, float] = {}
+        self.offline_since: dict[str, float] = {}
         # Extended offline interval: cameras offline for >15 min are checked every 15 min
         # instead of the normal interval_status (5 min), reducing unnecessary cloud calls.
         self._OFFLINE_EXTENDED_INTERVAL = 900  # 15 minutes
         # Per-camera status check timestamps (for extended offline intervals)
-        self._per_cam_status_at: dict[str, float] = {}
+        self.per_cam_status_at: dict[str, float] = {}
         # Stream warm-up state — eagerly initialised so clear_stream_warming() and
         # is_stream_warming() never need hasattr guards. Lazy init (hasattr) caused
         # clear_stream_warming() calls before first is_stream_warming() to silently
@@ -935,15 +935,15 @@ class BoschCameraCoordinator(
         # set-like facade over CameraSessionState.warming (external readers
         # in camera.py use `in`/`not in`, preserved via StreamWarmingView).
         # warming_started timestamp lives in the same CameraSessionState.
-        self._stream_warming = StreamWarmingView(self._sessions)
+        self.stream_warming = StreamWarmingView(self._sessions)
         # Bosch community RSS-derived maintenance announcement. Periodic refresh
         # every _MAINTENANCE_INTERVAL_S; reactive refresh on cloud 5xx (rate-
         # limited by _MAINTENANCE_REACTIVE_COOLDOWN_S). Cleared explicitly only
         # when the fetcher returns a fresh window — transient community-site
         # outages leave the previous value in place so the sensor stays stable.
 
-        self._maintenance_cache: MaintenanceWindow | None = None
-        self._maintenance_last_fetch: float = float("-inf")
+        self.maintenance_cache: MaintenanceWindow | None = None
+        self.maintenance_last_fetch: float = float("-inf")
         self._MAINTENANCE_INTERVAL_S: float = 3600.0
         self._MAINTENANCE_REACTIVE_COOLDOWN_S: float = 300.0
         # (link, state) of the last user-facing notification we sent for a
@@ -951,7 +951,7 @@ class BoschCameraCoordinator(
         # three times (scheduled / active / past). In-memory only — a HA
         # restart inside a maintenance window may re-announce, accepted as a
         # v1 trade-off vs. persistence overhead.
-        self._maintenance_notified_key: tuple[str, str] | None = None
+        self.maintenance_notified_key: tuple[str, str] | None = None
         # Per-camera last observed availability ("online" / "offline" /
         # "unknown"). First observation is silent so a HA restart while a
         # camera is offline does not re-announce. Transitions involving
@@ -975,7 +975,7 @@ class BoschCameraCoordinator(
         # an RSS-announced maintenance window is `active` we stay silent —
         # the maintenance lifecycle notifier already told the user.
         self._cloud_outage_started_at: float | None = None
-        self._cloud_outage_notified: bool = False
+        self.cloud_outage_notified: bool = False
         self._CLOUD_OUTAGE_NOTIFY_AFTER_S: float = 60.0
         # ── Session-quota (HTTP 444) tracker ─────────────────────────────────
         # Timestamps of recent 444 hits per camera (monotonic). Entries older
@@ -994,7 +994,7 @@ class BoschCameraCoordinator(
         # NOT open a new RTSP session against the camera (Bosch caps concurrent
         # sessions at 2-3). LAN-only: only runs when _connection_type=LOCAL +
         # camera ONLINE. See `docs/mini-nvr-concept.md` §2.
-        self._nvr_processes: dict[str, asyncio.subprocess.Process] = {}
+        self.nvr_processes: dict[str, asyncio.subprocess.Process] = {}
         # Set True as the very first step of config-entry unload/HA-stop
         # teardown (_async_cancel_coordinator_tasks), BEFORE stop_all()/
         # stop_all_preroll() run. Checked by start_recorder/
@@ -1007,19 +1007,19 @@ class BoschCameraCoordinator(
         # observe and kill it. Closes the orphaned-ffmpeg race from issue
         # #47 (up to 5 stray recorder/ring processes surviving a reload,
         # including concurrent writers to the same output file).
-        self._nvr_shutting_down: bool = False
+        self.nvr_shutting_down: bool = False
         # Session-State-Facade Slice 2: CacheFieldView over self._sessions
         # (see session_state.py) for the plain per-cam Mini-NVR status
         # dicts below — _nvr_processes above stays a plain dict (live
         # subprocess handles, deliberately excluded from this slice, see
         # the session_state.py module docstring).
-        self._nvr_user_intent: CacheFieldView[bool] = CacheFieldView(
+        self.nvr_user_intent: CacheFieldView[bool] = CacheFieldView(
             self._sessions, "nvr_user_intent"
         )
-        self._nvr_error_state: CacheFieldView[str] = CacheFieldView(
+        self.nvr_error_state: CacheFieldView[str] = CacheFieldView(
             self._sessions, "nvr_error_state"
         )
-        self._nvr_recent_crash: CacheFieldView[float] = CacheFieldView(
+        self.nvr_recent_crash: CacheFieldView[float] = CacheFieldView(
             self._sessions, "nvr_recent_crash"
         )
         # _nvr_auth_retry_count: consecutive 401/Unauthorized ffmpeg exits per
@@ -1028,7 +1028,7 @@ class BoschCameraCoordinator(
         # counting toward the crash-window give-up — but retrying forever
         # would hide a GENUINE broken-credential fault. Capped separately
         # in recorder._watch_recorder.
-        self._nvr_auth_retry_count: CacheFieldView[int] = CacheFieldView(
+        self.nvr_auth_retry_count: CacheFieldView[int] = CacheFieldView(
             self._sessions, "nvr_auth_retry_count"
         )
         # _nvr_recorder_locks: per-camera lock serializing the tail of
@@ -1058,29 +1058,29 @@ class BoschCameraCoordinator(
         self._nvr_event_clip_enabled: CacheFieldView[bool] = CacheFieldView(
             self._sessions, "nvr_event_clip_enabled"
         )
-        self._last_nvr_cleanup: float = float(
+        self.last_nvr_cleanup: float = float(
             "-inf"
         )  # float('-inf') → runs on first tick
         # Phase 4: pre-roll buffer — one short-segment ffmpeg per camera writing to tmpfs.
         # Keyed by cam_id, lifecycle mirrors _nvr_processes but independently controlled.
-        self._nvr_preroll_processes: dict[str, asyncio.subprocess.Process] = {}
+        self.nvr_preroll_processes: dict[str, asyncio.subprocess.Process] = {}
         self._nvr_preroll_last_crash: CacheFieldView[float] = CacheFieldView(
             self._sessions, "nvr_preroll_last_crash"
         )
-        self._nvr_preroll_segment_counts: CacheFieldView[int] = CacheFieldView(
+        self.nvr_preroll_segment_counts: CacheFieldView[int] = CacheFieldView(
             self._sessions, "nvr_preroll_segment_counts"
         )
-        self._nvr_preroll_tasks: dict[str, asyncio.Task[Any]] = {}
+        self.nvr_preroll_tasks: dict[str, asyncio.Task[Any]] = {}
         # Drain watcher state — populated by recorder.sync_drain_tick. Used by
         # BoschNvrStateSensor to render `target` / `pending_uploads` /
         # `failed_uploads` / `last_segment_age_s` attributes without coupling
         # the sensor to the watcher.
-        self._nvr_drain_state: dict[str, Any] = {}
-        self._nvr_drain_failures: dict[str, int] = {}
+        self.nvr_drain_state: dict[str, Any] = {}
+        self.nvr_drain_failures: dict[str, int] = {}
         # Per-coordinator drain watcher task. Started in async_setup_entry,
         # cancelled in async_unload_entry. NOT per-camera — one watcher serves
         # the entire integration.
-        self._nvr_drain_task: asyncio.Task[None] | None = None
+        self.nvr_drain_task: asyncio.Task[None] | None = None
 
         # Annotation-only declarations (PEP 526, no assignment — these stay
         # genuinely lazily-created via getattr/hasattr at their call sites,
@@ -1090,32 +1090,32 @@ class BoschCameraCoordinator(
         # (__init__.py's persistence bootstrap, shc.py's connector cache,
         # switch.py/light.py's lazy per-feature lock dicts, tick_housekeeping.py's
         # persisted-snapshot dedup, stream_lifecycle.py's dispatch coalescing).
-        self._maint_notified_store: Store[dict[str, str]]
-        self._cloud_alert_store: Store[dict[str, Any]]
-        self._lan_ips_store: Store[dict[str, str]]
-        self._hw_version_store: Store[dict[str, str]]
-        self._local_creds_store: Store[dict[str, Any]]
-        self._lan_ips_snapshot: dict[str, str]
-        self._hw_version_snapshot: dict[str, str]
-        self._local_creds_snapshot: dict[str, dict[str, Any]]
-        self._stream_log_listener: logging.Handler | None
-        self._stream_worker_dispatch_pending: set[str]
-        self._shc_connector: aiohttp.TCPConnector | None
-        self._shc_connector_key: tuple[str, str] | None
-        self._last_topdown_brightness: dict[str, dict[str, int]]
-        self._audio_detection_locks: dict[str, asyncio.Lock]
-        self._lighting_switch_locks: dict[str, asyncio.Lock]
-        self._panic_alarm_cache: dict[str, bool]
+        self.maint_notified_store: Store[dict[str, str]]
+        self.cloud_alert_store: Store[dict[str, Any]]
+        self.lan_ips_store: Store[dict[str, str]]
+        self.hw_version_store: Store[dict[str, str]]
+        self.local_creds_store: Store[dict[str, Any]]
+        self.lan_ips_snapshot: dict[str, str]
+        self.hw_version_snapshot: dict[str, str]
+        self.local_creds_snapshot: dict[str, dict[str, Any]]
+        self.stream_log_listener: logging.Handler | None
+        self.stream_worker_dispatch_pending: set[str]
+        self.shc_connector: aiohttp.TCPConnector | None
+        self.shc_connector_key: tuple[str, str] | None
+        self.last_topdown_brightness: dict[str, dict[str, int]]
+        self.audio_detection_locks: dict[str, asyncio.Lock]
+        self.lighting_switch_locks: dict[str, asyncio.Lock]
+        self.panic_alarm_cache: dict[str, bool]
 
     def get_model_config(self, cam_id: str) -> Any:
         """Return CameraModelConfig for a camera (from models.py)."""
         from .models import get_model_config
 
-        hw = self._hw_version.get(cam_id, "CAMERA")
+        hw = self.hw_version.get(cam_id, "CAMERA")
         return get_model_config(hw)
 
     @staticmethod
-    def _err_str(err: BaseException) -> str:
+    def err_str(err: BaseException) -> str:
         """Format an exception so empty-message types (TimeoutError, some
         aiohttp errors) still produce meaningful log output. Falls back to
         repr(err) when str(err) is empty — the original "fetch error: "
@@ -1197,7 +1197,7 @@ class BoschCameraCoordinator(
             )
         self._last_alarm_type[cam_id] = new_type
 
-    def _is_write_locked(
+    def is_write_locked(
         self, cam_id: str, set_at_dict: dict[str, float] | FloatFieldView
     ) -> bool:
         """Return True if a fresh user-write is still inside the eventual-consistency window.
@@ -1216,7 +1216,7 @@ class BoschCameraCoordinator(
         method relies on.
         """
         ts = set_at_dict.get(cam_id)
-        return ts is not None and (time.monotonic() - ts) < self._WRITE_LOCK_SECS
+        return ts is not None and (time.monotonic() - ts) < self.WRITE_LOCK_SECS
 
     def is_camera_online(self, cam_id: str) -> bool:
         """Return True if this camera's last known status is ONLINE.
@@ -1236,9 +1236,9 @@ class BoschCameraCoordinator(
         this in their `available` property to avoid showing a frozen stream
         as if it were healthy.
         """
-        return bool(self._session_stale.get(cam_id, False))
+        return bool(self.session_stale.get(cam_id, False))
 
-    async def _refresh_local_creds_from_heartbeat(
+    async def refresh_local_creds_from_heartbeat(
         self,
         cam_id: str,
         resp_text: str,
@@ -1253,7 +1253,7 @@ class BoschCameraCoordinator(
         docs/stream-perf-stability-refactor-plan.md) — kept as a bound
         method because it is called from within `_auto_renew_local_session`
         below and patched directly in tests via `AsyncMock()` /
-        `BoschCameraCoordinator._refresh_local_creds_from_heartbeat(coord,
+        `BoschCameraCoordinator.refresh_local_creds_from_heartbeat(coord,
         ...)` unbound-style calls. See `session_renewal.py` for the full
         docstring (cred-rotation window, go2rtc re-registration, NVR
         sidecar survival) — unchanged by this move.
@@ -1270,12 +1270,12 @@ class BoschCameraCoordinator(
         # a worker error firing after _tear_down_live_stream cleared the dict)
         # is not a LAN-health signal either. Counting those would pin the cam to
         # REMOTE after an unrelated hiccup even when LAN works fine again.
-        live = self._live_connections.get(cam_id, {})
+        live = self.live_connections.get(cam_id, {})
         if live.get("_connection_type") != "LOCAL":
             return
-        count = self._stream_error_count.get(cam_id, 0) + 1
-        self._stream_error_count[cam_id] = count
-        self._stream_error_at[cam_id] = time.monotonic()
+        count = self.stream_error_count.get(cam_id, 0) + 1
+        self.stream_error_count[cam_id] = count
+        self.stream_error_at[cam_id] = time.monotonic()
         cfg = self.get_model_config(cam_id)
         # Log only on the transition to threshold — not every subsequent tick while still failing
         if count == cfg.max_stream_errors:
@@ -1295,17 +1295,17 @@ class BoschCameraCoordinator(
 
     def record_stream_success(self, cam_id: str) -> None:
         """Reset error counter on successful stream."""
-        if self._stream_error_count.get(cam_id, 0) > 0:
+        if self.stream_error_count.get(cam_id, 0) > 0:
             _LOGGER.info(
                 "Stream recovered for %s — resetting error counter", cam_id[:8]
             )
-        self._stream_error_count[cam_id] = 0
-        self._stream_error_at.pop(cam_id, None)
-        self._stream_fell_back[cam_id] = False
-        self._local_rescue_attempts.pop(cam_id, None)
-        self._local_rescue_at.pop(cam_id, None)
+        self.stream_error_count[cam_id] = 0
+        self.stream_error_at.pop(cam_id, None)
+        self.stream_fell_back[cam_id] = False
+        self.local_rescue_attempts.pop(cam_id, None)
+        self.local_rescue_at.pop(cam_id, None)
 
-    async def _tear_down_live_stream(
+    async def tear_down_live_stream(
         self, cam_id: str, expected_generation: int | None = None
     ) -> None:
         """Stop an active LOCAL/REMOTE live stream cleanly.
@@ -1317,27 +1317,27 @@ class BoschCameraCoordinator(
         coordinator-facing modules (switch.py, slow_tier.py,
         frigate_endpoint.py's FrigateCoordinatorMixin, live_connection.py)
         and the shutdown path (`async_unload_entry`'s
-        `getattr(coord, "_tear_down_live_stream", None)` duck-typed
-        dispatch) as bound `coordinator._tear_down_live_stream(...)` calls,
+        `getattr(coord, "tear_down_live_stream", None)` duck-typed
+        dispatch) as bound `coordinator.tear_down_live_stream(...)` calls,
         and patched directly in tests via `AsyncMock()` /
-        `BoschCameraCoordinator._tear_down_live_stream(coord, ...)`
+        `BoschCameraCoordinator.tear_down_live_stream(coord, ...)`
         unbound-style calls. See `stream_lifecycle.py` for the full
         docstring (session-generation race, NVR/proxy/go2rtc/Stream
         teardown order, live-incident history) — unchanged by this move.
         """
         await tear_down_live_stream(self, cam_id, expected_generation)
 
-    def _schedule_stream_worker_error(self, cam_id: str, msg: str) -> None:
+    def schedule_stream_worker_error(self, cam_id: str, msg: str) -> None:
         """Thread-safe entry point from the log listener.
 
         Thin dispatch to `stream_lifecycle.schedule_stream_worker_error` —
         kept as a bound method because `_StreamWorkerErrorListener.emit`
-        passes `self._coordinator._schedule_stream_worker_error` itself
+        passes `self._coordinator.schedule_stream_worker_error` itself
         (not its call result) to `loop.call_soon_threadsafe`.
         """
         schedule_stream_worker_error(self, cam_id, msg)
 
-    async def _handle_stream_worker_error(self, cam_id: str, msg: str) -> None:
+    async def handle_stream_worker_error(self, cam_id: str, msg: str) -> None:
         """React to an HA stream-worker error for one camera.
 
         Thin dispatch to `stream_lifecycle.handle_stream_worker_error` —
@@ -1349,7 +1349,7 @@ class BoschCameraCoordinator(
         """
         await handle_stream_worker_error(self, cam_id, msg)
 
-    def _replace_renewal_task(
+    def replace_renewal_task(
         self, cam_id: str, coro: Coroutine[Any, Any, None]
     ) -> asyncio.Task[None]:
         """Cancel any existing renewal task for cam_id, then create and track the new one.
@@ -1360,18 +1360,18 @@ class BoschCameraCoordinator(
         loops, which never end — surfaces as a 5-minute "Something is
         blocking Home Assistant from wrapping up the start up phase" warning.
         """
-        old = self._renewal_tasks.get(cam_id)
+        old = self.renewal_tasks.get(cam_id)
         if old and not old.done():
             old.cancel()
         task = self.hass.async_create_background_task(
             coro, f"bosch_shc_camera_renewal_{cam_id[:8]}"
         )
-        self._renewal_tasks[cam_id] = task
-        self._bg_tasks.add(task)
-        task.add_done_callback(self._bg_tasks.discard)
+        self.renewal_tasks[cam_id] = task
+        self.bg_tasks.add(task)
+        task.add_done_callback(self.bg_tasks.discard)
         return task
 
-    def _replace_reaper_task(
+    def replace_reaper_task(
         self, cam_id: str, coro: Coroutine[Any, Any, None]
     ) -> asyncio.Task[None]:
         """Cancel any existing idle reaper for cam_id, then create and track the new one.
@@ -1380,18 +1380,18 @@ class BoschCameraCoordinator(
         only returns on stream-off / teardown, so it must be a background task
         (otherwise HA's startup-wait phase blocks on it).
         """
-        old = self._reaper_tasks.get(cam_id)
+        old = self.reaper_tasks.get(cam_id)
         if old and not old.done():
             old.cancel()
         task = self.hass.async_create_background_task(
             coro, f"bosch_shc_camera_reaper_{cam_id[:8]}"
         )
-        self._reaper_tasks[cam_id] = task
-        self._bg_tasks.add(task)
-        task.add_done_callback(self._bg_tasks.discard)
+        self.reaper_tasks[cam_id] = task
+        self.bg_tasks.add(task)
+        task.add_done_callback(self.bg_tasks.discard)
         return task
 
-    def _spawn_tracked(
+    def spawn_tracked(
         self, coro: Coroutine[Any, Any, Any], *, name: str
     ) -> asyncio.Task[Any]:
         """Fire-and-forget a coroutine as a tracked task in `_bg_tasks`.
@@ -1414,11 +1414,11 @@ class BoschCameraCoordinator(
         docstring for why).
         """
         task = self.hass.async_create_task(coro, name=name)
-        self._bg_tasks.add(task)
-        task.add_done_callback(self._bg_tasks.discard)
+        self.bg_tasks.add(task)
+        task.add_done_callback(self.bg_tasks.discard)
         return task
 
-    async def _go2rtc_consumer_count(self, cam_id: str) -> int | None:
+    async def go2rtc_consumer_count(self, cam_id: str) -> int | None:
         """Best-effort count of active go2rtc consumers for this camera's stream.
 
         Thin dispatch to `stream_lifecycle.go2rtc_consumer_count` — kept as
@@ -1429,12 +1429,12 @@ class BoschCameraCoordinator(
         """
         return await go2rtc_consumer_count(self, cam_id)
 
-    async def _has_active_consumer(self, cam_id: str) -> bool:
+    async def has_active_consumer(self, cam_id: str) -> bool:
         """True if anything is actively consuming the live stream.
 
         Thin dispatch to `stream_lifecycle.has_active_consumer` — kept as a
         bound method because this is called from `frigate_endpoint.py`'s
-        `FrigateCoordinatorMixin` (`self._has_active_consumer(cam_id)`,
+        `FrigateCoordinatorMixin` (`self.has_active_consumer(cam_id)`,
         where `self` is the coordinator instance) and patched directly in
         tests via `AsyncMock()`. See `stream_lifecycle.py` for the full
         docstring (three consumer signals, cheap-to-expensive order,
@@ -1442,14 +1442,14 @@ class BoschCameraCoordinator(
         """
         return await has_active_consumer(self, cam_id)
 
-    async def _idle_session_reaper(self, cam_id: str, generation: int) -> None:
+    async def idle_session_reaper(self, cam_id: str, generation: int) -> None:
         """Tear down a LOCAL session once nobody is consuming it.
 
         Thin dispatch to `stream_lifecycle.idle_session_reaper` — kept as a
         bound method because this is called from `live_connection.py` as
-        `coordinator._idle_session_reaper(cam_id, gen)` (wrapped in
+        `coordinator.idle_session_reaper(cam_id, gen)` (wrapped in
         `_replace_reaper_task`) and patched directly in tests via
-        `AsyncMock()` / `BoschCameraCoordinator._idle_session_reaper(c, ...)`
+        `AsyncMock()` / `BoschCameraCoordinator.idle_session_reaper(c, ...)`
         unbound-style calls. See `stream_lifecycle.py` for the full
         docstring (idle-reap timing, generation tracking) — unchanged by
         this move.
@@ -1462,13 +1462,13 @@ class BoschCameraCoordinator(
     # its cloud TLS session after each write, and the LAN HTTPS endpoint is
     # briefly unresponsive (~5–15 s observed). 30 s leaves margin without
     # masking a real network outage.
-    _LOCAL_WRITE_GRACE_S: float = 30.0
+    LOCAL_WRITE_GRACE_S: float = 30.0
 
     def _in_local_write_grace(self, cam_id: str, now: float | None = None) -> bool:
         """True if this cam was written to via local RCP within _LOCAL_WRITE_GRACE_S."""
         moment = now if now is not None else time.monotonic()
-        last = self._local_write_at.get(cam_id, float("-inf"))
-        return (moment - last) < self._LOCAL_WRITE_GRACE_S
+        last = self.local_write_at.get(cam_id, float("-inf"))
+        return (moment - last) < self.LOCAL_WRITE_GRACE_S
 
     def is_lan_reachable(self, cam_id: str) -> bool | None:
         """Most recent LAN-TCP reachability for `cam_id`, or None if unknown.
@@ -1478,7 +1478,7 @@ class BoschCameraCoordinator(
         so the UI does not flip to offline for a few seconds after every
         privacy/light toggle.
         """
-        entry = self._lan_tcp_reachable.get(cam_id)
+        entry = self.lan_tcp_reachable.get(cam_id)
         if entry is None:
             return True if self._in_local_write_grace(cam_id) else None
         reachable, _ts = entry
@@ -1495,16 +1495,16 @@ class BoschCameraCoordinator(
         camera-status sensor surfaces the same state as the enum value
         ``"updating"``.
         """
-        return bool(self._firmware_cache.get(cam_id, {}).get("updating", False))
+        return bool(self.firmware_cache.get(cam_id, {}).get("updating", False))
 
-    async def _async_local_tcp_ping(self, cam_id: str, timeout: float = 1.5) -> bool:
+    async def async_local_tcp_ping(self, cam_id: str, timeout: float = 1.5) -> bool:
         """Quick TCP connect to camera port 443 on LAN — returns True if reachable.
 
         Tries _rcp_lan_ip_cache first, falls back to _local_creds_cache.
         Result is written to _lan_tcp_reachable for stream pre-check reuse.
         Much faster than cloud /commissioned check (~5ms vs ~200ms).
         """
-        cam_ip = self._get_cam_lan_ip(cam_id)
+        cam_ip = self.get_cam_lan_ip(cam_id)
         if not cam_ip:
             return False  # no known LAN IP — can't ping locally
         try:
@@ -1515,12 +1515,12 @@ class BoschCameraCoordinator(
             writer.close()
             await writer.wait_closed()
             result = True
-        except (TimeoutError, OSError):
+        except TimeoutError, OSError:
             result = False
-        self._lan_tcp_reachable[cam_id] = (result, time.monotonic())
+        self.lan_tcp_reachable[cam_id] = (result, time.monotonic())
         return result
 
-    async def _async_outage_ping_all(self) -> None:
+    async def async_outage_ping_all(self) -> None:
         """Ping every known camera concurrently during a cloud outage.
 
         Called from the UpdateFailed paths in `_async_update_data`. Throttled
@@ -1537,13 +1537,13 @@ class BoschCameraCoordinator(
             cam_ids.extend(self.data.keys())
         # Also include cams known only via LAN IP cache (rare — coordinator
         # data not yet populated after a fresh start mid-outage).
-        for cid in self._rcp_lan_ip_cache:
+        for cid in self.rcp_lan_ip_cache:
             if cid not in cam_ids:
                 cam_ids.append(cid)
         if not cam_ids:
             return
         results = await asyncio.gather(
-            *(self._async_local_tcp_ping(cid) for cid in cam_ids),
+            *(self.async_local_tcp_ping(cid) for cid in cam_ids),
             return_exceptions=True,
         )
         _ok = sum(1 for r in results if r is True)
@@ -1564,15 +1564,15 @@ class BoschCameraCoordinator(
         # without waiting for the next coordinator tick.
         self.async_update_listeners()
 
-    def _get_cam_lan_ip(self, cam_id: str) -> str | None:
+    def get_cam_lan_ip(self, cam_id: str) -> str | None:
         """Return the best known LAN IP for a camera, or None if not yet discovered."""
-        ip = self._rcp_lan_ip_cache.get(cam_id)
+        ip = self.rcp_lan_ip_cache.get(cam_id)
         if ip:
             return ip
-        creds = self._local_creds_cache.get(cam_id)
+        creds = self.local_creds_cache.get(cam_id)
         return creds.get("host") if creds else None
 
-    def _should_check_status(
+    def should_check_status(
         self, cam_id: str, now: float, interval_status: int
     ) -> bool:
         """Determine if this camera needs a status check this tick.
@@ -1586,8 +1586,8 @@ class BoschCameraCoordinator(
         to advance every tick, making (now - _last_status) always < interval_status
         and status checks never firing after the first tick.
         """
-        per_cam_last = self._per_cam_status_at.get(cam_id, float("-inf"))
-        offline_since = self._offline_since.get(cam_id)
+        per_cam_last = self.per_cam_status_at.get(cam_id, float("-inf"))
+        offline_since = self.offline_since.get(cam_id)
         if offline_since and (now - offline_since) > self._OFFLINE_EXTENDED_INTERVAL:
             # Camera has been offline for a while — use extended interval
             return (now - per_cam_last) >= self._OFFLINE_EXTENDED_INTERVAL
@@ -1634,10 +1634,10 @@ class BoschCameraCoordinator(
         # logic internally (exponential backoff, soft vs hard-heal). This tick
         # only checks that the supervisor task is still alive and restarts it if
         # it somehow died (should never happen — the supervisor loops forever).
-        with self._fcm_lock:
-            _fcm_healthy = self._fcm_healthy
+        with self.fcm_lock:
+            _fcm_healthy = self.fcm_healthy
         if opts.get("enable_fcm_push", False):
-            sup = getattr(self, "_fcm_supervisor_task", None)
+            sup = getattr(self, "fcm_supervisor_task", None)
             if sup is None or sup.done():
                 self.hass.async_create_task(_fcm_async_ensure_supervisor(self))
         if _fcm_healthy:
@@ -1686,7 +1686,7 @@ class BoschCameraCoordinator(
                     cam_ids.append(cid)
                     cam_by_id[cid] = cam
                     # Cache hardware version for model-specific behavior
-                    self._hw_version[cid] = cam.get("hardwareVersion", "CAMERA")
+                    self.hw_version[cid] = cam.get("hardwareVersion", "CAMERA")
 
             # ── 2. Status ─ parallel across all cameras ────────────────────────
             any_status_checked = await poll_statuses(
@@ -1844,8 +1844,8 @@ class BoschCameraCoordinator(
                 if (
                     is_online
                     and do_slow_cam
-                    and self._get_cam_lan_ip(cam_id_key)
-                    and self._local_creds_cache.get(cam_id_key)
+                    and self.get_cam_lan_ip(cam_id_key)
+                    and self.local_creds_cache.get(cam_id_key)
                 ):
                     try:
                         await self._async_update_lan_diagnostic_sensors(cam_id_key)
@@ -1927,7 +1927,7 @@ class BoschCameraCoordinator(
         # — matches the pattern already used in live_connection.py.
         from . import ir as ir
 
-        for cam_id, notif in self._notifications_cache.items():
+        for cam_id, notif in self.notifications_cache.items():
             if not notif:
                 # No data fetched yet — skip to avoid false positives.
                 continue
@@ -1994,7 +1994,7 @@ class BoschCameraCoordinator(
         # — matches the pattern already used in live_connection.py.
         from . import ir as ir
 
-        for cam_id, fw in self._firmware_cache.items():
+        for cam_id, fw in self.firmware_cache.items():
             if not fw:
                 # No data fetched yet — skip to avoid false positives.
                 continue
@@ -2111,7 +2111,7 @@ class BoschCameraCoordinator(
         UpdateCameraFirmware — {"id": <update field>} to the same URL this
         integration already GETs for status).
         """
-        fw: dict[str, Any] = self._firmware_cache.get(cam_id, {})
+        fw: dict[str, Any] = self.firmware_cache.get(cam_id, {})
         if fw.get("updating"):
             raise HomeAssistantError("Firmware install is already in progress")
         target = fw.get("update")
@@ -2125,8 +2125,8 @@ class BoschCameraCoordinator(
                 f"Bosch cloud rejected the firmware install request for {target}"
             )
         fw["updating"] = True
-        self._firmware_cache[cam_id] = fw
-        self._firmware_set_at[cam_id] = time.monotonic()
+        self.firmware_cache[cam_id] = fw
+        self.firmware_set_at[cam_id] = time.monotonic()
 
     async def async_soft_reset_camera(self, cam_id: str) -> None:
         """Reboot the camera (soft reset).
@@ -2187,11 +2187,11 @@ class BoschCameraCoordinator(
         now = time.monotonic()
         if (
             reactive
-            and (now - self._maintenance_last_fetch)
+            and (now - self.maintenance_last_fetch)
             < self._MAINTENANCE_REACTIVE_COOLDOWN_S
         ):
             return
-        self._maintenance_last_fetch = now
+        self.maintenance_last_fetch = now
         try:
             session = async_get_clientsession(self.hass)
             result = await async_fetch_maintenance(session)
@@ -2199,7 +2199,7 @@ class BoschCameraCoordinator(
             _LOGGER.debug("Maintenance fetch raised: %s", exc)
             return
         if result is not None:
-            self._maintenance_cache = result
+            self.maintenance_cache = result
             _LOGGER.debug(
                 "Maintenance: %s state=%s window=%s..%s",
                 result.title[:60],
@@ -2234,20 +2234,20 @@ class BoschCameraCoordinator(
         # `past` only announces when we already announced `active` for this
         # same window (same link). Suppresses stale past-window discovery.
         if state == "past":
-            prior = self._maintenance_notified_key
+            prior = self.maintenance_notified_key
             if prior is None or prior[0] != mw.link or prior[1] != "active":
-                self._maintenance_notified_key = (mw.link, state)
+                self.maintenance_notified_key = (mw.link, state)
                 getattr(self, "_persist_maint_notified_key", lambda: None)()
                 return
         notify_key = (mw.link, state)
-        if self._maintenance_notified_key == notify_key:
+        if self.maintenance_notified_key == notify_key:
             return
         from .fcm import build_notify_data, get_alert_services
 
         services = get_alert_services(self, "system")
         if not services:
             _LOGGER.debug("Maintenance announce skipped: no notify service configured")
-            self._maintenance_notified_key = notify_key
+            self.maintenance_notified_key = notify_key
             getattr(self, "_persist_maint_notified_key", lambda: None)()
             return
         from zoneinfo import ZoneInfo
@@ -2295,7 +2295,7 @@ class BoschCameraCoordinator(
                     svc,
                     exc,
                 )
-        self._maintenance_notified_key = notify_key
+        self.maintenance_notified_key = notify_key
         getattr(self, "_persist_maint_notified_key", lambda: None)()
 
     def _persist_maint_notified_key(self) -> None:
@@ -2305,8 +2305,8 @@ class BoschCameraCoordinator(
         single Bosch maintenance window because every restart wiped the
         in-memory dedup key.
         """
-        key = self._maintenance_notified_key
-        store = getattr(self, "_maint_notified_store", None)
+        key = self.maintenance_notified_key
+        store = getattr(self, "maint_notified_store", None)
         if store is None or key is None:
             return
         self.hass.async_create_task(store.async_save({"link": key[0], "state": key[1]}))
@@ -2315,11 +2315,11 @@ class BoschCameraCoordinator(
         """Mirror the maintenance-key persistence for the cloud-state
         dedup flag, so a restart mid-outage doesn't re-fire "Cloud nicht
         erreichbar"."""
-        store = getattr(self, "_cloud_alert_store", None)
+        store = getattr(self, "cloud_alert_store", None)
         if store is None:
             return
         self.hass.async_create_task(
-            store.async_save({"outage_notified": bool(self._cloud_outage_notified)})
+            store.async_save({"outage_notified": bool(self.cloud_outage_notified)})
         )
 
     async def _async_maybe_announce_camera_status(
@@ -2499,17 +2499,17 @@ class BoschCameraCoordinator(
         # Active-maintenance check — if Bosch announced this exact outage as
         # planned, stay silent.
         in_maintenance = False
-        mw = self._maintenance_cache
+        mw = self.maintenance_cache
         if mw is not None and mw.camera_relevant and mw.state() == "active":
             in_maintenance = True
         if success:
-            if not self._cloud_outage_notified:
+            if not self.cloud_outage_notified:
                 # Was either healthy already or in a sub-grace blip — just
                 # reset the tracker so the next outage starts a fresh window.
                 self._cloud_outage_started_at = None
                 return
             # We previously announced an outage — announce recovery now.
-            self._cloud_outage_notified = False
+            self.cloud_outage_notified = False
             self._cloud_outage_started_at = None
             getattr(self, "_persist_cloud_outage_flag", lambda: None)()
             if in_maintenance:
@@ -2523,13 +2523,13 @@ class BoschCameraCoordinator(
         if self._cloud_outage_started_at is None:
             self._cloud_outage_started_at = now
             return
-        if self._cloud_outage_notified:
+        if self.cloud_outage_notified:
             return
         if (now - self._cloud_outage_started_at) < self._CLOUD_OUTAGE_NOTIFY_AFTER_S:
             return
         # Outage has persisted long enough → announce, but stay silent during
         # known maintenance.
-        self._cloud_outage_notified = True
+        self.cloud_outage_notified = True
         getattr(self, "_persist_cloud_outage_flag", lambda: None)()
         if in_maintenance:
             _LOGGER.debug("Cloud outage suppressed: known active maintenance window")
@@ -2633,83 +2633,83 @@ class BoschCameraCoordinator(
         # plain _nvr_* status CacheFieldView below, plus, since Slice 3,
         # _live_connections / _user_intent_streams — see the excluded-list
         # comment block at the end of this tuple)
-        "_audio_enabled",
-        "_audio_volume",
+        "audio_enabled",
+        "audio_volume",
         "_auto_renew_tasks",  # legacy, kept for backwards-compat, never populated
-        "_renewal_tasks",
-        "_reaper_tasks",
-        "_camera_entities",
-        "_zombie_stream_worker_count",
-        "_live_stream_entities",
-        "_image_entities",
-        "_slow_tier_defer_since",
-        "_cached_status",
-        "_cloud_444_at",
-        "_cached_events",
-        "_wifiinfo_cache",
-        "_ambient_light_cache",
+        "renewal_tasks",
+        "reaper_tasks",
+        "camera_entities",
+        "zombie_stream_worker_count",
+        "live_stream_entities",
+        "image_entities",
+        "slow_tier_defer_since",
+        "cached_status",
+        "cloud_444_at",
+        "cached_events",
+        "wifiinfo_cache",
+        "ambient_light_cache",
         "_rcp_cmd_failures",
         "_quality_preference",
         "_proxy_url_cache",
         "_fresh_snap_cache",
         "_ai_last_call",
-        "_last_event_ids",
-        "_unread_events_cache",
-        "_privacy_sound_cache",
-        "_commissioned_cache",
-        "_firmware_cache",
-        "_session_stale",
-        "_timestamp_cache",
-        "_ledlights_cache",
-        "_lens_elevation_cache",
-        "_motion_light_cache",
-        "_image_rotation_180",
-        "_external_stream_enabled",
-        "_ambient_lighting_cache",
-        "_lighting_switch_cache",
-        "_global_lighting_cache",
-        "_notifications_cache",
-        "_rules_cache",
-        "_cloud_zones_cache",
-        "_cloud_privacy_masks_cache",
-        "_lighting_options_cache",
-        "_intrusion_config_cache",
-        "_audio_detection_cache",
-        "_alarm_settings_cache",
-        "_alarm_status_cache",
+        "last_event_ids",
+        "unread_events_cache",
+        "privacy_sound_cache",
+        "commissioned_cache",
+        "firmware_cache",
+        "session_stale",
+        "timestamp_cache",
+        "ledlights_cache",
+        "lens_elevation_cache",
+        "motion_light_cache",
+        "image_rotation_180",
+        "external_stream_enabled",
+        "ambient_lighting_cache",
+        "lighting_switch_cache",
+        "global_lighting_cache",
+        "notifications_cache",
+        "rules_cache",
+        "cloud_zones_cache",
+        "cloud_privacy_masks_cache",
+        "lighting_options_cache",
+        "intrusion_config_cache",
+        "audio_detection_cache",
+        "alarm_settings_cache",
+        "alarm_status_cache",
         "_last_alarm_type",
-        "_arming_cache",
-        "_icon_led_brightness_cache",
-        "_gen2_zones_cache",
-        "_gen2_private_areas_cache",
+        "arming_cache",
+        "icon_led_brightness_cache",
+        "gen2_zones_cache",
+        "gen2_private_areas_cache",
         "_user_token_cache",
-        "_hw_version",
-        "_tls_proxy_ports",
-        "_tls_proxy_servers",
-        "_frigate_high_enabled",
-        "_frigate_low_enabled",
+        "hw_version",
+        "tls_proxy_ports",
+        "tls_proxy_servers",
+        "frigate_high_enabled",
+        "frigate_low_enabled",
         "_frigate_sticky_port",
-        "_viewing_sticky_port",
-        "_remote_viewing_sticky_port",
-        "_tls_proxy_rebuild_last",
-        "_stream_error_count",
-        "_stream_error_at",
-        "_stream_fell_back",
-        "_local_rescue_attempts",
-        "_local_rescue_at",
-        "_lan_tcp_reachable",
-        "_lan_recheck_forced_at",
-        "_local_write_at",
-        "_local_promote_at",
-        "_offline_since",
-        "_per_cam_status_at",
+        "viewing_sticky_port",
+        "remote_viewing_sticky_port",
+        "tls_proxy_rebuild_last",
+        "stream_error_count",
+        "stream_error_at",
+        "stream_fell_back",
+        "local_rescue_attempts",
+        "local_rescue_at",
+        "lan_tcp_reachable",
+        "lan_recheck_forced_at",
+        "local_write_at",
+        "local_promote_at",
+        "offline_since",
+        "per_cam_status_at",
         "_last_camera_status",
         "_session_quota_hits",
-        "_nvr_processes",
-        "_nvr_preroll_processes",
-        "_nvr_preroll_tasks",
-        "_nvr_drain_state",
-        "_nvr_drain_failures",
+        "nvr_processes",
+        "nvr_preroll_processes",
+        "nvr_preroll_tasks",
+        "nvr_drain_state",
+        "nvr_drain_failures",
     )
     # `set[str]` attributes whose members are cam_id → `.discard()`.
     # Empty since Slice 3: `_user_intent_streams` (the last member) is now a
@@ -2800,7 +2800,7 @@ class BoschCameraCoordinator(
         immediately); only the actual socket-close I/O is deferred to a
         tracked background task.
         """
-        server = self._tls_proxy_servers.pop(cam_id, None)
+        server = self.tls_proxy_servers.pop(cam_id, None)
         if server is not None:
 
             async def _close_leftover_proxy() -> None:
@@ -2816,8 +2816,8 @@ class BoschCameraCoordinator(
                     )
 
             t = self.hass.async_create_task(_close_leftover_proxy())
-            self._bg_tasks.add(t)
-            t.add_done_callback(self._bg_tasks.discard)
+            self.bg_tasks.add(t)
+            t.add_done_callback(self.bg_tasks.discard)
 
         # Same rationale as the `_tls_proxy_servers` block above: the
         # viewing front-door's *listener* lives inside
@@ -2828,7 +2828,7 @@ class BoschCameraCoordinator(
         # explicitly stopped here or the listener leaks for the rest of the
         # HA process lifetime, same as an un-stopped `_tls_proxy_servers`
         # entry would.
-        if cam_id in self._viewing_sticky_port:
+        if cam_id in self.viewing_sticky_port:
 
             async def _close_leftover_viewing_front_door() -> None:
                 # Bug-hunt finding: every OTHER mutator of the viewing
@@ -2848,12 +2848,12 @@ class BoschCameraCoordinator(
                 # it again. Taking the lock here serializes against that
                 # renewal exactly like `tear_down_live_stream` already does.
                 try:
-                    async with self._get_stream_lock(cam_id):
-                        await self._stop_viewing_front_door(cam_id)
+                    async with self.get_stream_lock(cam_id):
+                        await self.stop_viewing_front_door(cam_id)
                         # Re-pop defensively: if a renewal was mid-flight
                         # and re-inserted this entry while we waited for
                         # the lock, it must not survive a confirmed purge.
-                        self._viewing_sticky_port.pop(cam_id, None)
+                        self.viewing_sticky_port.pop(cam_id, None)
                 except Exception as exc:
                     _LOGGER.debug(
                         "Viewing front-door for %s: stop during camera-removal purge raised — %s",
@@ -2862,20 +2862,20 @@ class BoschCameraCoordinator(
                     )
 
             t2 = self.hass.async_create_task(_close_leftover_viewing_front_door())
-            self._bg_tasks.add(t2)
-            t2.add_done_callback(self._bg_tasks.discard)
+            self.bg_tasks.add(t2)
+            t2.add_done_callback(self.bg_tasks.discard)
 
         # Same again for the REMOTE viewing front-door's listener — separate
         # runner (`_remote_viewing_front_door_runner`), same leak-if-
         # unstopped / lock-against-a-racing-renewal reasoning as the LOCAL
         # block immediately above.
-        if cam_id in self._remote_viewing_sticky_port:
+        if cam_id in self.remote_viewing_sticky_port:
 
             async def _close_leftover_remote_viewing_front_door() -> None:
                 try:
-                    async with self._get_stream_lock(cam_id):
-                        await self._stop_remote_viewing_front_door(cam_id)
-                        self._remote_viewing_sticky_port.pop(cam_id, None)
+                    async with self.get_stream_lock(cam_id):
+                        await self.stop_remote_viewing_front_door(cam_id)
+                        self.remote_viewing_sticky_port.pop(cam_id, None)
                 except Exception as exc:
                     _LOGGER.debug(
                         "REMOTE viewing front-door for %s: stop during "
@@ -2887,8 +2887,8 @@ class BoschCameraCoordinator(
             t3 = self.hass.async_create_task(
                 _close_leftover_remote_viewing_front_door()
             )
-            self._bg_tasks.add(t3)
-            t3.add_done_callback(self._bg_tasks.discard)
+            self.bg_tasks.add(t3)
+            t3.add_done_callback(self.bg_tasks.discard)
 
         for attr_name in self._PURGE_CAM_DICT_ATTRS:
             attr = getattr(self, attr_name)
@@ -2903,7 +2903,7 @@ class BoschCameraCoordinator(
         for key in stale_lan_denied_keys:
             self._rcp_lan_denied_until.pop(key, None)
 
-    def _cleanup_stale_devices(self, current_cam_ids: set[str]) -> None:
+    def cleanup_stale_devices(self, current_cam_ids: set[str]) -> None:
         """Remove devices for cameras no longer in the Bosch cloud account.
 
         Quality-Scale Gold rule `stale-devices`. Compares the device registry
@@ -2918,7 +2918,7 @@ class BoschCameraCoordinator(
         from homeassistant.helpers import device_registry as dr
 
         dev_reg = dr.async_get(self.hass)
-        for device in dr.async_entries_for_config_entry(dev_reg, self._entry.entry_id):
+        for device in dr.async_entries_for_config_entry(dev_reg, self.entry.entry_id):
             cam_id = next(
                 (ident[1] for ident in device.identifiers if ident[0] == DOMAIN),
                 None,
@@ -2936,23 +2936,23 @@ class BoschCameraCoordinator(
     # _stream_setup_lock: per-camera asyncio.Lock to serialize stream operations
     # _stream_warming: set of cam_ids currently in warm-up phase (blocks privacy toggles)
 
-    def _get_stream_lock(self, cam_id: str) -> asyncio.Lock:
+    def get_stream_lock(self, cam_id: str) -> asyncio.Lock:
         """Get or create per-camera stream setup lock."""
         return get_or_create_lock(self._stream_locks, cam_id)
 
     def _get_rcp_session_lock(self, proxy_hash: str) -> asyncio.Lock:
         """Get or create per-proxy_hash RCP session-open lock."""
-        return get_or_create_lock(self._rcp_session_locks, proxy_hash)
+        return get_or_create_lock(self.rcp_session_locks, proxy_hash)
 
-    def _get_nvr_recorder_lock(self, cam_id: str) -> asyncio.Lock:
+    def get_nvr_recorder_lock(self, cam_id: str) -> asyncio.Lock:
         """Get or create per-camera Mini-NVR recorder-spawn lock."""
         return get_or_create_lock(self._nvr_recorder_locks, cam_id)
 
-    def _get_nvr_clip_assembly_lock(self, cam_id: str) -> asyncio.Lock:
+    def get_nvr_clip_assembly_lock(self, cam_id: str) -> asyncio.Lock:
         """Get or create per-camera Mini-NVR motion-clip-assembly lock."""
         return get_or_create_lock(self._nvr_clip_assembly_locks, cam_id)
 
-    def _get_session(self, cam_id: str) -> CameraSessionState:
+    def get_session(self, cam_id: str) -> CameraSessionState:
         """Get or create per-camera session bookkeeping (generation counter,
         idle-reaper timestamp, stream-warmup timestamp — see session_state.py)."""
         return get_or_create_session(self._sessions, cam_id)
@@ -2964,7 +2964,7 @@ class BoschCameraCoordinator(
         no longer has the cam_id, so the warm-up must have completed or
         errored out without resetting the flag).
         """
-        self._stream_warming.discard(cam_id)
+        self.stream_warming.discard(cam_id)
 
     def is_stream_warming(self, cam_id: str) -> bool:
         """True if this camera is currently in the warm-up phase.
@@ -2987,25 +2987,25 @@ class BoschCameraCoordinator(
         """
         import time as _time
 
-        if cam_id not in self._stream_warming:
+        if cam_id not in self.stream_warming:
             return False
         # Scenario 1: warming flag without _live_connections entry
-        if cam_id not in self._live_connections:
+        if cam_id not in self.live_connections:
             _LOGGER.debug(
                 "Clearing stale stream-warming flag for %s (no live conn)", cam_id[:8]
             )
-            self._stream_warming.discard(cam_id)
-            self._get_session(cam_id).warming_started = float("-inf")
+            self.stream_warming.discard(cam_id)
+            self.get_session(cam_id).warming_started = float("-inf")
             return False
-        live = self._live_connections.get(cam_id, {})
+        live = self.live_connections.get(cam_id, {})
         # Scenario 2: warming flag but pre-warm actually finished (URL set)
         if live.get("rtspsUrl") or live.get("rtspUrl"):
             _LOGGER.debug(
                 "Clearing stale stream-warming flag for %s (rtspsUrl already set — race)",
                 cam_id[:8],
             )
-            self._stream_warming.discard(cam_id)
-            self._get_session(cam_id).warming_started = float("-inf")
+            self.stream_warming.discard(cam_id)
+            self.get_session(cam_id).warming_started = float("-inf")
             return False
         # Scenario 3: warming for >180 s — hard timeout. Pre-warm worst case is
         # ~150 s (CAMERA_EYES outdoor: 8 retries × 13 s + 35 s min_total_wait +
@@ -3015,7 +3015,7 @@ class BoschCameraCoordinator(
         # _stream_warming with no start timestamp is an inconsistent state — treat
         # it as stuck and clear it rather than holding the privacy toggle hostage
         # forever (a `0` default is falsy and would skip the failsafe entirely).
-        started = self._get_session(cam_id).warming_started
+        started = self.get_session(cam_id).warming_started
         elapsed = _time.monotonic() - started
         if elapsed > 180:
             _LOGGER.warning(
@@ -3023,8 +3023,8 @@ class BoschCameraCoordinator(
                 cam_id[:8],
                 f"{elapsed:.0f}s" if started != float("-inf") else "unknown duration",
             )
-            self._stream_warming.discard(cam_id)
-            self._get_session(cam_id).warming_started = float("-inf")
+            self.stream_warming.discard(cam_id)
+            self.get_session(cam_id).warming_started = float("-inf")
             return False
         return True
 
@@ -3042,13 +3042,13 @@ class BoschCameraCoordinator(
         Serialized per camera via asyncio.Lock to prevent concurrent setup.
         """
         # Privacy guard — fail-open if cache not yet populated at boot
-        if bool(self._shc_state_cache.get(cam_id, {}).get("privacy_mode")):
+        if bool(self.shc_state_cache.get(cam_id, {}).get("privacy_mode")):
             _LOGGER.info(
                 "try_live_connection: privacy mode active for %s — stream blocked",
                 cam_id[:8],
             )
             return None
-        lock = self._get_stream_lock(cam_id)
+        lock = self.get_stream_lock(cam_id)
         # A recovery rebuild (force_reset) must WAIT for the lock, never skip:
         # the teardown of the old proxy now happens INSIDE the lock (see
         # try_live_connection_inner) so a concurrent renewal/heartbeat can't
@@ -3083,7 +3083,7 @@ class BoschCameraCoordinator(
                 self, cam_id, is_renewal, force_reset
             )
 
-    async def _run_smb_cleanup_bg(self) -> None:
+    async def run_smb_cleanup_bg(self) -> None:
         """Run the SMB retention cleanup in the background without blocking the coordinator tick."""
         try:
             await self.hass.async_add_executor_job(sync_smb_cleanup, self)
@@ -3099,9 +3099,9 @@ class BoschCameraCoordinator(
         existing recorder so a fresh URL is picked up.
         """
         # User-intent flag (consulted by the watcher's respawn check).
-        self._nvr_user_intent[cam_id] = True
+        self.nvr_user_intent[cam_id] = True
         if not nvr_recorder.should_record(self, cam_id, switch_on=True):
-            conn_type = self._live_connections.get(cam_id, {}).get("_connection_type")
+            conn_type = self.live_connections.get(cam_id, {}).get("_connection_type")
             if conn_type == "REMOTE":
                 # issue #47: recording wants LOCAL, but the live session is
                 # currently REMOTE (e.g. AUTO mode fell back because of a
@@ -3134,10 +3134,10 @@ class BoschCameraCoordinator(
         automatically when the LAN comes back.
         """
         if clear_intent:
-            self._nvr_user_intent.pop(cam_id, None)
+            self.nvr_user_intent.pop(cam_id, None)
         await nvr_recorder.stop_recorder(self, cam_id)
 
-    async def _run_nvr_cleanup_bg(self) -> None:
+    async def run_nvr_cleanup_bg(self) -> None:
         """Run NVR retention purge in an executor thread (called once per day)."""
         try:
             await self.hass.async_add_executor_job(nvr_recorder.sync_nvr_cleanup, self)
@@ -3183,7 +3183,7 @@ class BoschCameraCoordinator(
         # so the old getattr() guard for AttributeError is no longer needed.
         # Previous hotfix used _camera_status_extra (wrong attr — never assigned),
         # so the privacy short-circuit never fired; fixed here.
-        if self._shc_state_cache.get(cam_id, {}).get("privacy_mode"):
+        if self.shc_state_cache.get(cam_id, {}).get("privacy_mode"):
             return None
 
         # Reuse the pooled, application-lifetime Bosch cloud session instead of
@@ -3257,7 +3257,7 @@ class BoschCameraCoordinator(
                 # don't auto-populate dicts. Without the fallback every snapshot
                 # test (~14 cases across test_init_round7, test_init_sprint_*)
                 # raises AttributeError before reaching the gate logic.
-                hw_gen2 = getattr(self, "_hw_version", {}).get(cam_id, "") in (
+                hw_gen2 = getattr(self, "hw_version", {}).get(cam_id, "") in (
                     "HOME_Eyes_Indoor",
                     "HOME_Eyes_Outdoor",
                 )
@@ -3266,11 +3266,11 @@ class BoschCameraCoordinator(
                     proxy_host_rcp, proxy_hash_rcp = parts[0], parts[1]
                     rcp_base = f"https://{proxy_host_rcp}/{proxy_hash_rcp}/rcp.xml"
                     try:
-                        session_id = await self._get_cached_rcp_session(
+                        session_id = await self.get_cached_rcp_session(
                             proxy_host_rcp, proxy_hash_rcp
                         )
                         if session_id:
-                            raw = await self._rcp_read(rcp_base, "0x099e", session_id)
+                            raw = await self.rcp_read(rcp_base, "0x099e", session_id)
                             if raw and raw[:2] == b"\xff\xd8":
                                 _LOGGER.debug(
                                     "fetch_live_snapshot: RCP 0x099e → %d bytes (320×180 JPEG) for %s",
@@ -3447,7 +3447,7 @@ class BoschCameraCoordinator(
         opts = self.options
         try:
             max_per_day = int(opts.get("ai_max_per_day", 100) or 0)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             max_per_day = 100
         today = dt_util.now().date().isoformat()
         if self._ai_day_stamp != today:
@@ -3470,7 +3470,7 @@ class BoschCameraCoordinator(
                 try:
                     self._ai_day_count = int(stored.get("count", 0))
                     self._ai_day_stamp = stored_date
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     pass
             # else: stored day != today → counter stays at 0 (already reset for new day)
 
@@ -3491,10 +3491,10 @@ class BoschCameraCoordinator(
         opts = self.options
         try:
             cooldown = float(opts.get("ai_cooldown_seconds", 60) or 0)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             cooldown = 60.0
         used, max_per_day = self.ai_budget_state()
-        if max_per_day and (used + self._ai_in_flight) >= max_per_day:
+        if max_per_day and (used + self.ai_in_flight) >= max_per_day:
             # Use the SAME local-date source as ai_budget_state() above so the
             # one-shot "budget reached" log re-arms in lockstep with the daily
             # counter reset (a UTC date here would suppress the log for the
@@ -3510,7 +3510,7 @@ class BoschCameraCoordinator(
         last = self._ai_last_call.get(cam_id, float("-inf"))
         return (time.monotonic() - last) >= cooldown
 
-    def _ai_record_call(self, cam_id: str) -> None:
+    def ai_record_call(self, cam_id: str) -> None:
         """Record an AI analysis for cooldown + daily-budget accounting."""
         self.ai_budget_state()  # ensure the day-rollover runs first
         self._ai_last_call[cam_id] = time.monotonic()
@@ -3532,7 +3532,7 @@ class BoschCameraCoordinator(
         """
         if not self.options.get("enable_ai_description", False):
             return None
-        if self._shc_state_cache.get(cam_id, {}).get("privacy_mode"):
+        if self.shc_state_cache.get(cam_id, {}).get("privacy_mode"):
             return None
         if not force and not self._ai_window_allowed():
             return None
@@ -3540,7 +3540,7 @@ class BoschCameraCoordinator(
             # Reuse cached description only if not stale and not from a privacy era
             cached_entry = self.data.get(cam_id, {}).get("ai_description", {})
             cached_text: str | None = cached_entry.get("text")
-            if cached_text and not self._shc_state_cache.get(cam_id, {}).get(
+            if cached_text and not self.shc_state_cache.get(cam_id, {}).get(
                 "privacy_mode"
             ):
                 # Reject cache if generated_at is older than cooldown window or 300s cap
@@ -3557,7 +3557,7 @@ class BoschCameraCoordinator(
                 except Exception as _cache_err:
                     _LOGGER.debug("AI cache staleness check failed: %s", _cache_err)
             return None
-        cam_entity = getattr(self, "_camera_entities", {}).get(cam_id)
+        cam_entity = getattr(self, "camera_entities", {}).get(cam_id)
         if cam_entity is None:
             return None
         entity_id = cam_entity.entity_id
@@ -3591,7 +3591,7 @@ class BoschCameraCoordinator(
         }
         if ai_task_entity:
             ai_call_data["entity_id"] = ai_task_entity
-        self._ai_in_flight += 1
+        self.ai_in_flight += 1
         _ai_resp: Any = None
         _text_result: str | None = None
         try:
@@ -3613,13 +3613,13 @@ class BoschCameraCoordinator(
                     _text_result = _text_candidate
                     # Record the call while _ai_in_flight is still 1 so the
                     # budget counter reflects in-progress work correctly.
-                    self._ai_record_call(cam_id)
+                    self.ai_record_call(cam_id)
         except TimeoutError:
             _LOGGER.debug("AI description timed out (20s) for %s", cam_id[:8])
         except Exception as err:
             _LOGGER.debug("AI description generate failed for %s: %s", cam_id[:8], err)
         finally:
-            self._ai_in_flight -= 1
+            self.ai_in_flight -= 1
         if _text_result is None:
             return None
         text = _text_result
@@ -3735,7 +3735,7 @@ class BoschCameraCoordinator(
                                             time.monotonic() + _FRESH_SNAP_TTL,
                                         )
                                         return evdata
-                    except (TimeoutError, aiohttp.ClientError):
+                    except TimeoutError, aiohttp.ClientError:
                         continue
 
             except (TimeoutError, aiohttp.ClientError) as err:
@@ -3760,7 +3760,7 @@ class BoschCameraCoordinator(
         # Same privacy short-circuit as the REMOTE fetch — the LAN snap.jpg
         # also returns 0 bytes when privacy mode is ON. _shc_state_cache is
         # always initialized to {} in __init__, no getattr guard needed.
-        if self._shc_state_cache.get(cam_id, {}).get("privacy_mode"):
+        if self.shc_state_cache.get(cam_id, {}).get("privacy_mode"):
             return None
 
         connector = aiohttp.TCPConnector(
@@ -3876,7 +3876,7 @@ class BoschCameraCoordinator(
         Designed for opportunistic reads — never triggers a fresh PUT /connection
         (would cred-rotate on Gen2 Outdoor and break the running stream).
         """
-        live = self._live_connections.get(cam_id, {})
+        live = self.live_connections.get(cam_id, {})
         if not live:
             return None
         conn_type = live.get("_connection_type")
@@ -3905,7 +3905,7 @@ class BoschCameraCoordinator(
             )
         return None
 
-    async def _refresh_rcp_state(self, cam_id: str) -> None:
+    async def refresh_rcp_state(self, cam_id: str) -> None:
         """Hook fired after a successful stream start. Currently a no-op marker.
 
         Earlier versions (v10.4.8) read RCP `0x0d00` and `0x0c22` here and
@@ -3915,7 +3915,7 @@ class BoschCameraCoordinator(
         the reads were removed in v10.4.9. The hook itself is kept as a
         cheap extension point for future verified RCP+ uses.
         """
-        live = self._live_connections.get(cam_id, {})
+        live = self.live_connections.get(cam_id, {})
         source = live.get("_connection_type", "?").lower()
         cache = self._rcp_state_cache.setdefault(cam_id, {})
 
@@ -3934,7 +3934,7 @@ class BoschCameraCoordinator(
             cache["source"] = source
             cache["fetched_at"] = time.monotonic()
 
-    async def _check_and_recover_webrtc(self, cam_id: str) -> None:
+    async def check_and_recover_webrtc(self, cam_id: str) -> None:
         """Watchdog for HA's bundled go2rtc WebRTCProvider stale-schemes bug.
 
         HA's `WebRTCProvider.initialize()` runs once at config-entry-load and
@@ -3958,7 +3958,7 @@ class BoschCameraCoordinator(
         a recent reload already happened.
         """
         await asyncio.sleep(2)  # let async_refresh_providers settle first
-        cam_entity = self._camera_entities.get(cam_id)
+        cam_entity = self.camera_entities.get(cam_id)
         if cam_entity is None:
             return
         from homeassistant.components.camera import CameraEntityFeature, StreamType
@@ -3978,7 +3978,7 @@ class BoschCameraCoordinator(
         # usually does the job (the schemes are already populated, the cams
         # just need to re-query the providers).
         try:
-            self._last_schemes_refresh = float(
+            self.last_schemes_refresh = float(
                 "-inf"
             )  # force next _ensure_go2rtc_schemes_fresh past the 600s throttle
             await self._ensure_go2rtc_schemes_fresh()
@@ -4028,8 +4028,8 @@ class BoschCameraCoordinator(
         # schemes-fresh loop below: refreshing providers on an idle cam
         # triggers `stream_source()` → `try_live_connection()` and opens
         # an unwanted LOCAL session.
-        for cam_id_x, cam_ent in list(self._camera_entities.items()):
-            if cam_id_x not in self._live_connections:
+        for cam_id_x, cam_ent in list(self.camera_entities.items()):
+            if cam_id_x not in self.live_connections:
                 continue
             try:
                 if CameraEntityFeature.STREAM in cam_ent.supported_features:
@@ -4057,20 +4057,20 @@ class BoschCameraCoordinator(
         """
         await ensure_go2rtc_schemes_fresh(self)
 
-    async def _unregister_go2rtc_stream(self, cam_id: str) -> None:
+    async def unregister_go2rtc_stream(self, cam_id: str) -> None:
         """Remove the camera stream from go2rtc when the live session ends.
 
         Thin dispatch to `go2rtc_client.unregister_go2rtc_stream` — kept as
         a bound method because it is called from `stream_lifecycle.py` as
-        `coordinator._unregister_go2rtc_stream(cam_id)` and patched
+        `coordinator.unregister_go2rtc_stream(cam_id)` and patched
         directly in tests via `AsyncMock()` /
-        `BoschCameraCoordinator._unregister_go2rtc_stream(coord, ...)`
+        `BoschCameraCoordinator.unregister_go2rtc_stream(coord, ...)`
         unbound-style calls. See `go2rtc_client.py` for the full docstring
         (endpoint retry order) — unchanged by this move.
         """
         await unregister_go2rtc_stream(self, cam_id)
 
-    async def _start_tls_proxy(
+    async def start_tls_proxy(
         self, cam_id: str, cam_host: str, cam_port: int, is_renewal: bool = False
     ) -> int:
         """Start a local TCP→TLS proxy for a LOCAL RTSPS stream.
@@ -4079,9 +4079,9 @@ class BoschCameraCoordinator(
         step 4 coordinator-rewrite split, see
         docs/stream-perf-stability-refactor-plan.md) — kept as a bound
         method because it is called from other coordinator-facing modules
-        (live_connection.py) as `coordinator._start_tls_proxy(...)` and
+        (live_connection.py) as `coordinator.start_tls_proxy(...)` and
         patched directly in tests via `AsyncMock()` /
-        `BoschCameraCoordinator._start_tls_proxy(coord, ...)` unbound-style
+        `BoschCameraCoordinator.start_tls_proxy(coord, ...)` unbound-style
         calls. See `tls_proxy_wiring.py` for the full docstring (died-callback
         thread→event-loop hop, lazy SSL context init) — unchanged by this
         move.
@@ -4090,13 +4090,13 @@ class BoschCameraCoordinator(
             self, cam_id, cam_host, cam_port, is_renewal=is_renewal
         )
 
-    async def _on_tls_proxy_died(self, cam_id: str) -> None:
+    async def on_tls_proxy_died(self, cam_id: str) -> None:
         """Auto-rebuild the LOCAL session after the TLS proxy circuit breaker fires.
 
         Thin dispatch to `tls_proxy_wiring.on_tls_proxy_died` — kept as a
         bound method because it is scheduled as a task from within
         `_start_tls_proxy`'s died-callback and patched directly in tests
-        via `AsyncMock()` / `BoschCameraCoordinator._on_tls_proxy_died(
+        via `AsyncMock()` / `BoschCameraCoordinator.on_tls_proxy_died(
         coord, ...)` unbound-style calls. See `tls_proxy_wiring.py` for the
         full docstring (backoff mechanism, force_reset rebuild) — unchanged
         by this move.
@@ -4104,32 +4104,32 @@ class BoschCameraCoordinator(
         await on_tls_proxy_died(self, cam_id)
 
     @staticmethod
-    def _create_ssl_ctx() -> ssl.SSLContext:
+    def create_ssl_ctx() -> ssl.SSLContext:
         """Create SSL context for TLS proxy (blocking — runs in executor).
 
         Thin dispatch to `tls_proxy_wiring.create_ssl_ctx` — kept as a
         staticmethod on the class because `_start_tls_proxy` calls it via
-        `self._create_ssl_ctx` (patchable per-instance in tests) and tests
-        also call `BoschCameraCoordinator._create_ssl_ctx()` directly. See
+        `self.create_ssl_ctx` (patchable per-instance in tests) and tests
+        also call `BoschCameraCoordinator.create_ssl_ctx()` directly. See
         `tls_proxy_wiring.py` for the full docstring — unchanged by this
         move.
         """
         return create_ssl_ctx()
 
-    async def _stop_tls_proxy(self, cam_id: str) -> None:
+    async def stop_tls_proxy(self, cam_id: str) -> None:
         """Stop the TLS proxy for a camera.
 
         Thin dispatch to `tls_proxy_wiring.stop_tls_proxy_wiring` — kept as
         a bound method because it is called from other coordinator-facing
         modules (live_connection.py, stream_lifecycle.py, switch.py) as
-        `coordinator._stop_tls_proxy(cam_id)` and patched directly in
-        tests via `AsyncMock()` / `BoschCameraCoordinator._stop_tls_proxy(
+        `coordinator.stop_tls_proxy(cam_id)` and patched directly in
+        tests via `AsyncMock()` / `BoschCameraCoordinator.stop_tls_proxy(
         coord, ...)` unbound-style calls. See `tls_proxy_wiring.py` for the
         full docstring — unchanged by this move.
         """
         await stop_tls_proxy_wiring(self, cam_id)
 
-    async def _start_viewing_front_door(
+    async def start_viewing_front_door(
         self, cam_id: str, *, inst: int, audio_param: str, max_session_duration: int
     ) -> str | None:
         """Start (or reuse) the credential-free front-door for the main viewing path.
@@ -4137,9 +4137,9 @@ class BoschCameraCoordinator(
         Thin dispatch to `viewing_front_door.start_viewing_front_door` — kept
         as a bound method because it is called from other coordinator-facing
         modules (live_connection.py) as
-        `coordinator._start_viewing_front_door(...)` and patched directly in
+        `coordinator.start_viewing_front_door(...)` and patched directly in
         tests via `AsyncMock()` /
-        `BoschCameraCoordinator._start_viewing_front_door(coord, ...)`
+        `BoschCameraCoordinator.start_viewing_front_door(coord, ...)`
         unbound-style calls. See `viewing_front_door.py` for the full
         docstring — unchanged by this move.
         """
@@ -4151,21 +4151,21 @@ class BoschCameraCoordinator(
             max_session_duration=max_session_duration,
         )
 
-    async def _stop_viewing_front_door(self, cam_id: str) -> None:
+    async def stop_viewing_front_door(self, cam_id: str) -> None:
         """Stop the credential-free front-door for the main viewing path.
 
         Thin dispatch to `viewing_front_door.stop_viewing_front_door` — kept
         as a bound method because it is called from other coordinator-facing
         modules (stream_lifecycle.py) as
-        `coordinator._stop_viewing_front_door(cam_id)` and patched directly
+        `coordinator.stop_viewing_front_door(cam_id)` and patched directly
         in tests via `AsyncMock()` /
-        `BoschCameraCoordinator._stop_viewing_front_door(coord, ...)`
+        `BoschCameraCoordinator.stop_viewing_front_door(coord, ...)`
         unbound-style calls. See `viewing_front_door.py` for the full
         docstring — unchanged by this move.
         """
         await stop_viewing_front_door(self, cam_id)
 
-    async def _start_remote_viewing_front_door(
+    async def start_remote_viewing_front_door(
         self, cam_id: str, *, inst: int, audio_param: str, max_session_duration: int
     ) -> str | None:
         """Start (or reuse) the stable-URL front-door for the REMOTE viewing path.
@@ -4184,7 +4184,7 @@ class BoschCameraCoordinator(
             max_session_duration=max_session_duration,
         )
 
-    async def _stop_remote_viewing_front_door(self, cam_id: str) -> None:
+    async def stop_remote_viewing_front_door(self, cam_id: str) -> None:
         """Stop the stable-URL front-door for the REMOTE viewing path.
 
         Thin dispatch to
@@ -4194,44 +4194,44 @@ class BoschCameraCoordinator(
         """
         await stop_remote_viewing_front_door(self, cam_id)
 
-    async def _auto_renew_local_session(self, cam_id: str, generation: int) -> None:
+    async def auto_renew_local_session(self, cam_id: str, generation: int) -> None:
         """Keep LOCAL RTSP session alive via heartbeats + periodic full renewal.
 
         Thin dispatch to `session_renewal.auto_renew_local_session` (Phase 3
         step 2 coordinator-rewrite split, see
         docs/stream-perf-stability-refactor-plan.md) — kept as a bound
         method because this is called from `live_connection.py` as
-        `coordinator._auto_renew_local_session(cam_id, gen)` (wrapped in
+        `coordinator.auto_renew_local_session(cam_id, gen)` (wrapped in
         `_replace_renewal_task`) and patched directly in tests via
-        `AsyncMock()` / `BoschCameraCoordinator._auto_renew_local_session(
+        `AsyncMock()` / `BoschCameraCoordinator.auto_renew_local_session(
         coord, ...)` unbound-style calls. See `session_renewal.py` for the
         full docstring (heartbeat vs. full-renewal cadence, model-specific
         intervals) — unchanged by this move.
         """
         await auto_renew_local_session(self, cam_id, generation)
 
-    async def _promote_to_local(self, cam_id: str) -> None:
+    async def promote_to_local(self, cam_id: str) -> None:
         """Lift an active REMOTE-fallback stream onto LOCAL via a renewal.
 
         Thin dispatch to `session_renewal.promote_to_local` — kept as a
         bound method because this is called from `camera_status.py` as
-        `coordinator._promote_to_local(cam_id)` and patched directly in
-        tests via `AsyncMock()` / `BoschCameraCoordinator._promote_to_local(
+        `coordinator.promote_to_local(cam_id)` and patched directly in
+        tests via `AsyncMock()` / `BoschCameraCoordinator.promote_to_local(
         coord, ...)` unbound-style calls. See `session_renewal.py` for the
         full docstring (LAN-recovery trigger, REMOTE→LOCAL migration) —
         unchanged by this move.
         """
         await promote_to_local(self, cam_id)
 
-    async def _remote_session_terminator(self, cam_id: str, generation: int) -> None:
+    async def remote_session_terminator(self, cam_id: str, generation: int) -> None:
         """Schedule a clean teardown of a REMOTE live session before the
         relay-side lifetime cap.
 
         Thin dispatch to `session_renewal.remote_session_terminator` — kept
         as a bound method because this is called from `live_connection.py`
-        as `coordinator._remote_session_terminator(cam_id, gen)` (wrapped
+        as `coordinator.remote_session_terminator(cam_id, gen)` (wrapped
         in `_replace_renewal_task`) and patched directly in tests via
-        `AsyncMock()` / `BoschCameraCoordinator._remote_session_terminator(
+        `AsyncMock()` / `BoschCameraCoordinator.remote_session_terminator(
         coord, ...)` unbound-style calls. See `session_renewal.py` for the
         full docstring (relay lifetime cap, generation tracking, self-
         cancel avoidance) — unchanged by this move.
@@ -4247,10 +4247,10 @@ class BoschCameraCoordinator(
         Without invalidation the cache would keep serving the dead ID for
         its full 5-min TTL — readers would see None until the entry expired.
         """
-        if self._rcp_session_cache.pop(proxy_hash, None) is not None:
+        if self.rcp_session_cache.pop(proxy_hash, None) is not None:
             _LOGGER.debug("RCP session cache invalidated for %s", proxy_hash[:8])
 
-    async def _get_cached_rcp_session(
+    async def get_cached_rcp_session(
         self, proxy_host: str, proxy_hash: str
     ) -> str | None:
         """Return a cached RCP session ID, opening a new one if missing or expired.
@@ -4265,16 +4265,16 @@ class BoschCameraCoordinator(
         """
         async with self._get_rcp_session_lock(proxy_hash):
             now = time.monotonic()
-            cached = self._rcp_session_cache.get(proxy_hash)
+            cached = self.rcp_session_cache.get(proxy_hash)
             if cached:
                 session_id, expires_at = cached
                 if now < expires_at:
                     return session_id
-                del self._rcp_session_cache[proxy_hash]
+                del self.rcp_session_cache[proxy_hash]
 
             new_session_id: str | None = await self._rcp_session(proxy_host, proxy_hash)
             if new_session_id:
-                self._rcp_session_cache[proxy_hash] = (
+                self.rcp_session_cache[proxy_hash] = (
                     new_session_id,
                     now + 300.0,
                 )  # 5-min TTL
@@ -4371,7 +4371,7 @@ class BoschCameraCoordinator(
             return parts[-2]
         return None
 
-    async def _rcp_read(
+    async def rcp_read(
         self,
         rcp_base: str,
         command: str,
@@ -4470,10 +4470,10 @@ class BoschCameraCoordinator(
 
         if self._is_rcp_lan_denied(cam_id, opcode_hex):
             return None
-        ip = self._get_cam_lan_ip(cam_id)
+        ip = self.get_cam_lan_ip(cam_id)
         if not ip:
             return None
-        creds = self._local_creds_cache.get(cam_id)
+        creds = self.local_creds_cache.get(cam_id)
         if not creds:
             return None
         user: str = creds.get("user", "")
@@ -4549,13 +4549,13 @@ class BoschCameraCoordinator(
             raw_onvif = await self._fetch_rcp_lan(cam_id, "0x0a98")
             if raw_onvif:
                 scopes_dict = _parse_onvif_scopes(raw_onvif)
-                self._rcp_onvif_scopes_cache[cam_id] = scopes_dict
+                self.rcp_onvif_scopes_cache[cam_id] = scopes_dict
                 _LOGGER.debug("ONVIF scopes for %s: %s", cam_id[:8], scopes_dict)
         except Exception as err:
             _LOGGER.debug(
                 "ONVIF scopes fetch error for %s: %s",
                 cam_id[:8],
-                BoschCameraCoordinator._err_str(err),
+                BoschCameraCoordinator.err_str(err),
             )
 
         # F6: RCP protocol versions via 0xff00 (primary) + 0xff04 (secondary)
@@ -4563,30 +4563,30 @@ class BoschCameraCoordinator(
             raw_ver = await self._fetch_rcp_lan(cam_id, "0xff00")
             if raw_ver and len(raw_ver) >= 4:
                 version_str = f"{raw_ver[0]}.{raw_ver[1]}.{raw_ver[2]}.{raw_ver[3]}"
-                self._rcp_version_cache[cam_id] = version_str
+                self.rcp_version_cache[cam_id] = version_str
                 _LOGGER.debug("RCP version for %s: %s", cam_id[:8], version_str)
         except Exception as err:
             _LOGGER.debug(
                 "RCP version fetch error for %s: %s",
                 cam_id[:8],
-                BoschCameraCoordinator._err_str(err),
+                BoschCameraCoordinator.err_str(err),
             )
 
     def clock_offset(self, cam_id: str) -> float | None:
         """Return clock offset in seconds (camera time − server time), or None."""
-        return self._rcp_clock_offset_cache.get(cam_id)
+        return self.rcp_clock_offset_cache.get(cam_id)
 
     def rcp_lan_ip(self, cam_id: str) -> str | None:
         """Return camera LAN IP from RCP 0x0a36, or None."""
-        return self._rcp_lan_ip_cache.get(cam_id)
+        return self.rcp_lan_ip_cache.get(cam_id)
 
     def rcp_product_name(self, cam_id: str) -> str | None:
         """Return camera product name from RCP 0x0aea, or None."""
-        return self._rcp_product_name_cache.get(cam_id)
+        return self.rcp_product_name_cache.get(cam_id)
 
     def rcp_bitrate_ladder(self, cam_id: str) -> list[int]:
         """Return bitrate ladder (kbps) from RCP 0x0c81, or empty list."""
-        return self._rcp_bitrate_cache.get(cam_id, [])
+        return self.rcp_bitrate_cache.get(cam_id, [])
 
     def get_quality(self, cam_id: str) -> str:
         """Return current quality preference: 'auto', 'high', or 'low'.
@@ -4703,7 +4703,7 @@ class BoschCameraCoordinator(
                             endpoint,
                         )
                         try:
-                            token = await self._ensure_valid_token(token)
+                            token = await self.ensure_valid_token(token)
                             headers["Authorization"] = f"Bearer {token}"
                         except asyncio.CancelledError:
                             raise

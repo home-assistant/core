@@ -46,14 +46,14 @@ async def run_housekeeping(
         opts.get("enable_smb_upload")
         and opts.get("smb_server")
         and opts.get("smb_retention_days", 180) > 0
-        and (time.monotonic() - coordinator._last_smb_cleanup) >= _SMB_CLEANUP_INTERVAL
+        and (time.monotonic() - coordinator.last_smb_cleanup) >= _SMB_CLEANUP_INTERVAL
     ):
-        coordinator._last_smb_cleanup = time.monotonic()
+        coordinator.last_smb_cleanup = time.monotonic()
         # Fire-and-forget: cleanup walks the entire share and can take
         # minutes on large datasets. Don't block the coordinator tick.
         # Errors land in the executor future and are logged from smb.py.
         coordinator.hass.async_create_background_task(
-            coordinator._run_smb_cleanup_bg(),
+            coordinator.run_smb_cleanup_bg(),
             "bosch_shc_camera_smb_cleanup",
         )
 
@@ -61,11 +61,11 @@ async def run_housekeeping(
     if (
         opts.get("enable_nvr", False)
         and int(opts.get("nvr_retention_days", 3)) > 0
-        and (time.monotonic() - coordinator._last_nvr_cleanup) >= _NVR_CLEANUP_INTERVAL
+        and (time.monotonic() - coordinator.last_nvr_cleanup) >= _NVR_CLEANUP_INTERVAL
     ):
-        coordinator._last_nvr_cleanup = time.monotonic()
+        coordinator.last_nvr_cleanup = time.monotonic()
         coordinator.hass.async_create_background_task(
-            coordinator._run_nvr_cleanup_bg(),
+            coordinator.run_nvr_cleanup_bg(),
             "bosch_shc_camera_nvr_cleanup",
         )
 
@@ -73,7 +73,7 @@ async def run_housekeeping(
     # no longer exist in the Bosch cloud account. Skip on the fast first
     # tick so we don't race the device-registry creation in async_setup_entry.
     if not is_first_tick and data:
-        coordinator._cleanup_stale_devices(set(data.keys()))
+        coordinator.cleanup_stale_devices(set(data.keys()))
 
     # Per-camera availability transition notifier — fires when a cam
     # flips between online and offline. First tick is silent (records
@@ -87,7 +87,7 @@ async def run_housekeeping(
     if not is_first_tick and data and _announce is not None and _compute is not None:
         for _cam_id, _cam_data in data.items():
             new_status = _compute(_cam_id, _cam_data)
-            coordinator._spawn_tracked(
+            coordinator.spawn_tracked(
                 _announce(_cam_id, new_status),
                 name=f"bosch_shc_camera_status_announce_{_cam_id[:8]}",
             )
@@ -95,13 +95,13 @@ async def run_housekeeping(
     # Persist LAN IPs (cam_id → IP) so the next cloud-degraded
     # startup can ping cameras without first needing a cloud call.
     # Throttle: only write if the mapping actually changed.
-    _store = getattr(coordinator, "_lan_ips_store", None)
-    if _store is not None and coordinator._rcp_lan_ip_cache:
-        _snapshot = {k: v for k, v in coordinator._rcp_lan_ip_cache.items() if v}
-        _prev = getattr(coordinator, "_lan_ips_snapshot", None)
+    _store = getattr(coordinator, "lan_ips_store", None)
+    if _store is not None and coordinator.rcp_lan_ip_cache:
+        _snapshot = {k: v for k, v in coordinator.rcp_lan_ip_cache.items() if v}
+        _prev = getattr(coordinator, "lan_ips_snapshot", None)
         if _snapshot and _snapshot != _prev:
-            coordinator._lan_ips_snapshot = _snapshot
-            coordinator._spawn_tracked(
+            coordinator.lan_ips_snapshot = _snapshot
+            coordinator.spawn_tracked(
                 _store.async_save(_snapshot), name="bosch_shc_camera_lan_ips_save"
             )
 
@@ -110,13 +110,13 @@ async def run_housekeeping(
     # to Gen1 after a cold start during a cloud outage, which makes
     # the LAN-fallback gate on the privacy / front-light switches
     # report "unavailable" even though the LAN RCP path would work.
-    _hw_store = getattr(coordinator, "_hw_version_store", None)
-    if _hw_store is not None and coordinator._hw_version:
-        _hw_snapshot = {k: v for k, v in coordinator._hw_version.items() if v}
-        _hw_prev = getattr(coordinator, "_hw_version_snapshot", None)
+    _hw_store = getattr(coordinator, "hw_version_store", None)
+    if _hw_store is not None and coordinator.hw_version:
+        _hw_snapshot = {k: v for k, v in coordinator.hw_version.items() if v}
+        _hw_prev = getattr(coordinator, "hw_version_snapshot", None)
         if _hw_snapshot and _hw_snapshot != _hw_prev:
-            coordinator._hw_version_snapshot = _hw_snapshot
-            coordinator._spawn_tracked(
+            coordinator.hw_version_snapshot = _hw_snapshot
+            coordinator.spawn_tracked(
                 _hw_store.async_save(_hw_snapshot),
                 name="bosch_shc_camera_hw_version_save",
             )
@@ -125,8 +125,8 @@ async def run_housekeeping(
     # writes survive HA restarts during a Bosch cloud outage. Without
     # this, every cold restart while the cloud is 503 leaves the cred
     # cache empty and the LAN RCP write returns <err> "no auth".
-    _creds_store = getattr(coordinator, "_local_creds_store", None)
-    if _creds_store is not None and coordinator._local_creds_cache:
+    _creds_store = getattr(coordinator, "local_creds_store", None)
+    if _creds_store is not None and coordinator.local_creds_cache:
         _cred_snapshot = {
             k: {
                 "user": v["user"],
@@ -134,13 +134,13 @@ async def run_housekeeping(
                 "host": v["host"],
                 "port": v.get("port", 443),
             }
-            for k, v in coordinator._local_creds_cache.items()
+            for k, v in coordinator.local_creds_cache.items()
             if v.get("user") and v.get("password") and v.get("host")
         }
-        _cred_prev = getattr(coordinator, "_local_creds_snapshot", None)
+        _cred_prev = getattr(coordinator, "local_creds_snapshot", None)
         if _cred_snapshot and _cred_snapshot != _cred_prev:
-            coordinator._local_creds_snapshot = _cred_snapshot
-            coordinator._spawn_tracked(
+            coordinator.local_creds_snapshot = _cred_snapshot
+            coordinator.spawn_tracked(
                 _creds_store.async_save(_cred_snapshot),
                 name="bosch_shc_camera_local_creds_save",
             )
@@ -149,11 +149,11 @@ async def run_housekeeping(
     # feed — once per hour on a healthy coordinator tick. Reactive
     # refresh on 503 is handled inside the cloud-call branch.
     # getattr defaults handle stub coordinators in tests that bypass __init__.
-    _maint_last = getattr(coordinator, "_maintenance_last_fetch", float("-inf"))
+    _maint_last = getattr(coordinator, "maintenance_last_fetch", float("-inf"))
     _maint_interval = getattr(coordinator, "_MAINTENANCE_INTERVAL_S", 3600.0)
     _maint_refresh = getattr(coordinator, "_async_refresh_maintenance", None)
     if _maint_refresh is not None and (now - _maint_last) >= _maint_interval:
-        coordinator._spawn_tracked(
+        coordinator.spawn_tracked(
             _maint_refresh(reactive=False),
             name="bosch_shc_camera_maint_refresh_periodic",
         )

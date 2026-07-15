@@ -58,7 +58,7 @@ async def start_tls_proxy_wiring(
     is_renewal: bool = False,
 ) -> int:
     """Start a local TCP→TLS proxy for a LOCAL RTSPS stream."""
-    if getattr(coordinator, "_tls_proxy_teardown_done", False):
+    if getattr(coordinator, "tls_proxy_teardown_done", False):
         # _async_cancel_coordinator_tasks already took its stop_all_proxies
         # snapshot (unload/HA-stop) — a straggler call racing that point
         # must not start a fresh proxy nothing will ever see or close
@@ -71,13 +71,13 @@ async def start_tls_proxy_wiring(
     # itself (both contexts are equivalent default CERT_NONE contexts), but
     # re-checking after the await makes the cache genuinely single-flight
     # instead of silently discarding one of the two built contexts.
-    if coordinator._tls_ssl_ctx is None:
+    if coordinator.tls_ssl_ctx is None:
         new_ctx = await coordinator.hass.async_add_executor_job(
-            coordinator._create_ssl_ctx
+            coordinator.create_ssl_ctx
         )
-        if coordinator._tls_ssl_ctx is None:
-            coordinator._tls_ssl_ctx = new_ctx
-    ssl_ctx: ssl.SSLContext = coordinator._tls_ssl_ctx
+        if coordinator.tls_ssl_ctx is None:
+            coordinator.tls_ssl_ctx = new_ctx
+    ssl_ctx: ssl.SSLContext = coordinator.tls_ssl_ctx
 
     # The circuit breaker fires on transient WiFi jitter; without this
     # signal the stream stays dead until the next heartbeat (up to 3600s
@@ -87,17 +87,17 @@ async def start_tls_proxy_wiring(
     def _died_callback() -> None:
         if coordinator.hass.is_stopping:
             return
-        t = coordinator.hass.async_create_task(coordinator._on_tls_proxy_died(cam_id))
-        coordinator._bg_tasks.add(t)
-        t.add_done_callback(coordinator._bg_tasks.discard)
+        t = coordinator.hass.async_create_task(coordinator.on_tls_proxy_died(cam_id))
+        coordinator.bg_tasks.add(t)
+        t.add_done_callback(coordinator.bg_tasks.discard)
 
     return await start_tls_proxy(
         ssl_ctx,
         cam_id,
         cam_host,
         cam_port,
-        coordinator._tls_proxy_ports,
-        coordinator._tls_proxy_servers,
+        coordinator.tls_proxy_ports,
+        coordinator.tls_proxy_servers,
         is_renewal=is_renewal,
         on_proxy_died=_died_callback,
     )
@@ -118,7 +118,7 @@ async def on_tls_proxy_died(coordinator: BoschCameraCoordinator, cam_id: str) ->
     _PRE_WAIT = 5.0  # give the camera a moment to actually recover
 
     now = time.monotonic()
-    last = coordinator._tls_proxy_rebuild_last.get(cam_id, float("-inf"))
+    last = coordinator.tls_proxy_rebuild_last.get(cam_id, float("-inf"))
     if (now - last) < _TLS_PROXY_REBUILD_MIN_INTERVAL:
         _LOGGER.debug(
             "TLS proxy rebuild for %s skipped — last rebuild %.0fs ago (< %.0fs)",
@@ -127,13 +127,13 @@ async def on_tls_proxy_died(coordinator: BoschCameraCoordinator, cam_id: str) ->
             _TLS_PROXY_REBUILD_MIN_INTERVAL,
         )
         return
-    coordinator._tls_proxy_rebuild_last[cam_id] = now
+    coordinator.tls_proxy_rebuild_last[cam_id] = now
 
     await asyncio.sleep(_PRE_WAIT)
 
     # Re-check state AFTER the wait — user may have toggled off,
     # or another flow may have already rebuilt.
-    live = coordinator._live_connections.get(cam_id)
+    live = coordinator.live_connections.get(cam_id)
     if not live:
         _LOGGER.debug(
             "TLS proxy rebuild for %s skipped — stream no longer active",
@@ -185,5 +185,5 @@ async def stop_tls_proxy_wiring(
 ) -> None:
     """Stop the TLS proxy for a camera."""
     await stop_tls_proxy(
-        cam_id, coordinator._tls_proxy_ports, coordinator._tls_proxy_servers
+        cam_id, coordinator.tls_proxy_ports, coordinator.tls_proxy_servers
     )

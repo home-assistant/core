@@ -59,12 +59,12 @@ async def _fetch_one_camera_events(
                 if le_resp.status == 200:
                     last_ev = await le_resp.json()
                     last_ev_id = last_ev.get("id", "")
-                    if last_ev_id and last_ev_id == coordinator._last_event_ids.get(
+                    if last_ev_id and last_ev_id == coordinator.last_event_ids.get(
                         cam_id
                     ):
                         skip_full_fetch = True
                         ok = True
-                        events = coordinator._cached_events.get(cam_id, [])
+                        events = coordinator.cached_events.get(cam_id, [])
                         _LOGGER.debug(
                             "last_event unchanged for %s (id=%s) — skipping full fetch",
                             cam_id,
@@ -89,7 +89,7 @@ async def _fetch_one_camera_events(
             _LOGGER.debug(
                 "Events fetch error for %s: %s",
                 cam_id,
-                coordinator._err_str(err),
+                coordinator.err_str(err),
             )
     return (cam_id, events, ok)
 
@@ -124,6 +124,6 @@ async def poll_events(
             # failure must not blank a camera's events (and its
             # events-today count) until the next successful poll.
             if ev_ok:
-                coordinator._cached_events[cid] = ev_list
+                coordinator.cached_events[cid] = ev_list
                 any_events_fetched = True
     return any_events_fetched

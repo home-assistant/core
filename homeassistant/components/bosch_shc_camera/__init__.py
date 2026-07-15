@@ -216,7 +216,7 @@ class _StreamWorkerErrorListener(logging.Handler):
             # Resolve cam_id from entity_id via the coordinator's entity map.
             # `emit` runs in the logging thread — defer the async work.
             cam_id = None
-            for cid, entity in self._coordinator._camera_entities.items():
+            for cid, entity in self._coordinator.camera_entities.items():
                 if getattr(entity, "entity_id", None) == entity_id:
                     cam_id = cid
                     break
@@ -224,7 +224,7 @@ class _StreamWorkerErrorListener(logging.Handler):
                 return
             loop = self._coordinator.hass.loop
             loop.call_soon_threadsafe(
-                self._coordinator._schedule_stream_worker_error, cam_id, msg
+                self._coordinator.schedule_stream_worker_error, cam_id, msg
             )
         except Exception:  # noqa: S110 # logging.emit handler must never raise; exception would recurse into logging itself
             # Never let the log handler crash the event loop or the logger.
@@ -547,7 +547,9 @@ async def _migrate_doubled_prefix_entity_ids(
     return len(renamed)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: BoschCameraConfigEntry
+) -> bool:
     """Migrate config entries to the current schema version.
 
     v1 → v2 (2026-05-17, v12.4.3): DEFAULT_OPTIONS['stream_connection_type']
@@ -751,13 +753,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     _maint_key_store: Store[dict[str, str]] = Store(
         hass, version=1, key=f"{DOMAIN}_maint_notified"
     )
-    coordinator._maint_notified_store = _maint_key_store
+    coordinator.maint_notified_store = _maint_key_store
     _persisted_maint_key = await _maint_key_store.async_load() or None
     if isinstance(_persisted_maint_key, dict):
         _link = _persisted_maint_key.get("link")
         _state = _persisted_maint_key.get("state")
         if isinstance(_link, str) and isinstance(_state, str):
-            coordinator._maintenance_notified_key = (_link, _state)
+            coordinator.maintenance_notified_key = (_link, _state)
             _LOGGER.info(
                 "Loaded persisted maintenance-notify dedup key: %s for %s",
                 _state,
@@ -770,11 +772,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     _cloud_alert_store: Store = Store(
         hass, version=1, key=f"{DOMAIN}_cloud_alert_state"
     )
-    coordinator._cloud_alert_store = _cloud_alert_store
+    coordinator.cloud_alert_store = _cloud_alert_store
     _persisted_cloud_alert = await _cloud_alert_store.async_load() or {}
     if isinstance(_persisted_cloud_alert, dict):
         if _persisted_cloud_alert.get("outage_notified") is True:
-            coordinator._cloud_outage_notified = True
+            coordinator.cloud_outage_notified = True
             _LOGGER.info(
                 "Loaded persisted cloud-outage-notified flag (was True at last save)",
             )
@@ -783,12 +785,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     # have something to work with on a cloud-degraded startup. Written below
     # on every successful coordinator refresh.
     _lan_ips_store: Store = Store(hass, version=1, key=f"{DOMAIN}_lan_ips")
-    coordinator._lan_ips_store = _lan_ips_store
+    coordinator.lan_ips_store = _lan_ips_store
     _persisted_ips = await _lan_ips_store.async_load() or {}
     if isinstance(_persisted_ips, dict):
         for _cid, _ip in _persisted_ips.items():
             if isinstance(_cid, str) and isinstance(_ip, str):
-                coordinator._rcp_lan_ip_cache[_cid.upper()] = _ip
+                coordinator.rcp_lan_ip_cache[_cid.upper()] = _ip
         if _persisted_ips:
             _LOGGER.info(
                 "Loaded %d persisted LAN IP(s) for cloud-degraded LAN ping",
@@ -803,12 +805,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     # but missed this persistence; 2026-05-20 maintenance window exposed the
     # gap (cloud 503 for 30+ minutes, switches grey, no toggle).
     _hw_version_store: Store = Store(hass, version=1, key=f"{DOMAIN}_hw_versions")
-    coordinator._hw_version_store = _hw_version_store
+    coordinator.hw_version_store = _hw_version_store
     _persisted_hw = await _hw_version_store.async_load() or {}
     if isinstance(_persisted_hw, dict):
         for _cid, _hw in _persisted_hw.items():
             if isinstance(_cid, str) and isinstance(_hw, str):
-                coordinator._hw_version[_cid.upper()] = _hw
+                coordinator.hw_version[_cid.upper()] = _hw
         if _persisted_hw:
             _LOGGER.info(
                 "Loaded %d persisted hardware version(s) for cloud-degraded LAN fallback",
@@ -824,7 +826,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     # Security note: stored in HA's .storage (same protection level as the
     # cloud bearer token). LAN-only effective scope (camera not internet-exposed).
     _creds_store: Store = Store(hass, version=1, key=f"{DOMAIN}_local_creds")
-    coordinator._local_creds_store = _creds_store
+    coordinator.local_creds_store = _creds_store
     _persisted_creds = await _creds_store.async_load() or {}
     if isinstance(_persisted_creds, dict):
         _loaded_creds = 0
@@ -832,7 +834,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
             if not (isinstance(_cid, str) and isinstance(_payload, dict)):
                 continue
             if "user" in _payload and "password" in _payload and "host" in _payload:
-                coordinator._local_creds_cache[_cid.upper()] = {
+                coordinator.local_creds_cache[_cid.upper()] = {
                     "user": _payload["user"],
                     "password": _payload["password"],
                     "host": _payload["host"],
@@ -868,11 +870,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
             for _domain, _cid in _device.identifiers:
                 if _domain != DOMAIN:
                     continue
-                if _cid.upper() in coordinator._hw_version:
+                if _cid.upper() in coordinator.hw_version:
                     continue  # already populated
                 _hw_from_model = _display_to_hw.get(_device.model or "")
                 if _hw_from_model:
-                    coordinator._hw_version[_cid.upper()] = _hw_from_model
+                    coordinator.hw_version[_cid.upper()] = _hw_from_model
                     _LOGGER.info(
                         "Recovered hardware version for %s from device registry: %s (%s)",
                         _cid[:8],
@@ -917,7 +919,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
             )
             # Kick an immediate LAN ping so the LAN-reachable sensors and
             # switch fallbacks have a useful state right away.
-            hass.async_create_task(coordinator._async_outage_ping_all())
+            hass.async_create_task(coordinator.async_outage_ping_all())
         else:
             # Truly first-time install with no registry → preserve the original
             # behaviour and bail out so HA shows the standard setup-failed UI.
@@ -958,7 +960,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     # doesn't show greyed-out entries that can never work. Per-cam scoped:
     # only entities whose unique_id contains an Indoor II cam_id are removed.
     _indoor_ii_cam_ids: set[str] = set()
-    for _cam_id, _hw in (coordinator._hw_version or {}).items():
+    for _cam_id, _hw in (coordinator.hw_version or {}).items():
         if _hw in ("HOME_Eyes_Indoor", "CAMERA_INDOOR_GEN2"):
             _indoor_ii_cam_ids.add(_cam_id.lower())
     _orphan_uid_suffixes = (
@@ -1013,7 +1015,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     # _proactive_refresh() later against an orphaned coordinator. Each failed
     # setup retry (HA retries on ConfigEntryNotReady) armed one more zombie
     # timer with no bound on how many could accumulate (bug-hunt 2026-07-03).
-    coordinator._schedule_token_refresh()
+    coordinator.schedule_token_refresh()
 
     # Quench the camera-component log spam during stream pre-warm (idempotent).
     # See _StreamSupportNoiseFilter docstring for context.
@@ -1039,7 +1041,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     ):
         listener = _StreamWorkerErrorListener(coordinator)
         stream_logger.addHandler(listener)
-        coordinator._stream_log_listener = listener
+        coordinator.stream_log_listener = listener
     else:
         # Rebind the existing listener to the current coordinator so a
         # config reload doesn't leave it pointing at the old coordinator.
@@ -1049,7 +1051,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
             if isinstance(h, _StreamWorkerErrorListener)
         )
         existing._coordinator = coordinator
-        coordinator._stream_log_listener = existing
+        coordinator.stream_log_listener = existing
 
     # v8.0.2 migration: auto-enable front light / wallwasher / intensity entities
     # that were initially created with disabled_by=integration in earlier builds.
@@ -1130,8 +1132,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     # configured storage target (local / smb / ftp). One watcher per
     # coordinator; serves all cameras. Cancelled in async_unload_entry.
     if opts.get("enable_nvr", False):
-        coordinator._nvr_drain_task = hass.async_create_background_task(
-            nvr_recorder._drain_staging_to_remote(coordinator),
+        coordinator.nvr_drain_task = hass.async_create_background_task(
+            nvr_recorder.drain_staging_to_remote(coordinator),
             "bosch_nvr_drain_watcher",
         )
 
@@ -1232,7 +1234,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
             if not _coord:
                 continue
             if camera_id:
-                cam_entity = getattr(_coord, "_camera_entities", {}).get(camera_id)
+                cam_entity = getattr(_coord, "camera_entities", {}).get(camera_id)
                 if cam_entity:
                     coord = _coord
                     cur_opts = get_options(entry_inst)
@@ -1240,7 +1242,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
                     resolved_cam_id = camera_id
                     break
             elif entity_id_arg:
-                for cid, cent in getattr(_coord, "_camera_entities", {}).items():
+                for cid, cent in getattr(_coord, "camera_entities", {}).items():
                     if cent.entity_id == entity_id_arg:
                         coord = _coord
                         cur_opts = get_options(entry_inst)
@@ -1267,7 +1269,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
             )
 
         # Privacy guard: do not analyze a blank/privacy frame via the manual service
-        if resolved_cam_id and coord._shc_state_cache.get(resolved_cam_id, {}).get(
+        if resolved_cam_id and coord.shc_state_cache.get(resolved_cam_id, {}).get(
             "privacy_mode"
         ):
             raise ServiceValidationError(
@@ -1327,9 +1329,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
         # (whose budget gate reads ``used + _ai_in_flight``) sees the work and
         # does not push the daily total over the cap. Service-path itself has no
         # budget gate (manual = always allowed), but it must stay visible.
-        _track_in_flight = hasattr(coord, "_ai_in_flight")
+        _track_in_flight = hasattr(coord, "ai_in_flight")
         if _track_in_flight:
-            coord._ai_in_flight += 1
+            coord.ai_in_flight += 1
         try:
             async with asyncio.timeout(20):
                 resp = await hass.services.async_call(
@@ -1353,7 +1355,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
             ) from err
         finally:
             if _track_in_flight:
-                coord._ai_in_flight -= 1
+                coord.ai_in_flight -= 1
 
         text: str = (
             str(resp.get("data", "")) if isinstance(resp, dict) else str(resp or "")
@@ -1361,7 +1363,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
         if not text:
             return {"description": ""}
         if resolved_cam_id:
-            coord._ai_record_call(resolved_cam_id)
+            coord.ai_record_call(resolved_cam_id)
         generated_at = _dt_mod.datetime.now(_dt_mod.UTC).isoformat()
         if resolved_cam_id and resolved_cam_id in coord.data:
             coord.data[resolved_cam_id]["ai_description"] = {
@@ -1400,7 +1402,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
         for _entry in loaded_entries:
             coord_inst = _entry.runtime_data
             if coord_inst:
-                cam_entity_obj = getattr(coord_inst, "_camera_entities", {}).get(
+                cam_entity_obj = getattr(coord_inst, "camera_entities", {}).get(
                     cam_id_evt
                 )
                 if cam_entity_obj:
@@ -1409,7 +1411,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
         if found_coord is None:
             _LOGGER.debug("auto-describe: no entity found for cam_id %s", cam_id_evt)
             return
-        ai_opts = get_options(found_coord._entry)
+        ai_opts = get_options(found_coord.entry)
         if not ai_opts.get("ai_describe_on_motion", False):
             return
         # Update debounce timestamp only after confirming the option is enabled —
@@ -1523,7 +1525,7 @@ async def _async_cancel_coordinator_tasks(coord: "BoschCameraCoordinator") -> No
     # that stop_all()/stop_all_preroll() below now also acquire), closing
     # the window where an in-flight recorder start could race a reload and
     # leave an untracked, never-killed process behind.
-    coord._nvr_shutting_down = True
+    coord.nvr_shutting_down = True
     _cancelled_during_cleanup: asyncio.CancelledError | None = None
     try:
         await coord.async_stop_fcm_push()
@@ -1532,46 +1534,46 @@ async def _async_cancel_coordinator_tasks(coord: "BoschCameraCoordinator") -> No
         _LOGGER.debug("FCM stop cancelled mid-teardown — continuing remaining cleanup")
     # Cancel scheduled proactive token refresh — otherwise a reload leaves
     # a stale TimerHandle that fires against the dead coordinator.
-    handle = getattr(coord, "_token_refresh_handle", None)
+    handle = getattr(coord, "token_refresh_handle", None)
     if handle is not None:
         try:
             handle.cancel()
         except (AttributeError, RuntimeError) as err:
             _LOGGER.debug("Cancel of token-refresh handle raised: %s", err)
-        coord._token_refresh_handle = None
+        coord.token_refresh_handle = None
     # Cancel all LOCAL session auto-renewal tasks. The task dicts also
     # register in _bg_tasks (via _replace_renewal_task), so the gather
     # below actually waits for cancellation to propagate.
-    for task in coord._renewal_tasks.values():
+    for task in coord.renewal_tasks.values():
         if not task.done():
             task.cancel()
-    coord._renewal_tasks.clear()
+    coord.renewal_tasks.clear()
     # Idle reaper tasks (same lifecycle as the renewal tasks above).
-    for task in coord._reaper_tasks.values():
+    for task in coord.reaper_tasks.values():
         if not task.done():
             task.cancel()
-    coord._reaper_tasks.clear()
+    coord.reaper_tasks.clear()
     # Cancel tracked fire-and-forget background tasks (snapshot refreshes
     # from FCM pushes, renewal tasks registered above, go2rtc registration,
     # etc.). Await them so cancellation actually propagates before HA
     # enters its own final-writes shutdown stage.
-    bg = list(coord._bg_tasks)
+    bg = list(coord.bg_tasks)
     for t in bg:
         if not t.done():
             t.cancel()
     if bg:
         await asyncio.gather(*bg, return_exceptions=True)
-    coord._bg_tasks.clear()
+    coord.bg_tasks.clear()
     # Stop the NVR drain watcher BEFORE the recorders. The watcher is a
     # long-running coroutine; cancelling it is the supported stop path.
-    drain_task = getattr(coord, "_nvr_drain_task", None)
+    drain_task = getattr(coord, "nvr_drain_task", None)
     if drain_task is not None and not drain_task.done():
         drain_task.cancel()
         try:
             await drain_task
-        except (asyncio.CancelledError, Exception):  # noqa: S110 # drain_task cancelled intentionally on shutdown; any residual error is non-actionable
+        except asyncio.CancelledError, Exception:  # noqa: S110 # drain_task cancelled intentionally on shutdown; any residual error is non-actionable
             pass
-        coord._nvr_drain_task = None
+        coord.nvr_drain_task = None
     # Stop all NVR recorders BEFORE the TLS proxies — once the proxies are
     # gone the ffmpeg children would die anyway, but we want a clean SIGTERM
     # so the trailing MP4 moov atom is flushed and the in-progress segment
@@ -1592,8 +1594,8 @@ async def _async_cancel_coordinator_tasks(coord: "BoschCameraCoordinator") -> No
     # had to be cleaned manually.
     # `getattr(..., {})` keeps minimal SimpleNamespace test fixtures working —
     # they often don't populate every coordinator attribute.
-    for cam_id in list(getattr(coord, "_live_connections", {}).keys()):
-        teardown = getattr(coord, "_tear_down_live_stream", None)
+    for cam_id in list(getattr(coord, "live_connections", {}).keys()):
+        teardown = getattr(coord, "tear_down_live_stream", None)
         if teardown is None:
             break
         try:
@@ -1610,16 +1612,16 @@ async def _async_cancel_coordinator_tasks(coord: "BoschCameraCoordinator") -> No
         stop_frigate()  # self-guarded — never raises
     # Stop all main-viewing-path front-doors (viewing_front_door.py) —
     # same rationale as the Frigate front-doors above, separate runner.
-    viewing_runner = getattr(coord, "_viewing_front_door_runner", None)
+    viewing_runner = getattr(coord, "viewing_front_door_runner", None)
     if viewing_runner is not None:
         try:
             viewing_runner.stop_all()
         except Exception as err:
             _LOGGER.debug("viewing front-door stop_all on unload raised: %s", err)
-        coord._viewing_front_door_runner = None
+        coord.viewing_front_door_runner = None
     # Same for the REMOTE viewing-path front-door (remote_viewing_front_door.py)
     # — separate runner, same unload rationale.
-    remote_viewing_runner = getattr(coord, "_remote_viewing_front_door_runner", None)
+    remote_viewing_runner = getattr(coord, "remote_viewing_front_door_runner", None)
     if remote_viewing_runner is not None:
         try:
             remote_viewing_runner.stop_all()
@@ -1627,7 +1629,7 @@ async def _async_cancel_coordinator_tasks(coord: "BoschCameraCoordinator") -> No
             _LOGGER.debug(
                 "REMOTE viewing front-door stop_all on unload raised: %s", err
             )
-        coord._remote_viewing_front_door_runner = None
+        coord.remote_viewing_front_door_runner = None
     # Close the shared go2rtc-API session (Work Package 1,
     # stream-perf-stability-refactor) — opened lazily on first
     # register/unregister/consumer-count call. Distinct from the
@@ -1637,26 +1639,26 @@ async def _async_cancel_coordinator_tasks(coord: "BoschCameraCoordinator") -> No
     # above already ran every per-cam go2rtc unregister, so it's safe to
     # close now. `getattr` keeps minimal SimpleNamespace test fixtures
     # (predating this attribute) working unchanged.
-    go2rtc_session = getattr(coord, "_go2rtc_session", None)
+    go2rtc_session = getattr(coord, "go2rtc_session", None)
     if go2rtc_session is not None and not go2rtc_session.closed:
         try:
             await go2rtc_session.close()
         except Exception as err:
             _LOGGER.debug("go2rtc session close on unload raised: %s", err)
-    if hasattr(coord, "_go2rtc_session"):
-        coord._go2rtc_session = None
+    if hasattr(coord, "go2rtc_session"):
+        coord.go2rtc_session = None
     # Mark teardown done BEFORE returning so any straggler call to
     # _get_go2rtc_session that races this function (e.g. a live frontend
     # stream_source() request landing in the gap between this call and
     # async_unload_entry's later async_unload_platforms) raises instead of
     # lazily minting a session nothing will ever close again.
-    coord._go2rtc_teardown_done = True
+    coord.go2rtc_teardown_done = True
     # Mark BEFORE the sweep below for the same reason as
     # _go2rtc_teardown_done just above: a straggler start_tls_proxy_wiring
     # call racing this point (e.g. a queued task) must refuse to start a
     # fresh proxy that stop_all_proxies's already-taken snapshot can never
     # see, rather than silently surviving past config-entry unload.
-    coord._tls_proxy_teardown_done = True
+    coord.tls_proxy_teardown_done = True
     # Stop all TLS proxies (closes asyncio.Server objects).
     # Idempotent — _tear_down_live_stream already stopped per-cam proxies,
     # this catches anything left in the server_cache (defensive).
@@ -1664,17 +1666,17 @@ async def _async_cancel_coordinator_tasks(coord: "BoschCameraCoordinator") -> No
     # (predating this attribute) working unchanged, matching the pattern
     # used throughout this function.
     await stop_all_proxies(
-        coord._tls_proxy_ports, getattr(coord, "_tls_proxy_servers", {})
+        coord.tls_proxy_ports, getattr(coord, "tls_proxy_servers", {})
     )
     # Remove the stream-worker log listener so the handler doesn't outlive
     # the coordinator and keep a reference to a dead object.
-    listener = getattr(coord, "_stream_log_listener", None)
+    listener = getattr(coord, "stream_log_listener", None)
     if listener is not None:
         logging.getLogger("homeassistant.components.stream").removeHandler(listener)
         # Nullify the coordinator reference so any in-flight emit() calls
         # during the reload gap bail out early instead of accessing a dead object.
         listener._coordinator = None
-        coord._stream_log_listener = None
+        coord.stream_log_listener = None
 
     if _cancelled_during_cleanup is not None:
         # Cleanup finished despite the cancellation — now let it surface to
@@ -1682,7 +1684,9 @@ async def _async_cancel_coordinator_tasks(coord: "BoschCameraCoordinator") -> No
         raise _cancelled_during_cleanup
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: BoschCameraConfigEntry
+) -> bool:
     coord = getattr(entry, "runtime_data", None)
     if coord:
         await _async_cancel_coordinator_tasks(coord)
@@ -1690,7 +1694,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry)
     return bool(await hass.config_entries.async_unload_platforms(entry, ALL_PLATFORMS))
 
 
-async def _async_options_updated(hass: HomeAssistant, entry: BoschCameraConfigEntry) -> None:
+async def _async_options_updated(
+    hass: HomeAssistant, entry: BoschCameraConfigEntry
+) -> None:
     """Reload the config entry only when the *options* actually change.
 
     This listener fires on ANY config-entry update — including the frequent

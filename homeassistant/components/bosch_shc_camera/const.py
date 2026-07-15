@@ -188,7 +188,7 @@ DEFAULT_OPTIONS = {
     # NVR storage target: "local" (default — segments stay under nvr_base_path),
     # "smb" (drain finalized segments to the same SMB share used for events),
     # "ffp" / "ftp" (drain to FTP server). ffmpeg ALWAYS writes to a local
-    # staging dir first; the watcher in recorder._drain_staging_to_remote moves
+    # staging dir first; the watcher in recorder.drain_staging_to_remote moves
     # finalized files to the remote target.
     "nvr_storage_target": "local",
     # Subfolder under smb_base_path / FTP base_path to keep NVR segments

@@ -164,4 +164,6 @@ async def load_snapshot(hass: HomeAssistant, cam_id: str) -> bytes | None:
     Returns None on FileNotFoundError; logs WARNING on other OSError.
     """
     cam_id = _validate_cam_id(cam_id)
-    return await hass.async_add_executor_job(_sync_load, hass, cam_id)  # value is correct at runtime; HA/external source is Any-typed
+    return await hass.async_add_executor_job(
+        _sync_load, hass, cam_id
+    )  # value is correct at runtime; HA/external source is Any-typed

@@ -63,8 +63,8 @@ async def async_update_rcp_data(
     data = await fetch_rcp_camera_data(
         session,
         ssl_context,
-        coordinator._rcp_session_cache,
-        coordinator._rcp_session_locks,
+        coordinator.rcp_session_cache,
+        coordinator.rcp_session_locks,
         failures,
         cam_id,
         proxy_host,
@@ -77,26 +77,26 @@ async def async_update_rcp_data(
         return
 
     if data.dimmer is not None:
-        coordinator._rcp_dimmer_cache[cam_id] = data.dimmer
+        coordinator.rcp_dimmer_cache[cam_id] = data.dimmer
     if data.privacy is not None:
-        coordinator._rcp_privacy_cache[cam_id] = data.privacy
+        coordinator.rcp_privacy_cache[cam_id] = data.privacy
     if data.clock_offset is not None:
-        coordinator._rcp_clock_offset_cache[cam_id] = data.clock_offset
+        coordinator.rcp_clock_offset_cache[cam_id] = data.clock_offset
     if data.lan_ip is not None:
-        coordinator._rcp_lan_ip_cache[cam_id] = data.lan_ip
+        coordinator.rcp_lan_ip_cache[cam_id] = data.lan_ip
     if data.product_name is not None:
-        coordinator._rcp_product_name_cache[cam_id] = data.product_name
+        coordinator.rcp_product_name_cache[cam_id] = data.product_name
     if data.bitrate is not None:
-        coordinator._rcp_bitrate_cache[cam_id] = data.bitrate
+        coordinator.rcp_bitrate_cache[cam_id] = data.bitrate
     if data.alarm_catalog is not None:
-        coordinator._rcp_alarm_catalog_cache[cam_id] = data.alarm_catalog
+        coordinator.rcp_alarm_catalog_cache[cam_id] = data.alarm_catalog
     if data.motion_zones is not None:
-        coordinator._rcp_motion_zones_cache[cam_id] = data.motion_zones
+        coordinator.rcp_motion_zones_cache[cam_id] = data.motion_zones
     if data.motion_coords is not None:
-        coordinator._rcp_motion_coords_cache[cam_id] = data.motion_coords
+        coordinator.rcp_motion_coords_cache[cam_id] = data.motion_coords
     if data.tls_cert is not None:
-        coordinator._rcp_tls_cert_cache[cam_id] = data.tls_cert
+        coordinator.rcp_tls_cert_cache[cam_id] = data.tls_cert
     if data.network_services is not None:
-        coordinator._rcp_network_services_cache[cam_id] = data.network_services
+        coordinator.rcp_network_services_cache[cam_id] = data.network_services
     if data.iva_catalog is not None:
-        coordinator._rcp_iva_catalog_cache[cam_id] = data.iva_catalog
+        coordinator.rcp_iva_catalog_cache[cam_id] = data.iva_catalog

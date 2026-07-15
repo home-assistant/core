@@ -68,14 +68,14 @@ async def refresh_local_creds_from_heartbeat(
         new_pass = rj.get("password")
         if not (new_user and new_pass):
             return  # response without creds — nothing to refresh
-        live = coordinator._live_connections.get(cam_id)
+        live = coordinator.live_connections.get(cam_id)
         if not live or live.get("_connection_type") != "LOCAL":
             return  # session torn down or already on REMOTE
         old_user = live.get("_local_user")
         old_pass = live.get("_local_password")
         if old_user == new_user and old_pass == new_pass:
             return  # creds unchanged (rare but possible — skip noisy update)
-        proxy_port = coordinator._tls_proxy_ports.get(cam_id)
+        proxy_port = coordinator.tls_proxy_ports.get(cam_id)
         if not proxy_port:
             return  # TLS proxy not running — nothing to point the URL at
         old_url = live.get("rtspsUrl") or live.get("rtspUrl") or ""
@@ -119,20 +119,20 @@ async def refresh_local_creds_from_heartbeat(
         # published URL either way, so reusing it verbatim when the front-
         # door is active is correct.
         front_door_active = (
-            coordinator._viewing_front_door_runner is not None
-            and coordinator._viewing_front_door_runner.has_server(cam_id)
+            coordinator.viewing_front_door_runner is not None
+            and coordinator.viewing_front_door_runner.has_server(cam_id)
         )
         effective_url = old_url if front_door_active else new_url
         # Serialize against recorder.start_recorder's final creds
         # re-read + ffmpeg spawn (issue #42 follow-up) — without this,
         # a heartbeat rotation landing mid-spawn could still hand ffmpeg
         # a cred pair that's stale by the time it connects.
-        async with coordinator._get_nvr_recorder_lock(cam_id):
+        async with coordinator.get_nvr_recorder_lock(cam_id):
             live["_local_user"] = new_user
             live["_local_password"] = new_pass
             live["rtspsUrl"] = effective_url
             live["rtspUrl"] = effective_url
-            cache = coordinator._local_creds_cache.get(cam_id, {})
+            cache = coordinator.local_creds_cache.get(cam_id, {})
             cache.update(
                 {
                     "user": new_user,
@@ -140,8 +140,8 @@ async def refresh_local_creds_from_heartbeat(
                     "ts": time.monotonic(),
                 }
             )
-            coordinator._local_creds_cache[cam_id] = cache
-        cam_entity = coordinator._camera_entities.get(cam_id)
+            coordinator.local_creds_cache[cam_id] = cache
+        cam_entity = coordinator.camera_entities.get(cam_id)
         stream = getattr(cam_entity, "stream", None) if cam_entity else None
         if stream is not None:
             try:
@@ -228,7 +228,7 @@ async def auto_renew_local_session(
         while True:
             await asyncio.sleep(heartbeat_interval)
             # Stop if a newer generation was started (OFF→ON cycle)
-            if coordinator._get_session(cam_id).generation != generation:
+            if coordinator.get_session(cam_id).generation != generation:
                 _LOGGER.debug(
                     "Keepalive: stale gen=%d for %s — stopping",
                     generation,
@@ -236,10 +236,10 @@ async def auto_renew_local_session(
                 )
                 break
             # Stop if stream was turned off
-            if cam_id not in coordinator._live_connections:
+            if cam_id not in coordinator.live_connections:
                 _LOGGER.debug("Keepalive: stream off for %s — stopping", cam_id[:8])
                 break
-            live = coordinator._live_connections.get(cam_id, {})
+            live = coordinator.live_connections.get(cam_id, {})
             if live.get("_connection_type") != "LOCAL":
                 _LOGGER.debug("Keepalive: not LOCAL for %s — stopping", cam_id[:8])
                 break
@@ -261,8 +261,8 @@ async def auto_renew_local_session(
                     if result:
                         _LOGGER.info("Session renewed for %s", cam_id[:8])
                         renewal_fails = 0
-                        if coordinator._session_stale.get(cam_id):
-                            coordinator._session_stale[cam_id] = False
+                        if coordinator.session_stale.get(cam_id):
+                            coordinator.session_stale[cam_id] = False
                             _LOGGER.info(
                                 "Session recovered for %s — stale flag cleared",
                                 cam_id[:8],
@@ -281,8 +281,8 @@ async def auto_renew_local_session(
                 # Mark session stale after 3 consecutive renewal failures so
                 # entities can surface "unavailable" instead of silently
                 # showing a frozen picture.
-                if renewal_fails >= 3 and not coordinator._session_stale.get(cam_id):
-                    coordinator._session_stale[cam_id] = True
+                if renewal_fails >= 3 and not coordinator.session_stale.get(cam_id):
+                    coordinator.session_stale[cam_id] = True
                     _LOGGER.warning(
                         "Session renewal persistently failing for %s (%d consecutive)",
                         cam_id[:8],
@@ -332,7 +332,7 @@ async def auto_renew_local_session(
                             )
                             if resp.status in (200, 201):
                                 consecutive_fails = 0
-                                await coordinator._refresh_local_creds_from_heartbeat(
+                                await coordinator.refresh_local_creds_from_heartbeat(
                                     cam_id,
                                     resp_text,
                                     generation,
@@ -383,7 +383,7 @@ async def auto_renew_local_session(
     except asyncio.CancelledError:
         _LOGGER.debug("Keepalive cancelled for %s (gen=%d)", cam_id[:8], generation)
     finally:
-        coordinator._renewal_tasks.pop(cam_id, None)
+        coordinator.renewal_tasks.pop(cam_id, None)
         _LOGGER.debug("Keepalive loop ended for %s (gen=%d)", cam_id[:8], generation)
 
 
@@ -401,7 +401,7 @@ async def promote_to_local(coordinator: BoschCameraCoordinator, cam_id: str) -> 
     keeps running, just on the original path).
     """
     try:
-        live = coordinator._live_connections.get(cam_id, {})
+        live = coordinator.live_connections.get(cam_id, {})
         if not live or live.get("_connection_type") != "REMOTE":
             return
         result = await coordinator.try_live_connection(cam_id, is_renewal=True)
@@ -471,7 +471,7 @@ async def remote_session_terminator(
         await asyncio.sleep(delay)
         # Stop if a newer generation was started (OFF→ON cycle, or a
         # subsequent LOCAL upgrade replaced the REMOTE session).
-        if coordinator._get_session(cam_id).generation != generation:
+        if coordinator.get_session(cam_id).generation != generation:
             _LOGGER.debug(
                 "REMOTE terminator: stale gen=%d for %s — skipping",
                 generation,
@@ -479,13 +479,13 @@ async def remote_session_terminator(
             )
             return
         # Stop if the stream was already turned off.
-        if cam_id not in coordinator._live_connections:
+        if cam_id not in coordinator.live_connections:
             _LOGGER.debug(
                 "REMOTE terminator: stream already off for %s — skipping",
                 cam_id[:8],
             )
             return
-        live = coordinator._live_connections.get(cam_id, {})
+        live = coordinator.live_connections.get(cam_id, {})
         if live.get("_connection_type") != "REMOTE":
             _LOGGER.debug(
                 "REMOTE terminator: %s is %s now — skipping",
@@ -505,7 +505,7 @@ async def remote_session_terminator(
         # stops but before go2rtc unregister / `stream.stop()` run. Same
         # trap the idle reaper already avoids (see its comment above).
         coordinator.hass.async_create_task(
-            coordinator._tear_down_live_stream(cam_id, expected_generation=generation),
+            coordinator.tear_down_live_stream(cam_id, expected_generation=generation),
             f"bosch_shc_camera_remote_terminate_{cam_id[:8]}",
         )
         coordinator.hass.async_create_task(coordinator.async_request_refresh())
@@ -516,4 +516,4 @@ async def remote_session_terminator(
             generation,
         )
     finally:
-        coordinator._renewal_tasks.pop(cam_id, None)
+        coordinator.renewal_tasks.pop(cam_id, None)

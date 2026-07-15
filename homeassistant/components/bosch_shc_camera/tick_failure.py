@@ -35,7 +35,7 @@ async def dispatch_update_failed(coordinator: BoschCameraCoordinator) -> None:
     """Side effect for `except UpdateFailed:` — caller still re-raises."""
     _cloud_alert = getattr(coordinator, "_async_maybe_announce_cloud_state", None)
     if _cloud_alert is not None:
-        coordinator._spawn_tracked(
+        coordinator.spawn_tracked(
             _cloud_alert(False), name="bosch_shc_camera_cloud_alert_update_failed"
         )
 
@@ -45,17 +45,17 @@ async def dispatch_timeout(coordinator: BoschCameraCoordinator) -> UpdateFailed:
     the caller must `raise ... from None`."""
     _maint = getattr(coordinator, "_async_refresh_maintenance", None)
     if _maint is not None:
-        coordinator._spawn_tracked(
+        coordinator.spawn_tracked(
             _maint(reactive=True), name="bosch_shc_camera_maint_refresh_timeout"
         )
-    _outage_ping = getattr(coordinator, "_async_outage_ping_all", None)
+    _outage_ping = getattr(coordinator, "async_outage_ping_all", None)
     if _outage_ping is not None:
-        coordinator._spawn_tracked(
+        coordinator.spawn_tracked(
             _outage_ping(), name="bosch_shc_camera_outage_ping_timeout"
         )
     _cloud_alert = getattr(coordinator, "_async_maybe_announce_cloud_state", None)
     if _cloud_alert is not None:
-        coordinator._spawn_tracked(
+        coordinator.spawn_tracked(
             _cloud_alert(False), name="bosch_shc_camera_cloud_alert_timeout"
         )
     return UpdateFailed("Timeout fetching camera data from Bosch cloud")
@@ -68,7 +68,7 @@ async def dispatch_client_error(
     `UpdateFailed` the caller must `raise ... from err`."""
     _cloud_alert = getattr(coordinator, "_async_maybe_announce_cloud_state", None)
     if _cloud_alert is not None:
-        coordinator._spawn_tracked(
+        coordinator.spawn_tracked(
             _cloud_alert(False), name="bosch_shc_camera_cloud_alert_client_error"
         )
     return UpdateFailed(f"Network error: {err}")

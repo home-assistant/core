@@ -60,10 +60,10 @@ async def try_live_connection_inner(
         # holding the lock to (re)build the proxy. Doing the stop in the
         # caller (outside the lock) let a renewal publish Stream/go2rtc
         # against the port we'd just killed → frozen image (race 2026-06-01).
-        coordinator._live_connections.pop(cam_id, None)
-        coordinator._stream_warming.discard(cam_id)
-        coordinator._get_session(cam_id).warming_started = float("-inf")
-        await coordinator._stop_tls_proxy(cam_id)
+        coordinator.live_connections.pop(cam_id, None)
+        coordinator.stream_warming.discard(cam_id)
+        coordinator.get_session(cam_id).warming_started = float("-inf")
+        await coordinator.stop_tls_proxy(cam_id)
     token = coordinator.token
     if not token:
         _LOGGER.warning("try_live_connection: no token available")
@@ -91,8 +91,8 @@ async def try_live_connection_inner(
         hq, inst = coordinator.get_quality_params(cam_id)
         # [S7] Direct key read — opts only used for this one key; avoids full dict copy
         conn_type_pref = (
-            coordinator._stream_type_override
-            or coordinator._entry.options.get("stream_connection_type", "local")
+            coordinator.stream_type_override
+            or coordinator.entry.options.get("stream_connection_type", "local")
         )
         if conn_type_pref == "local":
             candidates = ["LOCAL"]
@@ -108,11 +108,11 @@ async def try_live_connection_inner(
             # almost certainly stale) and longer otherwise (LAN may still
             # be flaky — keep the cam on REMOTE a bit longer to avoid
             # ping-pong fallback loops).
-            lan_ok = coordinator._lan_tcp_reachable.get(cam_id, (False, 0))[0]
+            lan_ok = coordinator.lan_tcp_reachable.get(cam_id, (False, 0))[0]
             _STREAM_ERROR_TTL_SEC = 300 if lan_ok else 1800
-            err_ts = coordinator._stream_error_at.get(cam_id, 0)
+            err_ts = coordinator.stream_error_at.get(cam_id, 0)
             if err_ts and (time.monotonic() - err_ts) > _STREAM_ERROR_TTL_SEC:
-                if coordinator._stream_error_count.get(cam_id, 0) > 0:
+                if coordinator.stream_error_count.get(cam_id, 0) > 0:
                     _LOGGER.info(
                         "AUTO mode: %s stream-error counter aged out "
                         "(%.0fs since last error, LAN=%s) — re-attempting LOCAL",
@@ -120,23 +120,23 @@ async def try_live_connection_inner(
                         time.monotonic() - err_ts,
                         "ok" if lan_ok else "unknown",
                     )
-                coordinator._stream_error_count.pop(cam_id, None)
-                coordinator._stream_error_at.pop(cam_id, None)
-                coordinator._stream_fell_back.pop(cam_id, None)
+                coordinator.stream_error_count.pop(cam_id, None)
+                coordinator.stream_error_at.pop(cam_id, None)
+                coordinator.stream_fell_back.pop(cam_id, None)
             # Check if LOCAL should be skipped:
             # 1. Too many consecutive stream errors → fall back to REMOTE
-            err_count = coordinator._stream_error_count.get(cam_id, 0)
+            err_count = coordinator.stream_error_count.get(cam_id, 0)
             if err_count >= cfg.max_stream_errors:
                 _LOGGER.warning(
                     "AUTO mode: %s had %d consecutive LOCAL errors — falling back to REMOTE",
                     cam_id[:8],
                     err_count,
                 )
-                coordinator._stream_fell_back[cam_id] = True
+                coordinator.stream_fell_back[cam_id] = True
                 candidates = ["REMOTE"]
             else:
                 # 2. WiFi signal too weak → prefer REMOTE
-                wifi = coordinator._wifiinfo_cache.get(cam_id, {}).get(
+                wifi = coordinator.wifiinfo_cache.get(cam_id, {}).get(
                     "signalStrength", 100
                 )
                 if isinstance(wifi, (int, float)) and wifi < cfg.min_wifi_for_local:
@@ -152,7 +152,7 @@ async def try_live_connection_inner(
                     ]  # prefer REMOTE but try LOCAL as fallback
                 else:
                     candidates = ["LOCAL", "REMOTE"]
-                coordinator._stream_fell_back[cam_id] = False
+                coordinator.stream_fell_back[cam_id] = False
         else:
             candidates = ["REMOTE"]
 
@@ -163,10 +163,10 @@ async def try_live_connection_inner(
         # network/VLAN or that are powered off. Result is cached 60s so
         # repeated stream starts don't each trigger a fresh ping.
         if "LOCAL" in candidates and "REMOTE" in candidates:
-            lan_ip = coordinator._get_cam_lan_ip(cam_id)
+            lan_ip = coordinator.get_cam_lan_ip(cam_id)
             if lan_ip:
                 _TCP_TTL = 60.0
-                cached_tcp = coordinator._lan_tcp_reachable.get(cam_id)
+                cached_tcp = coordinator.lan_tcp_reachable.get(cam_id)
                 now_tcp = time.monotonic()
                 if cached_tcp and (now_tcp - cached_tcp[1]) < _TCP_TTL:
                     tcp_ok = cached_tcp[0]
@@ -177,7 +177,7 @@ async def try_live_connection_inner(
                         "reachable" if tcp_ok else "unreachable",
                     )
                 else:
-                    tcp_ok = await coordinator._async_local_tcp_ping(cam_id)
+                    tcp_ok = await coordinator.async_local_tcp_ping(cam_id)
                     _LOGGER.debug(
                         "TCP pre-check for %s (%s): %s",
                         cam_id[:8],
@@ -199,11 +199,11 @@ async def try_live_connection_inner(
                     # this only costs one extra connection attempt every
                     # LAN_RECHECK_FORCE_INTERVAL_SEC per camera.
                     now_recheck = time.monotonic()
-                    last_forced = coordinator._lan_recheck_forced_at.get(
+                    last_forced = coordinator.lan_recheck_forced_at.get(
                         cam_id, float("-inf")
                     )
                     if (now_recheck - last_forced) >= LAN_RECHECK_FORCE_INTERVAL_SEC:
-                        coordinator._lan_recheck_forced_at[cam_id] = now_recheck
+                        coordinator.lan_recheck_forced_at[cam_id] = now_recheck
                         _LOGGER.info(
                             "TCP pre-check: %s unreachable at cached LAN IP %s, "
                             "but forcing a periodic LOCAL retry anyway (last "
@@ -219,7 +219,7 @@ async def try_live_connection_inner(
                         # Deliberately do NOT strip LOCAL from `candidates`
                         # here — let the normal LOCAL-then-REMOTE flow run.
                     else:
-                        nvr_wants_local = bool(coordinator._nvr_user_intent.get(cam_id))
+                        nvr_wants_local = bool(coordinator.nvr_user_intent.get(cam_id))
                         _LOGGER.info(
                             "TCP pre-check: %s LAN unreachable — skipping LOCAL, "
                             "using REMOTE%s",
@@ -230,7 +230,7 @@ async def try_live_connection_inner(
                             else "",
                         )
                         candidates = ["REMOTE"]
-                        coordinator._stream_fell_back[cam_id] = True
+                        coordinator.stream_fell_back[cam_id] = True
 
         # A 401 on PUT /connection means the bearer token was rotated /
         # early-invalidated. _ensure_valid_token() is built for exactly this
@@ -262,7 +262,7 @@ async def try_live_connection_inner(
                     if resp.status == 401 and not token_refreshed:
                         token_refreshed = True
                         try:
-                            token = await coordinator._ensure_valid_token(token)
+                            token = await coordinator.ensure_valid_token(token)
                         except Exception as err:
                             _LOGGER.warning(
                                 "try_live_connection: token refresh after 401 "
@@ -329,7 +329,7 @@ async def try_live_connection_inner(
                             # Stays populated after the live connection is torn down.
                             try:
                                 _host, _port = cam_addr.split(":")
-                                coordinator._local_creds_cache[cam_id] = {
+                                coordinator.local_creds_cache[cam_id] = {
                                     "user": local_user,
                                     "password": local_pass,
                                     "host": _host,
@@ -346,16 +346,16 @@ async def try_live_connection_inner(
                                 # it here so both caches agree on the freshest
                                 # confirmed-working IP and the TCP pre-check
                                 # stops pinging a dead address indefinitely.
-                                if coordinator._rcp_lan_ip_cache.get(cam_id) != _host:
+                                if coordinator.rcp_lan_ip_cache.get(cam_id) != _host:
                                     _LOGGER.info(
                                         "LAN IP for %s updated via LOCAL "
                                         "connection: %s -> %s",
                                         cam_id[:8],
-                                        coordinator._rcp_lan_ip_cache.get(cam_id)
+                                        coordinator.rcp_lan_ip_cache.get(cam_id)
                                         or "(unknown)",
                                         _host,
                                     )
-                                    coordinator._rcp_lan_ip_cache[cam_id] = _host
+                                    coordinator.rcp_lan_ip_cache[cam_id] = _host
                             except Exception as _e:
                                 _LOGGER.debug(
                                     "LOCAL creds cache skip for %s: %s",
@@ -369,7 +369,7 @@ async def try_live_connection_inner(
                                 ) + "JpegSize=1206"
                             result["proxyUrl"] = _snap_url
                             cam_host, cam_port = cam_addr.split(":")
-                            proxy_port = await coordinator._start_tls_proxy(
+                            proxy_port = await coordinator.start_tls_proxy(
                                 cam_id,
                                 cam_host,
                                 int(cam_port),
@@ -379,7 +379,7 @@ async def try_live_connection_inner(
                             ep = _q(local_pass, safe="")
                             from .models import get_model_config as _gmc
 
-                            _mcfg = _gmc(coordinator._hw_version.get(cam_id, "CAMERA"))
+                            _mcfg = _gmc(coordinator.hw_version.get(cam_id, "CAMERA"))
                             local_rtsp_url = (
                                 f"rtsp://{eu}:{ep}@127.0.0.1:{proxy_port}"
                                 f"/rtsp_tunnel?inst={inst}{audio_param}&fmtp=1&maxSessionDuration={_mcfg.max_session_duration}"
@@ -434,7 +434,7 @@ async def try_live_connection_inner(
                                 pq = parsed.path + (
                                     f"?{parsed.query}" if parsed.query else ""
                                 )
-                                proxy_port = await coordinator._start_tls_proxy(
+                                proxy_port = await coordinator.start_tls_proxy(
                                     cam_id,
                                     parsed.hostname or "",
                                     parsed.port or 443,
@@ -510,7 +510,7 @@ async def try_live_connection_inner(
                                 # downgrade a healthy REMOTE session to the
                                 # cert-failing raw URL on any front-door bug).
                                 try:
-                                    remote_front_door_url = await coordinator._start_remote_viewing_front_door(
+                                    remote_front_door_url = await coordinator.start_remote_viewing_front_door(
                                         cam_id,
                                         inst=inst,
                                         audio_param=audio_param,
@@ -539,8 +539,8 @@ async def try_live_connection_inner(
                                 # the already-set hash-bearing local_rtsp_url
                                 # (still TLS-proxied, still works) so
                                 # streaming isn't blocked by this feature.
-                    coordinator._live_connections[cam_id] = result
-                    coordinator._live_opened_at[cam_id] = time.monotonic()
+                    coordinator.live_connections[cam_id] = result
+                    coordinator.live_opened_at[cam_id] = time.monotonic()
 
                     # ── LOCAL encoder warm-up (model-specific) ────────
                     # Camera needs time after PUT /connection before the
@@ -550,8 +550,8 @@ async def try_live_connection_inner(
                     # camera responds, plus a safety buffer. The RTSP URL
                     # is withheld from stream_source() until ready.
                     if type_val == "LOCAL" and local_user and local_pass:
-                        coordinator._stream_warming.add(cam_id)
-                        coordinator._get_session(
+                        coordinator.stream_warming.add(cam_id)
+                        coordinator.get_session(
                             cam_id
                         ).warming_started = time.monotonic()
                         # Stop HA's existing Stream now — the PUT above
@@ -578,7 +578,7 @@ async def try_live_connection_inner(
                         # bugs at the cost of one extra FFmpeg cold-start
                         # per stream-on (negligible — the pre-warm already
                         # dominates the activation time).
-                        cam_ent = coordinator._camera_entities.get(cam_id)
+                        cam_ent = coordinator.camera_entities.get(cam_id)
                         if cam_ent is not None:
                             stale = getattr(cam_ent, "stream", None)
                             if stale is not None:
@@ -623,12 +623,12 @@ async def try_live_connection_inner(
                                     # that keeps tripping this (accumulating
                                     # zombie workers) is visible in the logs.
                                     zombie_count = (
-                                        coordinator._zombie_stream_worker_count.get(
+                                        coordinator.zombie_stream_worker_count.get(
                                             cam_id, 0
                                         )
                                         + 1
                                     )
-                                    coordinator._zombie_stream_worker_count[cam_id] = (
+                                    coordinator.zombie_stream_worker_count[cam_id] = (
                                         zombie_count
                                     )
                                     _LOGGER.warning(
@@ -655,9 +655,9 @@ async def try_live_connection_inner(
                                     cam_id[:8],
                                 )
                         cfg = coordinator.get_model_config(cam_id)
-                        hw = coordinator._hw_version.get(cam_id, "?")
+                        hw = coordinator.hw_version.get(cam_id, "?")
                         put_time = time.monotonic()
-                        proxy_port_val = coordinator._tls_proxy_ports.get(cam_id)
+                        proxy_port_val = coordinator.tls_proxy_ports.get(cam_id)
                         if proxy_port_val:
                             _LOGGER.debug(
                                 "LOCAL pre-warm for %s (%s, hw=%s): delay=%ds, retries=%d, wait=%ds, buffer=%ds, min_total=%ds",
@@ -704,13 +704,13 @@ async def try_live_connection_inner(
                                 "Falling back to REMOTE.",
                                 cam_id[:8],
                             )
-                            coordinator._stream_warming.discard(cam_id)
-                            coordinator._get_session(cam_id).warming_started = float(
+                            coordinator.stream_warming.discard(cam_id)
+                            coordinator.get_session(cam_id).warming_started = float(
                                 "-inf"
                             )
-                            coordinator._live_connections.pop(cam_id, None)
-                            await coordinator._stop_tls_proxy(cam_id)
-                            coordinator._stream_fell_back[cam_id] = True
+                            coordinator.live_connections.pop(cam_id, None)
+                            await coordinator.stop_tls_proxy(cam_id)
+                            coordinator.stream_fell_back[cam_id] = True
                             continue  # try next candidate (REMOTE)
                         if not prewarm_ok:
                             # LOCAL-only mode: no REMOTE candidate to fall back to.
@@ -729,8 +729,8 @@ async def try_live_connection_inner(
                                 "clearing warm-up flag so privacy toggle stays responsive",
                                 cam_id[:8],
                             )
-                            coordinator._stream_warming.discard(cam_id)
-                            coordinator._get_session(cam_id).warming_started = float(
+                            coordinator.stream_warming.discard(cam_id)
+                            coordinator.get_session(cam_id).warming_started = float(
                                 "-inf"
                             )
                         # Ensure minimum total time from PUT /connection.
@@ -764,7 +764,7 @@ async def try_live_connection_inner(
                         # same inner TLS proxy port + live session and
                         # injects the Digest auth itself, so the published
                         # URL never changes across cred rotations.
-                        front_door_url = await coordinator._start_viewing_front_door(
+                        front_door_url = await coordinator.start_viewing_front_door(
                             cam_id,
                             inst=inst,
                             audio_param=audio_param,
@@ -781,16 +781,14 @@ async def try_live_connection_inner(
                             # benefit this session.
                             result["rtspsUrl"] = local_rtsp_url
                             result["rtspUrl"] = local_rtsp_url
-                        coordinator._live_connections[cam_id] = (
-                            result  # update with URL
-                        )
-                        coordinator._stream_warming.discard(cam_id)
+                        coordinator.live_connections[cam_id] = result  # update with URL
+                        coordinator.stream_warming.discard(cam_id)
 
                     rtsps_url = result.get("rtspsUrl", "")
 
                     # ── Update HA's stream with new URL ──────────────
                     # AFTER pre-warm so FFmpeg connects to a ready encoder.
-                    cam_entity = coordinator._camera_entities.get(cam_id)
+                    cam_entity = coordinator.camera_entities.get(cam_id)
                     if cam_entity is not None and rtsps_url:
                         if (
                             hasattr(cam_entity, "stream")
@@ -841,7 +839,7 @@ async def try_live_connection_inner(
                     # for the whole session. Explicit refresh here
                     # eliminates the race.
                     if rtsps_url:
-                        cam_ent = coordinator._camera_entities.get(cam_id)
+                        cam_ent = coordinator.camera_entities.get(cam_id)
                         if cam_ent is not None:
                             try:
                                 await cam_ent.async_refresh_providers()
@@ -854,10 +852,10 @@ async def try_live_connection_inner(
 
                     # ── LOCAL session auto-renewal ───────────────────
                     if type_val == "LOCAL" and local_user and local_pass:
-                        gen = coordinator._get_session(cam_id).generation + 1
-                        coordinator._get_session(cam_id).generation = gen
-                        coordinator._replace_renewal_task(
-                            cam_id, coordinator._auto_renew_local_session(cam_id, gen)
+                        gen = coordinator.get_session(cam_id).generation + 1
+                        coordinator.get_session(cam_id).generation = gen
+                        coordinator.replace_renewal_task(
+                            cam_id, coordinator.auto_renew_local_session(cam_id, gen)
                         )
                         # Green IT idle reaper: tears the session down once
                         # nobody consumes it (tab closed / navigated away /
@@ -868,9 +866,9 @@ async def try_live_connection_inner(
                         # so the reaper can false-negative and kill a watched
                         # stream — parked until detection is reworked. Match
                         # the const.py DEFAULT_OPTIONS default (False).
-                        if coordinator._entry.options.get("enable_green_it", False):
-                            coordinator._replace_reaper_task(
-                                cam_id, coordinator._idle_session_reaper(cam_id, gen)
+                        if coordinator.entry.options.get("enable_green_it", False):
+                            coordinator.replace_reaper_task(
+                                cam_id, coordinator.idle_session_reaper(cam_id, gen)
                             )
                     # ── REMOTE session lifetime watchdog ─────────────
                     # The relay drops the RTSP TCP at the URL's
@@ -881,10 +879,10 @@ async def try_live_connection_inner(
                     # flips OFF gracefully and the user sees a defined
                     # state instead of a buffering spinner.
                     elif type_val == "REMOTE":
-                        gen = coordinator._get_session(cam_id).generation + 1
-                        coordinator._get_session(cam_id).generation = gen
-                        coordinator._replace_renewal_task(
-                            cam_id, coordinator._remote_session_terminator(cam_id, gen)
+                        gen = coordinator.get_session(cam_id).generation + 1
+                        coordinator.get_session(cam_id).generation = gen
+                        coordinator.replace_renewal_task(
+                            cam_id, coordinator.remote_session_terminator(cam_id, gen)
                         )
                     # Full coordinator refresh re-evaluates ALL cameras. On a
                     # transparent session RENEWAL nothing user-visible
@@ -898,14 +896,14 @@ async def try_live_connection_inner(
                             coordinator.async_request_refresh()
                         )
                     coordinator.hass.async_create_task(
-                        coordinator._check_and_recover_webrtc(cam_id)
+                        coordinator.check_and_recover_webrtc(cam_id)
                     )
                     # Opportunistic RCP+ state pull: refresh privacy + LED-dimmer
                     # via lokales / Cloud-Proxy RCP+ on the freshly opened session.
                     # No-op silently on failure; fallback paths (SHC + cloud
                     # /v11/video_inputs) keep their primacy.
                     coordinator.hass.async_create_task(
-                        coordinator._refresh_rcp_state(cam_id)
+                        coordinator.refresh_rcp_state(cam_id)
                     )
                     # ── NVR sidecar reaction ─────────────────────────
                     # The recorder follows the live-session connection
@@ -913,15 +911,14 @@ async def try_live_connection_inner(
                     # with new creds) ffmpeg if user-intent is set. On a
                     # REMOTE session, stop any running recorder cleanly —
                     # LAN-only is a hard line per concept §2.
-                    if coordinator._nvr_user_intent.get(cam_id):
+                    if coordinator.nvr_user_intent.get(cam_id):
                         if type_val == "LOCAL":
                             coordinator.hass.async_create_task(
                                 nvr_recorder.start_recorder(coordinator, cam_id),
                                 name=f"bosch_nvr_start_{cam_id[:8]}",
                             )
                         elif (
-                            type_val == "REMOTE"
-                            and cam_id in coordinator._nvr_processes
+                            type_val == "REMOTE" and cam_id in coordinator.nvr_processes
                         ):
                             coordinator.hass.async_create_task(
                                 nvr_recorder.stop_recorder(coordinator, cam_id),

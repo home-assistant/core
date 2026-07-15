@@ -7,12 +7,12 @@ Creates number entities per camera:
     State is read from GET /v11/video_inputs/{id}/pan (polled each coordinator tick).
 
   • {Name} Intrusion Sensitivity  — intrusion detection sensitivity 0-7 (Gen2 only).
-    Reads from coordinator._intrusion_config_cache[cam_id]["sensitivity"].
+    Reads from coordinator.intrusion_config_cache[cam_id]["sensitivity"].
     Writes via PUT /v11/video_inputs/{id}/intrusionDetectionConfig — full body preserved.
     FW 9.40+ supports range 0-7 (capture 2026-04-28 confirmed sensitivity=3, max=7).
 
   • {Name} Intrusion Distance  — detection range in metres 1-8 (Gen2 only).
-    Reads from coordinator._intrusion_config_cache[cam_id]["distance"].
+    Reads from coordinator.intrusion_config_cache[cam_id]["distance"].
     Writes via PUT /v11/video_inputs/{id}/intrusionDetectionConfig — full body preserved.
     API rejects distance > 8 with HTTP 400 (verified FW 9.40.102). Max clamped to 8.
 """
@@ -132,13 +132,13 @@ class BoschPanNumber(_BoschEntityBase, NumberEntity):
         on the slider stays "right" on the user's screen.
         """
         return bool(
-            getattr(self.coordinator, "_image_rotation_180", {}).get(self._cam_id)
+            getattr(self.coordinator, "image_rotation_180", {}).get(self._cam_id)
         )
 
     @property
     @override
     def native_value(self) -> float | None:
-        raw = self.coordinator._pan_cache.get(self._cam_id)
+        raw = self.coordinator.pan_cache.get(self._cam_id)
         if raw is None:
             return None
         return float(-raw if self._rotation_180() else raw)
@@ -148,7 +148,7 @@ class BoschPanNumber(_BoschEntityBase, NumberEntity):
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
-            and self.coordinator._pan_cache.get(self._cam_id) is not None
+            and self.coordinator.pan_cache.get(self._cam_id) is not None
         )
 
     @override
@@ -163,7 +163,7 @@ class BoschPanNumber(_BoschEntityBase, NumberEntity):
 class BoschSpeakerLevelNumber(_BoschEntityBase, NumberEntity):
     """Number entity to control the intercom speaker volume (0–100).
 
-    Reads from coordinator._audio_cache[cam_id]["speakerLevel"].
+    Reads from coordinator.audio_cache[cam_id]["speakerLevel"].
     Writes via PUT /v11/video_inputs/{id}/audio with full body preserved —
     same pattern as BoschMicrophoneLevelNumber so audioEnabled is not clobbered.
     Capture 2026-04-08 confirms body shape: {"audioEnabled":true,"microphoneLevel":60,"speakerLevel":80}.
@@ -188,7 +188,7 @@ class BoschSpeakerLevelNumber(_BoschEntityBase, NumberEntity):
     @override
     def native_value(self) -> float | None:
         """Return speaker level from coordinator audio cache, or None if not yet polled."""
-        audio = self.coordinator._audio_cache.get(self._cam_id, {})
+        audio = self.coordinator.audio_cache.get(self._cam_id, {})
         val = audio.get("speakerLevel")
         return float(val) if val is not None else None
 
@@ -196,7 +196,7 @@ class BoschSpeakerLevelNumber(_BoschEntityBase, NumberEntity):
     @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and (
-            self.coordinator._audio_cache.get(self._cam_id) is not None
+            self.coordinator.audio_cache.get(self._cam_id) is not None
         )
 
     @override
@@ -217,7 +217,7 @@ class BoschSpeakerLevelNumber(_BoschEntityBase, NumberEntity):
         level = round(value)
         lock = _get_cam_lock(self.coordinator, "_audio_config_locks", self._cam_id)
         async with lock:
-            audio = dict(self.coordinator._audio_cache.get(self._cam_id, {}))
+            audio = dict(self.coordinator.audio_cache.get(self._cam_id, {}))
             audio["speakerLevel"] = level
             success = await self.coordinator.async_put_camera(
                 self._cam_id, "audio", audio
@@ -225,7 +225,7 @@ class BoschSpeakerLevelNumber(_BoschEntityBase, NumberEntity):
             if success:
                 # Merge only the changed field so a concurrent microphone
                 # write isn't clobbered by our stale snapshot.
-                self.coordinator._audio_cache.setdefault(self._cam_id, {})[
+                self.coordinator.audio_cache.setdefault(self._cam_id, {})[
                     "speakerLevel"
                 ] = level
                 _LOGGER.debug("Speaker level set to %d for %s", level, self._cam_id)
@@ -267,7 +267,7 @@ class BoschAudioVolumeNumber(_BoschEntityBase, NumberEntity):
     @override
     def native_value(self) -> float:
         return float(
-            self.coordinator._audio_volume.get(self._cam_id, self.DEFAULT_VOLUME)
+            self.coordinator.audio_volume.get(self._cam_id, self.DEFAULT_VOLUME)
         )
 
     @property
@@ -286,7 +286,7 @@ class BoschAudioVolumeNumber(_BoschEntityBase, NumberEntity):
         The card reads this state to set video.volume; HA pushes the change to
         every open card automatically.
         """
-        self.coordinator._audio_volume[self._cam_id] = round(value)
+        self.coordinator.audio_volume[self._cam_id] = round(value)
         self.async_write_ha_state()
 
 
@@ -315,7 +315,7 @@ class BoschFrontLightIntensityNumber(_BoschEntityBase, NumberEntity):
     @property
     @override
     def native_value(self) -> float | None:
-        val = self.coordinator._shc_state_cache.get(self._cam_id, {}).get(
+        val = self.coordinator.shc_state_cache.get(self._cam_id, {}).get(
             "front_light_intensity"
         )
         if val is not None:
@@ -329,7 +329,7 @@ class BoschFrontLightIntensityNumber(_BoschEntityBase, NumberEntity):
         # cache-miss reports "unknown" (available + native_value None) instead of
         # "unavailable", and automations reading the level see an undefined value.
         return bool(self.coordinator.last_update_success) and (
-            self.coordinator._shc_state_cache.get(self._cam_id, {}).get(
+            self.coordinator.shc_state_cache.get(self._cam_id, {}).get(
                 "front_light_intensity"
             )
             is not None
@@ -385,7 +385,7 @@ class BoschLensElevationNumber(_BoschGen2NumberBase):
     @property
     @override
     def native_value(self) -> float | None:
-        val = self.coordinator._lens_elevation_cache.get(self._cam_id)
+        val = self.coordinator.lens_elevation_cache.get(self._cam_id)
         return float(val) if val is not None else None
 
     @property
@@ -393,7 +393,7 @@ class BoschLensElevationNumber(_BoschGen2NumberBase):
     def available(self) -> bool:
         return (
             bool(self.coordinator.last_update_success)
-            and self.coordinator._lens_elevation_cache.get(self._cam_id) is not None
+            and self.coordinator.lens_elevation_cache.get(self._cam_id) is not None
         )
 
     @override
@@ -402,7 +402,7 @@ class BoschLensElevationNumber(_BoschGen2NumberBase):
             self._cam_id, "lens_elevation", {"elevation": round(value, 2)}
         )
         if success:
-            self.coordinator._lens_elevation_cache[self._cam_id] = value
+            self.coordinator.lens_elevation_cache[self._cam_id] = value
         self.async_write_ha_state()
 
 
@@ -428,7 +428,7 @@ class BoschMicrophoneLevelNumber(_BoschGen2NumberBase):
     @property
     @override
     def native_value(self) -> float | None:
-        audio = self.coordinator._audio_cache.get(self._cam_id, {})
+        audio = self.coordinator.audio_cache.get(self._cam_id, {})
         val = audio.get("microphoneLevel")
         return float(val) if val is not None else None
 
@@ -436,7 +436,7 @@ class BoschMicrophoneLevelNumber(_BoschGen2NumberBase):
     @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and (
-            self.coordinator._audio_cache.get(self._cam_id) is not None
+            self.coordinator.audio_cache.get(self._cam_id) is not None
         )
 
     @override
@@ -451,14 +451,14 @@ class BoschMicrophoneLevelNumber(_BoschGen2NumberBase):
         # 2026-07-03).
         lock = _get_cam_lock(self.coordinator, "_audio_config_locks", self._cam_id)
         async with lock:
-            audio = dict(self.coordinator._audio_cache.get(self._cam_id, {}))
+            audio = dict(self.coordinator.audio_cache.get(self._cam_id, {}))
             audio["microphoneLevel"] = level
             success = await self.coordinator.async_put_camera(
                 self._cam_id, "audio", audio
             )
             if success:
                 # Merge only the changed field (see speaker-level note).
-                self.coordinator._audio_cache.setdefault(self._cam_id, {})[
+                self.coordinator.audio_cache.setdefault(self._cam_id, {})[
                     "microphoneLevel"
                 ] = level
         self.async_write_ha_state()
@@ -503,7 +503,7 @@ class BoschWhiteBalanceNumber(_BoschGen2NumberBase):
     @property
     @override
     def native_value(self) -> float | None:
-        cached = self.coordinator._lighting_switch_cache.get(self._cam_id, {})
+        cached = self.coordinator.lighting_switch_cache.get(self._cam_id, {})
         front = cached.get("frontLightSettings", {})
         wb = front.get("whiteBalance")
         if wb is not None:
@@ -517,7 +517,7 @@ class BoschWhiteBalanceNumber(_BoschGen2NumberBase):
         # pre-populate / failed-sub-fetch window would PUT zero-defaults and
         # clobber the camera's real light settings (bug-hunt 2026-06-02).
         return bool(self.coordinator.last_update_success) and (
-            self.coordinator._lighting_switch_cache.get(self._cam_id, {}).get(
+            self.coordinator.lighting_switch_cache.get(self._cam_id, {}).get(
                 "frontLightSettings"
             )
             is not None
@@ -527,7 +527,7 @@ class BoschWhiteBalanceNumber(_BoschGen2NumberBase):
     async def async_set_native_value(self, value: float) -> None:
         """Set white balance for front light — sends FULL body (API requirement)."""
         wb = round(value, 2)
-        cached = self.coordinator._lighting_switch_cache.get(self._cam_id, {})
+        cached = self.coordinator.lighting_switch_cache.get(self._cam_id, {})
         body = _lighting_switch_body(cached)
         body["frontLightSettings"] = {
             **body["frontLightSettings"],
@@ -545,7 +545,7 @@ class BoschWhiteBalanceNumber(_BoschGen2NumberBase):
             # Merge ONLY the group we changed into the live cache (not the whole
             # snapshot) so a concurrent sibling write to a different light group
             # isn't clobbered by our stale snapshot (bug-hunt 2026-06-02).
-            cur = self.coordinator._lighting_switch_cache.setdefault(self._cam_id, {})
+            cur = self.coordinator.lighting_switch_cache.setdefault(self._cam_id, {})
             cur["frontLightSettings"] = body["frontLightSettings"]
             _LOGGER.debug("White balance set to %.2f for %s", wb, self._cam_id[:8])
         else:
@@ -572,7 +572,7 @@ class _BoschLedBrightnessBase(_BoschGen2NumberBase):
     @property
     @override
     def native_value(self) -> float | None:
-        cached = self.coordinator._lighting_switch_cache.get(self._cam_id, {})
+        cached = self.coordinator.lighting_switch_cache.get(self._cam_id, {})
         led = cached.get(self._led_key, {})
         val = led.get("brightness")
         if val is not None:
@@ -585,7 +585,7 @@ class _BoschLedBrightnessBase(_BoschGen2NumberBase):
         # Gate on the lighting cache (see white-balance note) — avoids writing
         # zero-defaults that clobber real settings before the cache is populated.
         return bool(self.coordinator.last_update_success) and (
-            self.coordinator._lighting_switch_cache.get(self._cam_id, {}).get(
+            self.coordinator.lighting_switch_cache.get(self._cam_id, {}).get(
                 self._led_key
             )
             is not None
@@ -595,7 +595,7 @@ class _BoschLedBrightnessBase(_BoschGen2NumberBase):
     async def async_set_native_value(self, value: float) -> None:
         """Set brightness — sends FULL body with all 3 groups (API requirement)."""
         brightness = round(value)
-        cached = self.coordinator._lighting_switch_cache.get(self._cam_id, {})
+        cached = self.coordinator.lighting_switch_cache.get(self._cam_id, {})
         body = _lighting_switch_body(cached)
         body[self._led_key] = {**body[self._led_key], "brightness": brightness}
         # Route through the coordinator's universal writer (401 → token-refresh
@@ -607,7 +607,7 @@ class _BoschLedBrightnessBase(_BoschGen2NumberBase):
         if ok:
             self._brightness = float(brightness)
             # Merge only the changed LED group (see white-balance note above).
-            cur = self.coordinator._lighting_switch_cache.setdefault(self._cam_id, {})
+            cur = self.coordinator.lighting_switch_cache.setdefault(self._cam_id, {})
             cur[self._led_key] = body[self._led_key]
             _LOGGER.debug(
                 "%s brightness set to %d for %s",
@@ -670,7 +670,7 @@ class BoschMotionLightSensitivityNumber(_BoschGen2NumberBase):
     @property
     @override
     def native_value(self) -> float | None:
-        cache = self.coordinator._motion_light_cache.get(self._cam_id, {})
+        cache = self.coordinator.motion_light_cache.get(self._cam_id, {})
         val = cache.get("motionLightSensitivity")
         return float(val) if val is not None else None
 
@@ -678,12 +678,12 @@ class BoschMotionLightSensitivityNumber(_BoschGen2NumberBase):
     @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and bool(
-            self.coordinator._motion_light_cache.get(self._cam_id)
+            self.coordinator.motion_light_cache.get(self._cam_id)
         )
 
     @override
     async def async_set_native_value(self, value: float) -> None:
-        cache = dict(self.coordinator._motion_light_cache.get(self._cam_id, {}))
+        cache = dict(self.coordinator.motion_light_cache.get(self._cam_id, {}))
         if not cache:
             return
         cache["motionLightSensitivity"] = round(value)
@@ -691,7 +691,7 @@ class BoschMotionLightSensitivityNumber(_BoschGen2NumberBase):
             self._cam_id, "lighting/motion", cache
         )
         if success:
-            self.coordinator._motion_light_cache[self._cam_id] = cache
+            self.coordinator.motion_light_cache[self._cam_id] = cache
         self.async_write_ha_state()
 
 
@@ -719,7 +719,7 @@ class BoschDarknessThresholdNumber(_BoschGen2NumberBase):
     @property
     @override
     def native_value(self) -> float | None:
-        cache = self.coordinator._global_lighting_cache.get(self._cam_id, {})
+        cache = self.coordinator.global_lighting_cache.get(self._cam_id, {})
         val = cache.get("darknessThreshold")
         return round(float(val) * 100, 0) if val is not None else None
 
@@ -727,12 +727,12 @@ class BoschDarknessThresholdNumber(_BoschGen2NumberBase):
     @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and bool(
-            self.coordinator._global_lighting_cache.get(self._cam_id)
+            self.coordinator.global_lighting_cache.get(self._cam_id)
         )
 
     @override
     async def async_set_native_value(self, value: float) -> None:
-        cache = self.coordinator._global_lighting_cache.get(self._cam_id, {})
+        cache = self.coordinator.global_lighting_cache.get(self._cam_id, {})
         soft_fading = cache.get("softLightFading", True)
         body = {
             "darknessThreshold": round(value / 100, 4),
@@ -742,7 +742,7 @@ class BoschDarknessThresholdNumber(_BoschGen2NumberBase):
             self._cam_id, "lighting", body
         )
         if success:
-            self.coordinator._global_lighting_cache[self._cam_id] = body
+            self.coordinator.global_lighting_cache[self._cam_id] = body
         self.async_write_ha_state()
 
 
@@ -774,7 +774,7 @@ class BoschPowerLedBrightnessNumber(_BoschGen2NumberBase):
     @property
     @override
     def native_value(self) -> float | None:
-        val = self.coordinator._icon_led_brightness_cache.get(self._cam_id)
+        val = self.coordinator.icon_led_brightness_cache.get(self._cam_id)
         return float(val) if val is not None else None
 
     @property
@@ -782,8 +782,7 @@ class BoschPowerLedBrightnessNumber(_BoschGen2NumberBase):
     def available(self) -> bool:
         return (
             bool(self.coordinator.last_update_success)
-            and self.coordinator._icon_led_brightness_cache.get(self._cam_id)
-            is not None
+            and self.coordinator.icon_led_brightness_cache.get(self._cam_id) is not None
         )
 
     @override
@@ -793,7 +792,7 @@ class BoschPowerLedBrightnessNumber(_BoschGen2NumberBase):
             self._cam_id, "iconLedBrightness", {"value": val}
         )
         if success:
-            self.coordinator._icon_led_brightness_cache[self._cam_id] = val
+            self.coordinator.icon_led_brightness_cache[self._cam_id] = val
         self.async_write_ha_state()
 
 
@@ -808,7 +807,7 @@ class _BoschAlarmDelayBase(_BoschGen2NumberBase):
 
     @property
     def _settings(self) -> dict[str, Any]:
-        return self.coordinator._alarm_settings_cache.get(self._cam_id, {})
+        return self.coordinator.alarm_settings_cache.get(self._cam_id, {})
 
     @property
     @override
@@ -838,10 +837,10 @@ class _BoschAlarmDelayBase(_BoschGen2NumberBase):
         if success:
             import time as _time
 
-            self.coordinator._alarm_settings_cache[self._cam_id] = cfg
+            self.coordinator.alarm_settings_cache[self._cam_id] = cfg
             # Write-lock so the slow-tier poll doesn't revert this before the
             # cloud reflects it (mirrors the intrusion-config pattern).
-            self.coordinator._alarm_settings_set_at[self._cam_id] = _time.monotonic()
+            self.coordinator.alarm_settings_set_at[self._cam_id] = _time.monotonic()
         self.async_write_ha_state()
 
 
@@ -905,7 +904,7 @@ class BoschIntrusionSensitivityNumber(_BoschGen2NumberBase):
 
     FW 9.40+ raised the range from 0–5 to 0–7 (confirmed via captures 2026-04-28:
     value=3 seen, comment in api-findings.md §5 "sensitivity bis 7 (vorher 5)").
-    Reads from coordinator._intrusion_config_cache[cam_id]["sensitivity"].
+    Reads from coordinator.intrusion_config_cache[cam_id]["sensitivity"].
     Writes via PUT /v11/video_inputs/{id}/intrusionDetectionConfig — full body is
     preserved from cache so detectionMode / distance / enabled are not clobbered.
     Write-lock timestamp _intrusion_config_set_at is set after successful PUT to
@@ -928,7 +927,7 @@ class BoschIntrusionSensitivityNumber(_BoschGen2NumberBase):
     @property
     @override
     def native_value(self) -> float | None:
-        cfg = self.coordinator._intrusion_config_cache.get(self._cam_id, {})
+        cfg = self.coordinator.intrusion_config_cache.get(self._cam_id, {})
         val = cfg.get("sensitivity")
         return float(val) if val is not None else None
 
@@ -936,12 +935,12 @@ class BoschIntrusionSensitivityNumber(_BoschGen2NumberBase):
     @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and bool(
-            self.coordinator._intrusion_config_cache.get(self._cam_id)
+            self.coordinator.intrusion_config_cache.get(self._cam_id)
         )
 
     @override
     async def async_set_native_value(self, value: float) -> None:
-        cfg = dict(self.coordinator._intrusion_config_cache.get(self._cam_id, {}))
+        cfg = dict(self.coordinator.intrusion_config_cache.get(self._cam_id, {}))
         if not cfg:
             return
         cfg["sensitivity"] = round(max(0, min(7, value)))
@@ -949,10 +948,10 @@ class BoschIntrusionSensitivityNumber(_BoschGen2NumberBase):
             self._cam_id, "intrusionDetectionConfig", cfg
         )
         if success:
-            self.coordinator._intrusion_config_cache[self._cam_id] = cfg
+            self.coordinator.intrusion_config_cache[self._cam_id] = cfg
             import time as _time
 
-            self.coordinator._intrusion_config_set_at[self._cam_id] = _time.monotonic()
+            self.coordinator.intrusion_config_set_at[self._cam_id] = _time.monotonic()
             _LOGGER.debug(
                 "Intrusion sensitivity set to %d for %s",
                 cfg["sensitivity"],
@@ -968,7 +967,7 @@ class BoschIntrusionSensitivityNumber(_BoschGen2NumberBase):
 class BoschIntrusionDistanceNumber(_BoschGen2NumberBase):
     """Number: intrusion detection range in metres 1–8 (Gen2 only).
 
-    Reads from coordinator._intrusion_config_cache[cam_id]["distance"].
+    Reads from coordinator.intrusion_config_cache[cam_id]["distance"].
     Writes via PUT /v11/video_inputs/{id}/intrusionDetectionConfig — full body preserved.
     Range: API rejects distance > 8 with HTTP 400 (verified live FW 9.40.102 2026-05-29).
     Available for both Gen2 Indoor II and Gen2 Outdoor II.
@@ -991,7 +990,7 @@ class BoschIntrusionDistanceNumber(_BoschGen2NumberBase):
     @property
     @override
     def native_value(self) -> float | None:
-        cfg = self.coordinator._intrusion_config_cache.get(self._cam_id, {})
+        cfg = self.coordinator.intrusion_config_cache.get(self._cam_id, {})
         val = cfg.get("distance")
         return float(val) if val is not None else None
 
@@ -999,12 +998,12 @@ class BoschIntrusionDistanceNumber(_BoschGen2NumberBase):
     @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and bool(
-            self.coordinator._intrusion_config_cache.get(self._cam_id)
+            self.coordinator.intrusion_config_cache.get(self._cam_id)
         )
 
     @override
     async def async_set_native_value(self, value: float) -> None:
-        cfg = dict(self.coordinator._intrusion_config_cache.get(self._cam_id, {}))
+        cfg = dict(self.coordinator.intrusion_config_cache.get(self._cam_id, {}))
         if not cfg:
             return
         cfg["distance"] = round(max(1, min(8, value)))  # API rejects > 8 (HTTP 400)
@@ -1012,10 +1011,10 @@ class BoschIntrusionDistanceNumber(_BoschGen2NumberBase):
             self._cam_id, "intrusionDetectionConfig", cfg
         )
         if success:
-            self.coordinator._intrusion_config_cache[self._cam_id] = cfg
+            self.coordinator.intrusion_config_cache[self._cam_id] = cfg
             import time as _time
 
-            self.coordinator._intrusion_config_set_at[self._cam_id] = _time.monotonic()
+            self.coordinator.intrusion_config_set_at[self._cam_id] = _time.monotonic()
             _LOGGER.debug(
                 "Intrusion distance set to %d m for %s",
                 cfg["distance"],

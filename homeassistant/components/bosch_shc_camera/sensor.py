@@ -258,8 +258,8 @@ class BoschCameraStatusSensor(_BoschSensorBase):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         info = self._cam_data.get("info", {})
-        comm = self.coordinator._commissioned_cache.get(self._cam_id, {})
-        fw = self.coordinator._firmware_cache.get(self._cam_id, {})
+        comm = self.coordinator.commissioned_cache.get(self._cam_id, {})
+        fw = self.coordinator.firmware_cache.get(self._cam_id, {})
         attrs: dict[str, Any] = {
             "camera_id": self._cam_id,
             "model": info.get("hardwareVersion", ""),
@@ -377,7 +377,7 @@ class BoschWifiSignalSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> int | None:
-        wifi = self.coordinator._wifiinfo_cache.get(self._cam_id)
+        wifi = self.coordinator.wifiinfo_cache.get(self._cam_id)
         if wifi is None:
             return None
         signal = wifi.get("signalStrength")
@@ -390,13 +390,13 @@ class BoschWifiSignalSensor(_BoschSensorBase):
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
-            and self.coordinator._wifiinfo_cache.get(self._cam_id) is not None
+            and self.coordinator.wifiinfo_cache.get(self._cam_id) is not None
         )
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        wifi = self.coordinator._wifiinfo_cache.get(self._cam_id, {})
+        wifi = self.coordinator.wifiinfo_cache.get(self._cam_id, {})
         attrs: dict[str, Any] = {
             "ssid": wifi.get("ssid", ""),
             "ip_address": wifi.get("ipAddress", ""),
@@ -481,7 +481,7 @@ class BoschAmbientLightSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> int | None:
-        level = self.coordinator._ambient_light_cache.get(self._cam_id)
+        level = self.coordinator.ambient_light_cache.get(self._cam_id)
         if level is None:
             return None
         # Convert 0.0–1.0 float to 0–100 integer percentage
@@ -492,7 +492,7 @@ class BoschAmbientLightSensor(_BoschSensorBase):
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
-            and self.coordinator._ambient_light_cache.get(self._cam_id) is not None
+            and self.coordinator.ambient_light_cache.get(self._cam_id) is not None
         )
 
 
@@ -518,14 +518,14 @@ class BoschLedDimmerSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> int | None:
-        return self.coordinator._rcp_dimmer_cache.get(self._cam_id)
+        return self.coordinator.rcp_dimmer_cache.get(self._cam_id)
 
     @property
     @override
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
-            and self.coordinator._rcp_dimmer_cache.get(self._cam_id) is not None
+            and self.coordinator.rcp_dimmer_cache.get(self._cam_id) is not None
         )
 
 
@@ -765,7 +765,7 @@ class BoschFcmPushStatusSensor(_BoschSensorBase):
     def native_value(self) -> str:
         if not self.coordinator.options.get("enable_fcm_push", False):
             return "disabled"
-        if self.coordinator._fcm_healthy:
+        if self.coordinator.fcm_healthy:
             return "fcm_push"
         return "polling"
 
@@ -776,15 +776,15 @@ class BoschFcmPushStatusSensor(_BoschSensorBase):
 
         attrs: dict[str, Any] = {
             "fcm_enabled": self.coordinator.options.get("enable_fcm_push", False),
-            "fcm_running": self.coordinator._fcm_running,
-            "fcm_healthy": self.coordinator._fcm_healthy,
-            "fcm_push_mode": self.coordinator._fcm_push_mode,
+            "fcm_running": self.coordinator.fcm_running,
+            "fcm_healthy": self.coordinator.fcm_healthy,
+            "fcm_push_mode": self.coordinator.fcm_push_mode,
             "fcm_push_mode_config": self.coordinator.options.get(
                 "fcm_push_mode", "auto"
             ),
         }
-        if self.coordinator._fcm_last_push != float("-inf"):
-            age = _time.monotonic() - self.coordinator._fcm_last_push
+        if self.coordinator.fcm_last_push != float("-inf"):
+            age = _time.monotonic() - self.coordinator.fcm_last_push
             attrs["last_push_seconds_ago"] = round(age)
         return attrs
 
@@ -827,7 +827,7 @@ class BoschCloudMaintenanceSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> str:
-        window = self.coordinator._maintenance_cache
+        window = self.coordinator.maintenance_cache
         return window.state() if window else "idle"
 
     @property
@@ -835,11 +835,11 @@ class BoschCloudMaintenanceSensor(_BoschSensorBase):
     def extra_state_attributes(self) -> dict[str, Any]:
         import time as _time
 
-        window = self.coordinator._maintenance_cache
+        window = self.coordinator.maintenance_cache
         attrs: dict[str, Any] = {}
         if window is not None:
             attrs.update(window.as_dict())
-        last_fetch = self.coordinator._maintenance_last_fetch
+        last_fetch = self.coordinator.maintenance_last_fetch
         if last_fetch != float("-inf"):
             attrs["last_fetched_seconds_ago"] = round(_time.monotonic() - last_fetch)
         return attrs
@@ -867,14 +867,14 @@ class BoschUnreadEventsCountSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> int | None:
-        return self.coordinator._unread_events_cache.get(self._cam_id)
+        return self.coordinator.unread_events_cache.get(self._cam_id)
 
     @property
     @override
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
-            and self.coordinator._unread_events_cache.get(self._cam_id) is not None
+            and self.coordinator.unread_events_cache.get(self._cam_id) is not None
         )
 
 
@@ -902,7 +902,7 @@ class BoschCommissionedSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> str | None:
-        data = self.coordinator._commissioned_cache.get(self._cam_id)
+        data = self.coordinator.commissioned_cache.get(self._cam_id)
         if data is None:
             return None
         if not data.get("connected", False):
@@ -916,13 +916,13 @@ class BoschCommissionedSensor(_BoschSensorBase):
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
-            and self.coordinator._commissioned_cache.get(self._cam_id) is not None
+            and self.coordinator.commissioned_cache.get(self._cam_id) is not None
         )
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        data = self.coordinator._commissioned_cache.get(self._cam_id)
+        data = self.coordinator.commissioned_cache.get(self._cam_id)
         if not data:
             return {}
         return {
@@ -957,7 +957,7 @@ class BoschRulesCountSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> int | None:
-        rules = self.coordinator._rules_cache.get(self._cam_id)
+        rules = self.coordinator.rules_cache.get(self._cam_id)
         if rules is None:
             return None
         return len(rules)
@@ -967,13 +967,13 @@ class BoschRulesCountSensor(_BoschSensorBase):
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
-            and self.coordinator._rules_cache.get(self._cam_id) is not None
+            and self.coordinator.rules_cache.get(self._cam_id) is not None
         )
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        rules = self.coordinator._rules_cache.get(self._cam_id, [])
+        rules = self.coordinator.rules_cache.get(self._cam_id, [])
         return {
             "rules": [
                 {
@@ -1016,7 +1016,7 @@ class BoschAlarmCatalogSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> int | None:
-        alarms = self.coordinator._rcp_alarm_catalog_cache.get(self._cam_id)
+        alarms = self.coordinator.rcp_alarm_catalog_cache.get(self._cam_id)
         if alarms is None:
             return None
         return len(alarms)
@@ -1026,13 +1026,13 @@ class BoschAlarmCatalogSensor(_BoschSensorBase):
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
-            and self.coordinator._rcp_alarm_catalog_cache.get(self._cam_id) is not None
+            and self.coordinator.rcp_alarm_catalog_cache.get(self._cam_id) is not None
         )
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        alarms = self.coordinator._rcp_alarm_catalog_cache.get(self._cam_id, [])
+        alarms = self.coordinator.rcp_alarm_catalog_cache.get(self._cam_id, [])
         return {
             "alarm_types": [a["name"] for a in alarms],
             "alarm_details": alarms,
@@ -1078,9 +1078,9 @@ class BoschMotionZonesSensor(_BoschSensorBase):
         # unknown/unavailable during the window before the first successful
         # fetch, or on a camera where it never succeeds. Distinguish
         # "not yet fetched" (None) from "fetched, zero zones" ([]) per source.
-        gen2_zones = self.coordinator._gen2_zones_cache.get(self._cam_id)
-        cloud_zones = self.coordinator._cloud_zones_cache.get(self._cam_id)
-        zones = self.coordinator._rcp_motion_zones_cache.get(self._cam_id)
+        gen2_zones = self.coordinator.gen2_zones_cache.get(self._cam_id)
+        cloud_zones = self.coordinator.cloud_zones_cache.get(self._cam_id)
+        zones = self.coordinator.rcp_motion_zones_cache.get(self._cam_id)
         if gen2_zones is None and cloud_zones is None and zones is None:
             return None
         # Gen2 polygon zones take priority
@@ -1096,18 +1096,18 @@ class BoschMotionZonesSensor(_BoschSensorBase):
     @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and (
-            self.coordinator._gen2_zones_cache.get(self._cam_id) is not None
-            or self.coordinator._cloud_zones_cache.get(self._cam_id) is not None
-            or self.coordinator._rcp_motion_zones_cache.get(self._cam_id) is not None
+            self.coordinator.gen2_zones_cache.get(self._cam_id) is not None
+            or self.coordinator.cloud_zones_cache.get(self._cam_id) is not None
+            or self.coordinator.rcp_motion_zones_cache.get(self._cam_id) is not None
         )
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        zones = self.coordinator._rcp_motion_zones_cache.get(self._cam_id, [])
-        coords = self.coordinator._rcp_motion_coords_cache.get(self._cam_id, [])
-        cloud_zones = self.coordinator._cloud_zones_cache.get(self._cam_id, [])
-        gen2_zones = self.coordinator._gen2_zones_cache.get(self._cam_id, [])
+        zones = self.coordinator.rcp_motion_zones_cache.get(self._cam_id, [])
+        coords = self.coordinator.rcp_motion_coords_cache.get(self._cam_id, [])
+        cloud_zones = self.coordinator.cloud_zones_cache.get(self._cam_id, [])
+        gen2_zones = self.coordinator.gen2_zones_cache.get(self._cam_id, [])
         attrs: dict[str, Any] = {
             "zones": zones,
             "coordinates": coords,
@@ -1146,7 +1146,7 @@ class BoschTlsCertSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> datetime | None:
-        cert = self.coordinator._rcp_tls_cert_cache.get(self._cam_id)
+        cert = self.coordinator.rcp_tls_cert_cache.get(self._cam_id)
         if not cert or "not_after" not in cert:
             return None
         try:
@@ -1154,7 +1154,7 @@ class BoschTlsCertSensor(_BoschSensorBase):
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=UTC)
             return dt
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return None
 
     @property
@@ -1162,13 +1162,13 @@ class BoschTlsCertSensor(_BoschSensorBase):
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
-            and self.coordinator._rcp_tls_cert_cache.get(self._cam_id) is not None
+            and self.coordinator.rcp_tls_cert_cache.get(self._cam_id) is not None
         )
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        cert = self.coordinator._rcp_tls_cert_cache.get(self._cam_id, {})
+        cert = self.coordinator.rcp_tls_cert_cache.get(self._cam_id, {})
         return {
             "issuer": cert.get("issuer", ""),
             "subject": cert.get("subject", ""),
@@ -1201,7 +1201,7 @@ class BoschNetworkServicesSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> int | None:
-        services = self.coordinator._rcp_network_services_cache.get(self._cam_id)
+        services = self.coordinator.rcp_network_services_cache.get(self._cam_id)
         if services is None:
             return None
         return len(services)
@@ -1211,14 +1211,14 @@ class BoschNetworkServicesSensor(_BoschSensorBase):
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
-            and self.coordinator._rcp_network_services_cache.get(self._cam_id)
+            and self.coordinator.rcp_network_services_cache.get(self._cam_id)
             is not None
         )
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        services = self.coordinator._rcp_network_services_cache.get(self._cam_id, [])
+        services = self.coordinator.rcp_network_services_cache.get(self._cam_id, [])
         return {"services": services}
 
 
@@ -1246,7 +1246,7 @@ class BoschIvaCatalogSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> int | None:
-        modules = self.coordinator._rcp_iva_catalog_cache.get(self._cam_id)
+        modules = self.coordinator.rcp_iva_catalog_cache.get(self._cam_id)
         if modules is None:
             return None
         return len(modules)
@@ -1256,13 +1256,13 @@ class BoschIvaCatalogSensor(_BoschSensorBase):
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
-            and self.coordinator._rcp_iva_catalog_cache.get(self._cam_id) is not None
+            and self.coordinator.rcp_iva_catalog_cache.get(self._cam_id) is not None
         )
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        modules = self.coordinator._rcp_iva_catalog_cache.get(self._cam_id, [])
+        modules = self.coordinator.rcp_iva_catalog_cache.get(self._cam_id, [])
         active = [m for m in modules if m.get("active")]
         return {
             "modules": modules,
@@ -1302,8 +1302,8 @@ class BoschPrivateAreasSensor(_BoschSensorBase):
         # this defaulted both cache lookups to `[]` and returned a
         # confirmed "0 masks" (with a misleading "no masks configured"
         # attribute note) even before either source had ever been fetched.
-        gen2_areas = self.coordinator._gen2_private_areas_cache.get(self._cam_id)
-        cloud_masks = self.coordinator._cloud_privacy_masks_cache.get(self._cam_id)
+        gen2_areas = self.coordinator.gen2_private_areas_cache.get(self._cam_id)
+        cloud_masks = self.coordinator.cloud_privacy_masks_cache.get(self._cam_id)
         if gen2_areas is None and cloud_masks is None:
             return None
         # Gen2 polygon private areas take priority
@@ -1316,15 +1316,15 @@ class BoschPrivateAreasSensor(_BoschSensorBase):
     @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and (
-            self.coordinator._gen2_private_areas_cache.get(self._cam_id) is not None
-            or self.coordinator._cloud_privacy_masks_cache.get(self._cam_id) is not None
+            self.coordinator.gen2_private_areas_cache.get(self._cam_id) is not None
+            or self.coordinator.cloud_privacy_masks_cache.get(self._cam_id) is not None
         )
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        cloud_masks = self.coordinator._cloud_privacy_masks_cache.get(self._cam_id, [])
-        gen2_areas = self.coordinator._gen2_private_areas_cache.get(self._cam_id, [])
+        cloud_masks = self.coordinator.cloud_privacy_masks_cache.get(self._cam_id, [])
+        gen2_areas = self.coordinator.gen2_private_areas_cache.get(self._cam_id, [])
         attrs: dict[str, Any] = {
             "cloud_privacy_masks": cloud_masks,
             "cloud_mask_count": len(cloud_masks),
@@ -1364,7 +1364,7 @@ class BoschAmbientLightScheduleSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> str | None:
-        cache = self.coordinator._ambient_lighting_cache.get(self._cam_id)
+        cache = self.coordinator.ambient_lighting_cache.get(self._cam_id)
         if not cache:
             return None
         enabled = cache.get("ambientLightEnabled", False)
@@ -1384,14 +1384,14 @@ class BoschAmbientLightScheduleSensor(_BoschSensorBase):
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
-            and self.coordinator._ambient_lighting_cache.get(self._cam_id) is not None
-            and len(self.coordinator._ambient_lighting_cache.get(self._cam_id, {})) > 0
+            and self.coordinator.ambient_lighting_cache.get(self._cam_id) is not None
+            and len(self.coordinator.ambient_lighting_cache.get(self._cam_id, {})) > 0
         )
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        cache = self.coordinator._ambient_lighting_cache.get(self._cam_id, {})
+        cache = self.coordinator.ambient_lighting_cache.get(self._cam_id, {})
         if not cache:
             return {}
         schedule = cache.get("ambientLightSchedule", "ENVIRONMENT")
@@ -1471,7 +1471,7 @@ class BoschAlarmStateSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> str:
-        status = self.coordinator._alarm_status_cache.get(self._cam_id, {})
+        status = self.coordinator.alarm_status_cache.get(self._cam_id, {})
         if status:
             # Guard the ENUM: an unmapped intrusionSystem value (e.g. new
             # firmware) would make HA discard the state and show "unknown"
@@ -1480,7 +1480,7 @@ class BoschAlarmStateSensor(_BoschSensorBase):
             val = str(status.get("intrusionSystem", "unknown")).lower()
             opts = getattr(self, "_attr_options", None)
             return val if (not opts or val in opts) else "unknown"
-        armed = self.coordinator._arming_cache.get(self._cam_id)
+        armed = self.coordinator.arming_cache.get(self._cam_id)
         if armed is True:
             return "active"
         if armed is False:
@@ -1495,8 +1495,8 @@ class BoschAlarmStateSensor(_BoschSensorBase):
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        settings = self.coordinator._alarm_settings_cache.get(self._cam_id, {})
-        status = self.coordinator._alarm_status_cache.get(self._cam_id, {})
+        settings = self.coordinator.alarm_settings_cache.get(self._cam_id, {})
+        status = self.coordinator.alarm_status_cache.get(self._cam_id, {})
         return {
             "alarm_mode": settings.get("alarmMode"),
             "pre_alarm_mode": settings.get("preAlarmMode"),
@@ -1531,28 +1531,28 @@ class BoschStreamStatusSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> str:
-        fell_back = self.coordinator._stream_fell_back.get(self._cam_id, False)
+        fell_back = self.coordinator.stream_fell_back.get(self._cam_id, False)
         if self.coordinator.is_stream_warming(self._cam_id):
             return "warming_up"
-        live = self.coordinator._live_connections.get(self._cam_id, {})
+        live = self.coordinator.live_connections.get(self._cam_id, {})
         rtsps = live.get("rtspsUrl") or live.get("rtspUrl")
         if rtsps:
             # stream_source is set → FFmpeg is (or will be) playing
             if fell_back:
                 return "streaming_remote"
             return "streaming"
-        if self._cam_id in self.coordinator._live_connections:
+        if self._cam_id in self.coordinator.live_connections:
             return "connecting"
         return "idle"
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        live = self.coordinator._live_connections.get(self._cam_id, {})
+        live = self.coordinator.live_connections.get(self._cam_id, {})
         return {
             "connection_type": live.get("_connection_type", ""),
-            "stream_errors": self.coordinator._stream_error_count.get(self._cam_id, 0),
-            "fell_back": self.coordinator._stream_fell_back.get(self._cam_id, False),
+            "stream_errors": self.coordinator.stream_error_count.get(self._cam_id, 0),
+            "fell_back": self.coordinator.stream_fell_back.get(self._cam_id, False),
         }
 
 
@@ -1561,9 +1561,9 @@ class BoschNvrStateSensor(_BoschSensorBase):
     """Diagnostic sensor surfacing the Mini-NVR drain-watcher state per camera.
 
     Helps users answer "is recording actually reaching the target?". Reads
-    from ``coordinator._nvr_drain_state`` (populated by
-    ``recorder.sync_drain_tick``) and ``coordinator._nvr_user_intent`` /
-    ``coordinator._nvr_processes`` (populated by the recorder lifecycle
+    from ``coordinator.nvr_drain_state`` (populated by
+    ``recorder.sync_drain_tick``) and ``coordinator.nvr_user_intent`` /
+    ``coordinator.nvr_processes`` (populated by the recorder lifecycle
     plumbing). Pure properties — no I/O. Disabled by default in the entity
     registry to avoid surprise entities.
 
@@ -1599,17 +1599,17 @@ class BoschNvrStateSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> str:
-        if self.coordinator._nvr_error_state.get(self._cam_id):
+        if self.coordinator.nvr_error_state.get(self._cam_id):
             return "error"
-        proc = self.coordinator._nvr_processes.get(self._cam_id)
-        if proc is not None and self.coordinator._nvr_user_intent.get(self._cam_id):
+        proc = self.coordinator.nvr_processes.get(self._cam_id)
+        if proc is not None and self.coordinator.nvr_user_intent.get(self._cam_id):
             return "recording"
         return "idle"
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        state = getattr(self.coordinator, "_nvr_drain_state", {}) or {}
+        state = getattr(self.coordinator, "nvr_drain_state", {}) or {}
         # Camera title is used as the staging-folder key (sanitized via
         # _safe_name in recorder._staging_dir). Read with the same sanitization
         # so the per-camera age lookup stays consistent.
@@ -1618,9 +1618,7 @@ class BoschNvrStateSensor(_BoschSensorBase):
         info = self.coordinator.data.get(self._cam_id, {}).get("info", {})
         cam_key = _safe_name(info.get("title", self._cam_id))
         last_age = (state.get("last_age_by_cam") or {}).get(cam_key)
-        preroll_count = self.coordinator._nvr_preroll_segment_counts.get(
-            self._cam_id, 0
-        )
+        preroll_count = self.coordinator.nvr_preroll_segment_counts.get(self._cam_id, 0)
         return {
             "target": state.get("target", "local"),
             "pending_uploads": int(state.get("pending", 0)),
@@ -1628,12 +1626,12 @@ class BoschNvrStateSensor(_BoschSensorBase):
             "last_segment_age_s": float(last_age) if last_age is not None else None,
             "last_tick_ts": state.get("last_tick_ts"),
             "user_intent": bool(
-                self.coordinator._nvr_user_intent.get(self._cam_id, False)
+                self.coordinator.nvr_user_intent.get(self._cam_id, False)
             ),
-            "error": self.coordinator._nvr_error_state.get(self._cam_id, ""),
+            "error": self.coordinator.nvr_error_state.get(self._cam_id, ""),
             "preroll_segments": preroll_count,
             "preroll_running": bool(
-                self.coordinator._nvr_preroll_processes.get(self._cam_id)
+                self.coordinator.nvr_preroll_processes.get(self._cam_id)
             ),
         }
 
@@ -1702,7 +1700,7 @@ class _BoschStreamUrlSensorBase(_BoschSensorBase):
       - the BoschExternalStreamSwitch is OFF for this camera (default), OR
       - no live session is open yet (rtspsUrl empty).
 
-    The URL is read straight from ``coordinator._live_connections[cam_id]``
+    The URL is read straight from ``coordinator.live_connections[cam_id]``
     so it always reflects whatever quality/transport the integration picked
     (LOCAL TLS proxy, REMOTE TLS proxy, or direct rtsps fallback).
     """
@@ -1714,9 +1712,9 @@ class _BoschStreamUrlSensorBase(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> str | None:
-        if not self.coordinator._external_stream_enabled.get(self._cam_id, False):
+        if not self.coordinator.external_stream_enabled.get(self._cam_id, False):
             return None
-        live = self.coordinator._live_connections.get(self._cam_id) or {}
+        live = self.coordinator.live_connections.get(self._cam_id) or {}
         url = live.get("rtspsUrl") or live.get("rtspUrl") or ""
         if not url:
             return None
@@ -1854,7 +1852,7 @@ class BoschOnvifScopesSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> str | None:
-        scopes = self.coordinator._rcp_onvif_scopes_cache.get(self._cam_id)
+        scopes = self.coordinator.rcp_onvif_scopes_cache.get(self._cam_id)
         if not scopes:
             return None
         return "supported"
@@ -1864,13 +1862,13 @@ class BoschOnvifScopesSensor(_BoschSensorBase):
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
-            and self.coordinator._rcp_onvif_scopes_cache.get(self._cam_id) is not None
+            and self.coordinator.rcp_onvif_scopes_cache.get(self._cam_id) is not None
         )
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        scopes = self.coordinator._rcp_onvif_scopes_cache.get(self._cam_id, {})
+        scopes = self.coordinator.rcp_onvif_scopes_cache.get(self._cam_id, {})
         return {
             "name": scopes.get("name", ""),
             "hardware": scopes.get("hardware", ""),
@@ -1910,20 +1908,20 @@ class BoschRcpVersionSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> str | None:
-        return self.coordinator._rcp_version_cache.get(self._cam_id)
+        return self.coordinator.rcp_version_cache.get(self._cam_id)
 
     @property
     @override
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
-            and self.coordinator._rcp_version_cache.get(self._cam_id) is not None
+            and self.coordinator.rcp_version_cache.get(self._cam_id) is not None
         )
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        ver = self.coordinator._rcp_version_cache.get(self._cam_id, "")
+        ver = self.coordinator.rcp_version_cache.get(self._cam_id, "")
         if not ver:
             return {}
         parts = ver.split(".")
@@ -1947,7 +1945,7 @@ class BoschCloudFeatureFlagsSensor(_BoschSensorBase):
     Attributes: full dict of all flags with their boolean values.
 
     Data source: GET /v11/feature_flags — fetched once at startup and cached
-    in coordinator._feature_flags. Rarely changes (account-level server-side
+    in coordinator.feature_flags. Rarely changes (account-level server-side
     config). Account-level entity — one per integration, not per camera.
 
     Disabled by default — enable in HA entity settings.
@@ -1967,7 +1965,7 @@ class BoschCloudFeatureFlagsSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> str | None:
-        flags = self.coordinator._feature_flags
+        flags = self.coordinator.feature_flags
         if not flags:
             return None
         enabled = sorted(k for k, v in flags.items() if v)
@@ -1978,13 +1976,13 @@ class BoschCloudFeatureFlagsSensor(_BoschSensorBase):
     @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and bool(
-            self.coordinator._feature_flags
+            self.coordinator.feature_flags
         )
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        flags = self.coordinator._feature_flags
+        flags = self.coordinator.feature_flags
         if not flags:
             return {}
         return dict(flags)

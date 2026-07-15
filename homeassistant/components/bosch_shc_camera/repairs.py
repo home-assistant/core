@@ -44,7 +44,7 @@ class FirmwareUpdateRepairFlow(RepairsFlow):
                 return self.async_abort(reason="install_failed")
             return self.async_create_entry(data={})
 
-        fw: dict[str, Any] = self._coordinator._firmware_cache.get(self._cam_id, {})
+        fw: dict[str, Any] = self._coordinator.firmware_cache.get(self._cam_id, {})
         cam_title: str = (
             (self._coordinator.data or {})
             .get(self._cam_id, {})

@@ -62,7 +62,9 @@ async def async_setup_entry(
     async_add_entities(entities, update_before_add=False)
 
 
-class BoschCameraLastSnapshotImage(ImageEntity):  # HA base class is untyped (no py.typed) → Any
+class BoschCameraLastSnapshotImage(
+    ImageEntity
+):  # HA base class is untyped (no py.typed) → Any
     """Image entity exposing the last persisted snapshot for a Bosch camera.
 
     On each successful background refresh the camera entity calls
@@ -111,12 +113,12 @@ class BoschCameraLastSnapshotImage(ImageEntity):  # HA base class is untyped (no
 
         # Register ourselves with the coordinator's camera entity so
         # BoschCamera can call async_notify_refreshed() after persisting.
-        coordinator._image_entities[cam_id] = self
+        coordinator.image_entities[cam_id] = self
 
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Unregister from coordinator on removal."""
-        self._coordinator._image_entities.pop(self._cam_id, None)
+        self._coordinator.image_entities.pop(self._cam_id, None)
         await super().async_will_remove_from_hass()
 
     @property
@@ -152,9 +154,9 @@ class BoschCameraLastSnapshotImage(ImageEntity):  # HA base class is untyped (no
         # Fallback to RAM cache from the camera entity. Do NOT store it as our
         # own cache: it's a transient cold-start fallback that the next disk
         # write supersedes, and caching it would shadow the disk snapshot.
-        cam = self._coordinator._camera_entities.get(self._cam_id)
+        cam = self._coordinator.camera_entities.get(self._cam_id)
         if cam is not None:
-            cached = cam._cached_image
+            cached = cam.cached_image
             # Don't serve the 1×1 placeholder as a real snapshot image.
             if cached and len(cached) > 200:
                 return cached  # type: ignore[no-any-return]  # value is correct at runtime; HA/external source is Any-typed

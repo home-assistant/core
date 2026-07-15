@@ -68,7 +68,7 @@ async def fetch_camera_list(
                     cloud_api,
                     (await resp.text())[:300],
                 )
-                token = await coordinator._ensure_valid_token(token)
+                token = await coordinator.ensure_valid_token(token)
                 headers = {
                     "Authorization": f"Bearer {token}",
                     "Accept": "application/json",
@@ -85,7 +85,7 @@ async def fetch_camera_list(
                 # And kick a LAN-ping sweep so the switch/light entities
                 # have a fresh reachability signal even though the
                 # cloud-driven status loop won't run this tick.
-                _outage_ping = getattr(coordinator, "_async_outage_ping_all", None)
+                _outage_ping = getattr(coordinator, "async_outage_ping_all", None)
                 if _outage_ping is not None:
                     coordinator.hass.async_create_task(_outage_ping())
                 raise UpdateFailed(f"Camera list returned HTTP {resp.status}")

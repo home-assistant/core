@@ -299,7 +299,7 @@ def _set_keepalive(writer: asyncio.StreamWriter) -> None:
         sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 30)
         sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 10)
         sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3)
-    except (AttributeError, OSError):
+    except AttributeError, OSError:
         pass
 
 

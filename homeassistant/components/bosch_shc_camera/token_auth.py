@@ -37,13 +37,13 @@ class TokenAuthCoordinatorMixin:
     @property
     def token(self: Any) -> str:
         # Prefer in-memory refreshed token over config entry (avoids stale reads)
-        return getattr(self, "_refreshed_token", None) or self._entry.data.get(  # type: ignore[no-any-return]  # value is correct at runtime; HA/external source is Any-typed
+        return getattr(self, "_refreshed_token", None) or self.entry.data.get(  # type: ignore[no-any-return]  # value is correct at runtime; HA/external source is Any-typed
             "bearer_token", ""
         )
 
     @property
     def refresh_token(self: Any) -> str:
-        return getattr(self, "_refreshed_refresh", None) or self._entry.data.get(  # type: ignore[no-any-return]  # value is correct at runtime; HA/external source is Any-typed
+        return getattr(self, "_refreshed_refresh", None) or self.entry.data.get(  # type: ignore[no-any-return]  # value is correct at runtime; HA/external source is Any-typed
             "refresh_token", ""
         )
 
@@ -75,11 +75,11 @@ class TokenAuthCoordinatorMixin:
             payload_b64 = parts[1] + "=" * (4 - len(parts[1]) % 4)
             payload = _json.loads(_b64.urlsafe_b64decode(payload_b64))
             return bool((payload.get("exp", 0) - _time.time()) >= min_remaining)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             # JWT payload was not base64-decodable or not JSON — treat as expired.
             return False
 
-    async def _ensure_valid_token(self: Any, observed_token: str | None = None) -> str:
+    async def ensure_valid_token(self: Any, observed_token: str | None = None) -> str:
         """
         Return a valid bearer token.
         Called ONLY when we get a 401 — not on every tick.
@@ -148,17 +148,17 @@ class TokenAuthCoordinatorMixin:
         import time as _time
 
         now_m = _time.monotonic()
-        if self._auth_outage_count > 0 and now_m < self._auth_outage_next_retry_ts:
+        if self.auth_outage_count > 0 and now_m < self._auth_outage_next_retry_ts:
             remaining = int(self._auth_outage_next_retry_ts - now_m)
             raise UpdateFailed(
                 f"Bosch auth server outage — next retry in {remaining}s "
-                f"(outage count: {self._auth_outage_count})"
+                f"(outage count: {self.auth_outage_count})"
             )
         # Always prefer the freshest refresh_token from the config entry
         # (persisted by previous successful refresh) over our in-memory
         # copy, which could be stale in edge cases (e.g. entry reload).
         refresh = (
-            self._entry.data.get("refresh_token", "")
+            self.entry.data.get("refresh_token", "")
             or getattr(self, "_refreshed_refresh", None)
             or ""
         )
@@ -230,9 +230,9 @@ class TokenAuthCoordinatorMixin:
                 "Reconfigure button on the integration card."
             ) from None
         except AuthServerOutageError as err:
-            self._auth_outage_count += 1
+            self.auth_outage_count += 1
             # Exponential back-off: 60s, 120s, 240s, 480s, capped at 600s (10 min)
-            backoff = min(60 * (2 ** (self._auth_outage_count - 1)), 600)
+            backoff = min(60 * (2 ** (self.auth_outage_count - 1)), 600)
             self._auth_outage_next_retry_ts = now_m + backoff
             _LOGGER.warning(
                 "Bosch Keycloak auth server outage (%s) — NOT triggering reauth "
@@ -240,12 +240,12 @@ class TokenAuthCoordinatorMixin:
                 "Backing off %ds before next attempt (outage #%d).",
                 err,
                 backoff,
-                self._auth_outage_count,
+                self.auth_outage_count,
             )
             # One-time repair issue after 3 consecutive outages so the user
             # sees a clear explanation in Settings → Repairs while entities
             # are unavailable. Quality-Scale Gold rule `repair-issues`.
-            if self._auth_outage_count >= 3 and not self._auth_outage_alert_sent:
+            if self.auth_outage_count >= 3 and not self._auth_outage_alert_sent:
                 self._auth_outage_alert_sent = True
                 ir.async_create_issue(
                     self.hass,
@@ -267,19 +267,19 @@ class TokenAuthCoordinatorMixin:
             # Always persist both tokens to config entry so they survive reloads/restarts.
             # Previously only saved when refresh_token changed — but Keycloak offline_access
             # keeps the same refresh_token, so the new bearer_token was never persisted.
-            new_data = dict(self._entry.data)
+            new_data = dict(self.entry.data)
             needs_update = False
-            if new_refresh != self._entry.data.get("refresh_token", ""):
+            if new_refresh != self.entry.data.get("refresh_token", ""):
                 new_data["refresh_token"] = new_refresh
                 needs_update = True
-            if self._refreshed_token != self._entry.data.get("bearer_token", ""):
+            if self._refreshed_token != self.entry.data.get("bearer_token", ""):
                 new_data["bearer_token"] = self._refreshed_token
                 needs_update = True
             if needs_update:
-                self.hass.config_entries.async_update_entry(self._entry, data=new_data)
+                self.hass.config_entries.async_update_entry(self.entry, data=new_data)
                 _LOGGER.debug("Persisted refreshed tokens to config entry")
             # Schedule next proactive refresh before this token expires
-            self._schedule_token_refresh()
+            self.schedule_token_refresh()
             # Reset failure tracking on success
             if self._token_fail_count > 0:
                 _LOGGER.info(
@@ -290,12 +290,12 @@ class TokenAuthCoordinatorMixin:
                 self._token_alert_sent = False
                 ir.async_delete_issue(self.hass, DOMAIN, "token_expired")
             # Clear auth-server outage state + dismiss the outage notification
-            if self._auth_outage_count > 0:
+            if self.auth_outage_count > 0:
                 _LOGGER.info(
                     "Bosch auth server recovered after %d outage cycles",
-                    self._auth_outage_count,
+                    self.auth_outage_count,
                 )
-                self._auth_outage_count = 0
+                self.auth_outage_count = 0
                 self._auth_outage_next_retry_ts = float("-inf")
                 if self._auth_outage_alert_sent:
                     self._auth_outage_alert_sent = False
@@ -359,7 +359,7 @@ class TokenAuthCoordinatorMixin:
 
     # ── Proactive background token refresh ───────────────────────────────────
 
-    def _schedule_token_refresh(self: Any) -> None:
+    def schedule_token_refresh(self: Any) -> None:
         """Schedule a proactive token refresh 5 minutes before the JWT expires.
 
         Called after every successful token acquisition (startup + renewals).
@@ -392,7 +392,7 @@ class TokenAuthCoordinatorMixin:
             )
             # Cancel any previously scheduled handle so reloads/reschedules
             # don't stack multiple timers that all fire the same refresh.
-            prev = self._token_refresh_handle
+            prev = self.token_refresh_handle
             if prev is not None:
                 try:
                     prev.cancel()
@@ -405,10 +405,10 @@ class TokenAuthCoordinatorMixin:
                 if self.hass.is_stopping:
                     return
                 t = self.hass.async_create_task(self._proactive_refresh())
-                self._bg_tasks.add(t)
-                t.add_done_callback(self._bg_tasks.discard)
+                self.bg_tasks.add(t)
+                t.add_done_callback(self.bg_tasks.discard)
 
-            self._token_refresh_handle = self.hass.loop.call_later(
+            self.token_refresh_handle = self.hass.loop.call_later(
                 refresh_in,
                 _schedule_proactive_refresh,
             )
@@ -426,7 +426,7 @@ class TokenAuthCoordinatorMixin:
             # fires 5 minutes BEFORE expiry by design) can't skip the
             # refresh; only a concurrent caller who already refreshed since
             # this timer fired should short-circuit it.
-            await self._ensure_valid_token(self.token)
+            await self.ensure_valid_token(self.token)
             # _ensure_valid_token calls _schedule_token_refresh on success,
             # so the next refresh is automatically rescheduled.
         except Exception as err:

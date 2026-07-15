@@ -83,10 +83,10 @@ class BoschRefreshSnapshotButton(_BoschEntityBase, ButtonEntity):
             )
         )
         # Refresh the camera image immediately (parallel, faster than coordinator tick)
-        cam = self.coordinator._camera_entities.get(self._cam_id)
+        cam = self.coordinator.camera_entities.get(self._cam_id)
         if cam:
             img_task = self.hass.async_create_task(
-                cam._async_trigger_image_refresh(delay=0)
+                cam.async_trigger_image_refresh(delay=0)
             )
             img_task.add_done_callback(
                 lambda t: (

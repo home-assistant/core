@@ -290,7 +290,7 @@ def check_basic_auth(buf: bytes, user: str, password: str) -> bool:
         return False
     try:
         decoded = base64.b64decode(b64.strip(), validate=True).decode("utf-8")
-    except (ValueError, UnicodeDecodeError):
+    except ValueError, UnicodeDecodeError:
         return False
     return hmac.compare_digest(decoded, f"{user}:{password}")
 
@@ -480,7 +480,7 @@ class _Relay:
                     break
                 buf += chunk
                 buf = await self._drain_requests(buf)
-        except (asyncio.IncompleteReadError, ConnectionError, OSError):
+        except asyncio.IncompleteReadError, ConnectionError, OSError:
             pass
         finally:
             if not self._iw.is_closing():
@@ -521,7 +521,7 @@ class _Relay:
                         self._challenge,
                     )
                     self._iw.write(inject_auth_header(req, auth))
-                except (ValueError, KeyError):
+                except ValueError, KeyError:
                     self._iw.write(req)
             else:
                 self._iw.write(req)
@@ -538,7 +538,7 @@ class _Relay:
                     break
                 self._cw.write(chunk)
                 await self._cw.drain()
-        except (ConnectionError, OSError):
+        except ConnectionError, OSError:
             pass
         finally:
             if not self._cw.is_closing():
@@ -709,7 +709,7 @@ class _CameraServer:
         if body:
             try:
                 first += await reader.readexactly(body)
-            except (asyncio.IncompleteReadError, OSError):
+            except asyncio.IncompleteReadError, OSError:
                 await _close_writer(writer)
                 return
 
@@ -883,7 +883,7 @@ class FrigateCoordinatorMixin:
     # narrower type (e.g. non-Optional FrontDoorRunner) from the `self:
     # Any`-typed assignment in async_sync_frigate_endpoint below. The real
     # instance attribute is set in BoschCameraCoordinator.__init__.
-    _frigate_runner: FrontDoorRunner | None
+    frigate_runner: FrontDoorRunner | None
 
     def _frigate_config(self: Any) -> FrontDoorConfig:
         """Build the front-door config from the integration options."""
@@ -941,13 +941,13 @@ class FrigateCoordinatorMixin:
         Gen2 FW 9.40.25+, rotating Digest credentials and destroying the running
         TLS proxy port every time a recorder reconnects (HA#37 stream-drop loop).
         """
-        live = self._live_connections.get(cam_id, {})
+        live = self.live_connections.get(cam_id, {})
         if live.get("_connection_type") != "LOCAL":
             await self.try_live_connection(cam_id)
-            live = self._live_connections.get(cam_id, {})
+            live = self.live_connections.get(cam_id, {})
         if live.get("_connection_type") != "LOCAL":
             return None
-        port = self._tls_proxy_ports.get(cam_id)
+        port = self.tls_proxy_ports.get(cam_id)
         user = live.get("_local_user")
         pwd = live.get("_local_password")
         if not (port and user and pwd):
@@ -959,8 +959,8 @@ class FrigateCoordinatorMixin:
         if not self.options.get("frigate_endpoints_enabled", False):
             return False
         return bool(
-            self._frigate_high_enabled.get(cam_id)
-            or self._frigate_low_enabled.get(cam_id)
+            self.frigate_high_enabled.get(cam_id)
+            or self.frigate_low_enabled.get(cam_id)
         )
 
     def _frigate_on_idle(self: Any, cam_id: str) -> None:
@@ -974,40 +974,40 @@ class FrigateCoordinatorMixin:
         """
 
         async def _maybe_teardown() -> None:
-            if await self._has_active_consumer(cam_id):
+            if await self.has_active_consumer(cam_id):
                 return  # a live view / recording still needs the session
-            live = self._live_connections.get(cam_id)
+            live = self.live_connections.get(cam_id)
             if not live or live.get("_connection_type") != "LOCAL":
                 return  # nothing LOCAL to tear down
             # Capture the generation at decision time: `_tear_down_live_stream`
             # can now block on the stream lock for the duration of a
             # concurrent rebuild, so by the time it runs, this stale "LOCAL,
             # no consumer" read may no longer describe the current session.
-            gen = self._get_session(cam_id).generation
+            gen = self.get_session(cam_id).generation
             _LOGGER.info(
                 "frigate front-door %s idle for frigate_idle_timeout — tearing "
                 "down on-demand LOCAL session",
                 cam_id[:8],
             )
-            await self._tear_down_live_stream(cam_id, expected_generation=gen)
+            await self.tear_down_live_stream(cam_id, expected_generation=gen)
 
         task = self.hass.async_create_task(
             _maybe_teardown(), f"bosch_shc_camera_frigate_idle_{cam_id[:8]}"
         )
-        self._bg_tasks.add(task)
-        task.add_done_callback(self._bg_tasks.discard)
+        self.bg_tasks.add(task)
+        task.add_done_callback(self.bg_tasks.discard)
 
     async def async_sync_frigate_endpoint(self: Any, cam_id: str) -> None:
         """Start or stop the front-door for a camera per current switch state."""
         wanted = self._frigate_wanted(cam_id)
         if not wanted:
-            if self._frigate_runner is not None and self._frigate_runner.has_server(
+            if self.frigate_runner is not None and self.frigate_runner.has_server(
                 cam_id
             ):
-                self._frigate_runner.stop_server(cam_id)
+                self.frigate_runner.stop_server(cam_id)
             return
-        if self._frigate_runner is None:
-            self._frigate_runner = FrontDoorRunner()
+        if self.frigate_runner is None:
+            self.frigate_runner = FrontDoorRunner()
         config = self._frigate_config()
         base_port = int(self.options.get("frigate_bind_port", 0))
         if base_port > 0:
@@ -1018,7 +1018,7 @@ class FrigateCoordinatorMixin:
             idx = sorted_cams.index(cam_id) if cam_id in sorted_cams else 0
             preferred_port = base_port + idx
             try:
-                port = await self._frigate_runner.start_server(
+                port = await self.frigate_runner.start_server(
                     cam_id,
                     config,
                     self._frigate_resolve_inner,
@@ -1038,7 +1038,7 @@ class FrigateCoordinatorMixin:
         else:
             # Ephemeral mode: use in-session sticky port; fall back on collision.
             try:
-                port = await self._frigate_runner.start_server(
+                port = await self.frigate_runner.start_server(
                     cam_id,
                     config,
                     self._frigate_resolve_inner,
@@ -1055,7 +1055,7 @@ class FrigateCoordinatorMixin:
                 )
                 self._frigate_sticky_port.pop(cam_id, None)
                 try:
-                    port = await self._frigate_runner.start_server(
+                    port = await self.frigate_runner.start_server(
                         cam_id,
                         config,
                         self._frigate_resolve_inner,
@@ -1092,15 +1092,15 @@ class FrigateCoordinatorMixin:
         if not self.options.get("frigate_endpoints_enabled", False):
             return None
         enabled = (
-            self._frigate_high_enabled
+            self.frigate_high_enabled
             if quality == QUALITY_HIGH
-            else self._frigate_low_enabled
+            else self.frigate_low_enabled
         )
         if not enabled.get(cam_id):
             return None
-        if self._frigate_runner is None or not self._frigate_runner.has_server(cam_id):
+        if self.frigate_runner is None or not self.frigate_runner.has_server(cam_id):
             return None
-        port = self._frigate_runner.port(cam_id)
+        port = self.frigate_runner.port(cam_id)
         if not port:
             return None
         config = self._frigate_config()
@@ -1117,9 +1117,9 @@ class FrigateCoordinatorMixin:
 
     def async_stop_frigate_endpoints(self: Any) -> None:
         """Tear down all front-doors (integration unload / shutdown)."""
-        if self._frigate_runner is not None:
+        if self.frigate_runner is not None:
             try:
-                self._frigate_runner.stop_all()
+                self.frigate_runner.stop_all()
             except Exception as err:  # broad: teardown must never block unload
                 _LOGGER.debug("frigate front-doors stop_all raised: %s", err)
-            self._frigate_runner = None
+            self.frigate_runner = None

@@ -47,18 +47,16 @@ def _register_services(hass: HomeAssistant) -> None:
             if not coord:
                 continue
             if target:
-                for _cam_id, cam in coord._camera_entities.items():
+                for _cam_id, cam in coord.camera_entities.items():
                     if getattr(cam, "entity_id", None) == target:
-                        hass.async_create_task(
-                            cam._async_trigger_image_refresh(delay=0)
-                        )
+                        hass.async_create_task(cam.async_trigger_image_refresh(delay=0))
                 continue
             # Fire coordinator refresh in background — do NOT await it.
             # async_request_refresh() awaits the full coordinator tick which can
             # take 6-22 s; blocking here freezes the card until the tick finishes.
             hass.async_create_task(coord.async_request_refresh())
-            for _cam_id, cam in coord._camera_entities.items():
-                hass.async_create_task(cam._async_trigger_image_refresh(delay=0))
+            for _cam_id, cam in coord.camera_entities.items():
+                hass.async_create_task(cam.async_trigger_image_refresh(delay=0))
 
     async def handle_open_live_connection(call: ServiceCall) -> None:
         """Try to open a live proxy connection for a specific camera."""
@@ -244,7 +242,7 @@ def _register_services(hass: HomeAssistant) -> None:
                 }
                 # Fetch current rule from cache or API (API needs all fields for PUT)
                 existing = None
-                for rule in coord._rules_cache.get(cam_id, []):
+                for rule in coord.rules_cache.get(cam_id, []):
                     if rule.get("id") == rule_id:
                         existing = dict(rule)
                         break
@@ -954,7 +952,7 @@ def _register_services(hass: HomeAssistant) -> None:
             coord = entry.runtime_data
             if coord:
                 try:
-                    cached = getattr(coord, "_lighting_options_cache", {}).get(cam_id)
+                    cached = getattr(coord, "lighting_options_cache", {}).get(cam_id)
                     if cached:
                         data = cached
                     else:
@@ -1130,10 +1128,8 @@ def _register_services(hass: HomeAssistant) -> None:
                                 # serve get_lighting_schedule stale pre-write data
                                 # for up to a full poll interval (bug-hunt finding,
                                 # 3-agent verification 2026-07-11).
-                                coord._lighting_options_cache[cam_id] = data
-                                coord._lighting_options_set_at[cam_id] = (
-                                    time.monotonic()
-                                )
+                                coord.lighting_options_cache[cam_id] = data
+                                coord.lighting_options_set_at[cam_id] = time.monotonic()
                                 await coord.async_request_refresh()
                             else:
                                 body = await put_resp.text()

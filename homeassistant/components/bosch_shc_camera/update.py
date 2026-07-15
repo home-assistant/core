@@ -72,13 +72,13 @@ class BoschFirmwareUpdate(_BoschEntityBase, UpdateEntity):
     @property
     @override
     def installed_version(self) -> str | None:
-        fw: dict[str, Any] = self.coordinator._firmware_cache.get(self._cam_id, {})
+        fw: dict[str, Any] = self.coordinator.firmware_cache.get(self._cam_id, {})
         return fw.get("current") or self._fw or None
 
     @property
     @override
     def latest_version(self) -> str | None:
-        fw: dict[str, Any] = self.coordinator._firmware_cache.get(self._cam_id, {})
+        fw: dict[str, Any] = self.coordinator.firmware_cache.get(self._cam_id, {})
         if not fw:
             return self.installed_version
         up_to_date: bool | None = fw.get("upToDate", None)
@@ -96,7 +96,7 @@ class BoschFirmwareUpdate(_BoschEntityBase, UpdateEntity):
     @property
     @override
     def in_progress(self) -> bool:
-        fw: dict[str, Any] = self.coordinator._firmware_cache.get(self._cam_id, {})
+        fw: dict[str, Any] = self.coordinator.firmware_cache.get(self._cam_id, {})
         return bool(fw.get("updating", False))
 
     @property
@@ -107,7 +107,7 @@ class BoschFirmwareUpdate(_BoschEntityBase, UpdateEntity):
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        fw: dict[str, Any] = self.coordinator._firmware_cache.get(self._cam_id, {})
+        fw: dict[str, Any] = self.coordinator.firmware_cache.get(self._cam_id, {})
         return {
             "up_to_date": fw.get("upToDate"),
             "updating": fw.get("updating", False),

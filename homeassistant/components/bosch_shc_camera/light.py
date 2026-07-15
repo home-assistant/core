@@ -59,7 +59,7 @@ async def async_setup_entry(
         # persistent `_hw_version` store so a cold-start during a cloud outage
         # still creates the right entities for Outdoor II. `getattr` keeps the
         # test stubs that don't seed the `_hw_version` dict happy.
-        _hw_cache = getattr(coordinator, "_hw_version", {}) or {}
+        _hw_cache = getattr(coordinator, "hw_version", {}) or {}
         hw = cam_info.get("hardwareVersion") or _hw_cache.get(cam_id, "CAMERA")
         from .models import get_model_config
 
@@ -133,7 +133,7 @@ class _BoschLightBase(
             try:
                 r, g, b = (int(lrc[0]), int(lrc[1]), int(lrc[2]))
                 self._last_color_hex = f"#{r:02X}{g:02X}{b:02X}"
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 pass
         lbri = last_state.attributes.get("last_brightness_pct")
         if isinstance(lbri, (int, float)) and 1 <= lbri <= 100:
@@ -238,7 +238,7 @@ class _BoschLightBase(
 
         if _is_gen2(self.coordinator, self._cam_id):
             return True
-        hw = self.coordinator._hw_version.get(self._cam_id)
+        hw = self.coordinator.hw_version.get(self._cam_id)
         return hw in (None, "", "CAMERA")
 
     def _load_state_from_cache(self) -> None:
@@ -248,7 +248,7 @@ class _BoschLightBase(
         Bosch app (polled by the coordinator).  Remembers last non-zero
         brightness and last color for restore-on-turn-on.
         """
-        lsc = self.coordinator._lighting_switch_cache.get(self._cam_id, {})
+        lsc = self.coordinator.lighting_switch_cache.get(self._cam_id, {})
         if not lsc:
             return
         led = lsc.get(self._led_key, {})
@@ -270,7 +270,7 @@ class _BoschLightBase(
 
     def _get_current_state(self) -> dict[str, Any]:
         """Get the current lighting/switch state from coordinator cache."""
-        cached = self.coordinator._lighting_switch_cache.get(self._cam_id, {})
+        cached = self.coordinator.lighting_switch_cache.get(self._cam_id, {})
         # Default fallback if cache is empty
         return {
             "frontLightSettings": cached.get(
@@ -306,10 +306,10 @@ class _BoschLightBase(
         # only the changed group(s) back (never the whole entry). Matches the
         # merge-only-own-key fix number.py already got in 2026-06-02.
         # (bug-hunt 2026-07-01)
-        locks = getattr(self.coordinator, "_lighting_switch_locks", None)
+        locks = getattr(self.coordinator, "lighting_switch_locks", None)
         if locks is None:
             locks = {}
-            self.coordinator._lighting_switch_locks = locks
+            self.coordinator.lighting_switch_locks = locks
         lock = locks.get(self._cam_id)
         if lock is None:
             lock = asyncio.Lock()
@@ -352,7 +352,7 @@ class _BoschLightBase(
                             # Merge ONLY the group(s) we changed into the live
                             # cache — never overwrite the whole entry, or a sibling
                             # group written concurrently would be clobbered.
-                            cur = self.coordinator._lighting_switch_cache.setdefault(
+                            cur = self.coordinator.lighting_switch_cache.setdefault(
                                 self._cam_id, {}
                             )
                             for key in updates:
@@ -421,14 +421,14 @@ class _BoschRgbLedLight(_BoschLightBase):
         Called after light entity turn_on/turn_off to immediately update the
         wallwasher switch without waiting for the next coordinator poll.
         """
-        lsc = self.coordinator._lighting_switch_cache.get(self._cam_id, {})
+        lsc = self.coordinator.lighting_switch_cache.get(self._cam_id, {})
         top_bri = lsc.get("topLedLightSettings", {}).get("brightness", 0)
         bot_bri = lsc.get("bottomLedLightSettings", {}).get("brightness", 0)
         front_bri = lsc.get("frontLightSettings", {}).get("brightness", 0)
-        cache_entry = self.coordinator._shc_state_cache.setdefault(self._cam_id, {})
+        cache_entry = self.coordinator.shc_state_cache.setdefault(self._cam_id, {})
         cache_entry["wallwasher"] = top_bri > 0 or bot_bri > 0
         cache_entry["camera_light"] = front_bri > 0 or top_bri > 0 or bot_bri > 0
-        self.coordinator._light_set_at[self._cam_id] = time.monotonic()
+        self.coordinator.light_set_at[self._cam_id] = time.monotonic()
         self.coordinator.async_update_listeners()
 
     @override
@@ -510,7 +510,7 @@ class _BoschRgbLedLight(_BoschLightBase):
             self._is_on = False
             self._brightness = 0
             # If BOTH top+bottom are now off, also disable topdown switch
-            lsc = self.coordinator._lighting_switch_cache.get(self._cam_id, {})
+            lsc = self.coordinator.lighting_switch_cache.get(self._cam_id, {})
             top_bri = lsc.get("topLedLightSettings", {}).get("brightness", 0)
             bot_bri = lsc.get("bottomLedLightSettings", {}).get("brightness", 0)
             if top_bri == 0 and bot_bri == 0:

@@ -84,37 +84,37 @@ def shc_ready(coordinator: BoschCameraCoordinator) -> bool:
     """
     if not shc_configured(coordinator):
         return False
-    if coordinator._shc_available:
+    if coordinator.shc_available:
         return True
     # SHC is offline -- check if retry interval has passed
     now = time.monotonic()
-    if now - coordinator._shc_last_check >= coordinator._SHC_RETRY_INTERVAL:
+    if now - coordinator.shc_last_check >= coordinator.SHC_RETRY_INTERVAL:
         return True  # allow one retry
     return False
 
 
 def _shc_mark_success(coordinator: BoschCameraCoordinator) -> None:
     """Mark SHC as healthy after a successful request."""
-    if not coordinator._shc_available:
+    if not coordinator.shc_available:
         _LOGGER.info("SHC local API is back online")
-    coordinator._shc_available = True
-    coordinator._shc_fail_count = 0
+    coordinator.shc_available = True
+    coordinator.shc_fail_count = 0
 
 
 def _shc_mark_failure(coordinator: BoschCameraCoordinator) -> None:
     """Track a failed SHC request; mark offline after N consecutive failures."""
-    coordinator._shc_fail_count += 1
+    coordinator.shc_fail_count += 1
     if (
-        coordinator._shc_fail_count >= coordinator._SHC_MAX_FAILS
-        and coordinator._shc_available
+        coordinator.shc_fail_count >= coordinator.SHC_MAX_FAILS
+        and coordinator.shc_available
     ):
-        coordinator._shc_available = False
-        coordinator._shc_last_check = time.monotonic()
+        coordinator.shc_available = False
+        coordinator.shc_last_check = time.monotonic()
         _LOGGER.warning(
             "SHC local API marked offline after %d consecutive failures -- "
             "will retry in %ds. Falling back to cloud API.",
-            coordinator._shc_fail_count,
-            coordinator._SHC_RETRY_INTERVAL,
+            coordinator.shc_fail_count,
+            coordinator.SHC_RETRY_INTERVAL,
         )
 
 
@@ -151,16 +151,16 @@ async def async_shc_request(
     # Reuse connector across calls — avoids a new TLS handshake per request
     _connector_key = (cert_path, key_path)
     _cached_conn: aiohttp.TCPConnector | None = getattr(
-        coordinator, "_shc_connector", None
+        coordinator, "shc_connector", None
     )
     if (
         _cached_conn is None
         or _cached_conn.closed
-        or getattr(coordinator, "_shc_connector_key", None) != _connector_key
+        or getattr(coordinator, "shc_connector_key", None) != _connector_key
     ):
         _cached_conn = aiohttp.TCPConnector(ssl=ctx)
-        coordinator._shc_connector = _cached_conn
-        coordinator._shc_connector_key = _connector_key
+        coordinator.shc_connector = _cached_conn
+        coordinator.shc_connector_key = _connector_key
 
     url = f"https://{shc_ip}:8444/smarthome{path}"
     headers = {"api-version": "3.2", "Content-Type": "application/json"}
@@ -217,7 +217,7 @@ async def _update_one_camera_shc_state(
         _LOGGER.debug("SHC: no device found matching camera title '%s'", title)
         return
 
-    entry = coordinator._shc_state_cache.setdefault(
+    entry = coordinator.shc_state_cache.setdefault(
         cam_id,
         {
             "device_id": device_id,
@@ -238,8 +238,8 @@ async def _update_one_camera_shc_state(
         # Without this, a fresh user-toggle can be overwritten by a
         # stale SHC reading within the cloud's eventual-consistency
         # window. Fixed 2026-05-05.
-        light_lock = coordinator._light_set_at.get(cam_id)
-        ttl = getattr(coordinator, "_WRITE_LOCK_SECS", 0)
+        light_lock = coordinator.light_set_at.get(cam_id)
+        ttl = getattr(coordinator, "WRITE_LOCK_SECS", 0)
         light_locked = light_lock is not None and (time.monotonic() - light_lock) < ttl
         old_light = entry.get("camera_light")
         if light_locked and old_light is not None and old_light != new_light:
@@ -266,8 +266,8 @@ async def _update_one_camera_shc_state(
         # user-toggle within the cloud's eventual-consistency window
         # → first OFF-toggle visibly reverts to ON until the next
         # user click forces the issue. Fixed 2026-05-05.
-        lock_ts = coordinator._privacy_set_at.get(cam_id)
-        ttl = getattr(coordinator, "_WRITE_LOCK_SECS", 0)
+        lock_ts = coordinator.privacy_set_at.get(cam_id)
+        ttl = getattr(coordinator, "WRITE_LOCK_SECS", 0)
         locked = lock_ts is not None and (time.monotonic() - lock_ts) < ttl
         old_priv = entry.get("privacy_mode")
         if locked and old_priv is not None and old_priv != new_priv:
@@ -299,13 +299,13 @@ async def async_update_shc_states(
 
     # Re-fetch device list at most once per 60 s
     now = time.monotonic()
-    if now - coordinator._last_shc_fetch >= 60 or not coordinator._shc_devices_raw:
+    if now - coordinator.last_shc_fetch >= 60 or not coordinator.shc_devices_raw:
         devices = await async_shc_request(coordinator, "GET", "/devices")
         if isinstance(devices, list):
-            coordinator._shc_devices_raw = devices
-            coordinator._last_shc_fetch = now
+            coordinator.shc_devices_raw = devices
+            coordinator.last_shc_fetch = now
 
-    shc_devices = coordinator._shc_devices_raw
+    shc_devices = coordinator.shc_devices_raw
     if not shc_devices:
         return
 
@@ -324,7 +324,7 @@ async def async_shc_set_camera_light(
     coordinator: BoschCameraCoordinator, cam_id: str, on: bool
 ) -> bool:
     """Turn the camera indicator LED on (True) or off (False) via SHC API."""
-    device_id = coordinator._shc_state_cache.get(cam_id, {}).get("device_id")
+    device_id = coordinator.shc_state_cache.get(cam_id, {}).get("device_id")
     if not device_id:
         # Expected on cold start before the first SHC poll populates the cache;
         # the next coordinator tick fixes it → DEBUG, not WARNING.
@@ -341,7 +341,7 @@ async def async_shc_set_camera_light(
         and isinstance(result, dict)
         and result.get("ok", result.get("status", 0) in (200, 201, 204))
     ):
-        coordinator._shc_state_cache[cam_id]["camera_light"] = on
+        coordinator.shc_state_cache[cam_id]["camera_light"] = on
         coordinator.async_update_listeners()
         # No forced refresh — optimistic cache + listeners above suffice; regular tick confirms. Avoids re-registering go2rtc / disrupting unrelated live streams (path C, 2026-05-29).
         return True
@@ -352,7 +352,7 @@ async def async_shc_set_privacy_mode(
     coordinator: BoschCameraCoordinator, cam_id: str, enabled: bool
 ) -> bool:
     """Enable (True) or disable (False) privacy mode via SHC API (legacy fallback)."""
-    device_id = coordinator._shc_state_cache.get(cam_id, {}).get("device_id")
+    device_id = coordinator.shc_state_cache.get(cam_id, {}).get("device_id")
     if not device_id:
         # Expected on cold start before the first SHC poll populates the cache;
         # the next coordinator tick fixes it → DEBUG, not WARNING.
@@ -371,8 +371,8 @@ async def async_shc_set_privacy_mode(
         and isinstance(result, dict)
         and result.get("ok", result.get("status", 0) in (200, 201, 204))
     ):
-        coordinator._shc_state_cache[cam_id]["privacy_mode"] = enabled
-        coordinator._privacy_set_at[cam_id] = time.monotonic()
+        coordinator.shc_state_cache[cam_id]["privacy_mode"] = enabled
+        coordinator.privacy_set_at[cam_id] = time.monotonic()
         coordinator.async_update_listeners()
         # No forced refresh — see async_cloud_set_privacy_mode (path C,
         # 2026-05-29): a privacy toggle must not re-register go2rtc streams and
@@ -401,10 +401,10 @@ def _schedule_privacy_off_snapshot(
       next poll, stalling the card spinner on the old image; 5s covers the
       slowest observed shutter-open + encoder-ready cycle.
     """
-    cam = coordinator._camera_entities.get(cam_id)
+    cam = coordinator.camera_entities.get(cam_id)
     if not cam:
         return
-    hw = coordinator._hw_version.get(cam_id, "")
+    hw = coordinator.hw_version.get(cam_id, "")
     hw_lower = hw.lower()
     is_indoor = (
         hw in ("INDOOR", "CAMERA_360", "HOME_Eyes_Indoor", "CAMERA_INDOOR_GEN2")
@@ -418,7 +418,7 @@ def _schedule_privacy_off_snapshot(
         hw,
         delay,
     )
-    coordinator.hass.async_create_task(cam._async_trigger_image_refresh(delay=delay))
+    coordinator.hass.async_create_task(cam.async_trigger_image_refresh(delay=delay))
 
 
 # ── Cloud API setters ────────────────────────────────────────────────────────
@@ -481,12 +481,11 @@ async def async_cloud_set_privacy_mode(
     # we go straight to the LAN/SHC fallback instead of re-hitting the cloud for
     # another 444. -inf = never (SENTINEL_RULE).
     _CLOUD_444_COOLDOWN = 120
-    _cloud_444_at = getattr(coordinator, "_cloud_444_at", {})
+    cloud_444_at = getattr(coordinator, "cloud_444_at", {})
     _recent_444 = (
-        _cloud_444_at.get(cam_id, float("-inf"))
-        > time.monotonic() - _CLOUD_444_COOLDOWN
+        cloud_444_at.get(cam_id, float("-inf")) > time.monotonic() - _CLOUD_444_COOLDOWN
     )
-    cam_offline = coordinator._cached_status.get(cam_id) == "OFFLINE" or _recent_444
+    cam_offline = coordinator.cached_status.get(cam_id) == "OFFLINE" or _recent_444
     if cam_offline:
         _LOGGER.debug(
             "cloud_set_privacy_mode: cam %s offline/cloud-degraded — skipping "
@@ -507,10 +506,8 @@ async def async_cloud_set_privacy_mode(
             # SHC background tick can never see a window where the
             # cache was changed but _privacy_set_at is still unset
             # (the race that caused the first OFF-toggle to revert).
-            coordinator._privacy_set_at[cam_id] = time.monotonic()
-            coordinator._shc_state_cache.setdefault(cam_id, {})["privacy_mode"] = (
-                enabled
-            )
+            coordinator.privacy_set_at[cam_id] = time.monotonic()
+            coordinator.shc_state_cache.setdefault(cam_id, {})["privacy_mode"] = enabled
             coordinator.async_update_listeners()
             _LOGGER.debug(
                 "cloud_set_privacy_mode: %s -> %s (HTTP %d)",
@@ -535,14 +532,14 @@ async def async_cloud_set_privacy_mode(
             # Token expired -- refresh and retry once
             _LOGGER.info("cloud_set_privacy_mode: 401 -- refreshing token and retrying")
             try:
-                token = await coordinator._ensure_valid_token(token)
+                token = await coordinator.ensure_valid_token(token)
             except Exception:  # noqa: S110 # token refresh failed; fall through to local SHC path
                 pass  # fall through to SHC
             else:
                 retry_result = await cloud_put_json(session, token, url, body)
                 if retry_result.ok:
-                    coordinator._privacy_set_at[cam_id] = time.monotonic()
-                    coordinator._shc_state_cache.setdefault(cam_id, {})[
+                    coordinator.privacy_set_at[cam_id] = time.monotonic()
+                    coordinator.shc_state_cache.setdefault(cam_id, {})[
                         "privacy_mode"
                     ] = enabled
                     coordinator.async_update_listeners()
@@ -553,10 +550,10 @@ async def async_cloud_set_privacy_mode(
                         _schedule_privacy_off_snapshot(coordinator, cam_id)
                     return True
 
-        if result.status == 444 and hasattr(coordinator, "_cloud_444_at"):
+        if result.status == 444 and hasattr(coordinator, "cloud_444_at"):
             # Session quota / not-ready — remember so the next write
             # skips the cloud and uses the LAN/SHC fallback directly.
-            coordinator._cloud_444_at[cam_id] = time.monotonic()
+            coordinator.cloud_444_at[cam_id] = time.monotonic()
         if result.status is not None:
             _LOGGER.warning(
                 "cloud_set_privacy_mode: HTTP %d for %s", result.status, cam_id
@@ -571,12 +568,12 @@ async def async_cloud_set_privacy_mode(
     # Gate: confirmed Gen2 OR unknown (cold-start cloud-outage). Gen1 known →
     # skip (no rcp.xml endpoint). For unknown, the write either succeeds
     # (Gen2) or fails cleanly (Gen1) — same shape as if we'd known.
-    _hw = coordinator._hw_version.get(cam_id)
+    _hw = coordinator.hw_version.get(cam_id)
     _gen2_or_unknown = _is_gen2(coordinator, cam_id) or _hw in (None, "", "CAMERA")
     if _gen2_or_unknown:
-        creds = coordinator._local_creds_cache.get(cam_id)
+        creds = coordinator.local_creds_cache.get(cam_id)
         cam_host = (
-            creds.get("host") if creds else coordinator._rcp_lan_ip_cache.get(cam_id)
+            creds.get("host") if creds else coordinator.rcp_lan_ip_cache.get(cam_id)
         )
         # Pass cycling LOCAL Digest creds — `rcp.xml` runs HTTPS-only and
         # requires Digest auth on Gen2. Falls through to anonymous mode if
@@ -600,14 +597,14 @@ async def async_cloud_set_privacy_mode(
                     cam_id,
                 )
                 _now = time.monotonic()
-                coordinator._privacy_set_at[cam_id] = _now
+                coordinator.privacy_set_at[cam_id] = _now
                 # Local RCP writes briefly tear down the camera's cloud TLS
                 # session as Digest creds rotate. Record the timestamp so
                 # `is_lan_reachable()` masks transient ping failures in the
                 # ~30 s window after the write.
-                if hasattr(coordinator, "_local_write_at"):
-                    coordinator._local_write_at[cam_id] = _now
-                coordinator._shc_state_cache.setdefault(cam_id, {})["privacy_mode"] = (
+                if hasattr(coordinator, "local_write_at"):
+                    coordinator.local_write_at[cam_id] = _now
+                coordinator.shc_state_cache.setdefault(cam_id, {})["privacy_mode"] = (
                     enabled
                 )
                 coordinator.async_update_listeners()
@@ -643,7 +640,7 @@ def _is_gen2(coordinator: BoschCameraCoordinator, cam_id: str) -> bool:
     """Check if a camera is Gen2 (uses different lighting endpoints)."""
     from .models import get_model_config
 
-    hw = coordinator._hw_version.get(cam_id, "CAMERA")
+    hw = coordinator.hw_version.get(cam_id, "CAMERA")
     return get_model_config(hw).generation >= 2
 
 
@@ -680,7 +677,7 @@ async def async_cloud_set_camera_light(
         else:
             # Gen1: single endpoint with combined body
             url = f"{CLOUD_API}/v11/video_inputs/{cam_id}/lighting_override"
-            cache = coordinator._shc_state_cache.get(cam_id, {})
+            cache = coordinator.shc_state_cache.get(cam_id, {})
             last_intensity = cache.get("front_light_intensity") or 1.0
             if on:
                 body = {
@@ -698,11 +695,11 @@ async def async_cloud_set_camera_light(
                 )
 
         if ok:
-            cache_entry = coordinator._shc_state_cache.setdefault(cam_id, {})
+            cache_entry = coordinator.shc_state_cache.setdefault(cam_id, {})
             cache_entry["camera_light"] = on
             cache_entry["front_light"] = on
             cache_entry["wallwasher"] = on
-            coordinator._light_set_at[cam_id] = time.monotonic()
+            coordinator.light_set_at[cam_id] = time.monotonic()
             coordinator.async_update_listeners()
             _LOGGER.debug(
                 "cloud_set_camera_light: %s -> %s (gen%d)",
@@ -745,7 +742,7 @@ async def async_cloud_set_light_component(
     # session, so we skip the (sometimes expensive) session+resolver setup
     # entirely when token is missing. Type guard before each cloud_put_json call.
     session = await async_get_bosch_cloud_session(coordinator.hass) if token else None
-    cache = coordinator._shc_state_cache.get(cam_id, {})
+    cache = coordinator.shc_state_cache.get(cam_id, {})
     gen2 = _is_gen2(coordinator, cam_id)
     ok = False
 
@@ -759,16 +756,16 @@ async def async_cloud_set_light_component(
             # Wallwasher controls BOTH top + bottom LEDs.
             # Must sync brightness via /lighting/switch AND toggle via /topdown
             # to keep light entities and wallwasher switch in sync.
-            lsc = coordinator._lighting_switch_cache.get(cam_id, {})
+            lsc = coordinator.lighting_switch_cache.get(cam_id, {})
             front_settings = lsc.get(
                 "frontLightSettings",
                 {"brightness": 0, "color": None, "whiteBalance": -1.0},
             )
-            if not hasattr(coordinator, "_last_topdown_brightness"):
-                coordinator._last_topdown_brightness = {}
+            if not hasattr(coordinator, "last_topdown_brightness"):
+                coordinator.last_topdown_brightness = {}
             if value:
                 # Turn ON: restore last brightness, then enable topdown
-                saved = coordinator._last_topdown_brightness.get(cam_id, {})
+                saved = coordinator.last_topdown_brightness.get(cam_id, {})
                 top_bri = saved.get("top", 100)
                 bot_bri = saved.get("bottom", 100)
                 top_settings = {
@@ -788,7 +785,7 @@ async def async_cloud_set_light_component(
                 cur_top = lsc.get("topLedLightSettings", {}).get("brightness", 0)
                 cur_bot = lsc.get("bottomLedLightSettings", {}).get("brightness", 0)
                 if cur_top > 0 or cur_bot > 0:
-                    coordinator._last_topdown_brightness[cam_id] = {
+                    coordinator.last_topdown_brightness[cam_id] = {
                         "top": cur_top or 100,
                         "bottom": cur_bot or 100,
                     }
@@ -813,7 +810,7 @@ async def async_cloud_set_light_component(
             assert session is not None  # narrowed by `if gen2 and token` above
             step1 = await cloud_put_json(session, token, base, full_body)
             if step1.ok:
-                coordinator._lighting_switch_cache[cam_id] = (
+                coordinator.lighting_switch_cache[cam_id] = (
                     step1.body if step1.body is not None else full_body
                 )
             else:
@@ -896,7 +893,7 @@ async def async_cloud_set_light_component(
             )
 
     if ok:
-        cache_entry = coordinator._shc_state_cache.setdefault(cam_id, {})
+        cache_entry = coordinator.shc_state_cache.setdefault(cam_id, {})
         if component == "front":
             cache_entry["front_light"] = value
         elif component == "wallwasher":
@@ -906,7 +903,7 @@ async def async_cloud_set_light_component(
         cache_entry["camera_light"] = cache_entry.get("front_light") or cache_entry.get(
             "wallwasher"
         )
-        coordinator._light_set_at[cam_id] = time.monotonic()
+        coordinator.light_set_at[cam_id] = time.monotonic()
         coordinator.async_update_listeners()
         _LOGGER.debug(
             "cloud_set_light_component: %s %s=%s (gen%d)",
@@ -924,14 +921,14 @@ async def async_cloud_set_light_component(
     # the LAN RCP service-auth gate. Treat "Gen2 confirmed OR unknown" as
     # eligible so cold-start during a cloud outage isn't artificially blocked
     # (Bug 2026-05-20).
-    _hw_light = coordinator._hw_version.get(cam_id)
+    _hw_light = coordinator.hw_version.get(cam_id)
     if (gen2 or _hw_light in (None, "", "CAMERA")) and component in (
         "front",
         "intensity",
     ):
-        creds = coordinator._local_creds_cache.get(cam_id)
+        creds = coordinator.local_creds_cache.get(cam_id)
         cam_host = (
-            creds.get("host") if creds else coordinator._rcp_lan_ip_cache.get(cam_id)
+            creds.get("host") if creds else coordinator.rcp_lan_ip_cache.get(cam_id)
         )
         local_user = creds.get("user") if creds else None
         local_pass = creds.get("password") if creds else None
@@ -964,7 +961,7 @@ async def async_cloud_set_light_component(
                     value,
                 )
                 _now = time.monotonic()
-                cache_entry = coordinator._shc_state_cache.setdefault(cam_id, {})
+                cache_entry = coordinator.shc_state_cache.setdefault(cam_id, {})
                 if component == "front":
                     cache_entry["front_light"] = value
                 else:
@@ -972,9 +969,9 @@ async def async_cloud_set_light_component(
                 cache_entry["camera_light"] = cache_entry.get(
                     "front_light"
                 ) or cache_entry.get("wallwasher")
-                coordinator._light_set_at[cam_id] = _now
-                if hasattr(coordinator, "_local_write_at"):
-                    coordinator._local_write_at[cam_id] = _now
+                coordinator.light_set_at[cam_id] = _now
+                if hasattr(coordinator, "local_write_at"):
+                    coordinator.local_write_at[cam_id] = _now
                 coordinator.async_update_listeners()
                 return True
             _LOGGER.debug(
@@ -1016,10 +1013,10 @@ async def async_cloud_set_notifications(
 
         result = await cloud_put_json(session, token, url, body)
         if result.ok:
-            coordinator._shc_state_cache.setdefault(cam_id, {})[
+            coordinator.shc_state_cache.setdefault(cam_id, {})[
                 "notifications_status"
             ] = status
-            coordinator._notif_set_at[cam_id] = time.monotonic()
+            coordinator.notif_set_at[cam_id] = time.monotonic()
             coordinator.async_update_listeners()
             _LOGGER.debug(
                 "cloud_set_notifications: %s -> %s (HTTP %s)",
@@ -1048,7 +1045,7 @@ async def async_cloud_set_pan(
     Uses PUT /v11/video_inputs/{id}/pan -- no SHC local API needed.
     """
     # Block pan while privacy mode is active (camera shutter closed, motor disabled)
-    privacy = coordinator._shc_state_cache.get(cam_id, {}).get("privacy_mode")
+    privacy = coordinator.shc_state_cache.get(cam_id, {}).get("privacy_mode")
     if privacy:
         _LOGGER.debug("cloud_set_pan: blocked — Privacy Mode is ON for %s", cam_id)
         return False
@@ -1070,7 +1067,7 @@ async def async_cloud_set_pan(
         if result.body is not None:
             actual = result.body.get("currentAbsolutePosition", position)
             eta = result.body.get("estimatedTimeToCompletion", 0)
-        coordinator._pan_cache[cam_id] = actual
+        coordinator.pan_cache[cam_id] = actual
         coordinator.async_update_listeners()
         _LOGGER.debug(
             "cloud_set_pan: %s -> %d deg (HTTP %s, ETA %dms)",

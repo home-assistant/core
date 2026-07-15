@@ -63,7 +63,7 @@ async def _warn_if_privacy_on(entity: Any, feature_name: str) -> bool:
     """
     coordinator = entity.coordinator
     cam_id = entity._cam_id
-    cache = coordinator._shc_state_cache.get(cam_id, {})
+    cache = coordinator.shc_state_cache.get(cam_id, {})
     privacy_on = bool(cache.get("privacy_mode"))
     if not privacy_on:
         return False

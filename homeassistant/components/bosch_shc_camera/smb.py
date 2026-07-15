@@ -240,7 +240,7 @@ def sync_local_save(
             time=time_str,
             type=etype,
         )
-    except (KeyError, ValueError):
+    except KeyError, ValueError:
         sub = cam_safe
 
     folder = os.path.join(download_path, sub.replace("/", os.sep))
@@ -256,7 +256,7 @@ def sync_local_save(
             month=month,
             day=day,
         )
-    except (KeyError, ValueError):
+    except KeyError, ValueError:
         stem = f"{cam_safe}_{date_str}_{time_str}_{etype}_{ev_id}"
 
     for ext, url in [("jpg", ev.get("imageUrl")), ("mp4", ev.get("videoClipUrl"))]:

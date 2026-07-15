@@ -76,10 +76,12 @@ async def _get_go2rtc_session(
     keep working without every one of them growing a
     `_go2rtc_session`/`_go2rtc_session_lock` attribute.
     """
-    existing: aiohttp.ClientSession | None = getattr(coordinator, "_go2rtc_session", None)
+    existing: aiohttp.ClientSession | None = getattr(
+        coordinator, "go2rtc_session", None
+    )
     if existing is not None and not existing.closed:
         return existing
-    if getattr(coordinator, "_go2rtc_teardown_done", False):
+    if getattr(coordinator, "go2rtc_teardown_done", False):
         # _async_cancel_coordinator_tasks already ran and closed the shared
         # session for good (unload/HA-stop). A stray caller racing that
         # teardown — e.g. camera.py's stream_source() from a live frontend
@@ -92,26 +94,26 @@ async def _get_go2rtc_session(
         # already catches RuntimeError and treats it like an unreachable
         # endpoint (see the (..., RuntimeError) except clauses below).
         raise RuntimeError("go2rtc session unavailable — coordinator is shutting down")
-    lock = getattr(coordinator, "_go2rtc_session_lock", None)
+    lock = getattr(coordinator, "go2rtc_session_lock", None)
     if lock is None:
         lock = asyncio.Lock()
-        coordinator._go2rtc_session_lock = lock
+        coordinator.go2rtc_session_lock = lock
     async with lock:
         # Double-check inside the lock — another coroutine may have already
         # created it while we awaited the lock (register/unregister/
         # consumer-count can all fire concurrently across cameras).
         existing = cast(
             "aiohttp.ClientSession | None",
-            getattr(coordinator, "_go2rtc_session", None),
+            getattr(coordinator, "go2rtc_session", None),
         )
         if existing is not None and not existing.closed:
             return existing
-        if getattr(coordinator, "_go2rtc_teardown_done", False):
+        if getattr(coordinator, "go2rtc_teardown_done", False):
             raise RuntimeError(
                 "go2rtc session unavailable — coordinator is shutting down"
             )
         session = aiohttp.ClientSession()
-        coordinator._go2rtc_session = session
+        coordinator.go2rtc_session = session
         return session
 
 
@@ -148,10 +150,10 @@ async def ensure_go2rtc_schemes_fresh(coordinator: BoschCameraCoordinator) -> No
     on the existing instance bypasses the reload churn and pulls the
     current scheme list now that go2rtc is ready.
     """
-    if not hasattr(coordinator, "_last_schemes_refresh"):
-        coordinator._last_schemes_refresh = float("-inf")
+    if not hasattr(coordinator, "last_schemes_refresh"):
+        coordinator.last_schemes_refresh = float("-inf")
     now = time.monotonic()
-    if now - coordinator._last_schemes_refresh < 600:
+    if now - coordinator.last_schemes_refresh < 600:
         return
     try:
         from homeassistant.components.camera.webrtc import DATA_WEBRTC_PROVIDERS
@@ -160,7 +162,7 @@ async def ensure_go2rtc_schemes_fresh(coordinator: BoschCameraCoordinator) -> No
     providers = coordinator.hass.data.get(DATA_WEBRTC_PROVIDERS, set())
     if not providers:
         return
-    coordinator._last_schemes_refresh = now
+    coordinator.last_schemes_refresh = now
     refreshed = False
     for provider in providers:
         if not hasattr(provider, "_rest_client") or not hasattr(
@@ -190,7 +192,7 @@ async def ensure_go2rtc_schemes_fresh(coordinator: BoschCameraCoordinator) -> No
     if refreshed:
         from homeassistant.components.camera import CameraEntityFeature
 
-        for cam_id_x, cam_ent in list(coordinator._camera_entities.items()):
+        for cam_id_x, cam_ent in list(coordinator.camera_entities.items()):
             # Only touch cameras that already have an active session.
             # HA Core's `async_refresh_providers` calls `stream_source()`
             # on the entity, which our implementation answers with
@@ -199,7 +201,7 @@ async def ensure_go2rtc_schemes_fresh(coordinator: BoschCameraCoordinator) -> No
             # Innenbereich woke up streaming after this loop ran on a
             # Terrasse stream-open. Guard added so the watchdog stays
             # scoped to the cam that triggered it.
-            if cam_id_x not in coordinator._live_connections:
+            if cam_id_x not in coordinator.live_connections:
                 continue
             try:
                 if CameraEntityFeature.STREAM in cam_ent.supported_features:
@@ -225,7 +227,7 @@ async def unregister_go2rtc_stream(
     (HA's bundled go2rtc provider uses this) and fall back to the legacy
     internal name when the entity is unavailable.
     """
-    cam_entity = coordinator._camera_entities.get(cam_id)
+    cam_entity = coordinator.camera_entities.get(cam_id)
     if cam_entity is not None and cam_entity.entity_id:
         stream_name = cam_entity.entity_id
     else:
@@ -263,7 +265,7 @@ async def unregister_go2rtc_stream(
                         url,
                         resp.status,
                     )
-        except (TimeoutError, aiohttp.ClientError, RuntimeError):
+        except TimeoutError, aiohttp.ClientError, RuntimeError:
             # RuntimeError: the shared go2rtc session can be mid-close/
             # closed if this call raced coordinator teardown.
             pass  # go2rtc may not be running on this port — try next

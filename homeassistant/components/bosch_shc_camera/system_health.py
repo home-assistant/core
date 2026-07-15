@@ -74,13 +74,13 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
             "platinum_quality": _PLATINUM_VERSION,
         }
 
-    fcm_running: bool = getattr(coord, "_fcm_running", False)
+    fcm_running: bool = getattr(coord, "fcm_running", False)
     fcm_push_active = "healthy" if fcm_running else "degraded"
 
     cameras_data: dict[str, Any] = getattr(coord, "data", {}) or {}
     cameras_loaded = len(cameras_data)
 
-    last_push: float = getattr(coord, "_fcm_last_push", float("-inf"))
+    last_push: float = getattr(coord, "fcm_last_push", float("-inf"))
     last_fcm_push_ago = _format_ago(last_push)
 
     return {

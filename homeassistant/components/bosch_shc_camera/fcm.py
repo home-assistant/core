@@ -217,10 +217,10 @@ async def async_start_fcm_push(coordinator: Any) -> None:
     Lazy-inits _fcm_start_lock, then delegates to _async_start_fcm_push_locked.
     Used by legacy tests that target the inner lock-and-start logic directly.
     """
-    lock = getattr(coordinator, "_fcm_start_lock", None)
+    lock = getattr(coordinator, "fcm_start_lock", None)
     if lock is None:
         lock = asyncio.Lock()
-        coordinator._fcm_start_lock = lock
+        coordinator.fcm_start_lock = lock
     async with lock:
         await _async_start_fcm_push_locked(coordinator)
 
@@ -476,34 +476,34 @@ async def async_ensure_fcm_supervisor(coordinator: Any) -> None:
     """
     if not coordinator.options.get("enable_fcm_push", False):
         return
-    sup = getattr(coordinator, "_fcm_supervisor_task", None)
+    sup = getattr(coordinator, "fcm_supervisor_task", None)
     if sup is not None and not sup.done():
         return
-    coordinator._fcm_supervisor_task = asyncio.ensure_future(
+    coordinator.fcm_supervisor_task = asyncio.ensure_future(
         _async_run_fcm_supervisor(coordinator),
     )
-    coordinator._fcm_supervisor_task.set_name("bosch_shc_camera_fcm_supervisor")
+    coordinator.fcm_supervisor_task.set_name("bosch_shc_camera_fcm_supervisor")
 
 
 async def async_stop_fcm_supervisor(coordinator: Any) -> None:
     """Cancel the FCM supervisor task, then stop the push listener."""
-    sup = getattr(coordinator, "_fcm_supervisor_task", None)
+    sup = getattr(coordinator, "fcm_supervisor_task", None)
     if sup is not None and not sup.done():
         sup.cancel()
         try:
             await sup
-        except (asyncio.CancelledError, Exception):  # noqa: S110 — intentional silent cancel
+        except asyncio.CancelledError, Exception:  # noqa: S110 — intentional silent cancel
             pass
-        coordinator._fcm_supervisor_task = None
+        coordinator.fcm_supervisor_task = None
     await async_stop_fcm_push(coordinator)
 
 
 async def _async_start_fcm_push_locked(coordinator: Any) -> bool:
-    """Start the FCM push listener. Caller must hold `coordinator._fcm_start_lock`.
+    """Start the FCM push listener. Caller must hold `coordinator.fcm_start_lock`.
 
     Returns True if the listener started successfully, False otherwise.
     """
-    if coordinator._fcm_running:
+    if coordinator.fcm_running:
         return True
     if not coordinator.options.get("enable_fcm_push", False):
         _LOGGER.debug("FCM push disabled in options")
@@ -539,13 +539,13 @@ async def _async_start_fcm_push_locked(coordinator: Any) -> bool:
 
     async def _build_fcm_cfg() -> dict[str, str]:
         """Return the OSS-sanctioned Firebase config (single source, no per-mode split)."""
-        cfg = coordinator._entry.data.get("fcm_config") or {}
+        cfg = coordinator.entry.data.get("fcm_config") or {}
         if not cfg:
             cfg = await fetch_firebase_config(coordinator.hass)
             if cfg:
                 coordinator.hass.config_entries.async_update_entry(
-                    coordinator._entry,
-                    data={**coordinator._entry.data, "fcm_config": cfg},
+                    coordinator.entry,
+                    data={**coordinator.entry.data, "fcm_config": cfg},
                 )
         return cfg
 
@@ -564,12 +564,12 @@ async def _async_start_fcm_push_locked(coordinator: Any) -> bool:
         )
 
         # Load saved FCM credentials from config entry (survives HA restarts)
-        saved_fcm_creds = coordinator._entry.data.get("fcm_credentials")
+        saved_fcm_creds = coordinator.entry.data.get("fcm_credentials")
 
-        # Bound AFTER coordinator._fcm_client is assigned below. Read via
+        # Bound AFTER coordinator.fcm_client is assigned below. Read via
         # late-binding closure (not captured by value) so the comparison in
         # _persist() below always reflects which client THIS _try_fcm() call
-        # created — not whatever coordinator._fcm_client points to by the
+        # created — not whatever coordinator.fcm_client points to by the
         # time the callback actually fires.
         _this_client: Any = None
 
@@ -592,7 +592,7 @@ async def _async_start_fcm_push_locked(coordinator: Any) -> bool:
                 # callback would silently overwrite the fresh credentials
                 # with stale ones, defeating the hard-heal it was meant to
                 # recover from (bug-hunt 2026-07-03).
-                if coordinator._fcm_client is not _this_client:
+                if coordinator.fcm_client is not _this_client:
                     _LOGGER.debug(
                         "FCM: ignoring credentials_updated_callback from a "
                         "stale/replaced client"
@@ -627,12 +627,12 @@ async def _async_start_fcm_push_locked(coordinator: Any) -> bool:
             fcm_kwargs["config"] = fcm_push_client_config_cls(
                 abort_on_sequential_error_count=None,
             )
-        coordinator._fcm_client = FcmPushClient(**fcm_kwargs)
-        _this_client = coordinator._fcm_client
+        coordinator.fcm_client = FcmPushClient(**fcm_kwargs)
+        _this_client = coordinator.fcm_client
 
         try:
-            coordinator._fcm_token = await coordinator._fcm_client.checkin_or_register()
-            _LOGGER.debug("FCM registered — token: %s...", coordinator._fcm_token[:8])
+            coordinator.fcm_token = await coordinator.fcm_client.checkin_or_register()
+            _LOGGER.debug("FCM registered — token: %s...", coordinator.fcm_token[:8])
         except Exception as err:
             # Log diagnostic details that survive _FCMNoiseFilter. The raw
             # error message often contains substrings the filter dedups
@@ -657,29 +657,29 @@ async def _async_start_fcm_push_locked(coordinator: Any) -> bool:
                 err_type,
                 err_short,
             )
-            coordinator._fcm_client = None
+            coordinator.fcm_client = None
             return False
 
-        # Register FCM token with Bosch CBS API. coordinator._fcm_push_mode is
+        # Register FCM token with Bosch CBS API. coordinator.fcm_push_mode is
         # still "unknown" at this point (set to "auto" only after client.start()).
         await register_fcm_with_bosch(coordinator)
 
         # Start listening for pushes
         try:
-            await coordinator._fcm_client.start()
-            with coordinator._fcm_lock:
-                coordinator._fcm_running = True
-                coordinator._fcm_healthy = True
-                coordinator._fcm_started_at = time.monotonic()
-                coordinator._fcm_push_mode = "auto"
+            await coordinator.fcm_client.start()
+            with coordinator.fcm_lock:
+                coordinator.fcm_running = True
+                coordinator.fcm_healthy = True
+                coordinator.fcm_started_at = time.monotonic()
+                coordinator.fcm_push_mode = "auto"
             _LOGGER.info(
                 "FCM push listener started — near-instant event detection active"
             )
             return True
         except Exception as err:
             _LOGGER.warning("FCM push listener failed to start: %s", err)
-            with coordinator._fcm_lock:
-                coordinator._fcm_client = None
+            with coordinator.fcm_lock:
+                coordinator.fcm_client = None
             return False
 
     # Install once before any FCM client is created so the very first WAN
@@ -708,7 +708,7 @@ async def register_fcm_with_bosch(coordinator: Any) -> bool:
     Response: HTTP 204 on success. deviceType is always ANDROID — the OSS
     Firebase app registered with Bosch lives under the Android app_id.
     """
-    if not coordinator._fcm_token or not coordinator.token:
+    if not coordinator.fcm_token or not coordinator.token:
         return False
 
     # Skip re-registration only when BOTH conditions hold:
@@ -722,22 +722,22 @@ async def register_fcm_with_bosch(coordinator: Any) -> bool:
     # while the HA client used the Android Firebase context. All FCM pushes were
     # routed to the wrong sub-app for hours (latency 3:43 min → polling fallback).
     # Fix: require the ANDROID marker before allowing the skip.
-    stored_token: str | None = coordinator._entry.data.get("fcm_registered_token")
-    stored_device_type: str | None = coordinator._entry.data.get(
+    stored_token: str | None = coordinator.entry.data.get("fcm_registered_token")
+    stored_device_type: str | None = coordinator.entry.data.get(
         "fcm_registered_device_type"
     )
     # Proactive re-registration (issue #36): even when the token is unchanged,
     # re-POST if the last successful registration is older than
     # FCM_REREGISTER_INTERVAL_SEC so a server-side-dropped Bosch device
     # registration self-heals without needing a token change or a hard-heal.
-    registered_at_raw = coordinator._entry.data.get("fcm_registered_at")
+    registered_at_raw = coordinator.entry.data.get("fcm_registered_at")
     try:
         registered_at = float(registered_at_raw) if registered_at_raw else 0.0
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         registered_at = 0.0
     registration_stale = (time.time() - registered_at) > FCM_REREGISTER_INTERVAL_SEC
     if (
-        stored_token == coordinator._fcm_token
+        stored_token == coordinator.fcm_token
         and stored_device_type == "ANDROID"
         and not registration_stale
     ):
@@ -747,7 +747,7 @@ async def register_fcm_with_bosch(coordinator: Any) -> bool:
         )
         return True
     if (
-        stored_token == coordinator._fcm_token
+        stored_token == coordinator.fcm_token
         and stored_device_type == "ANDROID"
         and registration_stale
     ):
@@ -756,7 +756,7 @@ async def register_fcm_with_bosch(coordinator: Any) -> bool:
             "push delivery alive (token unchanged)",
             FCM_REREGISTER_INTERVAL_SEC // 86400,
         )
-    if stored_token == coordinator._fcm_token and stored_device_type != "ANDROID":
+    if stored_token == coordinator.fcm_token and stored_device_type != "ANDROID":
         _LOGGER.info(
             "FCM CBS heal: token unchanged but deviceType marker is %r (not ANDROID) — "
             "forcing re-registration as deviceType=ANDROID",
@@ -768,7 +768,7 @@ async def register_fcm_with_bosch(coordinator: Any) -> bool:
         "Authorization": f"Bearer {coordinator.token}",
         "Content-Type": "application/json",
     }
-    payload = {"deviceType": "ANDROID", "deviceToken": coordinator._fcm_token}
+    payload = {"deviceType": "ANDROID", "deviceToken": coordinator.fcm_token}
 
     try:
         async with asyncio.timeout(10):
@@ -777,10 +777,10 @@ async def register_fcm_with_bosch(coordinator: Any) -> bool:
             ) as resp:
                 if resp.status in (200, 201, 204):
                     coordinator.hass.config_entries.async_update_entry(
-                        coordinator._entry,
+                        coordinator.entry,
                         data={
-                            **coordinator._entry.data,
-                            "fcm_registered_token": coordinator._fcm_token,
+                            **coordinator.entry.data,
+                            "fcm_registered_token": coordinator.fcm_token,
                             "fcm_registered_device_type": "ANDROID",
                             "fcm_registered_at": time.time(),
                         },
@@ -796,10 +796,10 @@ async def register_fcm_with_bosch(coordinator: Any) -> bool:
                     # token is already registered — FCM push still works. Treat as
                     # success and save both markers so subsequent restarts skip the POST.
                     coordinator.hass.config_entries.async_update_entry(
-                        coordinator._entry,
+                        coordinator.entry,
                         data={
-                            **coordinator._entry.data,
-                            "fcm_registered_token": coordinator._fcm_token,
+                            **coordinator.entry.data,
+                            "fcm_registered_token": coordinator.fcm_token,
                             "fcm_registered_device_type": "ANDROID",
                             "fcm_registered_at": time.time(),
                         },
@@ -832,9 +832,9 @@ async def async_stop_fcm_push(coordinator: Any) -> None:
     drains the old SSL session before the new client starts. Library has no
     documented stop-and-restart pattern (upstream issues #23, #33 open).
     """
-    with coordinator._fcm_lock:
-        client = coordinator._fcm_client
-        running = coordinator._fcm_running
+    with coordinator.fcm_lock:
+        client = coordinator.fcm_client
+        running = coordinator.fcm_running
     if client and running:
         try:
             await client.stop()
@@ -857,11 +857,11 @@ async def async_stop_fcm_push(coordinator: Any) -> None:
                 )
             except asyncio.CancelledError:
                 raise
-        with coordinator._fcm_lock:
-            coordinator._fcm_running = False
-            coordinator._fcm_healthy = False
-            coordinator._fcm_client = None
-            coordinator._fcm_push_mode = "unknown"
+        with coordinator.fcm_lock:
+            coordinator.fcm_running = False
+            coordinator.fcm_healthy = False
+            coordinator.fcm_client = None
+            coordinator.fcm_push_mode = "unknown"
         _LOGGER.info("FCM push listener stopped")
 
 
@@ -889,19 +889,19 @@ async def _async_run_fcm_supervisor(coordinator: Any) -> None:
     _LOGGER.debug("FCM supervisor started")
 
     while True:
-        push_ts_before = coordinator._fcm_last_push
+        push_ts_before = coordinator.fcm_last_push
 
         # ── Decide heal strategy ────────────────────────────────────────────
-        force_hard = getattr(coordinator, "_fcm_force_hard_heal", False)
+        force_hard = getattr(coordinator, "fcm_force_hard_heal", False)
         needs_hard = (
             force_hard
             or soft_streak >= FCM_SUPERVISOR_SOFT_HEAL_MAX
             or get_recent_fcm_creds_staleness_count(600.0) > 0
-            or not coordinator._entry.data.get("fcm_credentials")
+            or not coordinator.entry.data.get("fcm_credentials")
         )
 
         if force_hard:
-            coordinator._fcm_force_hard_heal = False
+            coordinator.fcm_force_hard_heal = False
 
         if needs_hard:
             if force_hard:
@@ -917,16 +917,16 @@ async def _async_run_fcm_supervisor(coordinator: Any) -> None:
             _LOGGER.info("FCM supervisor: hard-heal (%s) — purging credentials", reason)
 
             try:
-                async with coordinator._fcm_start_lock:
+                async with coordinator.fcm_start_lock:
                     await async_stop_fcm_push(coordinator)
                     new_data = {
                         k: v
-                        for k, v in coordinator._entry.data.items()
+                        for k, v in coordinator.entry.data.items()
                         if not k.startswith("fcm_")
                     }
-                    purged = sorted(set(coordinator._entry.data) - set(new_data))
+                    purged = sorted(set(coordinator.entry.data) - set(new_data))
                     coordinator.hass.config_entries.async_update_entry(
-                        coordinator._entry, data=new_data
+                        coordinator.entry, data=new_data
                     )
                     _LOGGER.info(
                         "FCM supervisor: purged %d entry-data keys: %s",
@@ -957,10 +957,10 @@ async def _async_run_fcm_supervisor(coordinator: Any) -> None:
         # ── Start listener ─────────────────────────────────────────────────
         started = False
         try:
-            lock = getattr(coordinator, "_fcm_start_lock", None)
+            lock = getattr(coordinator, "fcm_start_lock", None)
             if lock is None:
                 lock = asyncio.Lock()
-                coordinator._fcm_start_lock = lock
+                coordinator.fcm_start_lock = lock
             async with lock:
                 started = await _async_start_fcm_push_locked(coordinator)
         except asyncio.CancelledError:
@@ -994,10 +994,10 @@ async def _async_run_fcm_supervisor(coordinator: Any) -> None:
         try:
             while True:
                 await asyncio.sleep(FCM_SUPERVISOR_POLL_SEC)
-                fcm_client = coordinator._fcm_client
+                fcm_client = coordinator.fcm_client
                 if fcm_client is None or not fcm_client.is_started():
                     break
-                if getattr(coordinator, "_fcm_force_hard_heal", False):
+                if getattr(coordinator, "fcm_force_hard_heal", False):
                     # Silent-delivery-death: the poll-based fallback detected a
                     # camera event FCM never delivered while is_started() still
                     # reports True. Break out NOW so the top-of-loop hard-heal
@@ -1035,7 +1035,7 @@ async def _async_run_fcm_supervisor(coordinator: Any) -> None:
         await async_stop_fcm_push(coordinator)
 
         # ── Choose backoff ─────────────────────────────────────────────────
-        push_received = coordinator._fcm_last_push > push_ts_before
+        push_received = coordinator.fcm_last_push > push_ts_before
         if forced_heal:
             # A hard-heal was explicitly requested (delivery-death watchdog).
             # Restart fast so the top-of-loop credential purge happens promptly
@@ -1082,8 +1082,8 @@ async def _async_persist_fcm_creds(coordinator: Any, creds: dict[str, Any]) -> N
     """Write FCM credentials into the config entry (must run in event loop)."""
     try:
         coordinator.hass.config_entries.async_update_entry(
-            coordinator._entry,
-            data={**coordinator._entry.data, "fcm_credentials": creds},
+            coordinator.entry,
+            data={**coordinator.entry.data, "fcm_credentials": creds},
         )
         _LOGGER.debug("FCM credentials saved to config entry")
     except Exception as err:
@@ -1101,14 +1101,14 @@ def _on_fcm_push(
     The push is a silent wake-up signal with no event payload.
     We immediately trigger an event fetch + snapshot refresh for all cameras.
     """
-    with coordinator._fcm_lock:
+    with coordinator.fcm_lock:
         # Drop pushes that arrive after async_stop_fcm_push cleared the client —
         # a trailing push would otherwise reschedule async_handle_fcm_push on a
         # loop that already considers FCM down.
-        if not coordinator._fcm_running:
+        if not coordinator.fcm_running:
             return
-        coordinator._fcm_last_push = time.monotonic()
-        coordinator._fcm_healthy = True
+        coordinator.fcm_last_push = time.monotonic()
+        coordinator.fcm_healthy = True
     _LOGGER.info(
         "FCM push received (id=%s, from=%s) — fetching events",
         persistent_id,
@@ -1121,8 +1121,8 @@ def _on_fcm_push(
     # shutdown, leaving coordinator.data partially updated.
     def _spawn_fcm_handler() -> None:
         _t = coordinator.hass.async_create_task(async_handle_fcm_push(coordinator))
-        coordinator._bg_tasks.add(_t)
-        _t.add_done_callback(coordinator._bg_tasks.discard)
+        coordinator.bg_tasks.add(_t)
+        _t.add_done_callback(coordinator.bg_tasks.discard)
 
     coordinator.hass.loop.call_soon_threadsafe(_spawn_fcm_handler)
 
@@ -1163,13 +1163,13 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                 continue
 
             newest_id = events[0].get("id", "")
-            prev_id = coordinator._last_event_ids.get(cam_id)
+            prev_id = coordinator.last_event_ids.get(cam_id)
 
             # Per-event-ID dedup: concurrent FCM handlers (Bosch sometimes
             # sends two pushes ~10 s apart for the same event) otherwise both
             # pass the prev_id check and fire two alert chains.
             _now = time.monotonic()
-            _sent = coordinator._alert_sent_ids
+            _sent = coordinator.alert_sent_ids
             if newest_id and _sent.get(newest_id, float("-inf")) > _now - 60.0:
                 _LOGGER.debug(
                     "FCM push dedup: skipping duplicate alert for %s id=%s (already sent %.1fs ago)",
@@ -1185,7 +1185,7 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
             # nothing to evict, so it grows unbounded). Plain age-based
             # cleanup on every call has O(len) cost which is fine — len
             # stays small.
-            # NOTE: _sent aliases coordinator._alert_sent_ids — must mutate it
+            # NOTE: _sent aliases coordinator.alert_sent_ids — must mutate it
             # IN PLACE (a dict-comprehension rebind would detach the alias and
             # lose every later write at `_sent[newest_id] = _now`). Single-pass
             # collect-then-pop keeps the shared dict intact.
@@ -1200,7 +1200,7 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                 _sent[newest_id] = _now
                 # Update last event ID FIRST to prevent polling from
                 # detecting the same event and sending duplicate alerts
-                coordinator._last_event_ids[cam_id] = newest_id
+                coordinator.last_event_ids[cam_id] = newest_id
 
                 newest_event = events[0]
                 event_type = newest_event.get("eventType", "")
@@ -1227,7 +1227,7 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                 )
 
                 # Update cached events (next coordinator tick rebuilds data[]).
-                coordinator._cached_events[cam_id] = events
+                coordinator.cached_events[cam_id] = events
                 # Mirror into coordinator.data so the windowed binary sensors
                 # (motion/person/audio in binary_sensor.py) see the new event
                 # immediately on the async_update_listeners() call below —
@@ -1288,13 +1288,13 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                     ) and should_record(
                         coordinator,
                         cam_id,
-                        switch_on=coordinator._nvr_user_intent.get(cam_id, False),
+                        switch_on=coordinator.nvr_user_intent.get(cam_id, False),
                     ):
                         _clip_task = coordinator.hass.async_create_task(
                             assemble_and_ship_motion_clip(coordinator, cam_id)
                         )
-                        coordinator._bg_tasks.add(_clip_task)
-                        _clip_task.add_done_callback(coordinator._bg_tasks.discard)
+                        coordinator.bg_tasks.add(_clip_task)
+                        _clip_task.add_done_callback(coordinator.bg_tasks.discard)
 
                 # Check notification switches before sending alert.
                 # Master switch (switch.bosch_{name}_notifications) must be ON,
@@ -1353,8 +1353,8 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                             cam_id=cam_id,
                         )
                     )
-                    coordinator._bg_tasks.add(_alert_task)
-                    _alert_task.add_done_callback(coordinator._bg_tasks.discard)
+                    coordinator.bg_tasks.add(_alert_task)
+                    _alert_task.add_done_callback(coordinator.bg_tasks.discard)
                 else:
                     _LOGGER.info(
                         "Alert skipped for %s (%s) — notifications disabled",
@@ -1368,7 +1368,7 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                 # WHY tracked: fire-and-forget tasks get GC-collected on HA shutdown
                 # mid-flight, leaving half-written temp files. Strong reference +
                 # discard callback allows async_unload_entry to cancel+await cleanly.
-                cam_entity = coordinator._camera_entities.get(cam_id)
+                cam_entity = coordinator.camera_entities.get(cam_id)
                 if cam_entity and event_type in _SNAP_EVENT_TYPES:
                     # Stream-contention guard: while the RTSP live-stream is active,
                     # Path A's live-snap refresh (PUT /connection + snap.jpg) competes
@@ -1394,7 +1394,7 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                             # Gen1 needs ~1.5 s so the snap reflects the post-trigger frame.
                             from .models import get_model_config
 
-                            hw_cache = getattr(coordinator, "_hw_version", {})
+                            hw_cache = getattr(coordinator, "hw_version", {})
                             hw = (
                                 hw_cache.get(cam_id, "")
                                 if hasattr(hw_cache, "get")
@@ -1402,12 +1402,12 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                             )
                             refresh_delay = get_model_config(hw).event_refresh_delay
                             task = coordinator.hass.async_create_task(
-                                cam_entity._async_trigger_image_refresh(
+                                cam_entity.async_trigger_image_refresh(
                                     delay=refresh_delay
                                 )
                             )
-                            coordinator._bg_tasks.add(task)
-                            task.add_done_callback(coordinator._bg_tasks.discard)
+                            coordinator.bg_tasks.add(task)
+                            task.add_done_callback(coordinator.bg_tasks.discard)
                             _LOGGER.debug(
                                 "FCM Path A: live-snap refresh scheduled for %s (%s, delay=%.1fs)",
                                 cam_name,
@@ -1439,11 +1439,11 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                             pass
 
                     _mr_task = coordinator.hass.async_create_task(_mark_read_bg())
-                    coordinator._bg_tasks.add(_mr_task)
-                    _mr_task.add_done_callback(coordinator._bg_tasks.discard)
+                    coordinator.bg_tasks.add(_mr_task)
+                    _mr_task.add_done_callback(coordinator.bg_tasks.discard)
 
             elif newest_id:
-                coordinator._last_event_ids[cam_id] = newest_id
+                coordinator.last_event_ids[cam_id] = newest_id
 
         except (TimeoutError, aiohttp.ClientError) as err:
             # Transient cloud hiccup — the retry/backoff loop below (and the
@@ -1465,7 +1465,7 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
         and _attempt < len(_FCM_FETCH_RETRY_BACKOFFS)
     ):
         await asyncio.sleep(_FCM_FETCH_RETRY_BACKOFFS[_attempt])
-        if getattr(coordinator, "_fcm_running", False):
+        if getattr(coordinator, "fcm_running", False):
             await async_handle_fcm_push(coordinator, _attempt + 1)
 
 
@@ -1581,7 +1581,7 @@ async def async_send_alert(
     # Path B runs up to ~30 s later; re-reading the live cache at that point
     # can pick up a post-privacy-off value and write a pre-privacy frame into
     # the cache — fixing W-imageflip-BUG-2.
-    _shc_cache_early = getattr(coordinator, "_shc_state_cache", {})
+    _shc_cache_early = getattr(coordinator, "shc_state_cache", {})
     _push_time_priv: bool = (
         _shc_cache_early.get(_resolved_cam_id, {}).get("privacy_mode", False)
         if _resolved_cam_id
@@ -1833,23 +1833,23 @@ async def async_send_alert(
                                 _cam_id_for_b: str | None = _resolved_cam_id
                                 if _cam_id_for_b:
                                     _cam_entities = getattr(
-                                        coordinator, "_camera_entities", {}
+                                        coordinator, "camera_entities", {}
                                     )
                                     _cam_b = _cam_entities.get(_cam_id_for_b)
                                     # Use privacy state captured at push-receipt time
                                     # (W-imageflip-BUG-2 fix — not re-read from cache).
                                     if _cam_b and not _push_time_priv:
-                                        _existing = _cam_b._cached_image
+                                        _existing = _cam_b.cached_image
                                         # Byte-identity dedup (B04-BUG-1 fix):
                                         # len equality is NOT image equality.
                                         if _existing is None or _existing != data:
-                                            _cam_b._cached_image = data
-                                            _cam_b._last_image_fetch = time.monotonic()
+                                            _cam_b.cached_image = data
+                                            _cam_b.last_image_fetch = time.monotonic()
                                             await save_snapshot(
                                                 coordinator.hass, _cam_id_for_b, data
                                             )
                                             _img_entities = getattr(
-                                                coordinator, "_image_entities", {}
+                                                coordinator, "image_entities", {}
                                             )
                                             _img_ent = _img_entities.get(_cam_id_for_b)
                                             if _img_ent is not None:
@@ -1899,7 +1899,7 @@ async def async_send_alert(
 
         # Try direct clip.mp4 download first (faster than polling)
         if not found_clip_url:
-            event_id = event_id or coordinator._last_event_ids.get(_clip_cam_id, "")
+            event_id = event_id or coordinator.last_event_ids.get(_clip_cam_id, "")
             if event_id:
                 try:
                     async with asyncio.timeout(10):
@@ -2015,7 +2015,7 @@ async def async_send_alert(
 
     # -- Mark event as read ------------------------------------------------
     if _clip_cam_id and coordinator.options.get("mark_events_read", False):
-        event_id = event_id or coordinator._last_event_ids.get(_clip_cam_id, "")
+        event_id = event_id or coordinator.last_event_ids.get(_clip_cam_id, "")
         if event_id:
             try:
                 await async_mark_events_read(coordinator, [event_id])
@@ -2026,7 +2026,7 @@ async def async_send_alert(
     if opts.get("enable_smb_upload") and opts.get("smb_server") and _clip_cam_id:
         try:
             # Build a minimal data dict for sync_smb_upload with just this event
-            ev_id = event_id or coordinator._last_event_ids.get(_clip_cam_id, "unknown")
+            ev_id = event_id or coordinator.last_event_ids.get(_clip_cam_id, "unknown")
             ev_data = {
                 "timestamp": timestamp,
                 "eventType": event_type,
@@ -2088,7 +2088,7 @@ async def async_send_alert(
     # -- Local save (FCM-triggered, alongside SMB) -------------------------
     if opts.get("enable_local_save") and opts.get("download_path") and _clip_cam_id:
         try:
-            ev_id = event_id or coordinator._last_event_ids.get(_clip_cam_id, "unknown")
+            ev_id = event_id or coordinator.last_event_ids.get(_clip_cam_id, "unknown")
             ev_data = {
                 "timestamp": timestamp,
                 "eventType": event_type,
@@ -2204,7 +2204,7 @@ class FCMCoordinatorMixin:
         """Build notify service call data (delegated to build_notify_data)."""
         return build_notify_data(svc, message, file_path, title)
 
-    async def _async_send_alert(
+    async def async_send_alert(
         self,
         cam_name: str,
         event_type: str,

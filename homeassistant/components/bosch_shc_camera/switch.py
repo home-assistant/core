@@ -352,18 +352,18 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
         push the cleared state to HA immediately. Without the registry the
         UI shows a stale "on" until the next coordinator tick."""
         await super().async_added_to_hass()
-        self.coordinator._live_stream_entities[self._cam_id] = self
+        self.coordinator.live_stream_entities[self._cam_id] = self
 
     @override
     async def async_will_remove_from_hass(self) -> None:
-        self.coordinator._live_stream_entities.pop(self._cam_id, None)
+        self.coordinator.live_stream_entities.pop(self._cam_id, None)
         await super().async_will_remove_from_hass()
 
     @property
     @override
     def is_on(self) -> bool:
         """True if the user explicitly turned the live stream on."""
-        return self._cam_id in self.coordinator._user_intent_streams
+        return self._cam_id in self.coordinator.user_intent_streams
 
     @property
     @override
@@ -379,7 +379,7 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
         if not super().available:
             return False
         if bool(
-            self.coordinator._shc_state_cache.get(self._cam_id, {}).get("privacy_mode")
+            self.coordinator.shc_state_cache.get(self._cam_id, {}).get("privacy_mode")
         ):
             return False
         return not self.coordinator.is_session_stale(self._cam_id)
@@ -387,7 +387,7 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        live = self.coordinator._live_connections.get(self._cam_id, {})
+        live = self.coordinator.live_connections.get(self._cam_id, {})
         conn_type = live.get("_connection_type", "REMOTE") if live else ""
         return {
             "connection_type": conn_type,
@@ -403,7 +403,7 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
         """Open a new live proxy connection."""
         # Block stream start if privacy mode is active (camera shutter is closed)
         if bool(
-            self.coordinator._shc_state_cache.get(self._cam_id, {}).get("privacy_mode")
+            self.coordinator.shc_state_cache.get(self._cam_id, {}).get("privacy_mode")
         ):
             raise ServiceValidationError(
                 f"Cannot start stream for {self._cam_title} — privacy mode is active. "
@@ -425,7 +425,7 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
         # Mark user intent BEFORE the connection attempt — async_create_stream
         # auto-opens (Cast / play_stream / Lovelace) can race with this turn-on
         # and we want the switch to read "on" immediately while we work.
-        self.coordinator._user_intent_streams.add(self._cam_id)
+        self.coordinator.user_intent_streams.add(self._cam_id)
         # No explicit cleanup needed — try_live_connection() sends a new
         # PUT /connection which automatically replaces any stale session.
         result = await self.coordinator.try_live_connection(self._cam_id)
@@ -464,8 +464,8 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
                 hc_task = self.hass.async_create_task(
                     self._stream_health_watchdog(self._cam_id)
                 )
-                self.coordinator._bg_tasks.add(hc_task)
-                hc_task.add_done_callback(self.coordinator._bg_tasks.discard)
+                self.coordinator.bg_tasks.add(hc_task)
+                hc_task.add_done_callback(self.coordinator.bg_tasks.discard)
         else:
             _LOGGER.warning(
                 "Live stream failed for %s — check HA logs", self._cam_title
@@ -473,7 +473,7 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
             # Revert the intent we set before the attempt — the open failed,
             # the switch should not be left at "on" while the underlying
             # session is dead.
-            self.coordinator._user_intent_streams.discard(self._cam_id)
+            self.coordinator.user_intent_streams.discard(self._cam_id)
             self.coordinator.record_stream_error(self._cam_id)
         self.async_write_ha_state()
 
@@ -501,7 +501,7 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
         """
 
         def _is_local_active() -> bool:
-            live = self.coordinator._live_connections.get(cam_id, {})
+            live = self.coordinator.live_connections.get(cam_id, {})
             return bool(live) and live.get("_connection_type") == "LOCAL"
 
         def _stream_health_state() -> str:
@@ -513,7 +513,7 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
             #   "healthy"     — Stream.available is True (worker producing).
             #   "unhealthy"   — Stream object exists but available is False
             #     (FFmpeg started and died, or never produced first segment).
-            cam_entity = self.coordinator._camera_entities.get(cam_id)
+            cam_entity = self.coordinator.camera_entities.get(cam_id)
             if not cam_entity:
                 return "no_consumer"
             stream = getattr(cam_entity, "stream", None)
@@ -550,7 +550,7 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
             is_final = idx == 1
             if is_final:
                 cfg = self.coordinator.get_model_config(cam_id)
-                self.coordinator._stream_error_count[cam_id] = cfg.max_stream_errors
+                self.coordinator.stream_error_count[cam_id] = cfg.max_stream_errors
                 _LOGGER.warning(
                     "Stream health watchdog: %s LOCAL stream still not healthy "
                     "after ~2 min — forcing REMOTE fallback",
@@ -564,14 +564,14 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
                     cam_id[:8],
                     delay,
                 )
-            self.coordinator._live_connections.pop(cam_id, None)
-            await self.coordinator._stop_tls_proxy(cam_id)
+            self.coordinator.live_connections.pop(cam_id, None)
+            await self.coordinator.stop_tls_proxy(cam_id)
             # Re-check user intent after the 60s sleep + tear-down: user
             # may have toggled the switch OFF in the meantime, in which
             # case `_tear_down_live_stream` already cleared the intent.
             # Without this guard the watchdog re-opens the stream against
             # the user's wishes. Bug 2026-05-20.
-            if cam_id not in self.coordinator._user_intent_streams:
+            if cam_id not in self.coordinator.user_intent_streams:
                 _LOGGER.debug(
                     "Stream health watchdog: %s — user intent gone, skipping reconnect",
                     cam_id[:8],
@@ -600,11 +600,11 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
         # previous turn_on may still be sleeping and must see the cleared
         # intent when it wakes up (Bug 2026-05-20: watchdog re-opened
         # stream after user OFF if the OFF landed mid-sleep).
-        self.coordinator._user_intent_streams.discard(self._cam_id)
+        self.coordinator.user_intent_streams.discard(self._cam_id)
         # Shared teardown: cancels renewal task, pops _live_connections,
         # stops TLS proxy + go2rtc, stops HA's camera.stream so
         # stream_worker can't auto-restart against the dead proxy.
-        await self.coordinator._tear_down_live_stream(self._cam_id)
+        await self.coordinator.tear_down_live_stream(self._cam_id)
         # Update state immediately so the UI reflects OFF without waiting
         # for the coordinator refresh that follows.
         self.async_write_ha_state()
@@ -637,12 +637,12 @@ class BoschAudioSwitch(_BoschSwitchBase, RestoreEntity):
         self._attr_entity_category = EntityCategory.CONFIG
         # First-install seed: muted. The persisted state (restored in
         # async_added_to_hass) overrides this for any camera the user has toggled.
-        coordinator._audio_enabled.setdefault(cam_id, False)
+        coordinator.audio_enabled.setdefault(cam_id, False)
 
     @property
     @override
     def is_on(self) -> bool:
-        return self.coordinator._audio_enabled.get(self._cam_id, False)
+        return self.coordinator.audio_enabled.get(self._cam_id, False)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -651,7 +651,7 @@ class BoschAudioSwitch(_BoschSwitchBase, RestoreEntity):
         await super().async_added_to_hass()
         last = await self.async_get_last_state()
         if last is not None and last.state in ("on", "off"):
-            self.coordinator._audio_enabled[self._cam_id] = last.state == "on"
+            self.coordinator.audio_enabled[self._cam_id] = last.state == "on"
             _LOGGER.debug(
                 "audio: restored %s for %s from previous state",
                 last.state,
@@ -662,7 +662,7 @@ class BoschAudioSwitch(_BoschSwitchBase, RestoreEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Unmute — the card applies it to video.muted; no stream re-open."""
         _LOGGER.info("Audio ON (unmute) for %s", self._cam_title)
-        self.coordinator._audio_enabled[self._cam_id] = True
+        self.coordinator.audio_enabled[self._cam_id] = True
         # is_on reads the _audio_enabled dict, so write state immediately for an
         # instant, non-stale toggle that HA then pushes to every card (#22).
         self.async_write_ha_state()
@@ -671,7 +671,7 @@ class BoschAudioSwitch(_BoschSwitchBase, RestoreEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Mute — the card applies it to video.muted; no stream re-open."""
         _LOGGER.info("Audio OFF (mute) for %s", self._cam_title)
-        self.coordinator._audio_enabled[self._cam_id] = False
+        self.coordinator.audio_enabled[self._cam_id] = False
         self.async_write_ha_state()
 
 
@@ -695,7 +695,9 @@ class BoschCameraLightSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        return self.coordinator._shc_state_cache.get(self._cam_id, {}).get(  # value is correct at runtime; HA/external source is Any-typed
+        return self.coordinator.shc_state_cache.get(
+            self._cam_id, {}
+        ).get(  # value is correct at runtime; HA/external source is Any-typed
             "camera_light"
         )
 
@@ -748,7 +750,9 @@ class BoschFrontLightSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        return self.coordinator._shc_state_cache.get(self._cam_id, {}).get(  # value is correct at runtime; HA/external source is Any-typed
+        return self.coordinator.shc_state_cache.get(
+            self._cam_id, {}
+        ).get(  # value is correct at runtime; HA/external source is Any-typed
             "front_light"
         )
 
@@ -789,7 +793,7 @@ class BoschWallwasherSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        return self.coordinator._shc_state_cache.get(self._cam_id, {}).get("wallwasher")
+        return self.coordinator.shc_state_cache.get(self._cam_id, {}).get("wallwasher")
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -843,7 +847,9 @@ class BoschPrivacyModeSwitch(_BoschSwitchBase):
         """
         if self._pending_privacy is not None:
             return self._pending_privacy
-        return self.coordinator._shc_state_cache.get(self._cam_id, {}).get(  # value is correct at runtime; HA/external source is Any-typed
+        return self.coordinator.shc_state_cache.get(
+            self._cam_id, {}
+        ).get(  # value is correct at runtime; HA/external source is Any-typed
             "privacy_mode"
         )
 
@@ -878,7 +884,7 @@ class BoschPrivacyModeSwitch(_BoschSwitchBase):
         is_updating = getattr(self.coordinator, "is_updating", None)
         if is_updating is not None and is_updating(self._cam_id):
             return False
-        cache = self.coordinator._shc_state_cache.get(self._cam_id, {})
+        cache = self.coordinator.shc_state_cache.get(self._cam_id, {})
         has_cached_state = cache.get("privacy_mode") is not None
         if self.coordinator.last_update_success and has_cached_state:
             return True
@@ -906,7 +912,7 @@ class BoschPrivacyModeSwitch(_BoschSwitchBase):
 
         if _is_gen2(self.coordinator, self._cam_id):
             return True
-        hw = self.coordinator._hw_version.get(self._cam_id)
+        hw = self.coordinator.hw_version.get(self._cam_id)
         if hw in (None, "", "CAMERA"):
             # Hardware version not yet known — allow the toggle, the LAN
             # write will short-circuit for Gen1 (no rcp.xml endpoint).
@@ -922,7 +928,7 @@ class BoschPrivacyModeSwitch(_BoschSwitchBase):
         This supplements the REST API privacy state with a direct camera-side reading.
         The switch logic (is_on) remains driven by the REST API only.
         """
-        rcp_raw = self.coordinator._rcp_privacy_cache.get(self._cam_id)
+        rcp_raw = self.coordinator.rcp_privacy_cache.get(self._cam_id)
         return {
             "rcp_state": rcp_raw,
         }
@@ -951,7 +957,7 @@ class BoschPrivacyModeSwitch(_BoschSwitchBase):
         # would make `monotonic() - 0` look like a recent toggle and falsely block
         # the very first privacy change (the stream cooldown guards this with
         # `last_off > 0`; this path had no such guard).
-        last = self.coordinator._privacy_set_at.get(self._cam_id, float("-inf"))
+        last = self.coordinator.privacy_set_at.get(self._cam_id, float("-inf"))
         elapsed = time.monotonic() - last
         if elapsed < self._PRIVACY_COOLDOWN:
             remaining = self._PRIVACY_COOLDOWN - elapsed
@@ -981,7 +987,7 @@ class BoschPrivacyModeSwitch(_BoschSwitchBase):
         # would make `monotonic() - 0` look like a recent toggle and falsely block
         # the very first privacy change (the stream cooldown guards this with
         # `last_off > 0`; this path had no such guard).
-        last = self.coordinator._privacy_set_at.get(self._cam_id, float("-inf"))
+        last = self.coordinator.privacy_set_at.get(self._cam_id, float("-inf"))
         remaining = max(1, round(self._PRIVACY_COOLDOWN - (time.monotonic() - last)))
         return (
             f"Privacy for {self._cam_title} was just changed — please wait "
@@ -999,7 +1005,7 @@ class BoschPrivacyModeSwitch(_BoschSwitchBase):
         if self.coordinator.is_stream_warming(self._cam_id):
             return self._PRIVACY_PENDING_POLL
         # SENTINEL_RULE: "never set" is float("-inf"), never 0.
-        last = self.coordinator._privacy_set_at.get(self._cam_id, float("-inf"))
+        last = self.coordinator.privacy_set_at.get(self._cam_id, float("-inf"))
         remaining = self._PRIVACY_COOLDOWN - (time.monotonic() - last)
         return remaining if remaining > 0 else 0.0
 
@@ -1011,11 +1017,11 @@ class BoschPrivacyModeSwitch(_BoschSwitchBase):
         stops HA's camera.stream so the worker doesn't auto-restart against the
         now-dead TLS proxy (HTTP 443 privacy-gated).
         """
-        if desired and self._cam_id in self.coordinator._live_connections:
+        if desired and self._cam_id in self.coordinator.live_connections:
             _LOGGER.info(
                 "Privacy ON for %s — stopping active live stream", self._cam_title
             )
-            await self.coordinator._tear_down_live_stream(self._cam_id)
+            await self.coordinator.tear_down_live_stream(self._cam_id)
         success = await self.coordinator.async_cloud_set_privacy_mode(
             self._cam_id, desired
         )
@@ -1150,7 +1156,7 @@ class BoschNotificationsSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        status = self.coordinator._shc_state_cache.get(self._cam_id, {}).get(
+        status = self.coordinator.shc_state_cache.get(self._cam_id, {}).get(
             "notifications_status"
         )
         if status is None:
@@ -1167,7 +1173,7 @@ class BoschNotificationsSwitch(_BoschSwitchBase):
         """
         return (
             self.coordinator.last_update_success
-            and self.coordinator._shc_state_cache.get(self._cam_id, {}).get(
+            and self.coordinator.shc_state_cache.get(self._cam_id, {}).get(
                 "notifications_status"
             )
             is not None
@@ -1346,7 +1352,7 @@ class BoschIntercomSwitch(_BoschSwitchBase, RestoreEntity):
     cached body (preserves microphoneLevel — capture 2026-04-08 confirms the
     body shape {"audioEnabled":true,"microphoneLevel":60,"speakerLevel":80}).
     When turned OFF: disables speaker with {"audioEnabled": False}, same
-    merge. Shares coordinator._audio_cache and a per-camera lock with
+    merge. Shares coordinator.audio_cache and a per-camera lock with
     BoschSpeakerLevelNumber/BoschMicrophoneLevelNumber (same endpoint) so a
     concurrent write to a sibling field can't be clobbered by a stale
     snapshot.
@@ -1393,7 +1399,7 @@ class BoschIntercomSwitch(_BoschSwitchBase, RestoreEntity):
         """Read-modify-write the shared /audio body under the shared lock."""
         lock = _get_cam_lock(self.coordinator, "_audio_config_locks", self._cam_id)
         async with lock:
-            audio = dict(self.coordinator._audio_cache.get(self._cam_id, {}))
+            audio = dict(self.coordinator.audio_cache.get(self._cam_id, {}))
             audio["audioEnabled"] = enabled
             if enabled:
                 audio["speakerLevel"] = 50
@@ -1402,7 +1408,7 @@ class BoschIntercomSwitch(_BoschSwitchBase, RestoreEntity):
             )
             if success:
                 self._is_on = enabled
-                cache = self.coordinator._audio_cache.setdefault(self._cam_id, {})
+                cache = self.coordinator.audio_cache.setdefault(self._cam_id, {})
                 cache["audioEnabled"] = enabled
                 if enabled:
                     cache["speakerLevel"] = 50
@@ -1452,7 +1458,7 @@ class BoschPrivacySoundSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        return self.coordinator._privacy_sound_cache.get(self._cam_id)
+        return self.coordinator.privacy_sound_cache.get(self._cam_id)
 
     @property
     @override
@@ -1460,7 +1466,7 @@ class BoschPrivacySoundSwitch(_BoschSwitchBase):
         return (
             self.coordinator.last_update_success
             and self.coordinator.is_camera_online(self._cam_id)
-            and self.coordinator._privacy_sound_cache.get(self._cam_id) is not None
+            and self.coordinator.privacy_sound_cache.get(self._cam_id) is not None
         )
 
     @override
@@ -1468,8 +1474,8 @@ class BoschPrivacySoundSwitch(_BoschSwitchBase):
         await self._async_apply_toggle(
             "privacy_sound_override",
             {"result": True},
-            self.coordinator._privacy_sound_cache,
-            self.coordinator._privacy_sound_set_at,
+            self.coordinator.privacy_sound_cache,
+            self.coordinator.privacy_sound_set_at,
             True,
         )
 
@@ -1478,8 +1484,8 @@ class BoschPrivacySoundSwitch(_BoschSwitchBase):
         await self._async_apply_toggle(
             "privacy_sound_override",
             {"result": False},
-            self.coordinator._privacy_sound_cache,
-            self.coordinator._privacy_sound_set_at,
+            self.coordinator.privacy_sound_cache,
+            self.coordinator.privacy_sound_set_at,
             False,
         )
 
@@ -1505,7 +1511,7 @@ class BoschTimestampSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        return self.coordinator._timestamp_cache.get(self._cam_id)
+        return self.coordinator.timestamp_cache.get(self._cam_id)
 
     @property
     @override
@@ -1513,7 +1519,7 @@ class BoschTimestampSwitch(_BoschSwitchBase):
         return (
             self.coordinator.last_update_success
             and self.coordinator.is_camera_online(self._cam_id)
-            and self.coordinator._timestamp_cache.get(self._cam_id) is not None
+            and self.coordinator.timestamp_cache.get(self._cam_id) is not None
         )
 
     @override
@@ -1521,8 +1527,8 @@ class BoschTimestampSwitch(_BoschSwitchBase):
         await self._async_apply_toggle(
             "timestamp",
             {"result": True},
-            self.coordinator._timestamp_cache,
-            self.coordinator._timestamp_set_at,
+            self.coordinator.timestamp_cache,
+            self.coordinator.timestamp_set_at,
             True,
         )
 
@@ -1531,8 +1537,8 @@ class BoschTimestampSwitch(_BoschSwitchBase):
         await self._async_apply_toggle(
             "timestamp",
             {"result": False},
-            self.coordinator._timestamp_cache,
-            self.coordinator._timestamp_set_at,
+            self.coordinator.timestamp_cache,
+            self.coordinator.timestamp_set_at,
             False,
         )
 
@@ -1557,7 +1563,7 @@ class BoschStatusLedSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        return self.coordinator._ledlights_cache.get(self._cam_id)
+        return self.coordinator.ledlights_cache.get(self._cam_id)
 
     @property
     @override
@@ -1565,7 +1571,7 @@ class BoschStatusLedSwitch(_BoschSwitchBase):
         return (
             self.coordinator.last_update_success
             and self.coordinator.is_camera_online(self._cam_id)
-            and self.coordinator._ledlights_cache.get(self._cam_id) is not None
+            and self.coordinator.ledlights_cache.get(self._cam_id) is not None
         )
 
     @override
@@ -1573,8 +1579,8 @@ class BoschStatusLedSwitch(_BoschSwitchBase):
         await self._async_apply_toggle(
             "ledlights",
             {"state": "ON"},
-            self.coordinator._ledlights_cache,
-            self.coordinator._ledlights_set_at,
+            self.coordinator.ledlights_cache,
+            self.coordinator.ledlights_set_at,
             True,
         )
 
@@ -1583,8 +1589,8 @@ class BoschStatusLedSwitch(_BoschSwitchBase):
         await self._async_apply_toggle(
             "ledlights",
             {"state": "OFF"},
-            self.coordinator._ledlights_cache,
-            self.coordinator._ledlights_set_at,
+            self.coordinator.ledlights_cache,
+            self.coordinator.ledlights_set_at,
             False,
         )
 
@@ -1614,7 +1620,7 @@ class BoschMotionLightSwitch(_BoschSwitchBase):
         # is the source of truth and reflects changes made in the Bosch app. Read
         # it fresh each time; _is_on is only the optimistic value before the cache
         # has ever been filled (else a frozen _is_on hid external changes forever).
-        cache = self.coordinator._motion_light_cache.get(self._cam_id, {})
+        cache = self.coordinator.motion_light_cache.get(self._cam_id, {})
         if cache:
             return bool(cache.get("lightOnMotionEnabled", False))
         return self._is_on
@@ -1630,7 +1636,7 @@ class BoschMotionLightSwitch(_BoschSwitchBase):
     async def _set_motion_light(self, enabled: bool) -> None:
         """Read current motion light config, toggle enabled, write back."""
         # Read current config from cache or API
-        cache = self.coordinator._motion_light_cache.get(self._cam_id, {})
+        cache = self.coordinator.motion_light_cache.get(self._cam_id, {})
         if not cache:
             # Fetch fresh if cache empty
             token = self.coordinator.token
@@ -1663,7 +1669,7 @@ class BoschMotionLightSwitch(_BoschSwitchBase):
         )
         if success:
             self._is_on = enabled
-            self.coordinator._motion_light_cache[self._cam_id] = data
+            self.coordinator.motion_light_cache[self._cam_id] = data
             _LOGGER.info(
                 "Motion light %s for %s", "ON" if enabled else "OFF", self._cam_id[:8]
             )
@@ -1703,7 +1709,7 @@ class BoschAmbientLightSwitch(_BoschSwitchBase):
     def is_on(self) -> bool | None:
         # Cache is the source of truth (slow-tier re-poll reflects Bosch-app
         # changes); _is_on is only the optimistic pre-cache fallback.
-        cache = self.coordinator._ambient_lighting_cache.get(self._cam_id, {})
+        cache = self.coordinator.ambient_lighting_cache.get(self._cam_id, {})
         if cache:
             return bool(cache.get("ambientLightEnabled", False))
         return self._is_on
@@ -1737,7 +1743,7 @@ class BoschAmbientLightSwitch(_BoschSwitchBase):
                 async with session.put(url, headers=headers, json=data) as resp:
                     if resp.status in (200, 201, 204):
                         self._is_on = enabled
-                        self.coordinator._ambient_lighting_cache[self._cam_id] = data
+                        self.coordinator.ambient_lighting_cache[self._cam_id] = data
         except Exception:
             _LOGGER.exception("Ambient light error for %s", self._cam_id[:8])
         self.async_write_ha_state()
@@ -1772,7 +1778,7 @@ class BoschSoftLightFadingSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        cache = self.coordinator._global_lighting_cache.get(self._cam_id, {})
+        cache = self.coordinator.global_lighting_cache.get(self._cam_id, {})
         return cache.get("softLightFading") if cache else None
 
     @property
@@ -1781,14 +1787,14 @@ class BoschSoftLightFadingSwitch(_BoschSwitchBase):
         return (
             self.coordinator.last_update_success
             and self.coordinator.is_camera_online(self._cam_id)
-            and bool(self.coordinator._global_lighting_cache.get(self._cam_id))
+            and bool(self.coordinator.global_lighting_cache.get(self._cam_id))
         )
 
     async def _put_global_lighting(self, enabled: bool) -> None:
         token = self.coordinator.token
         if not token:
             return
-        cache = self.coordinator._global_lighting_cache.get(self._cam_id, {})
+        cache = self.coordinator.global_lighting_cache.get(self._cam_id, {})
         # Preserve existing darknessThreshold
         threshold = cache.get("darknessThreshold", 0.5)
         body = {"darknessThreshold": threshold, "softLightFading": enabled}
@@ -1806,15 +1812,15 @@ class BoschSoftLightFadingSwitch(_BoschSwitchBase):
                         try:
                             rsp = await resp.json()
                             if isinstance(rsp, dict):
-                                self.coordinator._global_lighting_cache[
-                                    self._cam_id
-                                ] = rsp
+                                self.coordinator.global_lighting_cache[self._cam_id] = (
+                                    rsp
+                                )
                             else:
-                                self.coordinator._global_lighting_cache[
-                                    self._cam_id
-                                ] = body
+                                self.coordinator.global_lighting_cache[self._cam_id] = (
+                                    body
+                                )
                         except Exception:
-                            self.coordinator._global_lighting_cache[self._cam_id] = body
+                            self.coordinator.global_lighting_cache[self._cam_id] = body
         except Exception:
             _LOGGER.exception("Soft fading error for %s", self._cam_id[:8])
         self.async_write_ha_state()
@@ -1848,7 +1854,7 @@ class BoschIntrusionDetectionSwitch(_BoschSwitchBase):
 
     @property
     def _config(self) -> dict[str, Any]:
-        return self.coordinator._intrusion_config_cache.get(self._cam_id, {})
+        return self.coordinator.intrusion_config_cache.get(self._cam_id, {})
 
     @property
     @override
@@ -1887,10 +1893,10 @@ class BoschIntrusionDetectionSwitch(_BoschSwitchBase):
             self._cam_id, "intrusionDetectionConfig", cfg
         )
         if success:
-            self.coordinator._intrusion_config_cache[self._cam_id] = cfg
+            self.coordinator.intrusion_config_cache[self._cam_id] = cfg
             # Guard the next slow-tier poll (300 s) from overwriting the cache
             # with the stale cloud value while propagation is still in flight.
-            self.coordinator._intrusion_config_set_at[self._cam_id] = time.monotonic()
+            self.coordinator.intrusion_config_set_at[self._cam_id] = time.monotonic()
         self.async_write_ha_state()
 
     @override
@@ -1916,7 +1922,7 @@ class _BoschAudioDetectionSwitchBase(_BoschSwitchBase):
 
     @property
     def _config(self) -> dict[str, Any]:
-        return self.coordinator._audio_detection_cache.get(self._cam_id, {})
+        return self.coordinator.audio_detection_cache.get(self._cam_id, {})
 
     @property
     @override
@@ -1946,10 +1952,10 @@ class _BoschAudioDetectionSwitchBase(_BoschSwitchBase):
         # makes each write read a cache that already holds the sibling's result,
         # and we merge only our own field back (never the whole entry).
         # (bug-hunt 2026-07-01)
-        locks = getattr(self.coordinator, "_audio_detection_locks", None)
+        locks = getattr(self.coordinator, "audio_detection_locks", None)
         if locks is None:
             locks = {}
-            self.coordinator._audio_detection_locks = locks
+            self.coordinator.audio_detection_locks = locks
         lock = locks.get(self._cam_id)
         if lock is None:
             lock = asyncio.Lock()
@@ -1968,15 +1974,13 @@ class _BoschAudioDetectionSwitchBase(_BoschSwitchBase):
                 # Merge only our own field into the live cache rather than
                 # overwriting the whole entry, so a concurrent sibling toggle
                 # isn't clobbered.
-                cur = self.coordinator._audio_detection_cache.setdefault(
+                cur = self.coordinator.audio_detection_cache.setdefault(
                     self._cam_id, {}
                 )
                 cur[self._field] = value
                 # Guard the next slow-tier poll from reverting the optimistic
                 # value while the cloud write is still propagating.
-                self.coordinator._audio_detection_set_at[self._cam_id] = (
-                    time.monotonic()
-                )
+                self.coordinator.audio_detection_set_at[self._cam_id] = time.monotonic()
         self.async_write_ha_state()
 
     @override
@@ -2065,7 +2069,7 @@ class BoschNotificationTypeSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        data = self.coordinator._notifications_cache.get(self._cam_id, {})
+        data = self.coordinator.notifications_cache.get(self._cam_id, {})
         if not data:
             return None
         return data.get(self._ntype, False)  # type: ignore[no-any-return]
@@ -2079,18 +2083,18 @@ class BoschNotificationTypeSwitch(_BoschSwitchBase):
         base class is_camera_online() guard intentionally.
         """
         return self.coordinator.last_update_success and bool(
-            self.coordinator._notifications_cache.get(self._cam_id)
+            self.coordinator.notifications_cache.get(self._cam_id)
         )
 
     async def _set_type(self, value: bool) -> None:
         """Write updated notification toggles (preserving other types)."""
-        current = dict(self.coordinator._notifications_cache.get(self._cam_id, {}))
+        current = dict(self.coordinator.notifications_cache.get(self._cam_id, {}))
         current[self._ntype] = value
         success = await self.coordinator.async_put_camera(
             self._cam_id, "notifications", current
         )
         if success:
-            self.coordinator._notifications_cache[self._cam_id] = current
+            self.coordinator.notifications_cache[self._cam_id] = current
         self.async_write_ha_state()
 
     @override
@@ -2123,7 +2127,7 @@ class BoschAlarmSystemArmSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        return self.coordinator._arming_cache.get(self._cam_id)
+        return self.coordinator.arming_cache.get(self._cam_id)
 
     @property
     @override
@@ -2136,7 +2140,7 @@ class BoschAlarmSystemArmSwitch(_BoschSwitchBase):
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        status = self.coordinator._alarm_status_cache.get(self._cam_id, {})
+        status = self.coordinator.alarm_status_cache.get(self._cam_id, {})
         return {
             "alarm_type": status.get("alarmType"),
             "intrusion_system": status.get("intrusionSystem"),
@@ -2146,8 +2150,8 @@ class BoschAlarmSystemArmSwitch(_BoschSwitchBase):
         await self._async_apply_toggle(
             "intrusionSystem/arming",
             {"arm": arm},
-            self.coordinator._arming_cache,
-            self.coordinator._arming_set_at,
+            self.coordinator.arming_cache,
+            self.coordinator.arming_set_at,
             arm,
         )
 
@@ -2167,7 +2171,7 @@ class _BoschAlarmSettingsSwitchBase(_BoschSwitchBase):
 
     @property
     def _settings(self) -> dict[str, Any]:
-        return self.coordinator._alarm_settings_cache.get(self._cam_id, {})
+        return self.coordinator.alarm_settings_cache.get(self._cam_id, {})
 
     @property
     @override
@@ -2195,7 +2199,7 @@ class _BoschAlarmSettingsSwitchBase(_BoschSwitchBase):
             self._cam_id, "alarm_settings", cfg
         )
         if success:
-            self.coordinator._alarm_settings_cache[self._cam_id] = cfg
+            self.coordinator.alarm_settings_cache[self._cam_id] = cfg
         self.async_write_ha_state()
 
     @override
@@ -2269,7 +2273,7 @@ class BoschImageRotation180Switch(_BoschSwitchBase, RestoreEntity):
     @property
     @override
     def is_on(self) -> bool:
-        return bool(self.coordinator._image_rotation_180.get(self._cam_id, False))
+        return bool(self.coordinator.image_rotation_180.get(self._cam_id, False))
 
     @property
     @override
@@ -2282,7 +2286,7 @@ class BoschImageRotation180Switch(_BoschSwitchBase, RestoreEntity):
         await super().async_added_to_hass()
         last = await self.async_get_last_state()
         if last is not None and last.state == "on":
-            self.coordinator._image_rotation_180[self._cam_id] = True
+            self.coordinator.image_rotation_180[self._cam_id] = True
             _LOGGER.debug(
                 "image_rotation_180: restored ON for %s from previous state",
                 self._cam_id[:8],
@@ -2290,14 +2294,14 @@ class BoschImageRotation180Switch(_BoschSwitchBase, RestoreEntity):
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
-        self.coordinator._image_rotation_180[self._cam_id] = True
+        self.coordinator.image_rotation_180[self._cam_id] = True
         self.async_write_ha_state()
         # Notify pan number entity to refresh display value (sign flips).
         self.coordinator.async_update_listeners()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
-        self.coordinator._image_rotation_180[self._cam_id] = False
+        self.coordinator.image_rotation_180[self._cam_id] = False
         self.async_write_ha_state()
         self.coordinator.async_update_listeners()
 
@@ -2314,7 +2318,7 @@ class BoschPanicAlarmSwitch(_BoschSwitchBase):
     until {"status":"OFF"} is sent or the user disarms via the app.
 
     State is local-only: the cloud does not expose a "panic active" GET endpoint,
-    so we track the last-sent state in `coordinator._panic_alarm_cache`. After a
+    so we track the last-sent state in `coordinator.panic_alarm_cache`. After a
     restart the switch defaults to OFF (siren has timed out / been silenced).
 
     Disabled by default — too loud to be in a casual dashboard. User enables via
@@ -2334,7 +2338,7 @@ class BoschPanicAlarmSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool:
-        cache = getattr(self.coordinator, "_panic_alarm_cache", {})
+        cache = getattr(self.coordinator, "panic_alarm_cache", {})
         return bool(cache.get(self._cam_id, False))
 
     @property
@@ -2346,8 +2350,8 @@ class BoschPanicAlarmSwitch(_BoschSwitchBase):
         )
 
     async def _set(self, enabled: bool) -> None:
-        if not hasattr(self.coordinator, "_panic_alarm_cache"):
-            self.coordinator._panic_alarm_cache = {}  # lazy init for older coordinators
+        if not hasattr(self.coordinator, "panic_alarm_cache"):
+            self.coordinator.panic_alarm_cache = {}  # lazy init for older coordinators
         # Privacy mode blocks /panic_alarm with HTTP 443 — warn the user explicitly
         # rather than letting the PUT fail silently and HA's verify-timeout fire.
         if enabled and await _warn_if_privacy_on(self, "Trigger Siren"):
@@ -2356,7 +2360,7 @@ class BoschPanicAlarmSwitch(_BoschSwitchBase):
             self._cam_id, "panic_alarm", {"status": "ON" if enabled else "OFF"}
         )
         if success:
-            self.coordinator._panic_alarm_cache[self._cam_id] = enabled
+            self.coordinator.panic_alarm_cache[self._cam_id] = enabled
             _LOGGER.info(
                 "Panic alarm %s for %s",
                 "TRIGGERED" if enabled else "stopped",
@@ -2417,7 +2421,7 @@ class BoschNvrRecordingSwitch(_BoschSwitchBase, RestoreEntity):
 
         Survives HA restarts via RestoreEntity (see `async_added_to_hass`).
         """
-        return bool(self.coordinator._nvr_user_intent.get(self._cam_id, False))
+        return bool(self.coordinator.nvr_user_intent.get(self._cam_id, False))
 
     @property
     @override
@@ -2432,19 +2436,19 @@ class BoschNvrRecordingSwitch(_BoschSwitchBase, RestoreEntity):
             return False
         if not self.coordinator.is_camera_online(self._cam_id):
             return False
-        live = self.coordinator._live_connections.get(self._cam_id, {})
+        live = self.coordinator.live_connections.get(self._cam_id, {})
         return live.get("_connection_type") == "LOCAL"
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Diagnostic visibility: surface ffmpeg state + last error."""
-        proc = self.coordinator._nvr_processes.get(self._cam_id)
-        live = self.coordinator._live_connections.get(self._cam_id, {})
+        proc = self.coordinator.nvr_processes.get(self._cam_id)
+        live = self.coordinator.live_connections.get(self._cam_id, {})
         return {
             "ffmpeg_running": proc is not None and proc.returncode is None,
             "connection_type": live.get("_connection_type", "(none)"),
-            "last_error": self.coordinator._nvr_error_state.get(self._cam_id, ""),
+            "last_error": self.coordinator.nvr_error_state.get(self._cam_id, ""),
             "base_path": (
                 self.coordinator.options.get("nvr_base_path") or "/config/bosch_nvr"
             ),
@@ -2458,7 +2462,7 @@ class BoschNvrRecordingSwitch(_BoschSwitchBase, RestoreEntity):
         await super().async_added_to_hass()
         last = await self.async_get_last_state()
         if last is not None and last.state == "on":
-            self.coordinator._nvr_user_intent[self._cam_id] = True
+            self.coordinator.nvr_user_intent[self._cam_id] = True
             _LOGGER.debug(
                 "NVR: restored ON for %s from previous state",
                 self._cam_id[:8],
@@ -2469,7 +2473,7 @@ class BoschNvrRecordingSwitch(_BoschSwitchBase, RestoreEntity):
             if (
                 self.coordinator.last_update_success
                 and self.coordinator.is_camera_online(self._cam_id)
-                and self.coordinator._live_connections.get(self._cam_id, {}).get(
+                and self.coordinator.live_connections.get(self._cam_id, {}).get(
                     "_connection_type"
                 )
                 == "LOCAL"
@@ -2482,14 +2486,14 @@ class BoschNvrRecordingSwitch(_BoschSwitchBase, RestoreEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         _LOGGER.info("NVR ON for %s", self._cam_title)
-        self.coordinator._nvr_user_intent[self._cam_id] = True
+        self.coordinator.nvr_user_intent[self._cam_id] = True
         await self.coordinator.start_recorder(self._cam_id)
         self.async_write_ha_state()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         _LOGGER.info("NVR OFF for %s", self._cam_title)
-        self.coordinator._nvr_user_intent[self._cam_id] = False
+        self.coordinator.nvr_user_intent[self._cam_id] = False
         await self.coordinator.stop_recorder(self._cam_id)
         self.async_write_ha_state()
 
@@ -2597,7 +2601,7 @@ class BoschExternalStreamSwitch(_BoschSwitchBase, RestoreEntity):
     @property
     @override
     def is_on(self) -> bool:
-        return bool(self.coordinator._external_stream_enabled.get(self._cam_id, False))
+        return bool(self.coordinator.external_stream_enabled.get(self._cam_id, False))
 
     @property
     @override
@@ -2609,7 +2613,7 @@ class BoschExternalStreamSwitch(_BoschSwitchBase, RestoreEntity):
         await super().async_added_to_hass()
         last = await self.async_get_last_state()
         if last is not None and last.state == "on":
-            self.coordinator._external_stream_enabled[self._cam_id] = True
+            self.coordinator.external_stream_enabled[self._cam_id] = True
             _LOGGER.debug(
                 "external_stream: restored ON for %s from previous state",
                 self._cam_id[:8],
@@ -2617,14 +2621,14 @@ class BoschExternalStreamSwitch(_BoschSwitchBase, RestoreEntity):
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
-        self.coordinator._external_stream_enabled[self._cam_id] = True
+        self.coordinator.external_stream_enabled[self._cam_id] = True
         self.async_write_ha_state()
         # Notify the two URL sensors so they recompute state immediately.
         self.coordinator.async_update_listeners()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
-        self.coordinator._external_stream_enabled[self._cam_id] = False
+        self.coordinator.external_stream_enabled[self._cam_id] = False
         self.async_write_ha_state()
         self.coordinator.async_update_listeners()
 
@@ -2650,9 +2654,9 @@ class _BoschFrigateEndpointSwitch(_BoschSwitchBase, RestoreEntity):
 
     def _store(self) -> dict[str, bool]:
         store: dict[str, bool] = (
-            self.coordinator._frigate_high_enabled
+            self.coordinator.frigate_high_enabled
             if self._quality == "high"
-            else self.coordinator._frigate_low_enabled
+            else self.coordinator.frigate_low_enabled
         )
         return store
 

@@ -170,7 +170,7 @@ class _BoschBinarySensorBase(
         )
         try:
             value: int = int(raw)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             value = DEFAULT_MOTION_ACTIVE_WINDOW
         return max(MOTION_ACTIVE_WINDOW_MIN, min(MOTION_ACTIVE_WINDOW_MAX, value))
 
@@ -358,18 +358,18 @@ class BoschLanReachableBinarySensor(_BoschBinarySensorBase):
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        entry = self.coordinator._lan_tcp_reachable.get(self._cam_id)
+        entry = self.coordinator.lan_tcp_reachable.get(self._cam_id)
         attrs: dict[str, Any] = {"camera_id": self._cam_id}
         if entry is not None:
             _reachable, ts = entry
             attrs["last_check_seconds_ago"] = round(_time.monotonic() - ts)
         last_write = (
-            self.coordinator._local_write_at.get(self._cam_id, float("-inf"))
-            if hasattr(self.coordinator, "_local_write_at")
+            self.coordinator.local_write_at.get(self._cam_id, float("-inf"))
+            if hasattr(self.coordinator, "local_write_at")
             else float("-inf")
         )
         if last_write != float("-inf"):
-            grace_left = self.coordinator._LOCAL_WRITE_GRACE_S - (
+            grace_left = self.coordinator.LOCAL_WRITE_GRACE_S - (
                 _time.monotonic() - last_write
             )
             if grace_left > 0:

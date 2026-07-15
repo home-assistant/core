@@ -3,7 +3,7 @@
 Phase 2 step 3 of the coordinator-rewrite split (see
 .claude/plans/jiggly-moseying-peacock.md, project root). Feature-flags and
 the Bosch API protocol-version check are each guarded by an instance flag
-(`self._feature_flags`/`self._protocol_checked`) so they only genuinely run
+(`self.feature_flags`/`self.protocol_checked`) so they only genuinely run
 on the first tick, but the guard checks themselves are re-evaluated every
 tick inline — this is bootstrap-shaped logic riding along in the per-tick
 polling method, not repeated polling work. Left inline-called on every tick
@@ -39,13 +39,13 @@ async def ensure_feature_flags(
     session: aiohttp.ClientSession,
     headers: dict[str, str],
 ) -> None:
-    """Fetch `/v11/feature_flags` once, caching onto `coordinator._feature_flags`.
+    """Fetch `/v11/feature_flags` once, caching onto `coordinator.feature_flags`.
 
-    No-op once `coordinator._feature_flags` is already truthy. Any timeout/
+    No-op once `coordinator.feature_flags` is already truthy. Any timeout/
     network error is swallowed (debug-logged) — a missing feature-flags
     fetch must not abort the tick.
     """
-    if coordinator._feature_flags:
+    if coordinator.feature_flags:
         return
     try:
         async with asyncio.timeout(5):
@@ -53,8 +53,8 @@ async def ensure_feature_flags(
                 f"{CLOUD_API}/v11/feature_flags", headers=headers
             ) as ff_resp:
                 if ff_resp.status == 200:
-                    coordinator._feature_flags = await ff_resp.json()
-                    _LOGGER.debug("Feature flags: %s", coordinator._feature_flags)
+                    coordinator.feature_flags = await ff_resp.json()
+                    _LOGGER.debug("Feature flags: %s", coordinator.feature_flags)
     except asyncio.CancelledError:
         raise
     except (TimeoutError, aiohttp.ClientError) as err:
@@ -68,18 +68,18 @@ async def ensure_protocol_checked(
 ) -> None:
     """Check the Bosch API protocol version once, at startup.
 
-    No-op once `coordinator._protocol_checked` is already `True` — that
+    No-op once `coordinator.protocol_checked` is already `True` — that
     flag is set unconditionally the first time this runs (before the fetch
     even completes), matching the pre-extraction inline code exactly:
     a failed check must not retry every tick. Logs a WARNING if the
     protocol is no longer reported as SUPPORTED, or if the check itself
     fails — never raises.
     """
-    if coordinator._protocol_checked:
+    if coordinator.protocol_checked:
         return
-    coordinator._protocol_checked = True
+    coordinator.protocol_checked = True
     try:
-        _version = coordinator._integration_version
+        _version = coordinator.integration_version
         async with asyncio.timeout(5):
             async with session.get(
                 f"{CLOUD_API}/protocol_support?protocol=11&client=haV{_version}",

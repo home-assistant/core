@@ -36,14 +36,14 @@ for a fallback branch to do.
 Because the listener's bound port never changes and the URL it publishes
 never embeds credentials, `stream_source()` can return the SAME URL string
 across every credential rotation — the front-door reads the freshest
-`_local_user`/`_local_password` out of `coordinator._live_connections[cam_id]`
+`_local_user`/`_local_password` out of `coordinator.live_connections[cam_id]`
 fresh on every client (re)connect, so native go2rtc registration stays a
 single, stable, dedup-friendly entry for the lifetime of a camera's LOCAL
 session.
 
 This is the "main viewing path" always-reused counterpart to
 `frigate_endpoint.py`'s opt-in external-recorder front-door — separate state
-(`coordinator._viewing_front_door_runner` / `_viewing_sticky_port`), separate
+(`coordinator.viewing_front_door_runner` / `_viewing_sticky_port`), separate
 `FrontDoorRunner` instance, but built entirely out of that module's generic,
 feature-agnostic building blocks (`FrontDoorRunner`, `FrontDoorConfig`,
 `InnerTarget`). Always bound to `127.0.0.1` with no IP allowlist and no gate
@@ -82,10 +82,10 @@ async def viewing_resolve_inner(coordinator: Any, cam_id: str) -> InnerTarget | 
     torn down, fell back to REMOTE, or the inner TLS proxy hasn't finished
     starting yet.
     """
-    live = coordinator._live_connections.get(cam_id, {})
+    live = coordinator.live_connections.get(cam_id, {})
     if live.get("_connection_type") != "LOCAL":
         return None
-    port = coordinator._tls_proxy_ports.get(cam_id)
+    port = coordinator.tls_proxy_ports.get(cam_id)
     user = live.get("_local_user")
     pwd = live.get("_local_password")
     if not (port and user and pwd):
@@ -121,9 +121,9 @@ async def start_viewing_front_door(
     the `user:pass@` credential prefix), since that is the contract HA's
     Stream component / go2rtc / FFmpeg already rely on.
     """
-    if coordinator._viewing_front_door_runner is None:
-        coordinator._viewing_front_door_runner = FrontDoorRunner()
-    runner = coordinator._viewing_front_door_runner
+    if coordinator.viewing_front_door_runner is None:
+        coordinator.viewing_front_door_runner = FrontDoorRunner()
+    runner = coordinator.viewing_front_door_runner
     if runner.has_server(cam_id):
         # Already bound — genuinely REUSE it rather than restart
         # (bug-hunt finding: `FrontDoorRunner.start_server` always does an
@@ -150,7 +150,7 @@ async def start_viewing_front_door(
             cam_id,
             config,
             lambda cid: viewing_resolve_inner(coordinator, cid),
-            preferred_port=coordinator._viewing_sticky_port.get(cam_id, 0),
+            preferred_port=coordinator.viewing_sticky_port.get(cam_id, 0),
         )
     except OSError as err:
         # Sticky port taken (e.g. after a reload) — retry on an ephemeral
@@ -161,7 +161,7 @@ async def start_viewing_front_door(
             cam_id[:8],
             err,
         )
-        coordinator._viewing_sticky_port.pop(cam_id, None)
+        coordinator.viewing_sticky_port.pop(cam_id, None)
         try:
             port = await runner.start_server(
                 cam_id,
@@ -180,7 +180,7 @@ async def start_viewing_front_door(
                 err2,
             )
             return None
-    coordinator._viewing_sticky_port[cam_id] = port
+    coordinator.viewing_sticky_port[cam_id] = port
     return (
         f"rtsp://127.0.0.1:{port}/rtsp_tunnel?inst={inst}{audio_param}"
         f"&fmtp=1&maxSessionDuration={max_session_duration}"
@@ -189,5 +189,5 @@ async def start_viewing_front_door(
 
 async def stop_viewing_front_door(coordinator: Any, cam_id: str) -> None:
     """Stop the viewing front-door listener for `cam_id`, if one is running."""
-    if coordinator._viewing_front_door_runner is not None:
-        coordinator._viewing_front_door_runner.stop_server(cam_id)
+    if coordinator.viewing_front_door_runner is not None:
+        coordinator.viewing_front_door_runner.stop_server(cam_id)
