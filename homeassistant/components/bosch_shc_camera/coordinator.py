@@ -3977,7 +3977,7 @@ class BoschCameraCoordinator(
         go2rtc_entries = [
             e
             for e in self.hass.config_entries.async_entries("go2rtc")
-            if e.state == ConfigEntryState.LOADED
+            if e.state is ConfigEntryState.LOADED
         ]
         if not go2rtc_entries:
             _LOGGER.debug("webrtc-watchdog: no loaded go2rtc entry to reload")

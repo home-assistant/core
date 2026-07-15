@@ -232,7 +232,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterator, MutableMapping
 from dataclasses import dataclass
-from typing import Any, TypeVar, cast, override
+from typing import Any, TypeVar, cast, overload, override
 
 _T = TypeVar("_T")
 
@@ -399,6 +399,12 @@ class LiveOpenedAtView:
     def __init__(self, sessions: dict[str, CameraSessionState]) -> None:
         self._sessions = sessions
 
+    @overload
+    def get(self, cam_id: str) -> float | None: ...
+    @overload
+    def get(self, cam_id: str, default: float) -> float: ...
+    @overload
+    def get(self, cam_id: str, default: float | None) -> float | None: ...
     def get(self, cam_id: str, default: float | None = None) -> float | None:
         session = self._sessions.get(cam_id)
         if session is None or session.opened_at is None:
@@ -439,6 +445,12 @@ class FloatFieldView:
         self._sessions = sessions
         self._field_name = field_name
 
+    @overload
+    def get(self, cam_id: str) -> float | None: ...
+    @overload
+    def get(self, cam_id: str, default: float) -> float: ...
+    @overload
+    def get(self, cam_id: str, default: float | None) -> float | None: ...
     def get(self, cam_id: str, default: float | None = None) -> float | None:
         session = self._sessions.get(cam_id)
         if session is None:
