@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import timedelta
 import io
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -22,7 +23,13 @@ from wyoming.tts import Synthesize
 from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
-from homeassistant.components import assist_pipeline, assist_satellite, intent
+from homeassistant.components import assist_pipeline, assist_satellite
+from homeassistant.components.timer_list import (
+    TimerItem,
+    TimerListEvent,
+    TimerListEventType,
+    TimerStatus,
+)
 from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.assist_satellite import WyomingAssistSatellite
 from homeassistant.components.wyoming.devices import SatelliteDevice
@@ -30,6 +37,7 @@ from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er, intent as intent_helper
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import SATELLITE_INFO, WAKE_WORD_INFO, MockAsyncTcpClient
 
@@ -1109,19 +1117,17 @@ async def test_handle_timer_noop_when_client_disconnected(
         satellite._client = None
 
         # Should not raise
-        satellite._handle_timer(
-            intent.TimerEventType.STARTED,
-            intent.TimerInfo(
-                id="test-timer",
-                name="test",
-                seconds=30,
-                device_id="test_device",
-                start_hours=0,
-                start_minutes=0,
-                start_seconds=30,
-                created_seconds=30,
-                language="en",
-            ),
+        satellite.handle_timer_event(
+            TimerListEvent(
+                event_type=TimerListEventType.STARTED,
+                item=TimerItem(
+                    timer_id="test-timer",
+                    name="test",
+                    status=TimerStatus.ACTIVE,
+                    duration=timedelta(seconds=30),
+                    created_at=dt_util.utcnow(),
+                ),
+            )
         )
 
 

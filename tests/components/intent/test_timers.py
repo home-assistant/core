@@ -2,43 +2,44 @@
 
 import asyncio
 from collections.abc import Callable
-from unittest.mock import MagicMock, patch
+from datetime import timedelta
+from unittest.mock import MagicMock
 
 import pytest
 
 from homeassistant.components.intent import DOMAIN
 from homeassistant.components.intent.timers import (
-    TIMER_DATA,
-    MultipleTimersMatchedError,
-    TimerEventType,
-    TimerHandler,
-    TimerInfo,
-    TimerManager,
     TimerNotFoundError,
     TimersNotSupportedError,
     _round_time,
     async_device_supports_timers,
-    async_register_timer_handler,
 )
 from homeassistant.components.local_timer_list import LocalTimerListEntity
 from homeassistant.components.timer_list import (
     DATA_COMPONENT as TIMER_LIST_DATA_COMPONENT,
     DOMAIN as TIMER_LIST_DOMAIN,
+    TimerItem,
     TimerListEntity,
+    TimerListEvent,
+    TimerListEventType,
     TimerStatus,
 )
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    area_registry as ar,
-    device_registry as dr,
-    entity_registry as er,
-    floor_registry as fr,
-    intent,
-)
+from homeassistant.const import ATTR_NAME
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er, intent
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
+
+# Observers receive the entity's raw TimerListEvent, exactly as satellite
+# integrations do when they subscribe to their device's timer_list entity.
+type _TimerObserver = Callable[[TimerListEvent], None]
+
+
+def _remaining_seconds(item: TimerItem) -> int:
+    """Return the whole seconds left on a timer right now."""
+    return round(item.remaining_at(dt_util.utcnow()).total_seconds())
 
 
 @pytest.fixture
@@ -60,12 +61,12 @@ def _make_timer_device_id(hass: HomeAssistant) -> str:
 
 
 async def _register_timer_device(
-    hass: HomeAssistant, device_id: str, handler: TimerHandler
-) -> Callable[[], None]:
-    """Give a device a timer_list entity and register its timer handler.
+    hass: HomeAssistant, device_id: str, observer: _TimerObserver | None = None
+) -> CALLBACK_TYPE | None:
+    """Give a device a timer_list entity and optionally observe its events.
 
-    Mirrors what homeassistant.components.assist_satellite does for real
-    satellite entities.
+    Mirrors what a satellite integration does: it creates a timer_list entity
+    for the device and subscribes to it.
     """
     component = hass.data[TIMER_LIST_DATA_COMPONENT]
     await component.async_add_entities(
@@ -78,7 +79,13 @@ async def _register_timer_device(
     )
     assert entity_id is not None
     entity_registry.async_update_entity(entity_id, device_id=device_id)
-    return async_register_timer_handler(hass, device_id, handler)
+
+    if observer is None:
+        return None
+
+    entity = hass.data[TIMER_LIST_DATA_COMPONENT].get_entity(entity_id)
+    assert entity is not None
+    return entity.async_subscribe_updates(observer)
 
 
 def _get_timer_entity(hass: HomeAssistant, device_id: str) -> TimerListEntity:
@@ -103,22 +110,19 @@ async def test_start_finish_timer(hass: HomeAssistant, init_components) -> None:
     timer_id: str | None = None
 
     @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+    def handle_timer(event: TimerListEvent) -> None:
         nonlocal timer_id
+        item = event.item
 
-        assert timer.name == timer_name
-        assert timer.device_id == device_id
-        assert timer.start_hours == 0
-        assert timer.start_minutes == 0
-        assert timer.start_seconds == 0
-        assert timer.seconds_left == 0
-        assert timer.created_seconds == 0
+        assert item.name == timer_name
+        assert item.duration == timedelta(0)
+        assert _remaining_seconds(item) == 0
 
-        if event_type == TimerEventType.STARTED:
-            timer_id = timer.id
+        if event.event_type == TimerListEventType.STARTED:
+            timer_id = item.timer_id
             started_event.set()
-        elif event_type == TimerEventType.FINISHED:
-            assert timer.id == timer_id
+        elif event.event_type == TimerListEventType.FINISHED:
+            assert item.timer_id == timer_id
             finished_event.set()
 
     await _register_timer_device(hass, device_id, handle_timer)
@@ -151,29 +155,22 @@ async def test_cancel_timer(hass: HomeAssistant, init_components) -> None:
     timer_id: str | None = None
 
     @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+    def handle_timer(event: TimerListEvent) -> None:
         nonlocal timer_id
+        item = event.item
 
-        assert timer.device_id == device_id
-        assert timer.start_hours == 1
-        assert timer.start_minutes == 2
-        assert timer.start_seconds == 3
+        assert item.duration == timedelta(hours=1, minutes=2, seconds=3)
 
         if timer_name is not None:
-            assert timer.name == timer_name
+            assert item.name == timer_name
 
-        if event_type == TimerEventType.STARTED:
-            timer_id = timer.id
-            assert (
-                timer.seconds_left
-                == (60 * 60 * timer.start_hours)
-                + (60 * timer.start_minutes)
-                + timer.start_seconds
-            )
+        if event.event_type == TimerListEventType.STARTED:
+            timer_id = item.timer_id
+            assert _remaining_seconds(item) == int(item.duration.total_seconds())
             started_event.set()
-        elif event_type == TimerEventType.CANCELLED:
-            assert timer.id == timer_id
-            assert timer.seconds_left == 0
+        elif event.event_type == TimerListEventType.CANCELLED:
+            assert item.timer_id == timer_id
+            assert _remaining_seconds(item) == 0
             cancelled_event.set()
 
     await _register_timer_device(hass, device_id, handle_timer)
@@ -245,7 +242,7 @@ async def test_cancel_timer(hass: HomeAssistant, init_components) -> None:
     async with asyncio.timeout(1):
         await cancelled_event.wait()
 
-    # Cancel without a device
+    # Cancel the device's only timer without any constraints
     timer_name = None
     started_event.clear()
     result = await intent.async_handle(
@@ -263,7 +260,9 @@ async def test_cancel_timer(hass: HomeAssistant, init_components) -> None:
     async with asyncio.timeout(1):
         await started_event.wait()
 
-    result = await intent.async_handle(hass, "test", intent.INTENT_CANCEL_TIMER, {})
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_CANCEL_TIMER, {}, device_id=device_id
+    )
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
 
 
@@ -279,37 +278,29 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
     original_total_seconds = -1
 
     @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+    def handle_timer(event: TimerListEvent) -> None:
         nonlocal timer_id, original_total_seconds
+        item = event.item
 
-        assert timer.device_id == device_id
-        assert timer.start_hours == 1
-        assert timer.start_minutes == 2
-        assert timer.start_seconds == 3
+        assert item.duration == timedelta(hours=1, minutes=2, seconds=3)
 
         if timer_name is not None:
-            assert timer.name == timer_name
+            assert item.name == timer_name
 
-        if event_type == TimerEventType.STARTED:
-            timer_id = timer.id
-            original_total_seconds = (
-                (60 * 60 * timer.start_hours)
-                + (60 * timer.start_minutes)
-                + timer.start_seconds
-            )
-            assert timer.created_seconds == original_total_seconds
+        if event.event_type == TimerListEventType.STARTED:
+            timer_id = item.timer_id
+            original_total_seconds = int(item.duration.total_seconds())
             started_event.set()
-        elif event_type == TimerEventType.UPDATED:
-            assert timer.id == timer_id
+        elif event.event_type == TimerListEventType.UPDATED:
+            assert item.timer_id == timer_id
 
-            # Timer was increased. created_seconds reflects the timer's
-            # original duration and does not grow past it, unlike the old
-            # in-memory TimerManager.
-            assert timer.seconds_left > original_total_seconds
-            assert timer.created_seconds == original_total_seconds
+            # Timer was increased. The duration reflects the timer's original
+            # length and does not grow past it, only the remaining time does.
+            assert _remaining_seconds(item) > original_total_seconds
+            assert int(item.duration.total_seconds()) == original_total_seconds
             updated_event.set()
-        elif event_type == TimerEventType.CANCELLED:
-            assert timer.id == timer_id
+        elif event.event_type == TimerListEventType.CANCELLED:
+            assert item.timer_id == timer_id
             cancelled_event.set()
 
     await _register_timer_device(hass, device_id, handle_timer)
@@ -345,6 +336,7 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
             "minutes": {"value": 0},
             "seconds": {"value": 0},
         },
+        device_id=device_id,
     )
 
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
@@ -363,6 +355,7 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
             "minutes": {"value": 5},
             "seconds": {"value": 30},
         },
+        device_id=device_id,
     )
 
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
@@ -376,6 +369,7 @@ async def test_increase_timer(hass: HomeAssistant, init_components) -> None:
         "test",
         intent.INTENT_CANCEL_TIMER,
         {"name": {"value": timer_name}},
+        device_id=device_id,
     )
 
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
@@ -396,35 +390,29 @@ async def test_decrease_timer(hass: HomeAssistant, init_components) -> None:
     original_total_seconds = 0
 
     @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+    def handle_timer(event: TimerListEvent) -> None:
         nonlocal timer_id, original_total_seconds
+        item = event.item
 
-        assert timer.device_id == device_id
-        assert timer.start_hours == 1
-        assert timer.start_minutes == 2
-        assert timer.start_seconds == 3
+        assert item.duration == timedelta(hours=1, minutes=2, seconds=3)
 
         if timer_name is not None:
-            assert timer.name == timer_name
+            assert item.name == timer_name
 
-        if event_type == TimerEventType.STARTED:
-            timer_id = timer.id
-            original_total_seconds = (
-                (60 * 60 * timer.start_hours)
-                + (60 * timer.start_minutes)
-                + timer.start_seconds
-            )
+        if event.event_type == TimerListEventType.STARTED:
+            timer_id = item.timer_id
+            original_total_seconds = int(item.duration.total_seconds())
             started_event.set()
-        elif event_type == TimerEventType.UPDATED:
-            assert timer.id == timer_id
+        elif event.event_type == TimerListEventType.UPDATED:
+            assert item.timer_id == timer_id
 
             # Timer was decreased
-            assert timer.seconds_left <= (original_total_seconds - 30)
-            assert timer.created_seconds == original_total_seconds
+            assert _remaining_seconds(item) <= (original_total_seconds - 30)
+            assert int(item.duration.total_seconds()) == original_total_seconds
 
             updated_event.set()
-        elif event_type == TimerEventType.CANCELLED:
-            assert timer.id == timer_id
+        elif event.event_type == TimerListEventType.CANCELLED:
+            assert item.timer_id == timer_id
             cancelled_event.set()
 
     await _register_timer_device(hass, device_id, handle_timer)
@@ -458,6 +446,7 @@ async def test_decrease_timer(hass: HomeAssistant, init_components) -> None:
             "start_seconds": {"value": 3},
             "seconds": {"value": 30},
         },
+        device_id=device_id,
     )
 
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
@@ -471,6 +460,7 @@ async def test_decrease_timer(hass: HomeAssistant, init_components) -> None:
         "test",
         intent.INTENT_CANCEL_TIMER,
         {"name": {"value": timer_name}},
+        device_id=device_id,
     )
 
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
@@ -494,26 +484,20 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant, init_components) -
     original_total_seconds = 0
 
     @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+    def handle_timer(event: TimerListEvent) -> None:
         nonlocal timer_id, original_total_seconds
+        item = event.item
 
-        assert timer.device_id == device_id
-        assert timer.name is None
-        assert timer.start_hours == 1
-        assert timer.start_minutes == 2
-        assert timer.start_seconds == 3
+        assert item.name is None
+        assert item.duration == timedelta(hours=1, minutes=2, seconds=3)
 
-        if event_type == TimerEventType.STARTED:
-            timer_id = timer.id
-            original_total_seconds = (
-                (60 * 60 * timer.start_hours)
-                + (60 * timer.start_minutes)
-                + timer.start_seconds
-            )
+        if event.event_type == TimerListEventType.STARTED:
+            timer_id = item.timer_id
+            original_total_seconds = int(item.duration.total_seconds())
             started_event.set()
-        elif event_type == TimerEventType.FINISHED:
-            assert timer.id == timer_id
-            assert timer.seconds_left == 0
+        elif event.event_type == TimerListEventType.FINISHED:
+            assert item.timer_id == timer_id
+            assert _remaining_seconds(item) == 0
             finished_event.set()
 
     await _register_timer_device(hass, device_id, handle_timer)
@@ -546,6 +530,7 @@ async def test_decrease_timer_below_zero(hass: HomeAssistant, init_components) -
             "start_seconds": {"value": 3},
             "seconds": {"value": original_total_seconds + 1},
         },
+        device_id=device_id,
     )
 
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
@@ -578,12 +563,8 @@ async def test_find_timer_failed(hass: HomeAssistant, init_components) -> None:
             device_id=device_id,
         )
 
-    # Must register a handler before we can do anything with timers
-    @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
-        pass
-
-    await _register_timer_device(hass, device_id, handle_timer)
+    # The device needs a timer_list entity before we can do anything with timers
+    await _register_timer_device(hass, device_id)
 
     # Start a 5 minute timer for pizza
     result = await intent.async_handle(
@@ -601,6 +582,7 @@ async def test_find_timer_failed(hass: HomeAssistant, init_components) -> None:
         "test",
         intent.INTENT_INCREASE_TIMER,
         {"name": {"value": "PIZZA "}, "minutes": {"value": 1}},
+        device_id=device_id,
     )
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
 
@@ -611,6 +593,7 @@ async def test_find_timer_failed(hass: HomeAssistant, init_components) -> None:
             "test",
             intent.INTENT_CANCEL_TIMER,
             {"name": {"value": "does-not-exist"}},
+            device_id=device_id,
         )
 
     # Right start time
@@ -619,6 +602,7 @@ async def test_find_timer_failed(hass: HomeAssistant, init_components) -> None:
         "test",
         intent.INTENT_INCREASE_TIMER,
         {"start_minutes": {"value": 5}, "minutes": {"value": 1}},
+        device_id=device_id,
     )
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
 
@@ -629,299 +613,81 @@ async def test_find_timer_failed(hass: HomeAssistant, init_components) -> None:
             "test",
             intent.INTENT_CANCEL_TIMER,
             {"start_minutes": {"value": 1}},
+            device_id=device_id,
         )
 
 
-async def test_disambiguation(
-    hass: HomeAssistant,
-    init_components,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
-    floor_registry: fr.FloorRegistry,
-) -> None:
-    """Test finding a timer by disambiguating with area/floor."""
-    entry = MockConfigEntry()
-    entry.add_to_hass(hass)
+async def test_timers_are_device_scoped(hass: HomeAssistant, init_components) -> None:
+    """Test that a device only sees and controls its own timer_list entity."""
+    device_a = _make_timer_device_id(hass)
+    device_b = _make_timer_device_id(hass)
 
-    cancelled_event = asyncio.Event()
-    timer_info: TimerInfo | None = None
+    await _register_timer_device(hass, device_a, MagicMock())
+    await _register_timer_device(hass, device_b, MagicMock())
 
-    @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
-        nonlocal timer_info
-
-        if event_type == TimerEventType.CANCELLED:
-            timer_info = timer
-            cancelled_event.set()
-
-    # Alice is upstairs in the study
-    floor_upstairs = floor_registry.async_create("upstairs")
-    area_study = area_registry.async_create("study")
-    area_study = area_registry.async_update(
-        area_study.id, floor_id=floor_upstairs.floor_id
-    )
-    device_alice_study = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections=set(),
-        identifiers={("test", "alice")},
-    )
-    device_registry.async_update_device(device_alice_study.id, area_id=area_study.id)
-
-    # Bob is downstairs in the kitchen
-    floor_downstairs = floor_registry.async_create("downstairs")
-    area_kitchen = area_registry.async_create("kitchen")
-    area_kitchen = area_registry.async_update(
-        area_kitchen.id, floor_id=floor_downstairs.floor_id
-    )
-    device_bob_kitchen_1 = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections=set(),
-        identifiers={("test", "bob")},
-    )
-    device_registry.async_update_device(
-        device_bob_kitchen_1.id, area_id=area_kitchen.id
-    )
-
-    await _register_timer_device(hass, device_alice_study.id, handle_timer)
-    await _register_timer_device(hass, device_bob_kitchen_1.id, handle_timer)
-
-    # Alice: set a 3 minute timer
+    # Start a timer on each device
     result = await intent.async_handle(
         hass,
         "test",
         intent.INTENT_START_TIMER,
-        {"minutes": {"value": 3}},
-        device_id=device_alice_study.id,
+        {"name": {"value": "pizza"}, "minutes": {"value": 10}},
+        device_id=device_a,
     )
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
 
-    # Bob: set a 3 minute timer
     result = await intent.async_handle(
         hass,
         "test",
         intent.INTENT_START_TIMER,
-        {"minutes": {"value": 3}},
-        device_id=device_bob_kitchen_1.id,
+        {"name": {"value": "tv"}, "minutes": {"value": 15}},
+        device_id=device_b,
     )
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
 
-    # Alice should hear her timer listed first
-    result = await intent.async_handle(
-        hass, "test", intent.INTENT_TIMER_STATUS, {}, device_id=device_alice_study.id
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-    timers = result.speech_slots.get("timers", [])
-    assert len(timers) == 2
-    assert timers[0].get(ATTR_DEVICE_ID) == device_alice_study.id
-    assert timers[1].get(ATTR_DEVICE_ID) == device_bob_kitchen_1.id
+    # Each device only sees its own timer
+    for device_id, expected_name in ((device_a, "pizza"), (device_b, "tv")):
+        result = await intent.async_handle(
+            hass, "test", intent.INTENT_TIMER_STATUS, {}, device_id=device_id
+        )
+        assert result.response_type is intent.IntentResponseType.ACTION_DONE
+        timers = result.speech_slots.get("timers", [])
+        assert len(timers) == 1
+        assert timers[0].get(ATTR_NAME) == expected_name
 
-    # Bob should hear his timer listed first
-    result = await intent.async_handle(
-        hass, "test", intent.INTENT_TIMER_STATUS, {}, device_id=device_bob_kitchen_1.id
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-    timers = result.speech_slots.get("timers", [])
-    assert len(timers) == 2
-    assert timers[0].get(ATTR_DEVICE_ID) == device_bob_kitchen_1.id
-    assert timers[1].get(ATTR_DEVICE_ID) == device_alice_study.id
-
-    # Alice: cancel my timer
-    cancelled_event.clear()
-    timer_info = None
-    result = await intent.async_handle(
-        hass, "test", intent.INTENT_CANCEL_TIMER, {}, device_id=device_alice_study.id
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-
-    async with asyncio.timeout(1):
-        await cancelled_event.wait()
-
-    # Verify this is the 3 minute timer from Alice
-    assert timer_info is not None
-    assert timer_info.device_id == device_alice_study.id
-    assert timer_info.start_minutes == 3
-
-    # Cancel Bob's timer
-    result = await intent.async_handle(
-        hass, "test", intent.INTENT_CANCEL_TIMER, {}, device_id=device_bob_kitchen_1.id
-    )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
-
-    # Add two new devices in two new areas, one upstairs and one downstairs
-    area_bedroom = area_registry.async_create("bedroom")
-    area_bedroom = area_registry.async_update(
-        area_bedroom.id, floor_id=floor_upstairs.floor_id
-    )
-    device_alice_bedroom = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections=set(),
-        identifiers={("test", "alice-2")},
-    )
-    device_registry.async_update_device(
-        device_alice_bedroom.id, area_id=area_bedroom.id
-    )
-
-    area_living_room = area_registry.async_create("living_room")
-    area_living_room = area_registry.async_update(
-        area_living_room.id, floor_id=floor_downstairs.floor_id
-    )
-    device_bob_living_room = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections=set(),
-        identifiers={("test", "bob-2")},
-    )
-    device_registry.async_update_device(
-        device_bob_living_room.id, area_id=area_living_room.id
-    )
-
-    await _register_timer_device(hass, device_alice_bedroom.id, handle_timer)
-    await _register_timer_device(hass, device_bob_living_room.id, handle_timer)
-
-    # Alice: set a 3 minute timer (study)
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_START_TIMER,
-        {"minutes": {"value": 3}},
-        device_id=device_alice_study.id,
-    )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
-
-    # Alice: set a 3 minute timer (bedroom)
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_START_TIMER,
-        {"minutes": {"value": 3}},
-        device_id=device_alice_bedroom.id,
-    )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
-
-    # Bob: set a 3 minute timer (kitchen)
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_START_TIMER,
-        {"minutes": {"value": 3}},
-        device_id=device_bob_kitchen_1.id,
-    )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
-
-    # Bob: set a 3 minute timer (living room)
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_START_TIMER,
-        {"minutes": {"value": 3}},
-        device_id=device_bob_living_room.id,
-    )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
-
-    # Alice should hear the timer in her area first, then on her floor, then
-    # elsewhere.
-    result = await intent.async_handle(
-        hass, "test", intent.INTENT_TIMER_STATUS, {}, device_id=device_alice_study.id
-    )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
-    timers = result.speech_slots.get("timers", [])
-    assert len(timers) == 4
-    assert timers[0].get(ATTR_DEVICE_ID) == device_alice_study.id
-    assert timers[1].get(ATTR_DEVICE_ID) == device_alice_bedroom.id
-    assert timers[2].get(ATTR_DEVICE_ID) == device_bob_kitchen_1.id
-    assert timers[3].get(ATTR_DEVICE_ID) == device_bob_living_room.id
-
-    # Alice cancels the study timer from study
-    cancelled_event.clear()
-    timer_info = None
-    result = await intent.async_handle(
-        hass, "test", intent.INTENT_CANCEL_TIMER, {}, device_id=device_alice_study.id
-    )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
-
-    async with asyncio.timeout(1):
-        await cancelled_event.wait()
-
-    # Verify this is the 3 minute timer from Alice in the study
-    assert timer_info is not None
-    assert timer_info.device_id == device_alice_study.id
-    assert timer_info.start_minutes == 3
-
-    # Trying to cancel the remaining two timers from a disconnected area fails
-    area_garage = area_registry.async_create("garage")
-    device_garage = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections=set(),
-        identifiers={("test", "garage")},
-    )
-    device_registry.async_update_device(device_garage.id, area_id=area_garage.id)
-    await _register_timer_device(hass, device_garage.id, handle_timer)
-
-    with pytest.raises(MultipleTimersMatchedError):
+    # Device A cannot reach device B's timer, even by its name
+    with pytest.raises(TimerNotFoundError):
         await intent.async_handle(
             hass,
             "test",
             intent.INTENT_CANCEL_TIMER,
-            {},
-            device_id=device_garage.id,
+            {"name": {"value": "tv"}},
+            device_id=device_a,
         )
 
-    # Alice cancels the bedroom timer from study (same floor)
-    cancelled_event.clear()
-    timer_info = None
+    # Cancelling all of device A's timers leaves device B's timer untouched
     result = await intent.async_handle(
-        hass, "test", intent.INTENT_CANCEL_TIMER, {}, device_id=device_alice_study.id
+        hass, "test", intent.INTENT_CANCEL_ALL_TIMERS, {}, device_id=device_a
     )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.speech_slots.get("canceled", 0) == 1
 
-    async with asyncio.timeout(1):
-        await cancelled_event.wait()
-
-    # Verify this is the 3 minute timer from Alice in the bedroom
-    assert timer_info is not None
-    assert timer_info.device_id == device_alice_bedroom.id
-    assert timer_info.start_minutes == 3
-
-    # Add a second device in the kitchen
-    device_bob_kitchen_2 = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections=set(),
-        identifiers={("test", "bob-3")},
-    )
-    device_registry.async_update_device(
-        device_bob_kitchen_2.id, area_id=area_kitchen.id
-    )
-
-    await _register_timer_device(hass, device_bob_kitchen_2.id, handle_timer)
-
-    # Bob cancels the kitchen timer from a different device
-    cancelled_event.clear()
-    timer_info = None
     result = await intent.async_handle(
-        hass, "test", intent.INTENT_CANCEL_TIMER, {}, device_id=device_bob_kitchen_2.id
+        hass, "test", intent.INTENT_TIMER_STATUS, {}, device_id=device_b
     )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
+    timers = result.speech_slots.get("timers", [])
+    assert len(timers) == 1
+    assert timers[0].get(ATTR_NAME) == "tv"
 
-    async with asyncio.timeout(1):
-        await cancelled_event.wait()
-
-    assert timer_info is not None
-    assert timer_info.device_id == device_bob_kitchen_1.id
-    assert timer_info.start_minutes == 3
-
-    # Bob cancels the living room timer from the kitchen
-    cancelled_event.clear()
-    timer_info = None
-    result = await intent.async_handle(
-        hass, "test", intent.INTENT_CANCEL_TIMER, {}, device_id=device_bob_kitchen_2.id
-    )
-    assert result.response_type == intent.IntentResponseType.ACTION_DONE
-
-    async with asyncio.timeout(1):
-        await cancelled_event.wait()
-
-    assert timer_info is not None
-    assert timer_info.device_id == device_bob_living_room.id
-    assert timer_info.start_minutes == 3
+    # A device without a timer_list entity does not support timers
+    no_entity_device = _make_timer_device_id(hass)
+    with pytest.raises(TimersNotSupportedError):
+        await intent.async_handle(
+            hass,
+            "test",
+            intent.INTENT_TIMER_STATUS,
+            {},
+            device_id=no_entity_device,
+        )
 
 
 async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None:
@@ -934,11 +700,11 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
     expected_active = True
 
     @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
-        if event_type == TimerEventType.STARTED:
+    def handle_timer(event: TimerListEvent) -> None:
+        if event.event_type == TimerListEventType.STARTED:
             started_event.set()
-        elif event_type == TimerEventType.UPDATED:
-            assert timer.is_active == expected_active
+        elif event.event_type == TimerListEventType.UPDATED:
+            assert (event.item.status == TimerStatus.ACTIVE) == expected_active
             updated_event.set()
 
     await _register_timer_device(hass, device_id, handle_timer)
@@ -957,7 +723,9 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
 
     # Pause the timer
     expected_active = False
-    result = await intent.async_handle(hass, "test", intent.INTENT_PAUSE_TIMER, {})
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_PAUSE_TIMER, {}, device_id=device_id
+    )
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
 
     async with asyncio.timeout(1):
@@ -965,12 +733,16 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
 
     # Pausing again will fail because there are no running timers
     with pytest.raises(TimerNotFoundError):
-        await intent.async_handle(hass, "test", intent.INTENT_PAUSE_TIMER, {})
+        await intent.async_handle(
+            hass, "test", intent.INTENT_PAUSE_TIMER, {}, device_id=device_id
+        )
 
     # Unpause the timer
     updated_event.clear()
     expected_active = True
-    result = await intent.async_handle(hass, "test", intent.INTENT_UNPAUSE_TIMER, {})
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_UNPAUSE_TIMER, {}, device_id=device_id
+    )
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
 
     async with asyncio.timeout(1):
@@ -978,112 +750,44 @@ async def test_pause_unpause_timer(hass: HomeAssistant, init_components) -> None
 
     # Unpausing again will fail because there are no paused timers
     with pytest.raises(TimerNotFoundError):
-        await intent.async_handle(hass, "test", intent.INTENT_UNPAUSE_TIMER, {})
+        await intent.async_handle(
+            hass, "test", intent.INTENT_UNPAUSE_TIMER, {}, device_id=device_id
+        )
 
 
-async def test_timer_not_found(hass: HomeAssistant, init_components) -> None:
-    """Test invalid device/timer ids raise TimerNotFoundError."""
-    timer_manager: TimerManager = hass.data[TIMER_DATA]
-
-    with pytest.raises(TimerNotFoundError):
-        await timer_manager.cancel_timer("does-not-exist", "does-not-exist")
-
-    with pytest.raises(TimerNotFoundError):
-        await timer_manager.add_time("does-not-exist", "does-not-exist", 1)
-
-    with pytest.raises(TimerNotFoundError):
-        await timer_manager.remove_time("does-not-exist", "does-not-exist", 1)
-
-    with pytest.raises(TimerNotFoundError):
-        await timer_manager.pause_timer("does-not-exist", "does-not-exist")
-
-    with pytest.raises(TimerNotFoundError):
-        await timer_manager.unpause_timer("does-not-exist", "does-not-exist")
-
-
-async def test_timer_manager_pause_unpause(
+async def test_pause_unpause_again_is_noop(
     hass: HomeAssistant, init_components
 ) -> None:
-    """Test that pausing/unpausing again will not have an affect."""
-    timer_manager: TimerManager = hass.data[TIMER_DATA]
-
-    # Start a timer
+    """Test that pausing/unpausing an already-paused/running timer emits nothing."""
     handle_timer = MagicMock()
 
     device_id = _make_timer_device_id(hass)
     await _register_timer_device(hass, device_id, handle_timer)
+    entity = _get_timer_entity(hass, device_id)
 
-    timer_id = await timer_manager.start_timer(
-        device_id,
-        hours=None,
-        minutes=5,
-        seconds=None,
-        language=hass.config.language,
-    )
-
-    timer_entity = _get_timer_entity(hass, device_id)
-    (timer_item,) = [t for t in timer_entity.timers if t.timer_id == timer_id]
+    timer_id = await entity.async_start_timer(name=None, duration=timedelta(minutes=5))
+    (timer_item,) = [t for t in entity.timers if t.timer_id == timer_id]
     assert timer_item.status == TimerStatus.ACTIVE
 
     # Pause
     handle_timer.reset_mock()
-    await timer_manager.pause_timer(device_id, timer_id)
+    await entity.async_pause_timer(timer_id)
     handle_timer.assert_called_once()
 
-    # Pausing again does not call handler
+    # Pausing again does not emit an event
     handle_timer.reset_mock()
-    await timer_manager.pause_timer(device_id, timer_id)
+    await entity.async_pause_timer(timer_id)
     handle_timer.assert_not_called()
 
     # Unpause
     handle_timer.reset_mock()
-    await timer_manager.unpause_timer(device_id, timer_id)
+    await entity.async_unpause_timer(timer_id)
     handle_timer.assert_called_once()
 
-    # Unpausing again does not call handler
+    # Unpausing again does not emit an event
     handle_timer.reset_mock()
-    await timer_manager.unpause_timer(device_id, timer_id)
+    await entity.async_unpause_timer(timer_id)
     handle_timer.assert_not_called()
-
-
-async def test_timers_not_supported(hass: HomeAssistant, init_components) -> None:
-    """Test unregistered device ids raise TimersNotSupportedError."""
-    timer_manager: TimerManager = hass.data[TIMER_DATA]
-
-    with pytest.raises(TimersNotSupportedError):
-        await timer_manager.start_timer(
-            "does-not-exist",
-            hours=None,
-            minutes=5,
-            seconds=None,
-            language=hass.config.language,
-        )
-
-    # Start a timer
-    @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
-        pass
-
-    device_id = _make_timer_device_id(hass)
-    unregister = await _register_timer_device(hass, device_id, handle_timer)
-
-    timer_id = await timer_manager.start_timer(
-        device_id,
-        hours=None,
-        minutes=5,
-        seconds=None,
-        language=hass.config.language,
-    )
-
-    # Unregister the handler; the timer_list entity (and its timer) still
-    # exist, so operations continue to work.
-    unregister()
-
-    await timer_manager.add_time(device_id, timer_id, 1)
-    await timer_manager.remove_time(device_id, timer_id, 1)
-    await timer_manager.pause_timer(device_id, timer_id)
-    await timer_manager.unpause_timer(device_id, timer_id)
-    await timer_manager.cancel_timer(device_id, timer_id)
 
 
 async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> None:
@@ -1094,10 +798,10 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
     num_started = 0
 
     @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+    def handle_timer(event: TimerListEvent) -> None:
         nonlocal num_started
 
-        if event_type == TimerEventType.STARTED:
+        if event.event_type == TimerListEventType.STARTED:
             num_started += 1
             if num_started == 4:
                 started_event.set()
@@ -1145,15 +849,14 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
     async with asyncio.timeout(1):
         await started_event.wait()
 
-    # No constraints returns all timers
-    for handle_device_id in (device_id, None):
-        result = await intent.async_handle(
-            hass, "test", intent.INTENT_TIMER_STATUS, {}, device_id=handle_device_id
-        )
-        assert result.response_type is intent.IntentResponseType.ACTION_DONE
-        timers = result.speech_slots.get("timers", [])
-        assert len(timers) == 4
-        assert {t.get(ATTR_NAME) for t in timers} == {"pizza", "cookies", "chicken"}
+    # No constraints returns all of the device's timers
+    result = await intent.async_handle(
+        hass, "test", intent.INTENT_TIMER_STATUS, {}, device_id=device_id
+    )
+    assert result.response_type is intent.IntentResponseType.ACTION_DONE
+    timers = result.speech_slots.get("timers", [])
+    assert len(timers) == 4
+    assert {t.get(ATTR_NAME) for t in timers} == {"pizza", "cookies", "chicken"}
 
     # Get status of cookie timer
     result = await intent.async_handle(
@@ -1247,206 +950,6 @@ async def test_timer_status_with_names(hass: HomeAssistant, init_components) -> 
     assert len(timers) == 0
 
 
-async def test_area_filter(
-    hass: HomeAssistant,
-    init_components,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test targeting timers by area name."""
-    entry = MockConfigEntry()
-    entry.add_to_hass(hass)
-
-    area_kitchen = area_registry.async_create("kitchen")
-    device_kitchen = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections=set(),
-        identifiers={("test", "kitchen-device")},
-    )
-    device_registry.async_update_device(device_kitchen.id, area_id=area_kitchen.id)
-
-    area_living_room = area_registry.async_create("living room")
-    device_living_room = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections=set(),
-        identifiers={("test", "living_room-device")},
-    )
-    device_registry.async_update_device(
-        device_living_room.id, area_id=area_living_room.id
-    )
-
-    started_event = asyncio.Event()
-    num_timers = 3
-    num_started = 0
-
-    @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
-        nonlocal num_started
-
-        if event_type == TimerEventType.STARTED:
-            num_started += 1
-            if num_started == num_timers:
-                started_event.set()
-
-    await _register_timer_device(hass, device_kitchen.id, handle_timer)
-    await _register_timer_device(hass, device_living_room.id, handle_timer)
-
-    # Start timers in different areas
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_START_TIMER,
-        {"name": {"value": "pizza"}, "minutes": {"value": 10}},
-        device_id=device_kitchen.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_START_TIMER,
-        {"name": {"value": "tv"}, "minutes": {"value": 10}},
-        device_id=device_living_room.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_START_TIMER,
-        {"name": {"value": "media"}, "minutes": {"value": 15}},
-        device_id=device_living_room.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-
-    # Wait for all timers to start
-    async with asyncio.timeout(1):
-        await started_event.wait()
-
-    # No constraints returns all timers
-    result = await intent.async_handle(
-        hass, "test", intent.INTENT_TIMER_STATUS, {}, device_id=device_kitchen.id
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-    timers = result.speech_slots.get("timers", [])
-    assert len(timers) == num_timers
-    assert {t.get(ATTR_NAME) for t in timers} == {"pizza", "tv", "media"}
-
-    # Filter by area (target kitchen from living room)
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_TIMER_STATUS,
-        {"area": {"value": "kitchen"}},
-        device_id=device_living_room.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-    timers = result.speech_slots.get("timers", [])
-    assert len(timers) == 1
-    assert timers[0].get(ATTR_NAME) == "pizza"
-
-    # Filter by area (target living room from kitchen)
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_TIMER_STATUS,
-        {"area": {"value": "living room"}},
-        device_id=device_kitchen.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-    timers = result.speech_slots.get("timers", [])
-    assert len(timers) == 2
-    assert {t.get(ATTR_NAME) for t in timers} == {"tv", "media"}
-
-    # Filter by area + name
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_TIMER_STATUS,
-        {"area": {"value": "living room"}, "name": {"value": "tv"}},
-        device_id=device_kitchen.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-    timers = result.speech_slots.get("timers", [])
-    assert len(timers) == 1
-    assert timers[0].get(ATTR_NAME) == "tv"
-
-    # Filter by area + time
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_TIMER_STATUS,
-        {"area": {"value": "living room"}, "start_minutes": {"value": 15}},
-        device_id=device_kitchen.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-    timers = result.speech_slots.get("timers", [])
-    assert len(timers) == 1
-    assert timers[0].get(ATTR_NAME) == "media"
-
-    # Filter by area that doesn't exist
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_TIMER_STATUS,
-        {"area": {"value": "does-not-exist"}},
-        device_id=device_kitchen.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-    timers = result.speech_slots.get("timers", [])
-    assert len(timers) == 0
-
-    # Cancel by area + time
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_CANCEL_TIMER,
-        {"area": {"value": "living room"}, "start_minutes": {"value": 15}},
-        device_id=device_living_room.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-
-    # Cancel by area
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_CANCEL_TIMER,
-        {"area": {"value": "living room"}},
-        device_id=device_living_room.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-
-    # Get status with device missing
-    with patch(
-        "homeassistant.helpers.device_registry.DeviceRegistry.async_get",
-        return_value=None,
-    ):
-        result = await intent.async_handle(
-            hass,
-            "test",
-            intent.INTENT_TIMER_STATUS,
-            device_id=device_kitchen.id,
-        )
-        assert result.response_type is intent.IntentResponseType.ACTION_DONE
-        timers = result.speech_slots.get("timers", [])
-        assert len(timers) == 1
-
-    # Get status with area missing
-    with patch(
-        "homeassistant.helpers.area_registry.AreaRegistry.async_get_area",
-        return_value=None,
-    ):
-        result = await intent.async_handle(
-            hass,
-            "test",
-            intent.INTENT_TIMER_STATUS,
-            device_id=device_kitchen.id,
-        )
-        assert result.response_type is intent.IntentResponseType.ACTION_DONE
-        timers = result.speech_slots.get("timers", [])
-        assert len(timers) == 1
-
-
 def test_round_time() -> None:
     """Test lower-precision time rounded."""
 
@@ -1481,16 +984,17 @@ async def test_pause_unpause_timer_disambiguate(
     updated_event = asyncio.Event()
 
     @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
-        if event_type == TimerEventType.STARTED:
+    def handle_timer(event: TimerListEvent) -> None:
+        item = event.item
+        if event.event_type == TimerListEventType.STARTED:
             started_event.set()
-            started_timer_ids.append(timer.id)
-        elif event_type == TimerEventType.UPDATED:
+            started_timer_ids.append(item.timer_id)
+        elif event.event_type == TimerListEventType.UPDATED:
             updated_event.set()
-            if timer.is_active:
-                unpaused_timer_ids.append(timer.id)
+            if item.status == TimerStatus.ACTIVE:
+                unpaused_timer_ids.append(item.timer_id)
             else:
-                paused_timer_ids.append(timer.id)
+                paused_timer_ids.append(item.timer_id)
 
     await _register_timer_device(hass, device_id, handle_timer)
 
@@ -1584,13 +1088,9 @@ async def test_async_device_supports_timers(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, {})
     assert not async_device_supports_timers(hass, device_id)
 
-    @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
-        pass
+    await _register_timer_device(hass, device_id)
 
-    await _register_timer_device(hass, device_id, handle_timer)
-
-    # After handler registration
+    # After the device's timer_list entity is created
     assert async_device_supports_timers(hass, device_id)
 
 
@@ -1602,10 +1102,10 @@ async def test_cancel_all_timers(hass: HomeAssistant, init_components) -> None:
     num_started = 0
 
     @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
+    def handle_timer(event: TimerListEvent) -> None:
         nonlocal num_started
 
-        if event_type == TimerEventType.STARTED:
+        if event.event_type == TimerListEventType.STARTED:
             num_started += 1
             if num_started == 3:
                 started_event.set()
@@ -1658,116 +1158,3 @@ async def test_cancel_all_timers(hass: HomeAssistant, init_components) -> None:
     assert result.response_type is intent.IntentResponseType.ACTION_DONE
     timers = result.speech_slots.get("timers", [])
     assert len(timers) == 0
-
-
-async def test_cancel_all_timers_area(
-    hass: HomeAssistant,
-    init_components,
-    area_registry: ar.AreaRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test cancelling all timers in an area."""
-    entry = MockConfigEntry()
-    entry.add_to_hass(hass)
-
-    area_kitchen = area_registry.async_create("kitchen")
-    device_kitchen = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections=set(),
-        identifiers={("test", "kitchen-device")},
-    )
-    device_registry.async_update_device(device_kitchen.id, area_id=area_kitchen.id)
-
-    area_living_room = area_registry.async_create("living room")
-    device_living_room = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        connections=set(),
-        identifiers={("test", "living_room-device")},
-    )
-    device_registry.async_update_device(
-        device_living_room.id, area_id=area_living_room.id
-    )
-
-    started_event = asyncio.Event()
-    num_timers = 3
-    num_started = 0
-
-    @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
-        nonlocal num_started
-
-        if event_type == TimerEventType.STARTED:
-            num_started += 1
-            if num_started == num_timers:
-                started_event.set()
-
-    await _register_timer_device(hass, device_kitchen.id, handle_timer)
-    await _register_timer_device(hass, device_living_room.id, handle_timer)
-
-    # Start timers in different areas
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_START_TIMER,
-        {"name": {"value": "pizza"}, "minutes": {"value": 10}},
-        device_id=device_kitchen.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_START_TIMER,
-        {"name": {"value": "tv"}, "minutes": {"value": 10}},
-        device_id=device_living_room.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_START_TIMER,
-        {"name": {"value": "media"}, "minutes": {"value": 15}},
-        device_id=device_living_room.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-
-    # Wait for all timers to start
-    async with asyncio.timeout(1):
-        await started_event.wait()
-
-    # Cancel all timers in kitchen
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_CANCEL_ALL_TIMERS,
-        {"area": {"value": "kitchen"}},
-        device_id=device_kitchen.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-    assert result.speech_slots.get("canceled", 0) == 1
-    assert result.speech_slots.get("area") == "kitchen"
-
-    # No timers should be running in kitchen
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_TIMER_STATUS,
-        {"area": {"value": "kitchen"}},
-        device_id=device_kitchen.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-    timers = result.speech_slots.get("timers", [])
-    assert len(timers) == 0
-
-    # timers should be running in living room
-    result = await intent.async_handle(
-        hass,
-        "test",
-        intent.INTENT_TIMER_STATUS,
-        {"area": {"value": "living room"}},
-        device_id=device_living_room.id,
-    )
-    assert result.response_type is intent.IntentResponseType.ACTION_DONE
-    timers = result.speech_slots.get("timers", [])
-    assert len(timers) == 2

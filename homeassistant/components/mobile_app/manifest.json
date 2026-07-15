@@ -9,6 +9,7 @@
     "intent",
     "person",
     "tag",
+    "timer_list",
     "webhook",
     "websocket_api"
   ],

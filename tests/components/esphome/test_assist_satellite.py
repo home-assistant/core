@@ -854,7 +854,7 @@ async def test_unknown_timer_event(
     assert dev is not None
 
     with patch(
-        "homeassistant.components.esphome.assist_satellite._TIMER_EVENT_TYPES.from_hass",
+        "homeassistant.components.esphome.timer_list._TIMER_EVENT_TYPES.from_hass",
         side_effect=KeyError,
     ):
         await intent_helper.async_handle(

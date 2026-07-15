@@ -2078,3 +2078,43 @@ async def assert_platform_setup_creates_issue(
         "platform_key": f"platform: {integration_domain}",
         "yaml_example": f"```yaml\n{platform_domain}:\n  - platform: {integration_domain}\n```",
     }
+
+
+async def async_setup_timer_list_entity(
+    hass: HomeAssistant, device_id: str | None = None
+) -> str:
+    """Give a device a timer_list entity so it supports voice timers in tests.
+
+    Mirrors what a satellite integration does for a real device; voice timer
+    intents resolve support by the presence of this entity. When ``device_id``
+    is omitted a device is created. Returns the device id.
+    """
+    # Imported here to avoid a mandatory dependency on the timer_list component.
+    from homeassistant.components import timer_list  # noqa: PLC0415
+    from homeassistant.components.local_timer_list import (  # noqa: PLC0415
+        LocalTimerListEntity,
+    )
+
+    if timer_list.DATA_COMPONENT not in hass.data:
+        assert await async_setup_component(hass, timer_list.DOMAIN, {})
+
+    if device_id is None:
+        config_entry = MockConfigEntry(domain="timer_list_test")
+        config_entry.add_to_hass(hass)
+        device = dr.async_get(hass).async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("timer_list_test", config_entry.entry_id)},
+        )
+        device_id = device.id
+
+    component = hass.data[timer_list.DATA_COMPONENT]
+    await component.async_add_entities(
+        [LocalTimerListEntity(name="Timers", unique_id=device_id)]
+    )
+    entity_registry = er.async_get(hass)
+    entity_id = entity_registry.async_get_entity_id(
+        timer_list.DOMAIN, timer_list.DOMAIN, device_id
+    )
+    assert entity_id is not None
+    entity_registry.async_update_entity(entity_id, device_id=device_id)
+    return device_id

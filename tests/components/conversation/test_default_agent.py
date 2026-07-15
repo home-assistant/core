@@ -29,12 +29,8 @@ from homeassistant.components.cover import SERVICE_OPEN_COVER
 from homeassistant.components.homeassistant.exposed_entities import (
     async_get_assistant_settings,
 )
-from homeassistant.components.intent import (
-    TimerEventType,
-    TimerInfo,
-    async_register_timer_handler,
-)
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.timer_list import async_get_timer_list_entity
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -44,12 +40,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     EntityCategory,
 )
-from homeassistant.core import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    Context,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Context, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     chat_session,
@@ -66,6 +57,7 @@ from tests.common import (
     MockConfigEntry,
     MockUser,
     async_mock_service,
+    async_setup_timer_list_entity,
     setup_test_component_platform,
 )
 from tests.components.light.common import MockLight
@@ -1681,14 +1673,8 @@ async def test_error_no_timer_support(
 @pytest.mark.usefixtures("init_components")
 async def test_error_timer_not_found(hass: HomeAssistant) -> None:
     """Test error message when a timer cannot be matched."""
-    device_id = "test_device"
-
-    @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
-        pass
-
-    # Register a handler so the device "supports" timers
-    async_register_timer_handler(hass, device_id, handle_timer)
+    # Give a device a timer_list entity so it "supports" timers
+    device_id = await async_setup_timer_list_entity(hass)
 
     result = await conversation.async_converse(
         hass, "pause timer", None, Context(), None, device_id=device_id
@@ -1721,12 +1707,8 @@ async def test_error_multiple_timers_matched(
     device_registry.async_update_device(device_kitchen.id, area_id=area_kitchen.id)
     device_id = device_kitchen.id
 
-    @callback
-    def handle_timer(event_type: TimerEventType, timer: TimerInfo) -> None:
-        pass
-
-    # Register a handler so the device "supports" timers
-    async_register_timer_handler(hass, device_id, handle_timer)
+    # Give the device a timer_list entity so it "supports" timers
+    await async_setup_timer_list_entity(hass, device_id)
 
     # Create two identical timers from the same device
     result = await conversation.async_converse(
@@ -1749,6 +1731,12 @@ async def test_error_multiple_timers_matched(
         result.response.speech["plain"]["speech"]
         == "Sorry, I am unable to target multiple timers"
     )
+
+    # Cancel the timers so their scheduled callbacks don't linger past the test
+    entity = async_get_timer_list_entity(hass, device_id)
+    assert entity is not None
+    for timer in list(entity.timers):
+        await entity.async_cancel_timer(timer.timer_id)
 
 
 @pytest.mark.usefixtures("init_components")
