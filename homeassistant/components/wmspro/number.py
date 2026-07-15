@@ -44,8 +44,8 @@ class WebControlProSlatRange(WebControlProGenericEntity, NumberEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
 
-    _value_func: Callable
     _value_name: str
+    _value_func: Callable[[float, float], float]
 
     @override
     async def async_update(self) -> None:
@@ -103,7 +103,7 @@ class WebControlProSlatRangeMin(WebControlProSlatRange):
     _attr_translation_key = "rotation-min"
 
     _value_name = "minValue"
-    _value_func = min
+    _value_func = staticmethod(min)
 
 
 class WebControlProSlatRangeMax(WebControlProSlatRange):
@@ -112,7 +112,7 @@ class WebControlProSlatRangeMax(WebControlProSlatRange):
     _attr_translation_key = "rotation-max"
 
     _value_name = "maxValue"
-    _value_func = max
+    _value_func = staticmethod(max)
 
 
 class WebControlProSlatRotation(WebControlProGenericEntity, NumberEntity):
