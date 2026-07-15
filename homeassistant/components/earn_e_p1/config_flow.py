@@ -196,6 +196,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: validated.host, CONF_SERIAL: validated.serial},
             )
 
+        self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={"host": device.host},

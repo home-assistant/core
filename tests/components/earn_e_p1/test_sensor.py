@@ -123,7 +123,6 @@ async def test_full_packet_values_persist_across_partial_packets(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # partial -> full -> partial
     trigger_callback(mock_listener, device_data=PARTIAL_DEVICE_DATA)
     await hass.async_block_till_done()
     trigger_callback(mock_listener)
@@ -139,7 +138,6 @@ async def test_full_packet_values_persist_across_partial_packets(
     assert gas is not None
     assert gas.state == "1234.567"
 
-    # Instantaneous value reflects the latest partial packet.
     power = hass.states.get("sensor.earn_e_p1_meter_power_imported")
     assert power is not None
     assert power.state == "0.35"
