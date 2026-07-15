@@ -1,9 +1,8 @@
 """Support for the Zeversolar platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 import zeversolar
 
@@ -13,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfPower
+from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -31,10 +30,8 @@ class ZeversolarEntityDescription(SensorEntityDescription):
 SENSOR_TYPES = (
     ZeversolarEntityDescription(
         key="pac",
-        translation_key="pac",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda data: data.pac,
     ),
@@ -82,6 +79,7 @@ class ZeversolarSensor(ZeversolarEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.serial_number}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | float:
         """Return sensor state."""
         return self.entity_description.value_fn(self.coordinator.data)

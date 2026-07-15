@@ -15,6 +15,7 @@ from homeassistant.components.proxmoxve.const import (
     CONF_TOKEN_SECRET,
     CONF_VMS,
     DOMAIN,
+    ProxmoxPermission,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -85,8 +86,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
     with patch(
         "homeassistant.components.proxmoxve.async_setup_entry",
         return_value=True,
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+    ) as mock_setup:
+        yield mock_setup
 
 
 @pytest.fixture
@@ -103,6 +104,9 @@ def mock_proxmox_client():
         mock_instance = MagicMock()
         mock_api.return_value = mock_instance
         mock_api_cf.return_value = mock_instance
+
+        mock_instance._mock_api = mock_api
+        mock_instance._mock_api_cf = mock_api_cf
 
         mock_instance.access.ticket.post.return_value = load_json_object_fixture(
             "access_ticket.json", DOMAIN
@@ -121,8 +125,12 @@ def mock_proxmox_client():
         node_mock.storage.get.return_value = load_json_array_fixture(
             "nodes/storage.json", DOMAIN
         )
-        node_mock.tasks.get.return_value = load_json_array_fixture(
-            "nodes/tasks.json", DOMAIN
+
+        node_mock.tasks.get.side_effect = lambda **kwargs: (
+            []
+            if ProxmoxPermission.SYSAUDIT
+            not in mock_instance.access.permissions.get.return_value.get("/nodes", [])
+            else load_json_array_fixture("nodes/tasks.json", DOMAIN)
         )
 
         qemu_by_vmid = {vm["vmid"]: vm for vm in qemu_list}

@@ -1,7 +1,5 @@
 """Support for the Fibaro devices."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Callable, Mapping
 import logging

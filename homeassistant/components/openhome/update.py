@@ -1,9 +1,7 @@
 """Update entities for Linn devices."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from async_upnp_client.client import UpnpError
@@ -53,7 +51,7 @@ class OpenhomeUpdateEntity(UpdateEntity):
     def __init__(self, device):
         """Initialize a Linn DS update entity."""
         self._device = device
-        self._attr_unique_id = f"{device.uuid()}-update"
+        self._attr_unique_id = f"{device.uuid()}-update"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, device.uuid()),
@@ -86,6 +84,7 @@ class OpenhomeUpdateEntity(UpdateEntity):
             ]
             self._attr_release_url = software_status["update_info"]["releasenotesuri"]
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:

@@ -1,10 +1,9 @@
 """DataUpdateCoordinator for Essent integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from essent_dynamic_pricing import (
     EssentClient,
@@ -55,6 +54,7 @@ class EssentDataUpdateCoordinator(DataUpdateCoordinator[EssentPrices]):
         _LOGGER.info("Starting listener updates on the hour")
         self._schedule_listener_tick()
 
+    @override
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
         await super().async_shutdown()
@@ -93,6 +93,7 @@ class EssentDataUpdateCoordinator(DataUpdateCoordinator[EssentPrices]):
             next_run,
         )
 
+    @override
     async def _async_update_data(self) -> EssentPrices:
         """Fetch data from API."""
         try:

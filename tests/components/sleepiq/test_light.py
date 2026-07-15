@@ -43,7 +43,9 @@ async def test_light_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None:
         LIGHT_DOMAIN,
         "turn_on",
         {
-            ATTR_ENTITY_ID: f"light.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_light_1"
+            ATTR_ENTITY_ID: (
+                f"light.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_light_1"
+            )
         },
         blocking=True,
     )
@@ -54,7 +56,9 @@ async def test_light_set_states(hass: HomeAssistant, mock_asyncsleepiq) -> None:
         LIGHT_DOMAIN,
         "turn_off",
         {
-            ATTR_ENTITY_ID: f"light.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_light_1"
+            ATTR_ENTITY_ID: (
+                f"light.{BED_NAME_LOWER}_sleepnumber_{BED_NAME_LOWER}_light_1"
+            )
         },
         blocking=True,
     )

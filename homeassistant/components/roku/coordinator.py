@@ -1,9 +1,8 @@
 """Coordinator for Roku."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from rokuecp import Roku, RokuError
 from rokuecp.models import Device
@@ -63,6 +62,7 @@ class RokuDataUpdateCoordinator(DataUpdateCoordinator[Device]):
             ),
         )
 
+    @override
     async def _async_update_data(self) -> Device:
         """Fetch data from Roku."""
         full_update = self.last_full_update is None or utcnow() >= (

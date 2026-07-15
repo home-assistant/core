@@ -69,9 +69,9 @@ async def test_form(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.LOADED
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert (
-            result["title"]
-            == f"QNAP {SYSTEM_BOARD_MOCK[API_RESULT][API_PRODUCT]} {SYSTEM_BOARD_MOCK[API_RESULT][API_MAC_ADDR]}"
+        assert result["title"] == (
+            f"QNAP {SYSTEM_BOARD_MOCK[API_RESULT][API_PRODUCT]}"
+            f" {SYSTEM_BOARD_MOCK[API_RESULT][API_MAC_ADDR]}"
         )
         assert result["data"][CONF_URL] == CONFIG[CONF_URL]
         assert result["data"][CONF_USERNAME] == CONFIG[CONF_USERNAME]

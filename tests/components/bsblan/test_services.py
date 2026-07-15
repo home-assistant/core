@@ -44,6 +44,19 @@ def device_entry(
     return device
 
 
+@pytest.fixture
+def water_heater_device_entry(
+    device_registry: dr.DeviceRegistry,
+    setup_integration: None,
+) -> dr.DeviceEntry:
+    """Get the water heater sub-device entry for testing."""
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{TEST_DEVICE_MAC}-water-heater")}
+    )
+    assert device is not None
+    return device
+
+
 @pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize(
     ("service_data", "expected_schedules"),
@@ -119,13 +132,13 @@ def device_entry(
 async def test_set_hot_water_schedule(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
-    device_entry: dr.DeviceEntry,
+    water_heater_device_entry: dr.DeviceEntry,
     service_data: dict[str, Any],
     expected_schedules: dict[str, DaySchedule],
 ) -> None:
     """Test setting hot water schedule with various configurations."""
     # Call the service with device_id and slot fields
-    service_call_data = {"device_id": device_entry.id}
+    service_call_data = {"device_id": water_heater_device_entry.id}
     service_call_data.update(service_data)
 
     await hass.services.async_call(
@@ -216,7 +229,7 @@ async def test_no_config_entry_for_device(
 async def test_config_entry_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    device_entry: dr.DeviceEntry,
+    water_heater_device_entry: dr.DeviceEntry,
 ) -> None:
     """Test error when config entry is not loaded."""
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -226,7 +239,7 @@ async def test_config_entry_not_loaded(
             DOMAIN,
             "set_hot_water_schedule",
             {
-                "device_id": device_entry.id,
+                "device_id": water_heater_device_entry.id,
                 "monday_slots": [
                     {"start_time": time(6, 0), "end_time": time(8, 0)},
                 ],
@@ -241,12 +254,34 @@ async def test_config_entry_not_loaded(
 async def test_api_error(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
-    device_entry: dr.DeviceEntry,
+    water_heater_device_entry: dr.DeviceEntry,
 ) -> None:
     """Test error when BSB-LAN API call fails."""
     mock_bsblan.set_hot_water_schedule.side_effect = BSBLANError("API Error")
 
     with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_hot_water_schedule",
+            {
+                "device_id": water_heater_device_entry.id,
+                "monday_slots": [
+                    {"start_time": time(6, 0), "end_time": time(8, 0)},
+                ],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "set_schedule_failed"
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_set_hot_water_schedule_rejects_main_device(
+    hass: HomeAssistant,
+    device_entry: dr.DeviceEntry,
+) -> None:
+    """Test that picking the main device for hot water schedule is rejected."""
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             "set_hot_water_schedule",
@@ -259,7 +294,7 @@ async def test_api_error(
             blocking=True,
         )
 
-    assert exc_info.value.translation_key == "set_schedule_failed"
+    assert exc_info.value.translation_key == "not_a_water_heater_device"
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -276,7 +311,7 @@ async def test_api_error(
 )
 async def test_time_validation_errors(
     hass: HomeAssistant,
-    device_entry: dr.DeviceEntry,
+    water_heater_device_entry: dr.DeviceEntry,
     start_time: time | str,
     end_time: time | str,
     expected_error: str,
@@ -287,7 +322,7 @@ async def test_time_validation_errors(
             DOMAIN,
             "set_hot_water_schedule",
             {
-                "device_id": device_entry.id,
+                "device_id": water_heater_device_entry.id,
                 "monday_slots": [
                     {"start_time": start_time, "end_time": end_time},
                 ],
@@ -302,7 +337,7 @@ async def test_time_validation_errors(
 async def test_unprovided_days_are_none(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
-    device_entry: dr.DeviceEntry,
+    water_heater_device_entry: dr.DeviceEntry,
 ) -> None:
     """Test that unprovided days are sent as None to BSB-LAN API."""
     # Only provide Monday and Tuesday, leave other days unprovided
@@ -310,7 +345,7 @@ async def test_unprovided_days_are_none(
         DOMAIN,
         "set_hot_water_schedule",
         {
-            "device_id": device_entry.id,
+            "device_id": water_heater_device_entry.id,
             "monday_slots": [
                 {"start_time": time(6, 0), "end_time": time(8, 0)},
             ],
@@ -346,7 +381,7 @@ async def test_unprovided_days_are_none(
 async def test_string_time_formats(
     hass: HomeAssistant,
     mock_bsblan: MagicMock,
-    device_entry: dr.DeviceEntry,
+    water_heater_device_entry: dr.DeviceEntry,
 ) -> None:
     """Test service with string time formats."""
     # Test with string time formats
@@ -354,7 +389,7 @@ async def test_string_time_formats(
         DOMAIN,
         "set_hot_water_schedule",
         {
-            "device_id": device_entry.id,
+            "device_id": water_heater_device_entry.id,
             "monday_slots": [
                 {"start_time": "06:00:00", "end_time": "08:00:00"},  # With seconds
             ],
@@ -382,7 +417,7 @@ async def test_string_time_formats(
 @pytest.mark.usefixtures("setup_integration")
 async def test_non_standard_time_types(
     hass: HomeAssistant,
-    device_entry: dr.DeviceEntry,
+    water_heater_device_entry: dr.DeviceEntry,
 ) -> None:
     """Test service with non-standard time types raises error."""
     # Test with integer time values - schema validation will reject these
@@ -391,7 +426,7 @@ async def test_non_standard_time_types(
             DOMAIN,
             "set_hot_water_schedule",
             {
-                "device_id": device_entry.id,
+                "device_id": water_heater_device_entry.id,
                 "monday_slots": [
                     {"start_time": 600, "end_time": 800},
                 ],
@@ -436,7 +471,10 @@ async def test_sync_time_service(
 
     # Mock device time that differs from HA time
     mock_bsblan.time.return_value = DeviceTime.model_validate_json(
-        '{"time": {"name": "Time", "value": "01.01.2020 00:00:00", "unit": "", "desc": "", "dataType": 0, "readonly": 0, "error": 0}}'
+        '{"time": {"name": "Time",'
+        ' "value": "01.01.2020 00:00:00",'
+        ' "unit": "", "desc": "",'
+        ' "dataType": 0, "readonly": 0, "error": 0}}'
     )
 
     # Call the service
@@ -474,7 +512,10 @@ async def test_sync_time_service_no_update_when_same(
     # Mock device time that matches HA time
     current_time_str = dt_util.now().strftime("%d.%m.%Y %H:%M:%S")
     mock_bsblan.time.return_value = DeviceTime.model_validate_json(
-        f'{{"time": {{"name": "Time", "value": "{current_time_str}", "unit": "", "desc": "", "dataType": 0, "readonly": 0, "error": 0}}}}'
+        f'{{"time": {{"name": "Time",'
+        f' "value": "{current_time_str}",'
+        f' "unit": "", "desc": "",'
+        f' "dataType": 0, "readonly": 0, "error": 0}}}}'
     )
 
     # Call the service
@@ -511,13 +552,19 @@ async def test_sync_time_service_error_handling(
     mock_bsblan.time.side_effect = BSBLANError("Connection failed")
 
     # Call the service - should raise HomeAssistantError
-    with pytest.raises(HomeAssistantError, match="Failed to sync time"):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
             "sync_time",
             {"device_id": device.id},
             blocking=True,
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "sync_time_failed"
+    assert exc.value.translation_placeholders == {
+        "device_name": "BSB-LAN",
+        "error": "Connection failed",
+    }
 
 
 async def test_sync_time_service_set_time_error(
@@ -537,20 +584,29 @@ async def test_sync_time_service_set_time_error(
 
     # Mock device time that differs
     mock_bsblan.time.return_value = DeviceTime.model_validate_json(
-        '{"time": {"name": "Time", "value": "01.01.2020 00:00:00", "unit": "", "desc": "", "dataType": 0, "readonly": 0, "error": 0}}'
+        '{"time": {"name": "Time",'
+        ' "value": "01.01.2020 00:00:00",'
+        ' "unit": "", "desc": "",'
+        ' "dataType": 0, "readonly": 0, "error": 0}}'
     )
 
     # Mock set_time() to raise an error
     mock_bsblan.set_time.side_effect = BSBLANError("Write failed")
 
     # Call the service - should raise HomeAssistantError
-    with pytest.raises(HomeAssistantError, match="Failed to sync time"):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
             "sync_time",
             {"device_id": device.id},
             blocking=True,
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "sync_time_failed"
+    assert exc.value.translation_placeholders == {
+        "device_name": "BSB-LAN",
+        "error": "Write failed",
+    }
 
 
 async def test_sync_time_service_entry_not_found(

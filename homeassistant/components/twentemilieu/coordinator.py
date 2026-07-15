@@ -1,8 +1,7 @@
 """Data update coordinator for Twente Milieu."""
 
-from __future__ import annotations
-
 from datetime import date
+from typing import override
 
 from twentemilieu import (
     TwenteMilieu,
@@ -49,6 +48,7 @@ class TwenteMilieuDataUpdateCoordinator(
             config_entry=entry,
         )
 
+    @override
     async def _async_update_data(self) -> dict[WasteType, list[date]]:
         """Fetch Twente Milieu data."""
         try:

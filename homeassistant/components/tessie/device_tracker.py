@@ -1,6 +1,6 @@
 """Device Tracker platform for Tessie integration."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
@@ -49,16 +49,19 @@ class TessieDeviceTrackerLocationEntity(TessieDeviceTrackerEntity):
     key = "location"
 
     @property
+    @override
     def longitude(self) -> float | None:
         """Return the longitude of the device tracker."""
         return self.get("drive_state_longitude")
 
     @property
+    @override
     def latitude(self) -> float | None:
         """Return the latitude of the device tracker."""
         return self.get("drive_state_latitude")
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, StateType] | None:
         """Return device state attributes."""
         return {
@@ -73,11 +76,13 @@ class TessieDeviceTrackerRouteEntity(TessieDeviceTrackerEntity):
     key = "route"
 
     @property
+    @override
     def longitude(self) -> float | None:
         """Return the longitude of the device tracker."""
         return self.get("drive_state_active_route_longitude")
 
     @property
+    @override
     def latitude(self) -> float | None:
         """Return the latitude of the device tracker."""
         return self.get("drive_state_active_route_latitude")

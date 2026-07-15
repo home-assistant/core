@@ -99,9 +99,18 @@
       },
       "door_unlocked_alarm": {
         "name": "Unlocked alarm"
+      },
+      "half_lock_calibration": {
+        "name": "Half-lock calibration"
+      },
+      "half_locked": {
+        "name": "Half locked"
       }
     },
     "button": {
+      "half_lock": {
+        "name": "Half lock"
+      },
       "light_sensor": {
         "name": "Light sensor"
       },
@@ -178,6 +187,19 @@
             }
           }
         }
+      },
+      "standing_fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "baby": "[%key:component::switchbot::entity::fan::fan::state_attributes::preset_mode::state::baby%]",
+              "custom_natural": "Custom natural",
+              "natural": "[%key:component::switchbot::entity::fan::fan::state_attributes::preset_mode::state::natural%]",
+              "normal": "[%key:common::state::normal%]",
+              "sleep": "[%key:component::switchbot::entity::fan::fan::state_attributes::preset_mode::state::sleep%]"
+            }
+          }
+        }
       }
     },
     "humidifier": {
@@ -209,6 +231,9 @@
       }
     },
     "light": {
+      "air_purifier_light": {
+        "name": "[%key:component::light::title%]"
+      },
       "light": {
         "state_attributes": {
           "effect": {
@@ -272,7 +297,26 @@
         }
       }
     },
+    "number": {
+      "display_time_offset": {
+        "name": "Display time offset"
+      },
+      "horizontal_oscillation_angle": {
+        "name": "Horizontal oscillation angle"
+      },
+      "vertical_oscillation_angle": {
+        "name": "Vertical oscillation angle"
+      }
+    },
     "select": {
+      "night_light": {
+        "name": "Night light",
+        "state": {
+          "level_1": "Level 1",
+          "level_2": "Level 2",
+          "off": "[%key:common::state::off%]"
+        }
+      },
       "time_format": {
         "name": "Time format",
         "state": {
@@ -339,6 +383,12 @@
       "child_lock": {
         "name": "Child lock"
       },
+      "horizontal_oscillation": {
+        "name": "Horizontal oscillation"
+      },
+      "vertical_oscillation": {
+        "name": "Vertical oscillation"
+      },
       "wireless_charging": {
         "name": "Wireless charging"
       }
@@ -367,7 +417,7 @@
       "message": "The device ID {device_id} does not belong to SwitchBot integration."
     },
     "device_not_found_error": {
-      "message": "Could not find Switchbot {sensor_type} with address {address}"
+      "message": "Could not find Switchbot {sensor_type} with address {address}: {reason}"
     },
     "device_without_config_entry": {
       "message": "The device ID {device_id} is not associated with a config entry."
@@ -380,6 +430,9 @@
     },
     "operation_error": {
       "message": "An error occurred while performing the action: {error}"
+    },
+    "set_fan_state_failed": {
+      "message": "Failed to send the command to the fan."
     },
     "value_error": {
       "message": "Switchbot device initialization failed because of incorrect configuration parameters: {error}"

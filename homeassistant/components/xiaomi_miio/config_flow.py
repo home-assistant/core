@@ -1,11 +1,9 @@
 """Config flow to configure Xiaomi Miio."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from re import search
-from typing import Any
+from typing import Any, override
 
 from micloud import MiCloud
 from micloud.micloudexception import MiCloudAccessDenied
@@ -120,6 +118,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: XiaomiMiioConfigEntry,
     ) -> OptionsFlowHandler:
@@ -144,12 +143,14 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_cloud()
         return self.async_show_form(step_id="reauth_confirm")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_cloud()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

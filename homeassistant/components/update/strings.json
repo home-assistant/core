@@ -1,6 +1,7 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
     "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least"
   },
@@ -10,6 +11,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::update::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::update::common::condition_for_name%]"
         }
       },
       "name": "Update is available"
@@ -19,6 +23,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::update::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::update::common::condition_for_name%]"
         }
       },
       "name": "Update is not available"
@@ -80,21 +87,6 @@
       "name": "Firmware"
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "services": {
     "clear_skipped": {
       "description": "Removes the skipped version marker from an update.",
@@ -121,8 +113,8 @@
   },
   "title": "Update",
   "triggers": {
-    "update_became_available": {
-      "description": "Triggers after one or more updates become available.",
+    "became_available": {
+      "description": "Triggers when one or more updates become available.",
       "fields": {
         "behavior": {
           "name": "[%key:component::update::common::trigger_behavior_name%]"

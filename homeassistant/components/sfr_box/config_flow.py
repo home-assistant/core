@@ -1,10 +1,8 @@
 """SFR Box config flow."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxAuthenticationError, SFRBoxError
@@ -49,6 +47,7 @@ class SFRBoxFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize SFR Box flow."""
         self._config: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

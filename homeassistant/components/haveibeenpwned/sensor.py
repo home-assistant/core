@@ -1,11 +1,9 @@
 """Support for haveibeenpwned (email breaches) sensor."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import requests
 import voluptuous as vol
@@ -68,6 +66,7 @@ class HaveIBeenPwnedSensor(SensorEntity):
         self._attr_native_unit_of_measurement = "Breaches"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes of the sensor."""
         val: dict[str, Any] = {}
@@ -85,6 +84,7 @@ class HaveIBeenPwnedSensor(SensorEntity):
 
         return val
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Get initial data."""
         # To make sure we get initial data for the sensors ignoring the normal

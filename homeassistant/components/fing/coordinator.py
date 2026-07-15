@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
+from typing import override
 
 from fing_agent_api import FingAgent
 from fing_agent_api.models import AgentInfoResponse, Device
@@ -51,6 +52,7 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
             config_entry=config_entry,
         )
 
+    @override
     async def _async_update_data(self) -> FingDataObject:
         """Fetch data from Fing Agent."""
         device_response = None
@@ -69,7 +71,8 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
             if err.response.status_code == 401:
                 raise UpdateFailed("Invalid API key") from err
             raise UpdateFailed(
-                f"Http request failed -> {err.response.status_code} - {err.response.reason_phrase}"
+                f"Http request failed -> {err.response.status_code}"
+                f" - {err.response.reason_phrase}"
             ) from err
         except httpx.InvalidURL as err:
             raise UpdateFailed("Invalid hostname or IP address") from err

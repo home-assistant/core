@@ -1,7 +1,5 @@
 """Test the History stats config flow."""
 
-from __future__ import annotations
-
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -64,7 +62,7 @@ async def test_form(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["version"] == 1
+    assert result["version"] == 2
     assert result["options"] == {
         CONF_NAME: DEFAULT_NAME,
         CONF_ENTITY_ID: "binary_sensor.test_monitored",
@@ -176,7 +174,7 @@ async def test_validation_options(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["version"] == 1
+    assert result["version"] == 2
     assert result["options"] == {
         CONF_NAME: DEFAULT_NAME,
         CONF_ENTITY_ID: "binary_sensor.test_monitored",

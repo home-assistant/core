@@ -1,9 +1,7 @@
 """Platform for the opengarage.io cover component."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -50,6 +48,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         super().__init__(coordinator, device_id)
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._state is None:
@@ -57,6 +56,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         return self._state == CoverState.CLOSED
 
     @property
+    @override
     def is_closing(self) -> bool | None:
         """Return if the cover is closing."""
         if self._state is None:
@@ -64,12 +64,14 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         return self._state == CoverState.CLOSING
 
     @property
+    @override
     def is_opening(self) -> bool | None:
         """Return if the cover is opening."""
         if self._state is None:
             return None
         return self._state == CoverState.OPENING
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if self._state in [CoverState.CLOSED, CoverState.CLOSING]:
@@ -78,6 +80,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         self._state = CoverState.CLOSING
         await self._push_button()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self._state in [CoverState.OPEN, CoverState.OPENING]:
@@ -87,6 +90,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         await self._push_button()
 
     @callback
+    @override
     def _update_attr(self) -> None:
         """Update the state and attributes."""
         status = self.coordinator.data

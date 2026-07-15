@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import TypeVar, cast
+from typing import TypeVar, cast, override
 
 from aiocomelit.api import ComelitCommonApi, ComeliteSerialBridgeApi, ComelitVedoApi
 from aiocomelit.const import (
@@ -18,7 +18,12 @@ from aiocomelit.const import (
     SCENARIO,
     VEDO,
 )
-from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
+from aiocomelit.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+    DeviceStorageFailureError,
+)
 from aiohttp import ClientSession
 
 from homeassistant.config_entries import ConfigEntry
@@ -95,6 +100,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
             hw_version=self._hw_version,
         )
 
+    @override
     async def _async_update_data(self) -> T:
         """Update device data."""
         _LOGGER.debug("Polling Comelit %s host: %s", self._device, self._host)
@@ -111,6 +117,11 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_authenticate",
+            ) from err
+        except DeviceStorageFailureError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_storage_failure",
             ) from err
 
     @abstractmethod
@@ -165,6 +176,7 @@ class ComelitSerialBridge(ComelitBaseCoordinator[T]):
         self.vedo_pin = vedo_pin
         super().__init__(hass, entry, BRIDGE, host)
 
+    @override
     async def _async_update_system_data(
         self,
     ) -> T:
@@ -208,6 +220,7 @@ class ComelitVedoSystem(ComelitBaseCoordinator[T]):
         self.vedo_pin = pin
         super().__init__(hass, entry, VEDO, host)
 
+    @override
     async def _async_update_system_data(
         self,
     ) -> T:

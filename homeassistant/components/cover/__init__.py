@@ -1,12 +1,10 @@
 """Support for Cover devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -43,6 +41,7 @@ from .const import (
     INTENT_OPEN_COVER,
     CoverDeviceClass,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
     CoverState,
 )
 from .trigger import make_cover_closed_trigger, make_cover_opened_trigger
@@ -78,6 +77,7 @@ __all__ = [
     "CoverEntity",
     "CoverEntityDescription",
     "CoverEntityFeature",
+    "CoverEntityStateAttribute",
     "CoverState",
     "make_cover_closed_trigger",
     "make_cover_is_closed_condition",
@@ -229,6 +229,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_current_cover_tilt_position
 
     @cached_property
+    @override
     def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -239,6 +240,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the state of the cover."""
         if self.is_opening:
@@ -255,21 +257,23 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         data: dict[str, Any] = {}
 
-        data[ATTR_IS_CLOSED] = self.is_closed
+        data[CoverEntityStateAttribute.IS_CLOSED] = self.is_closed
 
         if (current := self.current_cover_position) is not None:
-            data[ATTR_CURRENT_POSITION] = current
+            data[CoverEntityStateAttribute.CURRENT_POSITION] = current
 
         if (current_tilt := self.current_cover_tilt_position) is not None:
-            data[ATTR_CURRENT_TILT_POSITION] = current_tilt
+            data[CoverEntityStateAttribute.CURRENT_TILT_POSITION] = current_tilt
 
         return data
 
     @property
+    @override
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         if (features := self._attr_supported_features) is not None:
@@ -430,9 +434,13 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # * fully open but do not report `current_cover_position`
         # * stopped partially open
         # * either opening or closing, but do not report them
-        # If we previously reported opening/closing, we should move in the opposite direction.
-        # Otherwise, we must assume we are (partially) open and should always close.
-        # Note: _cover_is_last_toggle_direction_open will always remain True if we never report opening/closing.
+        # If we previously reported opening/closing, we should
+        # move in the opposite direction.
+        # Otherwise, we must assume we are (partially) open
+        # and should always close.
+        # Note: _cover_is_last_toggle_direction_open will
+        # always remain True if we never report
+        # opening/closing.
         return (
             fns["close"] if self._cover_is_last_toggle_direction_open else fns["open"]
         )

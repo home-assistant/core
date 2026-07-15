@@ -1,14 +1,8 @@
 """Helper to test significant sensor state changes."""
 
-from __future__ import annotations
-
 from typing import Any
 
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
-    UnitOfTemperature,
-)
+from homeassistant.const import EntityStateAttribute, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.significant_change import (
     check_absolute_change,
@@ -40,7 +34,7 @@ def async_check_significant_change(
     **kwargs: Any,
 ) -> bool | None:
     """Test if state significantly changed."""
-    if (device_class := new_attrs.get(ATTR_DEVICE_CLASS)) is None:
+    if (device_class := new_attrs.get(EntityStateAttribute.DEVICE_CLASS)) is None:
         return None
 
     absolute_change: float | None = None
@@ -49,7 +43,10 @@ def async_check_significant_change(
         SensorDeviceClass.TEMPERATURE,
         SensorDeviceClass.TEMPERATURE_DELTA,
     ):
-        if new_attrs.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.FAHRENHEIT:
+        if (
+            new_attrs.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+            == UnitOfTemperature.FAHRENHEIT
+        ):
             absolute_change = 1.0
         else:
             absolute_change = 0.5

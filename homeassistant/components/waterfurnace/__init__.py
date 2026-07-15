@@ -1,7 +1,5 @@
 """Support for WaterFurnace geothermal systems."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 
@@ -26,7 +24,7 @@ from .coordinator import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     {

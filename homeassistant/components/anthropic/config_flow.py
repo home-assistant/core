@@ -1,11 +1,9 @@
 """Config flow for Anthropic integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import json
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 import anthropic
 import voluptuous as vol
@@ -21,16 +19,14 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_API_KEY,
     CONF_LLM_HASS_API,
     CONF_NAME,
+    CONF_PROMPT,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import llm
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -43,16 +39,16 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    CODE_EXECUTION_UNSUPPORTED_MODELS,
     CONF_CHAT_MODEL,
     CONF_CODE_EXECUTION,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_PROMPT_CACHING,
     CONF_RECOMMENDED,
     CONF_THINKING_BUDGET,
     CONF_THINKING_EFFORT,
     CONF_TOOL_SEARCH,
+    CONF_WEB_FETCH,
+    CONF_WEB_FETCH_MAX_USES,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_COUNTRY,
@@ -66,10 +62,9 @@ from .const import (
     DOMAIN,
     MIN_THINKING_BUDGET,
     TOOL_SEARCH_UNSUPPORTED_MODELS,
-    WEB_SEARCH_UNSUPPORTED_MODELS,
     PromptCaching,
 )
-from .coordinator import model_alias
+from .coordinator import async_create_client, model_alias
 
 if TYPE_CHECKING:
     from . import AnthropicConfigEntry
@@ -98,9 +93,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    client = anthropic.AsyncAnthropic(
-        api_key=data[CONF_API_KEY], http_client=get_async_client(hass)
-    )
+    client = await async_create_client(hass, data[CONF_API_KEY])
     await client.models.list(timeout=10.0)
 
 
@@ -110,6 +103,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 2
     MINOR_VERSION = 4
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -186,6 +180,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: AnthropicConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -229,7 +224,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Set initial options."""
         # abort if entry is not loaded
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         hass_apis: list[SelectOptionDict] = [
@@ -299,7 +294,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 ):
                     self.options.pop(CONF_LLM_HASS_API)
                 if not errors:
-                    return await self.async_step_advanced()
+                    return await self.async_step_additional()
 
         return self.async_show_form(
             step_id="init",
@@ -309,10 +304,10 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             errors=errors or None,
         )
 
-    async def async_step_advanced(
+    async def async_step_additional(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Manage advanced options."""
+        """Manage additional options."""
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
 
@@ -361,7 +356,7 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 return await self.async_step_model()
 
         return self.async_show_form(
-            step_id="advanced",
+            step_id="additional",
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(step_schema), self.options
             ),
@@ -388,8 +383,6 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             if self.model_info.max_tokens
             else cv.positive_int,
         }
-
-        model = self.options[CONF_CHAT_MODEL]
 
         if (
             self.model_info.capabilities
@@ -445,42 +438,41 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         else:
             self.options.pop(CONF_THINKING_EFFORT, None)
 
-        if not model.startswith(tuple(CODE_EXECUTION_UNSUPPORTED_MODELS)):
-            step_schema[
+        step_schema.update(
+            {
                 vol.Optional(
                     CONF_CODE_EXECUTION,
                     default=DEFAULT[CONF_CODE_EXECUTION],
-                )
-            ] = bool
-        else:
-            self.options.pop(CONF_CODE_EXECUTION, None)
-
-        if not model.startswith(tuple(WEB_SEARCH_UNSUPPORTED_MODELS)):
-            step_schema.update(
-                {
-                    vol.Optional(
-                        CONF_WEB_SEARCH,
-                        default=DEFAULT[CONF_WEB_SEARCH],
-                    ): bool,
-                    vol.Optional(
-                        CONF_WEB_SEARCH_MAX_USES,
-                        default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
-                    ): int,
-                    vol.Optional(
-                        CONF_WEB_SEARCH_USER_LOCATION,
-                        default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
-                    ): bool,
-                }
-            )
-        else:
-            self.options.pop(CONF_WEB_SEARCH, None)
-            self.options.pop(CONF_WEB_SEARCH_MAX_USES, None)
-            self.options.pop(CONF_WEB_SEARCH_USER_LOCATION, None)
+                ): bool,
+                vol.Optional(
+                    CONF_WEB_SEARCH,
+                    default=DEFAULT[CONF_WEB_SEARCH],
+                ): bool,
+                vol.Optional(
+                    CONF_WEB_SEARCH_MAX_USES,
+                    default=DEFAULT[CONF_WEB_SEARCH_MAX_USES],
+                ): cv.positive_int,
+                vol.Optional(
+                    CONF_WEB_SEARCH_USER_LOCATION,
+                    default=DEFAULT[CONF_WEB_SEARCH_USER_LOCATION],
+                ): bool,
+                vol.Optional(
+                    CONF_WEB_FETCH,
+                    default=DEFAULT[CONF_WEB_FETCH],
+                ): bool,
+                vol.Optional(
+                    CONF_WEB_FETCH_MAX_USES,
+                    default=DEFAULT[CONF_WEB_FETCH_MAX_USES],
+                ): cv.positive_int,
+            }
+        )
 
         self.options.pop(CONF_WEB_SEARCH_CITY, None)
         self.options.pop(CONF_WEB_SEARCH_REGION, None)
         self.options.pop(CONF_WEB_SEARCH_COUNTRY, None)
         self.options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
+
+        model = self.options[CONF_CHAT_MODEL]
 
         if not model.startswith(tuple(TOOL_SEARCH_UNSUPPORTED_MODELS)):
             step_schema[
@@ -553,15 +545,16 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
         location_data: dict[str, str] = {}
         zone_home = self.hass.states.get(ENTITY_ID_HOME)
         if zone_home is not None:
-            client = anthropic.AsyncAnthropic(
-                api_key=self._get_entry().data[CONF_API_KEY],
-                http_client=get_async_client(self.hass),
+            client = await async_create_client(
+                self.hass, self._get_entry().data[CONF_API_KEY]
             )
             location_schema = vol.Schema(
                 {
                     vol.Optional(
                         CONF_WEB_SEARCH_CITY,
-                        description="Free text input for the city, e.g. `San Francisco`",
+                        description=(
+                            "Free text input for the city, e.g. `San Francisco`"
+                        ),
                     ): str,
                     vol.Optional(
                         CONF_WEB_SEARCH_REGION,
@@ -575,8 +568,8 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                     {
                         "role": "user",
                         "content": "Where are the following coordinates located: "
-                        f"({zone_home.attributes[ATTR_LATITUDE]},"
-                        f" {zone_home.attributes[ATTR_LONGITUDE]})?",
+                        f"({zone_home.attributes[EntityStateAttribute.LATITUDE]},"
+                        f" {zone_home.attributes[EntityStateAttribute.LONGITUDE]})?",
                     }
                 ],
                 max_tokens=cast(int, DEFAULT[CONF_MAX_TOKENS]),

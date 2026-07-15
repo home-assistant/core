@@ -1,9 +1,7 @@
 """Config flow for the EARN-E P1 Meter integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from earn_e_p1 import EarnEP1Device, EarnEP1Listener, discover, validate
 import voluptuous as vol
@@ -61,6 +59,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
             return await listener.validate(host, timeout=VALIDATION_TIMEOUT)
         return await validate(host, timeout=VALIDATION_TIMEOUT)
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -99,6 +98,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"host": ip}
         return await self.async_step_discovery_confirm()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

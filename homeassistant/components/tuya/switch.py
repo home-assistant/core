@@ -1,11 +1,9 @@
 """Support for Tuya switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from tuya_device_handlers.definition.switch import (
-    TuyaSwitchDefinition,
+    SwitchDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -20,8 +18,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 # All descriptions can be found here. Mostly the Boolean data types in the
@@ -719,6 +717,16 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
             translation_key="motion_alarm",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.MOTION_AREA_SWITCH,
+            translation_key="motion_detection_zone",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.IPC_AUTO_SIREN,
+            translation_key="auto_siren",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceCategory.SZ: (
         SwitchEntityDescription(
@@ -894,6 +902,12 @@ SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
     ),
     DeviceCategory.ZNRB: (
         SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
         ),
@@ -945,17 +959,19 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SwitchEntityDescription,
-        definition: TuyaSwitchDefinition,
+        definition: SwitchDefinition,
     ) -> None:
         """Init TuyaHaSwitch."""
         super().__init__(device, device_manager, description)
         self._dpcode_wrapper = definition.switch_wrapper
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self._read_wrapper(self._dpcode_wrapper)
 
+    @override
     async def _process_device_update(
         self,
         updated_status_properties: list[str],
@@ -970,10 +986,12 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
             self.device, updated_status_properties, dp_timestamps
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_send_wrapper_updates(self._dpcode_wrapper, False)

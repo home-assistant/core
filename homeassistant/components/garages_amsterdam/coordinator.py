@@ -1,6 +1,6 @@
 """Coordinator for the Garages Amsterdam integration."""
 
-from __future__ import annotations
+from typing import override
 
 from odp_amsterdam import Garage, ODPAmsterdam, VehicleType
 
@@ -34,6 +34,7 @@ class GaragesAmsterdamDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Gara
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> dict[str, Garage]:
         return {
             garage.garage_name: garage

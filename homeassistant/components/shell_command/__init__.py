@@ -1,7 +1,5 @@
 """Expose regular shell commands as services."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
@@ -191,6 +189,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Reload shell_command from YAML configuration."""
         try:
             raw_config = await conf_util.async_hass_config_yaml(hass)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
             _LOGGER.error("Error loading configuration.yaml: %s", err)
             return

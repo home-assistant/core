@@ -1,7 +1,5 @@
 """The Tesla Wall Connector integration."""
 
-from __future__ import annotations
-
 from tesla_wall_connector import WallConnector
 from tesla_wall_connector.exceptions import WallConnectorError
 
@@ -10,11 +8,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import CONF_SPLIT_PHASE, DEFAULT_SPLIT_PHASE
 from .coordinator import (
     WallConnectorConfigEntry,
     WallConnectorCoordinator,
     WallConnectorData,
-    get_poll_interval,
 )
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -26,7 +24,11 @@ async def async_setup_entry(
     """Set up Tesla Wall Connector from a config entry."""
     hostname = entry.data[CONF_HOST]
 
-    wall_connector = WallConnector(host=hostname, session=async_get_clientsession(hass))
+    wall_connector = WallConnector(
+        host=hostname,
+        session=async_get_clientsession(hass),
+        split_phase=entry.options.get(CONF_SPLIT_PHASE, DEFAULT_SPLIT_PHASE),
+    )
 
     try:
         version_data = await wall_connector.async_get_version()
@@ -47,14 +49,7 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     return True
-
-
-async def update_listener(hass: HomeAssistant, entry: WallConnectorConfigEntry) -> None:
-    """Handle options update."""
-    entry.runtime_data.update_coordinator.update_interval = get_poll_interval(entry)
 
 
 async def async_unload_entry(

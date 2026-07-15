@@ -1,5 +1,10 @@
 {
   "entity": {
+    "alarm_control_panel": {
+      "nvr_alarm": {
+        "default": "mdi:shield-home"
+      }
+    },
     "binary_sensor": {
       "alarm_sound_detection": {
         "default": "mdi:alarm-bell"
@@ -118,9 +123,6 @@
       "overlay_show_nerd_mode": {
         "default": "mdi:fullscreen"
       },
-      "package_detected": {
-        "default": "mdi:package-variant-closed"
-      },
       "person_detected": {
         "default": "mdi:walk"
       },
@@ -182,14 +184,14 @@
       "nfc": {
         "default": "mdi:nfc"
       },
+      "package": {
+        "default": "mdi:package-variant-closed"
+      },
       "vehicle": {
         "default": "mdi:car"
       }
     },
     "number": {
-      "auto_lock_timeout": {
-        "default": "mdi:walk"
-      },
       "auto_shutoff_duration": {
         "default": "mdi:camera-timer"
       },

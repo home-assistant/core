@@ -1,10 +1,9 @@
 """DataUpdateCoordinator for the ISS integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 import pyiss
 import requests
@@ -53,6 +52,7 @@ class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
             current_location=self.iss.current_location(),
         )
 
+    @override
     async def _async_update_data(self) -> IssData:
         """Fetch data from the ISS API, tolerating transient failures."""
         try:
@@ -63,7 +63,9 @@ class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
                 raise UpdateFailed("Unable to retrieve data") from err
             if self._consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
                 raise UpdateFailed(
-                    f"Unable to retrieve data after {self._consecutive_failures} consecutive update failures"
+                    "Unable to retrieve data after"
+                    f" {self._consecutive_failures}"
+                    " consecutive update failures"
                 ) from err
             _LOGGER.debug(
                 "Transient API error (%s/%s), using cached data: %s",

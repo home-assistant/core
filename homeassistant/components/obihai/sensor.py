@@ -1,8 +1,7 @@
 """Support for Obihai Sensors."""
 
-from __future__ import annotations
-
 import datetime
+from typing import override
 
 from requests.exceptions import RequestException
 
@@ -55,6 +54,7 @@ class ObihaiServiceSensors(SensorEntity):
             self._attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @property
+    @override
     def icon(self) -> str:
         """Return an icon."""
 

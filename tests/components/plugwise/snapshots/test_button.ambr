@@ -39,8 +39,8 @@
 # name: test_adam_button_snapshot[platforms0][button.adam_reboot-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Adam Reboot',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Adam Reboot',
     }),
     'context': <ANY>,
     'entity_id': 'button.adam_reboot',

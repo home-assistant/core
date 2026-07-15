@@ -182,8 +182,20 @@ async def test_options(hass: HomeAssistant) -> None:
                 "lower": 20.0,
             }
         ),
+        (
+            {
+                "name": "Test Sensor",
+                "entity_id": "sensor.test_monitored",
+                "lower": 20.0,
+            }
+        ),
     ],
-    ids=("success", "missing_upper_lower", "missing_entity_id"),
+    ids=(
+        "success",
+        "missing_upper_lower",
+        "missing_entity_id",
+        "missing_hysteresis",
+    ),
 )
 async def test_config_flow_preview_success(
     hass: HomeAssistant,

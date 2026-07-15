@@ -1,19 +1,24 @@
 """Fixtures for ViCare integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Generator
 from dataclasses import dataclass
+import time
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareService import ViCareDeviceAccessor, readFeature
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.vicare.const import DOMAIN
+from homeassistant.components.vicare.types import ViCareData, ViCareDevice
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
-from . import ENTRY_CONFIG, MODULE, setup_integration
+from . import MODULE, setup_integration
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -33,18 +38,49 @@ class MockPyViCare:
         """Init a single device from json dump."""
         self.devices = []
         for idx, fixture in enumerate(fixtures):
+            service = MockViCareService(
+                f"installation{idx}", f"gateway{idx}", f"deviceId{idx}", fixture
+            )
             self.devices.append(
                 PyViCareDeviceConfig(
-                    MockViCareService(
-                        f"installation{idx}", f"gateway{idx}", f"device{idx}", fixture
-                    ),
-                    f"deviceId{idx}",
+                    service.accessor,
+                    service,
                     "Vitovalor"
                     if fixture.data_file.endswith("VitoValor.json")
                     else f"model{idx}",
                     "Online",
+                    roles=list(fixture.roles),
                 )
             )
+        # Simulate a device with an unsupported deviceType that PyViCare's
+        # `devices` filter would drop but should still appear in `all_devices`
+        # (used by diagnostics).
+        unsupported_service = MockViCareService(
+            "installation_unsupported",
+            "gateway_unsupported",
+            "deviceId_unsupported",
+            Fixture(set(), "vicare/dummy-device-no-serial.json"),
+        )
+        self.all_devices = [
+            *self.devices,
+            PyViCareDeviceConfig(
+                unsupported_service.accessor,
+                unsupported_service,
+                "unsupported_model",
+                "Online",
+                roles=[],
+            ),
+        ]
+
+    def as_vicare_data(self) -> ViCareData:
+        """Convert to ViCareData as returned by _setup_vicare_api."""
+        return ViCareData(
+            client=self,
+            devices=[
+                ViCareDevice(config=device, api=device.asAutoDetectDevice())
+                for device in self.devices
+            ],
+        )
 
 
 class MockViCareService:
@@ -56,6 +92,7 @@ class MockViCareService:
         """Initialize the mock from a json dump."""
         self._test_data = load_json_object_fixture(fixture.data_file)
         self.fetch_all_features = Mock(return_value=self._test_data)
+        self.setProperty = Mock()
         self.roles = fixture.roles
         self.accessor = ViCareDeviceAccessor(installation_id, gateway_id, device_id)
 
@@ -63,9 +100,21 @@ class MockViCareService:
         """Return true if requested roles are assigned."""
         return requested_roles and set(requested_roles).issubset(self.roles)
 
-    def getProperty(self, property_name: str):
+    def getProperty(self, accessor: ViCareDeviceAccessor, property_name: str):
         """Read a property from json dump."""
         return readFeature(self._test_data["data"], property_name)
+
+
+@pytest.fixture(autouse=True)
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Fixture to setup credentials."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("mock-client-id", ""),
+        DOMAIN,
+    )
 
 
 @pytest.fixture
@@ -75,8 +124,18 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id="ViCare",
         entry_id="1234",
-        data=ENTRY_CONFIG,
-        minor_version=2,
+        version=2,
+        minor_version=1,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": time.time() + 3600,
+                "scope": "IoT User offline_access",
+                "token_type": "Bearer",
+            },
+        },
     )
 
 
@@ -86,9 +145,14 @@ async def mock_vicare_gas_boiler(
 ) -> AsyncGenerator[MockConfigEntry]:
     """Return a mocked ViCare API representing a single gas boiler device."""
     fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
-    with patch(
-        f"{MODULE}.login",
-        return_value=MockPyViCare(fixtures),
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(fixtures).as_vicare_data(),
+        ),
     ):
         await setup_integration(hass, mock_config_entry)
 
@@ -104,9 +168,14 @@ async def mock_vicare_room_sensors(
         Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json"),
         Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json"),
     ]
-    with patch(
-        f"{MODULE}.login",
-        return_value=MockPyViCare(fixtures),
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(fixtures).as_vicare_data(),
+        ),
     ):
         await setup_integration(hass, mock_config_entry)
 

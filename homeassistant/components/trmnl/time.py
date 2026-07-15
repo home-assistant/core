@@ -1,11 +1,9 @@
 """Support for TRMNL time entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import time
-from typing import Any
+from typing import Any, override
 
 from trmnl.models import Device
 
@@ -106,11 +104,13 @@ class TRMNLTimeEntity(TRMNLEntity, TimeEntity):
         self._attr_unique_id = f"{device_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> time:
         """Return the current time value."""
         return self.entity_description.value_fn(self._device)
 
     @exception_handler
+    @override
     async def async_set_value(self, value: time) -> None:
         """Set the time value."""
         await self.entity_description.set_value_fn(
