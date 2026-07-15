@@ -35,7 +35,7 @@ async def test_standing_fan_night_light_coordinator_data_is_none(
     assert entry.state is ConfigEntryState.LOADED
     entity_id = "select.standing_fan_1_night_light"
     state = hass.states.get(entity_id)
-    assert state.state == "Off"
+    assert state.state == "unknown"
 
 
 @pytest.mark.parametrize(
