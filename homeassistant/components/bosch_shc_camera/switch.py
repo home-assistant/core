@@ -415,8 +415,9 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
             self.coordinator.shc_state_cache.get(self._cam_id, {}).get("privacy_mode")
         ):
             raise ServiceValidationError(
-                f"Cannot start stream for {self._cam_title} — privacy mode is active. "
-                "Turn off privacy mode first.",
+                translation_domain=DOMAIN,
+                translation_key="stream_privacy_active_switch",
+                translation_placeholders={"camera": self._cam_title},
             )
         # SENTINEL_RULE: "never stopped" is float("-inf"), not 0 — the prior
         # `last_off > 0` guard worked but was fragile; -inf makes elapsed huge
