@@ -38,6 +38,9 @@ HUMIDITY_LEVELS = {
 }
 
 
+NIGHT_LIGHT_PARAMETERS_MAP = {"Off": "off", "Bright": "1", "Dark": "2"}
+
+
 class AirPurifierMode(Enum):
     """Air Purifier Modes."""
 
@@ -156,6 +159,6 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
         True, entity_config=(Platform.SENSOR, Platform.BUTTON, Platform.IMAGE)
     ),
     "Standing Fan": SwitchbotCloudDeviceConfig(
-        True, entity_config=(Platform.SENSOR, Platform.FAN)
+        True, entity_config=(Platform.SENSOR, Platform.FAN, Platform.SELECT)
     ),
 }

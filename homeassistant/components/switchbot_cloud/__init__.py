@@ -43,6 +43,7 @@ PLATFORMS: list[Platform] = [
     Platform.IMAGE,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.VACUUM,
@@ -64,6 +65,7 @@ class SwitchbotDevices:
     switches: list[tuple[Device | Remote, SwitchBotCoordinator]] = field(
         default_factory=list
     )
+    selects: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     sensors: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     vacuums: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     locks: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
@@ -314,6 +316,7 @@ async def make_new_device_data(
         Platform.IMAGE: devices_data.images,
         Platform.LIGHT: devices_data.lights,
         Platform.LOCK: devices_data.locks,
+        Platform.SELECT: devices_data.selects,
         Platform.SENSOR: devices_data.sensors,
         Platform.SWITCH: devices_data.switches,
         Platform.VACUUM: devices_data.vacuums,
