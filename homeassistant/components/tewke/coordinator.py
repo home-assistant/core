@@ -112,6 +112,7 @@ class TewkeCoordinator(DataUpdateCoordinator[TewkeCoordinatorData]):
         hass: HomeAssistant,
         logger: logging.Logger,
         name: str,
+        config_entry: TewkeConfigEntry,
     ) -> None:
         """Initialise coordinator with a fallback recovery interval."""
         super().__init__(
@@ -119,6 +120,7 @@ class TewkeCoordinator(DataUpdateCoordinator[TewkeCoordinatorData]):
             logger=logger,
             name=name,
             update_interval=_RECOVERY_INTERVAL,
+            config_entry=config_entry,
         )
         self._observe_setup_lock = asyncio.Lock()
         self._observe_retry_task: asyncio.Task[None] | None = None

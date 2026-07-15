@@ -3,9 +3,7 @@
 Each Tewke scene can be exposed as one of three HA platform types depending on
 the control type chosen during config flow:
 
-* "TewkeSceneSwitch" — "SwitchEntity", no brightness
 * "TewkeSceneLight" — "LightEntity", brightness 0-255 (optimistic)
-* "TewkeSceneFan" — "FanEntity", percentage 0-100 (optimistic)
 
 Scene brightness is write-only on the Tewke API; the last commanded value is
 held locally for optimistic rendering.
@@ -21,9 +19,7 @@ from pytewke.error import (
     PyTewkeUnknownError,
 )
 
-from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import callback
 
 from .const import LOGGER
@@ -97,11 +93,6 @@ class TewkeSceneEntity(TewkeEntity):
             else None
         )
 
-    @property
-    def percentage(self) -> int | None:
-        """Return the last commanded fan speed (0-100), or None if unknown."""
-        return self._brightness
-
     async def _async_set_scene(
         self, *, state: bool, brightness: int | None = None
     ) -> None:
@@ -128,28 +119,6 @@ class TewkeSceneEntity(TewkeEntity):
         ):
             action = "activating" if state else "deactivating"
             LOGGER.exception("Error %s Tewke scene %s", action, self._scene_id)
-
-
-class TewkeSceneSwitch(TewkeSceneEntity, SwitchEntity):
-    """A Tewke scene exposed as a switch."""
-
-    def __init__(
-        self,
-        coordinator: TewkeCoordinator,
-        scene: Scene,
-        *,
-        enabled_default: bool = True,
-    ) -> None:
-        """Initialise the switch."""
-        super().__init__(coordinator, scene, enabled_default=enabled_default)
-
-    async def async_turn_on(self, **_kwargs: object) -> None:
-        """Activate the scene."""
-        await self._async_set_scene(state=True)
-
-    async def async_turn_off(self, **_kwargs: object) -> None:
-        """Deactivate the scene."""
-        await self._async_set_scene(state=False)
 
 
 class TewkeSceneLight(TewkeSceneEntity, LightEntity):
@@ -181,89 +150,4 @@ class TewkeSceneLight(TewkeSceneEntity, LightEntity):
 
     async def async_turn_off(self, **_kwargs: object) -> None:
         """Deactivate the scene."""
-        await self._async_set_scene(state=False)
-
-
-class TewkeSceneFan(TewkeSceneEntity, FanEntity):
-    """A Tewke scene exposed as a fan.
-
-    Fan speed percentage (0-100) maps directly to Tewke brightness (0-100).
-    The last commanded percentage is stored locally because the Tewke API does
-    not return scene brightness.
-    """
-
-    _attr_supported_features = (
-        FanEntityFeature.SET_SPEED
-        | FanEntityFeature.TURN_ON
-        | FanEntityFeature.TURN_OFF
-    )
-
-    _MAX_SPEED = 100
-
-    def __init__(
-        self,
-        coordinator: TewkeCoordinator,
-        scene: Scene,
-        *,
-        default_dimming: int = 50,
-        enabled_default: bool = True,
-    ) -> None:
-        """Initialise the scene fan."""
-        super().__init__(coordinator, scene, enabled_default=enabled_default)
-        self._default_dimming = default_dimming
-
-    async def _async_set_percentage(self, percentage: int | None) -> None:
-        """Set fan speed. A percentage of 0 turns the fan off."""
-        if percentage == 0:
-            await self.async_turn_off()
-            return
-        await self._async_set_scene(state=True, brightness=percentage)
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return True when the scene is active.
-
-        If the device reports a brightness of _MAX_SPEED (100), substitute the
-        configured default dimming value so the entity never reflects a raw
-        reading of _MAX_SPEED.
-        """
-        scene = self._scene
-        if scene is not None:
-            self._is_on = scene.is_active
-            if scene.brightness is not None:
-                self._brightness = (
-                    self._default_dimming
-                    if scene.brightness == self._MAX_SPEED
-                    else scene.brightness
-                )
-        return self._is_on
-
-    async def async_set_percentage(self, percentage: int) -> None:
-        """Set fan speed. A percentage of 0 turns the fan off."""
-        return await self._async_set_percentage(percentage)
-
-    async def async_turn_on(
-        self,
-        percentage: int | None = None,
-        _preset_mode: str | None = None,
-        **_kwargs: object,
-    ) -> None:
-        """Turn on the fan at the requested speed.
-
-        When no percentage is given, the current device speed is used unless it
-        is at _MAX_SPEED (100), in which case the configured default speed is used.
-        """
-        if percentage is not None:
-            target = percentage
-        else:
-            current = self.percentage
-            target = (
-                self._default_dimming
-                if current is None or current == self._MAX_SPEED
-                else current
-            )
-        await self._async_set_percentage(target)
-
-    async def async_turn_off(self, **_kwargs: object) -> None:
-        """Turn off the fan."""
         await self._async_set_scene(state=False)

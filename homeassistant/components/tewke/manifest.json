@@ -1,20 +1,14 @@
 {
   "domain": "tewke",
   "name": "Tewke",
-  "codeowners": [
-    "@1NFR4R3D"
-  ],
+  "codeowners": ["@1NFR4R3D"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tewke",
   "integration_type": "device",
   "iot_class": "local_push",
-  "loggers": [
-    "pytewke"
-  ],
+  "loggers": ["pytewke"],
   "quality_scale": "bronze",
-  "requirements": [
-    "pytewke==0.5.4"
-  ],
+  "requirements": ["pytewke==0.5.6"],
   "zeroconf": [
     {
       "type": "_tewke-coap._udp.local."

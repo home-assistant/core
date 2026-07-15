@@ -2625,7 +2625,7 @@ pytautulli==23.1.1
 pyteleinfo==0.4.0
 
 # homeassistant.components.tewke
-pytewke==0.5.4
+pytewke==0.5.6
 
 # homeassistant.components.thinkingcleaner
 pythinkingcleaner==0.0.3

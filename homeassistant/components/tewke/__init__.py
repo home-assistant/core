@@ -20,11 +20,9 @@ if TYPE_CHECKING:
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
-    Platform.FAN,
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SENSOR,
-    Platform.SWITCH,
 ]
 
 
@@ -45,9 +43,8 @@ async def async_setup_entry(
         hass=hass,
         logger=LOGGER,
         name=DOMAIN,
+        config_entry=entry,
     )
-    # Pass the config entry to the coordinator
-    tewke_coordinator.config_entry = entry
 
     entry.runtime_data = TewkeData(
         host=entry.data[CONF_HOST],

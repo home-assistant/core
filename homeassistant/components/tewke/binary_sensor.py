@@ -18,7 +18,7 @@ from .entity import TewkeEntity
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from pytewke.data import ConfigData, SensorData
+    from pytewke.data import ConfigData, RadarData, SensorData
 
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -116,6 +116,12 @@ class TewkeScreenBinarySensor(TewkeEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return True when the panel screen is on."""
         config: ConfigData | None = self.coordinator.data.get("config")
-        if config is None:
-            return None
-        return config.screen_on
+        radar: RadarData | None = self.coordinator.data.get("radar")
+        screen_on = None
+
+        if config is not None and config.screen_on is not None:
+            screen_on = config.screen_on
+        if radar is not None and radar.screen_on is not None:
+            screen_on = radar.screen_on
+
+        return screen_on

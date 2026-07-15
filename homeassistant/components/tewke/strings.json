@@ -7,17 +7,9 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "step": {
-      "confirm_control_types": {
-        "description": "Choose the Home Assistant platform type for each scene, and optionally mark scenes to start disabled.\n\n**Light** (default) \u2014 the scene appears as a dimmable light entity.\n**Switch** \u2014 use this if you want to remove brightness control entirely.\n**Fan** \u2014 use this if you want brightness or speed control, but do not want the scene to appear as a light entity.",
-        "title": "Configure scene types"
-      },
       "confirmation": {
         "description": "Your Tewke device **{name}** is ready to be added to Home Assistant. Click Submit to complete the setup.",
         "title": "Final setup"
-      },
-      "fan_default_speeds": {
-        "description": "Set the default scene value (1\u2013100) to be applied when each scene is turned on without a specific value.",
-        "title": "Default scene dimming"
       },
       "zeroconf_confirm": {
         "description": "You are setting up the Tewke device **{name}**{room_suffix}. Click Submit to continue.",
@@ -89,77 +81,10 @@
             },
             "description": "New scenes were found on your Tewke device **{name}**. Assign a Home Assistant platform type to each one below.",
             "title": "Configure new scenes for {name}"
-          },
-          "fan_default_speeds": {
-            "data": {
-              "fan_scene_0": "{fan_scene_0}",
-              "fan_scene_1": "{fan_scene_1}",
-              "fan_scene_10": "{fan_scene_10}",
-              "fan_scene_11": "{fan_scene_11}",
-              "fan_scene_12": "{fan_scene_12}",
-              "fan_scene_13": "{fan_scene_13}",
-              "fan_scene_14": "{fan_scene_14}",
-              "fan_scene_15": "{fan_scene_15}",
-              "fan_scene_16": "{fan_scene_16}",
-              "fan_scene_17": "{fan_scene_17}",
-              "fan_scene_18": "{fan_scene_18}",
-              "fan_scene_19": "{fan_scene_19}",
-              "fan_scene_2": "{fan_scene_2}",
-              "fan_scene_20": "{fan_scene_20}",
-              "fan_scene_21": "{fan_scene_21}",
-              "fan_scene_22": "{fan_scene_22}",
-              "fan_scene_23": "{fan_scene_23}",
-              "fan_scene_24": "{fan_scene_24}",
-              "fan_scene_25": "{fan_scene_25}",
-              "fan_scene_26": "{fan_scene_26}",
-              "fan_scene_27": "{fan_scene_27}",
-              "fan_scene_28": "{fan_scene_28}",
-              "fan_scene_29": "{fan_scene_29}",
-              "fan_scene_3": "{fan_scene_3}",
-              "fan_scene_30": "{fan_scene_30}",
-              "fan_scene_31": "{fan_scene_31}",
-              "fan_scene_32": "{fan_scene_32}",
-              "fan_scene_33": "{fan_scene_33}",
-              "fan_scene_34": "{fan_scene_34}",
-              "fan_scene_35": "{fan_scene_35}",
-              "fan_scene_36": "{fan_scene_36}",
-              "fan_scene_37": "{fan_scene_37}",
-              "fan_scene_38": "{fan_scene_38}",
-              "fan_scene_39": "{fan_scene_39}",
-              "fan_scene_4": "{fan_scene_4}",
-              "fan_scene_40": "{fan_scene_40}",
-              "fan_scene_41": "{fan_scene_41}",
-              "fan_scene_42": "{fan_scene_42}",
-              "fan_scene_43": "{fan_scene_43}",
-              "fan_scene_44": "{fan_scene_44}",
-              "fan_scene_45": "{fan_scene_45}",
-              "fan_scene_46": "{fan_scene_46}",
-              "fan_scene_47": "{fan_scene_47}",
-              "fan_scene_48": "{fan_scene_48}",
-              "fan_scene_49": "{fan_scene_49}",
-              "fan_scene_5": "{fan_scene_5}",
-              "fan_scene_6": "{fan_scene_6}",
-              "fan_scene_7": "{fan_scene_7}",
-              "fan_scene_8": "{fan_scene_8}",
-              "fan_scene_9": "{fan_scene_9}"
-            },
-            "description": "Set the default scene value (1\u2013100) to be applied when each fan scene is turned on without a specific value.",
-            "title": "Default scene dimming"
           }
         }
       },
       "title": "New Scenes discovered"
-    }
-  },
-  "options": {
-    "abort": {
-      "no_fan_scenes": "No fan scenes are configured for this device."
-    },
-    "step": {
-      "init": {
-        "description": "Set the default scene value (1\u2013100) to be applied when each scene is turned on without a specific value.",
-        "title": "Default scene dimming"
-      }
     }
   }
 }
