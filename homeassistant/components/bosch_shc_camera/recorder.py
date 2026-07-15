@@ -1718,7 +1718,7 @@ def _upload_ftp(
         except (
             ftplib.all_errors
         ):  # best-effort graceful FTP quit; fallback to close below
-            with contextlib.suppress(ftplib.all_errors):
+            with contextlib.suppress(*ftplib.all_errors):
                 ftp.close()
 
 
@@ -2129,7 +2129,7 @@ def _sync_nvr_cleanup_ftp(coordinator: BoschCameraCoordinator) -> None:
         for sd in subdirs:
             _walk_and_delete(f"{path}/{sd}")
             with contextlib.suppress(
-                ftplib.all_errors
+                *ftplib.all_errors
             ):  # best-effort cwd restore, sibling loop continues
                 ftp.cwd(path)
 
@@ -2138,7 +2138,7 @@ def _sync_nvr_cleanup_ftp(coordinator: BoschCameraCoordinator) -> None:
         _walk_and_delete(root)
     finally:
         with contextlib.suppress(
-            ftplib.all_errors
+            *ftplib.all_errors
         ):  # best-effort FTP quit on cleanup teardown, failure non-actionable
             ftp.quit()
     if deadline_hit:

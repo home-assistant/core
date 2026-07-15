@@ -1432,16 +1432,10 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                     async def _mark_read_bg(
                         _coord: Any = coordinator, _eid: str = newest_id
                     ) -> None:
-<<<<<<< HEAD
                         # async_mark_events_read() already catches its own
                         # network errors internally and never raises — no
                         # wrapper needed here.
                         await async_mark_events_read(_coord, [_eid])
-=======
-                        # best-effort cloud housekeeping
-                        with contextlib.suppress(Exception):
-                            await async_mark_events_read(_coord, [_eid])
->>>>>>> worktree-agent-a91611414149f9537
 
                     _mr_task = coordinator.hass.async_create_task(_mark_read_bg())
                     coordinator.bg_tasks.add(_mr_task)
@@ -2031,15 +2025,9 @@ async def async_send_alert(
     if _clip_cam_id and coordinator.options.get("mark_events_read", False):
         event_id = event_id or coordinator.last_event_ids.get(_clip_cam_id, "")
         if event_id:
-<<<<<<< HEAD
             # async_mark_events_read() already catches its own network errors
             # internally and never raises — no wrapper needed here.
             await async_mark_events_read(coordinator, [event_id])
-=======
-            # best-effort cloud housekeeping; alert delivery already complete
-            with contextlib.suppress(Exception):
-                await async_mark_events_read(coordinator, [event_id])
->>>>>>> worktree-agent-a91611414149f9537
 
     # -- SMB upload (immediate, alongside alert) ---------------------------
     if opts.get("enable_smb_upload") and opts.get("smb_server") and _clip_cam_id:
