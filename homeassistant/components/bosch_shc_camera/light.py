@@ -38,6 +38,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import CLOUD_API, DOMAIN, BoschCameraConfigEntry, BoschCameraCoordinator
 from .cloud_ssl import async_get_bosch_cloud_session
 from .guards import _warn_if_privacy_on
+from .models import get_display_name, get_model_config
+from .shc import _is_gen2
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,8 +62,6 @@ async def async_setup_entry(
         # test stubs that don't seed the `_hw_version` dict happy.
         _hw_cache = getattr(coordinator, "hw_version", {}) or {}
         hw = cam_info.get("hardwareVersion") or _hw_cache.get(cam_id, "CAMERA")
-        from .models import get_model_config
-
         if get_model_config(hw).generation >= 2:
             has_light = cam_info.get("featureSupport", {}).get("light", False)
             # ONLY Outdoor II has controllable lights (RGB top + bottom + color-
@@ -102,8 +102,6 @@ class _BoschLightBase(
         info = coordinator.data.get(cam_id, {}).get("info", {})
         self._cam_title = info.get("title", cam_id)
         self._model = info.get("hardwareVersion", "CAMERA")
-        from .models import get_display_name
-
         self._model_name = get_display_name(self._model)
         self._fw = info.get("firmwareVersion", "")
         self._mac = info.get("macAddress", "")
@@ -231,8 +229,6 @@ class _BoschLightBase(
         # See switch.py BoschPrivacyModeSwitch.available — same relaxation:
         # if hw_version isn't yet known (cold-start during cloud outage),
         # allow the toggle. The write fails cleanly for Gen1.
-        from .shc import _is_gen2
-
         if _is_gen2(self.coordinator, self._cam_id):
             return True
         hw = self.coordinator.hw_version.get(self._cam_id)

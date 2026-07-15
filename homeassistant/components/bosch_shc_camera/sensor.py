@@ -16,6 +16,8 @@ Creates sensor entities per camera:
 
 from datetime import UTC, datetime
 import logging
+import re
+import time
 from typing import Any, override
 
 from homeassistant.components.sensor import (
@@ -31,6 +33,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
+from . import BoschCameraConfigEntry, BoschCameraCoordinator, get_options
+from .const import CONF_ENABLE_AI_DESCRIPTION, DOMAIN
+from .models import get_display_name, get_model_config
+from .smb import _safe_name
 from .time_utils import parse_bosch_timestamp
 
 
@@ -49,9 +55,6 @@ def _event_is_today_local(ts_str: str | None) -> bool:
     now_local: datetime = dt_util.now()
     return local_dt.date() == now_local.date()
 
-
-from . import BoschCameraConfigEntry, BoschCameraCoordinator, get_options
-from .const import CONF_ENABLE_AI_DESCRIPTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,10 +112,8 @@ async def async_setup_entry(
         entities.append(BoschNetworkServicesSensor(coordinator, cam_id, config_entry))
         entities.append(BoschIvaCatalogSensor(coordinator, cam_id, config_entry))
         # Gen2-only sensors
-        from .models import get_model_config as _gmc_setup
-
         hw_setup = cam_info.get("hardwareVersion", "")
-        if _gmc_setup(hw_setup).generation >= 2:
+        if get_model_config(hw_setup).generation >= 2:
             # Ambient-light schedule is Outdoor-only (Indoor II has no RGB lights)
             if hw_setup not in ("HOME_Eyes_Indoor", "CAMERA_INDOOR_GEN2"):
                 entities.append(
@@ -184,8 +185,6 @@ class _BoschSensorBase(CoordinatorEntity[BoschCameraCoordinator], SensorEntity):
         info = coordinator.data.get(cam_id, {}).get("info", {})
         self._cam_title = info.get("title", cam_id)
         self._model = info.get("hardwareVersion", "CAMERA")
-        from .models import get_display_name
-
         self._model_name = get_display_name(self._model)
         self._fw = info.get("firmwareVersion", "")
         self._mac = info.get("macAddress", "")
@@ -783,8 +782,6 @@ class BoschFcmPushStatusSensor(_BoschSensorBase):
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        import time as _time
-
         attrs: dict[str, Any] = {
             "fcm_enabled": self.coordinator.options.get("enable_fcm_push", False),
             "fcm_running": self.coordinator.fcm_running,
@@ -795,7 +792,7 @@ class BoschFcmPushStatusSensor(_BoschSensorBase):
             ),
         }
         if self.coordinator.fcm_last_push != float("-inf"):
-            age = _time.monotonic() - self.coordinator.fcm_last_push
+            age = time.monotonic() - self.coordinator.fcm_last_push
             attrs["last_push_seconds_ago"] = round(age)
         return attrs
 
@@ -844,15 +841,13 @@ class BoschCloudMaintenanceSensor(_BoschSensorBase):
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
-        import time as _time
-
         window = self.coordinator.maintenance_cache
         attrs: dict[str, Any] = {}
         if window is not None:
             attrs.update(window.as_dict())
         last_fetch = self.coordinator.maintenance_last_fetch
         if last_fetch != float("-inf"):
-            attrs["last_fetched_seconds_ago"] = round(_time.monotonic() - last_fetch)
+            attrs["last_fetched_seconds_ago"] = round(time.monotonic() - last_fetch)
         return attrs
 
 
@@ -1638,8 +1633,6 @@ class BoschNvrStateSensor(_BoschSensorBase):
         # Camera title is used as the staging-folder key (sanitized via
         # _safe_name in recorder._staging_dir). Read with the same sanitization
         # so the per-camera age lookup stays consistent.
-        from .smb import _safe_name
-
         info = self.coordinator.data.get(self._cam_id, {}).get("info", {})
         cam_key = _safe_name(info.get("title", self._cam_id))
         last_age = (state.get("last_age_by_cam") or {}).get(cam_key)
@@ -1705,9 +1698,6 @@ class BoschCameraAiDescriptionSensor(_BoschSensorBase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-import re as _re_inst
-
-
 def _swap_inst(url: str, new_inst: int) -> str:
     """Return ``url`` with its ``inst=N`` query parameter rewritten to ``new_inst``.
 
@@ -1715,7 +1705,7 @@ def _swap_inst(url: str, new_inst: int) -> str:
     query string (e.g. ``?inst=1&enableaudio=1``). This helper is the only
     place that knows that invariant — kept tiny so it's trivial to test.
     """
-    return _re_inst.sub(r"inst=\d+", f"inst={new_inst}", url, count=1)
+    return re.sub(r"inst=\d+", f"inst={new_inst}", url, count=1)
 
 
 class _BoschStreamUrlSensorBase(_BoschSensorBase):

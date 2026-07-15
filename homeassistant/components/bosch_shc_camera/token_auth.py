@@ -17,7 +17,10 @@ reactive 401.
 """
 
 import asyncio
+import base64
+import json
 import logging
+import time
 from typing import Any
 
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -62,10 +65,6 @@ class TokenAuthCoordinatorMixin:
         Used to skip unnecessary refreshes when a concurrent caller already
         refreshed the token while we were waiting on the lock.
         """
-        import base64 as _b64
-        import json as _json
-        import time as _time
-
         token = self.token
         if not token:
             return False
@@ -74,8 +73,8 @@ class TokenAuthCoordinatorMixin:
             if len(parts) < 2:
                 return False
             payload_b64 = parts[1] + "=" * (4 - len(parts[1]) % 4)
-            payload = _json.loads(_b64.urlsafe_b64decode(payload_b64))
-            return bool((payload.get("exp", 0) - _time.time()) >= min_remaining)
+            payload = json.loads(base64.urlsafe_b64decode(payload_b64))
+            return bool((payload.get("exp", 0) - time.time()) >= min_remaining)
         except ValueError, TypeError:
             # JWT payload was not base64-decodable or not JSON — treat as expired.
             return False
@@ -124,11 +123,17 @@ class TokenAuthCoordinatorMixin:
         # rename-reexport (issue_registry as ir): mypy --no-implicit-reexport
         # only recognizes identical-name re-export at the source; the alias
         # is intentional and correct at runtime.
-        from . import (
+        from . import (  # noqa: PLC0415
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
             ir as ir,
         )
-        from .config_flow import (
+
+        # Real circular import if hoisted (verified): config_flow.py itself
+        # does `from . import DEFAULT_OPTIONS, DOMAIN, BoschCameraConfigEntry`
+        # at its own top level, which fails while this package's __init__.py
+        # is still mid-import the first time coordinator.py -> token_auth.py
+        # is reached.
+        from .config_flow import (  # noqa: PLC0415
             AuthServerOutageError,
             RefreshTokenInvalidError,
             _do_refresh,
@@ -147,9 +152,7 @@ class TokenAuthCoordinatorMixin:
         # If we're in a Bosch auth-server outage, skip the POST entirely
         # until the back-off gate opens — avoids hammering a server that
         # is already known to be down.
-        import time as _time
-
-        now_m = _time.monotonic()
+        now_m = time.monotonic()
         if self.auth_outage_count > 0 and now_m < self._auth_outage_next_retry_ts:
             remaining = int(self._auth_outage_next_retry_ts - now_m)
             raise UpdateFailed(
@@ -328,7 +331,7 @@ class TokenAuthCoordinatorMixin:
         # rename-reexport (issue_registry as ir): mypy --no-implicit-reexport
         # only recognizes identical-name re-export at the source; the alias
         # is intentional and correct at runtime.
-        from . import ir as ir
+        from . import ir as ir  # noqa: PLC0415
 
         if self._token_alert_sent:
             return
@@ -369,10 +372,6 @@ class TokenAuthCoordinatorMixin:
         eliminating the ~60s race window between token expiry and the next
         coordinator tick that previously triggered reactive 401 handling.
         """
-        import base64 as _b64
-        import json as _json
-        import time as _time
-
         token = self.token
         if not token:
             return
@@ -382,9 +381,9 @@ class TokenAuthCoordinatorMixin:
                 return
             # JWT payload is URL-safe base64 (no padding)
             payload_b64 = parts[1] + "=" * (4 - len(parts[1]) % 4)
-            payload = _json.loads(_b64.urlsafe_b64decode(payload_b64))
+            payload = json.loads(base64.urlsafe_b64decode(payload_b64))
             exp = payload.get("exp", 0)
-            remaining = exp - _time.time()
+            remaining = exp - time.time()
             # Refresh 5 minutes before expiry; at minimum 10s to avoid tight loops
             refresh_in = max(remaining - 300, 10)
             _LOGGER.debug(

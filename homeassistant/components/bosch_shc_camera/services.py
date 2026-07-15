@@ -10,8 +10,11 @@ move with no behavior change.
 
 import asyncio
 import contextlib
-from datetime import UTC
+from datetime import UTC, datetime, timedelta
 import logging
+from pathlib import Path
+import re
+import shutil
 import time
 from typing import NoReturn
 
@@ -112,7 +115,10 @@ def _register_services(hass: HomeAssistant) -> None:
             if coord:
                 result = await coord.try_live_connection(cam_id, is_renewal=is_renewal)
                 if result:
-                    from . import _redact_creds  # local: avoids circular import
+                    # avoids circular import (see live_connection.py:
+                    # __init__.py defines _redact_creds after importing
+                    # this module's services)
+                    from . import _redact_creds  # noqa: PLC0415
 
                     _LOGGER.info(
                         "Live connection established: %s", _redact_creds(result)
@@ -131,7 +137,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (
+        from . import (  # noqa: PLC0415
             CLOUD_API as CLOUD_API,
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
@@ -196,7 +202,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (
+        from . import (  # noqa: PLC0415
             CLOUD_API as CLOUD_API,
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
@@ -244,7 +250,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (
+        from . import (  # noqa: PLC0415
             CLOUD_API as CLOUD_API,
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
@@ -346,7 +352,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (
+        from . import (  # noqa: PLC0415
             CLOUD_API as CLOUD_API,
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
@@ -451,7 +457,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (
+        from . import (  # noqa: PLC0415
             CLOUD_API as CLOUD_API,
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
@@ -532,7 +538,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (
+        from . import (  # noqa: PLC0415
             CLOUD_API as CLOUD_API,
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
@@ -554,8 +560,6 @@ def _register_services(hass: HomeAssistant) -> None:
             )
         if isinstance(camera_ids, str):
             camera_ids = [camera_ids]
-        from datetime import datetime, timedelta
-
         now = datetime.now(UTC)
         end = now + timedelta(days=int(days))
         shares = [
@@ -623,7 +627,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (
+        from . import (  # noqa: PLC0415
             CLOUD_API as CLOUD_API,
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
@@ -706,7 +710,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (
+        from . import (  # noqa: PLC0415
             CLOUD_API as CLOUD_API,
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
@@ -810,7 +814,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (
+        from . import (  # noqa: PLC0415
             CLOUD_API as CLOUD_API,
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
@@ -884,7 +888,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (
+        from . import (  # noqa: PLC0415
             CLOUD_API as CLOUD_API,
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
@@ -969,7 +973,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (
+        from . import (  # noqa: PLC0415
             CLOUD_API as CLOUD_API,
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
@@ -1095,7 +1099,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (
+        from . import (  # noqa: PLC0415
             CLOUD_API as CLOUD_API,
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
@@ -1154,7 +1158,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (
+        from . import (  # noqa: PLC0415
             CLOUD_API as CLOUD_API,
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
@@ -1224,7 +1228,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (
+        from . import (  # noqa: PLC0415
             CLOUD_API as CLOUD_API,
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
@@ -1290,7 +1294,7 @@ def _register_services(hass: HomeAssistant) -> None:
         # ".CLOUD_API") working the same way it did before this handler moved
         # out of __init__.py — those patches target the package's own
         # namespace, not services.py's.
-        from . import (
+        from . import (  # noqa: PLC0415
             CLOUD_API as CLOUD_API,
             async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
@@ -1331,14 +1335,10 @@ def _register_services(hass: HomeAssistant) -> None:
 
     async def handle_migrate_flat_events(call: ServiceCall) -> None:
         """Move flat event files (camera/file) into date hierarchy (camera/year/month/day/file)."""
-        from pathlib import Path
-        import re as _re
-        import shutil
-
-        _pat = _re.compile(
+        _pat = re.compile(
             r"^(?:(?P<camera>.+?)_)?(?P<date>\d{4}-\d{2}-\d{2})_(?P<time>\d{2}-\d{2}-\d{2})_"
             r"(?P<etype>[A-Z_]+)_[0-9A-F]+\.(?P<ext>jpg|jpeg|mp4)$",
-            _re.IGNORECASE,
+            re.IGNORECASE,
         )
         total = 0
         for entry in hass.config_entries.async_loaded_entries(DOMAIN):
@@ -1393,8 +1393,6 @@ def _register_services(hass: HomeAssistant) -> None:
 
     async def handle_delete_event(call: ServiceCall) -> None:
         """Delete a local event file by file path or by camera + date."""
-        from pathlib import Path
-
         file_path = (call.data.get("file_path") or "").strip()
         camera = (call.data.get("camera") or "").strip()
         date = (call.data.get("date") or "").strip()
@@ -1418,11 +1416,9 @@ def _register_services(hass: HomeAssistant) -> None:
             base = Path(base_str).resolve()
 
             def _delete(base: Path, file_path: str, camera: str, date: str) -> int:
-                import re as _re2
-
-                _pat2 = _re2.compile(
+                _pat2 = re.compile(
                     r"^(?:(?P<cam>.+?)_)?(?P<date>\d{4}-\d{2}-\d{2})_",
-                    _re2.IGNORECASE,
+                    re.IGNORECASE,
                 )
                 count = 0
                 if file_path:

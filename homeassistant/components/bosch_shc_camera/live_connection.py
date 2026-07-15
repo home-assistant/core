@@ -9,9 +9,11 @@ poll_statuses/poll_events/run_housekeeping.
 """
 
 import asyncio
+import json
 import logging
 import time
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote, urlparse
 
 import aiohttp
 
@@ -19,6 +21,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import CLOUD_API, LAN_RECHECK_FORCE_INTERVAL_SEC, TIMEOUT_PUT_CONNECTION
+from .models import get_model_config
 
 if TYPE_CHECKING:  # pragma: no cover — only for type hints
     from . import BoschCameraCoordinator
@@ -40,7 +43,7 @@ async def try_live_connection_inner(
     # additionally can't be a top-level import at all: __init__.py imports
     # this module, so a top-level `from . import _redact_creds` here would
     # be a real circular import.
-    from . import (
+    from . import (  # noqa: PLC0415
         _redact_creds as _redact_creds,
         async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         nvr_recorder as nvr_recorder,
@@ -288,9 +291,7 @@ async def try_live_connection_inner(
                     len(body),
                 )
                 if resp.status in (200, 201):
-                    import json as _json
-
-                    result: dict[str, Any] = _json.loads(body)
+                    result: dict[str, Any] = json.loads(body)
                     _LOGGER.info(
                         "Live connection opened! type=%s → %s",
                         type_val,
@@ -316,8 +317,6 @@ async def try_live_connection_inner(
                             "imageUrlScheme", "https://{url}/snap.jpg"
                         )
                         if urls:
-                            from urllib.parse import quote as _q
-
                             cam_addr = urls[0]  # "192.168.x.x:443"
                             # Cache LOCAL creds for cloud-outage fallback paths.
                             # Stays populated after the live connection is torn down.
@@ -369,11 +368,11 @@ async def try_live_connection_inner(
                                 int(cam_port),
                                 is_renewal=is_renewal,
                             )
-                            eu = _q(local_user, safe="")
-                            ep = _q(local_pass, safe="")
-                            from .models import get_model_config as _gmc
-
-                            _mcfg = _gmc(coordinator.hw_version.get(cam_id, "CAMERA"))
+                            eu = quote(local_user, safe="")
+                            ep = quote(local_pass, safe="")
+                            _mcfg = get_model_config(
+                                coordinator.hw_version.get(cam_id, "CAMERA")
+                            )
                             local_rtsp_url = (
                                 f"rtsp://{eu}:{ep}@127.0.0.1:{proxy_port}"
                                 f"/rtsp_tunnel?inst={inst}{audio_param}&fmtp=1&maxSessionDuration={_mcfg.max_session_duration}"
@@ -422,9 +421,7 @@ async def try_live_connection_inner(
                             # fails (HLS still works that way; WebRTC still cert-
                             # blocked, identical to v10.3.24 behavior).
                             try:
-                                from urllib.parse import urlparse as _up
-
-                                parsed = _up(cloud_rtsps_url)
+                                parsed = urlparse(cloud_rtsps_url)
                                 pq = parsed.path + (
                                     f"?{parsed.query}" if parsed.query else ""
                                 )

@@ -218,7 +218,12 @@ def register(hass: HomeAssistant) -> None:
     if _PATCHED:
         return
     try:
-        from homeassistant.components.stream import hls as _hls
+        # Deferred + wrapped in try/except: this monkeypatches HA-core's
+        # private stream.hls view classes, whose internal structure isn't a
+        # stable API. If a future HA-core version renames/restructures them,
+        # this should only disable the cache-busting optimization, not break
+        # integration setup.
+        from homeassistant.components.stream import hls as _hls  # noqa: PLC0415
 
         patched_playlist = []
         for cls_name in _PLAYLIST_VIEW_CLASSES:

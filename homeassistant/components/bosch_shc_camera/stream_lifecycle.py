@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING
 
 import aiohttp
 
+from .cf_unbuffer import hls_access_age
 from .const import (
     STREAM_HLS_FRESH_SEC,
     STREAM_IDLE_REAP_CHECK_SEC,
@@ -469,8 +470,6 @@ async def has_active_consumer(coordinator: BoschCameraCoordinator, cam_id: str) 
     Used by the idle reaper to avoid tearing down a session that someone —
     a viewer or an automation — is still using.
     """
-    from .cf_unbuffer import hls_access_age
-
     if cam_id in coordinator.nvr_processes:
         return True
     cam_entity = coordinator.camera_entities.get(cam_id)

@@ -39,6 +39,7 @@ from .const import (
     MOTION_ACTIVE_WINDOW_MAX,
     MOTION_ACTIVE_WINDOW_MIN,
 )
+from .models import get_display_name
 from .time_utils import parse_bosch_timestamp
 
 _LOGGER = logging.getLogger(__name__)
@@ -101,8 +102,6 @@ class _BoschBinarySensorBase(
         info = coordinator.data.get(cam_id, {}).get("info", {})
         self._cam_title = info.get("title", cam_id)
         self._model = info.get("hardwareVersion", "CAMERA")
-        from .models import get_display_name
-
         self._model_name = get_display_name(self._model)
         self._fw = info.get("firmwareVersion", "")
         self._mac = info.get("macAddress", "")

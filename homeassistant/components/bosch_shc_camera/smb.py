@@ -6,7 +6,9 @@ All functions that previously used `self` now take a `coordinator` parameter.
 
 import calendar
 import contextlib
-from datetime import UTC
+from datetime import UTC, datetime
+import ftplib
+from io import BytesIO
 import logging
 import os
 import re
@@ -18,6 +20,8 @@ from typing import TYPE_CHECKING, Any
 import urllib.error
 from urllib.parse import urlparse
 import urllib.request
+
+from .cloud_ssl import _build_ssl_context
 
 if TYPE_CHECKING:
     from . import BoschCameraCoordinator
@@ -59,9 +63,6 @@ def _bosch_ssl_ctx() -> ssl.SSLContext:
     """
     global _SSL_CTX  # noqa: PLW0603 -- lazy process-lifetime singleton cache
     if _SSL_CTX is None:
-        # Imported lazily to avoid any package import-order coupling.
-        from .cloud_ssl import _build_ssl_context
-
         with _SSL_CTX_LOCK:
             if _SSL_CTX is None:
                 _SSL_CTX = _build_ssl_context()
@@ -140,7 +141,9 @@ def smb_available() -> bool:
     without duplicating a bare ``try/except ImportError`` themselves.
     """
     try:
-        import smbclient
+        # smbclient is an optional third-party dependency (see docstring);
+        # deferred so a missing install only disables SMB, not the whole module.
+        import smbclient  # noqa: PLC0415, F401
     except ImportError:
         return False
     return True
@@ -353,8 +356,14 @@ def sync_smb_upload(
         return
 
     try:
-        from smbclient import open_file, register_session, stat as smb_stat
-        from smbprotocol.exceptions import SMBException
+        # Optional dependency, see smb_available() docstring — deferred so its
+        # absence only disables this SMB code path.
+        from smbclient import (  # noqa: PLC0415
+            open_file,
+            register_session,
+            stat as smb_stat,
+        )
+        from smbprotocol.exceptions import SMBException  # noqa: PLC0415
     except ImportError:
         _LOGGER.warning(
             "smbprotocol not installed — SMB upload disabled. "
@@ -404,7 +413,7 @@ def _sync_smb_upload_events(
     scope (set right before this call) cleanly wraps only the actual transfer
     work, not the session setup above it.
     """
-    from smbprotocol.exceptions import SMBException
+    from smbprotocol.exceptions import SMBException  # noqa: PLC0415
 
     opts = coordinator.options
     server = opts.get("smb_server", "").strip()
@@ -563,7 +572,11 @@ def smb_makedirs(
     full_path: str, server: str, share: str, base_path: str, folder_parts: str
 ) -> None:
     """Create SMB directories recursively."""
-    from smbclient import mkdir, stat as smb_stat
+    # Optional dependency, see smb_available() docstring. No try/except here
+    # (unlike other smbclient call sites) because every caller already went
+    # through its own try/except ImportError guard before reaching this
+    # helper, so smbclient is guaranteed importable at this point.
+    from smbclient import mkdir, stat as smb_stat  # noqa: PLC0415
 
     # Build path incrementally
     parts = [
@@ -590,8 +603,15 @@ def sync_smb_cleanup(coordinator: BoschCameraCoordinator) -> None:
         _sync_ftp_cleanup(coordinator)
         return
     try:
-        from smbclient import register_session, remove, scandir, stat as smb_stat
-        from smbprotocol.exceptions import SMBException
+        # Optional dependency, see smb_available() docstring — deferred so its
+        # absence only disables this SMB code path.
+        from smbclient import (  # noqa: PLC0415
+            register_session,
+            remove,
+            scandir,
+            stat as smb_stat,
+        )
+        from smbprotocol.exceptions import SMBException  # noqa: PLC0415
     except ImportError:
         return
 
@@ -709,8 +729,6 @@ async def _async_cleanup_alert(
 
 def _ftp_connect(server: str, username: str, password: str) -> Any:
     """Open a passive-mode FTP connection. Caller closes via .quit()."""
-    import ftplib
-
     ftp = ftplib.FTP(
         server, timeout=30
     )  # FTP ist eine bewusst konfigurierbare Upload-Zieloption (smb.py FTP-Pfad)
@@ -720,8 +738,6 @@ def _ftp_connect(server: str, username: str, password: str) -> Any:
 
 
 def _ftp_exists(ftp: Any, path: str) -> bool:
-    import ftplib
-
     try:
         ftp.size(path)
     except ftplib.error_perm:
@@ -734,8 +750,6 @@ def _ftp_exists(ftp: Any, path: str) -> bool:
 
 def _ftp_makedirs(ftp: Any, path: str) -> None:
     """Create FTP directories recursively, ignoring already-exists errors."""
-    import ftplib
-
     parts = [p for p in path.split("/") if p]
     current = ""
     for part in parts:
@@ -754,9 +768,6 @@ def _sync_ftp_upload(
 
     ``prefetched_image`` — see ``sync_smb_upload`` docstring.
     """
-    import ftplib
-    from io import BytesIO
-
     opts = coordinator.options
     server = opts.get("smb_server", "").strip()
     username = opts.get("smb_username", "").strip()
@@ -893,9 +904,6 @@ def _sync_ftp_upload(
 
 def _sync_ftp_cleanup(coordinator: BoschCameraCoordinator) -> None:
     """Delete files on the FTP server older than smb_retention_days."""
-    from datetime import datetime
-    import ftplib
-
     opts = coordinator.options
     server = opts.get("smb_server", "").strip()
     username = opts.get("smb_username", "").strip()

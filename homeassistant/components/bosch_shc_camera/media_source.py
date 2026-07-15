@@ -377,7 +377,11 @@ class _SmbBackend:
         so concurrent callers don't contend on one credit pool.
         """
         cache: dict[str, Any] = {}
-        from smbclient import register_session
+        # smbclient is an optional third-party dependency (see smb.py's
+        # smb_available() docstring) — deferred so its absence doesn't
+        # break importing this module, only this SMB browse/download path
+        # (callers are expected to have checked smb_available() first).
+        from smbclient import register_session  # noqa: PLC0415
 
         register_session(
             self.server,
@@ -394,7 +398,11 @@ class _SmbBackend:
         ref) and the NAS sees an ever-growing pile of half-idle sessions.
         """
         try:
-            from smbclient import delete_session
+            # smbclient is an optional third-party dependency (see smb.py's
+            # smb_available() docstring) — deferred so its absence doesn't
+            # break importing this module, only this SMB browse/download path
+            # (callers are expected to have checked smb_available() first).
+            from smbclient import delete_session  # noqa: PLC0415
 
             delete_session(self.server, connection_cache=cache)
         except (
@@ -450,7 +458,11 @@ class _SmbBackend:
         pre-existing per-call behavior is unchanged: a fresh cache is opened
         and closed here.
         """
-        from smbclient import scandir
+        # smbclient is an optional third-party dependency (see smb.py's
+        # smb_available() docstring) — deferred so its absence doesn't
+        # break importing this module, only this SMB browse/download path
+        # (callers are expected to have checked smb_available() first).
+        from smbclient import scandir  # noqa: PLC0415
 
         owns_cache = session is None
         cache = session if session is not None else self._new_session_cache()
@@ -611,7 +623,11 @@ class _SmbBackend:
         streamer invokes it after fobj.close() so the per-request SMB session
         is torn down.
         """
-        from smbclient import open_file, stat as smb_stat
+        # smbclient is an optional third-party dependency (see smb.py's
+        # smb_available() docstring) — deferred so its absence doesn't
+        # break importing this module, only this SMB browse/download path
+        # (callers are expected to have checked smb_available() first).
+        from smbclient import open_file, stat as smb_stat  # noqa: PLC0415
 
         # Re-validate filename to block path traversal
         if (
@@ -683,7 +699,11 @@ class _SmbBackend:
 
     def open_flat_file(self, camera: str, filename: str) -> tuple[Any, int]:
         """Return (file-like, size) for a file directly in camera/ folder."""
-        from smbclient import open_file, stat as smb_stat
+        # smbclient is an optional third-party dependency (see smb.py's
+        # smb_available() docstring) — deferred so its absence doesn't
+        # break importing this module, only this SMB browse/download path
+        # (callers are expected to have checked smb_available() first).
+        from smbclient import open_file, stat as smb_stat  # noqa: PLC0415
 
         if (
             "/" in filename

@@ -54,7 +54,9 @@ from . import BoschCameraConfigEntry, BoschCameraCoordinator, get_options
 from .cloud_ssl import async_get_bosch_cloud_session
 from .const import DOMAIN, STREAM_START_SKIPPED
 from .guards import _INDOOR_HW, _get_cam_lock, _is_gen2_indoor, _warn_if_privacy_on
+from .models import get_display_name, get_model_config
 from .session_state import FloatFieldView
+from .shc import _is_gen2
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,8 +107,6 @@ class _BoschSwitchBase(CoordinatorEntity[BoschCameraCoordinator], SwitchEntity):
         info = coordinator.data.get(cam_id, {}).get("info", {})
         self._cam_title = info.get("title", cam_id)
         self._model = info.get("hardwareVersion", "CAMERA")
-        from .models import get_display_name
-
         self._model_name = get_display_name(self._model)
         self._fw = info.get("firmwareVersion", "")
         self._mac = info.get("macAddress", "")
@@ -243,8 +243,6 @@ async def async_setup_entry(
         # Timestamp overlay — available for all cameras
         entities.append(BoschTimestampSwitch(coordinator, cam_id, config_entry))
         # Status LED — Gen2 cameras only
-        from .models import get_model_config
-
         if get_model_config(hw_version).generation >= 2:
             entities.append(BoschStatusLedSwitch(coordinator, cam_id, config_entry))
             entities.append(BoschMotionLightSwitch(coordinator, cam_id, config_entry))
@@ -924,8 +922,6 @@ class BoschPrivacyModeSwitch(_BoschSwitchBase):
         # cloud outage without waiting for hw_version to backfill.
         # Bug 2026-05-20 (Bosch maintenance window, hw_version never
         # populated on Indoor II → switch grey, user stuck).
-        from .shc import _is_gen2
-
         if _is_gen2(self.coordinator, self._cam_id):
             return True
         hw = self.coordinator.hw_version.get(self._cam_id)

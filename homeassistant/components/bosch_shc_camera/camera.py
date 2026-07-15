@@ -20,16 +20,15 @@ After 60 minutes the stream stops and must be restarted manually.
 """
 
 import asyncio
+from io import BytesIO
 import logging
 import time
 from typing import Any, override
 
 import aiohttp
-import urllib3
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
 from bosch_shc_camera_client.auth_utils import async_digest_request
+from PIL import Image
+import urllib3
 
 from homeassistant.components.camera import (
     Camera,
@@ -65,6 +64,8 @@ from .models import (
 from .snapshot_store import load_snapshot, save_snapshot
 from .switch import _redact_rtsp_creds
 
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
@@ -98,10 +99,6 @@ def _rotate_jpeg_180(jpeg_bytes: bytes) -> bytes:
     with libjpeg-turbo. Returns the original bytes if rotation fails.
     """
     try:
-        from io import BytesIO
-
-        from PIL import Image
-
         img = Image.open(BytesIO(jpeg_bytes))
         rotated = img.rotate(180)
         out = BytesIO()
@@ -883,10 +880,11 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     def _yuv422_to_jpeg(self, data: bytes) -> bytes | None:
         """Convert a 320×180 YUV422 (YUYV) raw frame to JPEG bytes using numpy+Pillow."""
         try:
-            import io
-
-            import numpy as np
-            from PIL import Image
+            # numpy is not a declared requirement of this integration (only
+            # pulled in transitively by other components) — lazy import so
+            # its absence doesn't break camera setup, only this rarely-hit
+            # RCP-thumbnail fallback path.
+            import numpy as np  # noqa: PLC0415
 
             if len(data) != 320 * 180 * 2:
                 return None
@@ -909,7 +907,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             np.clip(rgb_f, 0, 255, out=rgb_f)
             rgb = rgb_f.astype(np.uint8)
             img = Image.fromarray(rgb, mode="RGB")
-            buf = io.BytesIO()
+            buf = BytesIO()
             img.save(buf, format="JPEG", quality=85)
             return buf.getvalue()
         except ImportError, ValueError, OSError:

@@ -24,6 +24,7 @@ import asyncio
 import contextlib
 import datetime
 from datetime import UTC
+import ftplib
 import logging
 import math
 import os
@@ -41,7 +42,7 @@ from .const import (
     TIMEOUT_RECORDER_POSTROLL_GRACE,
     TIMEOUT_RECORDER_STDERR_DRAIN,
 )
-from .smb import _safe_name
+from .smb import _ftp_connect, _ftp_makedirs, _safe_name, smb_makedirs
 
 if TYPE_CHECKING:  # pragma: no cover — only for type hints
     from . import BoschCameraCoordinator
@@ -1619,7 +1620,9 @@ def _upload_smb(
     uploads stay in their own branch.
     """
     try:
-        from smbclient import open_file, register_session
+        # smbclient is an optional third-party dependency — deferred so its
+        # absence only disables SMB-target NVR drain, not the whole module.
+        from smbclient import open_file, register_session  # noqa: PLC0415
     except ImportError:
         _LOGGER.warning(
             "NVR drain (smb): smbprotocol not installed — install or set "
@@ -1640,8 +1643,6 @@ def _upload_smb(
         return False
 
     # Build remote path + ensure the per-date folder exists.
-    from .smb import smb_makedirs
-
     base = (opts.get("smb_base_path") or "Bosch-Kameras").strip()
     sub = (opts.get("nvr_smb_subpath") or "NVR").strip()
     server_share = f"\\\\{server}\\{(opts.get('smb_share') or '').strip()}"
@@ -1675,10 +1676,6 @@ def _upload_ftp(
     coordinator: BoschCameraCoordinator, full: str, cam: str, date: str, fname: str
 ) -> bool:
     """target=ftp: upload one finalized segment via ftplib."""
-    import ftplib
-
-    from .smb import _ftp_connect, _ftp_makedirs
-
     opts = coordinator.options
     server = (opts.get("smb_server") or "").strip()
     username = (opts.get("smb_username") or "").strip()
@@ -1974,7 +1971,14 @@ def _sync_nvr_cleanup_local(coordinator: BoschCameraCoordinator) -> None:
 def _sync_nvr_cleanup_smb(coordinator: BoschCameraCoordinator) -> None:
     """Walk only the NVR subtree on the SMB share and unlink old files."""
     try:
-        from smbclient import register_session, remove, scandir, stat as smb_stat
+        # Optional dependency, see _drain_nvr_smb docstring — deferred so its
+        # absence only disables this SMB-target cleanup path.
+        from smbclient import (  # noqa: PLC0415
+            register_session,
+            remove,
+            scandir,
+            stat as smb_stat,
+        )
     except ImportError:
         return
     opts = coordinator.options
@@ -2043,11 +2047,6 @@ def _sync_nvr_cleanup_smb(coordinator: BoschCameraCoordinator) -> None:
 
 def _sync_nvr_cleanup_ftp(coordinator: BoschCameraCoordinator) -> None:
     """Walk only the NVR subtree on the FTP server and unlink old files."""
-    from datetime import datetime
-    import ftplib
-
-    from .smb import _ftp_connect
-
     opts = coordinator.options
     server = (opts.get("smb_server") or "").strip()
     username = (opts.get("smb_username") or "").strip()
@@ -2109,7 +2108,7 @@ def _sync_nvr_cleanup_ftp(coordinator: BoschCameraCoordinator) -> None:
                 resp = ftp.sendcmd(f"MDTM {abs_name}")
                 ts_str = resp.split()[-1]
                 mt = (
-                    datetime.strptime(ts_str[:14], "%Y%m%d%H%M%S")
+                    datetime.datetime.strptime(ts_str[:14], "%Y%m%d%H%M%S")
                     .replace(tzinfo=UTC)
                     .timestamp()
                 )
