@@ -14,17 +14,22 @@ Handles:
 from __future__ import annotations
 
 import asyncio
+import base64
+import inspect
 import logging
 import os
 import ssl
 import time
+import traceback
 from typing import TYPE_CHECKING, Any, ClassVar, override
 from urllib.parse import urlparse
 
 import aiohttp
 
 from .cloud_ssl import async_get_bosch_cloud_session
+from .models import get_model_config
 from .recorder import assemble_and_ship_motion_clip, should_record
+from .smb import sync_local_save, sync_smb_upload
 from .snapshot_store import save_snapshot
 
 # ── URL allowlist for image/video downloads (SSRF prevention) ────────────────
@@ -298,11 +303,16 @@ class _QuietFcmPushClient:
         new/old for safe subclassing (i.e. ``_listen`` signature changed).
         """
         try:
-            from firebase_messaging import FcmPushClient, FcmPushClientRunState
+            # firebase_messaging is a declared requirement, but this defensively
+            # guards against a future refactor/removal upstream; the class
+            # body below subclasses private library internals whose shape
+            # can drift across firebase-messaging releases.
+            from firebase_messaging import (  # noqa: PLC0415
+                FcmPushClient,
+                FcmPushClientRunState,
+            )
         except ImportError:
             return None
-
-        import inspect
 
         # Safety guard: if the upstream _listen() signature ever changes (e.g.
         # gains a parameter) we must not silently break it.  Fall back to vanilla
@@ -388,7 +398,11 @@ class _QuietFcmPushClient:
                                 # If the import fails (future refactor) we skip the
                                 # error counter; the self-heal watchdog still fires.
                                 try:
-                                    from firebase_messaging.fcmpushclient import (
+                                    # ErrorType is a private enum in the library
+                                    # module, not exported via __all__ — deferred
+                                    # so a future refactor upstream only skips the
+                                    # error counter (self-heal watchdog still fires).
+                                    from firebase_messaging.fcmpushclient import (  # noqa: PLC0415
                                         ErrorType as _ErrorType,
                                     )
 
@@ -399,12 +413,10 @@ class _QuietFcmPushClient:
                                 except ImportError:
                                     await self._reset()
                 except Exception as ex:
-                    import traceback as _tb
-
                     _LOGGER.error(
                         "Unknown error: %s, shutting down FcmPushClient.\n%s",
                         ex,
-                        _tb.format_exc(),
+                        traceback.format_exc(),
                     )
                     self._terminate()
                 finally:
@@ -425,9 +437,10 @@ def _get_fcm_push_client_class() -> type | None:
         _QuietFcmPushClient._patched_class = _QuietFcmPushClient._patch_class()
     result = _QuietFcmPushClient._patched_class
     if result is None:
-        # Patch failed — fall back to vanilla
+        # Patch failed — fall back to vanilla. Deferred for the same
+        # library-API-drift-defense reason as _patch_class() above.
         try:
-            from firebase_messaging import FcmPushClient
+            from firebase_messaging import FcmPushClient  # noqa: PLC0415
 
             return FcmPushClient
         except ImportError:
@@ -451,8 +464,6 @@ async def fetch_firebase_config(hass: HomeAssistant) -> dict[str, str]:
     """
     project_id = "bosch-smart-cameras"
     app_id = f"1:{FCM_SENDER_ID}:android:9e5b6b58e4c70075"
-    import base64
-
     # Vendor-sanctioned OSS Firebase API key (2026-04-20) — FCM permissions confirmed for OSS use.
     _k = base64.b64decode(
         "QUl6YVN5Q0toaGZ4ZlRzMUc3V3Z6VERBaU8wQWlzN0VIMjVEYk9z"
@@ -511,7 +522,10 @@ async def _async_start_fcm_push_locked(coordinator: Any) -> bool:
         return False
 
     try:
-        from firebase_messaging import FcmRegisterConfig
+        # Defensive guard (see _patch_class() above) — firebase_messaging is a
+        # declared requirement, but this keeps FCM push gracefully disabled
+        # instead of crashing setup if the install is somehow missing it.
+        from firebase_messaging import FcmRegisterConfig  # noqa: PLC0415
     except ImportError:
         _LOGGER.warning("firebase-messaging not installed — FCM push disabled")
         return False
@@ -528,7 +542,11 @@ async def _async_start_fcm_push_locked(coordinator: Any) -> bool:
     # so older installs still start (without the hardening).
     fcm_push_client_config_cls: type[Any] | None
     try:
-        from firebase_messaging import FcmPushClientConfig as fcm_push_client_config_cls
+        # FcmPushClientConfig landed in firebase-messaging 0.4; guard
+        # defensively so older installs still start (without the hardening).
+        from firebase_messaging import (  # noqa: PLC0415
+            FcmPushClientConfig as fcm_push_client_config_cls,
+        )
     except ImportError:  # pragma: no cover — 0.4+ ships this symbol
         fcm_push_client_config_cls = None
 
@@ -1393,8 +1411,6 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                         try:
                             # Per-model settle delay — Gen2 captures immediately (0 s),
                             # Gen1 needs ~1.5 s so the snap reflects the post-trigger frame.
-                            from .models import get_model_config
-
                             hw_cache = getattr(coordinator, "hw_version", {})
                             hw = (
                                 hw_cache.get(cam_id, "")
@@ -1552,8 +1568,6 @@ async def async_send_alert(
     Callers that cannot supply cam_id (legacy / __init__ wrapper) leave it as
     "" and the title-fallback is used instead.
     """
-    from .smb import sync_local_save, sync_smb_upload
-
     # Bosch has been observed sending "timestamp": null in event payloads;
     # newest_event.get("timestamp", "") only substitutes the default when the
     # key is ABSENT, not when its value is JSON null, so a bare None could

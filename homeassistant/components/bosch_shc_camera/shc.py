@@ -37,10 +37,15 @@ from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from bosch_shc_camera_client.cloud import cloud_put_json
+from bosch_shc_camera_client.rcp import (
+    rcp_local_write_front_light,
+    rcp_local_write_privacy,
+)
 
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .cloud_ssl import async_get_bosch_cloud_session
+from .models import get_model_config
 
 if TYPE_CHECKING:
     from . import BoschCameraCoordinator
@@ -582,8 +587,6 @@ async def async_cloud_set_privacy_mode(
         local_user = creds.get("user") if creds else None
         local_pass = creds.get("password") if creds else None
         if cam_host:
-            from bosch_shc_camera_client.rcp import rcp_local_write_privacy
-
             local_session = async_get_clientsession(coordinator.hass, verify_ssl=False)
             ok = await rcp_local_write_privacy(
                 local_session,
@@ -639,8 +642,6 @@ async def async_cloud_set_privacy_mode(
 
 def _is_gen2(coordinator: BoschCameraCoordinator, cam_id: str) -> bool:
     """Check if a camera is Gen2 (uses different lighting endpoints)."""
-    from .models import get_model_config
-
     hw = coordinator.hw_version.get(cam_id, "CAMERA")
     return get_model_config(hw).generation >= 2
 
@@ -934,8 +935,6 @@ async def async_cloud_set_light_component(
         local_user = creds.get("user") if creds else None
         local_pass = creds.get("password") if creds else None
         if cam_host:
-            from bosch_shc_camera_client.rcp import rcp_local_write_front_light
-
             if component == "front":
                 # Boolean toggle: 0 = off, 100 = on (full brightness on restore)
                 brightness = 100 if value else 0

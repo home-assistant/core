@@ -21,7 +21,9 @@ No user data is hardcoded. All configuration via the HA UI.
 """
 
 import asyncio
+import datetime
 import logging
+from pathlib import Path
 import re as _re_mod
 import time
 from typing import Any, override
@@ -35,22 +37,44 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.components.http import StaticPathConfig
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import (
+    Event,
+    HomeAssistant,
+    ServiceCall,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession as async_get_clientsession,  # re-export: mypy --no-implicit-reexport (coordinator.py imports it via `from . import`)
 )
 from homeassistant.helpers.storage import Store
 
-from . import recorder as nvr_recorder
+from . import cf_unbuffer, recorder as nvr_recorder
 from .cloud_ssl import (
     async_get_bosch_cloud_session as async_get_bosch_cloud_session,  # re-export: mypy --no-implicit-reexport (services.py/live_connection.py/token_auth.py import it via `from . import`)
+)
+from .const import (
+    ALL_PLATFORMS,
+    CARD_VERSION,
+    CLOUD_API as CLOUD_API,  # re-export: mypy --no-implicit-reexport (services.py imports it via `from . import`)
+    CONF_ENABLE_WEBHOOK_DELIVERY,
+    CONF_WEBHOOK_URL,
+    DEFAULT_OPTIONS as DEFAULT_OPTIONS,  # re-export: mypy --no-implicit-reexport (config_flow.py imports it via `from . import`)
+    DOMAIN,
+    LIVE_SESSION_TTL,  # re-exported for tests
 )
 from .coordinator import (
     BoschCameraConfigEntry as BoschCameraConfigEntry,  # re-export: mypy --no-implicit-reexport (platform modules import it via `from . import`)
@@ -58,6 +82,7 @@ from .coordinator import (
     _is_safe_bosch_url as _is_safe_bosch_url,  # re-export: mypy --no-implicit-reexport (camera.py imports it via `from . import`)
     get_options as get_options,  # re-export: mypy --no-implicit-reexport (button.py/image.py/sensor.py/switch.py import it via `from . import`)
 )
+from .models import MODELS
 from .services import _register_services
 from .tls_proxy import (
     pre_warm_rtsp as pre_warm_rtsp,  # re-export: mypy --no-implicit-reexport (live_connection.py imports it via `from . import`)
@@ -127,9 +152,7 @@ class _StreamSupportNoiseFilter(logging.Filter):
 
         # ── "Camera not found" burst (startup race, no entity_id in message) ──
         if "Camera not found" in msg and "Error requesting stream" in msg:
-            import time as _t
-
-            now = _t.monotonic()
+            now = time.monotonic()
             last = self._last_passed.get(self._NOT_FOUND_KEY, float("-inf"))
             if (now - last) < self._NOT_FOUND_WINDOW:
                 return False
@@ -148,9 +171,7 @@ class _StreamSupportNoiseFilter(logging.Filter):
             ent = tail.split(" ", 1)[0]
         if not ent.startswith("bosch_"):
             return True  # not us, leave alone
-        import time as _t
-
-        now = _t.monotonic()
+        now = time.monotonic()
         last = self._last_passed.get(ent, float("-inf"))
         if (now - last) < 30.0:
             return False
@@ -267,8 +288,6 @@ def _rehydrate_cams_from_registry(
     registry, the device name is repaired in place so newly-registered
     entities pick up the correct slug.
     """
-    from homeassistant.helpers import device_registry as dr, entity_registry as er
-
     ereg = er.async_get(hass)
     dreg = dr.async_get(hass)
     cam_ids: set[str] = set()
@@ -330,14 +349,6 @@ def _redact_creds(d: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-from .const import (
-    ALL_PLATFORMS,
-    CLOUD_API as CLOUD_API,  # re-export: mypy --no-implicit-reexport (services.py imports it via `from . import`)
-    DEFAULT_OPTIONS as DEFAULT_OPTIONS,  # re-export: mypy --no-implicit-reexport (config_flow.py imports it via `from . import`)
-    DOMAIN,
-    LIVE_SESSION_TTL,  # re-exported for tests
-)
-
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 # hass.data key holding the per-entry options snapshot used by
@@ -363,8 +374,10 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     # already imported), so safe to call on every async_setup (e.g. reload).
     # Local import (not top-level): CLIENT_ID/CLIENT_SECRET live in
     # config_flow.py, which itself imports DEFAULT_OPTIONS/DOMAIN from this
-    # module — a top-level import here would be circular at module load time.
-    from .config_flow import CLIENT_ID, CLIENT_SECRET
+    # module — a top-level import here would be circular at module load time
+    # (verified: `from .config_flow import ...` at this module's top raises
+    # "cannot import name 'DEFAULT_OPTIONS' from partially initialized module").
+    from .config_flow import CLIENT_ID, CLIENT_SECRET  # noqa: PLC0415
 
     await async_import_client_credential(
         hass,
@@ -374,22 +387,15 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
 
     # Serve the bundled card JS files via HA's static path handler.
     # cache_headers=False → no-store so browsers always revalidate.
-    from pathlib import Path as _Path
-
-    from homeassistant.components.http import StaticPathConfig as _StaticPathConfig
-    from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-
-    from .const import CARD_VERSION
-
-    _www = _Path(__file__).parent / "www"
+    _www = Path(__file__).parent / "www"
     await hass.http.async_register_static_paths(
         [
-            _StaticPathConfig(
+            StaticPathConfig(
                 f"/{DOMAIN}/bosch-camera-card.js",
                 str(_www / "bosch-camera-card.js"),
                 False,
             ),
-            _StaticPathConfig(
+            StaticPathConfig(
                 f"/{DOMAIN}/bosch-camera-autoplay-fix.js",
                 str(_www / "bosch-camera-autoplay-fix.js"),
                 False,
@@ -461,10 +467,9 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
         # Integration reloaded while HA is already up
         await _register_lovelace_resources()
     else:
-        from homeassistant.core import Event as _Event, callback as _callback
 
-        @_callback
-        def _on_ha_started(_event: _Event) -> None:
+        @callback
+        def _on_ha_started(_event: Event) -> None:
             hass.async_create_task(_register_lovelace_resources())
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _on_ha_started)
@@ -497,8 +502,6 @@ async def _migrate_doubled_prefix_entity_ids(
 
     Reported in forum 998974/15 (Andrew75, 2026-05-15).
     """
-    from homeassistant.helpers import entity_registry as er
-
     ent_reg = er.async_get(hass)
     renamed: list[tuple[str, str]] = []
 
@@ -856,10 +859,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     # Wrapped in try/except: HA test fixtures sometimes hand back a partially-
     # initialised DeviceRegistry mock; rehydrate is best-effort.
     try:
-        from homeassistant.helpers import device_registry as dr
-
-        from .models import MODELS
-
         _dreg = dr.async_get(hass)
         _display_to_hw: dict[str, str] = {}
         for _hw_key, _cfg in MODELS.items():
@@ -937,8 +936,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     # any such stale entries so platform setup re-creates them with the
     # canonical `binary_sensor.bosch_<X>_lan_reachable` slug derived from
     # the translation key. No-op on clean installs.
-    from homeassistant.helpers import entity_registry as er
-
     _ereg = er.async_get(hass)
     _stale_lan_ids = [
         e.entity_id
@@ -1026,8 +1023,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     # streaming mode instead of buffering each segment at the edge — fixes
     # the iOS Companion App on cellular ("HLS wird geladen…" hang).
     # See cf_unbuffer.py docstring + knowledge-base/cloudflared-tunnel-hls-buffering.md
-    from . import cf_unbuffer
-
     cf_unbuffer.register(hass)
 
     # Listen on HA's stream component logger for worker-error events. This
@@ -1055,8 +1050,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
 
     # v8.0.2 migration: auto-enable front light / wallwasher / intensity entities
     # that were initially created with disabled_by=integration in earlier builds.
-    from homeassistant.helpers import entity_registry as er
-
     ent_reg = er.async_get(hass)
     for uid_suffix in ("front_light_", "wallwasher_", "front_light_intensity_"):
         for cam_id in coordinator.data:
@@ -1150,8 +1143,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
 
     async def _async_deliver_webhook(event: Any) -> None:
         """POST event payload to the configured webhook URL."""
-        from .const import CONF_ENABLE_WEBHOOK_DELIVERY, CONF_WEBHOOK_URL
-
         cur_opts = get_options(entry)
         if not cur_opts.get(CONF_ENABLE_WEBHOOK_DELIVERY, False):
             return
@@ -1201,8 +1192,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     # describe_snapshot service — ask HA ai_task to describe a camera snapshot
     async def handle_describe_snapshot(call: ServiceCall) -> dict[str, Any]:
         """Ask HA's ai_task to describe the current camera snapshot."""
-        import datetime as _dt_mod
-
         camera_id: str = call.data.get("camera_id", "").strip()
         entity_id_arg: str = call.data.get("entity_id", "").strip()
         instructions: str = call.data.get("instructions", "").strip()
@@ -1364,7 +1353,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
             return {"description": ""}
         if resolved_cam_id:
             coord.ai_record_call(resolved_cam_id)
-        generated_at = _dt_mod.datetime.now(_dt_mod.UTC).isoformat()
+        generated_at = datetime.datetime.now(datetime.UTC).isoformat()
         if resolved_cam_id and resolved_cam_id in coord.data:
             coord.data[resolved_cam_id]["ai_description"] = {
                 "text": text,
@@ -1439,10 +1428,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     # even after an integration reload — no stale closure over a setup-time entry.
     async def handle_send_event_webhook(call: ServiceCall) -> None:
         """Manually fire a webhook POST for testing."""
-        import datetime as _dt
-
-        from .const import CONF_ENABLE_WEBHOOK_DELIVERY, CONF_WEBHOOK_URL
-
         loaded = list(hass.config_entries.async_loaded_entries(DOMAIN))
         if not loaded:
             _LOGGER.warning(
@@ -1477,7 +1462,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
             "event_type": event_type_val,
             "camera": cam_name,
             "camera_id": "",
-            "timestamp": _dt.datetime.now(_dt.UTC).isoformat().replace("+00:00", "Z"),
+            "timestamp": datetime.datetime.now(datetime.UTC)
+            .isoformat()
+            .replace("+00:00", "Z"),
             "extra": {"source": "manual"},
         }
         session = async_get_clientsession(hass)

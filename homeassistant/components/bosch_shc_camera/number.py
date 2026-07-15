@@ -18,6 +18,7 @@ Creates number entities per camera:
 """
 
 import logging
+import time
 from typing import Any, override
 
 from homeassistant.components.number import NumberEntity, NumberMode
@@ -29,6 +30,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import BoschCameraConfigEntry
 from .base import _BoschEntityBase
 from .guards import _get_cam_lock, _is_gen2_indoor, _warn_if_privacy_on
+from .models import get_model_config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,8 +61,6 @@ async def async_setup_entry(
                 BoschFrontLightIntensityNumber(coordinator, cam_id, config_entry)
             )
         # Gen2-only entities
-        from .models import get_model_config
-
         hw = cam_info.get("hardwareVersion", "CAMERA")
         if get_model_config(hw).generation >= 2:
             # lens_elevation works on both Indoor II and Outdoor II
@@ -835,12 +835,10 @@ class _BoschAlarmDelayBase(_BoschGen2NumberBase):
             self._cam_id, "alarm_settings", cfg
         )
         if success:
-            import time as _time
-
             self.coordinator.alarm_settings_cache[self._cam_id] = cfg
             # Write-lock so the slow-tier poll doesn't revert this before the
             # cloud reflects it (mirrors the intrusion-config pattern).
-            self.coordinator.alarm_settings_set_at[self._cam_id] = _time.monotonic()
+            self.coordinator.alarm_settings_set_at[self._cam_id] = time.monotonic()
         self.async_write_ha_state()
 
 
@@ -949,9 +947,7 @@ class BoschIntrusionSensitivityNumber(_BoschGen2NumberBase):
         )
         if success:
             self.coordinator.intrusion_config_cache[self._cam_id] = cfg
-            import time as _time
-
-            self.coordinator.intrusion_config_set_at[self._cam_id] = _time.monotonic()
+            self.coordinator.intrusion_config_set_at[self._cam_id] = time.monotonic()
             _LOGGER.debug(
                 "Intrusion sensitivity set to %d for %s",
                 cfg["sensitivity"],
@@ -1012,9 +1008,7 @@ class BoschIntrusionDistanceNumber(_BoschGen2NumberBase):
         )
         if success:
             self.coordinator.intrusion_config_cache[self._cam_id] = cfg
-            import time as _time
-
-            self.coordinator.intrusion_config_set_at[self._cam_id] = _time.monotonic()
+            self.coordinator.intrusion_config_set_at[self._cam_id] = time.monotonic()
             _LOGGER.debug(
                 "Intrusion distance set to %d m for %s",
                 cfg["distance"],

@@ -156,7 +156,13 @@ async def ensure_go2rtc_schemes_fresh(coordinator: BoschCameraCoordinator) -> No
     if now - coordinator.last_schemes_refresh < 600:
         return
     try:
-        from homeassistant.components.camera.webrtc import DATA_WEBRTC_PROVIDERS
+        # homeassistant.components.camera.webrtc is not a guaranteed-stable
+        # public API (DATA_WEBRTC_PROVIDERS is an internal registry key) —
+        # deferred + ImportError-guarded so a future HA-core refactor only
+        # disables this watchdog refresh, not integration setup.
+        from homeassistant.components.camera.webrtc import (  # noqa: PLC0415
+            DATA_WEBRTC_PROVIDERS,
+        )
     except ImportError:
         return
     providers = coordinator.hass.data.get(DATA_WEBRTC_PROVIDERS, set())
@@ -190,7 +196,13 @@ async def ensure_go2rtc_schemes_fresh(coordinator: BoschCameraCoordinator) -> No
     # the provider's schemes are now fresh. The auto-fire only triggers on
     # `supported_features & STREAM` flips, but our streams may already be up.
     if refreshed:
-        from homeassistant.components.camera import CameraEntityFeature
+        # Deferred: homeassistant.components.camera pulls in heavy/optional
+        # native image libs (e.g. turbojpeg) via img_util — this module is
+        # imported by coordinator.py at __init__.py setup time, BEFORE HA
+        # forwards platform setup, so importing it eagerly here would make
+        # integration setup fail on systems where those optional libs
+        # aren't available, instead of only disabling this rare watchdog path.
+        from homeassistant.components.camera import CameraEntityFeature  # noqa: PLC0415
 
         for cam_id_x, cam_ent in list(coordinator.camera_entities.items()):
             # Only touch cameras that already have an active session.

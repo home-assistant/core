@@ -13,22 +13,25 @@ fcm, shc, rcp, smb, etc.).
 
 import asyncio
 from collections.abc import Coroutine
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, time as dt_time, timedelta
+import json
 import logging
+import re
 import ssl
 import threading
 import time
-from typing import TYPE_CHECKING, Any, override
-from urllib.parse import urlparse
+from typing import Any, override
+from urllib.parse import unquote, urlencode, urlparse
+from zoneinfo import ZoneInfo
 
 import aiohttp
+from bosch_shc_camera_client.local_rcp import rcp_read_local_sync, rcp_read_remote_sync
 
-if TYPE_CHECKING:
-    from .maintenance import MaintenanceWindow
-
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -52,11 +55,15 @@ from .event_polling import poll_events
 from .fcm import (
     FCMCoordinatorMixin,
     async_ensure_fcm_supervisor as _fcm_async_ensure_supervisor,
+    build_notify_data,
+    get_alert_services,
 )
 from .frigate_endpoint import FrigateCoordinatorMixin, FrontDoorRunner
 from .go2rtc_client import ensure_go2rtc_schemes_fresh, unregister_go2rtc_stream
 from .live_connection import try_live_connection_inner
 from .lock_utils import get_or_create_lock
+from .maintenance import MaintenanceWindow, async_fetch_maintenance
+from .models import get_model_config
 from .rcp import async_update_rcp_data
 from .remote_viewing_front_door import (
     start_remote_viewing_front_door,
@@ -189,9 +196,6 @@ def _parse_onvif_scopes(raw: bytes) -> dict[str, Any]:
     Returns {"supported": True, "raw_scopes": [], "name": "", "hardware": "", "profiles": []}
     on parse error (non-None raw means camera answered, so ONVIF is supported).
     """
-    import re as _re_onvif
-    from urllib.parse import unquote as _unquote
-
     result: dict[str, Any] = {
         "supported": True,
         "raw_scopes": [],
@@ -203,7 +207,7 @@ def _parse_onvif_scopes(raw: bytes) -> dict[str, Any]:
         # Null-terminated or newline-separated ASCII strings
         text = raw.decode("ascii", errors="replace")
         # Split on null bytes, newlines, or whitespace runs
-        scopes = [s.strip() for s in _re_onvif.split(r"[\x00\n\r]+", text) if s.strip()]
+        scopes = [s.strip() for s in re.split(r"[\x00\n\r]+", text) if s.strip()]
         result["raw_scopes"] = scopes
         for scope in scopes:
             if not scope.startswith("onvif://www.onvif.org/"):
@@ -212,7 +216,7 @@ def _parse_onvif_scopes(raw: bytes) -> dict[str, Any]:
             if "/" not in path:
                 continue
             key, _, val = path.partition("/")
-            val_decoded = _unquote(val).replace("+", " ")
+            val_decoded = unquote(val).replace("+", " ")
             if key == "name":
                 result["name"] = val_decoded
             elif key == "hardware":
@@ -1108,8 +1112,6 @@ class BoschCameraCoordinator(
 
     def get_model_config(self, cam_id: str) -> Any:
         """Return CameraModelConfig for a camera (from models.py)."""
-        from .models import get_model_config
-
         hw = self.hw_version.get(cam_id, "CAMERA")
         return get_model_config(hw)
 
@@ -1614,7 +1616,9 @@ class BoschCameraCoordinator(
         # ...) working the same way it did before BoschCameraCoordinator
         # moved out of __init__.py — those patches target the package's own
         # namespace, matching the pattern already used in live_connection.py.
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
+        from . import (  # noqa: PLC0415
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
+        )
 
         token = self.token
         if not token and not self.refresh_token:
@@ -1925,7 +1929,7 @@ class BoschCameraCoordinator(
         # "custom_components.bosch_shc_camera.ir", ...) working the same
         # way it did before BoschCameraCoordinator moved out of __init__.py
         # — matches the pattern already used in live_connection.py.
-        from . import ir as ir
+        from . import ir as ir  # noqa: PLC0415
 
         for cam_id, notif in self.notifications_cache.items():
             if not notif:
@@ -1992,7 +1996,7 @@ class BoschCameraCoordinator(
         # "custom_components.bosch_shc_camera.ir", ...) working the same
         # way it did before BoschCameraCoordinator moved out of __init__.py
         # — matches the pattern already used in live_connection.py.
-        from . import ir as ir
+        from . import ir as ir  # noqa: PLC0415
 
         for cam_id, fw in self.firmware_cache.items():
             if not fw:
@@ -2066,7 +2070,7 @@ class BoschCameraCoordinator(
         # "custom_components.bosch_shc_camera.ir", ...) working the same
         # way it did before BoschCameraCoordinator moved out of __init__.py
         # — matches the pattern already used in live_connection.py.
-        from . import ir as ir
+        from . import ir as ir  # noqa: PLC0415
 
         features = smb_dependent_features(self.options)
 
@@ -2181,8 +2185,9 @@ class BoschCameraCoordinator(
         # "custom_components.bosch_shc_camera.async_get_clientsession", ...)
         # working the same way it did before BoschCameraCoordinator moved
         # out of __init__.py — matches the live_connection.py pattern.
-        from . import async_get_clientsession as async_get_clientsession
-        from .maintenance import async_fetch_maintenance
+        from . import (  # noqa: PLC0415
+            async_get_clientsession as async_get_clientsession,
+        )
 
         now = time.monotonic()
         if (
@@ -2242,7 +2247,6 @@ class BoschCameraCoordinator(
         notify_key = (mw.link, state)
         if self.maintenance_notified_key == notify_key:
             return
-        from .fcm import build_notify_data, get_alert_services
 
         services = get_alert_services(self, "system")
         if not services:
@@ -2250,7 +2254,6 @@ class BoschCameraCoordinator(
             self.maintenance_notified_key = notify_key
             getattr(self, "_persist_maint_notified_key", lambda: None)()
             return
-        from zoneinfo import ZoneInfo
 
         when = ""
         if mw.scheduled_start and mw.scheduled_end:
@@ -2381,7 +2384,6 @@ class BoschCameraCoordinator(
             if (now_mono - seen) < CAMERA_OFFLINE_ANNOUNCE_GRACE_SEC:
                 return
         self._last_camera_status[cam_id] = new_status
-        from .fcm import build_notify_data, get_alert_services
 
         services = get_alert_services(self, "system")
         cam_info = self.data.get(cam_id, {}).get("info", {})
@@ -2539,7 +2541,6 @@ class BoschCameraCoordinator(
 
     async def _async_dispatch_cloud_alert(self, *, recovered: bool) -> None:
         """Send the actual notification through the integration's alert pipeline."""
-        from .fcm import build_notify_data, get_alert_services
 
         services = get_alert_services(self, "system")
         if not services:
@@ -2916,8 +2917,6 @@ class BoschCameraCoordinator(
         do not grow unbounded across camera swaps/renames over the lifetime
         of this coordinator instance.
         """
-        from homeassistant.helpers import device_registry as dr
-
         dev_reg = dr.async_get(self.hass)
         for device in dr.async_entries_for_config_entry(dev_reg, self.entry.entry_id):
             cam_id = next(
@@ -2987,8 +2986,6 @@ class BoschCameraCoordinator(
              Anything longer is stuck — clear and let the next toggle reset
              cleanly rather than blocking privacy/snapshot UI forever.
         """
-        import time as _time
-
         if cam_id not in self.stream_warming:
             return False
         # Scenario 1: warming flag without _live_connections entry
@@ -3018,7 +3015,7 @@ class BoschCameraCoordinator(
         # it as stuck and clear it rather than holding the privacy toggle hostage
         # forever (a `0` default is falsy and would skip the failsafe entirely).
         started = self.get_session(cam_id).warming_started
-        elapsed = _time.monotonic() - started
+        elapsed = time.monotonic() - started
         if elapsed > 180:
             _LOGGER.warning(
                 "Clearing stuck stream-warming flag for %s (warming for %s)",
@@ -3166,8 +3163,6 @@ class BoschCameraCoordinator(
             return await self._async_fetch_live_snapshot_impl(cam_id)
 
     async def _async_fetch_live_snapshot_impl(self, cam_id: str) -> bytes | None:
-        import json as _json
-
         token = self.token
         if not token:
             return None
@@ -3231,7 +3226,7 @@ class BoschCameraCoordinator(
                                 cam_id,
                             )
                             return None
-                        result = _json.loads(await resp.text())
+                        result = json.loads(await resp.text())
                         urls = result.get("urls", [])
                         if not urls:
                             return None
@@ -3397,13 +3392,12 @@ class BoschCameraCoordinator(
         time_allowed = True
         if time_gate_active:
             try:
-                from datetime import time as _dt_time
 
-                def _parse_t(s: str) -> _dt_time:
+                def _parse_t(s: str) -> dt_time:
                     parts = s.split(":")
                     h, m = int(parts[0]), int(parts[1])
                     sec = int(parts[2]) if len(parts) > 2 else 0
-                    return _dt_time(h, m, sec)
+                    return dt_time(h, m, sec)
 
                 t_start = _parse_t(time_start_raw)
                 t_end = _parse_t(time_end_raw)
@@ -3662,7 +3656,9 @@ class BoschCameraCoordinator(
         # ...) working the same way it did before BoschCameraCoordinator
         # moved out of __init__.py — those patches target the package's own
         # namespace, matching the pattern already used in live_connection.py.
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
+        from . import (  # noqa: PLC0415
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
+        )
 
         # Fast path: cache hit without acquiring the lock (hot path after first fetch)
         cached = self._fresh_snap_cache.get(cam_id)
@@ -3701,9 +3697,7 @@ class BoschCameraCoordinator(
                                 cam_id,
                             )
                             return None
-                        import json as _json
-
-                        events = _json.loads(await resp.text())
+                        events = json.loads(await resp.text())
 
                 if not events:
                     return None
@@ -3793,9 +3787,7 @@ class BoschCameraCoordinator(
                                 cam_id,
                             )
                             return None
-                        import json as _json
-
-                        result = _json.loads(await resp.text())
+                        result = json.loads(await resp.text())
         except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.debug(
                 "fetch_live_snapshot_local: PUT error for %s: %s", cam_id, err
@@ -3819,8 +3811,6 @@ class BoschCameraCoordinator(
         camera_host = urls[0]  # e.g. "192.168.x.x:443"
         snap_url = f"https://{camera_host}/snap.jpg?JpegSize=1206"
 
-        from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
         # Local import (not top-level): keeps unittest.mock.patch(
         # "custom_components.bosch_shc_camera.async_digest_request", ...)
         # working the same way it did before BoschCameraCoordinator moved
@@ -3828,7 +3818,7 @@ class BoschCameraCoordinator(
         # below and the live_connection.py precedent — matters here even
         # though only one call site remains, so a future third caller isn't
         # tempted to reintroduce the top-level-only inconsistency.
-        from . import async_digest_request as async_digest_request
+        from . import async_digest_request as async_digest_request  # noqa: PLC0415
 
         session = async_get_clientsession(self.hass, verify_ssl=False)
         try:
@@ -3888,8 +3878,6 @@ class BoschCameraCoordinator(
             if not user or not pwd or not urls:
                 return None
             host = urls[0]  # "192.168.x.x:443"
-            from bosch_shc_camera_client.local_rcp import rcp_read_local_sync
-
             return await self.hass.async_add_executor_job(
                 rcp_read_local_sync, host, user, pwd, command, type_
             )
@@ -3899,8 +3887,6 @@ class BoschCameraCoordinator(
                 return None
             # Cloud-Proxy URL form: "proxy-XX.live.cbs.boschsecurity.com:42090/{hash}"
             proxy_with_hash = urls[0]
-            from bosch_shc_camera_client.local_rcp import rcp_read_remote_sync
-
             return await self.hass.async_add_executor_job(
                 rcp_read_remote_sync, proxy_with_hash, command, type_
             )
@@ -3962,7 +3948,16 @@ class BoschCameraCoordinator(
         cam_entity = self.camera_entities.get(cam_id)
         if cam_entity is None:
             return
-        from homeassistant.components.camera import CameraEntityFeature, StreamType
+        # Deferred: homeassistant.components.camera pulls in heavy/optional
+        # native image libs (e.g. turbojpeg) via img_util. coordinator.py is
+        # imported eagerly by __init__.py at integration-setup time — a
+        # top-level import here would force that dependency on every setup
+        # instead of only on this rare webrtc-provider-refresh code path
+        # (same reasoning as go2rtc_client.py's deferred camera import).
+        from homeassistant.components.camera import (  # noqa: PLC0415
+            CameraEntityFeature,
+            StreamType,
+        )
 
         if CameraEntityFeature.STREAM not in cam_entity.supported_features:
             return  # stream_source not yet ready, nothing to check
@@ -3998,7 +3993,6 @@ class BoschCameraCoordinator(
             self._last_go2rtc_reload = float("-inf")
         if now - self._last_go2rtc_reload < 3600:
             return  # already reloaded recently — don't spam
-        from homeassistant.config_entries import ConfigEntryState
 
         go2rtc_entries = [
             e
@@ -4326,9 +4320,7 @@ class BoschCameraCoordinator(
                     return None
 
                 # Parse <sessionid> from XML response
-                import re as _re
-
-                m = _re.search(r"<sessionid>(\S+)</sessionid>", text, _re.IGNORECASE)
+                m = re.search(r"<sessionid>(\S+)</sessionid>", text, re.IGNORECASE)
                 if not m:
                     _LOGGER.debug(
                         "_rcp_session: no <sessionid> in response for %s: %s",
@@ -4392,7 +4384,9 @@ class BoschCameraCoordinator(
         # ...) working the same way it did before BoschCameraCoordinator
         # moved out of __init__.py — those patches target the package's own
         # namespace, matching the pattern already used in live_connection.py.
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
+        from . import (  # noqa: PLC0415
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
+        )
 
         params: dict[str, str] = {
             "command": command,
@@ -4464,7 +4458,7 @@ class BoschCameraCoordinator(
         # "custom_components.bosch_shc_camera.async_get_clientsession", ...)
         # working the same way it did before BoschCameraCoordinator moved
         # out of __init__.py — matches the live_connection.py pattern.
-        from . import (
+        from . import (  # noqa: PLC0415
             async_digest_request as async_digest_request,
             async_get_clientsession as async_get_clientsession,
         )
@@ -4489,12 +4483,8 @@ class BoschCameraCoordinator(
             "type": "P_OCTET",
             "num": "1",
         }
-        from urllib.parse import urlencode
-
         url = f"{base}?{urlencode(params)}"
         try:
-            import re as _re_lan
-
             async with await async_digest_request(
                 async_get_clientsession(self.hass, verify_ssl=False),
                 "GET",
@@ -4522,9 +4512,7 @@ class BoschCameraCoordinator(
                     )
                     return None
                 # Extract payload from <str>HEXDATA</str>
-                m = _re_lan.search(
-                    rb"<str>([0-9a-fA-F]+)</str>", raw, _re_lan.IGNORECASE
-                )
+                m = re.search(rb"<str>([0-9a-fA-F]+)</str>", raw, re.IGNORECASE)
                 if m:
                     return bytes.fromhex(m.group(1).decode("ascii"))
                 # Fallback: raw bytes if not XML envelope
@@ -4681,7 +4669,9 @@ class BoschCameraCoordinator(
         # ...) working the same way it did before BoschCameraCoordinator
         # moved out of __init__.py — those patches target the package's own
         # namespace, matching the pattern already used in live_connection.py.
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
+        from . import (  # noqa: PLC0415
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
+        )
 
         token = self.token
         headers = {

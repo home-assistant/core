@@ -27,6 +27,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import BoschCameraConfigEntry, BoschCameraCoordinator
 from .const import CONF_ENABLE_PTZ_CONTROLS, DOMAIN
 from .guards import _is_gen2_indoor, _warn_if_privacy_on
+from .models import get_model_config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,8 +79,6 @@ async def async_setup_entry(
         # Gen2-only: detection mode select
         cam_info = coordinator.data[cam_id].get("info", {})
         hw = cam_info.get("hardwareVersion", "CAMERA")
-        from .models import get_model_config
-
         if get_model_config(hw).generation >= 2:
             entities.append(BoschDetectionModeSelect(coordinator, cam_id, config_entry))
         # PTZ preset select — only for cameras with panLimit > 0 (CAMERA_360 indoor)

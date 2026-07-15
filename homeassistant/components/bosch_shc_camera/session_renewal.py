@@ -18,9 +18,11 @@ entire call surface for a purely structural move.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import time
 from typing import TYPE_CHECKING
+from urllib.parse import quote
 
 from .cloud_ssl import async_bosch_cloud_session_cm
 from .const import CLOUD_API, TIMEOUT_PUT_CONNECTION
@@ -60,10 +62,7 @@ async def refresh_local_creds_from_heartbeat(
     `_get_nvr_recorder_lock` instead of only shrinking the race window.
     """
     try:
-        import json as _json
-        from urllib.parse import quote as _q
-
-        rj = _json.loads(resp_text or "{}")
+        rj = json.loads(resp_text or "{}")
         new_user = rj.get("user")
         new_pass = rj.get("password")
         if not (new_user and new_pass):
@@ -96,7 +95,7 @@ async def refresh_local_creds_from_heartbeat(
         audio_param = "&enableaudio=1"
         mcfg = coordinator.get_model_config(cam_id)
         new_url = (
-            f"rtsp://{_q(new_user, safe='')}:{_q(new_pass, safe='')}@"
+            f"rtsp://{quote(new_user, safe='')}:{quote(new_pass, safe='')}@"
             f"127.0.0.1:{proxy_port}/rtsp_tunnel?inst={inst_val}"
             f"{audio_param}&fmtp=1&maxSessionDuration={mcfg.max_session_duration}"
         )

@@ -105,7 +105,33 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
 )
 
+from . import DEFAULT_OPTIONS, DOMAIN, BoschCameraConfigEntry
 from .cloud_ssl import async_get_bosch_cloud_session
+from .const import (
+    CONF_AI_ACTIVE_CONDITION_ENTITY,
+    CONF_AI_ACTIVE_CONDITION_STATE,
+    CONF_AI_ACTIVE_TIME_END,
+    CONF_AI_ACTIVE_TIME_START,
+    CONF_AI_COOLDOWN_SECONDS,
+    CONF_AI_DESCRIBE_LANGUAGE,
+    CONF_AI_DESCRIBE_ON_MOTION,
+    CONF_AI_DESCRIBE_PROMPT,
+    CONF_AI_MAX_PER_DAY,
+    CONF_AI_NOTIFY_INCLUDE_DESCRIPTION,
+    CONF_AI_TASK_ENTITY,
+    CONF_DEFER_DIAG_DURING_STREAM,
+    CONF_ENABLE_AI_DESCRIPTION,
+    CONF_ENABLE_PTZ_CONTROLS,
+    CONF_ENABLE_WEBHOOK_DELIVERY,
+    CONF_WEBHOOK_URL,
+    DEFAULT_AI_DESCRIBE_LANGUAGE,
+    DEFAULT_AI_DESCRIBE_PROMPT,
+    DEFAULT_DEFER_DIAG_DURING_STREAM,
+    DEFAULT_MOTION_ACTIVE_WINDOW,
+    MOTION_ACTIVE_WINDOW_MAX,
+    MOTION_ACTIVE_WINDOW_MIN,
+)
+from .smb import smb_available, smb_dependent_features
 
 # ── Section layout (single source of truth) ───────────────────────────────────
 # Sectioned options-flow groups the ~50 fields into collapsible blocks so the
@@ -273,33 +299,6 @@ def _flatten_sections(user_input: dict[str, Any]) -> dict[str, Any]:
 
     return flat
 
-
-from . import DEFAULT_OPTIONS, DOMAIN, BoschCameraConfigEntry
-from .const import (
-    CONF_AI_ACTIVE_CONDITION_ENTITY,
-    CONF_AI_ACTIVE_CONDITION_STATE,
-    CONF_AI_ACTIVE_TIME_END,
-    CONF_AI_ACTIVE_TIME_START,
-    CONF_AI_COOLDOWN_SECONDS,
-    CONF_AI_DESCRIBE_LANGUAGE,
-    CONF_AI_DESCRIBE_ON_MOTION,
-    CONF_AI_DESCRIBE_PROMPT,
-    CONF_AI_MAX_PER_DAY,
-    CONF_AI_NOTIFY_INCLUDE_DESCRIPTION,
-    CONF_AI_TASK_ENTITY,
-    CONF_DEFER_DIAG_DURING_STREAM,
-    CONF_ENABLE_AI_DESCRIPTION,
-    CONF_ENABLE_PTZ_CONTROLS,
-    CONF_ENABLE_WEBHOOK_DELIVERY,
-    CONF_WEBHOOK_URL,
-    DEFAULT_AI_DESCRIBE_LANGUAGE,
-    DEFAULT_AI_DESCRIBE_PROMPT,
-    DEFAULT_DEFER_DIAG_DURING_STREAM,
-    DEFAULT_MOTION_ACTIVE_WINDOW,
-    MOTION_ACTIVE_WINDOW_MAX,
-    MOTION_ACTIVE_WINDOW_MIN,
-)
-from .smb import smb_available, smb_dependent_features
 
 _LOGGER = logging.getLogger(__name__)
 
