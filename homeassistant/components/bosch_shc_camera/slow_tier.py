@@ -49,7 +49,7 @@ import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import aiohttp
 
@@ -399,7 +399,7 @@ async def _poll_slow_tier_endpoints(
 
     async def _fetch(
         endpoint: str,
-    ) -> tuple[str, int, dict[str, Any] | None]:
+    ) -> tuple[str, int, dict[str, Any] | list[Any] | int | float | str | None]:
         """Fetch a single slow-tier endpoint. Returns (endpoint, status, data)."""
         try:
             async with asyncio.timeout(8):
@@ -495,7 +495,14 @@ async def _poll_slow_tier_endpoints(
         if ep_status != 200 or ep_data is None:
             continue
         if ep == "wifiinfo":
-            coordinator._wifiinfo_cache[cam_id] = ep_data
+            # NOTE: unlike several sibling branches in this function (see
+            # e.g. "ambient_light_sensor_level"/"privacy_sound_override"),
+            # this endpoint has no isinstance(dict) guard against a
+            # malformed-but-200 cloud response -- same latent-crash class
+            # the v15.0.0 chaos-fault-injection suite found and fixed for
+            # 3 other endpoints, left open here. Flagged, not fixed here
+            # (a behavior change is out of scope for this mypy-only pass).
+            coordinator._wifiinfo_cache[cam_id] = cast(dict[str, Any], ep_data)
         elif ep == "ambient_light_sensor_level":
             # isinstance guard (chaos-fault-injection regression,
             # tests/test_chaos_fault_injection.py): every sibling branch in
@@ -527,7 +534,10 @@ async def _poll_slow_tier_endpoints(
             # actually flagged the install) reverts it to stale
             # "not updating" and a second install PUT could fire.
             if not coordinator._is_write_locked(cam_id, coordinator._firmware_set_at):
-                coordinator._firmware_cache[cam_id] = ep_data
+                # NOTE: no isinstance(dict) guard against a malformed-but-200
+                # cloud response here (see the "wifiinfo" branch above for
+                # the full note) -- flagged, not fixed in this mypy-only pass.
+                coordinator._firmware_cache[cam_id] = cast(dict[str, Any], ep_data)
         elif ep == "recording_options":
             data[cam_id]["recordingOptions"] = ep_data
         elif ep == "unread_events_count":
@@ -549,7 +559,8 @@ async def _poll_slow_tier_endpoints(
                     ep_data.get("result", False) if isinstance(ep_data, dict) else False
                 )
         elif ep == "commissioned":
-            coordinator._commissioned_cache[cam_id] = ep_data
+            # NOTE: no isinstance(dict) guard (see "wifiinfo" branch above).
+            coordinator._commissioned_cache[cam_id] = cast(dict[str, Any], ep_data)
         elif ep == "autofollow":
             data[cam_id]["autofollow"] = ep_data
         elif ep == "timestamp":
@@ -561,7 +572,8 @@ async def _poll_slow_tier_endpoints(
                     ep_data.get("result", False) if isinstance(ep_data, dict) else False
                 )
         elif ep == "notifications":
-            coordinator._notifications_cache[cam_id] = ep_data
+            # NOTE: no isinstance(dict) guard (see "wifiinfo" branch above).
+            coordinator._notifications_cache[cam_id] = cast(dict[str, Any], ep_data)
         elif ep == "rules":
             coordinator._rules_cache[cam_id] = (
                 ep_data if isinstance(ep_data, list) else []

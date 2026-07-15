@@ -16,7 +16,7 @@ Gen1 cameras use a different API (lighting_override) and are handled by switch.p
 import asyncio
 import logging
 import time
-from typing import Any, ClassVar, override
+from typing import Any, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -401,7 +401,7 @@ class _BoschRgbLedLight(_BoschLightBase):
 
     _led_key = ""
     _attr_color_mode = ColorMode.RGB
-    _attr_supported_color_modes: ClassVar[set[ColorMode]] = {ColorMode.RGB}
+    _attr_supported_color_modes = {ColorMode.RGB}
 
     @property
     @override
@@ -552,7 +552,7 @@ class BoschFrontLight(_BoschLightBase):
 
     _led_key = "frontLightSettings"
     _attr_color_mode = ColorMode.COLOR_TEMP
-    _attr_supported_color_modes: ClassVar[set[ColorMode]] = {ColorMode.COLOR_TEMP}
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
     _attr_min_color_temp_kelvin = 2000
     _attr_max_color_temp_kelvin = 6500
 

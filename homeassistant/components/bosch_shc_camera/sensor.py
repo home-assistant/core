@@ -16,7 +16,7 @@ Creates sensor entities per camera:
 
 from datetime import UTC, datetime
 import logging
-from typing import Any, ClassVar, override
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -222,7 +222,7 @@ class BoschCameraStatusSensor(_BoschSensorBase):
     can use this single sensor to drive both visibility and alerting.
     """
 
-    _attr_options: ClassVar[list[str]] = _STATUS_SENSOR_OPTIONS
+    _attr_options = _STATUS_SENSOR_OPTIONS
     _attr_device_class = SensorDeviceClass.ENUM
 
     def __init__(
@@ -626,7 +626,7 @@ class BoschLastEventTypeSensor(_BoschSensorBase):
     """Shows the type of the most recent camera event."""
 
     _attr_translation_key = "last_event_type"
-    _attr_options: ClassVar[list[str]] = [
+    _attr_options = [
         "movement",
         "person",
         "audio_alarm",
@@ -749,7 +749,7 @@ class BoschFcmPushStatusSensor(_BoschSensorBase):
     _attr_unique_id = "bosch_shc_camera_fcm_push_status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "push_status"
-    _attr_options: ClassVar[list[str]] = ["fcm_push", "polling", "disabled"]
+    _attr_options = ["fcm_push", "polling", "disabled"]
     _attr_device_class = SensorDeviceClass.ENUM
     # `last_push_seconds_ago` is recomputed from a monotonic clock on every
     # property read, so it changes on every coordinator tick even while the
@@ -802,7 +802,7 @@ class BoschCloudMaintenanceSensor(_BoschSensorBase):
     _attr_unique_id = "bosch_shc_camera_cloud_maintenance"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "cloud_maintenance"
-    _attr_options: ClassVar[list[str]] = [
+    _attr_options = [
         "active",
         "scheduled",
         "past",
@@ -1840,7 +1840,7 @@ class BoschOnvifScopesSensor(_BoschSensorBase):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
-    _attr_options: ClassVar[list[str]] = ["supported"]
+    _attr_options = ["supported"]
     _attr_device_class = SensorDeviceClass.ENUM
 
     def __init__(
