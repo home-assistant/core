@@ -182,6 +182,6 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
         True, entity_config=(Platform.SENSOR, Platform.FAN)
     ),
     "Battery Circulator Fan 2 Pro": SwitchbotCloudDeviceConfig(
-        True, entity_config=(Platform.SENSOR, Platform.FAN)
+        True, entity_config=(Platform.SENSOR, Platform.FAN, Platform.SELECT)
     ),
 }

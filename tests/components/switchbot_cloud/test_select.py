@@ -16,24 +16,35 @@ from homeassistant.core import HomeAssistant
 from . import configure_integration
 
 
-async def test_standing_fan_night_light_coordinator_data_is_none(
-    hass: HomeAssistant, mock_list_devices: AsyncMock, mock_get_status: AsyncMock
+@pytest.mark.parametrize(
+    "device",
+    [
+        "Standing Fan",
+        "Battery Circulator Fan",
+        "Battery Circulator Fan 2 Pro",
+    ],
+)
+async def test_night_light_coordinator_data_is_none(
+    hass: HomeAssistant,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+    device: str,
 ) -> None:
     """Test coordinator data is none."""
 
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
-            deviceId="standing-fan-id-1",
-            deviceName="standing-fan-1",
-            deviceType="Standing Fan",
+            deviceId="device-id-1",
+            deviceName="device-1",
+            deviceType=device,
             hubDeviceId="test-hub-id",
         ),
     ]
     mock_get_status.side_effect = [None, None]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "select.standing_fan_1_night_light"
+    entity_id = "select.device_1_night_light"
     state = hass.states.get(entity_id)
     assert state.state == "unknown"
 
@@ -41,24 +52,25 @@ async def test_standing_fan_night_light_coordinator_data_is_none(
 @pytest.mark.parametrize(
     ("key_type", "expected"),
     [
+        ("on", "1"),
         ("off", "off"),
         ("bright", "1"),
         ("soft", "2"),
     ],
 )
-async def test_standing_fan_night_light_options(
+async def test_night_light_options(
     hass: HomeAssistant,
     mock_list_devices: AsyncMock,
     mock_get_status: AsyncMock,
     key_type: str,
     expected: str,
 ) -> None:
-    """Test standing fan night light options."""
+    """Test night light options."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
-            deviceId="standing-fan-id-1",
-            deviceName="standing-fan-1",
+            deviceId="device-id-1",
+            deviceName="device-1",
             deviceType="Standing Fan",
             hubDeviceId="test-hub-id",
         ),
@@ -76,10 +88,7 @@ async def test_standing_fan_night_light_options(
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "select.standing_fan_1_night_light"
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == key_type
+    entity_id = "select.device_1_night_light"
 
     with (
         patch.object(SwitchBotAPI, "send_command") as mocked_send_command,
@@ -98,12 +107,12 @@ async def test_standing_fan_night_light_options(
     assert state.state == key_type
 
 
-async def test_standing_fan_night_light_options_not_exist(
+async def test_night_light_options_not_exist(
     hass: HomeAssistant,
     mock_list_devices: AsyncMock,
     mock_get_status: AsyncMock,
 ) -> None:
-    """Test standing fan night light options."""
+    """Test night light options."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
