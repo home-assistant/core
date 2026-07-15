@@ -1,5 +1,6 @@
 """Tests for the EARN-E P1 Meter config flow."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from earn_e_p1 import EarnEP1Device
@@ -346,9 +347,8 @@ async def test_validate_without_shared_listener(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_dhcp_discovery_new_device(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp_discovery_new_device(hass: HomeAssistant) -> None:
     """Test DHCP discovers a new device and creates a config entry."""
     with patch(VALIDATE_PATH, return_value=_mock_device()):
         result = await hass.config_entries.flow.async_init(
@@ -372,9 +372,9 @@ async def test_dhcp_discovery_new_device(
     assert result["result"].unique_id == MOCK_SERIAL
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_updates_ip_by_serial(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test DHCP updates IP and merges MAC for entry matched by serial."""
@@ -398,9 +398,20 @@ async def test_dhcp_discovery_updates_ip_by_serial(
     assert mock_config_entry.data[CONF_MAC] == MOCK_MAC
 
 
-async def test_dhcp_discovery_validate_timeout(hass: HomeAssistant) -> None:
-    """Test DHCP validate timeout aborts as cannot_connect."""
-    with patch(VALIDATE_PATH, return_value=None):
+@pytest.mark.parametrize(
+    ("validate_mock", "reason"),
+    [
+        ({"return_value": None}, "cannot_connect"),
+        ({"side_effect": OSError("no socket")}, "cannot_connect"),
+        ({"side_effect": RuntimeError("boom")}, "unknown"),
+    ],
+    ids=["timeout", "oserror", "unexpected_error"],
+)
+async def test_dhcp_discovery_validate_failures(
+    hass: HomeAssistant, validate_mock: dict[str, Any], reason: str
+) -> None:
+    """Test DHCP validation failures abort with the expected reason."""
+    with patch(VALIDATE_PATH, **validate_mock):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
@@ -408,33 +419,7 @@ async def test_dhcp_discovery_validate_timeout(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_dhcp_discovery_validate_oserror(hass: HomeAssistant) -> None:
-    """Test DHCP validate OSError aborts as cannot_connect."""
-    with patch(VALIDATE_PATH, side_effect=OSError("no socket")):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
-            data=DHCP_DISCOVERY,
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_dhcp_discovery_validate_unexpected_error(hass: HomeAssistant) -> None:
-    """Test DHCP validate unexpected error aborts as unknown."""
-    with patch(VALIDATE_PATH, side_effect=RuntimeError("boom")):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_DHCP},
-            data=DHCP_DISCOVERY,
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown"
+    assert result["reason"] == reason
 
 
 async def test_dhcp_discovery_updates_ip_by_mac(hass: HomeAssistant) -> None:
