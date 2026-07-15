@@ -81,9 +81,7 @@ class _KnxText(TextEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
-        if not self._device.remote_value.readable and (
-            last_state := await self.async_get_last_state()
-        ):
+        if last_state := await self.async_get_last_state():
             if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                 self._device.remote_value.value = last_state.state
 
