@@ -95,32 +95,24 @@ def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
 async def _migrate_property_unique_ids(hass: HomeAssistant, entry_id: str) -> None:
     """Ensure property entity unique_ids use {serial}-{property_key} format."""
     ent_reg = er.async_get(hass)
-    dev_reg = dr.async_get(hass)
 
     property_key_map = await hass.async_add_executor_job(get_property_key_map)
     for entry in er.async_entries_for_config_entry(ent_reg, entry_id):
-        if not entry.original_name or not entry.device_id:
+        if not entry.original_name:
             continue
         property_key = property_key_map.get(entry.original_name)
         if property_key is None:
             continue
-        device = dev_reg.async_get(entry.device_id)
-        if device is None or device.via_device_id is not None:
-            continue
-        serial = device.serial_number or next(
-            (ident[1] for ident in device.identifiers if ident[0] == DOMAIN), None
-        )
-        if serial is None:
-            _LOGGER.debug(
-                "Skipping unique_id migration for entity %s: device %s has no serial number or Velbus identifier",
-                entry.entity_id,
-                device.id,
-            )
-            continue
-
-        # Properties always use channel number 0; a regular channel is >=1. This guards
-        # against rewriting an ordinary channel whose name matches a property name.
-        if entry.unique_id not in (f"{serial}-0", f"{serial}-0-program_select"):
+        # Derive the serial from the entity's own unique_id, not from the device
+        # registry, which another integration could overwrite. The program select
+        # historically used `{serial}-{channel}-program_select`; every other property
+        # uses channel number 0 (`{serial}-0`). Regular channels are always >=1, so a
+        # `-0` suffix and the `-program_select` suffix only ever belong to properties.
+        if entry.unique_id.endswith("-program_select"):
+            serial = entry.unique_id.removesuffix("-program_select").rsplit("-", 1)[0]
+        elif entry.unique_id.endswith("-0"):
+            serial = entry.unique_id.removesuffix("-0")
+        else:
             continue
 
         expected_unique_id = f"{serial}-{property_key}"

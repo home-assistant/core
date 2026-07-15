@@ -413,25 +413,27 @@ async def test_migrate_property_unique_ids_already_correct(
     )
 
 
-async def test_migrate_property_unique_ids_skipped_when_no_serial(
+async def test_migrate_property_unique_ids_serial_from_unique_id(
     hass: HomeAssistant,
     config_entry: VelbusConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     controller: MagicMock,
 ) -> None:
-    """Test that migration is skipped when the device has no serial number or Velbus identifier."""
+    """Test that the new unique_id serial is taken from the old unique_id, not the device."""
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={("other_domain", "1")},
+        identifiers={(DOMAIN, "1")},
+        # A different serial that another integration could have written
+        serial_number="overwritten_serial",
     )
     entity_registry.async_get_or_create(
-        "select",
+        "sensor",
         DOMAIN,
-        "old-unique-id",
+        "test_serial-0",
         config_entry=config_entry,
         device_id=device.id,
-        original_name="select",
+        original_name="LightSensor",
     )
 
     with patch(
@@ -440,7 +442,12 @@ async def test_migrate_property_unique_ids_skipped_when_no_serial(
     ):
         await init_integration(hass, config_entry)
 
-    assert entity_registry.async_get_entity_id("select", DOMAIN, "old-unique-id")
+    assert entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "test_serial-LightValue"
+    )
+    assert not entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, "overwritten_serial-LightValue"
+    )
 
 
 async def test_migrate_property_unique_ids_skipped_without_name(
@@ -508,31 +515,26 @@ async def test_migrate_property_unique_ids_skipped_unknown_name(
     )
 
 
-async def test_migrate_property_unique_ids_skipped_for_subdevice(
+async def test_migrate_property_unique_ids_rename_select_legacy_channel(
     hass: HomeAssistant,
     config_entry: VelbusConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     controller: MagicMock,
 ) -> None:
-    """Test that migration skips entities on sub-devices (via_device_id set)."""
-    device_registry.async_get_or_create(
+    """Test that a program select using a legacy channel number gets renamed."""
+    device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "1")},
         serial_number="test_serial",
     )
-    sub_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "1-sub")},
-        serial_number="test_serial_sub",
-        via_device=(DOMAIN, "1"),
-    )
+    # Before it became a property, the program select used a real channel number
     entity_registry.async_get_or_create(
         "select",
         DOMAIN,
-        "test_serial_sub-old_format",
+        "test_serial-5-program_select",
         config_entry=config_entry,
-        device_id=sub_device.id,
+        device_id=device.id,
         original_name="select",
     )
 
@@ -542,8 +544,11 @@ async def test_migrate_property_unique_ids_skipped_for_subdevice(
     ):
         await init_integration(hass, config_entry)
 
+    assert not entity_registry.async_get_entity_id(
+        "select", DOMAIN, "test_serial-5-program_select"
+    )
     assert entity_registry.async_get_entity_id(
-        "select", DOMAIN, "test_serial_sub-old_format"
+        "select", DOMAIN, "test_serial-SelectedProgram"
     )
 
 
