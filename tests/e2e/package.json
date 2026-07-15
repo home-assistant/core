@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "End-to-end browser tests for Home Assistant Core",
   "private": true,
+  "packageManager": "pnpm@11.13.0",
   "scripts": {
     "test": "playwright test"
   },

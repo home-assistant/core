@@ -48,24 +48,29 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+        with:
+          package_json_file: tests/e2e/package.json
+
       - name: Set up Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: "24"
-          cache: npm
-          cache-dependency-path: tests/e2e/package-lock.json
+          cache: pnpm
+          cache-dependency-path: tests/e2e/pnpm-lock.yaml
 
       - name: Install E2E test dependencies
         working-directory: tests/e2e
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browser
         working-directory: tests/e2e
-        run: npx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Run Playwright E2E tests
         working-directory: tests/e2e
-        run: npx playwright test
+        run: pnpm exec playwright test
 
       - name: Upload Playwright report
         if: always()
