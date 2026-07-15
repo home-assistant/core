@@ -6,7 +6,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PapouchConfigEntry
-from .coordinator import PapouchDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -19,7 +18,7 @@ async def async_setup_entry(
     entities = []
 
     for item_id in coordinator.data.get("din", {}):
-        entities.append(PapouchBinarySensor(coordinator, entry, item_id))
+        entities.append(PapouchBinarySensor(coordinator, entry, item_id))  # noqa: PERF401
 
     async_add_entities(entities)
 
@@ -30,6 +29,7 @@ class PapouchBinarySensor(CoordinatorEntity, BinarySensorEntity):
     _attr_has_entity_name = True
 
     def __init__(self, coordinator, entry, item_id) -> None:
+        """Constructor for binary sensor."""
         super().__init__(coordinator)
         self.item_id = item_id
         self._attr_unique_id = f"{entry.entry_id}_din_{item_id}"

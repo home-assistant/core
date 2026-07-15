@@ -20,9 +20,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     entities = []
 
-    # TODO: refaktor into new class
+    # TODO: refactor into new class because this is only for Quido
     for item_id in coordinator.data.get("dout", {}):
-        entities.append(PapouchSwitch(coordinator, entry, item_id))
+        entities.append(PapouchSwitch(coordinator, entry, item_id))  # noqa: PERF401
 
     async_add_entities(entities)
 
@@ -57,10 +57,10 @@ class PapouchSwitch(CoordinatorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.coordinator.api_client.send_command("s", self.item_id)
+        await self.coordinator.device.turn_on_coil(self.item_id)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.coordinator.api_client.send_command("r", self.item_id)
+        await self.coordinator.device.turn_off_coil(self.item_id)
         await self.coordinator.async_request_refresh()

@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 
 import aiohttp
-from .devices import Quido, PapouchDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -12,6 +11,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .APIClient import PapouchApiClient
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .devices import PapouchDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,13 +36,12 @@ class PapouchDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=interval),
         )
         self.api_client = api_client
-        self.device = device()
+        self.device = device
 
     async def _async_update_data(self) -> dict:
         """Fetch data from the device."""
         try:
             raw_xml = await self.api_client.fetch_data()
-            # TODO: change it automatically
             return self.device.parse_xml(raw_xml)
         except aiohttp.ClientError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from None

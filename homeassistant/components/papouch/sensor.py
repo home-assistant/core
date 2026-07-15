@@ -26,10 +26,10 @@ async def async_setup_entry(
     # TODO: remove hard-coded names and refactor
 
     for item_id in coordinator.data.get("temp", {}):
-        entities.append(PapouchTemperatureSensor(coordinator, entry, item_id))
+        entities.append(PapouchTemperatureSensor(coordinator, entry, item_id))  # noqa: PERF401
 
     for item_id in coordinator.data.get("din_cnt", {}):
-        entities.append(PapouchCounterSensor(coordinator, entry, item_id))
+        entities.append(PapouchCounterSensor(coordinator, entry, item_id))  # noqa: PERF401
 
     async_add_entities(entities)
 
@@ -72,6 +72,7 @@ class PapouchCounterSensor(CoordinatorEntity, SensorEntity):
     _attr_native_unit_of_measurement = "pulses"
 
     def __init__(self, coordinator, entry, item_id) -> None:
+        """Constructor of the counter senzor UI."""
         super().__init__(coordinator)
         self.item_id = item_id
         self._attr_unique_id = f"{entry.entry_id}_din_cnt_{item_id}"

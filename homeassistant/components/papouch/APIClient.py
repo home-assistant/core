@@ -1,7 +1,10 @@
+"""This file is used for communicating with the device."""
+
 import logging
 
 import aiohttp
 import defusedxml.ElementTree as ET
+
 from .const import ENCODING
 
 INFO_URL = "is.xml"
@@ -37,9 +40,25 @@ class PapouchApiClient:
         """Fetching settings about a device."""
         return await self._fetch(SETTINGS_URL)
 
-    async def send_command(self, cmd_type: str, output_id: str) -> None:
-        """Send a GET command to the Quido device."""
-        params = {"type": cmd_type, "id": output_id}
+    async def send_command(
+        self,
+        cmd_type: str,
+        item_id: str | None = None,
+        counter: str | None = None,
+        # sts: str | None = None
+    ) -> None:
+        """Universal command for communicating with any device by using GET request."""
+        # TODO: write into the documentation that HA doesn't support massive setting.
+
+        raw_params = {
+            "type": cmd_type,
+            "id": item_id,
+            "cnt": counter,
+            # "sts": sts,
+        }
+
+        # adding the optional parameters
+        params = {key: value for key, value in raw_params.items() if value is not None}
 
         async with self.session.get(self.base_url + SET_URL, params=params) as response:
             if response.status != 200:
@@ -48,7 +67,11 @@ class PapouchApiClient:
             raw_xml = await response.text(encoding=ENCODING)
             root = ET.fromstring(raw_xml)
 
-            status = root.attrib.get("status")
-            if status == "error":
-                _LOGGER.error("Quido returned an error: %s", raw_xml)
-                return
+            result_tag = root.find("result")
+
+            if result_tag is not None:
+                status = result_tag.attrib.get("status")
+
+                if status == "0":
+                    _LOGGER.error("Quido returned an error: %s", raw_xml)
+                    return
