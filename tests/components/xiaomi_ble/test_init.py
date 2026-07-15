@@ -14,6 +14,7 @@ from tests.common import MockConfigEntry
 
 S400_ADDRESS = "04:AE:47:67:C6:7C"
 DATA_S400_IMPEDANCE_CACHE_PURGED = "s400_impedance_restore_cache_purged"
+DATA_S400_LOW_ONLY_MIGRATED = "s400_low_only_migration_occurred"
 S400_MODEL = "MJTZC01YM"
 V1V2_MODEL = "XMTZC02HM/XMTZC05HM/NUN4049CN"
 
@@ -510,8 +511,9 @@ async def test_purge_stale_restore_cache_via_low_only_provenance(
     """Test the stale low-only cache is purged via migration provenance.
 
     No generic "impedance" key ever existed for this device, so its
-    presence can't prove staleness here. The "impedance_high" entity's
-    previous_unique_id (set by the low->high rename) proves it instead.
+    presence can't prove staleness here. async_migrate_entry persists
+    DATA_S400_LOW_ONLY_MIGRATED at the moment of that specific rename,
+    proving it instead.
     """
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
@@ -531,6 +533,41 @@ async def test_purge_stale_restore_cache_via_low_only_provenance(
     await hass.async_block_till_done()
 
     assert entry.minor_version == 2
+    assert entry.data[DATA_S400_LOW_ONLY_MIGRATED] is True
+    sensor_data = restore_data[Platform.SENSOR]
+    assert "impedance_low___" not in sensor_data["entity_data"]
+    assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_purge_stale_restore_cache_low_only_marker_survives_entity_deletion(
+    hass: HomeAssistant,
+) -> None:
+    """Test the persisted low-only marker purges even with no entities left.
+
+    If the user deletes the renamed "impedance_high" entity after a
+    low-only migration, its previous_unique_id (the only other proof)
+    is lost with it. The independently persisted
+    DATA_S400_LOW_ONLY_MIGRATED marker must still be enough to purge the
+    stale cached value on a later setup.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=S400_ADDRESS,
+        version=1,
+        minor_version=2,
+        data={DATA_S400_LOW_ONLY_MIGRATED: True},
+    )
+    entry.add_to_hass(hass)
+    # No device, no entities: as if everything was deleted after the
+    # original migration, leaving only the persisted marker behind.
+    restore_data = _seed_restore_data(hass, entry, _low_only_stale_restore_data())
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
     sensor_data = restore_data[Platform.SENSOR]
     assert "impedance_low___" not in sensor_data["entity_data"]
     assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True
