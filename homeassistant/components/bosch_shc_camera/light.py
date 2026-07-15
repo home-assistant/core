@@ -16,7 +16,7 @@ Gen1 cameras use a different API (lighting_override) and are handled by switch.p
 import asyncio
 import logging
 import time
-from typing import Any, ClassVar
+from typing import Any, ClassVar, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -119,6 +119,7 @@ class _BoschLightBase(
         self._last_white_balance: float | None = -1.0
         self._is_on: bool = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last-known color/brightness/whiteBalance across HA restarts."""
         await super().async_added_to_hass()
@@ -141,6 +142,7 @@ class _BoschLightBase(
             self._last_white_balance = float(lwb)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Expose last-known values even when the light is off.
 
@@ -174,6 +176,7 @@ class _BoschLightBase(
         return attrs
 
     @property
+    @override
     def device_info(self) -> dict[str, Any]:
         return {
             "identifiers": {(DOMAIN, self._cam_id)},
@@ -185,11 +188,13 @@ class _BoschLightBase(
         }
 
     @property
+    @override
     def is_on(self) -> bool:
         self._load_state_from_cache()
         return self._is_on
 
     @property
+    @override
     def brightness(self) -> int | None:
         """HA brightness is 0-255, API brightness is 0-100.
 
@@ -201,6 +206,7 @@ class _BoschLightBase(
         return int(self._last_brightness * 255 / 100) if self._last_brightness else None
 
     @property
+    @override
     def available(self) -> bool:
         """Cloud-primary with LAN-reachability fallback (Gen2 only).
 
@@ -398,6 +404,7 @@ class _BoschRgbLedLight(_BoschLightBase):
     _attr_supported_color_modes: ClassVar[set[ColorMode]] = {ColorMode.RGB}
 
     @property
+    @override
     def rgb_color(self) -> tuple[int, int, int] | None:
         self._load_state_from_cache()
         color = self._color_hex or self._last_color_hex
@@ -423,6 +430,7 @@ class _BoschRgbLedLight(_BoschLightBase):
         self.coordinator._light_set_at[self._cam_id] = time.monotonic()
         self.coordinator.async_update_listeners()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         # Privacy mode blocks /lighting/switch PUT with HTTP 443 — warn the user.
         if await _warn_if_privacy_on(self, "RGB Light"):
@@ -489,6 +497,7 @@ class _BoschRgbLedLight(_BoschLightBase):
         self._sync_wallwasher_cache()
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         # Remember current settings before turning off
         if self._brightness > 0:
@@ -554,6 +563,7 @@ class BoschFrontLight(_BoschLightBase):
         self._white_balance = -1.0
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Convert whiteBalance (-1.0 to 1.0) to Kelvin (6500 to 2000).
 
@@ -570,6 +580,7 @@ class BoschFrontLight(_BoschLightBase):
         # -1.0 (cool) = 6500K, 1.0 (warm) = 2000K
         return int(4250 - wb * 2250)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         # Privacy mode blocks /lighting/switch PUT with HTTP 443 — warn the user.
         if await _warn_if_privacy_on(self, "Front Light"):
@@ -617,6 +628,7 @@ class BoschFrontLight(_BoschLightBase):
             await self._put_switch_endpoint("front", True)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         # Send brightness=0 to update cache + camera state (like the Bosch app does),
         # then disable via switch endpoint. Without the PUT, the cache retains the old

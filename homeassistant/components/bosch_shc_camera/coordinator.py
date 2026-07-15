@@ -18,7 +18,7 @@ import logging
 import ssl
 import threading
 import time
-from typing import TYPE_CHECKING, Any
+from typing import Any, TYPE_CHECKING, override
 from urllib.parse import urlparse
 
 import aiohttp
@@ -1569,6 +1569,7 @@ class BoschCameraCoordinator(
         return (now - per_cam_last) >= interval_status
 
     # ── Main update ───────────────────────────────────────────────────────────
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """
         Coordinator tick — runs every scan_interval seconds.

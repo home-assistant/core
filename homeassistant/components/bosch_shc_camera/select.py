@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -125,6 +125,7 @@ class BoschVideoQualitySelect(
         self._attr_translation_key = "video_quality"
         self._attr_entity_category = EntityCategory.CONFIG
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last quality selection after HA restart."""
         await super().async_added_to_hass()
@@ -145,6 +146,7 @@ class BoschVideoQualitySelect(
                 _LOGGER.debug("Restored quality %s for %s", quality_key, self._cam_id)
 
     @property
+    @override
     def device_info(self) -> dict[str, Any]:
         cam_data = self.coordinator.data.get(self._cam_id, {})
         cam_info = cam_data.get("info", {})
@@ -157,11 +159,13 @@ class BoschVideoQualitySelect(
         }
 
     @property
+    @override
     def current_option(self) -> str:
         """Return the current quality key."""
         quality_key = self.coordinator.get_quality(self._cam_id)
         return quality_key if quality_key in QUALITY_OPTIONS else "auto"
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Handle quality selection — update coordinator preference and reconnect stream."""
         self.coordinator.set_quality(self._cam_id, option)
@@ -231,6 +235,7 @@ class BoschNvrModeSelect(
         self._attr_translation_key = "nvr_mode"
         self._attr_entity_category = EntityCategory.CONFIG
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore the last NVR mode override after HA restart."""
         await super().async_added_to_hass()
@@ -240,6 +245,7 @@ class BoschNvrModeSelect(
             _LOGGER.debug("Restored NVR mode %s for %s", last_state.state, self._cam_id)
 
     @property
+    @override
     def device_info(self) -> dict[str, Any]:
         cam_data = self.coordinator.data.get(self._cam_id, {})
         cam_info = cam_data.get("info", {})
@@ -252,11 +258,13 @@ class BoschNvrModeSelect(
         }
 
     @property
+    @override
     def current_option(self) -> str:
         """Return the effective mode (per-cam override, or the global fallback)."""
         mode = self.coordinator.get_nvr_mode(self._cam_id)
         return mode if mode in NVR_MODE_OPTIONS else "continuous"
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the per-camera NVR mode override and apply it immediately
         if a recorder is already running for this camera.
@@ -318,6 +326,7 @@ class BoschMotionSensitivitySelect(
         self._attr_entity_category = EntityCategory.CONFIG
 
     @property
+    @override
     def device_info(self) -> dict[str, Any]:
         cam_data = self.coordinator.data.get(self._cam_id, {})
         cam_info = cam_data.get("info", {})
@@ -330,6 +339,7 @@ class BoschMotionSensitivitySelect(
         }
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current motion sensitivity level."""
         settings = self.coordinator.motion_settings(self._cam_id)
@@ -346,12 +356,14 @@ class BoschMotionSensitivitySelect(
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Available only when motion settings have been fetched (slow tier)."""
         return self.coordinator.last_update_success and bool(
             self.coordinator.motion_settings(self._cam_id)
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Write the new sensitivity level to the camera via cloud API."""
         if option not in MOTION_SENSITIVITY_OPTIONS:
@@ -412,6 +424,7 @@ class BoschFcmPushModeSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEn
         self._attr_translation_key = "fcm_push_mode"
 
     @property
+    @override
     def device_info(self) -> dict[str, Any]:
         cam_data = self.coordinator.data.get(self._cam_id, {})
         cam_info = cam_data.get("info", {})
@@ -425,6 +438,7 @@ class BoschFcmPushModeSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEn
         }
 
     @property
+    @override
     def available(self) -> bool:
         # Gating: dropdown is wirkungslos solange Master-Switch enable_fcm_push aus ist.
         # Unavailable signalisiert dem User explizit dass erst die Integration-Option
@@ -434,10 +448,12 @@ class BoschFcmPushModeSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEn
         return bool(self.coordinator.options.get("enable_fcm_push", False))
 
     @property
+    @override
     def current_option(self) -> str:
         mode = self._entry.options.get("fcm_push_mode", "auto")  # [S7] direct read
         return mode if mode in FCM_PUSH_MODE_OPTIONS else "auto"
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Handle push mode selection — update options and restart FCM."""
         # Update the integration options
@@ -493,6 +509,7 @@ class BoschStreamModeSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEnt
         self._attr_translation_key = "stream_mode"
 
     @property
+    @override
     def device_info(self) -> dict[str, Any]:
         cam_data = self.coordinator.data.get(self._cam_id, {})
         cam_info = cam_data.get("info", {})
@@ -505,6 +522,7 @@ class BoschStreamModeSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEnt
         }
 
     @property
+    @override
     def current_option(self) -> str:
         """Return the current stream mode key."""
         mode = self.coordinator._stream_type_override
@@ -514,6 +532,7 @@ class BoschStreamModeSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEnt
             )  # [S7] direct read
         return mode if mode in STREAM_MODE_OPTIONS else "local"
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Handle stream mode selection — update in-memory preference immediately."""
         self.coordinator._stream_type_override = option
@@ -522,9 +541,7 @@ class BoschStreamModeSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEnt
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschDetectionModeSelect(
-    CoordinatorEntity[BoschCameraCoordinator], SelectEntity
-):
+class BoschDetectionModeSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEntity):
     """Select entity: intrusion detection mode (Gen2 only).
 
     API values: ALL_MOTIONS / ONLY_HUMANS / ZONES — confirmed via mitm captures
@@ -553,6 +570,7 @@ class BoschDetectionModeSelect(
         self._attr_entity_category = EntityCategory.CONFIG
 
     @property
+    @override
     def device_info(self) -> dict[str, Any]:
         cam_data = self.coordinator.data.get(self._cam_id, {})
         cam_info = cam_data.get("info", {})
@@ -565,6 +583,7 @@ class BoschDetectionModeSelect(
         }
 
     @property
+    @override
     def current_option(self) -> str | None:
         cfg = self.coordinator._intrusion_config_cache.get(self._cam_id, {})
         val = cfg.get("detectionMode")
@@ -580,11 +599,13 @@ class BoschDetectionModeSelect(
         return None
 
     @property
+    @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and bool(
             self.coordinator._intrusion_config_cache.get(self._cam_id)
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         if option not in DETECTION_MODE_OPTIONS:
             return
@@ -648,6 +669,7 @@ class BoschPanPresetSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEnti
         self._attr_translation_key = "pan_preset"
 
     @property
+    @override
     def device_info(self) -> dict[str, Any]:
         cam_data = self.coordinator.data.get(self._cam_id, {})
         cam_info = cam_data.get("info", {})
@@ -660,6 +682,7 @@ class BoschPanPresetSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEnti
         }
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the preset name that matches the current pan position exactly, or None."""
         raw = self.coordinator._pan_cache.get(self._cam_id)
@@ -677,12 +700,14 @@ class BoschPanPresetSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEnti
         return None
 
     @property
+    @override
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
             and self.coordinator._pan_cache.get(self._cam_id) is not None
         )
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Move camera to the preset pan angle."""
         if option not in PAN_PRESET_ANGLES:

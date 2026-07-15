@@ -232,7 +232,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterator, MutableMapping
 from dataclasses import dataclass
-from typing import Any, TypeVar, cast
+from typing import Any, TypeVar, cast, override
 
 _T = TypeVar("_T")
 
@@ -248,6 +248,7 @@ class _Unset:
 
     __slots__ = ()
 
+    @override
     def __repr__(self) -> str:
         return "<unset>"
 
@@ -550,6 +551,7 @@ class CacheFieldView(MutableMapping[str, _T]):
         self._sessions = sessions
         self._field_name = field_name
 
+    @override
     def __getitem__(self, cam_id: str) -> _T:
         session = self._sessions.get(cam_id)
         value: object = (
@@ -559,9 +561,11 @@ class CacheFieldView(MutableMapping[str, _T]):
             raise KeyError(cam_id)
         return cast("_T", value)
 
+    @override
     def __setitem__(self, cam_id: str, value: _T) -> None:
         setattr(get_or_create_session(self._sessions, cam_id), self._field_name, value)
 
+    @override
     def __delitem__(self, cam_id: str) -> None:
         session = self._sessions.get(cam_id)
         value: object = (
@@ -571,6 +575,7 @@ class CacheFieldView(MutableMapping[str, _T]):
             raise KeyError(cam_id)
         setattr(session, self._field_name, _UNSET)
 
+    @override
     def __iter__(self) -> Iterator[str]:
         # Materialized eagerly (not a lazy generator) so that another
         # field's `get_or_create_session()` call elsewhere growing the
@@ -588,6 +593,7 @@ class CacheFieldView(MutableMapping[str, _T]):
             ]
         )
 
+    @override
     def __len__(self) -> int:
         return sum(
             1
@@ -595,5 +601,6 @@ class CacheFieldView(MutableMapping[str, _T]):
             if getattr(session, self._field_name) is not _UNSET
         )
 
+    @override
     def __repr__(self) -> str:
         return f"CacheFieldView({dict(self)!r})"

@@ -24,7 +24,7 @@ import asyncio
 import logging
 import re as _re_mod
 import time
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from bosch_shc_camera_client.auth_utils import (
@@ -121,6 +121,7 @@ class _StreamSupportNoiseFilter(logging.Filter):
         super().__init__()
         self._last_passed: dict[str, float] = {}
 
+    @override
     def filter(self, record: logging.LogRecord) -> bool:
         msg = record.getMessage() if hasattr(record, "getMessage") else str(record.msg)
 
@@ -192,6 +193,7 @@ class _StreamWorkerErrorListener(logging.Handler):
         super().__init__(logging.ERROR)
         self._coordinator: BoschCameraCoordinator | None = coordinator
 
+    @override
     def emit(self, record: logging.LogRecord) -> None:
         try:
             if self._coordinator is None:

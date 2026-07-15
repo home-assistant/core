@@ -24,7 +24,7 @@ import re
 from collections.abc import Generator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 from aiohttp import web
 from homeassistant.components.http import HomeAssistantView
@@ -888,6 +888,7 @@ class BoschCameraMediaSource(MediaSource):  # type: ignore[misc]
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         if not item.identifier:
             raise Unresolvable("Cannot play the root folder")
@@ -895,6 +896,7 @@ class BoschCameraMediaSource(MediaSource):  # type: ignore[misc]
         mime, _ = mimetypes.guess_type(item.identifier)
         return PlayMedia(url, mime or "application/octet-stream")
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         try:
             return await self.hass.async_add_executor_job(

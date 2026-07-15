@@ -6,7 +6,7 @@ is repeated across number.py (Gen1 + Gen2), button.py, and update.py.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -38,6 +38,7 @@ class _BoschEntityBase(CoordinatorEntity[BoschCameraCoordinator]):
         self._mac: str = info.get("macAddress", "")
 
     @property
+    @override
     def device_info(self) -> dict[str, Any]:
         return {
             "identifiers": {(DOMAIN, self._cam_id)},

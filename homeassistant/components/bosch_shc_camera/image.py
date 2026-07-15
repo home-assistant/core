@@ -20,6 +20,7 @@ Requires `enable_snapshots=True` (same gate as the camera platform).
 from __future__ import annotations
 
 import logging
+from typing import override
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
@@ -112,12 +113,14 @@ class BoschCameraLastSnapshotImage(ImageEntity):  # type: ignore[misc]  # HA bas
         # BoschCamera can call async_notify_refreshed() after persisting.
         coordinator._image_entities[cam_id] = self
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unregister from coordinator on removal."""
         self._coordinator._image_entities.pop(self._cam_id, None)
         await super().async_will_remove_from_hass()
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         return DeviceInfo(
             identifiers={(DOMAIN, self._cam_id)},
@@ -128,6 +131,7 @@ class BoschCameraLastSnapshotImage(ImageEntity):  # type: ignore[misc]  # HA bas
             connections={("mac", self._mac)} if self._mac else set(),
         )
 
+    @override
     async def async_image(self) -> bytes | None:
         """Return the latest persisted JPEG, falling back to camera RAM cache.
 

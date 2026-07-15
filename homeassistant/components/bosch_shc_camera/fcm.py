@@ -18,7 +18,7 @@ import logging
 import os
 import ssl
 import time
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import Any, ClassVar, TYPE_CHECKING, override
 from urllib.parse import urlparse
 
 import aiohttp
@@ -155,6 +155,7 @@ class _FCMNoiseFilter(logging.Filter):
         super().__init__()
         self._last_passed = float("-inf")  # monotonic ts of last record we let through
 
+    @override
     def filter(self, record: logging.LogRecord) -> bool:
         # Only target known failure markers; other firebase_messaging logs
         # (INFO start/stop, debug traces) pass through untouched so we keep

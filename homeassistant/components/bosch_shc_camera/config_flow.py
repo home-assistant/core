@@ -72,7 +72,7 @@ import ipaddress
 import json
 import logging
 import secrets
-from typing import Any
+from typing import Any, override
 from urllib.parse import parse_qs, urlencode
 
 import aiohttp
@@ -358,10 +358,12 @@ class BoschOAuth2Implementation(AbstractOAuth2Implementation):  # type: ignore[m
         self._last_verifier: str | None = None
 
     @property
+    @override
     def name(self) -> str:
         return "Bosch SingleKey ID"
 
     @property
+    @override
     def domain(self) -> str:
         return DOMAIN
 
@@ -369,6 +371,7 @@ class BoschOAuth2Implementation(AbstractOAuth2Implementation):  # type: ignore[m
     def redirect_uri(self) -> str:
         return REDIRECT_URI
 
+    @override
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate Keycloak authorization URL with PKCE challenge."""
         self._last_verifier, challenge = _pkce_pair()
@@ -391,6 +394,7 @@ class BoschOAuth2Implementation(AbstractOAuth2Implementation):  # type: ignore[m
         }
         return f"{KEYCLOAK_BASE}/auth?" + urlencode(params)
 
+    @override
     async def async_resolve_external_data(self, external_data: Any) -> dict[str, Any]:
         """Exchange authorization code for tokens."""
         code = external_data["code"]
@@ -415,6 +419,7 @@ class BoschOAuth2Implementation(AbstractOAuth2Implementation):  # type: ignore[m
             resp.raise_for_status()
             return await resp.json()  # type: ignore[no-any-return]
 
+    @override
     async def _async_refresh_token(self, token: dict[str, Any]) -> dict[str, Any]:
         """Refresh access token via Keycloak."""
         session = await async_get_bosch_cloud_session(self.hass)
@@ -583,9 +588,11 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):  # type: 
         self._manual_auth_url: str = ""
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         return _LOGGER
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
@@ -775,6 +782,7 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):  # type: 
             return self.async_show_form(step_id="reconfigure")
         return await self.async_step_user()
 
+    @override
     async def async_oauth_create_entry(
         self, data: dict[str, Any]
     ) -> config_entries.ConfigFlowResult:
@@ -812,6 +820,7 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):  # type: 
 
     @staticmethod
     @callback  # type: ignore[untyped-decorator]
+    @override
     def async_get_options_flow(
         config_entry: BoschCameraConfigEntry,
     ) -> config_entries.OptionsFlow:

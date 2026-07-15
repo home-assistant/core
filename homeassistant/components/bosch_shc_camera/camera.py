@@ -24,7 +24,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 import urllib3
@@ -199,6 +199,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         self._mac = info.get("macAddress", "")
 
     # ── Startup ───────────────────────────────────────────────────────────────
+    @override
     async def async_added_to_hass(self) -> None:
         """Called when entity is added to HA — kick off initial image fetch."""
         await super().async_added_to_hass()
@@ -232,11 +233,13 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         # Fetch a real image shortly after startup (let coordinator settle first).
         self.hass.async_create_task(self._async_trigger_image_refresh(delay=2))
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Called when entity is removed — unregister from coordinator."""
         self.coordinator._camera_entities.pop(self._cam_id, None)
         await super().async_will_remove_from_hass()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Detect streaming → idle transitions and trigger background 30-min refresh."""
         is_now_streaming = self.is_streaming
@@ -416,6 +419,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
 
     # ── Streaming state ───────────────────────────────────────────────────────
     @property
+    @override
     def is_streaming(self) -> bool:
         """True when a live proxy connection is active AND the RTSP URL is ready.
 
@@ -440,6 +444,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         return bool(live.get("rtspsUrl") or live.get("rtspUrl"))
 
     @property
+    @override
     def supported_features(self) -> CameraEntityFeature:
         """Advertise STREAM unless the camera is OFFLINE.
 
@@ -460,10 +465,12 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         return CameraEntityFeature.STREAM
 
     @property
+    @override
     def is_recording(self) -> bool:
         return False
 
     @property
+    @override
     def motion_detection_enabled(self) -> bool:
         """Whether motion detection is currently enabled on this camera.
 
@@ -475,6 +482,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             return False
         return bool(settings.get("enabled", False))
 
+    @override
     async def async_enable_motion_detection(self, **kwargs: Any) -> None:
         """Enable motion detection via standard HA camera service."""
         settings = self.coordinator.motion_settings(self._cam_id)
@@ -488,6 +496,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         )
         self.hass.async_create_task(self.coordinator.async_request_refresh())
 
+    @override
     async def async_disable_motion_detection(self, **kwargs: Any) -> None:
         """Disable motion detection via standard HA camera service."""
         settings = self.coordinator.motion_settings(self._cam_id)
@@ -502,6 +511,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         self.hass.async_create_task(self.coordinator.async_request_refresh())
 
     @property
+    @override
     def frame_interval(self) -> float:
         """How often (seconds) HA requests a fresh image from this camera.
 
@@ -530,14 +540,17 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
 
     # ── HA metadata ───────────────────────────────────────────────────────────
     @property
+    @override
     def brand(self) -> str:
         return "Bosch"
 
     @property
+    @override
     def model(self) -> str:
         return self._model  # type: ignore[no-any-return]
 
     @property
+    @override
     def available(self) -> bool:
         # Firmware install reboots the camera (3–7 min). Mark unavailable so
         # automations and the UI don't poll a dead endpoint or surface stale
@@ -581,6 +594,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         return self.is_streaming
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         return DeviceInfo(
             identifiers={(DOMAIN, self._cam_id)},
@@ -592,6 +606,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         cam_data = self._cam_data
         events = cam_data.get("events", [])
@@ -668,6 +683,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
 
     # ── Live stream ───────────────────────────────────────────────────────────
     @callback  # type: ignore[untyped-decorator]  # HA @callback is untyped (no py.typed)
+    @override
     def close_webrtc_session(self, session_id: str) -> None:
         """Close a WebRTC session — no-op for unknown / never-established sessions.
 
@@ -705,6 +721,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
                 session_id,
             )
 
+    @override
     async def async_create_stream(self) -> Any:
         """Auto-open live connection when play_stream / Cast is requested.
 
@@ -781,6 +798,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             await asyncio.sleep(0.5)
         return True
 
+    @override
     async def async_handle_async_webrtc_offer(
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:
@@ -829,6 +847,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             offer_sdp, session_id, send_message
         )
 
+    @override
     async def stream_source(self) -> str | None:
         """Return RTSP URL when a live connection has been opened.
 
@@ -964,6 +983,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         return None
 
     # ── Snapshot image ────────────────────────────────────────────────────────
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:

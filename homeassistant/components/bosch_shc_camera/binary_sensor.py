@@ -22,7 +22,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 import logging
 import time as _time
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -117,6 +117,7 @@ class _BoschBinarySensorBase(
         return self.coordinator.data.get(self._cam_id, {})  # type: ignore[no-any-return]
 
     @property
+    @override
     def device_info(self) -> dict[str, Any]:
         return {
             "identifiers": {(DOMAIN, self._cam_id)},
@@ -217,6 +218,7 @@ class BoschMotionBinarySensor(_BoschBinarySensorBase):
         self._attr_translation_key = "motion"
 
     @property
+    @override
     def is_on(self) -> bool:
         event = self._get_latest_event_of_type("MOVEMENT")
         if event is None:
@@ -224,6 +226,7 @@ class BoschMotionBinarySensor(_BoschBinarySensorBase):
         return self._event_within_window(event)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         event = self._get_latest_event_of_type("MOVEMENT")
         if not event:
@@ -251,6 +254,7 @@ class BoschAudioAlarmBinarySensor(_BoschBinarySensorBase):
         self._attr_translation_key = "audio_alarm_binary"
 
     @property
+    @override
     def is_on(self) -> bool:
         event = self._get_latest_event_of_type("AUDIO_ALARM")
         if event is None:
@@ -258,6 +262,7 @@ class BoschAudioAlarmBinarySensor(_BoschBinarySensorBase):
         return self._event_within_window(event)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         event = self._get_latest_event_of_type("AUDIO_ALARM")
         if not event:
@@ -285,6 +290,7 @@ class BoschPersonDetectedBinarySensor(_BoschBinarySensorBase):
         self._attr_translation_key = "person_detected"
 
     @property
+    @override
     def is_on(self) -> bool:
         event = self._get_latest_person_event()
         if event is None:
@@ -292,6 +298,7 @@ class BoschPersonDetectedBinarySensor(_BoschBinarySensorBase):
         return self._event_within_window(event)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         event = self._get_latest_person_event()
         if not event:
@@ -338,10 +345,12 @@ class BoschLanReachableBinarySensor(_BoschBinarySensorBase):
         # `binary_sensor.bosch_<title>_bosch_<title>_lan_reachable`.
 
     @property
+    @override
     def available(self) -> bool:
         return True
 
     @property
+    @override
     def is_on(self) -> bool | None:
         is_lan_reachable = getattr(self.coordinator, "is_lan_reachable", None)
         if is_lan_reachable is None:
@@ -350,6 +359,7 @@ class BoschLanReachableBinarySensor(_BoschBinarySensorBase):
         return None if result is None else bool(result)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         entry = self.coordinator._lan_tcp_reachable.get(self._cam_id)
         attrs: dict[str, Any] = {"camera_id": self._cam_id}

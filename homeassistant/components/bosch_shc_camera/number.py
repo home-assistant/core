@@ -18,7 +18,7 @@ Creates number entities per camera:
 """
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
@@ -136,6 +136,7 @@ class BoschPanNumber(_BoschEntityBase, NumberEntity):  # type: ignore[misc]
         )
 
     @property
+    @override
     def native_value(self) -> float | None:
         raw = self.coordinator._pan_cache.get(self._cam_id)
         if raw is None:
@@ -143,12 +144,14 @@ class BoschPanNumber(_BoschEntityBase, NumberEntity):  # type: ignore[misc]
         return float(-raw if self._rotation_180() else raw)
 
     @property
+    @override
     def available(self) -> bool:
         return (
             self.coordinator.last_update_success
             and self.coordinator._pan_cache.get(self._cam_id) is not None
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         # Invert sign when the camera is ceiling-mounted so the user-visible
         # direction matches the camera-physical pan direction.
@@ -182,6 +185,7 @@ class BoschSpeakerLevelNumber(_BoschEntityBase, NumberEntity):  # type: ignore[m
         self._attr_entity_category = EntityCategory.CONFIG
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return speaker level from coordinator audio cache, or None if not yet polled."""
         audio = self.coordinator._audio_cache.get(self._cam_id, {})
@@ -189,11 +193,13 @@ class BoschSpeakerLevelNumber(_BoschEntityBase, NumberEntity):  # type: ignore[m
         return float(val) if val is not None else None
 
     @property
+    @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and (
             self.coordinator._audio_cache.get(self._cam_id) is not None
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Write the new speaker level to the camera via cloud API.
 
@@ -258,12 +264,14 @@ class BoschAudioVolumeNumber(_BoschEntityBase, NumberEntity):  # type: ignore[mi
         self._attr_translation_key = "audio_volume"
 
     @property
+    @override
     def native_value(self) -> float:
         return float(
             self.coordinator._audio_volume.get(self._cam_id, self.DEFAULT_VOLUME)
         )
 
     @property
+    @override
     def available(self) -> bool:
         # Grey out together with the camera's other controls when it is offline,
         # rather than staying settable on its own (the audio switch greys too).
@@ -271,6 +279,7 @@ class BoschAudioVolumeNumber(_BoschEntityBase, NumberEntity):  # type: ignore[mi
             self.coordinator.is_camera_online(self._cam_id)
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Store the new playback volume — no Bosch API call (browser-side level).
 
@@ -304,6 +313,7 @@ class BoschFrontLightIntensityNumber(_BoschEntityBase, NumberEntity):  # type: i
         self._attr_entity_category = EntityCategory.CONFIG
 
     @property
+    @override
     def native_value(self) -> float | None:
         val = self.coordinator._shc_state_cache.get(self._cam_id, {}).get(
             "front_light_intensity"
@@ -313,6 +323,7 @@ class BoschFrontLightIntensityNumber(_BoschEntityBase, NumberEntity):  # type: i
         return None
 
     @property
+    @override
     def available(self) -> bool:
         # Gate on cache presence like the other number entities — otherwise a
         # cache-miss reports "unknown" (available + native_value None) instead of
@@ -324,6 +335,7 @@ class BoschFrontLightIntensityNumber(_BoschEntityBase, NumberEntity):  # type: i
             is not None
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set front light intensity (0-100% → 0.0-1.0 API value)."""
         intensity = round(value / 100, 2)
@@ -371,17 +383,20 @@ class BoschLensElevationNumber(_BoschGen2NumberBase):
         self._attr_entity_category = EntityCategory.CONFIG
 
     @property
+    @override
     def native_value(self) -> float | None:
         val = self.coordinator._lens_elevation_cache.get(self._cam_id)
         return float(val) if val is not None else None
 
     @property
+    @override
     def available(self) -> bool:
         return (
             bool(self.coordinator.last_update_success)
             and self.coordinator._lens_elevation_cache.get(self._cam_id) is not None
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         success = await self.coordinator.async_put_camera(
             self._cam_id, "lens_elevation", {"elevation": round(value, 2)}
@@ -411,17 +426,20 @@ class BoschMicrophoneLevelNumber(_BoschGen2NumberBase):
         self._attr_entity_category = EntityCategory.CONFIG
 
     @property
+    @override
     def native_value(self) -> float | None:
         audio = self.coordinator._audio_cache.get(self._cam_id, {})
         val = audio.get("microphoneLevel")
         return float(val) if val is not None else None
 
     @property
+    @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and (
             self.coordinator._audio_cache.get(self._cam_id) is not None
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         if _is_gen2_indoor(self) and await _warn_if_privacy_on(
             self, "Mikrofon-Lautstärke"
@@ -483,6 +501,7 @@ class BoschWhiteBalanceNumber(_BoschGen2NumberBase):
         self._attr_entity_category = EntityCategory.CONFIG
 
     @property
+    @override
     def native_value(self) -> float | None:
         cached = self.coordinator._lighting_switch_cache.get(self._cam_id, {})
         front = cached.get("frontLightSettings", {})
@@ -492,6 +511,7 @@ class BoschWhiteBalanceNumber(_BoschGen2NumberBase):
         return self._wb_value
 
     @property
+    @override
     def available(self) -> bool:
         # Gate on the lighting cache being populated — a write during the
         # pre-populate / failed-sub-fetch window would PUT zero-defaults and
@@ -503,6 +523,7 @@ class BoschWhiteBalanceNumber(_BoschGen2NumberBase):
             is not None
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set white balance for front light — sends FULL body (API requirement)."""
         wb = round(value, 2)
@@ -549,6 +570,7 @@ class _BoschLedBrightnessBase(_BoschGen2NumberBase):
         self._brightness = None
 
     @property
+    @override
     def native_value(self) -> float | None:
         cached = self.coordinator._lighting_switch_cache.get(self._cam_id, {})
         led = cached.get(self._led_key, {})
@@ -558,6 +580,7 @@ class _BoschLedBrightnessBase(_BoschGen2NumberBase):
         return self._brightness
 
     @property
+    @override
     def available(self) -> bool:
         # Gate on the lighting cache (see white-balance note) — avoids writing
         # zero-defaults that clobber real settings before the cache is populated.
@@ -568,6 +591,7 @@ class _BoschLedBrightnessBase(_BoschGen2NumberBase):
             is not None
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set brightness — sends FULL body with all 3 groups (API requirement)."""
         brightness = round(value)
@@ -644,17 +668,20 @@ class BoschMotionLightSensitivityNumber(_BoschGen2NumberBase):
         self._attr_entity_category = EntityCategory.CONFIG
 
     @property
+    @override
     def native_value(self) -> float | None:
         cache = self.coordinator._motion_light_cache.get(self._cam_id, {})
         val = cache.get("motionLightSensitivity")
         return float(val) if val is not None else None
 
     @property
+    @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and bool(
             self.coordinator._motion_light_cache.get(self._cam_id)
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         cache = dict(self.coordinator._motion_light_cache.get(self._cam_id, {}))
         if not cache:
@@ -690,17 +717,20 @@ class BoschDarknessThresholdNumber(_BoschGen2NumberBase):
         self._attr_translation_key = "darkness_threshold"
 
     @property
+    @override
     def native_value(self) -> float | None:
         cache = self.coordinator._global_lighting_cache.get(self._cam_id, {})
         val = cache.get("darknessThreshold")
         return round(float(val) * 100, 0) if val is not None else None
 
     @property
+    @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and bool(
             self.coordinator._global_lighting_cache.get(self._cam_id)
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         cache = self.coordinator._global_lighting_cache.get(self._cam_id, {})
         soft_fading = cache.get("softLightFading", True)
@@ -742,11 +772,13 @@ class BoschPowerLedBrightnessNumber(_BoschGen2NumberBase):
         self._attr_translation_key = "power_led_brightness"
 
     @property
+    @override
     def native_value(self) -> float | None:
         val = self.coordinator._icon_led_brightness_cache.get(self._cam_id)
         return float(val) if val is not None else None
 
     @property
+    @override
     def available(self) -> bool:
         return (
             bool(self.coordinator.last_update_success)
@@ -754,6 +786,7 @@ class BoschPowerLedBrightnessNumber(_BoschGen2NumberBase):
             is not None
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         val = round(max(0, min(4, value)))
         success = await self.coordinator.async_put_camera(
@@ -778,14 +811,17 @@ class _BoschAlarmDelayBase(_BoschGen2NumberBase):
         return self.coordinator._alarm_settings_cache.get(self._cam_id, {})  # type: ignore[no-any-return]
 
     @property
+    @override
     def native_value(self) -> float | None:
         val = self._settings.get(self._field)
         return float(val) if val is not None else None
 
     @property
+    @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and bool(self._settings)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         cfg = dict(self._settings)
         if not cfg:
@@ -890,17 +926,20 @@ class BoschIntrusionSensitivityNumber(_BoschGen2NumberBase):
         self._attr_entity_category = EntityCategory.CONFIG
 
     @property
+    @override
     def native_value(self) -> float | None:
         cfg = self.coordinator._intrusion_config_cache.get(self._cam_id, {})
         val = cfg.get("sensitivity")
         return float(val) if val is not None else None
 
     @property
+    @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and bool(
             self.coordinator._intrusion_config_cache.get(self._cam_id)
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         cfg = dict(self.coordinator._intrusion_config_cache.get(self._cam_id, {}))
         if not cfg:
@@ -950,17 +989,20 @@ class BoschIntrusionDistanceNumber(_BoschGen2NumberBase):
         self._attr_entity_category = EntityCategory.CONFIG
 
     @property
+    @override
     def native_value(self) -> float | None:
         cfg = self.coordinator._intrusion_config_cache.get(self._cam_id, {})
         val = cfg.get("distance")
         return float(val) if val is not None else None
 
     @property
+    @override
     def available(self) -> bool:
         return self.coordinator.last_update_success and bool(
             self.coordinator._intrusion_config_cache.get(self._cam_id)
         )
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         cfg = dict(self.coordinator._intrusion_config_cache.get(self._cam_id, {}))
         if not cfg:

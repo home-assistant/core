@@ -11,7 +11,7 @@ The Live Stream is controlled by the switch platform (switch.py):
 """
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
@@ -65,6 +65,7 @@ class BoschRefreshSnapshotButton(_BoschEntityBase, ButtonEntity):  # type: ignor
         self._attr_unique_id = f"bosch_shc_refresh_{cam_id.lower()}"
         self._attr_translation_key = "refresh_snapshot"
 
+    @override
     async def async_press(self) -> None:
         """Force an immediate data refresh and image update for this camera."""
         _LOGGER.debug("Snapshot refresh triggered for %s", self._cam_title)
@@ -128,6 +129,7 @@ class BoschSoftResetButton(_BoschEntityBase, ButtonEntity):  # type: ignore[misc
         self._attr_unique_id = f"bosch_shc_soft_reset_{cam_id.lower()}"
         self._attr_translation_key = "soft_reset"
 
+    @override
     async def async_press(self) -> None:
         """Reboot the camera."""
         _LOGGER.info("Soft reset (restart) triggered for %s", self._cam_title)
@@ -154,6 +156,7 @@ class BoschHardResetButton(_BoschEntityBase, ButtonEntity):  # type: ignore[misc
         self._attr_unique_id = f"bosch_shc_hard_reset_{cam_id.lower()}"
         self._attr_translation_key = "hard_reset"
 
+    @override
     async def async_press(self) -> None:
         """Factory-reset the camera. Requires re-pairing afterward."""
         _LOGGER.warning(

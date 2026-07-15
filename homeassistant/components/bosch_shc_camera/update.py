@@ -14,7 +14,7 @@ instead of waiting for that rollout.
 """
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -70,11 +70,13 @@ class BoschFirmwareUpdate(_BoschEntityBase, UpdateEntity):  # type: ignore[misc]
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
+    @override
     def installed_version(self) -> str | None:
         fw: dict[str, Any] = self.coordinator._firmware_cache.get(self._cam_id, {})
         return fw.get("current") or self._fw or None
 
     @property
+    @override
     def latest_version(self) -> str | None:
         fw: dict[str, Any] = self.coordinator._firmware_cache.get(self._cam_id, {})
         if not fw:
@@ -92,15 +94,18 @@ class BoschFirmwareUpdate(_BoschEntityBase, UpdateEntity):  # type: ignore[misc]
         return "update available"
 
     @property
+    @override
     def in_progress(self) -> bool:
         fw: dict[str, Any] = self.coordinator._firmware_cache.get(self._cam_id, {})
         return bool(fw.get("updating", False))
 
     @property
+    @override
     def available(self) -> bool:
         return bool(self.coordinator.last_update_success)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         fw: dict[str, Any] = self.coordinator._firmware_cache.get(self._cam_id, {})
         return {
@@ -109,6 +114,7 @@ class BoschFirmwareUpdate(_BoschEntityBase, UpdateEntity):  # type: ignore[misc]
             "status": fw.get("status", ""),
         }
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
