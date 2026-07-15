@@ -1,28 +1,18 @@
 {
   "domain": "bosch_shc_camera",
   "name": "Bosch Smart Home Camera",
-  "codeowners": [
-    "@mosandlt"
-  ],
+  "codeowners": ["@mosandlt"],
   "config_flow": true,
-  "dependencies": [
-    "application_credentials",
-    "my",
-    "http",
-    "media_source"
-  ],
+  "dependencies": ["application_credentials", "my", "http", "media_source"],
   "documentation": "https://www.home-assistant.io/integrations/bosch_shc_camera/",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "loggers": [
-    "custom_components.bosch_shc_camera"
-  ],
+  "loggers": ["custom_components.bosch_shc_camera"],
   "quality_scale": "platinum",
   "requirements": [
     "bosch-shc-camera-client==0.5.4",
     "defusedxml==0.7.1",
-    "firebase-messaging==0.4.5",
-    "smbprotocol==1.17.0"
+    "firebase-messaging==0.4.5"
   ],
   "single_config_entry": true
 }

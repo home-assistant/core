@@ -3064,9 +3064,6 @@ slixmpp==1.13.2
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.5.5
 
-# homeassistant.components.bosch_shc_camera
-smbprotocol==1.17.0
-
 # homeassistant.components.snapcast
 snapcast==2.3.8
 
