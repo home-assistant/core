@@ -81,6 +81,7 @@ async def test_water_heater_turn_off(
         },
         blocking=True,
     )
+    mock_my_pv_client.turn_off.assert_awaited_once_with()
 
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
     assert state.state == STATE_OFF
@@ -118,6 +119,7 @@ async def test_water_heater_turn_off_false(
             },
             blocking=True,
         )
+    mock_my_pv_client.turn_off.assert_awaited_once_with()
 
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
     assert state.state == STATE_ELECTRIC
@@ -153,6 +155,7 @@ async def test_water_heater_turn_on(
         },
         blocking=True,
     )
+    mock_my_pv_client.turn_on.assert_awaited_once_with()
 
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
     assert state.state == STATE_ELECTRIC
@@ -191,6 +194,7 @@ async def test_water_heater_turn_on_false(
             },
             blocking=True,
         )
+    mock_my_pv_client.turn_on.assert_awaited_once_with()
 
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
     assert state.state == STATE_OFF
@@ -226,6 +230,7 @@ async def test_water_heater_set_operation_off(
         },
         blocking=True,
     )
+    mock_my_pv_client.turn_off.assert_awaited_once_with()
 
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
     assert state.state == STATE_OFF
@@ -262,6 +267,7 @@ async def test_water_heater_set_operation_electric(
         },
         blocking=True,
     )
+    mock_my_pv_client.turn_on.assert_awaited_once_with()
 
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
     assert state.state == STATE_ELECTRIC
@@ -297,6 +303,7 @@ async def test_water_heater_set_temp(
         },
         blocking=True,
     )
+    mock_my_pv_client.set_target_temperature.assert_awaited_once_with(35)
 
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
     assert state.attributes[ATTR_TEMPERATURE] == 35
@@ -332,6 +339,7 @@ async def test_water_heater_set_temp_false(
             },
             blocking=True,
         )
+    mock_my_pv_client.set_target_temperature.assert_awaited_once_with(35)
 
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
     assert state.attributes[ATTR_TEMPERATURE] == 62.1
@@ -367,6 +375,7 @@ async def test_water_heater_set_temp_connection_error(
             },
             blocking=True,
         )
+    mock_my_pv_client.set_target_temperature.assert_awaited_once_with(35)
 
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
     assert state.attributes[ATTR_TEMPERATURE] == 62.1
