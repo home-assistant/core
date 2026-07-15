@@ -164,12 +164,11 @@ async def test_webrtc_offer(
         mock_kvs_client = mock_kvs_client_class.return_value
 
         async def mock_get_answer_sdp(_offer_sdp, on_ice_candidate):
-            on_ice_candidate({"sdpMid": "mock_sdp_mid", "sdpMLineIndex": 0})
             on_ice_candidate(
                 {
                     "candidate": "mock_candidate_string",
                     "sdpMid": "mock_sdp_mid",
-                    "sdpMLineIndex": -1,
+                    "sdpMLineIndex": 0,
                 }
             )
             return "mock_answer_sdp"
@@ -192,7 +191,7 @@ async def test_webrtc_offer(
         mock_kvs_client_class.assert_called_once()
         mock_kvs_client.async_get_answer_sdp.assert_called_once()
 
-        mock_send_message.assert_called_once()
+        assert mock_send_message.call_count == 2
         call_arg = mock_send_message.call_args[0][0]
         assert isinstance(call_arg, WebRTCAnswer)
         assert call_arg.answer == "mock_answer_sdp"
@@ -432,7 +431,7 @@ async def test_webrtc_offer_kvs_error(
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
 ) -> None:
-    """Test WebRTC offer handling failure paths."""
+    """Test WebRTC offer handling when the KVS library raises."""
     mock_api_client.async_get_camera_webrtc.return_value = {
         "region": "us-east-1",
         "channel_arn": None,
@@ -445,62 +444,21 @@ async def test_webrtc_offer_kvs_error(
 
     mock_send_message = MagicMock()
 
-    await camera_entity.async_handle_async_webrtc_offer(
-        offer_sdp="mock_offer_sdp",
-        session_id="mock_session_id",
-        send_message=mock_send_message,
-    )
+    with patch(
+        "homeassistant.components.xthings_cloud.camera.KvsSignalingClient",
+        side_effect=XthingsCloudApiError("Invalid KVS credentials"),
+    ):
+        await camera_entity.async_handle_async_webrtc_offer(
+            offer_sdp="mock_offer_sdp",
+            session_id="mock_session_id",
+            send_message=mock_send_message,
+        )
 
     mock_send_message.assert_called_once()
     call_arg = mock_send_message.call_args[0][0]
     assert isinstance(call_arg, WebRTCError)
     assert call_arg.code == "kvs_error"
-
-
-async def test_webrtc_offer_no_answer_sdp(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_api_client: AsyncMock,
-) -> None:
-    """Test WebRTC offer handling when KVS returns no answer SDP."""
-    mock_api_client.async_get_camera_webrtc.return_value = {
-        "region": "us-east-1",
-        "channel_arn": "arn:aws:kinesisvideo:us-east-1:111111111111:channel/test/123",
-        "viewer": {
-            "AccessKeyId": "test",
-            "SecretAccessKey": "test",
-            "SessionToken": "test",
-        },
-    }
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.CAMERA]):
-        await setup_integration(hass, mock_config_entry)
-
-    camera_entity = _get_camera_entity(hass, "camera.front_door_camera")
-    assert camera_entity is not None
-
-    session_id = "mock_session_id"
-    with patch(
-        "homeassistant.components.xthings_cloud.camera.KvsSignalingClient"
-    ) as mock_kvs_client_class:
-        mock_kvs_client = mock_kvs_client_class.return_value
-        mock_kvs_client.async_get_answer_sdp = AsyncMock(return_value=None)
-        mock_kvs_client.async_send_ice_candidate = AsyncMock()
-        mock_kvs_client.async_close = AsyncMock()
-        mock_send_message = MagicMock()
-
-        await camera_entity.async_handle_async_webrtc_offer(
-            offer_sdp="mock_offer_sdp",
-            session_id=session_id,
-            send_message=mock_send_message,
-        )
-
-        mock_send_message.assert_called_once()
-        call_arg = mock_send_message.call_args[0][0]
-        assert isinstance(call_arg, WebRTCError)
-        assert call_arg.code == "kvs_error"
-        assert call_arg.message == "No answer SDP from KVS"
-        mock_kvs_client.async_send_ice_candidate.assert_not_called()
-        mock_kvs_client.async_close.assert_awaited_once()
+    assert call_arg.message == "WebRTC negotiation failed"
 
 
 async def test_webrtc_offer_unexpected_error(

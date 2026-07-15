@@ -150,26 +150,6 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             channel_arn = kvs_data.get("channel_arn")
             viewer = kvs_data.get("viewer")
 
-            if not region or not channel_arn or not isinstance(viewer, dict):
-                send_message(
-                    WebRTCError(code="kvs_error", message="Invalid KVS credentials")
-                )
-                await self.async_close_webrtc_session(session_id)
-                return
-
-            if any(
-                key not in viewer
-                for key in ("AccessKeyId", "SecretAccessKey", "SessionToken")
-            ):
-                send_message(
-                    WebRTCError(
-                        code="kvs_error",
-                        message="Missing required AWS credentials in viewer data",
-                    )
-                )
-                await self.async_close_webrtc_session(session_id)
-                return
-
             session = async_get_clientsession(self.hass)
             kvs_client = KvsSignalingClient(
                 session=session,
@@ -179,29 +159,16 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             )
             self._kvs_sessions[session_id] = kvs_client
 
-            # Bridge: convert dict ICE candidates to HA WebRTCCandidate objects
-            def _on_ice(cand: dict) -> None:
+            def _on_ice(cand: dict[str, Any]) -> None:
                 if session_id not in self._open_sessions:
-                    return
-
-                candidate = cand.get("candidate")
-                if not isinstance(candidate, str) or not candidate:
-                    LOGGER.debug("Skipping ICE candidate without candidate value")
-                    return
-
-                sdp_m_line_index = cand.get("sdpMLineIndex")
-                if sdp_m_line_index is not None and (
-                    not isinstance(sdp_m_line_index, int) or sdp_m_line_index < 0
-                ):
-                    LOGGER.debug("Skipping ICE candidate with invalid sdpMLineIndex")
                     return
 
                 send_message(
                     WebRTCCandidate(
                         candidate=RTCIceCandidateInit(
-                            candidate=candidate,
+                            candidate=cand["candidate"],
                             sdp_mid=cand.get("sdpMid"),
-                            sdp_m_line_index=sdp_m_line_index,
+                            sdp_m_line_index=cand.get("sdpMLineIndex"),
                         )
                     )
                 )
@@ -213,14 +180,6 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             if session_id not in self._open_sessions:
                 return
 
-            if not answer_sdp:
-                send_message(
-                    WebRTCError(code="kvs_error", message="No answer SDP from KVS")
-                )
-                await self.async_close_webrtc_session(session_id)
-                return
-
-            send_message(WebRTCAnswer(answer=answer_sdp))
             pending_candidates = self._pending_candidates.get(session_id, [])
             for cand in pending_candidates:
                 if session_id not in self._open_sessions:
@@ -240,6 +199,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             # Clear candidates only after attempting to send them all
             self._pending_candidates.pop(session_id, None)
 
+            send_message(WebRTCAnswer(answer=answer_sdp))
 
         except KVS_EXCEPTIONS as err:
             if session_id not in self._open_sessions:
