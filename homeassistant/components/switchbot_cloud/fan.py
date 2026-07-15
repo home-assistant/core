@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from switchbot_api import (
     AirPurifierCommands,
@@ -73,7 +73,8 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
         ) or self.coordinator.data.get("powerState")
         mode: str = self.coordinator.data["mode"]
         fan_speed: str = self.coordinator.data["fanSpeed"]
-        assert power is not None
+        if TYPE_CHECKING:
+            assert power is not None
         self._attr_is_on = power.lower() == "on"
         self._attr_preset_mode = mode
         self._attr_percentage = int(fan_speed)

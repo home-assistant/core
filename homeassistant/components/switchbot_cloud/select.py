@@ -1,6 +1,6 @@
 """SwitchBotCloudSelect entity."""
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from switchbot_api import BatteryCirculatorFanCommands, Device, Remote, SwitchBotAPI
 
@@ -52,7 +52,8 @@ class SwitchBotCloudStandingFanNightLight(SwitchBotCloudEntity, SelectEntity):
             para = self._night_light_parameters_map.get(
                 NIGHT_LIGHT_BRIGHT
             ) or self._night_light_parameters_map.get(NIGHT_LIGHT_SOFT)
-            assert para is not None
+            if TYPE_CHECKING:
+                assert para is not None
             await self.send_api_command(
                 BatteryCirculatorFanCommands.SET_NIGHT_LIGHT_MODE,
                 parameters=para,
@@ -71,9 +72,6 @@ class SwitchBotCloudStandingFanNightLight(SwitchBotCloudEntity, SelectEntity):
         if self.coordinator.data is None:
             return
         night_status = self.coordinator.data.get("nightStatus")
-        # if night_status == NIGHT_LIGHT_ON:
-        #     self._attr_current_option = NIGHT_LIGHT_ON
-        #     return
         for key, value in self._night_light_parameters_map.items():
             if value == night_status:
                 self._attr_current_option = key
@@ -99,7 +97,7 @@ def _async_make_entity(
     | SwitchBotCloudBatteryCirculatorFan2ProNightLight
 ):
     """Make a SwitchBotCloudSelect entity."""
-    if device.device_type == "Standing Fan":
+    if device.device_type in ["Standing Fan", "Battery Circulator Fan"]:
         return SwitchBotCloudStandingFanNightLight(api, device, coordinator)
     if device.device_type == "Battery Circulator Fan 2 Pro":
         return SwitchBotCloudBatteryCirculatorFan2ProNightLight(
