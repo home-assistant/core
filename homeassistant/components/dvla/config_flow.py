@@ -7,7 +7,6 @@ from aio_dvla_vehicle_enquiry import DVLAClient, DVLAError, DVLAInvalidRegistrat
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import API_KEY, CONF_REG_NUMBER, DOMAIN
@@ -66,11 +65,3 @@ class DVLAConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidRegistration(HomeAssistantError):
-    """Error to indicate the registration number is invalid or unknown."""

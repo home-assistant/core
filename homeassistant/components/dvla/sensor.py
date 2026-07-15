@@ -78,7 +78,7 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="colour",
         icon="mdi:spray",
-        name="Colour",
+        name="Color",
     ),
     SensorEntityDescription(
         key="typeApproval",
@@ -130,51 +130,6 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         name="Euro status",
     ),
 )
-
-SENSOR_KEYS: tuple[str, ...] = (
-    "registrationNumber",
-    "taxStatus",
-    "taxDueDate",
-    "artEndDate",
-    "motStatus",
-    "make",
-    "yearOfManufacture",
-    "engineCapacity",
-    "co2Emissions",
-    "fuelType",
-    "colour",
-    "typeApproval",
-    "revenueWeight",
-    "dateOfLastV5CIssued",
-    "motExpiryDate",
-    "wheelplan",
-    "monthOfFirstRegistration",
-    "monthOfFirstDvlaRegistration",
-    "realDrivingEmissions",
-    "euroStatus",
-)
-ENTITY_DESCRIPTIONS: dict[str, str] = {
-    "registrationNumber": "Registration number",
-    "taxStatus": "Tax status",
-    "taxDueDate": "Tax due date",
-    "artEndDate": "Additional rate of tax end date",
-    "motStatus": "MOT status",  # codespell:ignore
-    "make": "Make",
-    "yearOfManufacture": "Year of manufacture",
-    "engineCapacity": "Engine capacity",
-    "co2Emissions": "CO2 emissions",
-    "fuelType": "Fuel type",
-    "colour": "Color",
-    "typeApproval": "Type approval",
-    "revenueWeight": "Revenue weight",
-    "dateOfLastV5CIssued": "Date of last V5C issued",
-    "motExpiryDate": "MOT expiry date",  # codespell:ignore
-    "wheelplan": "Wheelplan",
-    "monthOfFirstRegistration": "Month of first registration",
-    "monthOfFirstDvlaRegistration": "Month of first DVLA registration",
-    "realDrivingEmissions": "Real driving emissions",
-    "euroStatus": "Euro status",
-}
 
 
 async def async_setup_entry(
