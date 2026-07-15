@@ -41,9 +41,9 @@ async def test_standing_fan_night_light_coordinator_data_is_none(
 @pytest.mark.parametrize(
     ("key_type", "expected"),
     [
-        ("Off", "off"),
-        ("Bright", "1"),
-        ("Dark", "2"),
+        ("off", "off"),
+        ("bright", "1"),
+        ("soft", "2"),
     ],
 )
 async def test_standing_fan_night_light_options(
