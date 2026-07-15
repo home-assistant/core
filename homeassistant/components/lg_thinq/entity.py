@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 import logging
 from typing import Any, override
 
-import aiohttp
+from aiohttp import ClientError
 from thinqconnect import ThinQAPIException
 from thinqconnect.devices.const import Location
 from thinqconnect.integration import PropertyState
@@ -113,7 +113,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
             if on_fail_method:
                 on_fail_method()
             raise ServiceValidationError(exc) from exc
-        except (TimeoutError, aiohttp.ClientError) as exc:
+        except (TimeoutError, ClientError) as exc:
             if on_fail_method:
                 on_fail_method()
             raise HomeAssistantError(

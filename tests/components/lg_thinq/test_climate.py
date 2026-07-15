@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from thinqconnect.integration import HABridge
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -96,21 +97,14 @@ async def test_service_call_connection_error_raises_home_assistant_error(
     mock_thinq_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a network error during a service call raises HomeAssistantError.
-
-    A raw timeout/connection error from the thinqconnect client must be
-    wrapped so automations can handle it (continue_on_error), rather than
-    escaping as an unhandled fatal error.
-
-    https://github.com/home-assistant/core/issues/176488
-    """
+    """Test a network error during a service call raises HomeAssistantError."""
     with patch("homeassistant.components.lg_thinq.PLATFORMS", [Platform.CLIMATE]):
         await setup_integration(hass, mock_config_entry)
 
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
-    coordinator.api.async_set_fan_mode = AsyncMock(side_effect=TimeoutError)
-
-    with pytest.raises(HomeAssistantError):
+    with (
+        patch.object(HABridge, "async_set_fan_mode", side_effect=TimeoutError),
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
