@@ -327,8 +327,8 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         """Use preset DEFAULT_CLOUD account to get v3 device token and key."""
         device = self.devices[appliance_id]
 
-        if self.cloud is None:
-            return {"error": "cloud_none"}
+        # _check_cloud_login always succeeds before this is called, setting self.cloud
+        assert self.cloud is not None
 
         # get device token/key from cloud
         keys = await self.cloud.get_cloud_keys(appliance_id)
@@ -386,8 +386,6 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         # input device exist
         if user_input is not None:
             device_id = user_input[CONF_DEVICE]
-            if device_id not in self.devices:
-                return await self.async_step_auto(error="no_devices")
             device = self.devices[device_id]
             # set device args with protocol decode data
             # then get subtype from cloud, get v3 device token/key from cloud
@@ -401,27 +399,11 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_MODEL: device.get(CONF_MODEL),
             }
             # check login cache, show login web if no cache
-            if self._login_data is None:
+            if self._login_data is None or self.cloud is None:
                 return await self.async_step_auth_method()
-            # login cached exist, cloud is None, reinit and login
-            if self.cloud is None and not await self._check_cloud_login(
-                cloud_name=self._login_data[CONF_SERVER],
-                account=self._login_data[CONF_ACCOUNT],
-                password=self._login_data[CONF_PASSWORD],
-            ):
-                # print error in debug log and show login web
-                _LOGGER.debug(
-                    "Cached cloud login failed for %s",
-                    self._login_data[CONF_SERVER],
-                )
-                # remove error cache and relogin
-                self._clear_login_state()
-                return await self.async_step_login_credentials()
 
             # get subtype from cloud
-            if self.cloud is not None and (
-                device_info := await self.cloud.get_device_info(device_id)
-            ):
+            if device_info := await self.cloud.get_device_info(device_id):
                 # set subtype with model_number
                 if cloud_name := device_info.get("name"):
                     self.found_device[CONF_NAME] = cloud_name
@@ -472,9 +454,6 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._found_device_to_user_input(),
             )
         # show available device list in UI
-        if not self.available_device:
-            return await self.async_step_search(error="no_devices")
-
         return self.async_show_form(
             step_id="auto",
             data_schema=vol.Schema(
