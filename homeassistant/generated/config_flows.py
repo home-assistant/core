@@ -110,6 +110,7 @@ FLOWS = {
         "bond",
         "bosch_alarm",
         "bosch_shc",
+        "bosch_shc_camera",
         "braviatv",
         "bring",
         "broadlink",

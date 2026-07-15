@@ -2,11 +2,18 @@
   "config": {
     "abort": {
       "already_configured": "Already configured.",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "The Bosch Smart Home Camera integration is not set up correctly for OAuth. Restart Home Assistant and try again — if this keeps happening, please file an issue.",
       "missing_credentials": "No Bosch SingleKey ID application credential is registered. Restart Home Assistant and try again — if this keeps happening, please file an issue.",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "oauth_implementation_unavailable": "The selected login method is no longer available. Please start over.",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "Re-authentication successful — your Bosch Smart Home Camera integration has been updated with a fresh token. All entities, automations, and options are preserved.",
-      "reconfigure_successful": "Reconfiguration successful — your Bosch Smart Home Camera integration has been updated with a fresh token. All entities, automations, and options are preserved."
+      "reconfigure_successful": "Reconfiguration successful — your Bosch Smart Home Camera integration has been updated with a fresh token. All entities, automations, and options are preserved.",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "error": {
       "cannot_connect": "Cannot connect to Bosch servers.",

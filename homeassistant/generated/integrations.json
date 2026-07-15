@@ -839,6 +839,13 @@
         }
       }
     },
+    "bosch_shc_camera": {
+      "name": "Bosch Smart Home Camera",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
+    },
     "brandt": {
       "name": "Brandt Smart Control",
       "integration_type": "virtual",
