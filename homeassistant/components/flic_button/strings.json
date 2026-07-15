@@ -120,6 +120,11 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to {address}. Make sure it is in range and try again."
+    }
+  },
   "options": {
     "step": {
       "init": {

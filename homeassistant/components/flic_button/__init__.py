@@ -19,6 +19,7 @@ from .const import (
     CONF_PUSH_TWIST_MODE,
     CONF_SERIAL_NUMBER,
     CONF_SIG_BITS,
+    DOMAIN,
 )
 
 PLATFORMS: list[Platform] = [
@@ -72,7 +73,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlicButtonConfigEntry) -
         try:
             await client.start()
         except (TimeoutError, BleakError, FlicProtocolError) as err:
-            raise ConfigEntryNotReady(f"Unable to connect to {address}") from err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"address": address},
+            ) from err
 
     @callback
     def _async_bluetooth_callback(
