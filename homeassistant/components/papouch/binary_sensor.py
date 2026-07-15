@@ -3,9 +3,9 @@
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PapouchConfigEntry
+from .entity import PapouchEntity
 
 
 async def async_setup_entry(
@@ -23,24 +23,15 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PapouchBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class PapouchBinarySensor(PapouchEntity, BinarySensorEntity):
     """Representation of a digital input as a binary sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(self, coordinator, entry, item_id) -> None:
         """Constructor for binary sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, entry)
         self.item_id = item_id
         self._attr_unique_id = f"{entry.entry_id}_din_{item_id}"
         self._attr_name = f"Input {item_id}"
-
-        # TODO: DRY
-        self._attr_device_info = {
-            "identifiers": {(entry.domain, entry.entry_id)},
-            "name": "Papouch Quido",
-            "manufacturer": "Papouch s.r.o.",
-        }
 
     @property
     def is_on(self) -> bool:

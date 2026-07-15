@@ -1,16 +1,12 @@
 """Sensor platform for the Papouch integration."""
 
-from homeassistant.components.sensor import (
-    SensorEntity,
-    SensorDeviceClass,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PapouchConfigEntry
 from .coordinator import PapouchDataUpdateCoordinator
+from .entity import PapouchEntity
 
 
 async def async_setup_entry(
@@ -34,10 +30,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PapouchTemperatureSensor(CoordinatorEntity, SensorEntity):
+class PapouchTemperatureSensor(PapouchEntity, SensorEntity):
     """Representation of a temperature sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -46,16 +40,10 @@ class PapouchTemperatureSensor(CoordinatorEntity, SensorEntity):
         item_id: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, entry)
         self.item_id = item_id
         self._attr_unique_id = f"{entry.entry_id}_temp_{item_id}"
         self._attr_name = f"Temperature {item_id}"
-
-        self._attr_device_info = {
-            "identifiers": {(entry.domain, entry.entry_id)},
-            "name": "Papouch Quido",
-            "manufacturer": "Papouch s.r.o.",
-        }
 
     @property
     def native_value(self) -> float | None:
@@ -63,25 +51,19 @@ class PapouchTemperatureSensor(CoordinatorEntity, SensorEntity):
         return self.coordinator.data.get("temp", {}).get(self.item_id)
 
 
-class PapouchCounterSensor(CoordinatorEntity, SensorEntity):
+class PapouchCounterSensor(PapouchEntity, SensorEntity):
     """Representation of a pulse counter."""
 
-    _attr_has_entity_name = True
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_device_class = None
     _attr_native_unit_of_measurement = "pulses"
 
     def __init__(self, coordinator, entry, item_id) -> None:
         """Constructor of the counter senzor UI."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, entry)
         self.item_id = item_id
         self._attr_unique_id = f"{entry.entry_id}_din_cnt_{item_id}"
         self._attr_name = f"Input {item_id} Count"
-        self._attr_device_info = {
-            "identifiers": {(entry.domain, entry.entry_id)},
-            "name": "Papouch Quido",
-            "manufacturer": "Papouch s.r.o.",
-        }
 
     @property
     def native_value(self) -> int:

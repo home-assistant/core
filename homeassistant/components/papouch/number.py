@@ -3,9 +3,9 @@
 from homeassistant.components.number import NumberEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PapouchConfigEntry
+from .entity import PapouchEntity
 
 
 async def async_setup_entry(
@@ -23,7 +23,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PapouchCounter(CoordinatorEntity, NumberEntity):
+class PapouchCounter(PapouchEntity, NumberEntity):
     """Default counter of the Papouch's device used for decreasing."""
 
     _attr_has_entity_name = True
@@ -33,7 +33,7 @@ class PapouchCounter(CoordinatorEntity, NumberEntity):
 
     def __init__(self, coordinator, entry, item_id) -> None:
         """Constructor of the UI counter."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, entry)
         self.item_id = item_id
         self._attr_unique_id = f"{entry.entry_id}_counter_{item_id}"
         self._attr_name = f"Decrease counter {item_id} by: "

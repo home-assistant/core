@@ -3,9 +3,9 @@
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import PapouchConfigEntry
+from .entity import PapouchEntity
 
 
 async def async_setup_entry(
@@ -50,10 +50,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PapouchCommandButton(CoordinatorEntity, ButtonEntity):
+class PapouchCommandButton(PapouchEntity, ButtonEntity):
     """Default Command Button Class for Papouch's devices."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self, coordinator, entry, name: str, cmd_type: str, id_suffix: str
@@ -66,24 +64,18 @@ class PapouchCommandButton(CoordinatorEntity, ButtonEntity):
         ID suffix is not optional and should be unique.
         """
 
-        super().__init__(coordinator)
+        super().__init__(coordinator, entry)
         self.cmd_type = cmd_type
 
         self._attr_unique_id = f"{entry.entry_id}_btn_{id_suffix}"
         self._attr_name = name
 
-        # TODO: DRY
-        self._attr_device_info = {
-            "identifiers": {(entry.domain, entry.entry_id)},
-            "name": "Papouch Quido",
-            "manufacturer": "Papouch s.r.o.",
-        }
-
     async def async_press(self) -> None:
         """Home Assistant function for pressing the button.
 
         Note that this function uses dynamic lookup, make sure that function in
-        APIClient and function that was provided to the ctor of the button is the same.
+        APIClient.py and function that was provided to the ctor of the button is the same.
+        This is done for readability of the
         """
 
         command_method = getattr(self.coordinator.device, self.cmd_type)

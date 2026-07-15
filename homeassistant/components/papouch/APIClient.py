@@ -1,5 +1,7 @@
 """This file is used for communicating with the device."""
 
+# TODO: add other methods of communicating as well (modbus, USB, etc)
+
 import logging
 
 import aiohttp

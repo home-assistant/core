@@ -1,29 +1,9 @@
-"""This file contains classes that define Papouch devices.
-
-Every device has parse method that parses its own XML.
-
-"""
-
-from abc import ABC, abstractmethod
+"""This file contains classes that define Papouch devices."""
 
 import defusedxml.ElementTree as ET
-from .APIClient import PapouchApiClient
 
-
-class PapouchDevice(ABC):
-    """Abstract class for Papouch devices."""
-
-    name: str = ""
-    manufacturer: str = ""
-    device_identifiers: dict = {()}
-
-    @abstractmethod
-    def parse_xml(self, xml_data: str) -> dict:
-        """Abstract method for parsing XML."""
-
-    @abstractmethod
-    def get_info(self) -> dict:
-        """Abstract getter for information."""
+from ..APIClient import PapouchApiClient
+from .base import PapouchDevice
 
 
 class Quido(PapouchDevice):
@@ -35,14 +15,6 @@ class Quido(PapouchDevice):
         self.name = "Papouch Quido"
         self.manufacturer = "Papouch s.r.o."
         self.api_client = api_client
-
-    def get_info(self) -> dict:
-        """Getter for information about the device."""
-        return {
-            "name": self.name,
-            "manufacturer": self.manufacturer,
-            "identifiers": self.device_identifiers,
-        }
 
     def parse_xml(self, xml_data: str) -> dict:
         """Defines parser method for Quido family."""
