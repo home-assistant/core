@@ -15,6 +15,7 @@ CONF_CONFIG = "config"
 CONF_INCLUDE_OR_EXCLUDE = "include_or_exclude"
 CONF_NAME_SPACE = "NAME_SPACE"
 CONF_MESSAGE = "MESSAGE"
+CONF_DEVICE_TYPE = "device_type"
 CONF_VOLUME_STEP = "volume_step"
 
 DEFAULT_DEVICE_CLASS = MediaPlayerDeviceClass.TV

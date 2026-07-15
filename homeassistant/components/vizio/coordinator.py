@@ -10,6 +10,7 @@ from vizaio import (
     AppAvailability,
     AppConfig,
     AppRecord,
+    ChargingStatus,
     InputInfo,
     SettingInfo,
     Vizio,
@@ -105,6 +106,10 @@ class VizioDeviceData:
     # Current app config from get_current_app_config() (TVs only)
     current_app_config: AppConfig | None = None
 
+    # Battery state (Crave speakers only)
+    battery_level: int | None = None
+    charging_status: ChargingStatus | None = None
+
 
 class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
     """Coordinator for Vizio device data."""
@@ -182,6 +187,12 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         ):
             current_app_config = await _optional(self.device.get_current_app_config())
 
+        battery_level = None
+        charging_status = None
+        if self.device.profile.has_battery:
+            battery_level = await _optional(self.device.get_battery_level())
+            charging_status = await _optional(self.device.get_charging_status())
+
         return VizioDeviceData(
             is_on=True,
             audio_settings=audio_settings,
@@ -189,6 +200,8 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             current_input=current_input,
             input_list=input_list,
             current_app_config=current_app_config,
+            battery_level=battery_level,
+            charging_status=charging_status,
         )
 
 

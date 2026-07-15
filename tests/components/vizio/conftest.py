@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     ACCESS_TOKEN,
+    MOCK_CRAVE_CONFIG,
     APP_RECORDS,
     CURRENT_APP_CONFIG_OBJ,
     CURRENT_EQ,
@@ -64,6 +65,26 @@ async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) 
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+@pytest.fixture(autouse=True)
+def vizio_no_classification() -> Generator[None]:
+    """Mock device-type classification as unavailable by default."""
+    with patch(
+        "homeassistant.components.vizio.async_classify_device",
+        side_effect=VizioConnectionError("cannot connect"),
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_crave_config_entry() -> MockConfigEntry:
+    """Return a mock Crave speaker config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CRAVE_CONFIG,
+        unique_id=UNIQUE_ID,
+    )
 
 
 @pytest.fixture(name="vizio_get_unique_id", autouse=True)
