@@ -2130,16 +2130,33 @@ class BoschCameraCoordinator(
         """
         fw: dict[str, Any] = self.firmware_cache.get(cam_id, {})
         if fw.get("updating"):
-            raise HomeAssistantError("Firmware install is already in progress")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unexpected_error",
+                translation_placeholders={
+                    "action": "Install firmware",
+                    "error": "install already in progress",
+                },
+            )
         target = fw.get("update")
         if not target:
             raise HomeAssistantError(
-                "No firmware update is currently available to install"
+                translation_domain=DOMAIN,
+                translation_key="unexpected_error",
+                translation_placeholders={
+                    "action": "Install firmware",
+                    "error": "no update currently available",
+                },
             )
         ok = await self.async_put_camera(cam_id, "firmware", {"id": target})
         if not ok:
             raise HomeAssistantError(
-                f"Bosch cloud rejected the firmware install request for {target}"
+                translation_domain=DOMAIN,
+                translation_key="unexpected_error",
+                translation_placeholders={
+                    "action": "Install firmware",
+                    "error": f"Bosch cloud rejected the request for {target}",
+                },
             )
         fw["updating"] = True
         self.firmware_cache[cam_id] = fw
@@ -2163,7 +2180,12 @@ class BoschCameraCoordinator(
         ok = await self.async_put_camera(cam_id, "soft_reset", None)
         if not ok:
             raise HomeAssistantError(
-                "Bosch cloud rejected the soft-reset (restart) request"
+                translation_domain=DOMAIN,
+                translation_key="unexpected_error",
+                translation_placeholders={
+                    "action": "Soft reset (restart)",
+                    "error": "Bosch cloud rejected the request",
+                },
             )
 
     async def async_hard_reset_camera(self, cam_id: str) -> None:
@@ -2181,7 +2203,12 @@ class BoschCameraCoordinator(
         ok = await self.async_put_camera(cam_id, "hard_reset", None)
         if not ok:
             raise HomeAssistantError(
-                "Bosch cloud rejected the hard-reset (factory reset) request"
+                translation_domain=DOMAIN,
+                translation_key="unexpected_error",
+                translation_placeholders={
+                    "action": "Hard reset (factory reset)",
+                    "error": "Bosch cloud rejected the request",
+                },
             )
 
     async def _async_refresh_maintenance(self, *, reactive: bool) -> None:
