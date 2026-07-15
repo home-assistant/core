@@ -81,10 +81,7 @@ async def test_vehicle_router_with_bluetooth(hass: HomeAssistant) -> None:
 
     vehicle = entry.runtime_data.vehicles[0]
     assert isinstance(vehicle.api, VehicleRouter)
-    # confirmation="verify" reads state back on an ack+broadcast timeout to
-    # confirm or prove-non-application; raise_unconfirmed=False keeps a
-    # still-ambiguous outcome a best-effort success so the router never re-sends
-    # a non-idempotent command to cloud; keepalive is off for command-only use.
+    # Avoid replaying ambiguous commands or keeping the vehicle awake.
     mock_parent.return_value.vehicles.createBluetooth.assert_called_once_with(
         VIN,
         confirmation="verify",
