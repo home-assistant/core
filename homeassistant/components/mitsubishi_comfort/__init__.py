@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from typing import Any
 
 from mitsubishi_comfort import (
     DeviceInfo,
@@ -119,7 +120,7 @@ async def async_setup_entry(
         if mac in owned_macs and mac not in addresses
     }
 
-    data_updates: dict = {}
+    data_updates: dict[str, Any] = {}
     if credentials != cached_credentials:
         data_updates[CONF_CREDENTIALS] = credentials
     if addresses != stored:
