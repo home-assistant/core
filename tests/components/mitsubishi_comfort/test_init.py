@@ -277,7 +277,6 @@ async def test_setup_entry_prunes_stale_addresses(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    # The owned device keeps its address; the stale one is pruned.
     assert entry.data[CONF_ADDRESSES] == {dr.format_mac(MOCK_MAC): MOCK_ADDRESS}
 
 

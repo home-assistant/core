@@ -59,29 +59,30 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 errors["base"] = "unknown"
             else:
-                _LOGGER.debug(
-                    "Discovered %d device(s) for %s",
-                    len(devices),
-                    user_input[CONF_USERNAME],
-                )
+                _LOGGER.debug("Discovered %d device(s)", len(devices))
 
             if not errors:
                 await self.async_set_unique_id(account.user_id)
                 self._abort_if_unique_id_configured()
 
+                # Persist the per-device credentials discovered here (the
+                # Socket.IO password fetch). async_setup_entry replays them
+                # via discover_devices(cached_credentials=...) so it never
+                # repeats that slow, rate-limited call.
+                credentials = build_credentials(devices)
                 if not devices:
                     errors["base"] = "no_devices"
+                elif not credentials:
+                    # Creating the entry now would just repeat the rate-limited
+                    # fetch and load zero devices without raising any repair.
+                    errors["base"] = "no_usable_devices"
                 else:
-                    # Persist the per-device credentials discovered here (the
-                    # Socket.IO password fetch). async_setup_entry replays them
-                    # via discover_devices(cached_credentials=...) so it never
-                    # repeats that slow, rate-limited call.
                     return self.async_create_entry(
                         title=f"Mitsubishi Comfort ({user_input[CONF_USERNAME]})",
                         data={
                             CONF_USERNAME: user_input[CONF_USERNAME],
                             CONF_PASSWORD: user_input[CONF_PASSWORD],
-                            CONF_CREDENTIALS: build_credentials(devices),
+                            CONF_CREDENTIALS: credentials,
                         },
                     )
 

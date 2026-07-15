@@ -11,7 +11,7 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
-from .conftest import MOCK_MAC, MOCK_PASSWORD, MOCK_USERNAME
+from .conftest import MOCK_MAC, MOCK_PASSWORD, MOCK_SERIAL, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
 from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
@@ -77,9 +77,13 @@ async def test_fix_flow_sets_missing_address(
     )
     assert data["errors"] == {"base": "invalid_ip"}
 
-    data = await process_repair_fix_flow(
-        client, flow_id, json={dr.format_mac(MOCK_MAC): "192.168.1.50"}
-    )
+    with patch(
+        "homeassistant.components.mitsubishi_comfort.repairs.probe_candidate_ips",
+        return_value={MOCK_SERIAL: "192.168.1.50"},
+    ):
+        data = await process_repair_fix_flow(
+            client, flow_id, json={dr.format_mac(MOCK_MAC): "192.168.1.50"}
+        )
     assert data["type"] == "create_entry"
     await hass.async_block_till_done()
 
@@ -136,6 +140,35 @@ async def test_fix_flow_suggests_cached_ip(
 
     assert data["step_id"] == "addresses"
     assert data["data_schema"][0]["description"] == {"suggested_value": "10.0.0.5"}
+
+
+@pytest.mark.parametrize("ignore_missing_translations", [IGNORE_FORM_TRANSLATIONS])
+async def test_fix_flow_rejects_unreachable_address(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test an address whose device fails the authenticated probe is rejected.
+
+    Storing an unverified address would suppress this repair while the entry
+    is stuck retrying its first refresh, with no UI path left to correct it.
+    """
+    entry = await _setup_addressless_entry(hass)
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(
+        client, DOMAIN, f"missing_address_{entry.entry_id}"
+    )
+    with patch(
+        "homeassistant.components.mitsubishi_comfort.repairs.probe_candidate_ips",
+        return_value={},
+    ) as mock_probe:
+        data = await process_repair_fix_flow(
+            client, data["flow_id"], json={dr.format_mac(MOCK_MAC): "192.168.1.77"}
+        )
+
+    assert data["errors"] == {"base": "cannot_connect"}
+    assert mock_probe.call_args.args[1] == ["192.168.1.77"]
+    assert not entry.data.get(CONF_ADDRESSES)
 
 
 @pytest.mark.parametrize("ignore_missing_translations", [IGNORE_FORM_TRANSLATIONS])

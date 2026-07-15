@@ -1,8 +1,10 @@
 """Repairs for the Mitsubishi Comfort integration."""
 
+import asyncio
 from ipaddress import IPv4Address
 from typing import cast
 
+from mitsubishi_comfort import DeviceInfo, probe_candidate_ips
 import voluptuous as vol
 
 from homeassistant.components.dhcp import async_discovered_service_info
@@ -16,6 +18,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_ADDRESSES, CONF_CREDENTIALS
+
+
+async def _async_probe(serial: str, cred: dict[str, str], address: str) -> bool:
+    """Return whether the device answers an authenticated probe at address."""
+    info = DeviceInfo(
+        serial=serial,
+        label=serial,
+        address="",
+        mac=cred["mac"],
+        unit_type="",
+        password=cred["password"],
+        crypto_serial=cred["crypto_serial"],
+    )
+    return bool(await probe_candidate_ips({serial: info}, [address]))
 
 
 class MissingAddressRepairFlow(RepairsFlow):
@@ -78,7 +94,7 @@ class MissingAddressRepairFlow(RepairsFlow):
 
         errors: dict[str, str] = {}
         if user_input is not None:
-            updated = dict(stored)
+            entered: dict[str, str] = {}
             for mac in macs:
                 value = user_input.get(mac, "").strip()
                 if not value:
@@ -90,11 +106,27 @@ class MissingAddressRepairFlow(RepairsFlow):
                 except ValueError:
                     errors["base"] = "invalid_ip"
                 else:
-                    updated[mac] = value
+                    entered[mac] = value
+            if not errors and entered:
+                # Each address must answer an authenticated probe for its own
+                # device: a stored wrong address would suppress this repair
+                # while leaving the entry stuck in setup retries.
+                by_mac = {
+                    dr.format_mac(cred["mac"]): (serial, cred)
+                    for serial, cred in credentials.items()
+                }
+                reachable = await asyncio.gather(
+                    *(
+                        _async_probe(*by_mac[mac], address)
+                        for mac, address in entered.items()
+                    )
+                )
+                if not all(reachable):
+                    errors["base"] = "cannot_connect"
             if not errors:
                 self.hass.config_entries.async_update_entry(
                     self.entry,
-                    data={**self.entry.data, CONF_ADDRESSES: updated},
+                    data={**self.entry.data, CONF_ADDRESSES: {**stored, **entered}},
                 )
                 # The repairs framework deletes the issue after this step
                 # returns; run the reload non-eagerly so it happens after that

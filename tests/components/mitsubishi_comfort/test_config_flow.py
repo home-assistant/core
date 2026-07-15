@@ -132,8 +132,29 @@ async def test_user_step_skips_credential_less_devices(
         (DeviceConnectionError("nope"), None, "cannot_connect"),
         (RuntimeError("Unexpected"), None, "unknown"),
         (None, {}, "no_devices"),
+        (
+            None,
+            {
+                "SERIAL002": DeviceInfo(
+                    serial="SERIAL002",
+                    label="Bedroom",
+                    address="",
+                    mac="11:22:33:44:55:66",
+                    unit_type="ductless",
+                    password="",
+                    crypto_serial="",
+                )
+            },
+            "no_usable_devices",
+        ),
     ],
-    ids=["invalid_auth", "cannot_connect", "unknown_error", "no_devices"],
+    ids=[
+        "invalid_auth",
+        "cannot_connect",
+        "unknown_error",
+        "no_devices",
+        "no_usable_devices",
+    ],
 )
 async def test_user_step_errors(
     hass: HomeAssistant,
