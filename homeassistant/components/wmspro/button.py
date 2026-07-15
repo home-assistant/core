@@ -2,7 +2,7 @@
 
 from typing import override
 
-from wmspro.const import WMS_WebControl_pro_API_actionDescription
+from wmspro.const import WMS_WebControl_pro_API_actionDescription as ACTION_DESC
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.const import EntityCategory
@@ -23,9 +23,9 @@ async def async_setup_entry(
 
     entities: list[WebControlProGenericEntity] = []
     for d in hub.dests.values():
-        if d.hasAction(WMS_WebControl_pro_API_actionDescription.Identify):
+        if d.hasAction(ACTION_DESC.Identify):
             entities.append(WebControlProIdentifyButton(config_entry.entry_id, d))
-        if d.hasAction(WMS_WebControl_pro_API_actionDescription.SlatRotate):
+        if d.hasAction(ACTION_DESC.SlatRotate):
             entities.append(WebControlProRotationResetButton(config_entry.entry_id, d))
 
     async_add_entities(entities)
@@ -39,7 +39,7 @@ class WebControlProIdentifyButton(WebControlProGenericEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Handle the button press to identify the device."""
-        action = self._dest.action(WMS_WebControl_pro_API_actionDescription.Identify)
+        action = self._dest.action(ACTION_DESC.Identify)
         await action()
 
 
@@ -52,7 +52,7 @@ class WebControlProRotationResetButton(WebControlProGenericEntity, ButtonEntity)
     @override
     async def async_press(self) -> None:
         """Handle the button press to reset the rotation range to the default."""
-        action = self._dest.action(WMS_WebControl_pro_API_actionDescription.SlatRotate)
+        action = self._dest.action(ACTION_DESC.SlatRotate)
         # Delete the min and max override values to reset the rotation range to the default
         del action["minValue"]
         del action["maxValue"]
