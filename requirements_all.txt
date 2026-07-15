@@ -2746,7 +2746,7 @@ python-qube-heatpump==1.12.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.ripple
-python-ripple-api==0.0.3
+xrpl-py==5.0.0
 
 # homeassistant.components.roborock
 python-roborock==5.30.0
