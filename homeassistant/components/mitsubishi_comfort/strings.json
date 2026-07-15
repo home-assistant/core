@@ -49,11 +49,11 @@
     "missing_address": {
       "fix_flow": {
         "error": {
-          "invalid_ip": "One or more entries are not valid IP addresses."
+          "invalid_ip": "One or more entries are not valid IPv4 addresses."
         },
         "step": {
           "addresses": {
-            "description": "Enter the local IP address for each device DHCP discovery has not resolved. Each field is labeled with the device's MAC address; leave a field blank to keep waiting for DHCP discovery (which only works when the device is on the same network as Home Assistant). Devices: {devices}",
+            "description": "These devices have no known local IP address, so they have no entities yet. Enter the local IPv4 address for each device below; each field is labeled with the device's MAC address. Leave a field blank to keep waiting for DHCP discovery (which only works when the device is on the same network as Home Assistant). After you submit, the integration reloads and sets up every device that has an address. Devices: {devices}",
             "title": "Device IP addresses"
           }
         }

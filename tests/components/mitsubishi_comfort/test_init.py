@@ -124,6 +124,7 @@ async def test_setup_entry_no_address_loads_and_registers(
     issue = issue_registry.async_get_issue(DOMAIN, f"missing_address_{entry.entry_id}")
     assert issue
     assert issue.is_fixable
+    assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.data == {"entry_id": entry.entry_id}
 
 
@@ -195,23 +196,33 @@ async def test_setup_entry_caches_and_replays_credentials(
     mock_config_entry: MockConfigEntry,
     mock_setup_integration: tuple[AsyncMock, MagicMock],
 ) -> None:
-    """Test credentials are replayed to discovery and persisted on the entry."""
+    """Test credentials are persisted on the entry and replayed to discovery."""
     mock_account, _ = mock_setup_integration
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Discovery is told to reuse cached credentials so it can skip Socket.IO.
-    assert "cached_credentials" in mock_account.discover_devices.call_args.kwargs
-    # The discovered credentials are persisted for the next setup.
-    assert mock_config_entry.data[CONF_CREDENTIALS] == {
+    # The first setup has nothing to replay and persists the discovered
+    # credentials for the next one.
+    assert mock_account.discover_devices.call_args.kwargs["cached_credentials"] == {}
+    credentials = {
         MOCK_SERIAL: {
             "password": "dGVzdHBhc3M=",
             "crypto_serial": "0102030405060708090a",
             "mac": MOCK_MAC,
         }
     }
+    assert mock_config_entry.data[CONF_CREDENTIALS] == credentials
+
+    # A reload replays the persisted credentials so discovery can skip the
+    # rate-limited Socket.IO fetch.
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_account.discover_devices.call_args.kwargs["cached_credentials"] == (
+        credentials
+    )
 
 
 async def test_setup_entry_resolves_address_from_entry(
@@ -278,10 +289,11 @@ async def test_setup_entry_skips_incomplete_devices(
     mock_setup_integration: tuple[AsyncMock, MagicMock],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test setup skips devices the cloud returned no credentials for.
+    """Test setup skips devices the cloud returned incomplete data for.
 
     Without a password and cryptoSerial the local API cannot be authenticated,
-    so the device is skipped (no coordinator, no entity) and the gap is logged.
+    and without a MAC the device cannot be keyed in the address cache, so the
+    device is skipped (no coordinator, no entity) and the gap is logged.
     """
     incomplete_info = DeviceInfo(
         serial="SERIAL002",
@@ -292,10 +304,20 @@ async def test_setup_entry_skips_incomplete_devices(
         password="",
         crypto_serial="",
     )
+    no_mac_info = DeviceInfo(
+        serial="SERIAL003",
+        label="Attic",
+        address="",
+        mac="",
+        unit_type="ductless",
+        password="dGVzdHBhc3M=",
+        crypto_serial="0102030405060708090a",
+    )
     mock_account, _ = mock_setup_integration
     mock_account.discover_devices.return_value = {
         "SERIAL001": mock_device_info,
         "SERIAL002": incomplete_info,
+        "SERIAL003": no_mac_info,
     }
     mock_config_entry.add_to_hass(hass)
 
@@ -308,7 +330,11 @@ async def test_setup_entry_skips_incomplete_devices(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL001")
     assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL002") is None
-    assert "The cloud returned no credentials for 1 device(s): Bedroom" in caplog.text
+    assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL003") is None
+    assert (
+        "The cloud returned no credentials for 2 device(s): Attic, Bedroom"
+        in caplog.text
+    )
 
 
 async def test_unload_entry(

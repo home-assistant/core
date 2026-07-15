@@ -164,7 +164,7 @@ async def async_setup_entry(
             DOMAIN,
             issue_id,
             is_fixable=True,
-            severity=ir.IssueSeverity.WARNING,
+            severity=ir.IssueSeverity.ERROR,
             translation_key="missing_address",
             data={"entry_id": entry.entry_id},
         )

@@ -7,10 +7,11 @@ def is_fully_credentialed(info: DeviceInfo) -> bool:
     """Return whether the cloud returned a device's local-API credentials.
 
     Without a password and cryptoSerial the device cannot be authenticated
-    against the local API, so it cannot be set up or cached as usable and must
-    be re-discovered next time.
+    against the local API, and without a MAC it cannot be keyed in the address
+    cache, so it cannot be set up or cached as usable and must be
+    re-discovered next time.
     """
-    return bool(info.password and info.crypto_serial)
+    return bool(info.password and info.crypto_serial and info.mac)
 
 
 def build_credentials(devices: dict[str, DeviceInfo]) -> dict[str, dict[str, str]]:

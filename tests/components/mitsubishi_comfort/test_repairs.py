@@ -42,12 +42,24 @@ async def _setup_addressless_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.mark.parametrize("ignore_missing_translations", [IGNORE_FORM_TRANSLATIONS])
+@pytest.mark.parametrize(
+    "invalid_value",
+    [
+        pytest.param("not-an-ip", id="not_an_ip"),
+        pytest.param("2001:db8::1", id="ipv6"),
+    ],
+)
 async def test_fix_flow_sets_missing_address(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
+    invalid_value: str,
 ) -> None:
-    """Test the fix flow records a manually entered IP and resolves the issue."""
+    """Test the fix flow records a manually entered IP and resolves the issue.
+
+    Non-IPv4 input is rejected: the local API URL is built without IPv6
+    brackets, so an IPv6 literal can never work.
+    """
     entry = await _setup_addressless_entry(hass)
     issue_id = f"missing_address_{entry.entry_id}"
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
@@ -61,7 +73,7 @@ async def test_fix_flow_sets_missing_address(
     assert dr.format_mac(MOCK_MAC) in data["description_placeholders"]["devices"]
 
     data = await process_repair_fix_flow(
-        client, flow_id, json={dr.format_mac(MOCK_MAC): "not-an-ip"}
+        client, flow_id, json={dr.format_mac(MOCK_MAC): invalid_value}
     )
     assert data["errors"] == {"base": "invalid_ip"}
 
@@ -124,6 +136,34 @@ async def test_fix_flow_suggests_cached_ip(
 
     assert data["step_id"] == "addresses"
     assert data["data_schema"][0]["description"] == {"suggested_value": "10.0.0.5"}
+
+
+@pytest.mark.parametrize("ignore_missing_translations", [IGNORE_FORM_TRANSLATIONS])
+async def test_fix_flow_omits_devices_no_longer_on_account(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the form skips registry devices the account no longer has.
+
+    Setup prunes the credential cache but leaves old device registry entries,
+    so the form intersects with the cache to ask only for current devices.
+    """
+    entry = await _setup_addressless_entry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "REMOVED01")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "99:99:99:99:99:99")},
+    )
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(
+        client, DOMAIN, f"missing_address_{entry.entry_id}"
+    )
+
+    assert data["step_id"] == "addresses"
+    assert [field["name"] for field in data["data_schema"]] == [dr.format_mac(MOCK_MAC)]
+    assert "99:99:99:99:99:99" not in data["description_placeholders"]["devices"]
 
 
 async def test_fix_flow_without_entry_falls_back_to_confirm(

@@ -1,6 +1,6 @@
 """Repairs for the Mitsubishi Comfort integration."""
 
-from ipaddress import ip_address
+from ipaddress import IPv4Address
 from typing import cast
 
 import voluptuous as vol
@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_ADDRESSES
+from .const import CONF_ADDRESSES, CONF_CREDENTIALS
 
 
 class MissingAddressRepairFlow(RepairsFlow):
@@ -47,6 +47,13 @@ class MissingAddressRepairFlow(RepairsFlow):
     ) -> RepairsFlowResult:
         """Ask for the LAN IP of each device that has none."""
         stored: dict[str, str] = dict(self.entry.data.get(CONF_ADDRESSES, {}))
+        # The registry may still hold devices removed from the account; the
+        # freshly pruned credential cache reflects the account's current,
+        # usable devices, so only ask for those.
+        credentials: dict[str, dict[str, str]] = self.entry.data.get(
+            CONF_CREDENTIALS, {}
+        )
+        owned = {dr.format_mac(cred["mac"]) for cred in credentials.values()}
         device_registry = dr.async_get(self.hass)
         # Map each addressless device's formatted MAC (the address cache key)
         # to its name.
@@ -62,7 +69,11 @@ class MissingAddressRepairFlow(RepairsFlow):
                 ),
                 None,
             )
-            if mac is not None and (formatted := dr.format_mac(mac)) not in stored:
+            if (
+                mac is not None
+                and (formatted := dr.format_mac(mac)) in owned
+                and formatted not in stored
+            ):
                 macs[formatted] = device.name_by_user or device.name or formatted
 
         errors: dict[str, str] = {}
@@ -73,7 +84,9 @@ class MissingAddressRepairFlow(RepairsFlow):
                 if not value:
                     continue
                 try:
-                    ip_address(value)
+                    # IPv4 only: the local API URL is built without IPv6
+                    # brackets, so an IPv6 literal can never work.
+                    IPv4Address(value)
                 except ValueError:
                     errors["base"] = "invalid_ip"
                 else:
