@@ -114,7 +114,11 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
                     translation_key="cannot_connect",
                 )
 
-            await self.device.fetch_data()
+            if not await self.device.fetch_data():
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="fetch_failed",
+                )
         except MyPVAuthenticationError as exc:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
