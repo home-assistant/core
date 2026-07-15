@@ -53,3 +53,5 @@ async def test_button_press(
         {ATTR_ENTITY_ID: "button.mikrotik_restart"},
         blocking=True,
     )
+
+    mock_api.assert_called_with("/system/reboot")

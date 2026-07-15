@@ -75,7 +75,7 @@
     'object_id_base': 'Shutdown',
     'options': dict({
     }),
-    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Shutdown',
     'platform': 'mikrotik',
@@ -90,7 +90,6 @@
 # name: test_button_entities_created[button.mikrotik_shutdown-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mikrotik Shutdown',
     }),
     'context': <ANY>,

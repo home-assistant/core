@@ -77,10 +77,7 @@ async def setup_integration(
     ) -> Any:
         return command_responses.get(cmd, {})
 
-    with (
-        patch("librouteros.connect"),
-        patch.object(mikrotik.coordinator.MikrotikData, "command", new=mock_command),
-    ):
+    with patch.object(mikrotik.coordinator.MikrotikData, "command", new=mock_command):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

@@ -28,7 +28,6 @@ BUTTON_TYPES = {
     ButtonEntityDescription(
         key="shutdown",
         translation_key="shutdown",
-        device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
     ),
 }
