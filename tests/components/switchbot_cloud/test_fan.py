@@ -43,6 +43,7 @@ from tests.common import async_load_json_object_fixture, snapshot_platform
 @pytest.mark.parametrize(
     ("device_info", "entry_id"),
     [
+        (AIR_PURIFIER_INFO, "fan.air_purifier_1"),
         (CIRCULATOR_FAN_INFO, "fan.fan_1"),
         (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
         (STANDING_FAN_INFO, "fan.standing_fan_1"),
