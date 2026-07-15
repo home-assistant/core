@@ -1634,9 +1634,7 @@ class BoschCameraCoordinator(
         # Local import (not top-level): keeps unittest.mock.patch(
         # "custom_components.bosch_shc_camera.async_get_bosch_cloud_session",
         # ...) working the same way it does for _async_update_data below.
-        from . import (  # noqa: PLC0415
-            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-        )
+        from . import async_get_bosch_cloud_session  # noqa: PLC0415
 
         try:
             # Pooled Bosch-cloud session (cloud_ssl.py) — this slow-tier RCP
