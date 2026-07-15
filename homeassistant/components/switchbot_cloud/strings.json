@@ -72,7 +72,11 @@
         "name": "Display"
       }
     },
-
+    "select": {
+      "night_light_control": {
+        "name": "Night light"
+      }
+    },
     "sensor": {
       "light_level": {
         "name": "Light level"
