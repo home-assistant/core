@@ -70,7 +70,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator: BoschCameraCoordinator = config_entry.runtime_data
-    entities = []
+    entities: list[SelectEntity] = []
     for cam_id in coordinator.data:
         entities.append(BoschVideoQualitySelect(coordinator, cam_id, config_entry))
         entities.append(BoschMotionSensitivitySelect(coordinator, cam_id, config_entry))

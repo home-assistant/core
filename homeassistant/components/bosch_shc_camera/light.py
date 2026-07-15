@@ -51,7 +51,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator = config_entry.runtime_data
-    entities = []
+    entities: list[_BoschLightBase] = []
     for cam_id in coordinator.data:
         cam_info = coordinator.data[cam_id].get("info", {})
         # Prefer cam_info hardwareVersion (live cloud data); fall back to the

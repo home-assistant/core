@@ -924,14 +924,11 @@ class BoschCameraOptionsFlow(config_entries.OptionsFlow):
                         self._config_entry,
                         options=merged,
                     )
-                    # Use HA's native reauth trigger — scheduled as a task so the
-                    # options dialog closes before the reauth flow registers
-                    # (prevents UI race with stacked dialogs). async_start_reauth
-                    # is a coroutine in HA 2022.7+, so it must be awaited or
-                    # wrapped in a task.
-                    self.hass.async_create_task(
-                        self._config_entry.async_start_reauth(self.hass)
-                    )
+                    # Use HA's native reauth trigger. async_start_reauth is a
+                    # synchronous @callback that schedules its own task
+                    # internally (current HA-core config_entries.py) -- call
+                    # it directly, do not wrap it in async_create_task.
+                    self._config_entry.async_start_reauth(self.hass)
                     return self.async_abort(reason="migration_started")
 
                 # Merge submitted changes on top of existing opts so that fields

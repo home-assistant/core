@@ -57,7 +57,7 @@ from __future__ import annotations
 import logging
 import time
 from functools import wraps
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import web
 from homeassistant.core import HomeAssistant
@@ -165,7 +165,12 @@ async def _emit_segment_chunked(
         new_resp.headers[name] = value
     # No Content-Length → aiohttp uses chunked transfer encoding.
     await new_resp.prepare(request)
-    await new_resp.write(body)
+    # response.body is typed bytes | bytearray | Payload | None by aiohttp,
+    # but this handler only ever sees in-memory bytes bodies (never a
+    # Payload, which aiohttp only uses for multipart/file-backed responses
+    # this integration doesn't construct) -- matches write()'s own narrower
+    # accepted type.
+    await new_resp.write(cast("bytes | bytearray", body))
     await new_resp.write_eof()
     return new_resp
 

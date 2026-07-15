@@ -41,7 +41,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator = config_entry.runtime_data
-    entities = []
+    entities: list[_BoschEntityBase] = []
     for cam_id in coordinator.data:
         cam_info = coordinator.data[cam_id].get("info", {})
         pan_limit = cam_info.get("featureSupport", {}).get("panLimit", 0)

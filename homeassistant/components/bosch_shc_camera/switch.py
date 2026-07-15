@@ -193,7 +193,7 @@ async def async_setup_entry(
     opts = get_options(config_entry)
 
     coordinator = config_entry.runtime_data
-    entities = []
+    entities: list[_BoschSwitchBase] = []
     for cam_id in coordinator.data:
         cam_info = coordinator.data[cam_id].get("info", {})
         entities.append(BoschLiveStreamSwitch(coordinator, cam_id, config_entry))

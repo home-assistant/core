@@ -61,7 +61,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensor entities for each camera."""
     coordinator: BoschCameraCoordinator = config_entry.runtime_data
-    entities = []
+    entities: list[_BoschBinarySensorBase] = []
     for cam_id in coordinator.data:
         cam_info = coordinator.data[cam_id].get("info", {})
         has_sound = cam_info.get("featureSupport", {}).get("sound", False)
