@@ -136,7 +136,7 @@ class Control4Light(Control4Entity, LightEntity):
     @override
     def is_on(self) -> bool:
         """Return whether this light is on."""
-        attrs = self.extra_state_attributes
+        attrs = self._extra_state_attributes
         for key in (
             "LIGHT_LEVEL",
             "Brightness Percent",
@@ -152,7 +152,7 @@ class Control4Light(Control4Entity, LightEntity):
     @override
     def brightness(self) -> int | None:
         """Return brightness (0-255)."""
-        attrs = self.extra_state_attributes
+        attrs = self._extra_state_attributes
         raw_level = None
         if "LIGHT_LEVEL" in attrs:
             raw_level = attrs["LIGHT_LEVEL"]
@@ -176,7 +176,7 @@ class Control4Light(Control4Entity, LightEntity):
 
     @property
     def _is_dimmer(self) -> bool:
-        attrs = self.extra_state_attributes
+        attrs = self._extra_state_attributes
         return "LIGHT_LEVEL" in attrs or "Brightness Percent" in attrs
 
     def _to_rate_ms(self, transition: float | None) -> int:

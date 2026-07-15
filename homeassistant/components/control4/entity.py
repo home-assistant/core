@@ -15,10 +15,6 @@ from .const import DOMAIN, Control4RuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
-# Media metadata is large, changes frequently, and isn't documented as a
-# stable attribute, so it's kept out of the publicly exposed state attributes.
-_EXCLUDED_COORDINATOR_ATTRIBUTES = {"CURRENT MEDIA INFO"}
-
 
 class Control4Entity(Entity):
     """Base entity for Control4 that receives state from WebSocket push events."""
@@ -56,8 +52,6 @@ class Control4Entity(Entity):
             suggested_area=device_area,
         )
         self._extra_state_attributes: dict[str, Any] = device_attributes
-        self._extra_state_attributes["item id"] = idx
-        self._extra_state_attributes["parent item id"] = device_id
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -108,12 +102,6 @@ class Control4Entity(Entity):
                         None if value == "Undefined" else value
                     )
 
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        return self._extra_state_attributes
-
 
 class Control4CoordinatorEntity(CoordinatorEntity[Any]):
     """Coordinator-based entity for Control4 (used by media_player for position polling)."""
@@ -129,7 +117,6 @@ class Control4CoordinatorEntity(CoordinatorEntity[Any]):
         device_model: str | None,
         device_id: int,
         device_area: str | None,
-        device_attributes: dict[str, Any],
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -145,17 +132,3 @@ class Control4CoordinatorEntity(CoordinatorEntity[Any]):
             via_device=(DOMAIN, entry_data.controller_unique_id),
             suggested_area=device_area,
         )
-        self._extra_state_attributes: dict[str, Any] = device_attributes
-        self._extra_state_attributes["item id"] = idx
-        self._extra_state_attributes["parent item id"] = device_id
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return extra state attributes."""
-        self._extra_state_attributes.update(self.coordinator.data.get(self._idx, {}))
-        return {
-            key: value
-            for key, value in self._extra_state_attributes.items()
-            if key not in _EXCLUDED_COORDINATOR_ATTRIBUTES
-        }

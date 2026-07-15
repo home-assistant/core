@@ -53,16 +53,6 @@
 # name: test_climate_entities[climate.test_controller_residential_thermostat_v2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'COOL_SETPOINT_F': 75.0,
-      'FAN_MODE': 'Auto',
-      'FAN_MODES_LIST': 'Auto,On,Circulate',
-      'HEAT_SETPOINT_F': 68.0,
-      'HUMIDITY': 45,
-      'HVAC_MODE': 'Heat',
-      'HVAC_MODES_LIST': 'Off,Heat,Cool,Auto',
-      'HVAC_STATE': 'Off',
-      'SCALE': 'FAHRENHEIT',
-      'TEMPERATURE_F': 72.5,
       <ClimateEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 45.0,
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 72,
       <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
@@ -79,10 +69,8 @@
         <HVACMode.COOL: 'cool'>,
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
-      'item id': 123,
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 45,
-      'parent item id': 456,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 395>,
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,

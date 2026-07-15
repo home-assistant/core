@@ -43,18 +43,9 @@
 # name: test_media_player_with_and_without_sources[media_player.living_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'CURRENT_VIDEO_DEVICE': 100,
-      'CURRENT_VOLUME': 50,
-      'IS_MUTED': False,
-      'PAUSED': False,
-      'PLAYING': False,
-      'POWER_STATE': True,
-      'STOPPED': False,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tv',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
-      'item id': 1,
-      'parent item id': 1,
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'TV',
       ]),

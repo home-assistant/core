@@ -22,10 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, Control4ConfigEntry, Control4RuntimeData
-from .director_utils import (
-    director_get_entry_variables,
-    update_variables_for_config_entry,
-)
+from .director_utils import update_variables_for_config_entry
 from .entity import Control4CoordinatorEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -162,7 +159,6 @@ async def async_setup_entry(
             )
             continue
 
-        item_attributes = await director_get_entry_variables(hass, entry, room_id)
         try:
             hidden = room["roomHidden"]
             entity_list.append(
@@ -174,7 +170,6 @@ async def async_setup_entry(
                     item_to_parent_map,
                     sources,
                     hidden,
-                    item_attributes,
                 )
             )
         except KeyError:
@@ -201,7 +196,6 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
         id_to_parent: dict[int, int],
         sources: dict[int, _RoomSource],
         room_hidden: bool,
-        device_attributes: dict,
     ) -> None:
         """Initialize Control4 room entity."""
         super().__init__(
@@ -214,7 +208,6 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
             device_model=None,
             device_id=room_id,
             device_area=None,
-            device_attributes=device_attributes,
         )
         self._attr_entity_registry_enabled_default = not room_hidden
         self._id_to_parent = id_to_parent
