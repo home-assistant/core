@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components import zone
-from homeassistant.components.zone import ENTITY_ID_HOME, ZoneEntityStateAttribute
+from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.config import (
     async_log_schema_error,
     config_per_platform,
@@ -32,6 +32,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     STATE_HOME,
     STATE_NOT_HOME,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -509,8 +510,8 @@ def async_setup_scanner_platform(
             zone_home = hass.states.get(ENTITY_ID_HOME)
             if zone_home is not None:
                 kwargs["gps"] = [
-                    zone_home.attributes[ZoneEntityStateAttribute.LATITUDE],
-                    zone_home.attributes[ZoneEntityStateAttribute.LONGITUDE],
+                    zone_home.attributes[EntityStateAttribute.LATITUDE],
+                    zone_home.attributes[EntityStateAttribute.LONGITUDE],
                 ]
                 kwargs["gps_accuracy"] = 0
 
@@ -845,8 +846,8 @@ class Device(RestoreEntity):
         }
 
         if self.gps is not None:
-            attributes[TrackerEntityStateAttribute.LATITUDE] = self.gps[0]
-            attributes[TrackerEntityStateAttribute.LONGITUDE] = self.gps[1]
+            attributes[EntityStateAttribute.LATITUDE] = self.gps[0]
+            attributes[EntityStateAttribute.LONGITUDE] = self.gps[1]
             attributes[TrackerEntityStateAttribute.GPS_ACCURACY] = self.gps_accuracy
 
         if self.battery is not None:
@@ -961,10 +962,10 @@ class Device(RestoreEntity):
             if attribute in state.attributes:
                 setattr(self, var, state.attributes[attribute])
 
-        if TrackerEntityStateAttribute.LONGITUDE in state.attributes:
+        if EntityStateAttribute.LONGITUDE in state.attributes:
             self.gps = (
-                state.attributes[TrackerEntityStateAttribute.LATITUDE],
-                state.attributes[TrackerEntityStateAttribute.LONGITUDE],
+                state.attributes[EntityStateAttribute.LATITUDE],
+                state.attributes[EntityStateAttribute.LONGITUDE],
             )
 
 

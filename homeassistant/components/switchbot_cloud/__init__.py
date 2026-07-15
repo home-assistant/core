@@ -186,24 +186,6 @@ async def make_device_data(
         )
         devices_data.vacuums.append((device, coordinator))
 
-    if isinstance(device, Device) and device.device_type in [
-        "Smart Lock",
-        "Smart Lock Lite",
-        "Smart Lock Pro",
-        "Smart Lock Ultra",
-        "Smart Lock Vision",
-        "Smart Lock Vision Pro",
-        "Smart Lock Pro Wifi",
-        "Lock Vision",
-        "Lock Vision Pro",
-    ]:
-        coordinator = await coordinator_for_device(
-            hass, entry, api, device, coordinators_by_id
-        )
-        devices_data.locks.append((device, coordinator))
-        devices_data.sensors.append((device, coordinator))
-        devices_data.binary_sensors.append((device, coordinator))
-
     if isinstance(device, Device) and device.device_type == "Bot":
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id, True
