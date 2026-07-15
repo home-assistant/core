@@ -30,7 +30,7 @@ from typing import Any, cast
 
 import aiohttp
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import HomeAssistant
 
 # Bosch "Video CA 2A" intermediate CA, issued by the private "Bosch ST Root CA".
@@ -121,6 +121,29 @@ async def async_get_bosch_cloud_session(hass: HomeAssistant) -> aiohttp.ClientSe
     OAuth / Keycloak token exchange, and the live video proxy. Replaces the
     previous ``verify_ssl=False`` sessions that accepted any certificate
     (GHSA-6qh5-x5m5-vj6v / CWE-295).
+
+    The ``quality_scale.yaml`` ``inject-websession`` rule normally wants this
+    built via ``homeassistant.helpers.aiohttp_client.async_create_clientsession``
+    instead of a hand-rolled ``aiohttp.ClientSession``. That helper's connector
+    (``_async_get_connector``) is hardcoded to
+    ``homeassistant.util.ssl.client_context()`` /
+    ``client_context_no_verify()`` with no parameter to inject a custom
+    ``ssl.SSLContext`` or ``cadata`` -- there is no supported extension point
+    for CA pinning, so full compliance is not possible without dropping
+    ``BOSCH_CLOUD_CA_PEM`` and reintroducing the MITM hole this module exists
+    to close (see ``quality_scale.yaml`` for the full writeup and the Core
+    integrations checked for precedent).
+
+    What *is* adopted from Core's own convention: the cleanup listener fires
+    on ``EVENT_HOMEASSISTANT_CLOSE`` (matching both
+    ``_async_register_clientsession_shutdown`` and
+    ``_async_register_default_clientsession_shutdown`` in
+    ``aiohttp_client.py``, and the connector-close listener in
+    ``_async_get_connector``), not ``EVENT_HOMEASSISTANT_STOP``. Per
+    ``homeassistant/core.py``, ``STOP`` fires before ``FINAL_WRITE`` before
+    ``CLOSE`` -- ``CLOSE`` is the last event before shutdown, so listening on
+    it (instead of the earlier ``STOP``) avoids tearing this session down
+    while other integrations' stop-phase cleanup may still need it.
     """
     global _SESSION_LOCK  # noqa: PLW0603 -- lazy process-lifetime singleton cache
     existing = cast("aiohttp.ClientSession | None", hass.data.get(_SESSION_DATA_KEY))
@@ -150,7 +173,7 @@ async def async_get_bosch_cloud_session(hass: HomeAssistant) -> aiohttp.ClientSe
             if not session.closed:
                 await session.close()
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close_session)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _close_session)
         return session
 
 
