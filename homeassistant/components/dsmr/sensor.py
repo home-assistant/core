@@ -846,7 +846,6 @@ async def async_setup_entry(
         """Handle every new telegram and accumulate its data."""
         nonlocal initialized
 
-        # Make all device entities aware of the new telegram and accumulate it
         for entity in entities:
             entity.accumulate_data(telegram)
 
