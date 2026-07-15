@@ -117,6 +117,9 @@
     "announcement_connection_error": {
       "message": "Failed to reach Sonos speaker for announcement: {error}"
     },
+    "call_failed": {
+      "message": "Error on {target}: {error}"
+    },
     "cancel_announcement_error": {
       "message": "Cancelling announcement failed: {response}"
     },
@@ -155,6 +158,12 @@
     },
     "toggle_failed": {
       "message": "Could not toggle {entity_id}."
+    },
+    "upnp_call_failed": {
+      "message": "Error on {target} (UPnP error code {error_code}): {error}"
+    },
+    "upnp_call_failed_music_service_unavailable": {
+      "message": "Error on {target} (UPnP error code {error_code}): {error}. This may indicate the selected music service is not available on the speaker."
     }
   },
   "issues": {

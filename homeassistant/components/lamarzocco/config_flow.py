@@ -7,6 +7,7 @@ import uuid
 
 from aiohttp import ClientSession
 from pylamarzocco import LaMarzoccoCloudClient
+from pylamarzocco.const import DeviceType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import Thing
 from pylamarzocco.util import InstallationKey, generate_installation_key
@@ -105,7 +106,11 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Error connecting to server: %s", exc)
                 errors["base"] = "cannot_connect"
             else:
-                self._things = {thing.serial_number: thing for thing in things}
+                self._things = {
+                    thing.serial_number: thing
+                    for thing in things
+                    if thing.type is DeviceType.MACHINE
+                }
                 if not self._things:
                     errors["base"] = "no_machines"
 
