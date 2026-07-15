@@ -6,14 +6,14 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 20.0,
-      'min_temp': 8.0,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 20.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 8.0,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'eco',
         'none',
       ]),
@@ -51,23 +51,23 @@
 # name: test_celsius_fahrenheit[climate.heating_circuit_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 18.6,
-      'friendly_name': 'Heating circuit 1',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 18.6,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 20.0,
-      'min_temp': 8.0,
-      'preset_mode': 'none',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 20.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 8.0,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'eco',
         'none',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
-      'temperature': 18.5,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 18.5,
     }),
     'context': <ANY>,
     'entity_id': 'climate.heating_circuit_1',
@@ -84,14 +84,14 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'hvac_modes': list([
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 20.0,
-      'min_temp': 8.0,
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 20.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 8.0,
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'eco',
         'none',
       ]),
@@ -129,23 +129,23 @@
 # name: test_climate_entity_properties[climate.heating_circuit_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 18.6,
-      'friendly_name': 'Heating circuit 1',
-      'hvac_action': <HVACAction.IDLE: 'idle'>,
-      'hvac_modes': list([
+      <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 18.6,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1',
+      <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
+      <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 20.0,
-      'min_temp': 8.0,
-      'preset_mode': 'none',
-      'preset_modes': list([
+      <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 20.0,
+      <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 8.0,
+      <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
+      <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'eco',
         'none',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
-      'temperature': 18.5,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
+      <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 18.5,
     }),
     'context': <ANY>,
     'entity_id': 'climate.heating_circuit_1',

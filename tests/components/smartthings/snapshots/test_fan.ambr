@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'low',
         'medium',
@@ -47,16 +47,16 @@
 # name: test_all_entities[da_ac_air_000001][fan.air_purifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air purifier',
-      'preset_mode': 'auto',
-      'preset_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air purifier',
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'auto',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
         'sleep',
       ]),
-      'supported_features': <FanEntityFeature: 56>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 56>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.air_purifier',
@@ -73,7 +73,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'low',
         'medium',
@@ -114,16 +114,16 @@
 # name: test_all_entities[da_ac_air_01011][fan.air_filter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air filter',
-      'preset_mode': 'auto',
-      'preset_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air filter',
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'auto',
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
         'sleep',
       ]),
-      'supported_features': <FanEntityFeature: 56>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 56>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.air_filter',
@@ -140,7 +140,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'smart',
       ]),
     }),
@@ -177,14 +177,14 @@
 # name: test_all_entities[da_ks_hood_01001][fan.range_hood-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Range hood',
-      'percentage': 25,
-      'percentage_step': 25.0,
-      'preset_mode': None,
-      'preset_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Range hood',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 25,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'smart',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.range_hood',
@@ -201,7 +201,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'low',
         'medium',
@@ -242,18 +242,18 @@
 # name: test_all_entities[fake_fan][fan.theater_fake_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Fake fan',
-      'percentage': 2000,
-      'percentage_step': 33.333333333333336,
-      'preset_mode': None,
-      'preset_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fake fan',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 2000,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 33.333333333333336,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'auto',
         'low',
         'medium',
         'high',
         'turbo',
       ]),
-      'supported_features': <FanEntityFeature: 57>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.theater_fake_fan',
@@ -270,7 +270,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -305,12 +305,12 @@
 # name: test_all_entities[generic_fan_3_speed][fan.bedroom_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bedroom Fan',
-      'percentage': 0,
-      'percentage_step': 33.333333333333336,
-      'preset_mode': None,
-      'preset_modes': None,
-      'supported_features': <FanEntityFeature: 49>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom Fan',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 0,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 33.333333333333336,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.bedroom_fan',

@@ -39,7 +39,7 @@
 # name: test_all_entities[button.dual_cavity_oven_lower_oven_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dual cavity oven Lower oven stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual cavity oven Lower oven stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.dual_cavity_oven_lower_oven_stop',
@@ -89,7 +89,7 @@
 # name: test_all_entities[button.dual_cavity_oven_upper_oven_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dual cavity oven Upper oven stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dual cavity oven Upper oven stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.dual_cavity_oven_upper_oven_stop',
@@ -139,7 +139,7 @@
 # name: test_all_entities[button.single_cavity_oven_stop-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Single cavity oven Stop',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Single cavity oven Stop',
     }),
     'context': <ANY>,
     'entity_id': 'button.single_cavity_oven_stop',

@@ -1,6 +1,6 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 
-from typing import Any
+from typing import Any, override
 
 from pynobo import PynoboError, nobo
 
@@ -56,8 +56,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Nobø Ecohub platform from UI configuration."""
-
-    # Setup connection with hub
     hub = config_entry.runtime_data
 
     override_type = (
@@ -66,8 +64,20 @@ async def async_setup_entry(
         else nobo.API.OVERRIDE_TYPE_CONSTANT
     )
 
-    # Add zones as entities
-    async_add_entities(NoboZone(zone_id, hub, override_type) for zone_id in hub.zones)
+    known_zones: set[str] = set()
+
+    @callback
+    def _add_zones(_hub: nobo) -> None:
+        """Add climate entities for zones added to the hub."""
+        new_zones = [zone_id for zone_id in hub.zones if zone_id not in known_zones]
+        known_zones.update(new_zones)
+        async_add_entities(
+            NoboZone(zone_id, hub, override_type) for zone_id in new_zones
+        )
+
+    _add_zones(hub)
+    hub.register_callback(_add_zones)
+    config_entry.async_on_unload(lambda: hub.deregister_callback(_add_zones))
 
 
 class NoboZone(NoboBaseEntity, ClimateEntity):
@@ -104,11 +114,13 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
         )
         self._read_state()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
         preset = PRESET_COMFORT if hvac_mode == HVACMode.HEAT else PRESET_NONE
         await self._apply_preset(preset, "set_hvac_mode_failed")
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new zone override."""
         await self._apply_preset(preset_mode, "set_preset_mode_failed")
@@ -139,6 +151,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
                 translation_key=translation_key,
             ) from err
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TARGET_TEMP_LOW in kwargs:
@@ -158,14 +171,18 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
         """Fetch new state data for this zone."""
         self._read_state()
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Available when the hub is connected and the zone still exists."""
+        return super().available and self._id in self._nobo.zones
+
     @callback
+    @override
     def _read_state(self) -> None:
-        """Copy the current hub state onto the entity attributes."""
-        if self._id not in self._nobo.zones:
-            # Zone removed via the Nobø app; mark unavailable.
-            self._attr_available = False
+        """Read the current state from the hub. These are only local calls."""
+        if not self.available:
             return
-        self._attr_available = True
         state = self._nobo.get_current_zone_mode(self._id, dt_util.now())
         self._attr_hvac_mode = HVACMode.AUTO
         self._attr_preset_mode = PRESET_NONE

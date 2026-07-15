@@ -1,4 +1,5 @@
 """The Ruuvi Gateway integration."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 

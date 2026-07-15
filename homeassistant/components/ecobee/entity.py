@@ -1,7 +1,7 @@
 """Base classes shared among Ecobee entities."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -36,6 +36,7 @@ class EcobeeBaseEntity(Entity):
         return self.data.ecobee.get_thermostat(self.thermostat_index)
 
     @property
+    @override
     def available(self) -> bool:
         """Return if device is available."""
         return self.thermostat["runtime"]["connected"]

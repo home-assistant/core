@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime, time
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -10,11 +11,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     CONF_NAME,
-    PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     EntityCategory,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -53,6 +53,7 @@ class ValloxSensorEntity(ValloxEntity, SensorEntity):
         self._attr_unique_id = f"{self._device_uuid}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
         if (metric_key := self.entity_description.metric_key) is None:
@@ -72,6 +73,7 @@ class ValloxProfileSensor(ValloxSensorEntity):
     """Child class for profile reporting."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         vallox_profile = self.coordinator.data.profile
@@ -91,6 +93,7 @@ class ValloxFanSpeedSensor(ValloxSensorEntity):
     """Child class for fan speed reporting."""
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
         fan_is_on = self.coordinator.data.get(METRIC_KEY_MODE) == MODE_ON
@@ -101,6 +104,7 @@ class ValloxFilterRemainingSensor(ValloxSensorEntity):
     """Child class for filter remaining time reporting."""
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
         next_filter_change_date = self.coordinator.data.next_filter_change_date
@@ -118,6 +122,7 @@ class ValloxCellStateSensor(ValloxSensorEntity):
     """Child class for cell state reporting."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         super_native_value = super().native_value
@@ -132,6 +137,7 @@ class ValloxProfileDurationSensor(ValloxSensorEntity):
     """Child class for profile duration reporting."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
 
@@ -160,7 +166,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         translation_key="fan_speed",
         metric_key="A_CYC_FAN_SPEED",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_type=ValloxFanSpeedSensor,
     ),
     ValloxSensorEntityDescription(
@@ -247,14 +253,14 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_RH_VALUE",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     ValloxSensorEntityDescription(
         key="efficiency",
         translation_key="efficiency",
         metric_key="A_CYC_EXTRACT_EFFICIENCY",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_registry_enabled_default=False,
         round_ndigits=0,
     ),
@@ -263,7 +269,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_CO2_VALUE",
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         entity_registry_enabled_default=False,
     ),
     ValloxSensorEntityDescription(

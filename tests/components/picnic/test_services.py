@@ -9,6 +9,7 @@ from homeassistant.components.picnic.const import SERVICE_ADD_PRODUCT_TO_CART
 from homeassistant.components.picnic.services import PicnicServiceException
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from tests.common import MockConfigEntry
 
@@ -202,7 +203,7 @@ async def test_add_product_device_doesnt_exist(
     picnic_config_entry: MockConfigEntry,
 ) -> None:
     """Test adding a product for a specific Picnic service, which doesn't exist."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_ADD_PRODUCT_TO_CART,

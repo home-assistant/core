@@ -1,7 +1,7 @@
 """Class to hold all media player accessories."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_SWITCH
@@ -211,6 +211,7 @@ class MediaPlayer(HomeAccessory):
         self.async_call_service(MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_MUTE, params)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
         current_state = new_state.state
@@ -312,6 +313,7 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
 
         self.async_update_state(state)
 
+    @override
     def set_on_off(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "on_off" to %s', self.entity_id, value)
@@ -340,6 +342,7 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.async_call_service(MEDIA_PLAYER_DOMAIN, service, params)
 
+    @override
     def set_input_source(self, value: int) -> None:
         """Send input set value if call came from HomeKit."""
         _LOGGER.debug("%s: Set current input to %s", self.entity_id, value)
@@ -347,6 +350,7 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id, ATTR_INPUT_SOURCE: source_name}
         self.async_call_service(MEDIA_PLAYER_DOMAIN, SERVICE_SELECT_SOURCE, params)
 
+    @override
     def set_remote_key(self, value: int) -> None:
         """Send remote key value if call came from HomeKit."""
         _LOGGER.debug("%s: Set remote key to %s", self.entity_id, value)
@@ -376,6 +380,7 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update Television state after state changed."""
         current_state = new_state.state

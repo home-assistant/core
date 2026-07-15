@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from onedrive_personal_sdk.const import DriveState
 from onedrive_personal_sdk.models.items import DriveQuota
@@ -111,12 +112,14 @@ class OneDriveDriveStateSensor(
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         assert self.coordinator.data.quota
         return self.entity_description.value_fn(self.coordinator.data.quota)
 
     @property
+    @override
     def available(self) -> bool:
         """Availability of the sensor."""
         return super().available and self.coordinator.data.quota is not None

@@ -1,5 +1,7 @@
 """Support for Guntamatic sensors in Home Assistant."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -146,6 +148,7 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the current value of the sensor."""
         return self.coordinator.data[self.entity_description.key][0]
