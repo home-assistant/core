@@ -28,6 +28,20 @@ from homeassistant.util.dt import utcnow
 from tests.common import MockConfigEntry, async_capture_events, flush_store
 
 
+def _get_device_for_config_entry(
+    device_registry: dr.DeviceRegistry,
+    config_entry_id: str,
+    *,
+    identifiers: set[tuple[str, str]] | None = None,
+    connections: set[tuple[str, str]] | None = None,
+) -> dr.DeviceEntry | None:
+    """Return the device for a config entry matching identifiers or connections."""
+    for device in device_registry.devices.get_entries(identifiers, connections):
+        if device.config_entry_id == config_entry_id:
+            return device
+    return None
+
+
 @pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a mock config entry and add it to hass."""
@@ -2016,8 +2030,8 @@ async def test_migration_from_1_12(
         )
         == []
     )
-    collapsed = registry.async_get_device(
-        identifiers={("domain_c", "1")}, config_entry_id=config_entry_3.entry_id
+    collapsed = _get_device_for_config_entry(
+        registry, config_entry_3.entry_id, identifiers={("domain_c", "1")}
     )
     assert collapsed is not None
     assert collapsed.id == "subentries00000000000000000000"
@@ -2107,14 +2121,14 @@ async def test_migration_collapses_multi_subentry_device(
     assert device.composite_device_id is None
     assert device.has_composite_identifiers is False
     assert (
-        registry.async_get_device(
-            identifiers={("test", "device-1")}, config_entry_id=entry.entry_id
+        _get_device_for_config_entry(
+            registry, entry.entry_id, identifiers={("test", "device-1")}
         )
         is device
     )
     assert (
-        registry.async_get_device(
-            connections={("mac", "12:34:56:ab:cd:ef")}, config_entry_id=entry.entry_id
+        _get_device_for_config_entry(
+            registry, entry.entry_id, connections={("mac", "12:34:56:ab:cd:ef")}
         )
         is device
     )
@@ -3080,7 +3094,7 @@ async def test_async_update_device_composite_drops_identity_args(
 
     # No raise; the arg is ignored with a report-issue warning, devices untouched
     device_registry.async_update_device(composite.id, **update_kwargs)
-    assert "config_entry_id" in caplog.text
+    assert "async_entries_for_config_entry" in caplog.text
     assert "report this issue" in caplog.text
     assert device_registry.async_get(device_1.id) is device_1
     assert device_registry.async_get(device_2.id) is device_2
@@ -6558,14 +6572,14 @@ async def test_identifiers_unique_per_config_entry(
 
     # Scoped lookup returns the owning device
     assert (
-        device_registry.async_get_device(
-            identifiers={("shared", "1")}, config_entry_id=entry_a.entry_id
+        _get_device_for_config_entry(
+            device_registry, entry_a.entry_id, identifiers={("shared", "1")}
         ).id
         == device_a.id
     )
     assert (
-        device_registry.async_get_device(
-            identifiers={("shared", "1")}, config_entry_id=entry_b.entry_id
+        _get_device_for_config_entry(
+            device_registry, entry_b.entry_id, identifiers={("shared", "1")}
         ).id
         == device_b.id
     )
@@ -7041,8 +7055,8 @@ async def test_reregistration_replaces_composite_identifiers(
     await dr.async_load(hass)
     device_registry = dr.async_get(hass)
 
-    split_a = device_registry.async_get_device(
-        identifiers={("domain_a", "1")}, config_entry_id=entry_a.entry_id
+    split_a = _get_device_for_config_entry(
+        device_registry, entry_a.entry_id, identifiers={("domain_a", "1")}
     )
     assert split_a.has_composite_identifiers is True
 
@@ -7138,8 +7152,8 @@ async def test_clear_config_entry_clears_composite_primary_config_entry(
     await dr.async_load(hass)
     device_registry = dr.async_get(hass)
 
-    split_b = device_registry.async_get_device(
-        identifiers={("domain_a", "1")}, config_entry_id=entry_b.entry_id
+    split_b = _get_device_for_config_entry(
+        device_registry, entry_b.entry_id, identifiers={("domain_a", "1")}
     )
     assert split_b.composite_primary_config_entry == entry_a.entry_id
 
@@ -7147,13 +7161,13 @@ async def test_clear_config_entry_clears_composite_primary_config_entry(
     device_registry.async_clear_config_entry(entry_a.entry_id)
 
     assert (
-        device_registry.async_get_device(
-            identifiers={("domain_a", "1")}, config_entry_id=entry_a.entry_id
+        _get_device_for_config_entry(
+            device_registry, entry_a.entry_id, identifiers={("domain_a", "1")}
         )
         is None
     )
-    split_b = device_registry.async_get_device(
-        identifiers={("domain_a", "1")}, config_entry_id=entry_b.entry_id
+    split_b = _get_device_for_config_entry(
+        device_registry, entry_b.entry_id, identifiers={("domain_a", "1")}
     )
     assert split_b is not None
     assert split_b.composite_primary_config_entry is None
@@ -7183,8 +7197,8 @@ async def test_clear_non_primary_config_entry_keeps_composite_primary_config_ent
     # Clearing entry_b (not the former primary) removes its split but keeps the reference
     device_registry.async_clear_config_entry(entry_b.entry_id)
 
-    split_a = device_registry.async_get_device(
-        identifiers={("domain_a", "1")}, config_entry_id=entry_a.entry_id
+    split_a = _get_device_for_config_entry(
+        device_registry, entry_a.entry_id, identifiers={("domain_a", "1")}
     )
     assert split_a is not None
     assert split_a.composite_primary_config_entry == entry_a.entry_id

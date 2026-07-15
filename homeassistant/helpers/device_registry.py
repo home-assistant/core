@@ -1350,26 +1350,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         identifiers: set[tuple[str, str]] | None = None,
         connections: set[tuple[str, str]] | None = None,
-        *,
-        config_entry_id: str | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry | None:
         """Check if a device is registered.
 
-        Identifiers and connections are unique per config entry. If config_entry_id is
-        passed, only the device owned by that config entry is returned.
-
-        If config_entry_id is not passed and several config entries share the looked-up
-        identifier or connection, the match is resolved to a single device when possible
-        - preferring the device whose config entry domain matches the looked-up
-        identifier - otherwise a read-only composite spanning the matching devices is
-        returned, so callers that have not been migrated to pass config_entry_id still
-        reach all of them. async_update_device and async_remove_device fan such a
-        composite out to its underlying devices.
+        Identifiers and connections are unique per config entry. If several config
+        entries share the looked-up identifier or connection, the match is resolved to a
+        single device when possible - preferring the device whose config entry domain
+        matches the looked-up identifier - otherwise a read-only composite spanning the
+        matching devices is returned, so callers still reach all of them.
+        async_update_device and async_remove_device fan such a composite out to its
+        underlying devices.
         """
-        if config_entry_id is not UNDEFINED:
-            return self.devices.get_entry(
-                identifiers, connections, config_entry_id=config_entry_id
-            )
         matches = self._async_matching_devices(identifiers, connections)
         if len(matches) <= 1:
             return matches[0] if matches else None
@@ -2340,11 +2331,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             report_usage(
                 f"passed {', '.join(ignored)} to device_registry.async_update_device "
                 "for a composite device that spans several config entries (returned for "
-                "an ambiguous async_get_device lookup without config_entry_id, or "
+                "an ambiguous async_get_device lookup, or "
                 "resolved from a stored device id of a pre-migration composite); the "
                 "argument cannot be applied to the merged device and was ignored - "
-                "target a single device, e.g. by passing config_entry_id to "
-                "async_get_device",
+                "target a single device, e.g. one returned by "
+                "async_entries_for_config_entry",
                 core_behavior=ReportBehavior.LOG,
             )
             for name in ignored:

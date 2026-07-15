@@ -46,6 +46,20 @@ DEFAULT_TAG_SCAN_JSON = (
 )
 
 
+def _get_device_for_config_entry(
+    device_registry: dr.DeviceRegistry,
+    config_entry_id: str,
+    *,
+    identifiers: set[tuple[str, str]] | None = None,
+    connections: set[tuple[str, str]] | None = None,
+) -> dr.DeviceEntry | None:
+    """Return the device for a config entry matching identifiers or connections."""
+    for device in device_registry.devices.get_entries(identifiers, connections):
+        if device.config_entry_id == config_entry_id:
+            return device
+    return None
+
+
 @pytest.mark.no_fail_on_log_exception
 async def test_discover_bad_tag(
     hass: HomeAssistant,
@@ -572,15 +586,17 @@ async def test_cleanup_tag(
 
     # Verify device registry entries are created. Identifiers are unique per config
     # entry, so the test config entry and MQTT get separate "helloworld" devices
-    device_entry1 = device_registry.async_get_device(
+    device_entry1 = _get_device_for_config_entry(
+        device_registry,
+        config_entry.entry_id,
         identifiers={("mqtt", "helloworld")},
-        config_entry_id=config_entry.entry_id,
     )
     assert device_entry1 is not None
     assert device_entry1.config_entries == {config_entry.entry_id}
-    mqtt_device_entry1 = device_registry.async_get_device(
+    mqtt_device_entry1 = _get_device_for_config_entry(
+        device_registry,
+        mqtt_entry.entry_id,
         identifiers={("mqtt", "helloworld")},
-        config_entry_id=mqtt_entry.entry_id,
     )
     assert mqtt_device_entry1 is not None
     assert mqtt_device_entry1.config_entries == {mqtt_entry.entry_id}
@@ -593,15 +609,17 @@ async def test_cleanup_tag(
         device_entry1.id, remove_config_entry_id=config_entry.entry_id
     )
     assert (
-        device_registry.async_get_device(
+        _get_device_for_config_entry(
+            device_registry,
+            config_entry.entry_id,
             identifiers={("mqtt", "helloworld")},
-            config_entry_id=config_entry.entry_id,
         )
         is None
     )
-    mqtt_device_entry1 = device_registry.async_get_device(
+    mqtt_device_entry1 = _get_device_for_config_entry(
+        device_registry,
+        mqtt_entry.entry_id,
         identifiers={("mqtt", "helloworld")},
-        config_entry_id=mqtt_entry.entry_id,
     )
     assert mqtt_device_entry1 is not None
     assert mqtt_device_entry1.config_entries == {mqtt_entry.entry_id}
