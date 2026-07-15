@@ -8,10 +8,9 @@ CONF_INFRARED_RECEIVER_ENTITY_ID = "infrared_receiver_entity_id"
 CONF_DEVICE_TYPE = "device_type"
 CONF_HVAC_MODES = "hvac_modes"
 
-MIN_TEMP = 16
-MAX_TEMP = 30
-
 FAN_QUIET = "quiet"
+FAN_MEDIUM_LOW = "medium_low"
+FAN_MEDIUM_HIGH = "medium_high"
 
 
 class LGDeviceType(StrEnum):

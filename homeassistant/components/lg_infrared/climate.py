@@ -4,10 +4,11 @@ import logging
 from typing import Any, override
 
 from infrared_protocols.commands.lg_ac import (
+    MAX_TEMP,
+    MIN_TEMP,
     LgAcCommand,
     LgAcFanSpeed,
     LgAcMode,
-    decode,
 )
 
 from homeassistant.components.climate import (
@@ -35,9 +36,9 @@ from .const import (
     CONF_HVAC_MODES,
     CONF_INFRARED_ENTITY_ID,
     CONF_INFRARED_RECEIVER_ENTITY_ID,
+    FAN_MEDIUM_HIGH,
+    FAN_MEDIUM_LOW,
     FAN_QUIET,
-    MAX_TEMP,
-    MIN_TEMP,
     LGDeviceType,
 )
 from .entity import LgIrEntity
@@ -50,7 +51,9 @@ _HA_FAN_TO_LIB: dict[str, LgAcFanSpeed] = {
     FAN_AUTO: LgAcFanSpeed.AUTO,
     FAN_QUIET: LgAcFanSpeed.QUIET,
     FAN_LOW: LgAcFanSpeed.LOW,
+    FAN_MEDIUM_LOW: LgAcFanSpeed.MEDIUM_LOW,
     FAN_MEDIUM: LgAcFanSpeed.MEDIUM,
+    FAN_MEDIUM_HIGH: LgAcFanSpeed.MEDIUM_HIGH,
     FAN_HIGH: LgAcFanSpeed.HIGH,
 }
 _LIB_FAN_TO_HA: dict[LgAcFanSpeed, str] = {v: k for k, v in _HA_FAN_TO_LIB.items()}
@@ -90,7 +93,15 @@ class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
-    _attr_fan_modes = [FAN_AUTO, FAN_QUIET, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+    _attr_fan_modes = [
+        FAN_AUTO,
+        FAN_QUIET,
+        FAN_LOW,
+        FAN_MEDIUM_LOW,
+        FAN_MEDIUM,
+        FAN_MEDIUM_HIGH,
+        FAN_HIGH,
+    ]
 
     def __init__(self, entry: ConfigEntry, emitter_id: str) -> None:
         """Initialize LG AC climate entity."""
@@ -127,22 +138,30 @@ class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity
     @callback
     def _on_ir_received(self, signal: InfraredReceivedSignal) -> None:
         """Update state from physical remote signal."""
-        state = decode(signal.timings)
-        if state is None:
+        command = LgAcCommand.from_raw_timings(signal.timings)
+        if command is None:
             return
-        self._attr_hvac_mode = _LIB_MODE_TO_HA.get(state.mode, HVACMode.OFF)
-        self._attr_fan_mode = _LIB_FAN_TO_HA.get(state.fan, FAN_AUTO)
-        if state.temp_c is not None:
-            self._attr_target_temperature = float(state.temp_c)
+
+        hvac_mode = _LIB_MODE_TO_HA[command.mode]
+        if hvac_mode not in self._attr_hvac_modes:
+            return
+        self._attr_hvac_mode = hvac_mode
+
+        # A power-off frame is a fixed code carrying neither fan nor temperature, so the
+        # decoded command leaves them unset. Keep the last known values instead, otherwise
+        # powering off would reset them.
+        if command.fan is not None:
+            self._attr_fan_mode = _LIB_FAN_TO_HA[command.fan]
+        if command.temperature is not None:
+            self._attr_target_temperature = float(command.temperature)
+
         self.async_write_ha_state()
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
-        lib_mode = _HA_MODE_TO_LIB[hvac_mode]
-        fan = _HA_FAN_TO_LIB.get(self._attr_fan_mode or FAN_AUTO, LgAcFanSpeed.AUTO)
         temp = int(self._attr_target_temperature or MIN_TEMP)
-        await self._send_command(self._build_command(lib_mode, temp, fan))
+        await self._send_command(self._build_command(_HA_MODE_TO_LIB[hvac_mode], temp))
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
 
@@ -151,32 +170,26 @@ class LgAcClimateEntity(LgIrEntity, InfraredEmitterConsumerEntity, ClimateEntity
         """Set target temperature."""
         temp = int(kwargs[ATTR_TEMPERATURE])
         self._attr_target_temperature = float(temp)
-        lib_mode = _HA_MODE_TO_LIB.get(
-            self._attr_hvac_mode or HVACMode.OFF, LgAcMode.OFF
-        )
+        lib_mode = _HA_MODE_TO_LIB[self._attr_hvac_mode or HVACMode.OFF]
         if lib_mode in (LgAcMode.COOL, LgAcMode.HEAT):
-            fan = _HA_FAN_TO_LIB.get(self._attr_fan_mode or FAN_AUTO, LgAcFanSpeed.AUTO)
-            await self._send_command(
-                LgAcCommand(mode=lib_mode, temperature=temp, fan=fan)
-            )
+            await self._send_command(self._build_command(lib_mode, temp))
         self.async_write_ha_state()
 
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         self._attr_fan_mode = fan_mode
-        lib_mode = _HA_MODE_TO_LIB.get(
-            self._attr_hvac_mode or HVACMode.OFF, LgAcMode.OFF
-        )
-        if lib_mode != LgAcMode.OFF:
-            fan = _HA_FAN_TO_LIB.get(fan_mode, LgAcFanSpeed.AUTO)
+        lib_mode = _HA_MODE_TO_LIB[self._attr_hvac_mode or HVACMode.OFF]
+        if lib_mode is not LgAcMode.OFF:
             temp = int(self._attr_target_temperature or MIN_TEMP)
-            await self._send_command(self._build_command(lib_mode, temp, fan))
+            await self._send_command(self._build_command(lib_mode, temp))
         self.async_write_ha_state()
 
-    def _build_command(
-        self, mode: LgAcMode, temp: int, fan: LgAcFanSpeed
-    ) -> LgAcCommand:
-        if mode in (LgAcMode.COOL, LgAcMode.HEAT):
-            return LgAcCommand(mode=mode, temperature=temp, fan=fan)
-        return LgAcCommand(mode=mode, fan=fan)
+    def _build_command(self, mode: LgAcMode, temp: int) -> LgAcCommand:
+        """Build a command from a mode, a temperature and the current fan mode.
+
+        The library drops the temperature for the modes whose frames cannot carry one,
+        so it can be passed unconditionally.
+        """
+        fan = _HA_FAN_TO_LIB[self._attr_fan_mode or FAN_AUTO]
+        return LgAcCommand(mode=mode, temperature=temp, fan=fan)

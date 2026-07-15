@@ -3,7 +3,12 @@
 from collections.abc import Callable
 from unittest.mock import patch
 
-from infrared_protocols.commands.lg_ac import LgAcCommand, LgAcFanSpeed, LgAcMode
+from infrared_protocols.commands.lg_ac import (
+    MIN_TEMP,
+    LgAcCommand,
+    LgAcFanSpeed,
+    LgAcMode,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -19,7 +24,11 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.infrared import InfraredReceivedSignal
-from homeassistant.components.lg_infrared.const import MIN_TEMP
+from homeassistant.components.lg_infrared.const import (
+    FAN_MEDIUM_HIGH,
+    FAN_MEDIUM_LOW,
+    FAN_QUIET,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -328,13 +337,27 @@ async def test_set_fan_mode_sends_command_when_active(
 
 
 @pytest.mark.usefixtures("init_ac_integration_with_receiver")
+@pytest.mark.parametrize(
+    ("lib_fan", "expected_fan_mode"),
+    [
+        pytest.param(LgAcFanSpeed.QUIET, FAN_QUIET, id="quiet"),
+        pytest.param(LgAcFanSpeed.LOW, FAN_LOW, id="low"),
+        pytest.param(LgAcFanSpeed.MEDIUM_LOW, FAN_MEDIUM_LOW, id="medium_low"),
+        pytest.param(LgAcFanSpeed.MEDIUM, FAN_MEDIUM, id="medium"),
+        pytest.param(LgAcFanSpeed.MEDIUM_HIGH, FAN_MEDIUM_HIGH, id="medium_high"),
+        pytest.param(LgAcFanSpeed.HIGH, FAN_HIGH, id="high"),
+        pytest.param(LgAcFanSpeed.AUTO, FAN_AUTO, id="auto"),
+    ],
+)
 async def test_receiver_updates_state_on_cool_signal(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    lib_fan: LgAcFanSpeed,
+    expected_fan_mode: str,
 ) -> None:
-    """Test that a received cool signal updates the climate entity state."""
+    """Test that a received cool signal updates mode, temperature and every fan speed."""
     timings = LgAcCommand(
-        mode=LgAcMode.COOL, temperature=24, fan=LgAcFanSpeed.MEDIUM
+        mode=LgAcMode.COOL, temperature=24, fan=lib_fan
     ).get_raw_timings()
 
     signal = InfraredReceivedSignal(timings=timings)
@@ -344,7 +367,7 @@ async def test_receiver_updates_state_on_cool_signal(
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
     assert state.state == HVACMode.COOL
-    assert state.attributes["fan_mode"] == FAN_MEDIUM
+    assert state.attributes["fan_mode"] == expected_fan_mode
     assert float(state.attributes["temperature"]) == 24.0
 
 
@@ -353,7 +376,19 @@ async def test_receiver_updates_state_on_off_signal(
     hass: HomeAssistant,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
 ) -> None:
-    """Test that a received off signal sets mode to off."""
+    """Test a received off signal sets mode to off, keeping temperature and fan.
+
+    Power-off is a fixed code carrying neither, so they must survive it.
+    """
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=LgAcCommand(
+                mode=LgAcMode.COOL, temperature=24, fan=LgAcFanSpeed.MEDIUM
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+
     mock_infrared_receiver_entity._handle_received_signal(
         InfraredReceivedSignal(timings=LgAcCommand(mode=LgAcMode.OFF).get_raw_timings())
     )
@@ -362,6 +397,29 @@ async def test_receiver_updates_state_on_off_signal(
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
     assert state.state == HVACMode.OFF
+    assert state.attributes["fan_mode"] == FAN_MEDIUM
+    assert float(state.attributes["temperature"]) == 24.0
+
+
+@pytest.mark.usefixtures("init_ac_integration_with_receiver")
+async def test_receiver_ignores_unconfigured_hvac_mode(
+    hass: HomeAssistant,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Test a signal for a mode the user did not configure does not change state."""
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=LgAcCommand(
+                mode=LgAcMode.HEAT, temperature=24, fan=LgAcFanSpeed.HIGH
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+    assert state.attributes["fan_mode"] == FAN_AUTO
 
 
 @pytest.mark.usefixtures("init_ac_integration_with_receiver")
