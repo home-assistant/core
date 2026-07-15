@@ -20,10 +20,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import VizioConfigEntry, VizioDeviceCoordinator
+from .helpers import async_device_command
 
 PARALLEL_UPDATES = 0
 
-# Maps native pyvizio key names to human-friendly aliases.
+# Maps native vizaio key names to human-friendly aliases.
 # Keys are uppercase native names (e.g. "CC_TOGGLE"), values are lists of lowercase aliases.
 REMOTE_KEY_ALIASES: dict[str, list[str]] = {
     "CC_TOGGLE": ["closed_captions", "cc"],
@@ -74,8 +75,8 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
             assert unique_id is not None
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, unique_id)})
         self._device = coordinator.device
-        valid_keys = set(self._device.get_remote_keys_list())
-        # Map lowercased native keys to their original uppercase pyvizio names
+        valid_keys = set(self._device.available_keys)
+        # Map lowercased native keys to their original uppercase vizaio names
         self._command_map: dict[str, str] = {key.lower(): key for key in valid_keys}
         # Add aliases only for native keys this device actually supports
         for alias, target in _ALIAS_LOOKUP.items():
@@ -89,7 +90,7 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
         return self.coordinator.data.is_on
 
     def _resolve_command(self, command: str) -> str:
-        """Resolve an lowercased command string to a pyvizio key name."""
+        """Resolve an lowercased command string to a vizaio key name."""
         if resolved := self._command_map.get(command):
             return resolved
         raise ServiceValidationError(
@@ -101,12 +102,12 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
-        await self._device.pow_on(log_api_exception=False)
+        await async_device_command(self._device.power_on())
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
-        await self._device.pow_off(log_api_exception=False)
+        await async_device_command(self._device.power_off())
 
     @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
@@ -117,6 +118,6 @@ class VizioRemote(CoordinatorEntity[VizioDeviceCoordinator], RemoteEntity):
 
         for i in range(num_repeats):
             for cmd in resolved:
-                await self._device.remote(cmd, log_api_exception=False)
+                await async_device_command(self._device.send_key(cmd))
             if i < num_repeats - 1:
                 await asyncio.sleep(delay)

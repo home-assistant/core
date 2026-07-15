@@ -2827,9 +2827,6 @@ pyversasense==0.0.6
 # homeassistant.components.vesync
 pyvesync==3.4.2
 
-# homeassistant.components.vizio
-pyvizio==0.1.64
-
 # homeassistant.components.velux
 pyvlx==0.2.36
 
@@ -3324,6 +3321,9 @@ vilfo-api-client==0.5.0
 
 # homeassistant.components.watts
 visionpluspython==1.1.0
+
+# homeassistant.components.vizio
+vizaio==0.3.0
 
 # homeassistant.components.caldav
 vobject==0.9.9
