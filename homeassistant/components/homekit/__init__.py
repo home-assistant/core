@@ -116,7 +116,6 @@ from .const import (
     CONF_ENTRY_INDEX,
     CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
-    CONF_HOMEKIT_HIDDEN_SOURCES,
     CONF_HOMEKIT_MODE,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
@@ -153,6 +152,7 @@ from .util import (
     state_needs_accessory_mode,
     validate_entity_config,
 )
+from .visibility import AccessoryVisibilityStorage
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -396,7 +396,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
         homekit=homekit,
         pairing_qr=None,
         pairing_qr_secret=None,
-        last_options=dict(entry.options),
     )
     entry.runtime_data = entry_data
 
@@ -414,22 +413,6 @@ async def _async_update_listener(
     """Handle options update."""
     if entry.source == SOURCE_IMPORT:
         return
-    # Per-input visibility writes from HomeKit go through entry.options too.
-    # Skip the reload (which tears down the bridge and disrupts pairings) when
-    # the only thing that changed is the persisted hidden-source map.
-    entry_data = entry.runtime_data
-    new_options = dict(entry.options)
-    if entry_data is not None:
-        last = entry_data.last_options
-        last_without_visibility = {
-            k: v for k, v in last.items() if k != CONF_HOMEKIT_HIDDEN_SOURCES
-        }
-        new_without_visibility = {
-            k: v for k, v in new_options.items() if k != CONF_HOMEKIT_HIDDEN_SOURCES
-        }
-        if last_without_visibility == new_without_visibility:
-            entry_data.last_options = new_options
-            return
     await hass.config_entries.async_reload(entry.entry_id)
 
 
@@ -594,6 +577,7 @@ class HomeKit:
         self._devices = devices or []
         self.aid_storage: AccessoryAidStorage | None = None
         self.iid_storage: AccessoryIIDStorage | None = None
+        self.visibility_storage: AccessoryVisibilityStorage | None = None
         self.status = STATUS_READY
         self.driver: HomeDriver | None = None
         self.bridge: HomeBridge | None = None
@@ -612,6 +596,7 @@ class HomeKit:
         Returns False if the persistent data was not loaded
         """
         assert self.iid_storage is not None
+        assert self.visibility_storage is not None
         persist_file = get_persist_fullpath_for_entry_id(self.hass, self._entry_id)
         self.driver = HomeDriver(
             self.hass,
@@ -627,6 +612,7 @@ class HomeKit:
             zeroconf_server=f"{uuid}-hap.local.",
             loader=get_loader(),
             iid_storage=self.iid_storage,
+            visibility_storage=self.visibility_storage,
         )
         # If we do not load the mac address will be wrong
         # as pyhap uses a random one until state is restored
@@ -922,9 +908,11 @@ class HomeKit:
         uuid = await instance_id.async_get(self.hass)
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         self.iid_storage = AccessoryIIDStorage(self.hass, self._entry_id)
+        self.visibility_storage = AccessoryVisibilityStorage(self.hass, self._entry_id)
         # Avoid gather here since it will be I/O bound anyways
         await self.aid_storage.async_initialize()
         await self.iid_storage.async_initialize()
+        await self.visibility_storage.async_initialize()
         loaded_from_disk = await self.hass.async_add_executor_job(
             self.setup, async_zc_instance, uuid
         )

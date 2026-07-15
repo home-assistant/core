@@ -27,7 +27,6 @@ from homeassistant.components.homekit.const import (
     BRIDGE_NAME,
     BRIDGE_SERIAL_NUMBER,
     CONF_ADVERTISE_IP,
-    CONF_HOMEKIT_HIDDEN_SOURCES,
     DEFAULT_PORT,
     DOMAIN,
     HOMEKIT_MODE_ACCESSORY,
@@ -285,6 +284,7 @@ async def test_homekit_setup(hass: HomeAssistant, hk_driver) -> None:
     uuid = await instance_id.async_get(hass)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
         homekit.iid_storage = MagicMock()
+        homekit.visibility_storage = MagicMock()
         await hass.async_add_executor_job(homekit.setup, zeroconf_mock, uuid)
 
     path = get_persist_fullpath_for_entry_id(hass, entry.entry_id)
@@ -302,6 +302,7 @@ async def test_homekit_setup(hass: HomeAssistant, hk_driver) -> None:
         zeroconf_server=f"{uuid}-hap.local.",
         loader=ANY,
         iid_storage=ANY,
+        visibility_storage=ANY,
     )
     assert homekit.driver.safe_mode is False
 
@@ -333,6 +334,7 @@ async def test_homekit_setup_ip_address(
     uuid = await instance_id.async_get(hass)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
         homekit.iid_storage = MagicMock()
+        homekit.visibility_storage = MagicMock()
         await hass.async_add_executor_job(homekit.setup, mock_async_zeroconf, uuid)
     mock_driver.assert_called_with(
         hass,
@@ -348,6 +350,7 @@ async def test_homekit_setup_ip_address(
         zeroconf_server=f"{uuid}-hap.local.",
         loader=ANY,
         iid_storage=ANY,
+        visibility_storage=ANY,
     )
 
 
@@ -383,6 +386,7 @@ async def test_homekit_with_single_advertise_ips(
         zeroconf_server=ANY,
         loader=ANY,
         iid_storage=ANY,
+        visibility_storage=ANY,
     )
 
 
@@ -422,6 +426,7 @@ async def test_homekit_with_many_advertise_ips(
         zeroconf_server=ANY,
         loader=ANY,
         iid_storage=ANY,
+        visibility_storage=ANY,
     )
 
 
@@ -452,6 +457,7 @@ async def test_homekit_setup_advertise_ips(hass: HomeAssistant, hk_driver) -> No
     uuid = await instance_id.async_get(hass)
     with patch(f"{PATH_HOMEKIT}.HomeDriver", return_value=hk_driver) as mock_driver:
         homekit.iid_storage = MagicMock()
+        homekit.visibility_storage = MagicMock()
         await hass.async_add_executor_job(homekit.setup, async_zeroconf_instance, uuid)
     mock_driver.assert_called_with(
         hass,
@@ -467,6 +473,7 @@ async def test_homekit_setup_advertise_ips(hass: HomeAssistant, hk_driver) -> No
         zeroconf_server=f"{uuid}-hap.local.",
         loader=ANY,
         iid_storage=ANY,
+        visibility_storage=ANY,
     )
 
 
@@ -2520,69 +2527,3 @@ async def test_wait_for_port_to_free(
         await hass.async_block_till_done()
         assert "Waiting for the HomeKit server to shutdown" in caplog.text
         assert port_mock.called
-
-
-async def test_update_listener_skips_reload_for_visibility_only(
-    hass: HomeAssistant,
-) -> None:
-    """A homekit_hidden_sources-only options change must not reload the entry."""
-    entity_id = "media_player.tv"
-    initial_options = {
-        CONF_HOMEKIT_HIDDEN_SOURCES: {entity_id: ["HDMI 1"]},
-    }
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_NAME: "test", CONF_PORT: 12345},
-        options=initial_options,
-    )
-    entry.add_to_hass(hass)
-    entry.runtime_data = HomeKitEntryData(
-        homekit=Mock(),
-        last_options=dict(initial_options),
-    )
-
-    new_options = {
-        CONF_HOMEKIT_HIDDEN_SOURCES: {entity_id: ["HDMI 1", "HDMI 2"]},
-    }
-    hass.config_entries.async_update_entry(entry, options=new_options)
-
-    with patch.object(
-        hass.config_entries, "async_reload", new_callable=AsyncMock
-    ) as mock_reload:
-        await homekit_base._async_update_listener(hass, entry)
-
-    mock_reload.assert_not_called()
-    assert entry.runtime_data.last_options == new_options
-
-
-async def test_update_listener_reloads_when_other_options_change(
-    hass: HomeAssistant,
-) -> None:
-    """Changes outside homekit_hidden_sources still trigger an entry reload."""
-    initial_options = {
-        "filter": {"include_domains": ["light"]},
-        CONF_HOMEKIT_HIDDEN_SOURCES: {"media_player.tv": ["HDMI 1"]},
-    }
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_NAME: "test", CONF_PORT: 12345},
-        options=initial_options,
-    )
-    entry.add_to_hass(hass)
-    entry.runtime_data = HomeKitEntryData(
-        homekit=Mock(),
-        last_options=dict(initial_options),
-    )
-
-    new_options = {
-        "filter": {"include_domains": ["light", "switch"]},
-        CONF_HOMEKIT_HIDDEN_SOURCES: {"media_player.tv": ["HDMI 1"]},
-    }
-    hass.config_entries.async_update_entry(entry, options=new_options)
-
-    with patch.object(
-        hass.config_entries, "async_reload", new_callable=AsyncMock
-    ) as mock_reload:
-        await homekit_base._async_update_listener(hass, entry)
-
-    mock_reload.assert_called_once_with(entry.entry_id)

@@ -584,6 +584,11 @@ def get_iid_storage_filename_for_entry_id(entry_id: str) -> str:
     return f"{DOMAIN}.{entry_id}.iids"
 
 
+def get_visibility_storage_filename_for_entry_id(entry_id: str) -> str:
+    """Determine the filename of homekit input visibility storage file."""
+    return f"{DOMAIN}.{entry_id}.visibility"
+
+
 def get_persist_fullpath_for_entry_id(hass: HomeAssistant, entry_id: str) -> str:
     """Determine the path to the homekit state file."""
     return hass.config.path(STORAGE_DIR, get_persist_filename_for_entry_id(entry_id))
