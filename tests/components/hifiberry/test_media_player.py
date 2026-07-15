@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_NAME,
@@ -29,10 +31,10 @@ from tests.common import MockConfigEntry
 ENTITY_ID = "media_player.kitchen_speaker"
 
 
+@pytest.mark.usefixtures("mock_audiocontrol_client")
 async def test_media_player_state(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_audiocontrol_client: MagicMock,
 ) -> None:
     """Test media player state and attributes."""
     mock_config_entry.add_to_hass(hass)
@@ -133,3 +135,55 @@ async def test_media_player_services(
         blocking=True,
     )
     mock_audiocontrol_client.async_set_volume.assert_awaited_with(0)
+
+
+async def test_media_player_play_pause_capability(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_audiocontrol_client: MagicMock,
+) -> None:
+    """Test play/pause controls use play_pause when that is the only capability."""
+    mock_audiocontrol_client.active_player_capabilities = {"play_pause"}
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PLAY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+
+    mock_audiocontrol_client.async_command.assert_awaited_with("play_pause")
+
+
+async def test_volume_change_clears_emulated_mute(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_audiocontrol_client: MagicMock,
+) -> None:
+    """Test volume changes keep emulated mute state in sync."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_MUTE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
+        blocking=True,
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is True
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
+        blocking=True,
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is False

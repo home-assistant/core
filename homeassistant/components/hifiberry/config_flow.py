@@ -11,21 +11,17 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-
-def _schema(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT) -> vol.Schema:
-    """Return the config flow schema."""
-    return vol.Schema(
-        {
-            vol.Required(CONF_HOST, default=host): str,
-            vol.Required(CONF_PORT, default=port): int,
-        }
-    )
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT): int,
+    }
+)
 
 
 async def validate_input(hass: HomeAssistant, host: str, port: int) -> None:
@@ -77,42 +73,12 @@ class HiFiBerryConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=_schema(self._host, self._port), errors=errors
-        )
-
-    @override
-    async def async_step_zeroconf(
-        self, discovery_info: ZeroconfServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle zeroconf discovery."""
-        self._host = discovery_info.hostname.rstrip(".")
-        self._port = DEFAULT_PORT
-
-        await self.async_set_unique_id(self._host)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
-
-        return await self.async_step_discovery_confirm()
-
-    async def async_step_discovery_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle user confirmation of a discovered player."""
-        if user_input is not None:
-            try:
-                await validate_input(self.hass, self._host, self._port)
-            except CannotConnect:
-                return self.async_abort(reason="cannot_connect")
-            return self.async_create_entry(
-                title=self._host,
-                data={
-                    CONF_HOST: self._host,
-                    CONF_PORT: self._port,
-                },
-            )
-
-        return self.async_show_form(
-            step_id="discovery_confirm",
-            description_placeholders={"host": self._host},
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                {CONF_HOST: self._host, CONF_PORT: self._port},
+            ),
+            errors=errors,
         )
 
 

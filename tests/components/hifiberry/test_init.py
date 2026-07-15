@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+import pytest
 from aiohifiberry import AudioControlError
 
 from homeassistant.config_entries import ConfigEntryState
@@ -40,10 +41,10 @@ async def test_setup_entry_not_ready(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("mock_audiocontrol_client")
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_audiocontrol_client: MagicMock,
 ) -> None:
     """Test unloading a config entry."""
     mock_config_entry.add_to_hass(hass)
