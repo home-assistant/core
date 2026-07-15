@@ -20,7 +20,10 @@ from homeassistant.components.knx.const import (
     KNX_TELEGRAM_BACKEND_POSTGRES,
     REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
 )
-from homeassistant.components.knx.telegrams import TelegramDict
+from homeassistant.components.knx.telegrams import (
+    STORE_INIT_RETRY_BACKOFF,
+    TelegramDict,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.util import dt as dt_util
@@ -135,7 +138,6 @@ async def test_store_telegram_history_sqlite(
     "side_effect",
     [
         pytest.param(KnxTelegramStoreException("DB init failure"), id="db_error"),
-        pytest.param(TimeoutError(), id="timeout"),
         pytest.param(ValueError("unexpected"), id="generic_error"),
     ],
 )
@@ -164,7 +166,7 @@ async def test_store_telegram_history_needs_migration_timeout(
     hass: HomeAssistant,
     knx: KNXTestKit,
 ) -> None:
-    """Test that store initialization is aborted when needs_migration times out."""
+    """Test store init aborts when needs_migration times out and retries are off."""
 
     async def hanging_probe() -> bool:
         await asyncio.Event().wait()
@@ -172,6 +174,7 @@ async def test_store_telegram_history_needs_migration_timeout(
 
     with (
         patch("homeassistant.components.knx.telegrams.STORE_INIT_TIMEOUT", 0.05),
+        patch("homeassistant.components.knx.telegrams.STORE_INIT_MAX_RETRIES", 0),
         patch(
             "knx_telegram_store.BufferedSqliteStore.needs_migration",
             side_effect=hanging_probe,
@@ -186,6 +189,88 @@ async def test_store_telegram_history_needs_migration_timeout(
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
     assert issue is not None
+
+
+async def test_store_init_timeout_retries_and_succeeds(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A transient init timeout is retried in the background and then succeeds."""
+    freezer.move_to("2024-01-01 12:00:00+00:00")
+    with (
+        patch(
+            "knx_telegram_store.BufferedSqliteStore.initialize",
+            side_effect=[TimeoutError(), None],
+        ),
+        patch(
+            "knx_telegram_store.BufferedSqliteStore.get_last_unique_telegrams",
+            return_value=[],
+        ),
+    ):
+        await knx.setup_integration()
+
+        telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+        issue_registry = ir.async_get(hass)
+
+        # First attempt timed out: no store yet and a repair issue is raised,
+        # but init is not abandoned - a background retry is scheduled.
+        assert telegrams_module.store is None
+        assert (
+            issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+            is not None
+        )
+
+        # Advance past the first backoff so the scheduled retry fires.
+        freezer.tick(STORE_INIT_RETRY_BACKOFF[0] + 1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Retry succeeded: store initialized and the repair issue cleared.
+        assert telegrams_module.store is not None
+        assert (
+            issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+            is None
+        )
+
+
+async def test_store_init_timeout_exhausts_retries_and_aborts(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A persistent init timeout disables the store once the retry budget is spent."""
+    freezer.move_to("2024-01-01 12:00:00+00:00")
+    with (
+        patch("homeassistant.components.knx.telegrams.STORE_INIT_MAX_RETRIES", 1),
+        patch(
+            "knx_telegram_store.BufferedSqliteStore.initialize",
+            side_effect=TimeoutError(),
+        ),
+    ):
+        await knx.setup_integration()
+
+        telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+        issue_registry = ir.async_get(hass)
+
+        # First timeout: retry scheduled, repair raised, no store yet.
+        assert telegrams_module.store is None
+        assert (
+            issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+            is not None
+        )
+
+        # Fire the retry; it times out again and, the budget being spent,
+        # the store is abandoned.
+        freezer.tick(STORE_INIT_RETRY_BACKOFF[0] + 1)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert telegrams_module.store is None
+    assert (
+        issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
+        is not None
+    )
 
 
 async def test_migrate_telegrams_from_json(
