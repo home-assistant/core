@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DVLAConfigEntry
-from .const import CONF_REG_NUMBER, DOMAIN
+from .const import DOMAIN
 from .coordinator import DVLACoordinator
 
 SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
@@ -139,10 +139,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors from a config entry created in the integrations UI."""
     coordinator = entry.runtime_data
-    name = entry.data[CONF_REG_NUMBER]
+    reg_number = coordinator.reg_number
 
     async_add_entities(
-        DVLASensor(coordinator, name, description)
+        DVLASensor(coordinator, reg_number, description)
         for description in SENSOR_DESCRIPTIONS
     )
 

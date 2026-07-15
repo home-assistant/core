@@ -273,4 +273,3 @@ async def test_device_entry_type(hass: HomeAssistant) -> None:
     assert device.entry_type is DeviceEntryType.SERVICE
     assert device.manufacturer == "FORD"
     assert device.model is None
-    assert device.entry_type is DeviceEntryType.SERVICE
