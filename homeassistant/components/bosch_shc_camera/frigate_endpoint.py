@@ -43,7 +43,7 @@ import hmac
 import ipaddress
 import logging
 import socket
-from typing import Any, Protocol, TypeVar
+from typing import Any, Protocol
 from urllib.parse import quote as _urlquote
 
 from bosch_shc_camera_client.auth_utils import (
@@ -52,8 +52,6 @@ from bosch_shc_camera_client.auth_utils import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-_T = TypeVar("_T")
 
 # Auth modes (mirrored in const.py CONF defaults + the options flow selector).
 AUTH_NONE = "none"
@@ -216,7 +214,7 @@ def inject_auth_header(request: bytes, auth_value: str) -> bytes:
     kept = [
         ln
         for ln in head.split("\r\n")
-        if not ln.split(":", 1)[0].strip().lower() == "authorization"
+        if ln.split(":", 1)[0].strip().lower() != "authorization"
     ]
     kept.append(f"Authorization: {auth_value}")
     return ("\r\n".join(kept)).encode("utf-8") + tail

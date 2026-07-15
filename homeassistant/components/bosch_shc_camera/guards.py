@@ -40,7 +40,10 @@ def _get_cam_lock(coordinator: Any, lock_attr: str, cam_id: str) -> asyncio.Lock
 def _is_gen2_indoor(entity: Any) -> bool:
     """Return True if the entity's camera is a Gen2 Indoor model."""
     hw = (
-        entity.coordinator.data.get(entity._cam_id, {})
+        entity.coordinator.data.get(
+            entity._cam_id,  # noqa: SLF001 -- entity-platform's own attribute, not the coordinator's
+            {},
+        )
         .get("info", {})
         .get("hardwareVersion", "")
     )
@@ -59,7 +62,7 @@ async def _warn_if_privacy_on(entity: Any, feature_name: str) -> bool:
     guard the user sees a clear notification explaining why.
     """
     coordinator = entity.coordinator
-    cam_id = entity._cam_id
+    cam_id = entity._cam_id  # noqa: SLF001 -- entity-platform's own attribute, not the coordinator's
     cache = coordinator.shc_state_cache.get(cam_id, {})
     privacy_on = bool(cache.get("privacy_mode"))
     if not privacy_on:

@@ -29,7 +29,7 @@ if TYPE_CHECKING:  # pragma: no cover — only for type hints
 _LOGGER = logging.getLogger(__name__)
 
 
-async def try_live_connection_inner(
+async def try_live_connection_inner(  # noqa: C901 -- always runs under the coordinator's per-camera stream lock, sequencing TLS-proxy/go2rtc/pre-warm setup; splitting risks reordering lock-held side effects
     coordinator: BoschCameraCoordinator,
     cam_id: str,
     is_renewal: bool = False,

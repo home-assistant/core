@@ -28,6 +28,17 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+# Explicit `tuple[type[BaseException], ...]` annotation so mypy accepts this
+# as a valid `except` tuple — a bare starred-unpack of `ftplib.all_errors`
+# directly inside an `except (...)` tuple display isn't recognized by mypy's
+# exception-tuple check (unlike the pre-existing `tuple + (...)` concatenation
+# pattern it replaced, RUF005 collection-literal-concatenation).
+_FTP_MDTM_PARSE_ERRORS: tuple[type[BaseException], ...] = (
+    *ftplib.all_errors,
+    ValueError,
+    IndexError,
+)
+
 
 # ── URL allowlist for image/video downloads (SSRF prevention) ────────────────
 _SAFE_DOMAINS = frozenset({".boschsecurity.com", ".bosch.com"})
@@ -960,9 +971,8 @@ def _sync_ftp_cleanup(coordinator: BoschCameraCoordinator) -> None:
                     .replace(tzinfo=UTC)
                     .timestamp()
                 )
-            except ftplib.all_errors + (
-                ValueError,
-                IndexError,
+            except (
+                _FTP_MDTM_PARSE_ERRORS
             ):  # MDTM/parse failure → skip file, resilient cleanup loop
                 continue
             if mt < cutoff:

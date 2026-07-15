@@ -198,15 +198,19 @@ def get_recent_fcm_creds_staleness_count(window_seconds: float = 600.0) -> int:
     failure-storm but narrow enough that an old incident doesn't poison a
     fresh outage hours later.
     """
-    if not _FCMNoiseFilter._SHARED_STALENESS_TIMESTAMPS:
+    if not _FCMNoiseFilter._SHARED_STALENESS_TIMESTAMPS:  # noqa: SLF001 -- _FCMNoiseFilter's own shared class attribute, not the coordinator
         return 0
     cutoff = time.monotonic() - window_seconds
-    return sum(1 for ts in _FCMNoiseFilter._SHARED_STALENESS_TIMESTAMPS if ts >= cutoff)
+    return sum(
+        1
+        for ts in _FCMNoiseFilter._SHARED_STALENESS_TIMESTAMPS  # noqa: SLF001 -- _FCMNoiseFilter's own shared class attribute, not the coordinator
+        if ts >= cutoff
+    )
 
 
 def reset_fcm_creds_staleness_counter() -> None:
     """Clear the creds-staleness timestamp list after a hard-heal registration."""
-    _FCMNoiseFilter._SHARED_STALENESS_TIMESTAMPS.clear()
+    _FCMNoiseFilter._SHARED_STALENESS_TIMESTAMPS.clear()  # noqa: SLF001 -- _FCMNoiseFilter's own shared class attribute, not the coordinator
 
 
 def reset_fcm_error_counter() -> None:
@@ -316,7 +320,9 @@ class _QuietFcmPushClient:
         # Safety guard: if the upstream _listen() signature ever changes (e.g.
         # gains a parameter) we must not silently break it.  Fall back to vanilla
         # if the signature is unexpected.
-        sig = inspect.signature(FcmPushClient._listen)
+        sig = inspect.signature(
+            FcmPushClient._listen  # noqa: SLF001 -- upstream firebase_messaging library's own method, signature-checked defensively
+        )
         if list(sig.parameters) != ["self"]:
             _LOGGER.debug(
                 "FCM subclass: upstream _listen() signature changed — "
@@ -432,9 +438,11 @@ def _get_fcm_push_client_class() -> type | None:
 
     Cached after the first call.
     """
-    if _QuietFcmPushClient._patched_class is False:
-        _QuietFcmPushClient._patched_class = _QuietFcmPushClient._patch_class()
-    result = _QuietFcmPushClient._patched_class
+    if _QuietFcmPushClient._patched_class is False:  # noqa: SLF001 -- _QuietFcmPushClient's own module-level cache attribute, not the coordinator
+        _QuietFcmPushClient._patched_class = (  # noqa: SLF001 -- _QuietFcmPushClient's own module-level cache attribute, not the coordinator
+            _QuietFcmPushClient._patch_class()  # noqa: SLF001 -- _QuietFcmPushClient's own staticmethod, not the coordinator
+        )
+    result = _QuietFcmPushClient._patched_class  # noqa: SLF001 -- _QuietFcmPushClient's own module-level cache attribute, not the coordinator
     if result is None:
         # Patch failed — fall back to vanilla. Deferred for the same
         # library-API-drift-defense reason as _patch_class() above.
@@ -1144,7 +1152,9 @@ def _on_fcm_push(
     coordinator.hass.loop.call_soon_threadsafe(_spawn_fcm_handler)
 
 
-async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
+async def async_handle_fcm_push(  # noqa: C901 -- per-camera event dedup/dispatch with explicit write-ordering constraints (dedup-then-cache-then-fire, "Update last event ID FIRST" etc.); splitting risks reordering these bug-fix-driven writes
+    coordinator: Any, _attempt: int = 0
+) -> None:
     """Handle an FCM push — fetch fresh events for all cameras and fire HA events.
 
     Bosch's FCM push can beat its own /v11/events cloud index by a few seconds:
@@ -1544,7 +1554,7 @@ def _write_file(path: str, data: bytes) -> None:
 # ── 3-step alert pipeline ───────────────────────────────────────────────────
 
 
-async def async_send_alert(
+async def async_send_alert(  # noqa: C901 -- sequential 3-step (text/snapshot/clip) alert with time-sensitive state capture (e.g. privacy mode read at push-receipt time, not at Path B/Step 3 time — see comments); splitting risks breaking the point-in-time capture ordering that fixed real bugs (W-imageflip-BUG-2, B04-BUG-2)
     coordinator: Any,
     cam_name: str,
     event_type: str,

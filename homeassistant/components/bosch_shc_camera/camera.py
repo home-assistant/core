@@ -1018,7 +1018,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             jpeg = await self.hass.async_add_executor_job(_rotate_jpeg_180, jpeg)
         return jpeg
 
-    async def _async_camera_image_impl(
+    async def _async_camera_image_impl(  # noqa: C901 -- deeply nested tiered snapshot fallback chain (0-4) with entity-state (cached_image/last_image_fetch) mutation and hand-tuned per-tier timeouts against HA's outer CAMERA_IMAGE_TIMEOUT budget; splitting risks breaking the early-return/timeout budget contract between tiers
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return the best available JPEG snapshot, tried in this order.

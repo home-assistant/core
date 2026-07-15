@@ -175,10 +175,12 @@ async def ensure_go2rtc_schemes_fresh(coordinator: BoschCameraCoordinator) -> No
         ):
             continue  # not the bundled go2rtc provider
         try:
-            fresh = await provider._rest_client.schemes.list()
+            fresh = await provider._rest_client.schemes.list()  # noqa: SLF001 -- HA-core's own go2rtc WebRTCProvider, not ours
             if fresh:
-                old_count = len(provider._supported_schemes)
-                provider._supported_schemes = fresh
+                old_count = len(
+                    provider._supported_schemes  # noqa: SLF001 -- HA-core's own go2rtc WebRTCProvider, not ours
+                )
+                provider._supported_schemes = fresh  # noqa: SLF001 -- HA-core's own go2rtc WebRTCProvider, not ours
                 refreshed = True
                 _LOGGER.info(
                     "webrtc-watchdog: refreshed go2rtc provider _supported_schemes "

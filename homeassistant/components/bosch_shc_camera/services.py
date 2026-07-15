@@ -66,7 +66,7 @@ def _raise_index_out_of_range(index: int, count: int) -> NoReturn:
     )
 
 
-def _register_services(hass: HomeAssistant) -> None:
+def _register_services(hass: HomeAssistant) -> None:  # noqa: C901 -- ~20 independent, low-coupling service-handler closures registered in one place (see module docstring); splitting the registration would scatter one coherent handler-registry
     """Register HA services (skip if already registered)."""
 
     async def handle_trigger_snapshot(call: ServiceCall) -> None:
