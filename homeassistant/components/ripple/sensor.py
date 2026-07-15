@@ -1,8 +1,10 @@
 """Support for Ripple sensors."""
 
 from datetime import timedelta
+from typing import override
 
-from pyripple import get_balance
+from xrpl.account import get_balance
+from xrpl.clients import JsonRpcClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -47,27 +49,31 @@ class RippleSensor(SensorEntity):
 
     def __init__(self, name, address):
         """Initialize the sensor."""
+        self._client = JsonRpcClient("https://s1.ripple.com:51234/")
         self._name = name
         self.address = address
         self._state = None
         self._unit_of_measurement = "XRP"
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
         return self._unit_of_measurement
 
     def update(self) -> None:
         """Get the latest state of the sensor."""
-        if (balance := get_balance(self.address)) is not None:
+        if (balance := get_balance(self.address, self._client)) is not None:
             self._state = balance

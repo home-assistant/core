@@ -6,5 +6,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pyripple"],
   "quality_scale": "legacy",
-  "requirements": ["python-ripple-api==0.0.3"]
+  "requirements": ["xrpl-py==5.0.0"]
 }
