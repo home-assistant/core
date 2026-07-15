@@ -5,6 +5,7 @@ from collections.abc import Callable
 import logging
 from typing import Any, override
 
+from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_TELEVISION
 
 from homeassistant.components.remote import (
@@ -138,7 +139,6 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         self._hidden_sources: set[str] = set(
             self.driver.visibility_storage.get_hidden_sources(self.entity_id)
         )
-        self._input_current_visibility_chars: dict[str, Any] = {}
         for index, source in enumerate(self.sources):
             serv_input = self.add_preload_service(
                 SERV_INPUT_SOURCE,
@@ -156,35 +156,33 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
             char_current_visibility = serv_input.configure_char(
                 CHAR_CURRENT_VISIBILITY_STATE, value=initial_hidden
             )
-            self._input_current_visibility_chars[source] = char_current_visibility
             serv_input.configure_char(
                 CHAR_TARGET_VISIBILITY_STATE,
                 value=initial_hidden,
-                setter_callback=self._make_visibility_setter(source),
+                setter_callback=self._make_visibility_setter(
+                    source, char_current_visibility
+                ),
             )
             _LOGGER.debug("%s: Added source %s", self.entity_id, source)
 
-    def _make_visibility_setter(self, source: str) -> Callable[[int], None]:
-        """Build a setter bound to a single input source."""
+    def _make_visibility_setter(
+        self, source: str, char_current: Characteristic
+    ) -> Callable[[int], None]:
+        """Build a setter that persists the visibility of a single input source."""
 
+        @callback
         def _setter(value: int) -> None:
-            self._async_set_input_visibility(source, value)
+            is_hidden = bool(value)
+            if is_hidden:
+                self._hidden_sources.add(source)
+            else:
+                self._hidden_sources.discard(source)
+            char_current.set_value(int(is_hidden))
+            self.driver.visibility_storage.async_set_hidden_sources(
+                self.entity_id, self._hidden_sources
+            )
 
         return _setter
-
-    @callback
-    def _async_set_input_visibility(self, source: str, value: int) -> None:
-        """Apply a visibility change requested from HomeKit and persist it."""
-        is_hidden = bool(value)
-        if is_hidden:
-            self._hidden_sources.add(source)
-        else:
-            self._hidden_sources.discard(source)
-        if (char := self._input_current_visibility_chars.get(source)) is not None:
-            char.set_value(int(is_hidden))
-        self.driver.visibility_storage.async_set_hidden_sources(
-            self.entity_id, self._hidden_sources
-        )
 
     def _get_mapped_sources(self, state: State) -> dict[str, str]:
         """Return a dict of sources mapped to their homekit safe name."""

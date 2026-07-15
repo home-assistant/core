@@ -393,9 +393,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> b
     )
 
     entry_data = HomeKitEntryData(
-        homekit=homekit,
-        pairing_qr=None,
-        pairing_qr_secret=None,
+        homekit=homekit, pairing_qr=None, pairing_qr_secret=None
     )
     entry.runtime_data = entry_data
 

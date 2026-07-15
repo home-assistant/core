@@ -55,6 +55,11 @@ class AccessoryVisibilityStorage:
         assert self.store is not None
         self.store.async_delay_save(self._data_to_save, VISIBILITY_SAVE_DELAY)
 
+    async def async_save(self) -> None:
+        """Save the visibility store."""
+        assert self.store is not None
+        await self.store.async_save(self._data_to_save())
+
     @callback
     def _data_to_save(self) -> dict[str, dict[str, list[str]]]:
         """Return data of the visibility map to store in a file."""
