@@ -1,7 +1,7 @@
 """Provide a way to connect entities belonging to one device."""
 
 import asyncio
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from collections.abc import Iterable, Mapping, Set as AbstractSet
 import copy
 from datetime import datetime
@@ -588,10 +588,6 @@ _COMPOSITE_IGNORED_UPDATE_ARGS = (
     "new_connections",
     "new_identifiers",
 )
-
-# Safety-valve bound on the number of remembered ambiguous-match lookups (see
-# DeviceRegistry._composite_device_queries). Can be removed in HA Core 2027.8.
-_COMPOSITE_QUERY_CACHE_SIZE = 2048
 
 
 @attr.s(frozen=True, slots=True)
@@ -1263,17 +1259,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Initialize the device registry."""
         self.hass = hass
         self._loaded_event = asyncio.Event()
-        # The (identifiers, connections) lookup that produced each ambiguous-match
-        # composite async_get_device returned, keyed by the composite's transient id.
-        # Can be removed in HA Core 2027.8.
-        self._composite_device_queries: OrderedDict[
-            str, tuple[frozenset[tuple[str, str]], frozenset[tuple[str, str]]]
-        ] = OrderedDict()
-        # Reverse map (identifiers, connections) -> composite id, kept in sync with
-        # _composite_device_queries. Can be removed in HA Core 2027.8.
-        self._composite_device_ids_by_query: dict[
-            tuple[frozenset[tuple[str, str]], frozenset[tuple[str, str]]], str
-        ] = {}
         self._store = DeviceRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -1300,14 +1285,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             return device
         if split_devices := self.devices.get_devices_for_composite_device_id(device_id):
             return self._restore_composite_device(device_id, split_devices)
-        if (query := self._composite_device_queries.get(device_id)) is not None:
-            self._composite_device_queries.move_to_end(device_id)
-            matches = self._async_matching_devices(query[0] or None, query[1] or None)
-            if not matches:
-                return None
-            if len(matches) == 1:
-                return matches[0]
-            return self._restore_composite_device(device_id, matches)
         return None
 
     @callback
@@ -1356,59 +1333,26 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         Identifiers and connections are unique per config entry. If several config
         entries share the looked-up identifier or connection, the match is resolved to a
         single device when possible - preferring the device whose config entry domain
-        matches the looked-up identifier - otherwise a read-only composite spanning the
-        matching devices is returned, so callers still reach all of them.
-        async_update_device and async_remove_device fan such a composite out to its
-        underlying devices.
+        matches the looked-up identifier. If the remaining matches are the splits of one
+        pre-migration composite device, a read-only composite spanning them is returned
+        (async_update_device and async_remove_device fan it out to the underlying
+        devices); otherwise the first match is returned.
         """
         matches = self._async_matching_devices(identifiers, connections)
         if len(matches) <= 1:
             return matches[0] if matches else None
-        # Ambiguous match: return a read-only composite over the matching devices.
+        # If the matches are the splits of one pre-migration composite device, return a
+        # read-only composite over them, reusing the composite's id so stored references
+        # (an automation, a fired event, or an entity holding the old device id) keep
+        # resolving to it as before the split. Otherwise they are independent devices
+        # sharing an identifier or connection: return the first match.
         composite_device_ids = {match.composite_device_id for match in matches}
         if (
             len(composite_device_ids) == 1
             and (pre_migration_id := next(iter(composite_device_ids))) is not None
         ):
-            # The matches are the splits of one pre-migration composite device: reuse its
-            # id so stored references (automations targeting the old device id, a fired
-            # event device_id, an entity's device_id) keep resolving to the same
-            # composite, as they did before the rewrite. Resolution is via the
-            # composite_device_id index, so no query is remembered.
-            composite_id = pre_migration_id
-        else:
-            # A runtime ambiguity between independent devices sharing an identifier or
-            # connection: reuse a stable id for this lookup (so a fired/stored composite
-            # id does not churn) and remember the lookup so async_get and the shims can
-            # rebuild the composite against the current registry.
-            composite_id = self._composite_id_for_query(identifiers, connections)
-        return self._restore_composite_device(composite_id, matches)
-
-    @callback
-    def _composite_id_for_query(
-        self,
-        identifiers: set[tuple[str, str]] | None,
-        connections: set[tuple[str, str]] | None,
-    ) -> str:
-        """Return a stable synthesized composite id for an ambiguous lookup.
-
-        A repeated lookup returns the same id (bounded, least-recently-used evicted), so
-        a composite id an integration fires in an event or stores as a device_id stays
-        stable across calls instead of being re-minted each time.
-        """
-        query_key = (frozenset(identifiers or ()), frozenset(connections or ()))
-        if (
-            composite_id := self._composite_device_ids_by_query.get(query_key)
-        ) is not None:
-            self._composite_device_queries.move_to_end(composite_id)
-            return composite_id
-        composite_id = uuid_util.random_uuid_hex()
-        self._composite_device_queries[composite_id] = query_key
-        self._composite_device_ids_by_query[query_key] = composite_id
-        if len(self._composite_device_queries) > _COMPOSITE_QUERY_CACHE_SIZE:
-            _, evicted_key = self._composite_device_queries.popitem(last=False)
-            self._composite_device_ids_by_query.pop(evicted_key, None)
-        return composite_id
+            return self._restore_composite_device(pre_migration_id, matches)
+        return matches[0]
 
     @callback
     def _async_matching_devices(
@@ -1441,10 +1385,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Return the underlying real device ids if device_id is a composite."""
         if device_id in self.devices:
             return None
-        if (query := self._composite_device_queries.get(device_id)) is not None:
-            self._composite_device_queries.move_to_end(device_id)
-            matches = self._async_matching_devices(query[0] or None, query[1] or None)
-            return [device.id for device in matches]
         if split_devices := self.devices.get_devices_for_composite_device_id(device_id):
             return [split_device.id for split_device in split_devices]
         return None
@@ -1455,25 +1395,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     ) -> list[DeviceEntry]:
         """Return the devices a composite device id represents.
 
-        A composite device id is either a pre-migration composite id - a device that
-        belonged to several config entries, split into one device per config entry, each
-        keeping the original id as composite_device_id - or a transient id
-        async_get_device synthesized for an ambiguous lookup (several config entries
-        sharing an identifier/connection). In both cases the underlying live devices are
-        returned so that actions and entity lookups targeting the composite id still
-        reach all of them; unmodified integrations keep the pre-rewrite behaviour, where
-        a shared identifier/connection resolved to a single multi-config-entry device.
-        Returns an empty list for a device id which is not a composite device id.
+        A composite device id is a pre-migration composite id - a device that belonged to
+        several config entries, split into one device per config entry, each keeping the
+        original id as composite_device_id. The underlying live devices are returned so
+        that actions and entity lookups targeting the composite id still reach all of
+        them; unmodified integrations keep the pre-rewrite behaviour, where a shared
+        identifier/connection resolved to a single multi-config-entry device. Returns an
+        empty list for a device id which is not a composite device id.
         """
-        if split_devices := self.devices.get_devices_for_composite_device_id(
-            composite_device_id
-        ):
-            return split_devices
-        query = self._composite_device_queries.get(composite_device_id)
-        if query is not None:
-            self._composite_device_queries.move_to_end(composite_device_id)
-            return self._async_matching_devices(query[0] or None, query[1] or None)
-        return []
+        return self.devices.get_devices_for_composite_device_id(composite_device_id)
 
     def _substitute_name_placeholders(
         self,

@@ -5555,30 +5555,28 @@ async def test_async_entries_for_device_legacy_composite_id(
     } == {"sensor.a"}
 
 
-async def test_async_entries_for_device_synthetic_composite_id(
+async def test_async_entries_for_device_composite_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """A synthesized composite id resolves to the underlying devices' entities.
+    """A pre-migration composite id resolves to the underlying devices' entities.
 
     Backwards compatibility for unmodified integrations: before the single-config-entry
-    rewrite a shared connection resolved to one multi-config-entry device, so
-    async_entries_for_device(async_get_device(connections=...).id) returned all of that
-    device's entities. async_get_device now returns a read-only composite for such an
-    ambiguous lookup, and the composite's virtual id must resolve to the same union so
-    the integration keeps working without code changes.
+    rewrite a shared identifier resolved to one multi-config-entry device, so
+    async_entries_for_device(composite_id) returned all of that device's entities. After
+    the split, the composite's virtual id must resolve to the same union so a legacy
+    reference keeps working.
     """
     entry_1 = MockConfigEntry(domain="itg1")
     entry_1.add_to_hass(hass)
     entry_2 = MockConfigEntry(domain="itg2")
     entry_2.add_to_hass(hass)
-    mac = (dr.CONNECTION_NETWORK_MAC, "12:34:56:ab:cd:ef")
     device_1 = device_registry.async_get_or_create(
-        config_entry_id=entry_1.entry_id, connections={mac}
+        config_entry_id=entry_1.entry_id, identifiers={("itg1", "1")}
     )
     device_2 = device_registry.async_get_or_create(
-        config_entry_id=entry_2.entry_id, connections={mac}
+        config_entry_id=entry_2.entry_id, identifiers={("itg2", "1")}
     )
     entity_1 = entity_registry.async_get_or_create(
         "sensor", "itg1", "u1", config_entry=entry_1, device_id=device_1.id
@@ -5586,10 +5584,17 @@ async def test_async_entries_for_device_synthetic_composite_id(
     entity_2 = entity_registry.async_get_or_create(
         "sensor", "itg2", "u2", config_entry=entry_2, device_id=device_2.id
     )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry.devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
 
-    composite = device_registry.async_get_device(connections={mac})
-    assert composite.id not in device_registry.devices
+    assert old_id not in device_registry.devices
     assert {
         entry.entity_id
-        for entry in er.async_entries_for_device(entity_registry, composite.id)
+        for entry in er.async_entries_for_device(entity_registry, old_id)
     } == {entity_1.entity_id, entity_2.entity_id}

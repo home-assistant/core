@@ -1854,26 +1854,31 @@ async def test_validate_config_rewrites_composite_device_id(
     fake_entry.add_to_hass(hass)
     other_entry = MockConfigEntry(domain="other")
     other_entry.add_to_hass(hass)
-    connection = (dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")
     device_fake = device_registry.async_get_or_create(
-        config_entry_id=fake_entry.entry_id, connections={connection}
+        config_entry_id=fake_entry.entry_id, identifiers={("fake_integration", "1")}
     )
-    device_registry.async_get_or_create(
-        config_entry_id=other_entry.entry_id, connections={connection}
+    device_other = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id, identifiers={("other", "1")}
     )
     entity = entity_registry.async_get_or_create(
         "light", "fake_integration", "u", device_id=device_fake.id
     )
-    # A shared connection across config entries resolves to a transient composite id
-    composite = device_registry.async_get_device(connections={connection})
-    assert composite.id not in device_registry.devices
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[device_fake.id] = attr.evolve(
+        device_fake, composite_device_id=old_id
+    )
+    device_registry.devices[device_other.id] = attr.evolve(
+        device_other, composite_device_id=old_id
+    )
+    assert old_id not in device_registry.devices
 
     validated = await async_validate_device_automation_config(
         hass,
         {
             "platform": "device",
             "domain": "fake_integration",
-            "device_id": composite.id,
+            "device_id": old_id,
             "entity_id": entity.entity_id,
             "type": "turned_on",
         },
