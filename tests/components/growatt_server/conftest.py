@@ -356,6 +356,13 @@ def mock_growatt_classic_api():
             }
         }
 
+        # Called by write_ac_charge_times / write_ac_discharge_times services
+        # for Classic (username/password) auth on Mix devices
+        mock_classic_api.update_mix_inverter_setting.return_value = {
+            "success": True,
+            "msg": "200",
+        }
+
         yield mock_classic_api
 
 

@@ -1126,7 +1126,7 @@ async def test_sph_service_with_non_sph_growatt_device(
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "device_not_configured"
     assert excinfo.value.translation_placeholders == {
-        "device_type": "SPH",
+        "device_type": "MIX/SPH",
         "serial_number": "MIN999999",
     }
 
@@ -1183,3 +1183,189 @@ async def test_write_ac_charge_times_uses_cached_periods_for_unspecified(
             },
         ],
     )
+
+
+async def _setup_mix_integration(
+    hass: HomeAssistant,
+    mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api: MagicMock,
+) -> None:
+    """Set up the integration with a single classic-auth Mix device."""
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "MIX123456", "deviceType": "mix"}
+    ]
+    mock_config_entry_classic.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_classic.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_write_ac_charge_times_classic_auth(
+    hass: HomeAssistant,
+    mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test writing AC charge times via classic (username/password) auth."""
+    await _setup_mix_integration(
+        hass, mock_config_entry_classic, mock_growatt_classic_api
+    )
+
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    assert device_entry is not None
+
+    await hass.services.async_call(
+        DOMAIN,
+        "write_ac_charge_times",
+        {
+            "device_id": device_entry.id,
+            "charge_power": 100,
+            "charge_stop_soc": 95,
+            "mains_enabled": True,
+            "period_1_start": "00:00",
+            "period_1_end": "06:00",
+            "period_1_enabled": True,
+        },
+        blocking=True,
+    )
+
+    mock_growatt_classic_api.update_mix_inverter_setting.assert_called_once_with(
+        "MIX123456",
+        "mix_ac_charge_time_period",
+        [
+            "100",
+            "95",
+            "1",
+            "0",
+            "0",
+            "6",
+            "0",
+            "1",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+        ],
+    )
+
+
+async def test_write_ac_discharge_times_classic_auth(
+    hass: HomeAssistant,
+    mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test writing AC discharge times via classic (username/password) auth."""
+    await _setup_mix_integration(
+        hass, mock_config_entry_classic, mock_growatt_classic_api
+    )
+
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    assert device_entry is not None
+
+    await hass.services.async_call(
+        DOMAIN,
+        "write_ac_discharge_times",
+        {
+            "device_id": device_entry.id,
+            "discharge_power": 100,
+            "discharge_stop_soc": 10,
+            "period_1_start": "16:00",
+            "period_1_end": "20:00",
+            "period_1_enabled": True,
+        },
+        blocking=True,
+    )
+
+    mock_growatt_classic_api.update_mix_inverter_setting.assert_called_once_with(
+        "MIX123456",
+        "mix_ac_discharge_time_period",
+        [
+            "100",
+            "10",
+            "16",
+            "0",
+            "20",
+            "0",
+            "1",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+        ],
+    )
+
+
+async def test_write_ac_charge_times_classic_auth_api_error(
+    hass: HomeAssistant,
+    mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test handling a classic-API failure response on write_ac_charge_times."""
+    await _setup_mix_integration(
+        hass, mock_config_entry_classic, mock_growatt_classic_api
+    )
+
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    assert device_entry is not None
+
+    mock_growatt_classic_api.update_mix_inverter_setting.return_value = {
+        "success": False,
+        "msg": "some failure",
+    }
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            "write_ac_charge_times",
+            {
+                "device_id": device_entry.id,
+                "charge_power": 100,
+                "charge_stop_soc": 95,
+                "mains_enabled": True,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "service",
+    ["read_ac_charge_times", "read_ac_discharge_times"],
+)
+async def test_read_ac_times_classic_auth_not_supported(
+    hass: HomeAssistant,
+    mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    service: str,
+) -> None:
+    """Test reading AC times on a classic-auth device reports it is unsupported."""
+    await _setup_mix_integration(
+        hass, mock_config_entry_classic, mock_growatt_classic_api
+    )
+
+    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    assert device_entry is not None
+
+    with pytest.raises(ServiceValidationError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {"device_id": device_entry.id},
+            blocking=True,
+            return_response=True,
+        )
+    assert excinfo.value.translation_domain == DOMAIN
+    assert excinfo.value.translation_key == "token_auth_required"

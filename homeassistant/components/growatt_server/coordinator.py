@@ -601,35 +601,60 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         mains_enabled: bool,
         periods: list[dict],
     ) -> None:
-        """Update AC charge time periods for SPH device.
-
-        Args:
-            charge_power: Charge power limit (0-100 %)
-            charge_stop_soc: Stop charging at this SOC level (0-100 %)
-            mains_enabled: Whether AC (mains) charging is enabled
-            periods: List of up to 3 dicts with keys start_time, end_time, enabled
-        """
-        if self.api_version != "v1":
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="token_auth_required",
-            )
-
-        try:
-            await self.hass.async_add_executor_job(
-                self.api.sph_write_ac_charge_times,
-                self.device_id,
-                charge_power,
-                charge_stop_soc,
-                mains_enabled,
-                periods,
-            )
-        except growattServer.GrowattV1ApiError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="api_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
+        """Update AC charge time periods for SPH/Mix device."""
+        if self.api_version == "v1":
+            try:
+                await self.hass.async_add_executor_job(
+                    self.api.sph_write_ac_charge_times,
+                    self.device_id,
+                    charge_power,
+                    charge_stop_soc,
+                    mains_enabled,
+                    periods,
+                )
+            except growattServer.GrowattV1ApiError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+        else:
+            # Classic (username/password) auth — same underlying mixSet endpoint,
+            # addressed via positional param1-18 instead of the V1 named payload.
+            params = [
+                str(charge_power),
+                str(charge_stop_soc),
+                "1" if mains_enabled else "0",
+            ]
+            for period in periods:
+                params.extend(
+                    [
+                        str(period["start_time"].hour),
+                        str(period["start_time"].minute),
+                        str(period["end_time"].hour),
+                        str(period["end_time"].minute),
+                        "1" if period.get("enabled", False) else "0",
+                    ]
+                )
+            try:
+                result = await self.hass.async_add_executor_job(
+                    self.api.update_mix_inverter_setting,
+                    self.device_id,
+                    "mix_ac_charge_time_period",
+                    params,
+                )
+            except growattServer.GrowattError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+            if not result.get("success", True):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"error": str(result)},
+                )
 
         if self.data:
             self.data["chargePowerCommand"] = charge_power
@@ -660,41 +685,69 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             discharge_stop_soc: Stop discharging at this SOC level (0-100 %)
             periods: List of up to 3 dicts with keys start_time, end_time, enabled
         """
-        if self.api_version != "v1":
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="token_auth_required",
-            )
-
-        try:
-            await self.hass.async_add_executor_job(
-                self.api.sph_write_ac_discharge_times,
-                self.device_id,
-                discharge_power,
-                discharge_stop_soc,
-                periods,
-            )
-        except growattServer.GrowattV1ApiError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="api_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-
-        if self.data:
-            self.data["disChargePowerCommand"] = discharge_power
-            self.data["wdisChargeSOCLowLimit"] = discharge_stop_soc
-            for i, period in enumerate(periods, 1):
-                self.data[f"forcedDischargeTimeStart{i}"] = period[
-                    "start_time"
-                ].strftime("%H:%M")
-                self.data[f"forcedDischargeTimeStop{i}"] = period["end_time"].strftime(
-                    "%H:%M"
+        if self.api_version == "v1":
+            try:
+                await self.hass.async_add_executor_job(
+                    self.api.sph_write_ac_discharge_times,
+                    self.device_id,
+                    discharge_power,
+                    discharge_stop_soc,
+                    periods,
                 )
-                self.data[f"forcedDischargeStopSwitch{i}"] = (
-                    1 if period.get("enabled", False) else 0
+            except growattServer.GrowattV1ApiError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+
+            if self.data:
+                self.data["disChargePowerCommand"] = discharge_power
+                self.data["wdisChargeSOCLowLimit"] = discharge_stop_soc
+                for i, period in enumerate(periods, 1):
+                    self.data[f"forcedDischargeTimeStart{i}"] = period[
+                        "start_time"
+                    ].strftime("%H:%M")
+                    self.data[f"forcedDischargeTimeStop{i}"] = period[
+                        "end_time"
+                    ].strftime("%H:%M")
+                    self.data[f"forcedDischargeStopSwitch{i}"] = (
+                        1 if period.get("enabled", False) else 0
+                    )
+                self.async_set_updated_data(self.data)
+        else:
+            # Classic (username/password) auth — same underlying mixSet endpoint,
+            # addressed via positional param1-18 instead of the V1 named payload.
+            params = [str(discharge_power), str(discharge_stop_soc)]
+            for period in periods:
+                params.extend(
+                    [
+                        str(period["start_time"].hour),
+                        str(period["start_time"].minute),
+                        str(period["end_time"].hour),
+                        str(period["end_time"].minute),
+                        "1" if period.get("enabled", False) else "0",
+                    ]
                 )
-            self.async_set_updated_data(self.data)
+            try:
+                result = await self.hass.async_add_executor_job(
+                    self.api.update_mix_inverter_setting,
+                    self.device_id,
+                    "mix_ac_discharge_time_period",
+                    params,
+                )
+            except growattServer.GrowattError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"error": str(err)},
+                ) from err
+            if not result.get("success", True):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"error": str(result)},
+                )
 
     async def read_ac_charge_times(self) -> dict:
         """Read AC charge time settings from SPH device cache."""
