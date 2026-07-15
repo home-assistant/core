@@ -14,7 +14,7 @@
     "xknx==3.16.0",
     "xknxproject==3.9.0",
     "knx-frontend==2026.6.23.203726",
-    "knx-telegram-store[sqlite,postgres]==0.9.1"
+    "knx-telegram-store[sqlite,postgres]==0.10.1"
   ],
   "single_config_entry": true
 }
