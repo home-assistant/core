@@ -41,4 +41,6 @@ class ProxmoxPermission(StrEnum):
 
     POWER = "VM.PowerMgmt"
     SNAPSHOT = "VM.Snapshot"
+    SYSAUDIT = "Sys.Audit"
     SYSPOWER = "Sys.PowerMgmt"
+    VMAUDIT = "VM.Audit"
