@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, Mock
 
-from my_pv.exceptions import MyPVConnectionError
+from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 import pytest
 
 from homeassistant.components.water_heater import (
@@ -23,7 +23,7 @@ from homeassistant.const import (
     STATE_OFF,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 
 from tests.common import MockConfigEntry
 
@@ -365,6 +365,42 @@ async def test_water_heater_set_temp_connection_error(
 
     with (
         pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            WATER_HEATER_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                ATTR_ENTITY_ID: "water_heater.my_pv_ac_elwa_2",
+                ATTR_TEMPERATURE: 35,
+            },
+            blocking=True,
+        )
+    mock_my_pv_client.set_target_temperature.assert_awaited_once_with(35)
+
+    state = hass.states.get("water_heater.my_pv_ac_elwa_2")
+    assert state.attributes[ATTR_TEMPERATURE] == 62.1
+
+
+async def test_water_heater_set_temp_authentication_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
+) -> None:
+    """Test connection error when setting the target temperature."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    mock_my_pv_client.get_setup_configuration = Mock(
+        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_my_pv_client.set_target_temperature.side_effect = MyPVAuthenticationError()
+
+    with (
+        pytest.raises(ConfigEntryAuthFailed),
     ):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,

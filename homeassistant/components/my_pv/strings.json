@@ -48,6 +48,9 @@
     }
   },
   "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed, please reauthenticate."
+    },
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
     },

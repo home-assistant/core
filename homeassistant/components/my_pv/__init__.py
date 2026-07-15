@@ -27,7 +27,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
                 translation_key="cannot_connect",
             )
     except MyPVAuthenticationError as exc:
-        raise ConfigEntryAuthFailed from exc
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_error",
+        ) from exc
 
     coordinator = MyPVCoordinator(hass, entry, device)
 

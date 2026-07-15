@@ -34,7 +34,10 @@ def _my_pv_connection[T](
 
             return await func(self, *args, **kwargs)
         except MyPVAuthenticationError as exc:
-            raise ConfigEntryAuthFailed from exc
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+            ) from exc
         except MyPVConnectionError as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -113,7 +116,10 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
 
             await self.device.fetch_data()
         except MyPVAuthenticationError as exc:
-            raise ConfigEntryAuthFailed from exc
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+            ) from exc
         except MyPVConnectionError as exc:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
