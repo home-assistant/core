@@ -60,3 +60,7 @@ class TeslemetryEnergyData:
     # The local-control subentry id, or None for sites without a battery
     # (solar-only or wall-connector-only), which have no Powerwall to pair.
     subentry_id: str | None
+    # The site's gateway DIN as the cloud reports it, which pairing compares
+    # against the DIN the local gateway reports so a subentry can only ever be
+    # bound to its own hardware. None when the cloud omits it.
+    gateway_id: str | None

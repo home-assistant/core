@@ -6,12 +6,13 @@ import logging
 from pathlib import Path
 from typing import Any, cast, override
 
-from aiohttp import ClientConnectionError, ClientResponseError
+from aiohttp import ClientError
 from aiopowerwall import (
     DEFAULT_GATEWAY_HOST,
     PowerwallAuthenticationError,
     PowerwallClient,
     PowerwallError,
+    PowerwallFaultError,
 )
 from tesla_fleet_api.const import (
     AuthorizedClientKeyType,
@@ -76,21 +77,40 @@ class PowerwallLookupError(Exception):
     """
 
 
+class PowerwallKeyRejectedError(Exception):
+    """Signal that the gateway refused a v1r-signed read with our RSA key.
+
+    Distinct from a bad gateway password: the login succeeded, but the key has
+    not been approved on the gateway, so only signed requests fail.
+    """
+
+
 _PENDING_STATES = (
     AuthorizedClientState.PENDING,
     AuthorizedClientState.PENDING_VERIFICATION,
 )
 
 
-def _is_gateway_unreachable(err: TeslaFleetError | ClientResponseError) -> bool:
+def _is_gateway_unreachable(err: TeslaFleetError | ClientError) -> bool:
     """Return whether err is a 502 Bad Gateway from an energy gateway command.
 
     A bodyless 502 surfaces from tesla-fleet-api as ``ResponseError`` (a
     ``TeslaFleetError`` carrying ``status``); a 502 with a JSON body instead
     surfaces as ``aiohttp.ClientResponseError``. ``status`` is looked up with
-    ``getattr`` since a bare ``TeslaFleetError`` is not guaranteed to carry one.
+    ``getattr`` since neither a bare ``TeslaFleetError`` nor a transport-level
+    ``ClientError`` is guaranteed to carry one.
     """
     return getattr(err, "status", None) == HTTPStatus.BAD_GATEWAY
+
+
+def _din_matches(expected: str, actual: str) -> bool:
+    """Return whether two gateway DINs identify the same gateway.
+
+    Compared normalized: the local gateway's DIN has not been confirmed
+    byte-identical to the cloud's, and rejecting a valid pairing over a
+    case or whitespace skew would be worse than not comparing at all.
+    """
+    return expected.strip().casefold() == actual.strip().casefold()
 
 
 class OAuth2FlowHandler(
@@ -180,7 +200,7 @@ class OAuth2FlowHandler(
             return {"base": "invalid_access_token"}
         except SubscriptionRequired:
             return {"base": "subscription_required"}
-        except ClientConnectionError:
+        except ClientError:
             return {"base": "cannot_connect"}
         except TeslaFleetError as e:
             LOGGER.error("Teslemetry API error: %s", e)
@@ -241,6 +261,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         self._public_key_der: bytes = b""
         self._public_key_b64: str = ""
         self._discovered_host: str = ""
+        self._gateway_id: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -274,10 +295,11 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             if isinstance(energy_data.api, EnergySiteRouter)
             else energy_data.api,
         )
+        self._gateway_id = energy_data.gateway_id
 
         try:
             self._discovered_host = await self._energy_site.find_gateway_address() or ""
-        except (ClientResponseError, TeslaFleetError) as err:
+        except (ClientError, TeslaFleetError) as err:
             LOGGER.debug("Gateway address discovery failed: %s", err)
             self._discovered_host = ""
 
@@ -319,12 +341,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 key_type=AuthorizedClientKeyType.RSA,
                 authorized_client_type=AuthorizedClientType.CUSTOMER_MOBILE_APP,
             )
-        except ClientResponseError as err:
-            if _is_gateway_unreachable(err):
-                return self.async_abort(reason="powerwall_unreachable")
-            LOGGER.error("Add authorized client failed: %s", err)
-            return self.async_abort(reason="cannot_connect")
-        except TeslaFleetError as err:
+        except (ClientError, TeslaFleetError) as err:
             if _is_gateway_unreachable(err):
                 return self.async_abort(reason="powerwall_unreachable")
             LOGGER.error("Add authorized client failed: %s", err)
@@ -391,7 +408,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         assert self._energy_site is not None
         try:
             result = await self._energy_site.find_authorized_clients()
-        except (ClientResponseError, TeslaFleetError) as err:
+        except (ClientError, TeslaFleetError) as err:
             if _is_gateway_unreachable(err):
                 raise PowerwallUnreachableError from err
             LOGGER.debug("find_authorized_clients failed: %s", err)
@@ -405,11 +422,28 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             None,
         )
 
-    async def _key_is_verified(self) -> bool:
-        """Report whether our public key is registered and VERIFIED on the gateway."""
-        client = await self._find_authorized_client()
-        LOGGER.debug("Powerwall keys: %s", client)
-        return client is not None and client.state == AuthorizedClientState.VERIFIED
+    async def _verify_local_gateway(self, host: str, password: str) -> str:
+        """Prove the LAN connection and the RSA key, returning the gateway DIN.
+
+        ``connect()`` only performs the gateway password login and fetches the
+        DIN over an unsigned endpoint, so it succeeds even when the gateway has
+        not approved our key. The signed read that follows is what an
+        unapproved key actually fails, and it raises
+        ``PowerwallKeyRejectedError`` when it does.
+        """
+        assert self._key_pem is not None
+        async with PowerwallClient(
+            host=host,
+            gateway_password=password,
+            rsa_private_key_pem=self._key_pem,
+            session=async_get_clientsession(self.hass),
+        ) as client:
+            din = await client.connect()
+            try:
+                await client.get_status()
+            except (PowerwallAuthenticationError, PowerwallFaultError) as err:
+                raise PowerwallKeyRejectedError from err
+            return din
 
     async def async_step_credentials(
         self, user_input: dict[str, Any] | None = None
@@ -422,25 +456,34 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             # the Wi-Fi password printed on the gateway; users routinely enter
             # the full string, so trim it to what the gateway will accept.
             password = user_input[CONF_PASSWORD].strip()[-5:]
-            assert self._key_pem is not None
             try:
-                async with PowerwallClient(
-                    host=host,
-                    gateway_password=password,
-                    rsa_private_key_pem=self._key_pem,
-                    session=async_get_clientsession(self.hass),
-                ) as client:
-                    await client.connect()
+                din = await self._verify_local_gateway(host, password)
+            except PowerwallKeyRejectedError as err:
+                LOGGER.debug("Powerwall rejected the signed read: %s", err.__cause__)
+                errors["base"] = "key_not_approved"
             except PowerwallAuthenticationError:
                 errors["base"] = "invalid_password"
             except PowerwallError as err:
                 LOGGER.debug("Local Powerwall verify failed: %s", err)
                 errors["base"] = "cannot_connect"
             else:
-                entry = self._get_entry()
-                self.hass.config_entries.async_schedule_reload(entry.entry_id)
-                return self.async_update_and_abort(
-                    entry,
+                # The RSA key is shared by every site, so it authorizes each of
+                # the account's gateways: without this check a host pointed at
+                # the wrong gateway would command another site's house.
+                if self._gateway_id is None:
+                    LOGGER.debug(
+                        "No cloud gateway ID for this site; skipping DIN binding"
+                    )
+                elif not _din_matches(self._gateway_id, din):
+                    return self.async_abort(
+                        reason="gateway_mismatch",
+                        description_placeholders={
+                            "expected": self._gateway_id,
+                            "actual": din,
+                        },
+                    )
+                return self.async_update_reload_and_abort(
+                    self._get_entry(),
                     self._get_reconfigure_subentry(),
                     data_updates={CONF_HOST: host, CONF_PASSWORD: password},
                 )
