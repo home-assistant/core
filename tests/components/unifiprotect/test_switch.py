@@ -592,10 +592,52 @@ async def test_switch_camera_osd_public_value(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
+CAMERA_SWITCHES_DETECTION_READ = [
+    ("smart_person", {"object_types": [SmartDetectObjectType.PERSON]}),
+    ("smart_vehicle", {"object_types": [SmartDetectObjectType.VEHICLE]}),
+    ("smart_animal", {"object_types": [SmartDetectObjectType.ANIMAL]}),
+    ("smart_package", {"object_types": [SmartDetectObjectType.PACKAGE]}),
+    ("smart_licenseplate", {"object_types": [SmartDetectObjectType.LICENSE_PLATE]}),
+    ("smart_smoke", {"audio_types": [SmartDetectAudioType.SMOKE]}),
+    ("smart_cmonx", {"audio_types": [SmartDetectAudioType.CMONX]}),
+    ("smart_siren", {"audio_types": [SmartDetectAudioType.SIREN]}),
+    ("smart_baby_cry", {"audio_types": [SmartDetectAudioType.BABY_CRY]}),
+    ("smart_speak", {"audio_types": [SmartDetectAudioType.SPEAK]}),
+    ("smart_bark", {"audio_types": [SmartDetectAudioType.BARK]}),
+    ("smart_car_alarm", {"audio_types": [SmartDetectAudioType.BURGLAR]}),
+    ("smart_car_horn", {"audio_types": [SmartDetectAudioType.CAR_HORN]}),
+    ("smart_glass_break", {"audio_types": [SmartDetectAudioType.GLASS_BREAK]}),
+]
+
+
+@pytest.mark.parametrize(("key", "public_kwargs"), CAMERA_SWITCHES_DETECTION_READ)
 async def test_switch_camera_detection_public_value(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    key: str,
+    public_kwargs: dict[str, list[SmartDetectObjectType] | list[SmartDetectAudioType]],
 ) -> None:
-    """A detection toggle reads its on/off state from the public object."""
+    """Each detection toggle reads its on/off state from its own public flag."""
+
+    doorbell.feature_flags.smart_detect_types = [
+        SmartDetectObjectType.PERSON,
+        SmartDetectObjectType.VEHICLE,
+        SmartDetectObjectType.ANIMAL,
+        SmartDetectObjectType.PACKAGE,
+        SmartDetectObjectType.LICENSE_PLATE,
+    ]
+    doorbell.feature_flags.smart_detect_audio_types = [
+        SmartDetectAudioType.SMOKE,
+        SmartDetectAudioType.CMONX,
+        SmartDetectAudioType.SIREN,
+        SmartDetectAudioType.BABY_CRY,
+        SmartDetectAudioType.SPEAK,
+        SmartDetectAudioType.BARK,
+        SmartDetectAudioType.BURGLAR,
+        SmartDetectAudioType.CAR_HORN,
+        SmartDetectAudioType.GLASS_BREAK,
+    ]
 
     setup_public_camera(ufp)
 
@@ -608,13 +650,13 @@ async def test_switch_camera_detection_public_value(
 
     await init_entry(hass, ufp, [doorbell])
 
-    description = next(d for d in CAMERA_SWITCHES if d.key == "smart_person")
+    description = next(d for d in CAMERA_SWITCHES if d.key == key)
     _, entity_id = await ids_from_device_description(
         hass, Platform.SWITCH, doorbell, description
     )
     assert hass.states.get(entity_id).state == STATE_OFF
 
-    public = make_public_camera(doorbell, object_types=[SmartDetectObjectType.PERSON])
+    public = make_public_camera(doorbell, **public_kwargs)
     ufp.devices_ws_subscription(public_device_ws_message(public))
     await hass.async_block_till_done()
 
@@ -642,28 +684,6 @@ async def test_switch_camera_highfps_public_value(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
-async def test_switch_camera_audio_detection_public_value(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
-) -> None:
-    """An audio detection toggle reads its on/off state from audio_types."""
-
-    doorbell.feature_flags.smart_detect_audio_types = [SmartDetectAudioType.SMOKE]
-    setup_public_camera(ufp)
-    await init_entry(hass, ufp, [doorbell])
-
-    description = next(d for d in CAMERA_SWITCHES if d.key == "smart_smoke")
-    _, entity_id = await ids_from_device_description(
-        hass, Platform.SWITCH, doorbell, description
-    )
-    assert hass.states.get(entity_id).state == STATE_OFF
-
-    public = make_public_camera(doorbell, audio_types=[SmartDetectAudioType.SMOKE])
-    ufp.devices_ws_subscription(public_device_ws_message(public))
-    await hass.async_block_till_done()
-
-    assert hass.states.get(entity_id).state == STATE_ON
-
-
 async def test_switch_camera_detection_unavailable_without_public(
     hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ) -> None:
@@ -683,6 +703,26 @@ async def test_switch_camera_detection_unavailable_without_public(
         hass, Platform.SWITCH, doorbell, description
     )
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_switch_camera_detection_available_with_recording_disabled(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+) -> None:
+    """A migrated detection toggle stays available with recording disabled.
+
+    Unlike the legacy private-only switch, the public detection toggles no
+    longer gate their availability on ``is_recording_enabled`` (breaking change).
+    """
+
+    doorbell.recording_settings.mode = RecordingMode.NEVER
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell])
+
+    description = next(d for d in CAMERA_SWITCHES if d.key == "smart_person")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, doorbell, description
+    )
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
 
 async def test_switch_camera_privacy(
