@@ -302,18 +302,18 @@ LIGHT_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="dark",
         translation_key="is_dark",
-        ufp_value="is_dark",
+        ufp_public_value="is_dark",
     ),
     ProtectBinaryEntityDescription(
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
-        ufp_value="is_pir_motion_detected",
+        ufp_public_value="is_pir_motion_detected",
     ),
     ProtectBinaryEntityDescription(
         key="light",
         translation_key="flood_light",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="is_light_on",
+        ufp_public_value="is_light_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -328,7 +328,7 @@ LIGHT_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="status_light",
         translation_key="status_light",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="light_device_settings.is_indicator_enabled",
+        ufp_public_value="light_device_settings.is_indicator_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
 )
