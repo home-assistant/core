@@ -361,6 +361,9 @@ def make_public_light(
     public = Mock(spec=PublicLight)
     public.id = light.id
     public.mac = light.mac
+    public.name = light.name
+    public.display_name = light.display_name
+    public.type = light.type
     public.model = ModelType.LIGHT
     public.state = DeviceState[light.state.name] if state is None else state
     public.is_light_on = light.is_light_on if is_light_on is None else is_light_on

@@ -16,6 +16,7 @@ from uiprotect.data import (
     Camera,
     Event,
     EventType,
+    Light,
     ModelType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
@@ -23,7 +24,7 @@ from uiprotect.data import (
     WSAction,
     WSSubscriptionMessage,
 )
-from uiprotect.data.public_devices import PublicCamera
+from uiprotect.data.public_devices import PublicCamera, PublicLight
 from uiprotect.exceptions import ClientError, NotAuthorized
 from uiprotect.utils import log_event
 from uiprotect.websocket import WebsocketState
@@ -46,6 +47,7 @@ from .const import (
     DISPATCH_ADD,
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
+    DISPATCH_PUBLIC_ADD,
     DOMAIN,
 )
 from .utils import async_get_devices_by_type
@@ -102,6 +104,7 @@ class ProtectData:
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
         self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
+        self.public_add_signal = _async_dispatch_id(entry, DISPATCH_PUBLIC_ADD)
         # PTZ patrol cache: camera_id -> list of patrols
         self.ptz_patrols: dict[str, list[PTZPatrol]] = {}
 
@@ -183,6 +186,36 @@ class ProtectData:
             yield public, private
         for camera_id, private in private_cameras.items():
             if camera_id in public_cameras or not private.is_adopted_by_us:
+                continue
+            yield None, private
+
+    def get_public_lights(
+        self,
+    ) -> Generator[tuple[PublicLight | None, Light | None]]:
+        """Iterate lights public-master with private-fill.
+
+        The public bootstrap is the master list; the matching private light is
+        paired by shared id when present (hybrid) and ``None`` in public-only
+        mode. An adopted private light not (yet) mirrored into the public
+        bootstrap is yielded as ``(None, private)``. Adopted-filtering mirrors
+        the private enumeration whenever a private object is available.
+        """
+        api = self.api
+        if not api.has_public_bootstrap:
+            return
+        # An API-key-only client never initializes the private bootstrap;
+        # accessing it would raise.
+        private_lights: dict[str, Light] = (
+            {} if api.is_public_only else api.bootstrap.lights
+        )
+        public_lights = api.public_bootstrap.lights
+        for light_id, public in public_lights.items():
+            private = private_lights.get(light_id)
+            if private is not None and not private.is_adopted_by_us:
+                continue
+            yield public, private
+        for light_id, private in private_lights.items():
+            if light_id in public_lights or not private.is_adopted_by_us:
                 continue
             yield None, private
 
@@ -273,6 +306,12 @@ class ProtectData:
         if isinstance(new_obj, PublicDeviceModel):
             if new_obj.model is ModelType.CAMERA:
                 self._async_reenumerate_camera_on_public_change(new_obj, message)
+            elif self.api.is_public_only and message.action is WSAction.ADD:
+                # In public-only mode there is no private adopt path that could
+                # discover a new device; platforms enumerating public-master
+                # subscribe to this signal and filter by type. Cameras have
+                # their own re-enumeration path above.
+                async_dispatcher_send(self._hass, self.public_add_signal, new_obj)
             self._async_signal_public_update(new_obj.mac, new_obj)
 
     @callback

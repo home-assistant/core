@@ -175,19 +175,23 @@ def mock_ufp_client(bootstrap: Bootstrap):
     # primes the cameras from the private bootstrap.
     client.public_bootstrap = Mock()
     client.public_bootstrap.cameras = {}
+    client.public_bootstrap.lights = {}
     client.public_bootstrap.relays = {}
     client.public_bootstrap.sirens = {}
     client.public_bootstrap.arm_profiles = {}
     client.public_bootstrap.arm_mode = None
 
-    # Cameras resolve to their primed public model (see ``update_public`` in
-    # ``mock_entry``); other device types opt in via the ``setup_public_*``
-    # helpers, so they default to no paired public object.
+    # Cameras and lights resolve to their primed public model (see
+    # ``update_public`` in ``mock_entry`` / ``setup_public_light``); other
+    # device types opt in via the ``setup_public_*`` helpers, so they default
+    # to no paired public object.
     def _public_bootstrap_get(
         model: ModelType, obj_id: str
     ) -> ProtectModelWithId | None:
         if model is ModelType.CAMERA:
             return client.public_bootstrap.cameras.get(obj_id)
+        if model is ModelType.LIGHT:
+            return client.public_bootstrap.lights.get(obj_id)
         return None
 
     client.public_bootstrap.get = Mock(side_effect=_public_bootstrap_get)
