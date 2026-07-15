@@ -183,15 +183,6 @@ async def async_setup_entry(
     )
 
 
-def _update_data(fields: dict[str, Any]) -> dict[str, Any]:
-    """Map the fields of an update, which replaces the event as a whole.
-
-    An absent rrule means the recurrence was removed, so it is passed on as
-    None rather than left out.
-    """
-    return {**_item_data(fields), "rrule": fields.get("rrule")}
-
-
 def _item_data(fields: dict[str, Any]) -> dict[str, Any]:
     """Map the Home Assistant event fields onto caldav keyword arguments."""
     item_data: dict[str, Any] = {
@@ -277,7 +268,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
                 update_event,
                 self.coordinator.calendar,
                 uid,
-                _update_data(event),
+                _item_data(event),
                 recurrence_id,
                 recurrence_range == RANGE_THIS_AND_FUTURE,
             ),

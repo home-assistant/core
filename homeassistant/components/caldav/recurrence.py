@@ -7,14 +7,16 @@ series lives in a single calendar object that has to be rewritten by hand.
 
 A single occurrence is dropped with an EXDATE and changed through an overriding
 VEVENT carrying a RECURRENCE-ID. "This and future" caps the RRULE with UNTIL.
-RFC 5545 requires EXDATE and RECURRENCE-ID to use the value type of DTSTART,
-and UNTIL to be UTC whenever DTSTART is a datetime.
+RFC 5545 requires EXDATE, RECURRENCE-ID and UNTIL to follow DTSTART: its value
+type, and its zone or lack of one. A floating DTSTART keeps them floating; a
+zoned one puts them in UTC.
 """
 
 from datetime import UTC, date, datetime, time, timedelta
 from typing import Any
 
 import caldav
+from dateutil.rrule import rrulestr
 from icalendar import Event as ICalEvent, vDDDTypes, vRecur
 
 from homeassistant.util import dt as dt_util
@@ -52,13 +54,16 @@ def update_event(
 
     # RFC 4791 allows only one UID per object, so the tail needs its own.
     tail = dict(data)
-    if tail.get("rrule") is None:
-        tail.pop("rrule", None)
+    tail.setdefault("rrule", _tail_rrule(master, occurrence))
+    if tail["rrule"] is None:
+        del tail["rrule"]
 
+    # Creating the tail first costs a visible duplicate if capping then fails,
+    # where capping first would silently drop every occurrence from here on.
+    calendar.add_event(**tail)
     _cap_series(master, occurrence)
     _drop_overrides(ical, occurrence, from_occurrence=True)
     _save(dav_event, ical, master)
-    calendar.add_event(**tail)
 
 
 def delete_event(
@@ -140,7 +145,7 @@ def _new_override(ical: Any, master: Any, occurrence: datetime | date) -> Any:
     override = ICalEvent()
     override.add("UID", str(master["UID"]))
     override.add("DTSTAMP", dt_util.utcnow())
-    override.add("RECURRENCE-ID", vDDDTypes(_match_type(master, occurrence)))
+    override.add("RECURRENCE-ID", vDDDTypes(_align(master, occurrence)))
     ical.add_component(override)
     return override
 
@@ -155,15 +160,41 @@ def _drop_overrides(
             ical.subcomponents.remove(vevent)
 
 
-def _match_type(master: Any, occurrence: datetime | date) -> datetime | date:
-    """Return the occurrence in the value type the master DTSTART uses."""
-    if isinstance(master["DTSTART"].dt, datetime):
-        return _utc(occurrence)
-    return occurrence.date() if isinstance(occurrence, datetime) else occurrence
+def _align(master: Any, occurrence: datetime | date) -> datetime | date:
+    """Return the occurrence in the value type and zone the master DTSTART uses."""
+    dtstart = master["DTSTART"].dt
+    if not isinstance(dtstart, datetime):
+        return occurrence.date() if isinstance(occurrence, datetime) else occurrence
+    if not isinstance(occurrence, datetime):
+        occurrence = datetime.combine(occurrence, time.min)
+    if dtstart.tzinfo is None:
+        return occurrence.replace(tzinfo=None)
+    return _utc(occurrence)
 
 
 def _add_exdate(master: Any, occurrence: datetime | date) -> None:
-    master.add("EXDATE", vDDDTypes(_match_type(master, occurrence)))
+    master.add("EXDATE", vDDDTypes(_align(master, occurrence)))
+
+
+def _tail_rrule(master: Any, occurrence: datetime | date) -> str | None:
+    """Return the rule for the tail, with COUNT reduced by the capped head."""
+    rrule = master.get("RRULE")
+    if rrule is None:
+        return None
+    recur = vRecur(dict(rrule))
+    if count := recur.get("COUNT"):
+        recur["COUNT"] = [max(count[0] - _occurrences_before(master, occurrence), 1)]
+    return recur.to_ical().decode("utf-8")
+
+
+def _occurrences_before(master: Any, occurrence: datetime | date) -> int:
+    dtstart = master["DTSTART"].dt
+    target = _align(master, occurrence)
+    if not isinstance(dtstart, datetime):
+        dtstart = datetime.combine(dtstart, time.min)
+        target = datetime.combine(target, time.min)
+    rule = rrulestr(master["RRULE"].to_ical().decode("utf-8"), dtstart=dtstart)
+    return sum(1 for moment in rule if moment < target)
 
 
 def _cap_series(master: Any, occurrence: datetime | date) -> None:
@@ -178,10 +209,10 @@ def _cap_series(master: Any, occurrence: datetime | date) -> None:
 
 def _until(master: Any, occurrence: datetime | date) -> datetime | date:
     """Return an UNTIL that stops the series before the occurrence."""
-    if isinstance(master["DTSTART"].dt, datetime):
-        return _utc(occurrence) - timedelta(seconds=1)
-    day = occurrence.date() if isinstance(occurrence, datetime) else occurrence
-    return day - timedelta(days=1)
+    aligned = _align(master, occurrence)
+    if isinstance(aligned, datetime):
+        return aligned - timedelta(seconds=1)
+    return aligned - timedelta(days=1)
 
 
 def _apply(component: Any, data: dict[str, Any]) -> None:
@@ -194,12 +225,11 @@ def _apply(component: Any, data: dict[str, Any]) -> None:
         _replace(component, "dtend", data["dtend"])
     _replace(component, "description", data.get("description"))
     _replace(component, "location", data.get("location"))
-    if "rrule" in data:
-        _replace(
-            component,
-            "rrule",
-            vRecur.from_ical(data["rrule"]) if data["rrule"] else None,
-        )
+    # An absent rrule means "leave the recurrence alone": the coordinator
+    # expands series server side, so CalendarEvent.rrule is never populated and
+    # the frontend cannot echo the existing rule back.
+    if rrule := data.get("rrule"):
+        _replace(component, "rrule", vRecur.from_ical(rrule))
 
 
 def _save(dav_event: caldav.CalendarObjectResource, ical: Any, touched: Any) -> None:
