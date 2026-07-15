@@ -52,7 +52,7 @@
       'identifiers': set({
         tuple(
           'samsungtv',
-          '123456',
+          'be9554b9-c9fb-41f4-8920-22da015376a4',
         ),
       }),
       'labels': set({
