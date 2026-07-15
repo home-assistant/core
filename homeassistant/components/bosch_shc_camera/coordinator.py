@@ -291,6 +291,7 @@ class BoschCameraCoordinator(
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=int(opts.get("scan_interval", 60))),
         )
