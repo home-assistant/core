@@ -76,7 +76,7 @@
       "night_light_control": {
         "name": "Night light",
         "state": {
-          "bright": "Bight",
+          "bright": "Bright",
           "off": "[%key:common::state::off%]",
           "soft": "Soft"
         }
