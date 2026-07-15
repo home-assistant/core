@@ -38,7 +38,9 @@ from typing import TYPE_CHECKING, Any
 import aiohttp
 from bosch_shc_camera_client.cloud import cloud_put_json
 
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .cloud_ssl import async_get_bosch_cloud_session
 
@@ -143,7 +145,7 @@ async def async_shc_request(
 
     try:
         ctx = _get_shc_ssl_ctx(cert_path, key_path)
-    except Exception as err:
+    except OSError as err:
         _LOGGER.warning("SHC TLS setup failed (check cert/key paths): %s", err)
         _SHC_SSL_CONTEXTS.pop((cert_path, key_path), None)
         _shc_mark_failure(coordinator)
@@ -191,7 +193,9 @@ async def async_shc_request(
     except aiohttp.ClientError as err:
         _LOGGER.debug("SHC request error %s %s: %s", method, path, err)
         _shc_mark_failure(coordinator)
-    except Exception as err:
+    except ValueError as err:
+        # r.json() raises json.JSONDecodeError (a ValueError) on a malformed
+        # body; aiohttp's own content-type mismatch is already aiohttp.ClientError above.
         _LOGGER.debug("SHC unexpected error %s %s: %s", method, path, err)
         _shc_mark_failure(coordinator)
     return None
@@ -462,7 +466,7 @@ async def _notify_write_failed(
                 "notification_id": f"bosch_{feature_key}_queued_{cam_id[:8]}",
             },
         )
-    except Exception:  # best-effort persistent_notification; HA service call non-critical after all write paths exhausted
+    except Exception:  # noqa: BLE001 — best-effort persistent_notification; HA service call non-critical after all write paths exhausted
         pass
 
 
@@ -534,7 +538,10 @@ async def async_cloud_set_privacy_mode(
             _LOGGER.info("cloud_set_privacy_mode: 401 -- refreshing token and retrying")
             try:
                 token = await coordinator.ensure_valid_token(token)
-            except Exception:  # token refresh failed; fall through to local SHC path
+            except (
+                ConfigEntryAuthFailed,
+                UpdateFailed,
+            ):  # token refresh failed; fall through to local SHC path
                 pass  # fall through to SHC
             else:
                 retry_result = await cloud_put_json(session, token, url, body)

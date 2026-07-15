@@ -184,5 +184,5 @@ async def fetch_mjpeg_snapshot(
                 pass
             try:
                 await proc.wait()
-            except Exception:
+            except OSError:
                 pass

@@ -89,7 +89,7 @@ try:
     _INTEGRATION_VERSION: str = _json.loads(
         (_pathlib.Path(__file__).parent / "manifest.json").read_text()
     )["version"]
-except Exception:  # pragma: no cover — manifest.json ships with the package; only fires on a corrupted install
+except Exception:  # noqa: BLE001  # pragma: no cover — manifest.json ships with the package; only fires on a corrupted install
     _INTEGRATION_VERSION = "unknown"
 
 
@@ -226,7 +226,7 @@ class _StreamWorkerErrorListener(logging.Handler):
             loop.call_soon_threadsafe(
                 self._coordinator.schedule_stream_worker_error, cam_id, msg
             )
-        except Exception:  # logging.emit handler must never raise; exception would recurse into logging itself
+        except Exception:  # noqa: BLE001  # logging.emit handler must never raise; exception would recurse into logging itself
             # Never let the log handler crash the event loop or the logger.
             # Intentionally broad: this runs inside logging.emit and any
             # exception here would be routed back to logging's own error path.
@@ -741,7 +741,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
             new_opts = dict(entry.options)
             new_opts["feedback_hint_version"] = _INTEGRATION_VERSION
             hass.config_entries.async_update_entry(entry, options=new_opts)
-    except Exception as _fb_err:
+    except Exception as _fb_err:  # noqa: BLE001  # feedback-hint is nice-to-have, must never block setup
         _LOGGER.debug("feedback-hint suppressed: %s", _fb_err)
 
     # Load the persistent maintenance-notification dedup key so a restart
@@ -881,7 +881,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
                         _hw_from_model,
                         _device.model,
                     )
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001  # rehydrate is best-effort, see comment above
         _LOGGER.debug("Device-registry hw_version rehydrate skipped: %s", exc)
 
     # First refresh — tolerate a cloud-side 5xx so the integration can still
@@ -1099,7 +1099,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
                         _LOGGER.debug(
                             "go2rtc setup result: %s", result.get("type", "unknown")
                         )
-                except Exception as err:
+                except Exception as err:  # noqa: BLE001  # go2rtc auto-setup is nice-to-have, must never block camera setup
                     _LOGGER.debug("go2rtc auto-setup skipped: %s", err)
             else:
                 _LOGGER.debug(
@@ -1420,7 +1420,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
         _AI_MOTION_DEBOUNCE[cam_id_evt] = now_ts
         try:
             await found_coord.async_generate_ai_description(cam_id_evt, force=False)
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001  # auto-describe is nice-to-have, must never break the motion-event listener
             _LOGGER.debug("auto-describe failed for %s: %s", cam_id_evt, err)
 
     for _motion_evt in ("bosch_shc_camera_motion", "bosch_shc_camera_person"):
@@ -1573,7 +1573,7 @@ async def _async_cancel_coordinator_tasks(coord: BoschCameraCoordinator) -> None
             await drain_task
         except (
             asyncio.CancelledError,
-            Exception,
+            Exception,  # noqa: BLE001
         ):  # drain_task cancelled intentionally on shutdown; any residual error is non-actionable
             pass
         coord.nvr_drain_task = None
@@ -1583,7 +1583,7 @@ async def _async_cancel_coordinator_tasks(coord: BoschCameraCoordinator) -> None
     # stays playable.
     try:
         await nvr_recorder.stop_all(coord)
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001  # teardown cleanup must never block unload
         _LOGGER.debug("NVR stop_all on unload raised: %s", err)
     # Tear down every active LOCAL/REMOTE live stream cleanly BEFORE
     # stop_all_proxies. Without this, integration reload leaves stale state
@@ -1603,7 +1603,7 @@ async def _async_cancel_coordinator_tasks(coord: BoschCameraCoordinator) -> None
             break
         try:
             await teardown(cam_id)
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001  # teardown cleanup must never block unload
             _LOGGER.debug(
                 "teardown live stream for %s on unload raised: %s",
                 cam_id[:8],
@@ -1619,7 +1619,7 @@ async def _async_cancel_coordinator_tasks(coord: BoschCameraCoordinator) -> None
     if viewing_runner is not None:
         try:
             viewing_runner.stop_all()
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001  # teardown cleanup must never block unload
             _LOGGER.debug("viewing front-door stop_all on unload raised: %s", err)
         coord.viewing_front_door_runner = None
     # Same for the REMOTE viewing-path front-door (remote_viewing_front_door.py)
@@ -1628,7 +1628,7 @@ async def _async_cancel_coordinator_tasks(coord: BoschCameraCoordinator) -> None
     if remote_viewing_runner is not None:
         try:
             remote_viewing_runner.stop_all()
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001  # teardown cleanup must never block unload
             _LOGGER.debug(
                 "REMOTE viewing front-door stop_all on unload raised: %s", err
             )
@@ -1646,7 +1646,7 @@ async def _async_cancel_coordinator_tasks(coord: BoschCameraCoordinator) -> None
     if go2rtc_session is not None and not go2rtc_session.closed:
         try:
             await go2rtc_session.close()
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001  # teardown cleanup must never block unload
             _LOGGER.debug("go2rtc session close on unload raised: %s", err)
     if hasattr(coord, "go2rtc_session"):
         coord.go2rtc_session = None

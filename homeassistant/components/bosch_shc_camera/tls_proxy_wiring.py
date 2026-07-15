@@ -172,7 +172,7 @@ async def on_tls_proxy_died(coordinator: BoschCameraCoordinator, cam_id: str) ->
                 "heartbeat/renewal will retry",
                 cam_id[:8],
             )
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 — background circuit-breaker recovery guard; try_live_connection spans socket/TLS/digest-auth/session-open code with too many failure modes to enumerate, and this is a self-healing loop where the next heartbeat/renewal retries regardless
         _LOGGER.warning(
             "TLS proxy rebuild for %s failed: %s — next heartbeat/renewal will retry",
             cam_id[:8],

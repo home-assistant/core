@@ -39,6 +39,8 @@ import time
 from typing import Any, ClassVar, override
 from urllib.parse import urlsplit, urlunsplit
 
+import aiohttp
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -1072,7 +1074,7 @@ class BoschPrivacyModeSwitch(_BoschSwitchBase):
             await self._flush_pending_privacy()
         except asyncio.CancelledError:
             raise
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- background task's outer guard; must not let any failure crash the deferred-apply loop, matches _apply_privacy's own "never raises" contract
             # Deferred best-effort apply — surface the failure, don't crash the
             # background loop task.
             _LOGGER.warning(
@@ -1820,9 +1822,9 @@ class BoschSoftLightFadingSwitch(_BoschSwitchBase):
                                 self.coordinator.global_lighting_cache[self._cam_id] = (
                                     body
                                 )
-                        except Exception:
+                        except aiohttp.ClientError, ValueError:
                             self.coordinator.global_lighting_cache[self._cam_id] = body
-        except Exception:
+        except TimeoutError, aiohttp.ClientError:
             _LOGGER.exception("Soft fading error for %s", self._cam_id[:8])
         self.async_write_ha_state()
 

@@ -181,7 +181,7 @@ async def ensure_go2rtc_schemes_fresh(coordinator: BoschCameraCoordinator) -> No
                     old_count,
                     len(fresh),
                 )
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- one provider's failure (private go2rtc-provider internals) must not abort refreshing the rest
             _LOGGER.debug("webrtc-watchdog: scheme-refresh failed: %s", err)
     # Push the now-fresh provider to every camera entity that has STREAM
     # in supported_features. Without this, cams that ran async_refresh_providers
@@ -210,7 +210,7 @@ async def ensure_go2rtc_schemes_fresh(coordinator: BoschCameraCoordinator) -> No
                         "webrtc-watchdog: refreshed providers on %s",
                         getattr(cam_ent, "entity_id", "?"),
                     )
-            except Exception as err:
+            except Exception as err:  # noqa: BLE001 -- one camera's async_refresh_providers() failure must not abort the watchdog pass for the rest
                 _LOGGER.debug(
                     "webrtc-watchdog: cam refresh-providers failed for %s: %s",
                     getattr(cam_ent, "entity_id", "?"),

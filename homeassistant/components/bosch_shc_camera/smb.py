@@ -223,7 +223,7 @@ def sync_local_save(
                     started_at - ev_epoch,
                 )
                 return
-        except Exception:  # timestamp parse failure is non-actionable; event proceeds without age-filter
+        except ValueError:  # timestamp parse failure is non-actionable; event proceeds without age-filter
             pass
 
     cam_safe = _safe_name(cam_name)
@@ -286,7 +286,7 @@ def sync_local_save(
             ok = _http_get_to_file(url, token, path, timeout=60)
             if ok:
                 _LOGGER.debug("Local save: %s", os.path.basename(path))
-        except Exception as err:
+        except OSError as err:
             _LOGGER.warning("Local save failed for %s: %s", os.path.basename(path), err)
 
 
@@ -355,6 +355,7 @@ def sync_smb_upload(
 
     try:
         from smbclient import open_file, register_session, stat as smb_stat
+        from smbprotocol.exceptions import SMBException
     except ImportError:
         _LOGGER.warning(
             "smbprotocol not installed — SMB upload disabled. "
@@ -373,7 +374,7 @@ def sync_smb_upload(
                 register_session(server, username=username, password=password)
             finally:
                 socket.setdefaulttimeout(None)
-        except Exception as err:
+        except (OSError, SMBException) as err:
             _LOGGER.warning("SMB session to %s failed: %s", server, err)
             return
 
@@ -404,6 +405,8 @@ def _sync_smb_upload_events(
     scope (set right before this call) cleanly wraps only the actual transfer
     work, not the session setup above it.
     """
+    from smbprotocol.exceptions import SMBException
+
     opts = coordinator.options
     server = opts.get("smb_server", "").strip()
     share = opts.get("smb_share", "").strip()
@@ -461,7 +464,7 @@ def _sync_smb_upload_events(
             # Ensure folder exists (create recursively)
             try:
                 smb_makedirs(smb_folder, server, share, base_path, folder_parts)
-            except Exception as err:
+            except (OSError, SMBException) as err:
                 _LOGGER.warning("SMB mkdir error for %s: %s", smb_folder, err)
                 continue
 
@@ -505,7 +508,7 @@ def _sync_smb_upload_events(
                                     status,
                                     len(content),
                                 )
-                    except Exception as err:
+                    except (OSError, SMBException) as err:
                         _LOGGER.warning("SMB upload error for %s: %s", file_base, err)
             else:
                 _LOGGER.debug("SMB: no imageUrl for event %s", ev.get("id", "?")[:8])
@@ -551,7 +554,7 @@ def _sync_smb_upload_events(
                                 _LOGGER.warning(
                                     "SMB clip download failed: HTTP %d", r.status
                                 )
-                    except Exception as err:
+                    except (OSError, SMBException) as err:
                         _LOGGER.warning(
                             "SMB clip upload error for %s: %s", file_base, err
                         )
@@ -591,6 +594,7 @@ def sync_smb_cleanup(coordinator: BoschCameraCoordinator) -> None:
         return
     try:
         from smbclient import register_session, remove, scandir, stat as smb_stat
+        from smbprotocol.exceptions import SMBException
     except ImportError:
         return
 
@@ -616,7 +620,7 @@ def sync_smb_cleanup(coordinator: BoschCameraCoordinator) -> None:
             register_session(server, username=username, password=password)
         finally:
             socket.setdefaulttimeout(None)
-    except Exception as err:
+    except (OSError, SMBException) as err:
         _LOGGER.warning("SMB cleanup: session to %s failed: %s", server, err)
         return
 
@@ -628,7 +632,7 @@ def sync_smb_cleanup(coordinator: BoschCameraCoordinator) -> None:
         nonlocal deleted
         try:
             entries = list(scandir(path))
-        except Exception:
+        except OSError, SMBException:
             return
         for entry in entries:
             full = f"{path}\\{entry.name}"
@@ -641,7 +645,7 @@ def sync_smb_cleanup(coordinator: BoschCameraCoordinator) -> None:
                         remove(full)
                         deleted += 1
                         _LOGGER.debug("SMB cleanup: deleted %s", entry.name)
-                except Exception as err:
+                except (OSError, SMBException) as err:
                     _LOGGER.debug("SMB cleanup: error on %s: %s", entry.name, err)
 
     _walk_and_delete(root)
@@ -694,7 +698,7 @@ async def _async_cleanup_alert(
                     {"message": message, "title": "Bosch Kamera — NAS-Bereinigung"},
                 )
                 return
-            except Exception as err:
+            except Exception as err:  # noqa: BLE001 — arbitrary user-configured notify service, any integration-specific error is non-actionable here; loop tries the next configured service
                 _LOGGER.debug("Cleanup alert via %s failed: %s", svc, err)
 
 
@@ -725,7 +729,7 @@ def _ftp_exists(ftp: Any, path: str) -> bool:
         return True
     except ftplib.error_perm:
         return False
-    except Exception:
+    except ftplib.all_errors:
         return False
 
 
@@ -753,6 +757,7 @@ def _sync_ftp_upload(
 
     ``prefetched_image`` — see ``sync_smb_upload`` docstring.
     """
+    import ftplib
     from io import BytesIO
 
     opts = coordinator.options
@@ -770,7 +775,7 @@ def _sync_ftp_upload(
 
     try:
         ftp = _ftp_connect(server, username, password)
-    except Exception as err:
+    except ftplib.all_errors as err:
         _LOGGER.warning("FTP login to %s failed: %s", server, err)
         return
 
@@ -847,7 +852,7 @@ def _sync_ftp_upload(
                                     _LOGGER.warning(
                                         "FTP snapshot download failed: HTTP %d", status
                                     )
-                        except Exception as err:
+                        except ftplib.all_errors as err:
                             _LOGGER.warning("FTP upload error for %s: %s", fname, err)
 
                 # Video clip
@@ -875,17 +880,17 @@ def _sync_ftp_upload(
                                     _LOGGER.warning(
                                         "FTP clip download failed: HTTP %d", r.status
                                     )
-                        except Exception as err:
+                        except ftplib.all_errors as err:
                             _LOGGER.warning(
                                 "FTP clip upload error for %s: %s", fname, err
                             )
     finally:
         try:
             ftp.quit()
-        except Exception:
+        except Exception:  # noqa: BLE001 — best-effort FTP teardown; if quit() fails for any reason, fall back to close(), failure non-actionable either way
             try:
                 ftp.close()
-            except Exception:  # best-effort FTP teardown, failure non-actionable
+            except Exception:  # noqa: BLE001 — best-effort FTP teardown, failure non-actionable
                 pass
 
 
@@ -906,7 +911,7 @@ def _sync_ftp_cleanup(coordinator: BoschCameraCoordinator) -> None:
 
     try:
         ftp = _ftp_connect(server, username, password)
-    except Exception as err:
+    except ftplib.all_errors as err:
         _LOGGER.warning("FTP cleanup: login to %s failed: %s", server, err)
         return
 
@@ -922,7 +927,7 @@ def _sync_ftp_cleanup(coordinator: BoschCameraCoordinator) -> None:
         entries: list[str] = []
         try:
             ftp.retrlines("LIST", entries.append)
-        except Exception:
+        except ftplib.all_errors:
             return
 
         files: list[str] = []
@@ -950,13 +955,16 @@ def _sync_ftp_cleanup(coordinator: BoschCameraCoordinator) -> None:
                     .replace(tzinfo=UTC)
                     .timestamp()
                 )
-            except Exception:  # MDTM/parse failure → skip file, resilient cleanup loop
+            except ftplib.all_errors + (
+                ValueError,
+                IndexError,
+            ):  # MDTM/parse failure → skip file, resilient cleanup loop
                 continue
             if mt < cutoff:
                 try:
                     ftp.delete(name)
                     deleted += 1
-                except Exception as err:
+                except ftplib.all_errors as err:
                     _LOGGER.debug("FTP cleanup: delete %s failed: %s", name, err)
 
         for sub in subdirs:
@@ -964,7 +972,7 @@ def _sync_ftp_cleanup(coordinator: BoschCameraCoordinator) -> None:
             try:
                 ftp.cwd(path)  # back up before next sibling
             except (
-                Exception
+                Exception  # noqa: BLE001
             ):  # best-effort cwd restore; sibling iteration proceeds regardless
                 pass
 
@@ -974,7 +982,7 @@ def _sync_ftp_cleanup(coordinator: BoschCameraCoordinator) -> None:
     finally:
         try:
             ftp.quit()
-        except Exception:  # best-effort FTP cleanup teardown, failure non-actionable
+        except Exception:  # noqa: BLE001 — best-effort FTP cleanup teardown, failure non-actionable
             pass
 
     if deleted:

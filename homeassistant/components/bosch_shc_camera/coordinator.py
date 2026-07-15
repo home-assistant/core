@@ -151,7 +151,11 @@ try:
     _INTEGRATION_VERSION: str = _json.loads(
         (_pathlib.Path(__file__).parent / "manifest.json").read_text()
     )["version"]
-except Exception:  # pragma: no cover — manifest.json ships with the package; only fires on a corrupted install
+except (
+    OSError,
+    ValueError,
+    KeyError,
+):  # pragma: no cover — manifest.json ships with the package; only fires on a corrupted install
     _INTEGRATION_VERSION = "unknown"
 
 # ── URL allowlist for image/video downloads (SSRF prevention) ────────────────
@@ -220,7 +224,7 @@ def _parse_onvif_scopes(raw: bytes) -> dict[str, Any]:
             elif key == "Profile":
                 profiles: list[str] = result["profiles"]
                 profiles.append(val_decoded)
-    except Exception:  # pragma: no cover — defensive parse of raw camera bytes; partial result still returned
+    except Exception:  # pragma: no cover — defensive parse of raw camera bytes; partial result still returned  # noqa: BLE001
         pass
     return result
 
@@ -1833,7 +1837,7 @@ class BoschCameraCoordinator(
                                 cam_id_key,
                                 err,
                             )
-                    except Exception as err:
+                    except Exception as err:  # noqa: BLE001 -- one camera's RCP update failure must not crash the whole coordinator tick
                         _LOGGER.debug("RCP update skipped for %s: %s", cam_id_key, err)
 
                 # ── F4/F6 LAN diagnostic sensors (slow tier) ─────────────────
@@ -1849,7 +1853,7 @@ class BoschCameraCoordinator(
                 ):
                     try:
                         await self._async_update_lan_diagnostic_sensors(cam_id_key)
-                    except Exception as err:
+                    except Exception as err:  # noqa: BLE001 -- one camera's LAN diagnostic failure must not crash the whole coordinator tick
                         _LOGGER.debug(
                             "LAN diagnostic sensors skipped for %s: %s", cam_id_key, err
                         )
@@ -1860,7 +1864,7 @@ class BoschCameraCoordinator(
             if self.shc_ready:
                 try:
                     await self._async_update_shc_states(data)
-                except Exception as err:
+                except Exception as err:  # noqa: BLE001 -- SHC supplementary/fallback update must not crash the whole coordinator tick
                     _LOGGER.debug("SHC state update error: %s", err)
 
             # ── 7/8. Housekeeping: SMB/NVR cleanup, stale devices, availability
@@ -1873,7 +1877,7 @@ class BoschCameraCoordinator(
             # permanently "Clear" with no error shown to the user.
             try:
                 self._refresh_notifications_disabled_issues()
-            except Exception:
+            except Exception:  # noqa: BLE001 -- best-effort Repairs check must not crash the whole coordinator tick
                 _LOGGER.debug(
                     "Notifications-disabled Repairs check failed (non-fatal)",
                     exc_info=True,
@@ -1883,7 +1887,7 @@ class BoschCameraCoordinator(
             # camera — see _refresh_firmware_update_issues docstring.
             try:
                 self._refresh_firmware_update_issues()
-            except Exception:
+            except Exception:  # noqa: BLE001 -- best-effort Repairs check must not crash the whole coordinator tick
                 _LOGGER.debug(
                     "Firmware-update Repairs check failed (non-fatal)",
                     exc_info=True,
@@ -1894,7 +1898,7 @@ class BoschCameraCoordinator(
             # installed — see _refresh_smb_unavailable_issue docstring.
             try:
                 self._refresh_smb_unavailable_issue()
-            except Exception:
+            except Exception:  # noqa: BLE001 -- best-effort Repairs check must not crash the whole coordinator tick
                 _LOGGER.debug(
                     "SMB-unavailable Repairs check failed (non-fatal)",
                     exc_info=True,
@@ -2195,7 +2199,7 @@ class BoschCameraCoordinator(
         try:
             session = async_get_clientsession(self.hass)
             result = await async_fetch_maintenance(session)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 -- optional maintenance-feed polling must not crash the coordinator tick
             _LOGGER.debug("Maintenance fetch raised: %s", exc)
             return
         if result is not None:
@@ -2289,7 +2293,7 @@ class BoschCameraCoordinator(
                     state,
                     when or "(no window)",
                 )
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 -- a misconfigured notify service must not break maintenance discovery
                 _LOGGER.warning(
                     "Maintenance announce via notify.%s failed: %s",
                     svc,
@@ -2422,7 +2426,7 @@ class BoschCameraCoordinator(
                     last,
                     new_status,
                 )
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 -- a misconfigured notify service must not break camera-status tracking
                 _LOGGER.warning(
                     "Camera status announce via notify.%s for %s failed: %s",
                     svc,
@@ -2474,7 +2478,7 @@ class BoschCameraCoordinator(
                     len(hits),
                     self._SESSION_QUOTA_WINDOW_S,
                 )
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 -- non-fatal per docstring, must not affect the caller's status update
             _LOGGER.debug("Session-quota notification failed (non-fatal): %s", exc)
 
     async def _async_maybe_announce_cloud_state(self, success: bool) -> None:
@@ -2578,7 +2582,7 @@ class BoschCameraCoordinator(
                     svc,
                     recovered,
                 )
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 -- a misconfigured notify service must not break cloud-state tracking
                 _LOGGER.warning(
                     "Cloud-state alert via notify.%s failed: %s",
                     svc,
@@ -2809,7 +2813,7 @@ class BoschCameraCoordinator(
                     server.close()
                     server.close_clients()
                     await server.wait_closed()
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001 -- best-effort cleanup of a leftover listener during camera removal, must not raise into a background task
                     _LOGGER.debug(
                         "TLS proxy for %s: close during camera-removal purge raised — %s",
                         cam_id[:8],
@@ -2855,7 +2859,7 @@ class BoschCameraCoordinator(
                         # and re-inserted this entry while we waited for
                         # the lock, it must not survive a confirmed purge.
                         self.viewing_sticky_port.pop(cam_id, None)
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001 -- best-effort cleanup of a leftover listener during camera removal, must not raise into a background task
                     _LOGGER.debug(
                         "Viewing front-door for %s: stop during camera-removal purge raised — %s",
                         cam_id[:8],
@@ -2877,7 +2881,7 @@ class BoschCameraCoordinator(
                     async with self.get_stream_lock(cam_id):
                         await self.stop_remote_viewing_front_door(cam_id)
                         self.remote_viewing_sticky_port.pop(cam_id, None)
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001 -- best-effort cleanup of a leftover listener during camera removal, must not raise into a background task
                     _LOGGER.debug(
                         "REMOTE viewing front-door for %s: stop during "
                         "camera-removal purge raised — %s",
@@ -3088,7 +3092,7 @@ class BoschCameraCoordinator(
         """Run the SMB retention cleanup in the background without blocking the coordinator tick."""
         try:
             await self.hass.async_add_executor_job(sync_smb_cleanup, self)
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- background retention cleanup must not crash the coordinator
             _LOGGER.debug("SMB cleanup background task error: %s", err)
 
     # ── Mini-NVR plumbing (delegate to recorder.py) ──────────────────────────
@@ -3142,7 +3146,7 @@ class BoschCameraCoordinator(
         """Run NVR retention purge in an executor thread (called once per day)."""
         try:
             await self.hass.async_add_executor_job(nvr_recorder.sync_nvr_cleanup, self)
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- background retention cleanup must not crash the coordinator
             _LOGGER.debug("NVR cleanup background task error: %s", err)
 
     # ── go2rtc integration ────────────────────────────────────────────────────
@@ -3283,7 +3287,7 @@ class BoschCameraCoordinator(
                                 "fetch_live_snapshot: RCP 0x099e unavailable for %s — using snap.jpg",
                                 cam_id,
                             )
-                    except Exception as _rcp_err:
+                    except Exception as _rcp_err:  # noqa: BLE001 -- RCP fast-path failure falls back to snap.jpg, must not abort the snapshot fetch
                         _LOGGER.debug(
                             "fetch_live_snapshot: RCP error for %s: %s — using snap.jpg",
                             cam_id,
@@ -3415,7 +3419,7 @@ class BoschCameraCoordinator(
                 else:
                     # Overnight window: e.g. 22:00–06:00
                     time_allowed = now_t >= t_start or now_t <= t_end
-            except Exception:
+            except ValueError, IndexError, TypeError:
                 _LOGGER.debug(
                     "AI activation window: malformed time value (start=%r end=%r)"
                     " — treating as no time gate",
@@ -3461,7 +3465,7 @@ class BoschCameraCoordinator(
         """Load persisted daily AI budget from storage (called on setup)."""
         try:
             stored = await self._ai_budget_store.async_load()
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- corrupt/missing budget store falls back to a fresh counter, must not block setup
             _LOGGER.debug("AI budget store load failed: %s", err)
             stored = None
         if isinstance(stored, dict):
@@ -3484,7 +3488,7 @@ class BoschCameraCoordinator(
                     "count": self._ai_day_count,
                 }
             )
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- best-effort persistence, must not break the AI-analysis call path
             _LOGGER.debug("AI budget store save failed: %s", err)
 
     def _ai_rate_allowed(self, cam_id: str) -> bool:
@@ -3555,7 +3559,7 @@ class BoschCameraCoordinator(
                         age_secs = (datetime.now(UTC) - gen_dt).total_seconds()
                         if max_age > 0 and age_secs <= max_age:
                             return cached_text
-                except Exception as _cache_err:
+                except (ValueError, TypeError) as _cache_err:
                     _LOGGER.debug("AI cache staleness check failed: %s", _cache_err)
             return None
         cam_entity = getattr(self, "camera_entities", {}).get(cam_id)
@@ -3617,7 +3621,7 @@ class BoschCameraCoordinator(
                     self.ai_record_call(cam_id)
         except TimeoutError:
             _LOGGER.debug("AI description timed out (20s) for %s", cam_id[:8])
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- "Never raises" contract (see docstring): the calling notification/event path must never break
             _LOGGER.debug("AI description generate failed for %s: %s", cam_id[:8], err)
         finally:
             self.ai_in_flight -= 1
@@ -3970,7 +3974,7 @@ class BoschCameraCoordinator(
             caps = cam_entity.camera_capabilities
             if StreamType.WEB_RTC in caps.frontend_stream_types:
                 return  # all good
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- best-effort watchdog probe, must not crash the coordinator
             _LOGGER.debug("webrtc-watchdog: capabilities probe failed: %s", err)
             return
         # First-line recovery: direct-refresh `_supported_schemes` on the
@@ -3991,7 +3995,7 @@ class BoschCameraCoordinator(
                     cam_id[:8],
                 )
                 return
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- best-effort recovery step, falls through to the reload path below on any failure
             _LOGGER.debug("webrtc-watchdog: direct refresh failed: %s", err)
         now = time.monotonic()
         if not hasattr(self, "_last_go2rtc_reload"):
@@ -4019,7 +4023,7 @@ class BoschCameraCoordinator(
             )
             try:
                 await self.hass.config_entries.async_reload(entry.entry_id)
-            except Exception as err:
+            except Exception as err:  # noqa: BLE001 -- one go2rtc entry's reload failure must not stop the loop over the others
                 _LOGGER.warning("webrtc-watchdog: go2rtc reload failed: %s", err)
         # After reload, the cam entity's `_webrtc_provider` is still None — HA
         # only auto-refreshes on `supported_features & STREAM` flips, but our
@@ -4035,7 +4039,7 @@ class BoschCameraCoordinator(
             try:
                 if CameraEntityFeature.STREAM in cam_ent.supported_features:
                     await cam_ent.async_refresh_providers()
-            except Exception as err:
+            except Exception as err:  # noqa: BLE001 -- one camera's provider-refresh failure must not stop the loop over the others
                 _LOGGER.debug(
                     "webrtc-watchdog: async_refresh_providers failed for %s: %s",
                     getattr(cam_ent, "entity_id", "?"),
@@ -4534,7 +4538,7 @@ class BoschCameraCoordinator(
         except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.debug("_fetch_rcp_lan: %s@%s %s", opcode_hex, ip, err)
             return None
-        except Exception as err:  # pragma: no cover
+        except Exception as err:  # pragma: no cover  # noqa: BLE001 -- last-resort catch-all for genuinely unexpected errors beyond the network-error branch above
             _LOGGER.debug("_fetch_rcp_lan: %s@%s unexpected: %s", opcode_hex, ip, err)
             return None
 
@@ -4552,7 +4556,7 @@ class BoschCameraCoordinator(
                 scopes_dict = _parse_onvif_scopes(raw_onvif)
                 self.rcp_onvif_scopes_cache[cam_id] = scopes_dict
                 _LOGGER.debug("ONVIF scopes for %s: %s", cam_id[:8], scopes_dict)
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- non-fatal per docstring, sensor falls back to its last cached value
             _LOGGER.debug(
                 "ONVIF scopes fetch error for %s: %s",
                 cam_id[:8],
@@ -4566,7 +4570,7 @@ class BoschCameraCoordinator(
                 version_str = f"{raw_ver[0]}.{raw_ver[1]}.{raw_ver[2]}.{raw_ver[3]}"
                 self.rcp_version_cache[cam_id] = version_str
                 _LOGGER.debug("RCP version for %s: %s", cam_id[:8], version_str)
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- non-fatal per docstring, sensor falls back to its last cached value
             _LOGGER.debug(
                 "RCP version fetch error for %s: %s",
                 cam_id[:8],
@@ -4708,7 +4712,7 @@ class BoschCameraCoordinator(
                             headers["Authorization"] = f"Bearer {token}"
                         except asyncio.CancelledError:
                             raise
-                        except Exception as err:
+                        except Exception as err:  # noqa: BLE001 -- any token-refresh failure (auth or network) must fall through to a clean write-failure return, not crash the caller
                             _LOGGER.debug(
                                 "async_put_camera token refresh failed: %s", err
                             )
@@ -4739,7 +4743,7 @@ class BoschCameraCoordinator(
                             body[:200],
                         )
                     return ok
-        except Exception as err:
+        except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.warning("async_put_camera %s/%s error: %s", cam_id, endpoint, err)
             return False
 

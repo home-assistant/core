@@ -70,7 +70,9 @@ async def _fetch_one_camera_events(
                             cam_id,
                             last_ev_id[:8],
                         )
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001 — any failure here (network,
+        # timeout, malformed cloud response) is safe to swallow: it just
+        # skips the optimization and falls through to the full fetch below.
         _LOGGER.debug(
             "last_event check error for %s: %s — falling back to full fetch",
             cam_id,
@@ -85,7 +87,10 @@ async def _fetch_one_camera_events(
                     if r.status == 200:
                         events = await r.json()
                         ok = True
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 — per-camera events fetch is
+            # gathered in parallel with return_exceptions=True (see module
+            # docstring); one camera's failure, of any kind, must not blank
+            # its cached events or abort the other cameras' fetches.
             _LOGGER.debug(
                 "Events fetch error for %s: %s",
                 cam_id,

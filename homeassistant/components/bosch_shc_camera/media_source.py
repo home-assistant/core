@@ -399,7 +399,7 @@ class _SmbBackend:
 
             delete_session(self.server, connection_cache=cache)
         except (
-            Exception
+            Exception  # noqa: BLE001
         ):  # pragma: no cover — best-effort SMB session cleanup, failure non-actionable
             pass
 
@@ -1757,5 +1757,5 @@ class BoschCameraMediaView(HomeAssistantView):
                 if close_cache is not None:
                     try:
                         await self.hass.async_add_executor_job(close_cache)
-                    except Exception:  # pragma: no cover — best-effort async cache teardown, failure non-actionable
+                    except Exception:  # noqa: BLE001  # pragma: no cover — best-effort async cache teardown, failure non-actionable
                         pass

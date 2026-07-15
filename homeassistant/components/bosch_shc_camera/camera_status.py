@@ -155,7 +155,7 @@ async def _check_one_camera_status(
                     )
                     status = "SESSION_LIMIT"
                     ping_ok = True
-    except Exception as err:
+    except (aiohttp.ClientError, TimeoutError, ValueError) as err:
         _LOGGER.debug("Ping check error for %s: %s", cam_id, err)
     if not ping_ok:
         try:
@@ -178,7 +178,7 @@ async def _check_one_camera_status(
                             cam_id[:8],
                         )
                         status = "SESSION_LIMIT"
-        except Exception as err:
+        except (aiohttp.ClientError, TimeoutError, ValueError) as err:
             _LOGGER.debug("Commissioned fallback error for %s: %s", cam_id, err)
 
     coordinator.per_cam_status_at[cam_id] = now

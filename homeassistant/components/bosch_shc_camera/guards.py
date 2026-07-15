@@ -90,6 +90,6 @@ async def _warn_if_privacy_on(entity: Any, feature_name: str) -> bool:
             },
             blocking=False,
         )
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001 — best-effort UI notification for a write already blocked; the service call target/schema is arbitrary HA core plumbing and must never mask the privacy-mode-blocked result being returned below
         _LOGGER.debug("persistent_notification create failed: %s", err)
     return True

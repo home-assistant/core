@@ -62,7 +62,11 @@ async def build_data_and_dispatch(
                         await coordinator.async_mark_events_read(unread_ids)
                     except asyncio.CancelledError:
                         raise
-                    except Exception as err:
+                    except Exception as err:  # noqa: BLE001 — best-effort:
+                        # a mark-read failure must never block startup event
+                        # processing (async_mark_events_read already swallows
+                        # its own errors and returns bool; this is
+                        # defense-in-depth against that contract changing).
                         _LOGGER.debug(
                             "Mark-read (startup) failed for %s: %s", cam_id, err
                         )
@@ -216,7 +220,11 @@ async def build_data_and_dispatch(
                             await coordinator.async_mark_events_read([newest_id])
                         except asyncio.CancelledError:
                             raise
-                        except Exception as err:
+                        except Exception as err:  # noqa: BLE001 — best-effort:
+                            # a mark-read failure must never block alert
+                            # dispatch for a genuinely new event (same
+                            # defense-in-depth rationale as the startup
+                            # mark-read above).
                             _LOGGER.debug(
                                 "Mark-read (new event) failed for %s: %s",
                                 cam_id,

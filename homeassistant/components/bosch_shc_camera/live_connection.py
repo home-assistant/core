@@ -18,6 +18,9 @@ from typing import TYPE_CHECKING, Any
 
 import aiohttp
 
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import UpdateFailed
+
 from .const import CLOUD_API, LAN_RECHECK_FORCE_INTERVAL_SEC, TIMEOUT_PUT_CONNECTION
 
 if TYPE_CHECKING:  # pragma: no cover — only for type hints
@@ -257,7 +260,7 @@ async def try_live_connection_inner(
                         token_refreshed = True
                         try:
                             token = await coordinator.ensure_valid_token(token)
-                        except Exception as err:
+                        except (ConfigEntryAuthFailed, UpdateFailed) as err:
                             _LOGGER.warning(
                                 "try_live_connection: token refresh after 401 "
                                 "failed for %s: %s",
@@ -350,7 +353,7 @@ async def try_live_connection_inner(
                                         _host,
                                     )
                                     coordinator.rcp_lan_ip_cache[cam_id] = _host
-                            except Exception as _e:
+                            except ValueError as _e:
                                 _LOGGER.debug(
                                     "LOCAL creds cache skip for %s: %s",
                                     cam_id[:8],
@@ -465,7 +468,7 @@ async def try_live_connection_inner(
                                     parsed.hostname,
                                     local_rtsp_url[:80],
                                 )
-                            except Exception as err:
+                            except (OSError, RuntimeError) as err:
                                 _LOGGER.warning(
                                     "REMOTE TLS proxy start failed for %s — falling back "
                                     "to direct rtsps:// (HLS works, WebRTC will cert-fail): %s",
@@ -516,7 +519,7 @@ async def try_live_connection_inner(
                                         # with what REMOTE has always sent.
                                         max_session_duration=3600,
                                     )
-                                except Exception as fd_err:
+                                except Exception as fd_err:  # noqa: BLE001 — genuinely unexpected front-door bug must not discard the already-working proxied stream
                                     _LOGGER.warning(
                                         "REMOTE viewing front-door start failed for %s "
                                         "— falling back to the raw TLS-proxied URL "
@@ -635,7 +638,7 @@ async def try_live_connection_inner(
                                         cam_id[:8],
                                         zombie_count,
                                     )
-                                except Exception as _exc:
+                                except Exception as _exc:  # noqa: BLE001 — best-effort cleanup of HA-core's Stream worker thread, failure mode is not predictable
                                     _LOGGER.debug(
                                         "%s: stale Stream.stop() for %s failed: %s",
                                         "Renewal" if is_renewal else "Fresh toggle",
@@ -798,7 +801,7 @@ async def try_live_connection_inner(
                                     "Stream.update_source() applied for %s",
                                     cam_id[:8],
                                 )
-                            except Exception as err:
+                            except Exception as err:  # noqa: BLE001 — guards against HA-core Stream internals changing under us; force a rebuild rather than crash the session
                                 _LOGGER.debug(
                                     "Stream.update_source() failed for %s — forcing stream rebuild: %s",
                                     cam_id[:8],
@@ -837,7 +840,7 @@ async def try_live_connection_inner(
                         if cam_ent is not None:
                             try:
                                 await cam_ent.async_refresh_providers()
-                            except Exception as err:
+                            except Exception as err:  # noqa: BLE001 — best-effort post-connect provider refresh, must not fail the whole session
                                 _LOGGER.debug(
                                     "post-connect refresh_providers failed for %s: %s",
                                     cam_id[:8],

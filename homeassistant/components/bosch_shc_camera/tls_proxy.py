@@ -96,7 +96,7 @@ async def start_tls_proxy(
             port_cache.pop(cam_id, None)
         try:
             server.close()
-        except Exception as close_exc:  # best-effort close, callback below still fires
+        except OSError as close_exc:  # best-effort close, callback below still fires
             _LOGGER.debug(
                 "TLS proxy %s: server.close() during circuit-breaker raised — %s",
                 cam_id[:8],
@@ -113,7 +113,7 @@ async def start_tls_proxy(
         if on_proxy_died is not None:
             try:
                 on_proxy_died()
-            except Exception as cb_exc:
+            except Exception as cb_exc:  # noqa: BLE001 -- caller-supplied callback, arbitrary exception surface
                 _LOGGER.debug(
                     "TLS proxy %s: on_proxy_died callback raised — %s",
                     cam_id[:8],
@@ -183,7 +183,7 @@ async def start_tls_proxy(
                     data = text.encode("utf-8")
                 writer.write(data)
                 await writer.drain()
-        except Exception as exc:
+        except OSError as exc:
             # Peer closed / reset / SSL error — expected during session
             # teardown (e.g. after credential rotation), not a real error.
             _LOGGER.debug(
@@ -206,7 +206,7 @@ async def start_tls_proxy(
                 ),
                 timeout=TIMEOUT_TLS_PROXY_CONNECT,
             )
-        except Exception as exc:
+        except OSError as exc:
             now = time.monotonic()
             if fail_count == 0:
                 first_fail_at = now
@@ -328,7 +328,7 @@ async def stop_tls_proxy(
             server.close_clients()
             await server.wait_closed()
             _LOGGER.debug("TLS proxy for %s: server closed", cam_id[:8])
-        except Exception:
+        except OSError:
             pass
 
 
@@ -384,7 +384,7 @@ async def rtsp_keepalive(
                 try:
                     await writer.wait_closed()
                 except (
-                    Exception
+                    OSError
                 ):  # best-effort writer close after keepalive, failure non-actionable
                     pass
                 return True
@@ -395,7 +395,7 @@ async def rtsp_keepalive(
             try:
                 await writer.wait_closed()
             except (
-                Exception
+                OSError
             ):  # best-effort writer close after keepalive, failure non-actionable
                 pass
             return False
@@ -419,7 +419,7 @@ async def rtsp_keepalive(
         try:
             await writer.wait_closed()
         except (
-            Exception
+            OSError
         ):  # best-effort writer close after keepalive, failure non-actionable
             pass
 
@@ -430,7 +430,7 @@ async def rtsp_keepalive(
             "Keepalive: unexpected response on port %d: %.100s", proxy_port, resp2_str
         )
         return False
-    except Exception as exc:
+    except OSError as exc:
         _LOGGER.debug("Keepalive failed on port %d: %s", proxy_port, exc)
         # Close a writer opened before the failure — a read-timeout or drain
         # error after open_connection succeeded would otherwise leak one
@@ -440,7 +440,7 @@ async def rtsp_keepalive(
                 writer.close()
                 await writer.wait_closed()
             except (
-                Exception
+                OSError
             ):  # best-effort writer close on keepalive failure, failure non-actionable
                 pass
         return False
@@ -543,7 +543,7 @@ async def pre_warm_rtsp(
                 try:
                     await writer.wait_closed()
                 except (
-                    Exception
+                    OSError
                 ):  # best-effort writer close on pre-warm abort, failure non-actionable
                     pass
                 if attempt < max_attempts:
@@ -582,7 +582,7 @@ async def pre_warm_rtsp(
             writer.close()
             try:
                 await writer.wait_closed()
-            except Exception:  # best-effort writer close after pre-warm DESCRIBE, failure non-actionable
+            except OSError:  # best-effort writer close after pre-warm DESCRIBE, failure non-actionable
                 pass
             # Wait for the camera to fully release the TLS connection.
             # The camera only allows ~2 concurrent RTSP sessions per
@@ -590,7 +590,7 @@ async def pre_warm_rtsp(
             # may connect before the pre-warm's TLS session is torn down.
             await asyncio.sleep(post_success_wait)
             return got_ok
-        except Exception as exc:
+        except OSError as exc:
             _LOGGER.debug(
                 "Pre-warm RTSP failed on port %d (attempt %d/%d): %s",
                 proxy_port,
@@ -602,7 +602,7 @@ async def pre_warm_rtsp(
                 try:
                     writer.close()
                     await writer.wait_closed()
-                except Exception:  # best-effort writer close in pre-warm exception handler, failure non-actionable
+                except OSError:  # best-effort writer close in pre-warm exception handler, failure non-actionable
                     pass
             if attempt < max_attempts:
                 await asyncio.sleep(retry_wait)

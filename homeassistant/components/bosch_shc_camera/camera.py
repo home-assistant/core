@@ -109,7 +109,7 @@ def _rotate_jpeg_180(jpeg_bytes: bytes) -> bytes:
         out = BytesIO()
         rotated.save(out, format="JPEG", quality=90)
         return out.getvalue()
-    except Exception as err:
+    except (OSError, ValueError) as err:
         _LOGGER.debug("rotate_jpeg_180 failed (%s) — returning original", err)
         return jpeg_bytes
 
@@ -406,7 +406,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
                     self._display_name,
                 )
 
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 — background refresh across multiple cloud/local fetch + disk-save + state-write paths; any failure here must be logged and swallowed so the periodic refresh loop keeps running
             _LOGGER.debug("%s: image refresh failed: %s", self._display_name, err)
         finally:
             self._refresh_inflight = False
@@ -913,7 +913,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             buf = io.BytesIO()
             img.save(buf, format="JPEG", quality=85)
             return buf.getvalue()
-        except Exception:
+        except ImportError, ValueError, OSError:
             return None
 
     async def _async_rcp_thumbnail(self) -> bytes | None:
@@ -1004,7 +1004,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             jpeg = result or self._PLACEHOLDER_JPEG
         except asyncio.CancelledError:
             raise  # let cancellation propagate cleanly
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 — outer entrypoint guard: any uncaught exception from the fallback cascade must still yield a valid placeholder JPEG instead of HA's camera proxy serving a raw 500 body (see docstring)
             _LOGGER.debug(
                 "%s: async_camera_image failed (%s) — serving placeholder",
                 self._display_name,

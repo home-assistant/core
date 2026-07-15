@@ -159,7 +159,7 @@ async def tear_down_live_stream(
         if ls_entity is not None and getattr(ls_entity, "hass", None) is not None:
             try:
                 ls_entity.async_write_ha_state()
-            except Exception as exc:  # pragma: no cover — defensive: HA state write
+            except Exception as exc:  # noqa: BLE001 -- pragma: no cover — defensive: HA state write must not abort teardown on any failure
                 _LOGGER.debug(
                     "live-stream switch state write for %s skipped: %s",
                     cam_id[:8],
@@ -173,7 +173,7 @@ async def tear_down_live_stream(
         if cam_id in coordinator.nvr_processes:
             try:
                 await coordinator.stop_recorder(cam_id, clear_intent=False)
-            except Exception as exc:
+            except Exception as exc:  # noqa: BLE001 -- teardown must continue through proxy/stream cleanup below regardless of what the NVR sidecar stop raises; visible state is already cleared
                 _LOGGER.warning(
                     "stop_recorder for %s raised %s during teardown — "
                     "switch state already cleared, continuing with proxy/stream cleanup",
@@ -221,7 +221,7 @@ async def tear_down_live_stream(
                         "force-detaching, worker will be GC'd",
                         cam_id[:8],
                     )
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001 -- cam_entity.stream is force-detached to None unconditionally right after this block, so any failure here must not block that cleanup
                     _LOGGER.debug(
                         "camera.stream.stop() for %s failed: %s", cam_id[:8], exc
                     )

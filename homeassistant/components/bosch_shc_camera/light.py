@@ -18,6 +18,8 @@ import logging
 import time
 from typing import Any, override
 
+import aiohttp
+
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -339,7 +341,7 @@ class _BoschLightBase(
                             # stuck False.)
                             try:
                                 rsp = await resp.json(content_type=None)
-                            except Exception:
+                            except aiohttp.ClientError, ValueError:
                                 rsp = None
                             authoritative = (
                                 rsp if (rsp and isinstance(rsp, dict)) else body
@@ -359,7 +361,7 @@ class _BoschLightBase(
                             resp.status,
                             self._cam_id[:8],
                         )
-            except Exception as err:
+            except (TimeoutError, aiohttp.ClientError) as err:
                 _LOGGER.warning(
                     "lighting/switch error for %s: %s", self._cam_id[:8], err
                 )
@@ -383,7 +385,7 @@ class _BoschLightBase(
                     json={"enabled": enabled},
                 ) as resp:
                     return resp.status in (200, 201, 204)
-        except Exception as err:
+        except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.warning("lighting/switch/%s error: %s", endpoint, err)
         return False
 

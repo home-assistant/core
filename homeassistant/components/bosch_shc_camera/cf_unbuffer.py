@@ -202,7 +202,11 @@ def _make_segment_wrapper(orig_handle: Any) -> Any:
             return response
         try:
             return await _emit_segment_chunked(request, response)
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 — this is a best-effort
+            # workaround for a Cloudflare-tunnel buffering quirk; any
+            # failure re-emitting the response as chunked must fall back to
+            # serving the original (unpatched) response rather than break
+            # the actual HLS segment delivery.
             _LOGGER.debug("CF unbuffer segment chunked emit failed: %s", exc)
             return response
 
@@ -248,5 +252,8 @@ def register(hass: HomeAssistant) -> None:
             ", ".join(patched_playlist) if patched_playlist else "none",
             ", ".join(patched_segment) if patched_segment else "none",
         )
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 — this optional monkey-patch
+        # (import + getattr/setattr on HA's stream views) must never prevent
+        # integration setup; any failure here just means the CF-tunnel
+        # workaround stays inactive.
         _LOGGER.warning("CF unbuffer patch failed: %s", exc)

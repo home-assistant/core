@@ -184,7 +184,7 @@ class BoschVideoQualitySelect(
                 new_live = await self.coordinator.try_live_connection(self._cam_id)
                 if new_live:
                     self.coordinator.data[self._cam_id]["live"] = new_live
-            except Exception:  # best-effort live-URL reconnect on quality change, failure non-actionable
+            except Exception:  # noqa: BLE001 — best-effort live-URL reconnect on quality change, failure non-actionable
                 pass
         self.async_write_ha_state()
 

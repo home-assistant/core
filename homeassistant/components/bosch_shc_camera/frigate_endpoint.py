@@ -343,7 +343,7 @@ async def _close_writer(writer: asyncio.StreamWriter) -> None:
     writer.close()
     try:
         await writer.wait_closed()
-    except Exception as err:  # best-effort close of an already-abrupt connection
+    except Exception as err:  # noqa: BLE001 — best-effort close of an already-abrupt connection
         _LOGGER.debug("frigate front-door: wait_closed() error (non-fatal): %s", err)
 
 
@@ -650,7 +650,7 @@ class _CameraServer:
             if self._on_active is not None:
                 try:
                     self._on_active()
-                except Exception as err:  # caller callback must never kill the listener
+                except Exception as err:  # noqa: BLE001 — caller callback must never kill the listener
                     _LOGGER.debug(
                         "frigate front-door %s: on_active raised — %s", cam, err
                     )
@@ -685,7 +685,7 @@ class _CameraServer:
         if self.client_count == 0 and self._on_idle is not None:
             try:
                 self._on_idle()
-            except Exception as err:  # caller callback must never kill the listener
+            except Exception as err:  # noqa: BLE001 — caller callback must never kill the listener
                 _LOGGER.debug(
                     "frigate front-door %s: on_idle raised — %s",
                     self.cam_id[:8],
@@ -749,9 +749,7 @@ class _CameraServer:
             target = await asyncio.wait_for(
                 self._resolve(self.cam_id), timeout=_RESOLVE_TIMEOUT
             )
-        except (
-            Exception
-        ) as err:  # broad: any resolve failure → drop client, recorder retries
+        except Exception as err:  # noqa: BLE001 — broad: any resolve failure → drop client, recorder retries
             _LOGGER.debug("frigate front-door %s: resolve_inner failed — %s", cam, err)
             target = None
         if target is None:
@@ -1121,6 +1119,6 @@ class FrigateCoordinatorMixin:
         if self.frigate_runner is not None:
             try:
                 self.frigate_runner.stop_all()
-            except Exception as err:  # broad: teardown must never block unload
+            except Exception as err:  # noqa: BLE001 — broad: teardown must never block unload
                 _LOGGER.debug("frigate front-doors stop_all raised: %s", err)
             self.frigate_runner = None

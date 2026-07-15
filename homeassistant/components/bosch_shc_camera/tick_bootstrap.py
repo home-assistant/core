@@ -101,5 +101,5 @@ async def ensure_protocol_checked(
                         "— consider updating the integration",
                         proto_resp.status,
                     )
-    except Exception as exc:
+    except (aiohttp.ClientError, TimeoutError, ValueError) as exc:
         _LOGGER.debug("Protocol version check failed: %s", exc)

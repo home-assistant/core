@@ -22,6 +22,8 @@ import logging
 import time
 from typing import TYPE_CHECKING
 
+import aiohttp
+
 from .cloud_ssl import async_bosch_cloud_session_cm
 from .const import CLOUD_API, TIMEOUT_PUT_CONNECTION
 
@@ -146,7 +148,7 @@ async def refresh_local_creds_from_heartbeat(
         if stream is not None:
             try:
                 stream.update_source(effective_url)
-            except Exception as err:
+            except Exception as err:  # noqa: BLE001 -- best-effort proactive cache refresh; any failure here self-heals at next worker restart, so swallowing is intentional
                 _LOGGER.debug(
                     "Heartbeat: Stream.update_source for %s failed (will heal at next worker restart): %s",
                     cam_id[:8],
@@ -183,7 +185,7 @@ async def refresh_local_creds_from_heartbeat(
             elapsed,
             new_user,
         )
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001 -- best-effort handler by design (see docstring): any parse/state error is swallowed, the heartbeat keeps running, and the reactive 401 rescue remains the safety net
         _LOGGER.debug(
             "Heartbeat cred-refresh skipped for %s: %s",
             cam_id[:8],
@@ -274,7 +276,7 @@ async def auto_renew_local_session(
                             cam_id[:8],
                         )
                         session_start = time.monotonic()  # reset to avoid spamming
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001 -- keepalive loop must survive any unexpected failure (try_live_connection is documented to never raise) to keep retrying every cycle
                     renewal_fails += 1
                     _LOGGER.warning("Session renewal error for %s: %s", cam_id[:8], exc)
                     session_start = time.monotonic()
@@ -346,7 +348,7 @@ async def auto_renew_local_session(
                                     cam_id[:8],
                                     consecutive_fails,
                                 )
-            except Exception as exc:
+            except (TimeoutError, aiohttp.ClientError) as exc:
                 consecutive_fails += 1
                 _LOGGER.warning(
                     "Heartbeat error for %s: %s (fail %d)",
@@ -375,7 +377,7 @@ async def auto_renew_local_session(
                     else:
                         _LOGGER.warning("Heartbeat: renewal failed for %s", cam_id[:8])
                         session_start = time.monotonic()
-                except Exception as exc:
+                except Exception as exc:  # noqa: BLE001 -- keepalive loop must survive any unexpected failure (try_live_connection is documented to never raise) to keep retrying every cycle
                     _LOGGER.warning(
                         "Heartbeat: renewal error for %s: %s", cam_id[:8], exc
                     )
@@ -425,7 +427,7 @@ async def promote_to_local(coordinator: BoschCameraCoordinator, cam_id: str) -> 
                 cam_id[:8],
                 new_type,
             )
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001 -- fire-and-forget background task (scheduled via async_create_task, no caller to propagate to); must log and not crash the status loop on any unexpected failure
         _LOGGER.warning(
             "Active LOCAL promotion failed for %s: %s",
             cam_id[:8],

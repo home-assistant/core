@@ -398,7 +398,7 @@ class _QuietFcmPushClient:
                                         await self._reset()
                                 except ImportError:
                                     await self._reset()
-                except Exception as ex:
+                except Exception as ex:  # noqa: BLE001 -- outer read-loop guard: any truly unexpected error must terminate this client cleanly (logged) rather than crash the event loop
                     import traceback as _tb
 
                     _LOGGER.error(
@@ -493,7 +493,7 @@ async def async_stop_fcm_supervisor(coordinator: Any) -> None:
         sup.cancel()
         try:
             await sup
-        except asyncio.CancelledError, Exception:
+        except asyncio.CancelledError, Exception:  # noqa: BLE001 -- tearing down our own just-cancelled task; any failure surfacing during that await is irrelevant, we're shutting down regardless
             pass
         coordinator.fcm_supervisor_task = None
     await async_stop_fcm_push(coordinator)
@@ -634,7 +634,7 @@ async def _async_start_fcm_push_locked(coordinator: Any) -> bool:
         try:
             coordinator.fcm_token = await coordinator.fcm_client.checkin_or_register()
             _LOGGER.debug("FCM registered — token: %s...", coordinator.fcm_token[:8])
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- firebase_messaging library call, exception surface undocumented/arbitrary
             # Log diagnostic details that survive _FCMNoiseFilter. The raw
             # error message often contains substrings the filter dedups
             # ("PHONE_REGISTRATION_ERROR", "Unable to establish subscription"),
@@ -677,7 +677,7 @@ async def _async_start_fcm_push_locked(coordinator: Any) -> bool:
                 "FCM push listener started — near-instant event detection active"
             )
             return True
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- firebase_messaging library call, exception surface undocumented/arbitrary
             _LOGGER.warning("FCM push listener failed to start: %s", err)
             with coordinator.fcm_lock:
                 coordinator.fcm_client = None
@@ -841,7 +841,7 @@ async def async_stop_fcm_push(coordinator: Any) -> None:
             await client.stop()
         except asyncio.CancelledError:
             raise
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- firebase_messaging library cleanup call, exception surface undocumented/arbitrary; must not block our own teardown
             _LOGGER.debug("FCM stop raised: %s", err)
         pending = getattr(client, "tasks", None) or []
         if pending:
@@ -1087,7 +1087,7 @@ async def _async_persist_fcm_creds(coordinator: Any, creds: dict[str, Any]) -> N
             data={**coordinator.entry.data, "fcm_credentials": creds},
         )
         _LOGGER.debug("FCM credentials saved to config entry")
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001 -- best-effort persist from a detached background task; any failure here must be logged and swallowed, not left as an unretrieved task exception
         _LOGGER.debug("FCM creds persist failed: %s", err)
 
 
@@ -1415,7 +1415,7 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                                 event_type,
                                 refresh_delay,
                             )
-                        except Exception as _snap_err:
+                        except Exception as _snap_err:  # noqa: BLE001 -- Path A scheduling guard: import/attribute/task-creation failures must not abort the rest of this camera's event handling (notification + mark-read below)
                             _LOGGER.warning(
                                 "FCM Path A: failed to schedule live-snap refresh for %s: %s",
                                 cam_name,
@@ -1434,10 +1434,10 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                     async def _mark_read_bg(
                         _coord: Any = coordinator, _eid: str = newest_id
                     ) -> None:
-                        try:
-                            await async_mark_events_read(_coord, [_eid])
-                        except Exception:  # best-effort cloud housekeeping
-                            pass
+                        # async_mark_events_read() already catches its own
+                        # network errors internally and never raises — no
+                        # wrapper needed here.
+                        await async_mark_events_read(_coord, [_eid])
 
                     _mr_task = coordinator.hass.async_create_task(_mark_read_bg())
                     coordinator.bg_tasks.add(_mr_task)
@@ -1451,7 +1451,7 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
             # 300 s safety poll) recover from it without operator action.
             # → DEBUG, not WARNING.
             _LOGGER.debug("FCM push event fetch network error for %s: %s", cam_id, err)
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- per-camera loop: one camera's unexpected failure must not abort event fetching for the remaining cameras in this pass
             _LOGGER.debug("FCM push event fetch error for %s: %s", cam_id, err)
 
     # Push beat the cloud index → no new event this pass. Retry a couple of
@@ -1652,7 +1652,10 @@ async def async_send_alert(
                 domain, service = svc.split(".", 1)
                 call_data = build_notify_data(svc, message, file_path)
                 await coordinator.hass.services.async_call(domain, service, call_data)
-            except Exception as err:
+            # svc is an arbitrary user-configured notify service; its integration
+            # can raise anything, and one misconfigured service must not stop
+            # the others in this loop.
+            except Exception as err:  # noqa: BLE001
                 _LOGGER.warning("Alert send failed for %s (%s): %s", svc, type_key, err)
 
     # -- Step 1: Instant text alert ----------------------------------------
@@ -1664,7 +1667,7 @@ async def async_send_alert(
             _step1_key, f"{type_icon} {cam_name}: {type_label} ({ts_short})"
         )
         _LOGGER.debug("Alert step 1 (text) sent via %s", _step1_key)
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001 -- final safety net around the critical first alert step (get_alert_services()/options access); its failure aborts the whole alert, so it must be logged rather than crash the FCM push handler
         _LOGGER.warning("Alert step 1 failed: %s", err)
         return
 
@@ -1719,7 +1722,7 @@ async def async_send_alert(
                                     fresh_events[0].get("videoClipUploadStatus", "")
                                     or clip_status
                                 )
-            except Exception as err:
+            except (TimeoutError, aiohttp.ClientError) as err:
                 _LOGGER.debug("Alert: re-fetch attempt %d failed: %s", attempt, err)
                 continue
             if image_url:
@@ -1796,7 +1799,7 @@ async def async_send_alert(
                                         if _desc:
                                             _desc = _desc[:200].rstrip()
                                             caption = f"{caption}\n\U0001f916 {_desc}"
-                                except Exception as _ai_err:
+                                except Exception as _ai_err:  # noqa: BLE001 -- async_generate_ai_description() calls an arbitrary external AI backend; a failure there must never break the screenshot notification
                                     _LOGGER.debug(
                                         "AI notify-include failed: %s", _ai_err
                                     )
@@ -1866,13 +1869,13 @@ async def async_send_alert(
                                                 cam_name,
                                                 len(data),
                                             )
-                            except Exception as _pb_err:
+                            except Exception as _pb_err:  # noqa: BLE001 -- deliberately broad per the comment above: any error updating the image-entity cache must never affect the rest of the alert pipeline (cleanup, clip download, etc.)
                                 _LOGGER.warning(
                                     "FCM Path B: failed to update %s cache: %s",
                                     cam_name,
                                     _pb_err,
                                 )
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- alert step 2 (snapshot) must not abort steps 3 (video) and the housekeeping that follow; mirrors the "log + continue" pattern used by every other alert step in this function
             _LOGGER.warning("Alert step 2 failed: %s", err)
 
     # -- Step 3: Video clip — poll until ready, then download + send -------
@@ -1920,7 +1923,10 @@ async def async_send_alert(
                                 _LOGGER.debug(
                                     "Alert: direct clip.mp4 available for %s", cam_name
                                 )
-                except Exception:  # best-effort HEAD probe for direct clip URL; failure falls through to poll path
+                except (
+                    TimeoutError,
+                    aiohttp.ClientError,
+                ):  # best-effort HEAD probe for direct clip URL; failure falls through to poll path
                     pass
 
         if not found_clip_url and clip_status == "Unavailable":
@@ -1978,7 +1984,10 @@ async def async_send_alert(
                         break
                     if clip_unavailable:
                         break
-                except Exception:  # resilient poll loop, transient network error on one attempt should not abort all retries
+                except (
+                    TimeoutError,
+                    aiohttp.ClientError,
+                ):  # resilient poll loop, transient network error on one attempt should not abort all retries
                     continue
 
         if found_clip_url and _is_safe_bosch_url(found_clip_url):
@@ -2009,7 +2018,7 @@ async def async_send_alert(
                                 )
                                 if not save_snapshots:
                                     files_to_cleanup.append(clip_path)
-            except Exception as err:
+            except (TimeoutError, aiohttp.ClientError, OSError) as err:
                 _LOGGER.warning("Alert step 3 (video) failed: %s", err)
         else:
             _LOGGER.debug("Alert: video clip not ready after 90s for %s", cam_name)
@@ -2018,12 +2027,9 @@ async def async_send_alert(
     if _clip_cam_id and coordinator.options.get("mark_events_read", False):
         event_id = event_id or coordinator.last_event_ids.get(_clip_cam_id, "")
         if event_id:
-            try:
-                await async_mark_events_read(coordinator, [event_id])
-            except (
-                Exception
-            ):  # best-effort cloud housekeeping; alert delivery already complete
-                pass
+            # async_mark_events_read() already catches its own network errors
+            # internally and never raises — no wrapper needed here.
+            await async_mark_events_read(coordinator, [event_id])
 
     # -- SMB upload (immediate, alongside alert) ---------------------------
     if opts.get("enable_smb_upload") and opts.get("smb_server") and _clip_cam_id:
@@ -2085,7 +2091,7 @@ async def async_send_alert(
             _LOGGER.info("Alert: SMB upload completed for %s", cam_name)
         except TimeoutError:
             _LOGGER.warning("Alert: SMB upload timed out after 30s for %s", cam_name)
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- sync_smb_upload runs smbclient/smbprotocol calls in an executor thread with an undocumented/arbitrary exception surface (OSError, SMB-protocol errors, etc.); must not abort the local-save step that follows
             _LOGGER.warning("Alert: SMB upload failed for %s: %s", cam_name, err)
 
     # -- Local save (FCM-triggered, alongside SMB) -------------------------
@@ -2108,7 +2114,7 @@ async def async_send_alert(
             )
         except TimeoutError:
             _LOGGER.warning("Alert: local save timed out after 30s for %s", cam_name)
-        except Exception as err:
+        except Exception as err:  # noqa: BLE001 -- sync_local_save runs in an executor thread with an undocumented exception surface beyond plain OSError; a failure here must be logged, not left as an unretrieved task exception
             _LOGGER.warning("Alert: local save failed for %s: %s", cam_name, err)
 
     # -- Cleanup local files -----------------------------------------------
@@ -2155,7 +2161,8 @@ async def async_mark_events_read(coordinator: Any, event_ids: list[str]) -> bool
                     if resp.status in (200, 201, 204):
                         success = True
         except (
-            Exception
+            TimeoutError,
+            aiohttp.ClientError,
         ):  # best-effort mark-read; caller logs success/failure via return value
             pass
 

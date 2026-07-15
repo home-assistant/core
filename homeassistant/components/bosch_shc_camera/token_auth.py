@@ -354,7 +354,7 @@ class TokenAuthCoordinatorMixin:
                         {"message": message, "title": title},
                     )
                     _LOGGER.info("Token failure alert sent via %s", svc)
-                except Exception as err:
+                except Exception as err:  # noqa: BLE001 — best-effort alert fan-out to an arbitrary user-configured notify service; its failure modes are unknowable here and must never block iterating the remaining services
                     _LOGGER.debug("Token failure alert via %s failed: %s", svc, err)
 
     # ── Proactive background token refresh ───────────────────────────────────
@@ -412,7 +412,7 @@ class TokenAuthCoordinatorMixin:
                 refresh_in,
                 _schedule_proactive_refresh,
             )
-        except Exception as err:
+        except (ValueError, TypeError, AttributeError) as err:
             _LOGGER.debug("_schedule_token_refresh: cannot parse token expiry: %s", err)
 
     async def _proactive_refresh(self: Any) -> None:
@@ -429,7 +429,7 @@ class TokenAuthCoordinatorMixin:
             await self.ensure_valid_token(self.token)
             # _ensure_valid_token calls _schedule_token_refresh on success,
             # so the next refresh is automatically rescheduled.
-        except Exception as err:
+        except (ConfigEntryAuthFailed, UpdateFailed) as err:
             _LOGGER.warning(
                 "Proactive token refresh failed: %s — will retry via reactive 401 handling",
                 err,

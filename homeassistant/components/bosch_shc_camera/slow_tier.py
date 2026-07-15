@@ -338,7 +338,7 @@ async def _poll_cam_control(
                         coordinator.pan_cache[cam_id] = pan_data.get(
                             "currentAbsolutePosition"
                         )
-        except Exception as err:
+        except (aiohttp.ClientError, TimeoutError, ValueError) as err:
             _LOGGER.debug(
                 "Pan fetch error for %s: %s",
                 cam_id,
@@ -357,7 +357,7 @@ async def _poll_cam_control(
                 ) as ls_resp:
                     if ls_resp.status == 200:
                         coordinator.lighting_switch_cache[cam_id] = await ls_resp.json()
-        except Exception as err:
+        except (aiohttp.ClientError, TimeoutError, ValueError) as err:
             _LOGGER.debug(
                 "lighting/switch fetch error for %s: %s",
                 cam_id,
@@ -413,7 +413,7 @@ async def _poll_slow_tier_endpoints(
                     if r.status == 200:
                         return (endpoint, 200, await r.json())
                     return (endpoint, r.status, None)
-        except Exception as err:
+        except (aiohttp.ClientError, TimeoutError, ValueError) as err:
             _LOGGER.debug(
                 "%s fetch error for %s: %s",
                 endpoint,

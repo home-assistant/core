@@ -402,7 +402,7 @@ async def _watch_preroll_recorder(
                 max_segs,
             )
             coordinator.nvr_preroll_segment_counts[cam_id] = remaining
-        except Exception:  # best-effort prune-on-stop; non-fatal if cache dir missing  # best-effort cache prune, non-fatal if dir missing
+        except OSError:  # best-effort cache prune, non-fatal if dir missing
             pass
 
 
@@ -484,7 +484,7 @@ async def _spawn_preroll_recorder_locked(
             max_segs,
         )
         coordinator.nvr_preroll_segment_counts[cam_id] = remaining
-    except Exception:  # best-effort prune-on-spawn; non-fatal if cache dir missing  # best-effort cache prune, non-fatal if dir missing
+    except OSError:  # best-effort cache prune, non-fatal if dir missing
         pass
 
     # Start periodic prune watcher — keeps the ring buffer bounded while running.
@@ -584,7 +584,7 @@ async def stop_preroll_recorder(
     cam_dir = _preroll_cam_dir(coordinator, cam_id)
     try:
         await coordinator.hass.async_add_executor_job(prune_preroll_cache, cam_dir, 0)
-    except Exception:  # best-effort cleanup; non-fatal if cache dir missing  # best-effort ring cleanup on stop, non-fatal if dir missing
+    except OSError:  # best-effort ring cleanup on stop, non-fatal if dir missing
         pass
     return clean_exit
 
@@ -1421,10 +1421,7 @@ async def _watch_recorder(
                 proc.stderr.read(2048), timeout=TIMEOUT_RECORDER_STDERR_DRAIN
             )
             err_tail = err_bytes.decode("utf-8", errors="replace").strip()
-        except (  # best-effort stderr drain before respawn, exit already logged
-            TimeoutError,
-            Exception,
-        ):  # best-effort stderr drain before respawn; ffmpeg exit already logged
+        except Exception:  # noqa: BLE001 -- best-effort stderr drain before respawn; ffmpeg exit already logged regardless of drain outcome
             pass
 
     elapsed = time.monotonic() - started_at
@@ -1481,7 +1478,7 @@ async def _watch_recorder(
                         },
                     )
                 )
-        except Exception:  # best-effort UI notification; error already logged
+        except Exception:  # noqa: BLE001 -- best-effort UI notification; disk-full state already logged/recorded above regardless
             pass
         return
 
@@ -1665,7 +1662,7 @@ def _upload_smb(
         return False
     try:
         register_session(server, username=username, password=password)
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001 -- smbprotocol/spnego raise a wide, non-enumerable exception hierarchy for auth/protocol/socket failures; any of them means the session failed
         _LOGGER.warning("NVR drain (smb): session to %s failed: %s", server, err)
         return False
 
@@ -1685,7 +1682,7 @@ def _upload_smb(
             base,
             folder_parts,
         )
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001 -- smbprotocol raises a wide, non-enumerable exception hierarchy; any failure here means mkdir failed
         _LOGGER.debug("NVR drain (smb): mkdir %s failed: %s", smb_folder, err)
         return False
 
@@ -1695,7 +1692,7 @@ def _upload_smb(
             for chunk in iter(lambda: src.read(65536), b""):
                 dst.write(chunk)
         return True
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001 -- combines local OSError with smbprotocol's non-enumerable exception hierarchy for the remote write
         _LOGGER.warning("NVR drain (smb): upload %s -> %s failed: %s", full, dest, err)
         return False
 
@@ -1704,6 +1701,8 @@ def _upload_ftp(
     coordinator: BoschCameraCoordinator, full: str, cam: str, date: str, fname: str
 ) -> bool:
     """target=ftp: upload one finalized segment via ftplib."""
+    import ftplib
+
     from .smb import _ftp_connect, _ftp_makedirs
 
     opts = coordinator.options
@@ -1715,7 +1714,7 @@ def _upload_ftp(
         return False
     try:
         ftp = _ftp_connect(server, username, password)
-    except Exception as err:
+    except ftplib.all_errors as err:
         _LOGGER.warning("NVR drain (ftp): login to %s failed: %s", server, err)
         return False
     try:
@@ -1725,7 +1724,7 @@ def _upload_ftp(
         ftp_dir = f"/{base}/{sub}/{cam_safe}/{date}".replace("//", "/").rstrip("/")
         try:
             _ftp_makedirs(ftp, ftp_dir)
-        except Exception as err:
+        except ftplib.all_errors as err:
             _LOGGER.debug("NVR drain (ftp): mkdir %s failed: %s", ftp_dir, err)
             return False
         dest = f"{ftp_dir}/{fname}"
@@ -1733,7 +1732,7 @@ def _upload_ftp(
             with open(full, "rb") as src:
                 ftp.storbinary(f"STOR {dest}", src)
             return True
-        except Exception as err:
+        except (OSError,) + ftplib.all_errors as err:
             _LOGGER.warning(
                 "NVR drain (ftp): upload %s -> %s failed: %s", full, dest, err
             )
@@ -1741,11 +1740,13 @@ def _upload_ftp(
     finally:
         try:
             ftp.quit()
-        except Exception:  # best-effort graceful FTP quit; fallback to close below
+        except (
+            ftplib.all_errors
+        ):  # best-effort graceful FTP quit; fallback to close below
             try:
                 ftp.close()
-            except (  # best-effort FTP teardown, failure non-actionable
-                Exception
+            except (
+                ftplib.all_errors
             ):  # best-effort FTP socket close on teardown, failure non-actionable
                 pass
 
@@ -1876,9 +1877,7 @@ def sync_drain_tick(
                             },
                         ),
                     )
-            except (  # best-effort UI notify; quarantine + error already logged
-                Exception
-            ):  # best-effort UI notification; quarantine + error log already done above
+            except Exception:  # noqa: BLE001 -- best-effort UI notify; quarantine + error already logged above regardless of notify outcome
                 pass
 
     # Persist the latest drain stats on the coordinator so the sensor can
@@ -1917,7 +1916,7 @@ async def drain_staging_to_remote(coordinator: BoschCameraCoordinator) -> None:
                         sync_drain_tick,
                         coordinator,
                     )
-                except Exception as err:
+                except Exception as err:  # noqa: BLE001 -- drain watcher must survive any tick failure to keep watching (SMB/FTP raise a wide, non-enumerable exception surface)
                     _LOGGER.warning("NVR drain tick raised: %s", err)
             await asyncio.sleep(_DRAIN_TICK_SECONDS)
         except asyncio.CancelledError:
@@ -2017,7 +2016,7 @@ def _sync_nvr_cleanup_smb(coordinator: BoschCameraCoordinator) -> None:
         return
     try:
         register_session(server, username=username, password=password)
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001 -- smbprotocol/spnego raise a wide, non-enumerable exception hierarchy for auth/protocol/socket failures; any of them means the session failed
         _LOGGER.warning("NVR cleanup (smb): session to %s failed: %s", server, err)
         return
 
@@ -2034,7 +2033,7 @@ def _sync_nvr_cleanup_smb(coordinator: BoschCameraCoordinator) -> None:
             return
         try:
             entries = list(scandir(path))
-        except Exception:
+        except Exception:  # noqa: BLE001 -- smbprotocol raises a wide, non-enumerable exception hierarchy; resilient walk, skip this subtree
             return
         for entry in entries:
             if time.monotonic() > deadline:
@@ -2049,7 +2048,7 @@ def _sync_nvr_cleanup_smb(coordinator: BoschCameraCoordinator) -> None:
                     if st.st_mtime < cutoff:
                         remove(full)
                         deleted += 1
-                except Exception as err:
+                except Exception as err:  # noqa: BLE001 -- smbprotocol raises a wide, non-enumerable exception hierarchy; resilient walk, skip this file
                     _LOGGER.debug("NVR cleanup (smb): error on %s: %s", entry.name, err)
 
     _walk_and_delete(root)
@@ -2087,7 +2086,7 @@ def _sync_nvr_cleanup_ftp(coordinator: BoschCameraCoordinator) -> None:
         return
     try:
         ftp = _ftp_connect(server, username, password)
-    except Exception as err:
+    except ftplib.all_errors as err:
         _LOGGER.warning("NVR cleanup (ftp): login to %s failed: %s", server, err)
         return
 
@@ -2108,7 +2107,7 @@ def _sync_nvr_cleanup_ftp(coordinator: BoschCameraCoordinator) -> None:
         entries: list[str] = []
         try:
             ftp.retrlines("LIST", entries.append)
-        except Exception:
+        except ftplib.all_errors:
             return
 
         files: list[str] = []
@@ -2141,13 +2140,16 @@ def _sync_nvr_cleanup_ftp(coordinator: BoschCameraCoordinator) -> None:
                     .replace(tzinfo=UTC)
                     .timestamp()
                 )
-            except Exception:  # skip file if MDTM unavailable; resilient FTP walk loop  # skip file if MDTM unavailable, resilient walk
+            except ftplib.all_errors + (
+                ValueError,
+                IndexError,
+            ):  # skip file if MDTM unavailable/unparseable, resilient walk
                 continue
             if mt < cutoff:
                 try:
                     ftp.delete(abs_name)
                     deleted += 1
-                except Exception as err:
+                except ftplib.all_errors as err:
                     _LOGGER.debug(
                         "NVR cleanup (ftp): delete %s failed: %s", abs_name, err
                     )
@@ -2155,9 +2157,7 @@ def _sync_nvr_cleanup_ftp(coordinator: BoschCameraCoordinator) -> None:
             _walk_and_delete(f"{path}/{sd}")
             try:
                 ftp.cwd(path)
-            except (  # best-effort cwd restore, sibling loop continues
-                Exception
-            ):  # best-effort cwd back to parent after subdir walk; non-fatal
+            except ftplib.all_errors:  # best-effort cwd restore, sibling loop continues
                 pass
 
     try:
@@ -2166,8 +2166,8 @@ def _sync_nvr_cleanup_ftp(coordinator: BoschCameraCoordinator) -> None:
     finally:
         try:
             ftp.quit()
-        except (  # best-effort FTP teardown, failure non-actionable
-            Exception
+        except (
+            ftplib.all_errors
         ):  # best-effort FTP quit on cleanup teardown, failure non-actionable
             pass
     if deadline_hit:

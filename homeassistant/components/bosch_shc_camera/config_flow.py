@@ -509,7 +509,7 @@ def _detect_token_client_id(bearer_token: str) -> str | None:
         payload_b64 = parts[1] + "=" * (4 - len(parts[1]) % 4)
         payload = json.loads(base64.urlsafe_b64decode(payload_b64))
         return str(payload.get("azp")) if payload.get("azp") is not None else None
-    except Exception:
+    except ValueError, TypeError, AttributeError:
         return None
 
 
