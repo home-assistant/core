@@ -472,9 +472,9 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 # the account's gateways: without this check a host pointed at
                 # the wrong gateway would command another site's house.
                 if self._gateway_id is None:
-                    # Pairing is allowed to proceed: refusing it over a missing
-                    # comparand would block a valid gateway. Warn rather than
-                    # debug so the check being skipped is never silent.
+                    # Pairing proceeds: refusing over a missing comparand would
+                    # block a valid gateway. Warn so a skipped identity check is
+                    # never silent.
                     LOGGER.warning(
                         "Energy site %s reports no gateway ID, so %s cannot be "
                         "confirmed as this site's own gateway; pairing anyway",
