@@ -6,20 +6,28 @@ that occurrence and everything after it. CalDAV has no such call: the whole
 series lives in a single calendar object that has to be rewritten by hand.
 
 A single occurrence is dropped with an EXDATE and changed through an overriding
-VEVENT carrying a RECURRENCE-ID. "This and future" caps the RRULE with UNTIL.
-RFC 5545 requires EXDATE, RECURRENCE-ID and UNTIL to follow DTSTART: its value
-type, and its zone or lack of one. A floating DTSTART keeps them floating; a
-zoned one puts them in UTC.
+VEVENT carrying a RECURRENCE-ID. "This and future" caps the RRULE with UNTIL
+and drops later RDATEs; an update clones the resource into a second object
+holding the remaining occurrences. RFC 5545 requires EXDATE, RECURRENCE-ID and
+UNTIL to follow DTSTART: its value type, and its zone or lack of one. A
+floating DTSTART keeps them floating; a zoned one puts them in UTC.
 """
 
 from datetime import UTC, date, datetime, time, timedelta
+import logging
 from typing import Any
 
 import caldav
+from caldav.lib.error import DAVError
 from dateutil.rrule import rrulestr
-from icalendar import Event as ICalEvent, vDDDTypes, vRecur
+from icalendar import Calendar as ICalCalendar, Event as ICalEvent, vDDDTypes, vRecur
+import requests
 
 from homeassistant.util import dt as dt_util
+
+_LOGGER = logging.getLogger(__name__)
+
+_WRITE_FAILURES = (requests.ConnectionError, requests.Timeout, DAVError, ValueError)
 
 
 def update_event(
@@ -52,18 +60,19 @@ def update_event(
         _save(dav_event, ical, master)
         return
 
-    # RFC 4791 allows only one UID per object, so the tail needs its own.
-    tail = dict(data)
-    tail.setdefault("rrule", _tail_rrule(master, occurrence))
-    if tail["rrule"] is None:
-        del tail["rrule"]
+    if "RRULE" not in master and "RDATE" not in master:
+        raise ValueError("Event is not a recurring series")
 
-    # Creating the tail first costs a visible duplicate if capping then fails,
-    # where capping first would silently drop every occurrence from here on.
-    calendar.add_event(**tail)
-    _cap_series(master, occurrence)
-    _drop_overrides(ical, occurrence, from_occurrence=True)
-    _save(dav_event, ical, master)
+    # RFC 4791 allows one UID per object; a derived UID makes retries
+    # overwrite the tail instead of adding another one.
+    tail = calendar.save_event(_tail_ics(ical, master, data, occurrence))
+    try:
+        _cap_series(master, occurrence)
+        _drop_overrides(ical, occurrence, from_occurrence=True)
+        _save(dav_event, ical, master)
+    except _WRITE_FAILURES:
+        _discard(tail)
+        raise
 
 
 def delete_event(
@@ -176,15 +185,38 @@ def _add_exdate(master: Any, occurrence: datetime | date) -> None:
     master.add("EXDATE", vDDDTypes(_align(master, occurrence)))
 
 
-def _tail_rrule(master: Any, occurrence: datetime | date) -> str | None:
-    """Return the rule for the tail, with COUNT reduced by the capped head."""
+def _tail_ics(
+    ical: Any, master: Any, data: dict[str, Any], occurrence: datetime | date
+) -> str:
+    """Return the occurrences from the split onwards as their own object."""
+    tail = ICalCalendar.from_ical(ical.to_ical())
+    vevent = _master(tail)
+    for override in _overrides(tail):
+        tail.subcomponents.remove(override)
+    _replace(vevent, "uid", _tail_uid(str(master["UID"]), occurrence))
+    _replace(vevent, "dtstamp", dt_util.utcnow())
+    _replace(vevent, "sequence", None)
+    _apply(vevent, data)
+    if "rrule" not in data:
+        _replace(vevent, "rrule", _tail_rrule(master, occurrence))
+    _keep_dates(vevent, "RDATE", occurrence, before=False)
+    _keep_dates(vevent, "EXDATE", occurrence, before=False)
+    return tail.to_ical().decode("utf-8")
+
+
+def _tail_uid(uid: str, occurrence: datetime | date) -> str:
+    return f"{uid}-{_utc(occurrence).strftime('%Y%m%dT%H%M%SZ')}"
+
+
+def _tail_rrule(master: Any, occurrence: datetime | date) -> vRecur | None:
+    """Return the master's rule with COUNT reduced by the capped head."""
     rrule = master.get("RRULE")
     if rrule is None:
         return None
     recur = vRecur(dict(rrule))
     if count := recur.get("COUNT"):
         recur["COUNT"] = [max(count[0] - _occurrences_before(master, occurrence), 1)]
-    return recur.to_ical().decode("utf-8")
+    return recur
 
 
 def _occurrences_before(master: Any, occurrence: datetime | date) -> int:
@@ -197,14 +229,54 @@ def _occurrences_before(master: Any, occurrence: datetime | date) -> int:
     return sum(1 for moment in rule if moment < target)
 
 
+def _discard(tail: Any) -> None:
+    try:
+        tail.delete()
+    except (requests.ConnectionError, requests.Timeout, DAVError) as err:
+        _LOGGER.warning(
+            "The split-off series could not be removed after a failed update"
+            " and may show duplicate events until the update is retried: %s",
+            err,
+        )
+
+
 def _cap_series(master: Any, occurrence: datetime | date) -> None:
     rrule = master.get("RRULE")
-    if rrule is None:
+    if rrule is None and "RDATE" not in master:
         raise ValueError("Event is not a recurring series")
-    recur = vRecur(dict(rrule))
-    recur.pop("COUNT", None)
-    recur["UNTIL"] = [_until(master, occurrence)]
-    _replace(master, "rrule", recur)
+    if rrule is not None:
+        recur = vRecur(dict(rrule))
+        recur.pop("COUNT", None)
+        recur["UNTIL"] = [_until(master, occurrence)]
+        _replace(master, "rrule", recur)
+    _keep_dates(master, "RDATE", occurrence, before=True)
+    _keep_dates(master, "EXDATE", occurrence, before=True)
+
+
+def _keep_dates(
+    component: Any, key: str, occurrence: datetime | date, before: bool
+) -> None:
+    """Keep the RDATE or EXDATE values on one side of the occurrence."""
+    if key not in component:
+        return
+    entries = component[key]
+    if not isinstance(entries, list):
+        entries = [entries]
+    target = _utc(occurrence)
+    kept = [
+        item.dt
+        for entry in entries
+        for item in entry.dts
+        if (_utc(_start_of(item.dt)) < target) == before
+    ]
+    del component[key]
+    if kept:
+        component.add(key, kept)
+
+
+def _start_of(value: Any) -> datetime | date:
+    """Return the start of an RDATE value, which may be a period."""
+    return value[0] if isinstance(value, tuple) else value
 
 
 def _until(master: Any, occurrence: datetime | date) -> datetime | date:
@@ -225,9 +297,8 @@ def _apply(component: Any, data: dict[str, Any]) -> None:
         _replace(component, "dtend", data["dtend"])
     _replace(component, "description", data.get("description"))
     _replace(component, "location", data.get("location"))
-    # An absent rrule means "leave the recurrence alone": the coordinator
-    # expands series server side, so CalendarEvent.rrule is never populated and
-    # the frontend cannot echo the existing rule back.
+    # The frontend never sees the rule (expand strips RRULE), so an absent
+    # rrule must not remove the recurrence.
     if rrule := data.get("rrule"):
         _replace(component, "rrule", vRecur.from_ical(rrule))
 
@@ -236,10 +307,8 @@ def _save(dav_event: caldav.CalendarObjectResource, ical: Any, touched: Any) -> 
     _replace(touched, "last-modified", dt_util.utcnow())
     _replace(touched, "sequence", int(touched.get("sequence", 0)) + 1)
     dav_event.data = ical.to_ical().decode("utf-8")
-    # Defaults would bump SEQUENCE twice and, when an override comes first,
-    # merge back only that component, dropping the edits to the master.
-    # caldav.CalendarObjectResource types against a shim that predates
-    # only_this_recurrence; the runtime class accepts it.
+    # Defaults would bump SEQUENCE twice and merge back only the first
+    # component; the ignore covers a legacy shim without only_this_recurrence.
     dav_event.save(increase_seqno=False, only_this_recurrence=False)  # type: ignore[call-arg]
 
 

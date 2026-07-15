@@ -218,6 +218,9 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
     ) -> None:
         """Create the WebDav Calendar Event Device."""
         super().__init__(coordinator)
+        if coordinator.search is not None:
+            # Never modify events the filter hides from this entity.
+            self._attr_supported_features = CalendarEntityFeature.CREATE_EVENT
         self.entity_id = entity_id
         self._event: CalendarEvent | None = None
         self._attr_name = name
