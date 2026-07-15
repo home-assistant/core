@@ -101,7 +101,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class BoschVideoQualitySelect(CoordinatorEntity, SelectEntity, RestoreEntity):  # type: ignore[misc]
+class BoschVideoQualitySelect(
+    CoordinatorEntity[BoschCameraCoordinator], SelectEntity, RestoreEntity
+):
     """Select entity to choose the RTSPS stream quality (inst + highQualityVideo)."""
 
     _attr_has_entity_name = True
@@ -183,7 +185,9 @@ class BoschVideoQualitySelect(CoordinatorEntity, SelectEntity, RestoreEntity):  
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschNvrModeSelect(CoordinatorEntity, SelectEntity, RestoreEntity):  # type: ignore[misc]
+class BoschNvrModeSelect(
+    CoordinatorEntity[BoschCameraCoordinator], SelectEntity, RestoreEntity
+):
     """Select entity to override the Mini-NVR recording mode for one camera.
 
     GitHub #43 (realKim-dotcom): lets a mixed fleet run different NVR
@@ -280,7 +284,9 @@ class BoschNvrModeSelect(CoordinatorEntity, SelectEntity, RestoreEntity):  # typ
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschMotionSensitivitySelect(CoordinatorEntity, SelectEntity):  # type: ignore[misc]
+class BoschMotionSensitivitySelect(
+    CoordinatorEntity[BoschCameraCoordinator], SelectEntity
+):
     """Select entity to set motion detection sensitivity for a camera.
 
     Options: SUPER_HIGH / HIGH / MEDIUM / MEDIUM_LOW / LOW
@@ -380,7 +386,7 @@ class BoschMotionSensitivitySelect(CoordinatorEntity, SelectEntity):  # type: ig
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschFcmPushModeSelect(CoordinatorEntity, SelectEntity):  # type: ignore[misc]
+class BoschFcmPushModeSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEntity):
     """Select entity to choose the FCM push notification mode.
 
     Options: Auto (FCM push, auto-fallback to polling on registration failure),
@@ -455,7 +461,7 @@ class BoschFcmPushModeSelect(CoordinatorEntity, SelectEntity):  # type: ignore[m
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschStreamModeSelect(CoordinatorEntity, SelectEntity):  # type: ignore[misc]
+class BoschStreamModeSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEntity):
     """Select entity to choose the live stream connection mode.
 
     Options:
@@ -516,7 +522,9 @@ class BoschStreamModeSelect(CoordinatorEntity, SelectEntity):  # type: ignore[mi
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschDetectionModeSelect(CoordinatorEntity, SelectEntity):  # type: ignore[misc]
+class BoschDetectionModeSelect(
+    CoordinatorEntity[BoschCameraCoordinator], SelectEntity
+):
     """Select entity: intrusion detection mode (Gen2 only).
 
     API values: ALL_MOTIONS / ONLY_HUMANS / ZONES — confirmed via mitm captures
@@ -604,7 +612,7 @@ class BoschDetectionModeSelect(CoordinatorEntity, SelectEntity):  # type: ignore
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschPanPresetSelect(CoordinatorEntity, SelectEntity):  # type: ignore[misc]
+class BoschPanPresetSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEntity):
     """Select entity with named PTZ presets for the Gen1 360° indoor camera.
 
     Options: home (0°), left (-60°), right (+60°), back_left (-120°), back_right (+120°).

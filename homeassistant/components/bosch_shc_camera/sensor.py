@@ -165,7 +165,7 @@ async def async_setup_entry(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class _BoschSensorBase(CoordinatorEntity, SensorEntity):  # type: ignore[misc]
+class _BoschSensorBase(CoordinatorEntity[BoschCameraCoordinator], SensorEntity):
     """Shared base for all Bosch camera sensors."""
 
     _attr_has_entity_name = True

@@ -31,7 +31,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CLOUD_API, DOMAIN, BoschCameraConfigEntry  # type: ignore[attr-defined]
+from . import (  # type: ignore[attr-defined]
+    CLOUD_API,
+    DOMAIN,
+    BoschCameraConfigEntry,
+    BoschCameraCoordinator,
+)
 from .cloud_ssl import async_get_bosch_cloud_session
 from .guards import _warn_if_privacy_on
 
@@ -74,7 +79,9 @@ async def async_setup_entry(
     async_add_entities(entities, update_before_add=False)
 
 
-class _BoschLightBase(CoordinatorEntity, LightEntity, RestoreEntity):  # type: ignore[misc]
+class _BoschLightBase(
+    CoordinatorEntity[BoschCameraCoordinator], LightEntity, RestoreEntity
+):
     """Base class for Gen2 light entities.
 
     Inherits from RestoreEntity so `_last_color_hex`, `_last_brightness`,

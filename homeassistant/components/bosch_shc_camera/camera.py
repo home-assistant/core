@@ -132,7 +132,7 @@ async def async_setup_entry(
     async_add_entities(entities, update_before_add=False)
 
 
-class BoschCamera(CoordinatorEntity, Camera):  # type: ignore[misc]
+class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     """Represents a single Bosch Smart Home camera in Home Assistant.
 
     • Shows the latest motion-triggered JPEG snapshot (refreshed every scan_interval)

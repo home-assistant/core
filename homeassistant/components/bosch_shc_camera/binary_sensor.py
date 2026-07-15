@@ -84,7 +84,9 @@ async def async_setup_entry(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class _BoschBinarySensorBase(CoordinatorEntity, BinarySensorEntity):  # type: ignore[misc]
+class _BoschBinarySensorBase(
+    CoordinatorEntity[BoschCameraCoordinator], BinarySensorEntity
+):
     """Shared base for Bosch camera binary sensors."""
 
     # Disabled by default — enable explicitly in entity registry if desired

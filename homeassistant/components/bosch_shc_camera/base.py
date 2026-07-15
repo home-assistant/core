@@ -12,10 +12,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import BoschCameraCoordinator
 from .models import get_display_name
 
 
-class _BoschEntityBase(CoordinatorEntity):  # type: ignore[misc]
+class _BoschEntityBase(CoordinatorEntity[BoschCameraCoordinator]):
     """Common init + device_info for all Bosch camera entities.
 
     Subclass alongside the appropriate HA entity mixin
@@ -23,7 +24,9 @@ class _BoschEntityBase(CoordinatorEntity):  # type: ignore[misc]
     super().__init__(coordinator, cam_id, entry) from the subclass __init__.
     """
 
-    def __init__(self, coordinator: Any, cam_id: str, entry: ConfigEntry) -> None:
+    def __init__(
+        self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
+    ) -> None:
         super().__init__(coordinator)
         self._cam_id = cam_id
         self._entry = entry

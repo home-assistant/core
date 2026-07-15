@@ -89,7 +89,7 @@ def _redact_rtsp_creds(url: str) -> str:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class _BoschSwitchBase(CoordinatorEntity, SwitchEntity):  # type: ignore[misc]
+class _BoschSwitchBase(CoordinatorEntity[BoschCameraCoordinator], SwitchEntity):
     """Shared base for Bosch camera switch entities."""
 
     _attr_has_entity_name = True
