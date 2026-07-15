@@ -451,6 +451,7 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         """Collect the local gateway host/password and verify the LAN connection."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            assert self._energy_site is not None
             host = user_input[CONF_HOST].strip()
             # The Powerwall gateway login accepts only the last 5 characters of
             # the Wi-Fi password printed on the gateway; users routinely enter
@@ -471,8 +472,14 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 # the account's gateways: without this check a host pointed at
                 # the wrong gateway would command another site's house.
                 if self._gateway_id is None:
-                    LOGGER.debug(
-                        "No cloud gateway ID for this site; skipping DIN binding"
+                    # Pairing is allowed to proceed: refusing it over a missing
+                    # comparand would block a valid gateway. Warn rather than
+                    # debug so the check being skipped is never silent.
+                    LOGGER.warning(
+                        "Energy site %s reports no gateway ID, so %s cannot be "
+                        "confirmed as this site's own gateway; pairing anyway",
+                        self._energy_site.energy_site_id,
+                        din,
                     )
                 elif not _din_matches(self._gateway_id, din):
                     return self.async_abort(

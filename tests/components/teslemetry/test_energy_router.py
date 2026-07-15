@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from copy import deepcopy
 from types import MappingProxyType
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from aiohttp import ClientResponseError, RequestInfo
@@ -217,11 +218,19 @@ async def test_energy_site_cloud_without_powerwall(hass: HomeAssistant) -> None:
     assert not isinstance(energysite.api, EnergySiteRouter)
 
 
-async def _setup_energy_site_subentry(hass: HomeAssistant) -> MockConfigEntry:
+async def _setup_energy_site_subentry(
+    hass: HomeAssistant, products: dict[str, Any] | None = None
+) -> MockConfigEntry:
     """Set up an entry and return it with an (unpaired) energy site subentry."""
     entry = mock_config_entry()
     entry.add_to_hass(hass)
-    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Teslemetry.products",
+            return_value=products or PRODUCTS,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     return entry
@@ -598,6 +607,55 @@ async def test_subentry_credentials_gateway_mismatch(
         "actual": din,
     }
     assert CONF_HOST not in entry.subentries[subentry_id].data
+
+
+@pytest.mark.usefixtures("mock_rsa_key")
+async def test_subentry_credentials_without_cloud_gateway_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A site with no cloud gateway ID pairs, but says so rather than skipping quietly.
+
+    There is nothing to compare the local DIN against, and refusing a valid
+    gateway would be worse than not binding it.
+    """
+    products = deepcopy(PRODUCTS)
+    site = next(
+        product
+        for product in products["response"]
+        if product.get("energy_site_id") == SITE_ID
+    )
+    site.pop("gateway_id")
+
+    entry = await _setup_energy_site_subentry(hass, products=products)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
+
+    client = _mock_powerwall_client(din="UNKNOWN-GATEWAY")
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.energysite.TeslemetryEnergySite.find_authorized_clients",
+            new=AsyncMock(
+                return_value=_own_key_clients(AuthorizedClientState.VERIFIED)
+            ),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.PowerwallClient",
+            return_value=client,
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        assert result["step_id"] == "credentials"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.subentries[subentry_id].data[CONF_HOST] == HOST
+    assert f"Energy site {SITE_ID} reports no gateway ID" in caplog.text
+    assert caplog.records[-1].levelname == "WARNING"
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
