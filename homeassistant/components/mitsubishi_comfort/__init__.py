@@ -11,6 +11,7 @@ from mitsubishi_comfort import (
 )
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 
+from homeassistant.components.dhcp import async_discovered_service_info
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
@@ -99,10 +100,24 @@ async def async_setup_entry(
     credentials = build_credentials(devices)
 
     # Stored IPs are keyed by MAC; drop any for devices no longer on the account.
-    # Addresses come from DHCP discovery (async_step_dhcp) and the manual entries
-    # in the options flow — the cloud never returns a device's LAN IP.
+    # Addresses come from DHCP discovery (async_step_dhcp), the sighting cache
+    # below, and the repair flow — the cloud never returns a device's LAN IP.
     stored: dict[str, str] = entry.data.get(CONF_ADDRESSES, {})
     addresses = {mac: ip for mac, ip in stored.items() if mac in owned_macs}
+
+    # The dhcp component caches every sighting, including devices seen before
+    # they were registered here — those never re-fire registered_devices
+    # discovery, so look the cache up instead of waiting for a new sighting.
+    # Stored addresses win: live discovery handles genuine IP changes.
+    discovered = {
+        dr.format_mac(info.macaddress): info.ip
+        for info in async_discovered_service_info(hass)
+    }
+    addresses |= {
+        mac: ip
+        for mac, ip in discovered.items()
+        if mac in owned_macs and mac not in addresses
+    }
 
     data_updates: dict = {}
     if credentials != cached_credentials:
@@ -137,23 +152,20 @@ async def async_setup_entry(
             len(no_credentials),
             ", ".join(sorted(no_credentials)),
         )
-    # A device the cloud cannot locate stays unaddressable across restarts until
-    # DHCP discovery reaches it or the user enters an IP in the options; raise a
-    # repair issue while any device lacks an address and clear it once they all
-    # have one.
+    # A device the cloud cannot locate stays unaddressable across restarts
+    # until DHCP discovery reaches it or the user enters an IP in the repair
+    # flow; raise a fixable repair issue while any device lacks an address and
+    # clear it once they all have one.
     issue_id = f"missing_address_{entry.entry_id}"
     if no_address:
         ir.async_create_issue(
             hass,
             DOMAIN,
             issue_id,
-            is_fixable=False,
+            is_fixable=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="missing_address",
-            translation_placeholders={
-                "count": str(len(no_address)),
-                "devices": ", ".join(sorted(no_address)),
-            },
+            data={"entry_id": entry.entry_id},
         )
     else:
         ir.async_delete_issue(hass, DOMAIN, issue_id)

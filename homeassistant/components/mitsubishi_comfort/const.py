@@ -10,8 +10,9 @@ PLATFORMS: Final = [Platform.CLIMATE]
 
 # Config entry data key holding the per-device LAN address cache, keyed by the
 # device's formatted MAC. The cloud API only returns each device's MAC, never
-# its LAN IP, so addresses come from DHCP discovery and from manual entry in the
-# options flow, then persisted here to survive restarts.
+# its LAN IP, so addresses come from DHCP discovery (live and cached sightings)
+# and from manual entry in the repair flow, then persisted here to survive
+# restarts.
 CONF_ADDRESSES: Final = "addresses"
 
 # Config entry data key holding per-device credentials (the Socket.IO-fetched

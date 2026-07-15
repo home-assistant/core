@@ -21,7 +21,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import MOCK_MAC, MOCK_PASSWORD, MOCK_SERIAL, MOCK_USERNAME
 
-from tests.common import MockConfigEntry, get_schema_suggested_value
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -309,108 +309,3 @@ async def test_dhcp_no_account_aborts(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-class TestOptionsFlow:
-    """Options flow tests.
-
-    The per-device IP fields are keyed by formatted MAC (dynamic), so they have
-    no static label in strings.json; ignore that in the translation check.
-    """
-
-    @pytest.fixture(autouse=True)
-    def ignore_missing_translations(self) -> list[str]:
-        """Allow the dynamic, MAC-keyed device IP fields."""
-        return [
-            "component.mitsubishi_comfort.options.step.init.data.",
-            "component.mitsubishi_comfort.options.step.init.data_description.",
-        ]
-
-    async def test_sets_device_ip(
-        self,
-        hass: HomeAssistant,
-        device_registry: dr.DeviceRegistry,
-        mock_config_entry: MockConfigEntry,
-    ) -> None:
-        """Test the options flow stores a manually entered device IP."""
-        mock_config_entry.add_to_hass(hass)
-        _register_device(device_registry, mock_config_entry)
-
-        result = await hass.config_entries.options.async_init(
-            mock_config_entry.entry_id
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
-        # The fields are labelled by raw MAC, so the description must pair each
-        # MAC with its device name for the user to tell the fields apart.
-        assert dr.format_mac(MOCK_MAC) in result["description_placeholders"]["devices"]
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], {dr.format_mac(MOCK_MAC): "192.168.1.50"}
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert mock_config_entry.data[CONF_ADDRESSES][dr.format_mac(MOCK_MAC)] == (
-            "192.168.1.50"
-        )
-
-    async def test_clears_device_ip(
-        self,
-        hass: HomeAssistant,
-        device_registry: dr.DeviceRegistry,
-        mock_config_entry: MockConfigEntry,
-    ) -> None:
-        """Test submitting a blank field removes the device's stored IP."""
-        mock_config_entry.add_to_hass(hass)
-        _register_device(device_registry, mock_config_entry)
-        # The fixture entry starts with a stored address for the device.
-        assert dr.format_mac(MOCK_MAC) in mock_config_entry.data[CONF_ADDRESSES]
-
-        result = await hass.config_entries.options.async_init(
-            mock_config_entry.entry_id
-        )
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], {dr.format_mac(MOCK_MAC): ""}
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert dr.format_mac(MOCK_MAC) not in mock_config_entry.data[CONF_ADDRESSES]
-
-    async def test_rejects_invalid_ip(
-        self,
-        hass: HomeAssistant,
-        device_registry: dr.DeviceRegistry,
-        mock_config_entry: MockConfigEntry,
-    ) -> None:
-        """Test the options flow rejects a non-IP entry."""
-        mock_config_entry.add_to_hass(hass)
-        _register_device(device_registry, mock_config_entry)
-
-        result = await hass.config_entries.options.async_init(
-            mock_config_entry.entry_id
-        )
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], {dr.format_mac(MOCK_MAC): "not-an-ip"}
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "invalid_ip"}
-        # The submitted value is preserved so the user does not have to re-enter.
-        schema = result["data_schema"].schema
-        assert (
-            get_schema_suggested_value(schema, dr.format_mac(MOCK_MAC)) == "not-an-ip"
-        )
-
-
-async def test_options_flow_aborts_without_devices(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test the options flow aborts when no devices are registered yet."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_devices"

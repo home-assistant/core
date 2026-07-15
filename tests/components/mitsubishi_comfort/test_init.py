@@ -1,7 +1,8 @@
 """Tests for the Mitsubishi Comfort integration setup."""
 
 import logging
-from unittest.mock import AsyncMock, MagicMock
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from mitsubishi_comfort import DeviceInfo
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
@@ -20,10 +21,18 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import MOCK_ADDRESS, MOCK_MAC, MOCK_PASSWORD, MOCK_SERIAL, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
+
+
+def _cache_entry(ip: str, mac: str = MOCK_MAC) -> DhcpServiceInfo:
+    """Build a DHCP cache entry (the cache stores MACs without separators)."""
+    return DhcpServiceInfo(
+        ip=ip, hostname="kumo", macaddress=mac.replace(":", "").lower()
+    )
 
 
 async def test_setup_entry_success(
@@ -112,7 +121,73 @@ async def test_setup_entry_no_address_loads_and_registers(
     assert device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_MAC))}
     )
-    assert issue_registry.async_get_issue(DOMAIN, f"missing_address_{entry.entry_id}")
+    issue = issue_registry.async_get_issue(DOMAIN, f"missing_address_{entry.entry_id}")
+    assert issue
+    assert issue.is_fixable
+    assert issue.data == {"entry_id": entry.entry_id}
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "cache", "expected_addresses", "expect_issue"),
+    [
+        pytest.param(
+            {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+            [_cache_entry(MOCK_ADDRESS)],
+            {dr.format_mac(MOCK_MAC): MOCK_ADDRESS},
+            False,
+            id="seeds_missing_address",
+        ),
+        pytest.param(
+            {
+                CONF_USERNAME: MOCK_USERNAME,
+                CONF_PASSWORD: MOCK_PASSWORD,
+                CONF_ADDRESSES: {dr.format_mac(MOCK_MAC): MOCK_ADDRESS},
+            },
+            [_cache_entry("192.168.1.222")],
+            {dr.format_mac(MOCK_MAC): MOCK_ADDRESS},
+            False,
+            id="stored_address_wins",
+        ),
+        pytest.param(
+            {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+            [_cache_entry("192.168.1.60", mac="99:99:99:99:99:99")],
+            {},
+            True,
+            id="ignores_unowned_mac",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_integration")
+async def test_setup_entry_dhcp_cache_seeding(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    entry_data: dict[str, Any],
+    cache: list[DhcpServiceInfo],
+    expected_addresses: dict[str, str],
+    expect_issue: bool,
+) -> None:
+    """Test setup consults the DHCP discovery cache for missing addresses.
+
+    A device sighted before it was registered never re-fires
+    registered_devices discovery, so setup looks the sighting cache up instead
+    of waiting for a new sighting. Stored addresses are never overwritten by
+    the cache (live discovery handles genuine IP changes), and sightings of
+    MACs the account does not own are ignored.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id="user-12345")
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.mitsubishi_comfort.async_discovered_service_info",
+        return_value=cache,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.data.get(CONF_ADDRESSES, {}) == expected_addresses
+    issue = issue_registry.async_get_issue(DOMAIN, f"missing_address_{entry.entry_id}")
+    assert (issue is not None) is expect_issue
 
 
 async def test_setup_entry_caches_and_replays_credentials(
