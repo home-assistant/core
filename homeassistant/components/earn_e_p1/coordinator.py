@@ -60,7 +60,8 @@ class EarnEP1Coordinator(DataUpdateCoordinator[dict[str, Any]]):
                     model=self.model,
                     sw_version=self.sw_version,
                 )
-        self.async_set_updated_data(device.data)
+        # Device emits partial packets; merge so keys from full packets persist.
+        self.async_set_updated_data({**(self.data or {}), **device.data})
 
     def start(self) -> None:
         """Register with the shared listener."""
