@@ -1,0 +1,210 @@
+"""Test the WATERCryst BIOCAT config flow."""
+
+from unittest.mock import AsyncMock
+
+from httpx import HTTPStatusError, Request, Response
+import pytest
+
+from homeassistant import config_entries
+from homeassistant.components.watercryst.config_flow import (
+    DeviceOffline,
+    WrongDeviceSerial,
+)
+from homeassistant.components.watercryst.const import (
+    CONF_BLE_MAC,
+    CONF_BSN,
+    CONF_ESN,
+    CONF_FW_VERSION,
+    CONF_HW_VERSION,
+    CONF_LATEST_FW_VERSION,
+    CONF_LINE,
+    CONF_SERIES,
+    CONF_SYSTEM_MAC,
+    DOMAIN,
+)
+from homeassistant.const import CONF_API_KEY, CONF_MODEL_ID, CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
+
+
+@pytest.mark.usefixtures("mock_api_client")
+async def test_form_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test successful flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_BSN: "2025001395300149",
+            CONF_API_KEY: "<api-key>",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Schulungsgerät"
+    assert result["data"] == {
+        CONF_BSN: "2025001395300149",
+        CONF_API_KEY: "<api-key>",
+        CONF_ESN: "2041730218",
+        CONF_MODEL_ID: "12000273",
+        CONF_LINE: "BIOCAT",
+        CONF_SERIES: "KLS 3000-C",
+        CONF_NAME: "Schulungsgerät",
+        CONF_FW_VERSION: "V01.05.07",
+        CONF_HW_VERSION: "2",
+        CONF_LATEST_FW_VERSION: "V01.08.05",
+        CONF_SYSTEM_MAC: "00:A2:FF:01:EE:DE",
+        CONF_BLE_MAC: "CC:F9:57:8F:EE:C4",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_duplicate_entry(hass: HomeAssistant) -> None:
+    """Test duplicate entry handling."""
+
+    # Add a preexisting identical config entry to hass.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="2025001395300149",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_BSN: "2025001395300149",
+            CONF_API_KEY: "<api-key>",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (DeviceOffline, "device_offline"),
+        (WrongDeviceSerial, "wrong_device_serial"),
+        (
+            HTTPStatusError(
+                message="",
+                request=Request(method="GET", url="v1/state"),
+                response=Response(status_code=401),
+            ),
+            "invalid_auth",
+        ),
+        (
+            HTTPStatusError(
+                message="",
+                request=Request(method="GET", url="v1/state"),
+                response=Response(status_code=403),
+            ),
+            "api_disabled",
+        ),
+        (
+            HTTPStatusError(
+                message="",
+                request=Request(method="GET", url="v1/state"),
+                response=Response(status_code=500),
+            ),
+            "unknown",
+        ),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_raise_error(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test an invalid setup."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    mock_api_client.get_state.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_BSN: "2025001395300149",
+            CONF_API_KEY: "<api-key>",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+
+async def test_form_device_offline(
+    hass: HomeAssistant, mock_api_client: AsyncMock
+) -> None:
+    """Test with an offline device."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    mock_api_client.get_state.return_value.online = False
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_BSN: "2025001395300149",
+            CONF_API_KEY: "<api-key>",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "device_offline"}
+
+
+@pytest.mark.usefixtures("mock_api_client")
+async def test_form_wrong_device_serial(hass: HomeAssistant) -> None:
+    """Test with a disabled API endpoint."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_BSN: "<wrong-bsn>",
+            CONF_API_KEY: "<api-key>",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "wrong_device_serial"}

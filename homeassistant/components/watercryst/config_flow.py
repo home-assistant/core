@@ -10,7 +10,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_MODEL_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -95,11 +94,11 @@ class WatercrystConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_BSN])
+            self._abort_if_unique_id_configured()
+
             try:
                 info = await validate_input(self.hass, user_input)
-
-                await self.async_set_unique_id(user_input[CONF_BSN])
-                self._abort_if_unique_id_configured()
 
                 data = {
                     CONF_BSN: user_input[CONF_BSN],
@@ -129,9 +128,6 @@ class WatercrystConfigFlow(ConfigFlow, domain=DOMAIN):
             except UnknownError:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-            except AbortFlow:
-                _LOGGER.exception("Already configured")
-                errors["base"] = "already_configured"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
