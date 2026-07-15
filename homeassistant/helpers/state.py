@@ -21,12 +21,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, State
-from homeassistant.loader import IntegrationNotFound, async_get_integration, bind_hass
+from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@bind_hass
 async def async_reproduce_state(
     hass: HomeAssistant,
     states: State | Iterable[State],

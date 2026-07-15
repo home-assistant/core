@@ -1125,6 +1125,22 @@ def test_state_selector_schema(schema, valid_selections, invalid_selections) -> 
 @pytest.mark.parametrize(
     ("schema", "valid_selections", "invalid_selections"),
     [
+        (None, ("/dev/ttyUSB0", "/dev/ttyACM1", "COM3"), (None, 1, True)),
+        ({}, ("/dev/ttyUSB0",), (None,)),
+    ],
+)
+def test_serial_selector_schema(
+    schema: dict | None,
+    valid_selections: tuple[Any, ...],
+    invalid_selections: tuple[Any, ...],
+) -> None:
+    """Test serial selector."""
+    _test_selector("serial", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
         ({}, ({"entity_id": ["sensor.abc123"]},), ("abc123", None)),
         ({"entity": {}}, (), ()),
         ({"entity": {"domain": "light"}}, (), ()),

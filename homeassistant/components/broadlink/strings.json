@@ -49,6 +49,11 @@
     }
   },
   "entity": {
+    "infrared": {
+      "infrared": {
+        "name": "IR transmitter"
+      }
+    },
     "select": {
       "day_of_week": {
         "name": "Day of week",
@@ -76,6 +81,11 @@
       "total_consumption": {
         "name": "Total consumption"
       }
+    }
+  },
+  "exceptions": {
+    "send_command_failed": {
+      "message": "Failed to send IR command: {error}"
     }
   }
 }

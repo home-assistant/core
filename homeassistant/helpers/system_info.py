@@ -10,7 +10,6 @@ from typing import Any
 
 from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
-from homeassistant.loader import bind_hass
 from homeassistant.util.package import is_docker_env, is_virtual_env
 from homeassistant.util.system_info import is_official_image
 
@@ -50,7 +49,6 @@ async def async_get_container_arch(hass: HomeAssistant) -> str:
 cached_get_user = cache(getuser)
 
 
-@bind_hass
 async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return info about the system."""
     is_hassio_ = is_hassio(hass)

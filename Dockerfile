@@ -19,25 +19,22 @@ ENV \
     UV_SYSTEM_PYTHON=true \
     UV_NO_CACHE=true
 
+WORKDIR /usr/src
+
 # Home Assistant S6-Overlay
 COPY rootfs /
 
 # Add go2rtc binary
 COPY --from=ghcr.io/alexxit/go2rtc@sha256:675c318b23c06fd862a61d262240c9a63436b4050d177ffc68a32710d9e05bae /usr/local/bin/go2rtc /bin/go2rtc
 
+## Setup Home Assistant Core dependencies
+COPY --parents requirements.txt homeassistant/package_constraints.txt homeassistant/
 RUN \
     # Verify go2rtc can be executed
     go2rtc --version \
-    # Install uv
-    && pip3 install uv==0.11.1
-
-WORKDIR /usr/src
-
-## Setup Home Assistant Core dependencies
-COPY requirements.txt homeassistant/
-COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
-RUN \
-    uv pip install \
+    # Install uv at the version pinned in the requirements file
+    && pip3 install --no-cache-dir "uv==$(awk -F'==' '/^uv==/{print $2}' homeassistant/requirements.txt)" \
+    && uv pip install \
         --no-build \
         -r homeassistant/requirements.txt
 
@@ -51,7 +48,7 @@ RUN \
         -r homeassistant/requirements_all.txt
 
 ## Setup Home Assistant Core
-COPY . homeassistant/
+COPY --parents LICENSE* README* homeassistant/ pyproject.toml homeassistant/
 RUN \
     uv pip install \
         -e ./homeassistant \

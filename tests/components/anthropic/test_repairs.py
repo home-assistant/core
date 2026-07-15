@@ -87,7 +87,7 @@ async def test_repair_flow_iterates_subentries(
                 "unique_id": None,
             },
             {
-                "data": {CONF_CHAT_MODEL: "claude-3-5-sonnet-20241022"},
+                "data": {CONF_CHAT_MODEL: "claude-3-7-sonnet-20250219"},
                 "subentry_type": "ai_task_data",
                 "title": "AI task One",
                 "unique_id": None,
@@ -128,6 +128,7 @@ async def test_repair_flow_iterates_subentries(
     assert placeholders["entry_name"] == entry_one.title
     assert placeholders["subentry_name"] == "Conversation One"
     assert placeholders["subentry_type"] == "Conversation agent"
+    assert placeholders["retirement_date"] == "February 19th, 2026"
 
     flow_id = result["flow_id"]
 
@@ -146,6 +147,7 @@ async def test_repair_flow_iterates_subentries(
     assert placeholders["entry_name"] == entry_one.title
     assert placeholders["subentry_name"] == "AI task One"
     assert placeholders["subentry_type"] == "AI task"
+    assert placeholders["retirement_date"] == "February 19th, 2026"
 
     result = await process_repair_fix_flow(
         client,
@@ -166,6 +168,7 @@ async def test_repair_flow_iterates_subentries(
     assert placeholders["entry_name"] == entry_two.title
     assert placeholders["subentry_name"] == "Conversation Two"
     assert placeholders["subentry_type"] == "Conversation agent"
+    assert placeholders["retirement_date"] == "January 5th, 2026"
 
     result = await process_repair_fix_flow(
         client,

@@ -1,7 +1,8 @@
 {
   "common": {
     "condition_behavior_name": "Condition passes if",
-    "trigger_behavior_name": "Trigger when"
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
   },
   "conditions": {
     "is_cleaning": {
@@ -190,6 +191,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::vacuum::common::trigger_for_name%]"
         }
       },
       "name": "Vacuum returned to dock"
@@ -199,6 +203,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::vacuum::common::trigger_for_name%]"
         }
       },
       "name": "Vacuum encountered an error"
@@ -208,6 +215,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::vacuum::common::trigger_for_name%]"
         }
       },
       "name": "Vacuum cleaner paused cleaning"
@@ -217,6 +227,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::vacuum::common::trigger_for_name%]"
         }
       },
       "name": "Vacuum cleaner started cleaning"
@@ -226,6 +239,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::vacuum::common::trigger_for_name%]"
         }
       },
       "name": "Vacuum cleaner started returning to dock"

@@ -9,6 +9,11 @@
           - first
           - last
           - any
+  for: &trigger_for
+    required: true
+    default: 00:00:00
+    selector:
+      duration:
 
 .illuminance_threshold_entity: &illuminance_threshold_entity
   - domain: input_number
@@ -55,6 +60,7 @@ crossed_threshold:
   target: *trigger_numerical_target
   fields:
     behavior: *trigger_behavior
+    for: *trigger_for
     threshold:
       required: true
       selector:

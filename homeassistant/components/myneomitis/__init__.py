@@ -22,7 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SELECT]
+PLATFORMS = [Platform.CLIMATE, Platform.SELECT]
 
 
 @dataclass
@@ -112,6 +112,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+def process_connection_update(new_state: dict[str, Any]) -> bool | None:
+    """Return availability from a connection update."""
+    if not new_state or "connected" not in new_state:
+        return None
+
+    return bool(new_state.get("connected"))
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -> bool:

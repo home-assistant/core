@@ -3,6 +3,7 @@
     "condition_behavior_name": "Condition passes if",
     "condition_threshold_name": "Threshold type",
     "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least",
     "trigger_threshold_name": "Threshold type"
   },
   "conditions": {
@@ -184,6 +185,9 @@
         "behavior": {
           "name": "[%key:component::water_heater::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::water_heater::common::trigger_for_name%]"
+        },
         "operation_mode": {
           "description": "The operation modes to trigger on.",
           "name": "Operation mode"
@@ -206,6 +210,9 @@
         "behavior": {
           "name": "[%key:component::water_heater::common::trigger_behavior_name%]"
         },
+        "for": {
+          "name": "[%key:component::water_heater::common::trigger_for_name%]"
+        },
         "threshold": {
           "name": "[%key:component::water_heater::common::trigger_threshold_name%]"
         }
@@ -217,6 +224,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::water_heater::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::water_heater::common::trigger_for_name%]"
         }
       },
       "name": "Water heater turned off"
@@ -226,6 +236,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::water_heater::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::water_heater::common::trigger_for_name%]"
         }
       },
       "name": "Water heater turned on"

@@ -2,6 +2,10 @@
 # name: test_model_list
   list([
     dict({
+      'label': 'Claude Opus 4.7',
+      'value': 'claude-opus-4-7',
+    }),
+    dict({
       'label': 'Claude Sonnet 4.6',
       'value': 'claude-sonnet-4-6',
     }),

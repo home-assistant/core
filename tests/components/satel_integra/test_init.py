@@ -4,6 +4,11 @@ from copy import deepcopy
 from unittest.mock import AsyncMock
 
 import pytest
+from satel_integra import (
+    SatelConnectFailedError,
+    SatelConnectionInitializationError,
+    SatelPanelBusyError,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_PANEL_DOMAIN
@@ -11,7 +16,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.satel_integra.config_flow import SatelConfigFlow
 from homeassistant.components.satel_integra.const import CONF_ENCRYPTION_KEY, DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigSubentry
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -164,3 +169,24 @@ async def test_parent_device_exists(
         identifiers={(DOMAIN, MOCK_ENTRY_ID)}
     )
     assert device_entry == snapshot(name="parent-device")
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        (SatelConnectFailedError, ConfigEntryState.SETUP_RETRY),
+        (SatelPanelBusyError, ConfigEntryState.SETUP_RETRY),
+        (SatelConnectionInitializationError, ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_setup_exceptions(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test the client async_connect."""
+    mock_satel.connect.side_effect = exception
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state == expected_state

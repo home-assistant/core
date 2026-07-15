@@ -76,10 +76,12 @@ from .const import (
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHELLY_EMIT_EVENT_PATTERN,
+    SHELLY_WALL_DISPLAY_MODELS,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     UPTIME_DEVIATION,
     VIRTUAL_COMPONENTS,
     VIRTUAL_COMPONENTS_MAP,
+    WALL_DISPLAY_RELEASE_URL,
     All_LIGHT_TYPES,
 )
 
@@ -120,7 +122,7 @@ def get_block_number_of_channels(device: BlockDevice, block: Block) -> int:
 
 def get_block_custom_name(device: BlockDevice, block: Block | None) -> str | None:
     """Get custom name from device settings."""
-    if block and (key := cast(str, block.type) + "s") and key in device.settings:
+    if block and (key := block.type + "s") and key in device.settings:
         assert block.channel
 
         if name := device.settings[key][int(block.channel)].get("name"):
@@ -587,6 +589,9 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
         beta and gen in BLOCK_GENERATIONS
     ) or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
+
+    if model in SHELLY_WALL_DISPLAY_MODELS:
+        return WALL_DISPLAY_RELEASE_URL
 
     if beta:
         return GEN2_BETA_RELEASE_URL

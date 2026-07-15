@@ -70,7 +70,6 @@ async def async_setup_platform(
 class EvoDHW(EvoChild, WaterHeaterEntity):
     """Base for any evohome-compatible DHW controller."""
 
-    _attr_name = "DHW controller"
     _attr_operation_list = list(HA_STATE_TO_EVO)
     _attr_supported_features = (
         WaterHeaterEntityFeature.AWAY_MODE
@@ -89,7 +88,6 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         """Initialize an evohome-compatible DHW controller."""
 
         super().__init__(coordinator, evo_device)
-        self._evo_id = evo_device.id
 
         self._attr_unique_id = evo_device.id
         self._attr_name = evo_device.name  # is static

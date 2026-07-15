@@ -19,7 +19,7 @@
         "data_description": {
           "api_key": "The new API access token for authenticating with Firefly III"
         },
-        "description": "The access token for your Firefly III instance is invalid and needs to be updated. Go to **Options > Profile** and select the **OAuth** tab. Create a new personal access token and copy it (it will only display once)."
+        "description": "The access token for your Firefly III instance is invalid and needs to be updated. Go to **Options > Remote access and tokens**. Create a new personal access token and copy it (it will only display once)."
       },
       "reconfigure": {
         "data": {
@@ -46,7 +46,7 @@
           "url": "[%key:common::config_flow::data::url%]",
           "verify_ssl": "Verify the SSL certificate of the Firefly III instance"
         },
-        "description": "You can create an API key in the Firefly III UI. Go to **Options > Profile** and select the **OAuth** tab. Create a new personal access token and copy it (it will only display once)."
+        "description": "You can create an API key in the Firefly III UI. Go to **Options > Remote access and tokens**. Create a new personal access token and copy it (it will only display once)."
       }
     }
   },

@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-import dataclasses
 import fnmatch
 import os
 
-from serial.tools.list_ports import comports
-from serial.tools.list_ports_common import ListPortInfo
+from serialx import SerialPortInfo, list_serial_ports
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
@@ -17,8 +15,8 @@ from homeassistant.loader import USBMatcher
 from .models import SerialDevice, USBDevice
 
 
-def usb_device_from_port(port: ListPortInfo) -> USBDevice:
-    """Convert serial ListPortInfo to USBDevice."""
+def usb_device_from_port(port: SerialPortInfo) -> USBDevice:
+    """Convert serialx SerialPortInfo to USBDevice."""
     assert port.vid is not None
     assert port.pid is not None
 
@@ -28,53 +26,30 @@ def usb_device_from_port(port: ListPortInfo) -> USBDevice:
         pid=f"{hex(port.pid)[2:]:0>4}".upper(),
         serial_number=port.serial_number,
         manufacturer=port.manufacturer,
-        description=port.description,
+        description=port.product,
     )
 
 
-def serial_device_from_port(port: ListPortInfo) -> SerialDevice:
-    """Convert serial ListPortInfo to SerialDevice."""
+def serial_device_from_port(port: SerialPortInfo) -> SerialDevice:
+    """Convert serialx SerialPortInfo to SerialDevice."""
     return SerialDevice(
         device=port.device,
         serial_number=port.serial_number,
         manufacturer=port.manufacturer,
-        description=port.description,
+        description=port.product,
     )
 
 
-def usb_serial_device_from_port(port: ListPortInfo) -> USBDevice | SerialDevice:
-    """Convert serial ListPortInfo to USBDevice or SerialDevice."""
-    if port.vid is not None or port.pid is not None:
-        assert port.vid is not None
-        assert port.pid is not None
-
+def usb_serial_device_from_port(port: SerialPortInfo) -> USBDevice | SerialDevice:
+    """Convert serialx SerialPortInfo to USBDevice or SerialDevice."""
+    if port.vid is not None and port.pid is not None:
         return usb_device_from_port(port)
     return serial_device_from_port(port)
 
 
 def scan_serial_ports() -> Sequence[USBDevice | SerialDevice]:
     """Scan serial ports and return USB and other serial devices."""
-
-    # Scan all symlinks first
-    by_id = "/dev/serial/by-id"
-    realpath_to_by_id: dict[str, str] = {}
-    if os.path.isdir(by_id):
-        for path in (entry.path for entry in os.scandir(by_id) if entry.is_symlink()):
-            realpath_to_by_id[os.path.realpath(path)] = path
-
-    serial_ports = []
-
-    for port in comports():
-        device = usb_serial_device_from_port(port)
-        device_path = realpath_to_by_id.get(port.device, port.device)
-
-        if device_path != port.device:
-            # Prefer the unique /dev/serial/by-id/ path if it exists
-            device = dataclasses.replace(device, device=device_path)
-
-        serial_ports.append(device)
-
-    return serial_ports
+    return [usb_serial_device_from_port(port) for port in list_serial_ports()]
 
 
 async def async_scan_serial_ports(

@@ -157,7 +157,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 
@@ -173,7 +172,6 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 DELETE_CURRENT_TOKEN_DELAY = 2
 
 
-@bind_hass
 def create_auth_code(
     hass: HomeAssistant, client_id: str, credential: Credentials
 ) -> str:

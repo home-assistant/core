@@ -45,7 +45,6 @@
     'attributes': ReadOnlyDict({
       'entity_picture': '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=7bb89748322acb6c',
       'friendly_name': 'Spotify spotify_1',
-      'last_non_buffering_state': <MediaPlayerState.PLAYING: 'playing'>,
       'media_album_name': 'Permanent Waves',
       'media_artist': 'Rush',
       'media_content_id': 'spotify:track:4e9hUiLsN4mx61ARosFi7p',
@@ -119,7 +118,6 @@
     'attributes': ReadOnlyDict({
       'entity_picture': '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=cf1e6e1e830f08d3',
       'friendly_name': 'Spotify spotify_1',
-      'last_non_buffering_state': <MediaPlayerState.PLAYING: 'playing'>,
       'media_artist': 'Safety Third',
       'media_content_id': 'spotify:episode:3o0RYoo5iOMKSmEbunsbvW',
       'media_content_type': <MediaType.PODCAST: 'podcast'>,

@@ -12,13 +12,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import RitualsDataUpdateCoordinator
+from .coordinator import RitualsConfigEntry
 from .entity import DiffuserEntity
 
 PARALLEL_UPDATES = 0
@@ -61,13 +59,11 @@ ENTITY_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RitualsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the diffuser sensors."""
-    coordinators: dict[str, RitualsDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators = config_entry.runtime_data
 
     async_add_entities(
         RitualsSensorEntity(coordinator, description)

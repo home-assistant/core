@@ -17,7 +17,6 @@ from unittest.mock import (
 import uuid
 
 import pytest
-from serial.tools.list_ports_common import ListPortInfo
 from zha.application.const import RadioType
 from zigpy.application import ControllerApplication
 from zigpy.backups import BackupManager
@@ -33,7 +32,7 @@ import zigpy.types
 
 from homeassistant import config_entries
 from homeassistant.components.hassio import AddonError, AddonState
-from homeassistant.components.usb import USBDevice
+from homeassistant.components.usb import SerialDevice, USBDevice
 from homeassistant.components.zha import config_flow, radio_manager
 from homeassistant.components.zha.const import (
     CONF_BAUDRATE,
@@ -66,9 +65,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
-type RadioPicker = Callable[
-    [RadioType], Coroutine[Any, Any, tuple[ConfigFlowResult, ListPortInfo]]
-]
+type RadioPicker = Callable[[RadioType], Coroutine[Any, Any, ConfigFlowResult]]
 PROBE_FUNCTION_PATH = "zigbee.application.ControllerApplication.probe"
 
 
@@ -168,15 +165,14 @@ def mock_detect_radio_type(
     return detect
 
 
-def com_port(device="/dev/ttyUSB1234") -> ListPortInfo:
+def com_port(device="/dev/ttyUSB1234") -> SerialDevice:
     """Mock of a serial port."""
-    port = ListPortInfo(device)
-    port.serial_number = "1234"
-    port.manufacturer = "Virtual serial port"
-    port.device = device
-    port.description = "Some serial port"
-
-    return port
+    return SerialDevice(
+        device=device,
+        serial_number="1234",
+        manufacturer="Virtual serial port",
+        description="Some serial port",
+    )
 
 
 def usb_port(device="/dev/ttyUSB1234") -> USBDevice:
@@ -1129,7 +1125,7 @@ async def test_user_flow_not_detected(hass: HomeAssistant) -> None:
     """Test user flow, radio not detected."""
 
     port = com_port()
-    port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
+    port_select = f"{port.device} - {port.description}, s/n: {port.serial_number} - {port.manufacturer}"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -1700,14 +1696,12 @@ def test_prevent_overwrite_ezsp_ieee() -> None:
 
 
 @pytest.fixture
-def advanced_pick_radio(
-    hass: HomeAssistant,
-) -> Generator[RadioPicker]:
+def advanced_pick_radio(hass: HomeAssistant) -> Generator[RadioPicker]:
     """Fixture for the first step of the config flow (where a radio is picked)."""
 
-    async def wrapper(radio_type: RadioType) -> tuple[ConfigFlowResult, ListPortInfo]:
+    async def wrapper(radio_type: RadioType) -> ConfigFlowResult:
         port = com_port()
-        port_select = f"{port}, s/n: {port.serial_number} - {port.manufacturer}"
+        port_select = f"{port.device} - {port.description}, s/n: {port.serial_number} - {port.manufacturer}"
 
         with patch(
             "homeassistant.components.zha.radio_manager.ZhaRadioManager.detect_radio_type",

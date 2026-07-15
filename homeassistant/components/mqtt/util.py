@@ -17,7 +17,12 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import MAX_LENGTH_STATE_STATE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+    template,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
 
@@ -421,3 +426,31 @@ def migrate_certificate_file_to_content(file_name_or_auto: str) -> str | None:
 def learn_more_url(platform: str) -> str:
     """Return the URL for the platform specific MQTT documentation."""
     return f"https://www.home-assistant.io/integrations/{platform}.mqtt/"
+
+
+async def async_cleanup_device_registry(
+    hass: HomeAssistant, device_id: str | None, config_entry_id: str | None
+) -> None:
+    """Clean up the device registry after MQTT removal.
+
+    Remove MQTT from the device registry entry if there are no remaining
+    entities, triggers or tags.
+    """
+    # Local import to avoid circular dependencies
+    from . import device_trigger, tag  # noqa: PLC0415
+
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    if (
+        device_id
+        and device_id not in device_registry.deleted_devices
+        and config_entry_id
+        and not er.async_entries_for_device(
+            entity_registry, device_id, include_disabled_entities=False
+        )
+        and not await device_trigger.async_get_triggers(hass, device_id)
+        and not tag.async_has_tags(hass, device_id)
+    ):
+        device_registry.async_update_device(
+            device_id, remove_config_entry_id=config_entry_id
+        )

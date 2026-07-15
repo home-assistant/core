@@ -106,12 +106,12 @@
       "title": "[%key:component::homeassistant::issues::deprecated_architecture::title%]"
     },
     "deprecated_method": {
-      "description": "This system is using the {installation_type} installation type, which has been deprecated and will become unsupported following the release of Home Assistant 2025.12. While you can continue using your current setup after that point, we strongly recommend migrating to a supported installation method.",
-      "title": "Deprecation notice: Installation method"
+      "description": "This system is using the {installation_type} installation type, which has been unsupported since Home Assistant 2025.12. To continue receiving updates and support, migrate to a supported installation method.",
+      "title": "Unsupported installation method"
     },
     "deprecated_method_architecture": {
-      "description": "This system is using the {installation_type} installation type, and 32-bit hardware (`{arch}`), both of which have been deprecated and will no longer be supported after the release of Home Assistant 2025.12.",
-      "title": "Deprecation notice"
+      "description": "This system is using the {installation_type} installation type, and 32-bit hardware (`{arch}`), both of which have been unsupported since Home Assistant 2025.12. To continue receiving updates and support, migrate to supported hardware and use a supported installation method.",
+      "title": "Unsupported installation method and architecture"
     },
     "deprecated_os_aarch64": {
       "description": "This system is running on a 32-bit operating system (`armv7`), which has been deprecated and will no longer receive updates after the release of Home Assistant 2025.12. To continue using Home Assistant on this hardware, you will need to install a 64-bit operating system. Please refer to our [installation guide]({installation_guide}).",

@@ -5,7 +5,6 @@ from __future__ import annotations
 from homeassistant.const import ATTR_GPS_ACCURACY, STATE_HOME  # noqa: F401
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 from .config_entry import (  # noqa: F401
     ScannerEntity,
@@ -52,7 +51,6 @@ from .legacy import (  # noqa: F401
 )
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return the state if any or a specified device is home."""
     return hass.states.is_state(entity_id, STATE_HOME)

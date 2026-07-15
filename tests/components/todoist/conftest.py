@@ -11,7 +11,7 @@ from requests.models import Response
 from todoist_api_python.api_async import TodoistAPIAsync
 from todoist_api_python.models import Collaborator, Due, Label, Project, Section, Task
 
-from homeassistant.components.todoist import DOMAIN
+from homeassistant.components.todoist.const import DOMAIN
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

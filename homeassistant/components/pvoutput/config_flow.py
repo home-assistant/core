@@ -32,8 +32,6 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    imported_name: str | None = None
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -56,7 +54,7 @@ class PVOutputFlowHandler(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(str(user_input[CONF_SYSTEM_ID]))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=self.imported_name or str(user_input[CONF_SYSTEM_ID]),
+                    title=str(user_input[CONF_SYSTEM_ID]),
                     data={
                         CONF_SYSTEM_ID: user_input[CONF_SYSTEM_ID],
                         CONF_API_KEY: user_input[CONF_API_KEY],

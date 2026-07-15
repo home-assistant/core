@@ -47,6 +47,17 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect_manual": {
+      "message": "Unable to connect to Nobø Ecohub with serial {serial} at {ip}. If the hub has moved to a new IP address, remove and re-add the integration."
+    },
+    "cannot_connect_rediscovered": {
+      "message": "Unable to connect to Nobø Ecohub at rediscovered IP {ip}; will retry."
+    },
+    "hub_not_found": {
+      "message": "Nobø Ecohub with serial {serial} not found on the network. The hub may be offline or on a different subnet; will retry."
+    }
+  },
   "options": {
     "step": {
       "init": {

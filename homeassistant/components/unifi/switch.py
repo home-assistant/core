@@ -259,7 +259,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
     UnifiSwitchEntityDescription[DPIRestrictionGroups, DPIRestrictionGroup](
         key="DPI restriction",
         translation_key="dpi_restriction",
-        has_entity_name=False,
         entity_category=EntityCategory.CONFIG,
         allowed_fn=lambda hub, obj_id: hub.config.option_dpi_restrictions,
         api_handler_fn=lambda api: api.dpi_groups,

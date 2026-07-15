@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from duco.exceptions import DucoConnectionError
+from duco.exceptions import DucoConnectionError, DucoError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -58,6 +58,18 @@ async def test_iaq_sensor_entities_disabled_by_default(
 
 
 @pytest.mark.usefixtures("init_integration")
+async def test_diagnostic_sensor_entities_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that diagnostic sensor entities are disabled by default."""
+    for entity_id in ("sensor.living_signal_strength",):
+        entry = entity_registry.async_get(entity_id)
+        assert entry is not None
+        assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+
+@pytest.mark.usefixtures("init_integration")
 async def test_coordinator_update_marks_unavailable(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
@@ -73,5 +85,43 @@ async def test_coordinator_update_marks_unavailable(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.office_co2_carbon_dioxide")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_update_duco_error_marks_unavailable(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that sensor entities become unavailable when async_get_nodes raises DucoError."""
+    mock_duco_client.async_get_nodes = AsyncMock(side_effect=DucoError("api error"))
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.office_co2_carbon_dioxide")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_lan_info_duco_error_marks_unavailable(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that entities become unavailable when async_get_lan_info raises DucoError."""
+    mock_duco_client.async_get_lan_info = AsyncMock(
+        side_effect=DucoError("lan info error")
+    )
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.living_signal_strength")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE

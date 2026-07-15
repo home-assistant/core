@@ -2434,10 +2434,22 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_TEMP_STEP",
     # Removed
     "CONF_WHITE_VALUE",
+    # Config entry only settings
+    "CONF_BROKER",
+    "CONF_BIRTH_MESSAGE",
+    "CONF_DISCOVERY_PREFIX",
+    "CONF_KEEPALIVE",
+    "CONF_TRANSPORT",
+    "CONF_WS_PATH",
+    "CONF_WS_HEADERS",
+    "CONF_WILL_MESSAGE",
+    "CONF_CERTIFICATE",
+    "CONF_CLIENT_KEY",
+    "CONF_CLIENT_CERT",
+    "CONF_TLS_INSECURE",
 ]
 
 EXCLUDED_MODULES = {
-    "const.py",
     "config.py",
     "config_flow.py",
     "device_trigger.py",

@@ -105,5 +105,4 @@ async def init_integration(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.entry_id in hass.data[DOMAIN]
-    assert hass.data[DOMAIN]
+    assert mock_config_entry.runtime_data
