@@ -22,7 +22,7 @@ CLOUD_HEALTH_URL = "https://residential.cbs.boschsecurity.com/"
 _PLATINUM_VERSION = "v12.0.0+"
 
 
-@callback  # type: ignore[untyped-decorator]
+@callback
 def async_register(
     hass: HomeAssistant, register: system_health.SystemHealthRegistration
 ) -> None:

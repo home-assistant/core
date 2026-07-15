@@ -46,7 +46,7 @@ ALL_PLATFORMS = [
 LIVE_SESSION_TTL = 55  # seconds — proxy sessions last ~60s, expire 5s early
 
 
-class _StreamStartSkipped(dict):  # type: ignore[type-arg]
+class _StreamStartSkipped(dict):
     """Sentinel returned by ``try_live_connection`` when it declined to open a
     new session because a non-renewal start for the same camera was already in
     flight (opportunistic de-dup: ``lock.locked() and not is_renewal and not

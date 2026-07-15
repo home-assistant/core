@@ -881,7 +881,7 @@ def _node(
     )
 
 
-class BoschCameraMediaSource(MediaSource):  # type: ignore[misc]
+class BoschCameraMediaSource(MediaSource):
     name = "Bosch Camera"
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -1506,7 +1506,7 @@ class BoschCameraMediaSource(MediaSource):  # type: ignore[misc]
 
 
 # ── HTTP view ────────────────────────────────────────────────────────────────
-class BoschCameraMediaView(HomeAssistantView):  # type: ignore[misc]
+class BoschCameraMediaView(HomeAssistantView):
     """Serve event jpg/mp4 files from local FS or via SMB. Auth required."""
 
     name = f"api:{DOMAIN}:event"

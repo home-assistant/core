@@ -107,7 +107,7 @@ async def async_setup_entry(
     async_add_entities(entities, update_before_add=False)
 
 
-class BoschPanNumber(_BoschEntityBase, NumberEntity):  # type: ignore[misc]
+class BoschPanNumber(_BoschEntityBase, NumberEntity):
     """Number entity to control the pan position of the 360 camera."""
 
     _attr_has_entity_name = True
@@ -160,7 +160,7 @@ class BoschPanNumber(_BoschEntityBase, NumberEntity):  # type: ignore[misc]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschSpeakerLevelNumber(_BoschEntityBase, NumberEntity):  # type: ignore[misc]
+class BoschSpeakerLevelNumber(_BoschEntityBase, NumberEntity):
     """Number entity to control the intercom speaker volume (0–100).
 
     Reads from coordinator._audio_cache[cam_id]["speakerLevel"].
@@ -237,7 +237,7 @@ class BoschSpeakerLevelNumber(_BoschEntityBase, NumberEntity):  # type: ignore[m
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschAudioVolumeNumber(_BoschEntityBase, NumberEntity):  # type: ignore[misc]
+class BoschAudioVolumeNumber(_BoschEntityBase, NumberEntity):
     """Card playback volume (0–100 %) for this camera's live audio.
 
     Virtual preference — there is NO Bosch API for volume (loudness is a browser
@@ -291,7 +291,7 @@ class BoschAudioVolumeNumber(_BoschEntityBase, NumberEntity):  # type: ignore[mi
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschFrontLightIntensityNumber(_BoschEntityBase, NumberEntity):  # type: ignore[misc]
+class BoschFrontLightIntensityNumber(_BoschEntityBase, NumberEntity):
     """Number entity: front light brightness (0–100%).
 
     Maps to frontLightIntensity (0.0–1.0) in PUT /v11/video_inputs/{id}/lighting_override.
@@ -355,7 +355,7 @@ class BoschFrontLightIntensityNumber(_BoschEntityBase, NumberEntity):  # type: i
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class _BoschGen2NumberBase(_BoschEntityBase, NumberEntity):  # type: ignore[misc]
+class _BoschGen2NumberBase(_BoschEntityBase, NumberEntity):
     """Base class for Gen2-only number entities."""
 
     _attr_entity_registry_enabled_default = True
@@ -808,7 +808,7 @@ class _BoschAlarmDelayBase(_BoschGen2NumberBase):
 
     @property
     def _settings(self) -> dict[str, Any]:
-        return self.coordinator._alarm_settings_cache.get(self._cam_id, {})  # type: ignore[no-any-return]
+        return self.coordinator._alarm_settings_cache.get(self._cam_id, {})
 
     @property
     @override

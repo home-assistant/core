@@ -125,7 +125,7 @@ class TokenAuthCoordinatorMixin:
         # rename-reexport (issue_registry as ir): mypy --no-implicit-reexport
         # only recognizes identical-name re-export at the source; the alias
         # is intentional and correct at runtime.
-        from . import ir as ir  # type: ignore[attr-defined]
+        from . import ir as ir
         from .config_flow import (
             AuthServerOutageError,
             RefreshTokenInvalidError,
@@ -326,7 +326,7 @@ class TokenAuthCoordinatorMixin:
         # rename-reexport (issue_registry as ir): mypy --no-implicit-reexport
         # only recognizes identical-name re-export at the source; the alias
         # is intentional and correct at runtime.
-        from . import ir as ir  # type: ignore[attr-defined]
+        from . import ir as ir
 
         if self._token_alert_sent:
             return

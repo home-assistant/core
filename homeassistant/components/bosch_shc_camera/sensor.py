@@ -517,7 +517,7 @@ class BoschLedDimmerSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> int | None:
-        return self.coordinator._rcp_dimmer_cache.get(self._cam_id)  # type: ignore[no-any-return]
+        return self.coordinator._rcp_dimmer_cache.get(self._cam_id)
 
     @property
     @override
@@ -547,7 +547,7 @@ class BoschClockOffsetSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> float | None:
-        return self.coordinator.clock_offset(self._cam_id)  # type: ignore[no-any-return]
+        return self.coordinator.clock_offset(self._cam_id)
 
     @property
     @override
@@ -866,7 +866,7 @@ class BoschUnreadEventsCountSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> int | None:
-        return self.coordinator._unread_events_cache.get(self._cam_id)  # type: ignore[no-any-return]
+        return self.coordinator._unread_events_cache.get(self._cam_id)
 
     @property
     @override
@@ -1489,7 +1489,7 @@ class BoschAlarmStateSensor(_BoschSensorBase):
     @property
     @override
     def available(self) -> bool:
-        return self.coordinator.last_update_success  # type: ignore[no-any-return]
+        return self.coordinator.last_update_success
 
     @property
     @override
@@ -1909,7 +1909,7 @@ class BoschRcpVersionSensor(_BoschSensorBase):
     @property
     @override
     def native_value(self) -> str | None:
-        return self.coordinator._rcp_version_cache.get(self._cam_id)  # type: ignore[no-any-return]
+        return self.coordinator._rcp_version_cache.get(self._cam_id)
 
     @property
     @override

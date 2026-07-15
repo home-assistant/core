@@ -38,7 +38,7 @@ EVENT_AUDIO_ALARM = "bosch_shc_camera_audio_alarm"
 EVENT_PERSON = "bosch_shc_camera_person"
 
 
-@callback  # type: ignore[untyped-decorator]
+@callback
 def async_describe_events(
     hass: HomeAssistant,
     async_describe_event: Callable[
@@ -47,7 +47,7 @@ def async_describe_events(
 ) -> None:
     """Register Bosch SHC Camera logbook event descriptions."""
 
-    @callback  # type: ignore[untyped-decorator]
+    @callback
     def _describe_motion(event: Event[dict[str, Any]]) -> dict[str, str]:
         """Return a friendly Logbook entry for a motion-detection event."""
         camera_name: str = event.data.get("camera_name") or "unknown camera"
@@ -56,7 +56,7 @@ def async_describe_events(
             LOGBOOK_ENTRY_MESSAGE: "detected motion",
         }
 
-    @callback  # type: ignore[untyped-decorator]
+    @callback
     def _describe_audio_alarm(event: Event[dict[str, Any]]) -> dict[str, str]:
         """Return a friendly Logbook entry for an audio-alarm event."""
         camera_name: str = event.data.get("camera_name") or "unknown camera"
@@ -65,7 +65,7 @@ def async_describe_events(
             LOGBOOK_ENTRY_MESSAGE: "detected an audio alarm",
         }
 
-    @callback  # type: ignore[untyped-decorator]
+    @callback
     def _describe_person(event: Event[dict[str, Any]]) -> dict[str, str]:
         """Return a friendly Logbook entry for a person-detection event."""
         camera_name: str = event.data.get("camera_name") or "unknown camera"

@@ -29,7 +29,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import (  # type: ignore[attr-defined]
+from . import (
     DOMAIN,
     BoschCameraConfigEntry,
     BoschCameraCoordinator,
@@ -62,7 +62,7 @@ async def async_setup_entry(
     async_add_entities(entities, update_before_add=False)
 
 
-class BoschCameraLastSnapshotImage(ImageEntity):  # type: ignore[misc]  # HA base class is untyped (no py.typed) → Any
+class BoschCameraLastSnapshotImage(ImageEntity):  # HA base class is untyped (no py.typed) → Any
     """Image entity exposing the last persisted snapshot for a Bosch camera.
 
     On each successful background refresh the camera entity calls

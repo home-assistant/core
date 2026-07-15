@@ -20,7 +20,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import DOMAIN
 
 
-class FirmwareUpdateRepairFlow(RepairsFlow):  # type: ignore[misc]
+class FirmwareUpdateRepairFlow(RepairsFlow):
     """Confirm, then install the pending firmware update for one camera."""
 
     def __init__(self, coordinator: Any, cam_id: str) -> None:

@@ -46,7 +46,7 @@ async def async_setup_entry(
     async_add_entities(entities, update_before_add=False)
 
 
-class BoschFirmwareUpdate(_BoschEntityBase, UpdateEntity):  # type: ignore[misc]
+class BoschFirmwareUpdate(_BoschEntityBase, UpdateEntity):
     """Update entity showing camera firmware status."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE

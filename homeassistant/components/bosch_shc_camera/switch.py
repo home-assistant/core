@@ -166,7 +166,7 @@ class _BoschSwitchBase(CoordinatorEntity[BoschCameraCoordinator], SwitchEntity):
         those API calls go through the Bosch cloud and succeed even when
         the camera itself is unreachable.
         """
-        return (  # type: ignore[no-any-return]
+        return (
             self.coordinator.last_update_success
             and self.coordinator.is_camera_online(self._cam_id)
         )
@@ -612,7 +612,7 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschAudioSwitch(_BoschSwitchBase, RestoreEntity):  # type: ignore[misc]
+class BoschAudioSwitch(_BoschSwitchBase, RestoreEntity):
     """Switch: ON = live audio plays, OFF = muted. Synced across every session.
 
     The live stream ALWAYS carries the AAC track now (≈ negligible bandwidth), so
@@ -642,7 +642,7 @@ class BoschAudioSwitch(_BoschSwitchBase, RestoreEntity):  # type: ignore[misc]
     @property
     @override
     def is_on(self) -> bool:
-        return self.coordinator._audio_enabled.get(self._cam_id, False)  # type: ignore[no-any-return]
+        return self.coordinator._audio_enabled.get(self._cam_id, False)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -695,7 +695,7 @@ class BoschCameraLightSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        return self.coordinator._shc_state_cache.get(self._cam_id, {}).get(  # type: ignore[no-any-return]  # value is correct at runtime; HA/external source is Any-typed
+        return self.coordinator._shc_state_cache.get(self._cam_id, {}).get(  # value is correct at runtime; HA/external source is Any-typed
             "camera_light"
         )
 
@@ -707,7 +707,7 @@ class BoschCameraLightSwitch(_BoschSwitchBase):
         Control uses cloud API (PUT /v11/video_inputs/{id}/lighting_override).
         Requires camera ONLINE: light control needs camera to respond.
         """
-        return (  # type: ignore[no-any-return]
+        return (
             self.coordinator.last_update_success
             and self.coordinator.is_camera_online(self._cam_id)
         )
@@ -748,7 +748,7 @@ class BoschFrontLightSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        return self.coordinator._shc_state_cache.get(self._cam_id, {}).get(  # type: ignore[no-any-return]  # value is correct at runtime; HA/external source is Any-typed
+        return self.coordinator._shc_state_cache.get(self._cam_id, {}).get(  # value is correct at runtime; HA/external source is Any-typed
             "front_light"
         )
 
@@ -789,7 +789,7 @@ class BoschWallwasherSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        return self.coordinator._shc_state_cache.get(self._cam_id, {}).get("wallwasher")  # type: ignore[no-any-return]
+        return self.coordinator._shc_state_cache.get(self._cam_id, {}).get("wallwasher")
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -843,7 +843,7 @@ class BoschPrivacyModeSwitch(_BoschSwitchBase):
         """
         if self._pending_privacy is not None:
             return self._pending_privacy
-        return self.coordinator._shc_state_cache.get(self._cam_id, {}).get(  # type: ignore[no-any-return]  # value is correct at runtime; HA/external source is Any-typed
+        return self.coordinator._shc_state_cache.get(self._cam_id, {}).get(  # value is correct at runtime; HA/external source is Any-typed
             "privacy_mode"
         )
 
@@ -1338,7 +1338,7 @@ class BoschAutoFollowSwitch(_BoschSwitchBase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschIntercomSwitch(_BoschSwitchBase, RestoreEntity):  # type: ignore[misc]
+class BoschIntercomSwitch(_BoschSwitchBase, RestoreEntity):
     """Switch: ON = intercom (two-way audio) active, OFF = intercom off.
 
     When turned ON: enables speaker via PUT /v11/video_inputs/{id}/audio
@@ -1452,7 +1452,7 @@ class BoschPrivacySoundSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        return self.coordinator._privacy_sound_cache.get(self._cam_id)  # type: ignore[no-any-return]
+        return self.coordinator._privacy_sound_cache.get(self._cam_id)
 
     @property
     @override
@@ -1505,7 +1505,7 @@ class BoschTimestampSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        return self.coordinator._timestamp_cache.get(self._cam_id)  # type: ignore[no-any-return]
+        return self.coordinator._timestamp_cache.get(self._cam_id)
 
     @property
     @override
@@ -1557,7 +1557,7 @@ class BoschStatusLedSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        return self.coordinator._ledlights_cache.get(self._cam_id)  # type: ignore[no-any-return]
+        return self.coordinator._ledlights_cache.get(self._cam_id)
 
     @property
     @override
@@ -1622,7 +1622,7 @@ class BoschMotionLightSwitch(_BoschSwitchBase):
     @property
     @override
     def available(self) -> bool:
-        return (  # type: ignore[no-any-return]
+        return (
             self.coordinator.last_update_success
             and self.coordinator.is_camera_online(self._cam_id)
         )
@@ -1711,7 +1711,7 @@ class BoschAmbientLightSwitch(_BoschSwitchBase):
     @property
     @override
     def available(self) -> bool:
-        return (  # type: ignore[no-any-return]
+        return (
             self.coordinator.last_update_success
             and self.coordinator.is_camera_online(self._cam_id)
         )
@@ -1848,7 +1848,7 @@ class BoschIntrusionDetectionSwitch(_BoschSwitchBase):
 
     @property
     def _config(self) -> dict[str, Any]:
-        return self.coordinator._intrusion_config_cache.get(self._cam_id, {})  # type: ignore[no-any-return]
+        return self.coordinator._intrusion_config_cache.get(self._cam_id, {})
 
     @property
     @override
@@ -1916,7 +1916,7 @@ class _BoschAudioDetectionSwitchBase(_BoschSwitchBase):
 
     @property
     def _config(self) -> dict[str, Any]:
-        return self.coordinator._audio_detection_cache.get(self._cam_id, {})  # type: ignore[no-any-return]
+        return self.coordinator._audio_detection_cache.get(self._cam_id, {})
 
     @property
     @override
@@ -2123,12 +2123,12 @@ class BoschAlarmSystemArmSwitch(_BoschSwitchBase):
     @property
     @override
     def is_on(self) -> bool | None:
-        return self.coordinator._arming_cache.get(self._cam_id)  # type: ignore[no-any-return]
+        return self.coordinator._arming_cache.get(self._cam_id)
 
     @property
     @override
     def available(self) -> bool:
-        return (  # type: ignore[no-any-return]
+        return (
             self.coordinator.last_update_success
             and self.coordinator.is_camera_online(self._cam_id)
         )
@@ -2167,7 +2167,7 @@ class _BoschAlarmSettingsSwitchBase(_BoschSwitchBase):
 
     @property
     def _settings(self) -> dict[str, Any]:
-        return self.coordinator._alarm_settings_cache.get(self._cam_id, {})  # type: ignore[no-any-return]
+        return self.coordinator._alarm_settings_cache.get(self._cam_id, {})
 
     @property
     @override
@@ -2236,7 +2236,7 @@ class BoschPreAlarmSwitch(_BoschAlarmSettingsSwitchBase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschImageRotation180Switch(_BoschSwitchBase, RestoreEntity):  # type: ignore[misc]
+class BoschImageRotation180Switch(_BoschSwitchBase, RestoreEntity):
     """Switch: ON = display the camera image rotated 180° (ceiling mount).
 
     Indoor-only — outdoor cameras have a fixed mounting orientation. Bosch's
@@ -2275,7 +2275,7 @@ class BoschImageRotation180Switch(_BoschSwitchBase, RestoreEntity):  # type: ign
     @override
     def available(self) -> bool:
         # Always available — pure client-side flag, no API dependency
-        return self.coordinator.last_update_success  # type: ignore[no-any-return]
+        return self.coordinator.last_update_success
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -2340,7 +2340,7 @@ class BoschPanicAlarmSwitch(_BoschSwitchBase):
     @property
     @override
     def available(self) -> bool:
-        return (  # type: ignore[no-any-return]  # value is correct at runtime; HA/external source is Any-typed
+        return (  # value is correct at runtime; HA/external source is Any-typed
             self.coordinator.last_update_success
             and self.coordinator.is_camera_online(self._cam_id)
         )
@@ -2380,7 +2380,7 @@ class BoschPanicAlarmSwitch(_BoschSwitchBase):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschNvrRecordingSwitch(_BoschSwitchBase, RestoreEntity):  # type: ignore[misc]
+class BoschNvrRecordingSwitch(_BoschSwitchBase, RestoreEntity):
     """Switch: ON = continuously record this camera's LOCAL stream to disk.
 
     Phase 1 MVP of the Mini-NVR feature (see `docs/mini-nvr-concept.md`).
@@ -2433,7 +2433,7 @@ class BoschNvrRecordingSwitch(_BoschSwitchBase, RestoreEntity):  # type: ignore[
         if not self.coordinator.is_camera_online(self._cam_id):
             return False
         live = self.coordinator._live_connections.get(self._cam_id, {})
-        return live.get("_connection_type") == "LOCAL"  # type: ignore[no-any-return]
+        return live.get("_connection_type") == "LOCAL"
 
     @property
     @override
@@ -2495,7 +2495,7 @@ class BoschNvrRecordingSwitch(_BoschSwitchBase, RestoreEntity):  # type: ignore[
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschNvrEventClipSwitch(_BoschSwitchBase, RestoreEntity):  # type: ignore[misc]
+class BoschNvrEventClipSwitch(_BoschSwitchBase, RestoreEntity):
     """Switch: ON (default) = assemble+ship a native clip on FCM motion/person
     events while this camera is in ``event_buffered`` Mini-NVR mode.
 
@@ -2562,7 +2562,7 @@ class BoschNvrEventClipSwitch(_BoschSwitchBase, RestoreEntity):  # type: ignore[
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschExternalStreamSwitch(_BoschSwitchBase, RestoreEntity):  # type: ignore[misc]
+class BoschExternalStreamSwitch(_BoschSwitchBase, RestoreEntity):
     """Switch: ON = publish stream_url + stream_url_sub sensors for this camera.
 
     Per-camera opt-in for users who want to paste the LOCAL TLS-proxy RTSP URL
@@ -2602,7 +2602,7 @@ class BoschExternalStreamSwitch(_BoschSwitchBase, RestoreEntity):  # type: ignor
     @property
     @override
     def available(self) -> bool:
-        return self.coordinator.last_update_success  # type: ignore[no-any-return]
+        return self.coordinator.last_update_success
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -2629,7 +2629,7 @@ class BoschExternalStreamSwitch(_BoschSwitchBase, RestoreEntity):  # type: ignor
         self.coordinator.async_update_listeners()
 
 
-class _BoschFrigateEndpointSwitch(_BoschSwitchBase, RestoreEntity):  # type: ignore[misc]
+class _BoschFrigateEndpointSwitch(_BoschSwitchBase, RestoreEntity):
     """Base for the per-camera Frigate persistent-endpoint High/Low switches.
 
     ON = publish the credential-free always-on RTSP URL sensor for this quality

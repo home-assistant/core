@@ -34,7 +34,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import (  # type: ignore[attr-defined]
+from . import (
     DOMAIN,
     BoschCameraConfigEntry,
     BoschCameraCoordinator,

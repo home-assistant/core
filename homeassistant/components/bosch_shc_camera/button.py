@@ -50,7 +50,7 @@ async def async_setup_entry(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschRefreshSnapshotButton(_BoschEntityBase, ButtonEntity):  # type: ignore[misc]
+class BoschRefreshSnapshotButton(_BoschEntityBase, ButtonEntity):
     """Button: force an immediate coordinator refresh.
 
     Fetches latest camera info, status, and events from the Bosch Cloud API
@@ -102,7 +102,7 @@ class BoschRefreshSnapshotButton(_BoschEntityBase, ButtonEntity):  # type: ignor
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschSoftResetButton(_BoschEntityBase, ButtonEntity):  # type: ignore[misc]
+class BoschSoftResetButton(_BoschEntityBase, ButtonEntity):
     """Button: reboot the camera (soft reset) via the Bosch cloud API.
 
     Same effect as the "Restart" action in the official Bosch app — the
@@ -137,7 +137,7 @@ class BoschSoftResetButton(_BoschEntityBase, ButtonEntity):  # type: ignore[misc
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschHardResetButton(_BoschEntityBase, ButtonEntity):  # type: ignore[misc]
+class BoschHardResetButton(_BoschEntityBase, ButtonEntity):
     """Button: factory-reset the camera (hard reset) via the Bosch cloud API.
 
     Same effect as the "Factory Reset" action in the official Bosch app —

@@ -682,7 +682,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         return attrs
 
     # ── Live stream ───────────────────────────────────────────────────────────
-    @callback  # type: ignore[untyped-decorator]  # HA @callback is untyped (no py.typed)
+    @callback  # HA @callback is untyped (no py.typed)
     @override
     def close_webrtc_session(self, session_id: str) -> None:
         """Close a WebRTC session — no-op for unknown / never-established sessions.

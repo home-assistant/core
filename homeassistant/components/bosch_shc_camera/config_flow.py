@@ -274,7 +274,7 @@ def _flatten_sections(user_input: dict[str, Any]) -> dict[str, Any]:
     return flat
 
 
-from . import (  # type: ignore[attr-defined]
+from . import (
     DEFAULT_OPTIONS,
     DOMAIN,
     BoschCameraConfigEntry,
@@ -334,7 +334,7 @@ def _pkce_pair() -> tuple[str, str]:
 # ── OAuth2 Implementation (automatic flow via my.home-assistant.io) ──────────
 
 
-class BoschOAuth2Implementation(AbstractOAuth2Implementation):  # type: ignore[misc]
+class BoschOAuth2Implementation(AbstractOAuth2Implementation):
     """Bosch Keycloak OAuth2 implementation with PKCE.
 
     `client_id`/`client_secret` default to the module-level constants (the
@@ -576,7 +576,7 @@ async def _do_refresh(session: Any, refresh_token: str) -> dict[str, Any] | None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):  # type: ignore[misc, call-arg]
+class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Handle the initial setup flow — automatic OAuth2 PKCE browser login."""
 
     DOMAIN = DOMAIN
@@ -819,7 +819,7 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):  # type: 
         )
 
     @staticmethod
-    @callback  # type: ignore[untyped-decorator]
+    @callback
     @override
     def async_get_options_flow(
         config_entry: BoschCameraConfigEntry,
@@ -828,7 +828,7 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):  # type: 
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-class BoschCameraOptionsFlow(config_entries.OptionsFlow):  # type: ignore[misc]
+class BoschCameraOptionsFlow(config_entries.OptionsFlow):
     """Handle options: feature toggles + optional re-login."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:

@@ -463,7 +463,7 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     else:
         from homeassistant.core import Event as _Event, callback as _callback
 
-        @_callback  # type: ignore[untyped-decorator]
+        @_callback
         def _on_ha_started(_event: _Event) -> None:
             hass.async_create_task(_register_lovelace_resources())
 

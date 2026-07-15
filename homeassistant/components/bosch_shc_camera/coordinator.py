@@ -234,7 +234,7 @@ def get_options(entry: ConfigEntry) -> dict[str, Any]:
 
 # ─────────────────────────────────────────────────────────────────────────────
 class BoschCameraCoordinator(
-    DataUpdateCoordinator,  # type: ignore[misc]
+    DataUpdateCoordinator,
     FCMCoordinatorMixin,
     FrigateCoordinatorMixin,
     SHCCoordinatorMixin,
@@ -1344,7 +1344,7 @@ class BoschCameraCoordinator(
         self._renewal_tasks[cam_id] = task
         self._bg_tasks.add(task)
         task.add_done_callback(self._bg_tasks.discard)
-        return task  # type: ignore[no-any-return]
+        return task
 
     def _replace_reaper_task(
         self, cam_id: str, coro: Coroutine[Any, Any, None]
@@ -1364,7 +1364,7 @@ class BoschCameraCoordinator(
         self._reaper_tasks[cam_id] = task
         self._bg_tasks.add(task)
         task.add_done_callback(self._bg_tasks.discard)
-        return task  # type: ignore[no-any-return]
+        return task
 
     def _spawn_tracked(
         self, coro: Coroutine[Any, Any, Any], *, name: str
@@ -1391,7 +1391,7 @@ class BoschCameraCoordinator(
         task = self.hass.async_create_task(coro, name=name)
         self._bg_tasks.add(task)
         task.add_done_callback(self._bg_tasks.discard)
-        return task  # type: ignore[no-any-return]
+        return task
 
     async def _go2rtc_consumer_count(self, cam_id: str) -> int | None:
         """Best-effort count of active go2rtc consumers for this camera's stream.
@@ -1900,7 +1900,7 @@ class BoschCameraCoordinator(
         # "custom_components.bosch_shc_camera.ir", ...) working the same
         # way it did before BoschCameraCoordinator moved out of __init__.py
         # — matches the pattern already used in live_connection.py.
-        from . import ir as ir  # type: ignore[attr-defined]
+        from . import ir as ir
 
         for cam_id, notif in self._notifications_cache.items():
             if not notif:
@@ -1967,7 +1967,7 @@ class BoschCameraCoordinator(
         # "custom_components.bosch_shc_camera.ir", ...) working the same
         # way it did before BoschCameraCoordinator moved out of __init__.py
         # — matches the pattern already used in live_connection.py.
-        from . import ir as ir  # type: ignore[attr-defined]
+        from . import ir as ir
 
         for cam_id, fw in self._firmware_cache.items():
             if not fw:
@@ -2041,7 +2041,7 @@ class BoschCameraCoordinator(
         # "custom_components.bosch_shc_camera.ir", ...) working the same
         # way it did before BoschCameraCoordinator moved out of __init__.py
         # — matches the pattern already used in live_connection.py.
-        from . import ir as ir  # type: ignore[attr-defined]
+        from . import ir as ir
 
         features = smb_dependent_features(self.options)
 
