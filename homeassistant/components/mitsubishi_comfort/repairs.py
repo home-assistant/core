@@ -69,7 +69,9 @@ class MissingAddressRepairFlow(RepairsFlow):
         credentials: dict[str, dict[str, str]] = self.entry.data.get(
             CONF_CREDENTIALS, {}
         )
-        owned = {dr.format_mac(cred["mac"]) for cred in credentials.values()}
+        owned = {
+            dr.format_mac(cred["mac"]) for cred in credentials.values() if cred["mac"]
+        }
         device_registry = dr.async_get(self.hass)
         # Map each addressless device's formatted MAC (the address cache key)
         # to its name.

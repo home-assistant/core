@@ -292,7 +292,10 @@ async def test_setup_entry_skips_incomplete_devices(
 
     Without a password and cryptoSerial the local API cannot be authenticated,
     and without a MAC the device cannot be keyed in the address cache, so the
-    device is skipped (no coordinator, no entity) and the gap is logged.
+    device is skipped (no coordinator, no entity) and the gap is logged. A
+    device with secrets but no MAC still has its record cached: the password
+    only comes from the rate-limited Socket.IO fetch, while the next status
+    fetch can supply the MAC.
     """
     incomplete_info = DeviceInfo(
         serial="SERIAL002",
@@ -334,6 +337,18 @@ async def test_setup_entry_skips_incomplete_devices(
         "The cloud returned no credentials for 2 device(s): Attic, Bedroom"
         in caplog.text
     )
+    assert mock_config_entry.data[CONF_CREDENTIALS] == {
+        "SERIAL001": {
+            "password": "dGVzdHBhc3M=",
+            "crypto_serial": "0102030405060708090a",
+            "mac": MOCK_MAC,
+        },
+        "SERIAL003": {
+            "password": "dGVzdHBhc3M=",
+            "crypto_serial": "0102030405060708090a",
+            "mac": "",
+        },
+    }
 
 
 async def test_unload_entry(
@@ -352,6 +367,37 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_failed_unload_keeps_missing_address_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Test a failed platform unload keeps the actionable repair issue.
+
+    A failed unload leaves the entry active with its addressless devices, so
+    deleting the issue first would strip the only UI path to fix them.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        unique_id="user-12345",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    issue_id = f"missing_address_{entry.entry_id}"
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=False,
+    ):
+        assert not await hass.config_entries.async_unload(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
 async def test_unload_entry_clears_missing_address_issue(

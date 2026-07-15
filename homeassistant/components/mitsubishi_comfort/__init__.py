@@ -193,8 +193,10 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: MitsubishiComfortConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    ir.async_delete_issue(hass, DOMAIN, f"missing_address_{entry.entry_id}")
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        # Only after a successful unload: a failed unload leaves the entry
+        # active, so its addressless devices still need the repair.
+        ir.async_delete_issue(hass, DOMAIN, f"missing_address_{entry.entry_id}")
         await asyncio.gather(
             *(c.device.close() for c in entry.runtime_data.values()),
             return_exceptions=True,
