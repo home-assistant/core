@@ -220,6 +220,7 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
                 await self.async_close_webrtc_session(session_id)
                 return
 
+            send_message(WebRTCAnswer(answer=answer_sdp))
             pending_candidates = self._pending_candidates.get(session_id, [])
             for cand in pending_candidates:
                 if session_id not in self._open_sessions:
