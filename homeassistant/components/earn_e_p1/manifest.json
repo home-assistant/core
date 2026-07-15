@@ -6,6 +6,9 @@
   "dhcp": [
     {
       "hostname": "energiemonitor-*"
+    },
+    {
+      "registered_devices": true
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/earn_e_p1",

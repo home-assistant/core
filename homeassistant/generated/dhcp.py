@@ -328,6 +328,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "hostname": "energiemonitor-*",
     },
     {
+        "domain": "earn_e_p1",
+        "registered_devices": True,
+    },
+    {
         "domain": "elgato",
         "registered_devices": True,
     },
