@@ -155,4 +155,7 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "AI Art Frame": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BUTTON, Platform.IMAGE)
     ),
+    "Standing Fan": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.FAN)
+    ),
 }
