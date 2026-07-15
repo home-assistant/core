@@ -65,6 +65,26 @@ async def test_coordinator_refresh_connection_error(
     assert isinstance(coordinator.last_exception, UpdateFailed)
 
 
+async def test_coordinator_refresh_fetch_data_false(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
+) -> None:
+    """Test coordinator refresh when client fetch data returns False."""
+    coordinator = MyPVCoordinator(hass, mock_config_entry, mock_my_pv_client)
+
+    await coordinator.async_refresh()
+    assert coordinator.last_update_success
+
+    mock_my_pv_client.connected = True
+    mock_my_pv_client.fetch_data.return_value = False
+
+    await coordinator.async_refresh()
+
+    assert not coordinator.last_update_success
+    assert isinstance(coordinator.last_exception, UpdateFailed)
+
+
 async def test_coordinator_refresh_authentication_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
