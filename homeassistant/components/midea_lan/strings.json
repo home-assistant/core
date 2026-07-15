@@ -17,6 +17,13 @@
       "token_unavailable": "Could not get a valid token and key from the cloud"
     },
     "step": {
+      "auth_method": {
+        "data": {
+          "login_mode": "Login mode"
+        },
+        "description": "Choose how you want to authenticate.",
+        "title": "Authentication"
+      },
       "auto": {
         "data": {
           "device": "Device"
@@ -101,9 +108,10 @@
     }
   },
   "selector": {
-    "server": {
+    "login_mode": {
       "options": {
-        "skip_login_option": "Skip login and use preset cloud credentials"
+        "account": "Your account credentials",
+        "preset": "Preset cloud credentials"
       }
     }
   }
