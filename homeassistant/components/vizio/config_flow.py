@@ -1,5 +1,6 @@
 """Config flow for Vizio."""
 
+from collections.abc import Mapping
 import copy
 import logging
 import socket
@@ -11,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     SOURCE_ZEROCONF,
     ConfigFlow,
     ConfigFlowResult,
@@ -345,6 +347,21 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthorization when the stored access token is rejected."""
+        self._data = dict(entry_data)
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth; continuing puts a pairing PIN on the TV screen."""
+        if user_input is not None:
+            return await self.async_step_pair_tv()
+        return self.async_show_form(step_id="reauth_confirm")
+
     async def async_step_pair_tv(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -365,6 +382,11 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
                     device_id=DEVICE_ID, device_name=self._data[CONF_NAME]
                 )
             except VizioError:
+                if self.source == SOURCE_REAUTH:
+                    return self.async_show_form(
+                        step_id="reauth_confirm",
+                        errors={"base": "cannot_connect"},
+                    )
                 return self.async_show_form(
                     step_id="user",
                     data_schema=_get_config_schema(self._data),
@@ -387,6 +409,11 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
                 # If pairing failed, it's assumed the PIN was invalid
                 errors[CONF_PIN] = "complete_pairing_failed"
             else:
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(),
+                        data_updates={CONF_ACCESS_TOKEN: auth_token},
+                    )
                 self._data[CONF_ACCESS_TOKEN] = auth_token
                 self._must_show_form = True
                 return await self.async_step_pairing_complete()

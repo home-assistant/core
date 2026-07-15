@@ -581,3 +581,52 @@ async def test_zeroconf_flow_already_configured_hostname(hass: HomeAssistant) ->
     # Flow should abort because device is already setup
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("vizio_bypass_setup", "vizio_complete_pairing")
+async def test_reauth_flow(hass: HomeAssistant) -> None:
+    """Test reauth flow re-pairs the TV and updates the access token."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_USER_VALID_TV_CONFIG, CONF_ACCESS_TOKEN: "expiredtoken"},
+        unique_id=UNIQUE_ID,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair_tv"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_PIN_CONFIG
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_ACCESS_TOKEN] == ACCESS_TOKEN
+
+
+@pytest.mark.usefixtures("vizio_bypass_setup", "vizio_start_pairing_failure")
+async def test_reauth_flow_cannot_connect(hass: HomeAssistant) -> None:
+    """Test reauth flow shows an error when pairing cannot start."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_USER_VALID_TV_CONFIG,
+        unique_id=UNIQUE_ID,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "cannot_connect"}

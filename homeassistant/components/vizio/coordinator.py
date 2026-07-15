@@ -13,6 +13,7 @@ from vizaio import (
     InputInfo,
     SettingInfo,
     Vizio,
+    VizioAuthError,
     VizioError,
     fetch_app_availability,
     fetch_remote_app_catalog,
@@ -24,6 +25,7 @@ from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
@@ -39,9 +41,14 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 
 async def _optional[T](coro: Coroutine[Any, Any, T]) -> T | None:
-    """Return the call result, or None when the device API call fails."""
+    """Return the call result, or None when the device API call fails.
+
+    Auth failures are not degradable — they surface as a reauth trigger.
+    """
     try:
         return await coro
+    except VizioAuthError as err:
+        raise ConfigEntryAuthFailed from err
     except VizioError:
         return None
 
@@ -151,6 +158,8 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         """Fetch all device data."""
         try:
             is_on = await self.device.get_power_state()
+        except VizioAuthError as err:
+            raise ConfigEntryAuthFailed from err
         except VizioError as err:
             raise UpdateFailed(
                 f"Unable to connect to {self.config_entry.data[CONF_HOST]}"
