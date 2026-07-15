@@ -1,0 +1,10 @@
+{
+  "triggers": {
+    "cleared": {
+      "trigger": "mdi:vibrate-off"
+    },
+    "detected": {
+      "trigger": "mdi:vibrate"
+    }
+  }
+}
