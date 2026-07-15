@@ -65,8 +65,8 @@ STORE_INIT_TIMEOUT = 10
 # database on low-power hardware), the failure is usually transient. Instead of giving
 # up until the next reload, retry in the background with a capped backoff. The store is
 # only disabled after this many consecutive timeouts.
-STORE_INIT_MAX_RETRIES = 6
 STORE_INIT_RETRY_BACKOFF = (15, 30, 60, 120, 300, 300)
+STORE_INIT_MAX_RETRIES = len(STORE_INIT_RETRY_BACKOFF)
 
 
 class DecodedTelegramPayload(TypedDict):
