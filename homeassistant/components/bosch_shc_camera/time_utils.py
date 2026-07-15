@@ -23,8 +23,6 @@ future → motion stuck on) and the events-today / movement / audio counters
 (local-date events bucketed against a UTC "today").
 """
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
 
 

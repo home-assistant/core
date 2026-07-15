@@ -20,8 +20,6 @@ here propagates up through the SAME outer try/except in `__init__.py` as
 before this extraction, unchanged.
 """
 
-from __future__ import annotations
-
 import asyncio
 import json as _json
 import logging

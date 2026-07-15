@@ -9,8 +9,6 @@ library needs, calls the pure fetch, and merges the returned `RcpCameraData`
 fields into the coordinator's own cache dicts.
 """
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

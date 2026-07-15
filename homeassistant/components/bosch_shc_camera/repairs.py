@@ -7,8 +7,6 @@ async_install_firmware, also used by update.py's Install button) — pressing
 pointing the user at a separate button elsewhere.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol

@@ -15,9 +15,8 @@ existing on the class. Keeping the thin dispatch avoids rewriting that
 entire call surface for a purely structural move.
 """
 
-from __future__ import annotations
-
 import asyncio
+import contextlib
 import logging
 import time
 from typing import TYPE_CHECKING
@@ -86,10 +85,8 @@ async def refresh_local_creds_from_heartbeat(
         qs = old_url.split("?", 1)[-1] if "?" in old_url else ""
         for tok in qs.split("&"):
             if tok.startswith("inst="):
-                try:
+                with contextlib.suppress(ValueError):
                     inst_val = int(tok.split("=", 1)[1])
-                except ValueError:
-                    pass
                 break
         # Audio track is ALWAYS requested. switch.<cam>_audio is now a
         # lightweight synced MUTE preference applied card-side (video.muted),

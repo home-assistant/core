@@ -17,8 +17,6 @@ frames on cold open.
 Requires `enable_snapshots=True` (same gate as the camera platform).
 """
 
-from __future__ import annotations
-
 import logging
 from typing import override
 

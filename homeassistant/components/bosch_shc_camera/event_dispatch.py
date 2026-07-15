@@ -8,8 +8,6 @@ time), unlike the parallel status/events gather passes in
 `camera_status.py`/`event_polling.py`.
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
 import time

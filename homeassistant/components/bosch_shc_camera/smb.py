@@ -4,9 +4,8 @@ Extracted from __init__.py to keep the coordinator lean.
 All functions that previously used `self` now take a `coordinator` parameter.
 """
 
-from __future__ import annotations
-
 import calendar
+import contextlib
 from datetime import UTC
 import logging
 import os
@@ -58,7 +57,7 @@ def _bosch_ssl_ctx() -> ssl.SSLContext:
     is acceptable. The LAN/self-signed exception applies only to camera IPs,
     never to the cloud host reached here.
     """
-    global _SSL_CTX
+    global _SSL_CTX  # noqa: PLW0603 -- lazy process-lifetime singleton cache
     if _SSL_CTX is None:
         # Imported lazily to avoid any package import-order coupling.
         from .cloud_ssl import _build_ssl_context
@@ -577,10 +576,8 @@ def smb_makedirs(
         try:
             smb_stat(current)
         except OSError:
-            try:
+            with contextlib.suppress(OSError):  # may exist due to race condition
                 mkdir(current)
-            except OSError:
-                pass  # May exist due to race condition
 
 
 # ── SMB retention cleanup (runs in executor thread, once per day) ─────────────
@@ -697,9 +694,10 @@ async def _async_cleanup_alert(
                     name,
                     {"message": message, "title": "Bosch Kamera — NAS-Bereinigung"},
                 )
-                return
             except Exception as err:  # noqa: BLE001 — arbitrary user-configured notify service, any integration-specific error is non-actionable here; loop tries the next configured service
                 _LOGGER.debug("Cleanup alert via %s failed: %s", svc, err)
+            else:
+                return
 
 
 # ── FTP backend (FRITZ.NAS, plain FTP servers) ────────────────────────────────
@@ -726,11 +724,12 @@ def _ftp_exists(ftp: Any, path: str) -> bool:
 
     try:
         ftp.size(path)
-        return True
     except ftplib.error_perm:
         return False
     except ftplib.all_errors:
         return False
+    else:
+        return True
 
 
 def _ftp_makedirs(ftp: Any, path: str) -> None:
@@ -741,10 +740,8 @@ def _ftp_makedirs(ftp: Any, path: str) -> None:
     current = ""
     for part in parts:
         current = f"{current}/{part}"
-        try:
+        with contextlib.suppress(ftplib.error_perm):  # already exists or permission
             ftp.mkd(current)
-        except ftplib.error_perm:
-            pass  # already exists or permission — ignore
 
 
 def _sync_ftp_upload(
@@ -888,10 +885,10 @@ def _sync_ftp_upload(
         try:
             ftp.quit()
         except Exception:  # noqa: BLE001 — best-effort FTP teardown; if quit() fails for any reason, fall back to close(), failure non-actionable either way
-            try:
+            with contextlib.suppress(
+                Exception
+            ):  # best-effort FTP teardown, failure non-actionable
                 ftp.close()
-            except Exception:  # noqa: BLE001 — best-effort FTP teardown, failure non-actionable
-                pass
 
 
 def _sync_ftp_cleanup(coordinator: BoschCameraCoordinator) -> None:
@@ -969,21 +966,17 @@ def _sync_ftp_cleanup(coordinator: BoschCameraCoordinator) -> None:
 
         for sub in subdirs:
             _walk_and_delete(f"{path}/{sub}")
-            try:
+            with contextlib.suppress(
+                Exception
+            ):  # sibling iteration proceeds regardless
                 ftp.cwd(path)  # back up before next sibling
-            except (
-                Exception  # noqa: BLE001
-            ):  # best-effort cwd restore; sibling iteration proceeds regardless
-                pass
 
     try:
         root = f"/{base_path}"
         _walk_and_delete(root)
     finally:
-        try:
+        with contextlib.suppress(Exception):
             ftp.quit()
-        except Exception:  # noqa: BLE001 — best-effort FTP cleanup teardown, failure non-actionable
-            pass
 
     if deleted:
         root_label = f"{server}/{base_path}"

@@ -8,8 +8,6 @@ taking `coordinator` explicitly, matching the pattern already used for
 poll_statuses/poll_events/run_housekeeping.
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
 import time
@@ -105,9 +103,9 @@ async def try_live_connection_inner(
             # be flaky — keep the cam on REMOTE a bit longer to avoid
             # ping-pong fallback loops).
             lan_ok = coordinator.lan_tcp_reachable.get(cam_id, (False, 0))[0]
-            _STREAM_ERROR_TTL_SEC = 300 if lan_ok else 1800
+            _stream_error_ttl_sec = 300 if lan_ok else 1800
             err_ts = coordinator.stream_error_at.get(cam_id, 0)
-            if err_ts and (time.monotonic() - err_ts) > _STREAM_ERROR_TTL_SEC:
+            if err_ts and (time.monotonic() - err_ts) > _stream_error_ttl_sec:
                 if coordinator.stream_error_count.get(cam_id, 0) > 0:
                     _LOGGER.info(
                         "AUTO mode: %s stream-error counter aged out "
@@ -161,10 +159,10 @@ async def try_live_connection_inner(
         if "LOCAL" in candidates and "REMOTE" in candidates:
             lan_ip = coordinator.get_cam_lan_ip(cam_id)
             if lan_ip:
-                _TCP_TTL = 60.0
+                _tcp_ttl = 60.0
                 cached_tcp = coordinator.lan_tcp_reachable.get(cam_id)
                 now_tcp = time.monotonic()
-                if cached_tcp and (now_tcp - cached_tcp[1]) < _TCP_TTL:
+                if cached_tcp and (now_tcp - cached_tcp[1]) < _tcp_ttl:
                     tcp_ok = cached_tcp[0]
                     _LOGGER.debug(
                         "TCP pre-check cache HIT for %s (%s): %s",

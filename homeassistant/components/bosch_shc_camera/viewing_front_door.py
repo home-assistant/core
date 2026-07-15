@@ -53,8 +53,6 @@ FFmpeg, go2rtc), not to expose the stream to other hosts on the LAN (that is
 what the separate, explicitly opt-in Frigate front-door is for).
 """
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

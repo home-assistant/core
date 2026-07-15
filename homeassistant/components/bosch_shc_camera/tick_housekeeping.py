@@ -11,8 +11,6 @@ methods called directly from `_async_update_data`, per the orchestrator
 skeleton in the plan file.
 """
 
-from __future__ import annotations
-
 import logging
 import time
 from typing import TYPE_CHECKING, Any

@@ -34,8 +34,6 @@ still pass plain ``dict[str, asyncio.Lock]`` stand-ins directly, which
 continue to work unchanged since ``dict`` satisfies ``MutableMapping`` too.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import MutableMapping
 

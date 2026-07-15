@@ -227,8 +227,6 @@ more or less safe than popping just the lock dict entry used to be, given
 that precondition holds.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterator, MutableMapping
 from dataclasses import dataclass

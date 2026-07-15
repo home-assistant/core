@@ -14,10 +14,9 @@ config-entry unload can tear everything down deterministically without a
 defensive module-level sweep.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
+import contextlib
 import hashlib
 import logging
 import re
@@ -383,23 +382,19 @@ async def rtsp_keepalive(
                     "Keepalive OPTIONS 200 OK (no auth needed) on port %d", proxy_port
                 )
                 writer.close()
-                try:
-                    await writer.wait_closed()
-                except (
+                with contextlib.suppress(
                     OSError
                 ):  # best-effort writer close after keepalive, failure non-actionable
-                    pass
+                    await writer.wait_closed()
                 return True
             _LOGGER.debug(
                 "Keepalive: no nonce/realm on port %d (%.100s)", proxy_port, resp1_str
             )
             writer.close()
-            try:
-                await writer.wait_closed()
-            except (
+            with contextlib.suppress(
                 OSError
             ):  # best-effort writer close after keepalive, failure non-actionable
-                pass
+                await writer.wait_closed()
             return False
 
         nonce, realm = nonce_m.group(1), realm_m.group(1)
@@ -418,33 +413,29 @@ async def rtsp_keepalive(
         )
         resp2_str = resp2.decode("utf-8", errors="replace")
         writer.close()
-        try:
-            await writer.wait_closed()
-        except (
+        with contextlib.suppress(
             OSError
         ):  # best-effort writer close after keepalive, failure non-actionable
-            pass
-
-        if "200 OK" in resp2_str:
-            _LOGGER.debug("Keepalive OPTIONS 200 OK on port %d", proxy_port)
-            return True
-        _LOGGER.debug(
-            "Keepalive: unexpected response on port %d: %.100s", proxy_port, resp2_str
-        )
-        return False
+            await writer.wait_closed()
     except OSError as exc:
         _LOGGER.debug("Keepalive failed on port %d: %s", proxy_port, exc)
         # Close a writer opened before the failure — a read-timeout or drain
         # error after open_connection succeeded would otherwise leak one
         # fd/socket per keepalive (runs ~every 30s). Mirrors pre_warm_rtsp.
         if writer is not None:
-            try:
-                writer.close()
-                await writer.wait_closed()
-            except (
+            with contextlib.suppress(
                 OSError
             ):  # best-effort writer close on keepalive failure, failure non-actionable
-                pass
+                writer.close()
+                await writer.wait_closed()
+        return False
+    else:
+        if "200 OK" in resp2_str:
+            _LOGGER.debug("Keepalive OPTIONS 200 OK on port %d", proxy_port)
+            return True
+        _LOGGER.debug(
+            "Keepalive: unexpected response on port %d: %.100s", proxy_port, resp2_str
+        )
         return False
 
 
@@ -542,12 +533,10 @@ async def pre_warm_rtsp(
                     resp1_str,
                 )
                 writer.close()
-                try:
-                    await writer.wait_closed()
-                except (
+                with contextlib.suppress(
                     OSError
                 ):  # best-effort writer close on pre-warm abort, failure non-actionable
-                    pass
+                    await writer.wait_closed()
                 if attempt < max_attempts:
                     await asyncio.sleep(retry_wait)
                     continue
@@ -582,16 +571,15 @@ async def pre_warm_rtsp(
                 )
 
             writer.close()
-            try:
+            with contextlib.suppress(
+                OSError
+            ):  # best-effort writer close after pre-warm DESCRIBE, failure non-actionable
                 await writer.wait_closed()
-            except OSError:  # best-effort writer close after pre-warm DESCRIBE, failure non-actionable
-                pass
             # Wait for the camera to fully release the TLS connection.
             # The camera only allows ~2 concurrent RTSP sessions per
             # PUT /connection credential set. Without this delay, FFmpeg
             # may connect before the pre-warm's TLS session is torn down.
             await asyncio.sleep(post_success_wait)
-            return got_ok
         except OSError as exc:
             _LOGGER.debug(
                 "Pre-warm RTSP failed on port %d (attempt %d/%d): %s",
@@ -601,11 +589,13 @@ async def pre_warm_rtsp(
                 exc,
             )
             if writer is not None:
-                try:
+                with contextlib.suppress(
+                    OSError
+                ):  # best-effort writer close in pre-warm exception handler, failure non-actionable
                     writer.close()
                     await writer.wait_closed()
-                except OSError:  # best-effort writer close in pre-warm exception handler, failure non-actionable
-                    pass
             if attempt < max_attempts:
                 await asyncio.sleep(retry_wait)
+        else:
+            return got_ok
     return False

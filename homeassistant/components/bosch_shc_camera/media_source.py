@@ -16,9 +16,8 @@ seek. When only one backend is configured, the source/backend chooser is hidden
 so users land directly on the meaningful content.
 """
 
-from __future__ import annotations
-
 from collections.abc import Generator
+import contextlib
 from dataclasses import dataclass
 import logging
 import mimetypes
@@ -631,11 +630,12 @@ class _SmbBackend:
             # share_access="r": allow other readers (FRITZ.NAS opens exclusive
             # by default → NtStatus 0xc0000043 on a 2nd parallel range-request).
             fobj = open_file(path, mode="rb", share_access="r", connection_cache=cache)
-            fobj._bosch_close_cache = lambda: self._close_session_cache(cache)
-            return fobj, st.st_size
         except Exception:
             self._close_session_cache(cache)
             raise
+        else:
+            fobj._bosch_close_cache = lambda: self._close_session_cache(cache)
+            return fobj, st.st_size
 
     # ── flat-file methods (files directly in camera/ folder on NAS) ──────────
     def list_flat_dates(
@@ -700,11 +700,12 @@ class _SmbBackend:
             st = smb_stat(path, connection_cache=cache)
             # share_access="r": allow other readers (see open_file for context).
             fobj = open_file(path, mode="rb", share_access="r", connection_cache=cache)
-            fobj._bosch_close_cache = lambda: self._close_session_cache(cache)
-            return fobj, st.st_size
         except Exception:
             self._close_session_cache(cache)
             raise
+        else:
+            fobj._bosch_close_cache = lambda: self._close_session_cache(cache)
+            return fobj, st.st_size
 
 
 class _NvrBackend:
@@ -1758,7 +1759,6 @@ class BoschCameraMediaView(HomeAssistantView):
                 await self.hass.async_add_executor_job(fobj.close)
             finally:
                 if close_cache is not None:
-                    try:
+                    # pragma: no cover — best-effort async cache teardown, failure non-actionable
+                    with contextlib.suppress(Exception):
                         await self.hass.async_add_executor_job(close_cache)
-                    except Exception:  # noqa: BLE001  # pragma: no cover — best-effort async cache teardown, failure non-actionable
-                        pass

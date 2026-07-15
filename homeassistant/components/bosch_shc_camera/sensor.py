@@ -145,14 +145,16 @@ async def async_setup_entry(
     # users can answer "is recording reaching the target?". Disabled by
     # default; enable via the entity registry. One per camera.
     if opts.get("enable_nvr", False):
-        for cam_id in coordinator.data:
-            entities.append(BoschNvrStateSensor(coordinator, cam_id, config_entry))
+        entities.extend(
+            BoschNvrStateSensor(coordinator, cam_id, config_entry)
+            for cam_id in coordinator.data
+        )
     # AI Snapshot Description sensor — only when option is enabled
     if opts.get(CONF_ENABLE_AI_DESCRIPTION, False):
-        for cam_id in coordinator.data:
-            entities.append(
-                BoschCameraAiDescriptionSensor(coordinator, cam_id, config_entry)
-            )
+        entities.extend(
+            BoschCameraAiDescriptionSensor(coordinator, cam_id, config_entry)
+            for cam_id in coordinator.data
+        )
     # External stream URL sensors (main + sub). Per-camera, always registered
     # so the BoschExternalStreamSwitch can toggle their value without dynamic
     # entity (re-)registration. Disabled in entity registry by default;
@@ -1166,11 +1168,12 @@ class BoschTlsCertSensor(_BoschSensorBase):
             return None
         try:
             dt = datetime.fromisoformat(cert["not_after"])
+        except ValueError, TypeError:
+            return None
+        else:
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=UTC)
             return dt
-        except ValueError, TypeError:
-            return None
 
     @property
     @override

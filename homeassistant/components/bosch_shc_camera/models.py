@@ -13,8 +13,6 @@ Supported models (Gen2, firmware 9.40.25):
   - "Eyes Innenkamera II"  (API: HOME_Eyes_Indoor / CAMERA_INDOOR_GEN2)
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 

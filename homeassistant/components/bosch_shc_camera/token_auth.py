@@ -16,8 +16,6 @@ renews the token 5 minutes before it expires so normal ticks never hit a
 reactive 401.
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import Any

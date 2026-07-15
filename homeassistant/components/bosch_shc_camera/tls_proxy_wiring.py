@@ -26,8 +26,6 @@ already running on the HA event loop, so the old thread->event-loop
 schedules the rebuild task directly.
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
 import ssl
@@ -110,26 +108,26 @@ async def on_tls_proxy_died(coordinator: BoschCameraCoordinator, cam_id: str) ->
     closes its server socket after 5 consecutive connect failures (WiFi
     jitter, brief camera reboot, Bosch FW glitch).
 
-    Backoff: skip if another rebuild ran within _TLS_PROXY_REBUILD_MIN_INTERVAL
+    Backoff: skip if another rebuild ran within _tls_proxy_rebuild_min_interval
     seconds — prevents a storm when the new proxy also dies immediately
     because the camera is still flapping.
     """
-    _TLS_PROXY_REBUILD_MIN_INTERVAL = 30.0
-    _PRE_WAIT = 5.0  # give the camera a moment to actually recover
+    _tls_proxy_rebuild_min_interval = 30.0
+    _pre_wait = 5.0  # give the camera a moment to actually recover
 
     now = time.monotonic()
     last = coordinator.tls_proxy_rebuild_last.get(cam_id, float("-inf"))
-    if (now - last) < _TLS_PROXY_REBUILD_MIN_INTERVAL:
+    if (now - last) < _tls_proxy_rebuild_min_interval:
         _LOGGER.debug(
             "TLS proxy rebuild for %s skipped — last rebuild %.0fs ago (< %.0fs)",
             cam_id[:8],
             now - last,
-            _TLS_PROXY_REBUILD_MIN_INTERVAL,
+            _tls_proxy_rebuild_min_interval,
         )
         return
     coordinator.tls_proxy_rebuild_last[cam_id] = now
 
-    await asyncio.sleep(_PRE_WAIT)
+    await asyncio.sleep(_pre_wait)
 
     # Re-check state AFTER the wait — user may have toggled off,
     # or another flow may have already rebuilt.

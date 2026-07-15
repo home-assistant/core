@@ -21,6 +21,7 @@ No user data is hardcoded. All configuration via the HA UI.
 """
 
 import asyncio
+import contextlib
 import logging
 import re as _re_mod
 import time
@@ -1144,7 +1145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     # Listen on all four HA event bus topics fired by the coordinator and
     # re-deliver them via HTTP POST to the user-configured URL.
     # Default OFF — both enable_webhook_delivery AND webhook_url must be set.
-    _WEBHOOK_EVENT_TYPES = (
+    _webhook_event_types = (
         "bosch_shc_camera_motion",
         "bosch_shc_camera_audio_alarm",
         "bosch_shc_camera_person",
@@ -1198,7 +1199,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
         except aiohttp.ClientError as err:
             _LOGGER.error("Webhook delivery failed for %s: %s", event.event_type, err)
 
-    for _evt_type in _WEBHOOK_EVENT_TYPES:
+    for _evt_type in _webhook_event_types:
         entry.async_on_unload(hass.bus.async_listen(_evt_type, _async_deliver_webhook))
 
     # describe_snapshot service — ask HA ai_task to describe a camera snapshot
@@ -1572,13 +1573,9 @@ async def _async_cancel_coordinator_tasks(coord: BoschCameraCoordinator) -> None
     drain_task = getattr(coord, "nvr_drain_task", None)
     if drain_task is not None and not drain_task.done():
         drain_task.cancel()
-        try:
+        # drain_task cancelled intentionally on shutdown; any residual error is non-actionable
+        with contextlib.suppress(asyncio.CancelledError, Exception):
             await drain_task
-        except (
-            asyncio.CancelledError,
-            Exception,  # noqa: BLE001
-        ):  # drain_task cancelled intentionally on shutdown; any residual error is non-actionable
-            pass
         coord.nvr_drain_task = None
     # Stop all NVR recorders BEFORE the TLS proxies — once the proxies are
     # gone the ffmpeg children would die anyway, but we want a clean SIGTERM

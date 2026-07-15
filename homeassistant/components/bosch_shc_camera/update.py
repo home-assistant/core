@@ -41,9 +41,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Bosch camera firmware update entities from a config entry."""
     coordinator = config_entry.runtime_data
-    entities = []
-    for cam_id in coordinator.data:
-        entities.append(BoschFirmwareUpdate(coordinator, cam_id, config_entry))
+    entities = [
+        BoschFirmwareUpdate(coordinator, cam_id, config_entry)
+        for cam_id in coordinator.data
+    ]
     async_add_entities(entities, update_before_add=False)
 
 

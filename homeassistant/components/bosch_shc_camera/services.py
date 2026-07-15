@@ -8,12 +8,12 @@ the active config entry's coordinator per-call via
 move with no behavior change.
 """
 
-from __future__ import annotations
-
 import asyncio
+import contextlib
 from datetime import UTC
 import logging
 import time
+from typing import NoReturn
 
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -21,6 +21,46 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _raise_http_error(action: str, status: int) -> NoReturn:
+    """Raise a translated HomeAssistantError for a non-2xx cloud response."""
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="http_error",
+        translation_placeholders={"action": action, "status": str(status)},
+    )
+
+
+def _raise_http_error_with_body(action: str, status: int, body: str) -> NoReturn:
+    """Raise a translated HomeAssistantError including the response body."""
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="http_error_with_body",
+        translation_placeholders={
+            "action": action,
+            "status": str(status),
+            "body": body[:200],
+        },
+    )
+
+
+def _raise_privacy_blocked(action: str) -> NoReturn:
+    """Raise a translated HomeAssistantError for a privacy-mode-blocked write."""
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="privacy_blocked",
+        translation_placeholders={"action": action},
+    )
+
+
+def _raise_index_out_of_range(index: int, count: int) -> NoReturn:
+    """Raise a translated ServiceValidationError for an out-of-range zone index."""
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="index_out_of_range",
+        translation_placeholders={"index": str(index), "count": str(count)},
+    )
 
 
 def _register_services(hass: HomeAssistant) -> None:
@@ -46,7 +86,7 @@ def _register_services(hass: HomeAssistant) -> None:
             if not coord:
                 continue
             if target:
-                for _cam_id, cam in coord.camera_entities.items():
+                for cam in coord.camera_entities.values():
                     if getattr(cam, "entity_id", None) == target:
                         hass.async_create_task(cam.async_trigger_image_refresh(delay=0))
                 continue
@@ -54,7 +94,7 @@ def _register_services(hass: HomeAssistant) -> None:
             # async_request_refresh() awaits the full coordinator tick which can
             # take 6-22 s; blocking here freezes the card until the tick finishes.
             hass.async_create_task(coord.async_request_refresh())
-            for _cam_id, cam in coord.camera_entities.items():
+            for cam in coord.camera_entities.values():
                 hass.async_create_task(cam.async_trigger_image_refresh(delay=0))
 
     async def handle_open_live_connection(call: ServiceCall) -> None:
@@ -135,14 +175,7 @@ def _register_services(hass: HomeAssistant) -> None:
                                 result = await resp.json()
                                 _LOGGER.info("Rule created: %s", result)
                             else:
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error",
-                                    translation_placeholders={
-                                        "action": "Create rule",
-                                        "status": str(resp.status),
-                                    },
-                                )
+                                _raise_http_error("Create rule", resp.status)
                 except HomeAssistantError:
                     raise
                 except Exception as err:
@@ -190,14 +223,7 @@ def _register_services(hass: HomeAssistant) -> None:
                             if resp.status == 204:
                                 _LOGGER.info("Rule %s deleted", rule_id)
                             else:
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error",
-                                    translation_placeholders={
-                                        "action": "Delete rule",
-                                        "status": str(resp.status),
-                                    },
-                                )
+                                _raise_http_error("Delete rule", resp.status)
                 except HomeAssistantError:
                     raise
                 except Exception as err:
@@ -297,14 +323,8 @@ def _register_services(hass: HomeAssistant) -> None:
                                 await coord.async_request_refresh()
                             else:
                                 body = await resp.text()
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error_with_body",
-                                    translation_placeholders={
-                                        "action": "Update rule",
-                                        "status": str(resp.status),
-                                        "body": body[:200],
-                                    },
+                                _raise_http_error_with_body(
+                                    "Update rule", resp.status, body
                                 )
                 except HomeAssistantError:
                     raise
@@ -405,23 +425,11 @@ def _register_services(hass: HomeAssistant) -> None:
                                 )
                                 await coord.async_request_refresh()
                             elif resp.status == 443:
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="privacy_blocked",
-                                    translation_placeholders={
-                                        "action": "Set motion zones"
-                                    },
-                                )
+                                _raise_privacy_blocked("Set motion zones")
                             else:
                                 body = await resp.text()
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error_with_body",
-                                    translation_placeholders={
-                                        "action": "Set motion zones",
-                                        "status": str(resp.status),
-                                        "body": body[:200],
-                                    },
+                                _raise_http_error_with_body(
+                                    "Set motion zones", resp.status, body
                                 )
                 except HomeAssistantError:
                     raise
@@ -498,23 +506,11 @@ def _register_services(hass: HomeAssistant) -> None:
                                         "notification_id": "bosch_motion_zones",
                                     },
                                 )
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="privacy_blocked",
-                                    translation_placeholders={
-                                        "action": "get_motion_zones"
-                                    },
-                                )
+                                _raise_privacy_blocked("get_motion_zones")
                             else:
                                 body = await resp.text()
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error_with_body",
-                                    translation_placeholders={
-                                        "action": "Get motion zones",
-                                        "status": str(resp.status),
-                                        "body": body[:200],
-                                    },
+                                _raise_http_error_with_body(
+                                    "Get motion zones", resp.status, body
                                 )
                 except HomeAssistantError:
                     raise
@@ -604,14 +600,8 @@ def _register_services(hass: HomeAssistant) -> None:
                                 )
                             else:
                                 body = await resp.text()
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error_with_body",
-                                    translation_placeholders={
-                                        "action": "Share camera",
-                                        "status": str(resp.status),
-                                        "body": body[:200],
-                                    },
+                                _raise_http_error_with_body(
+                                    "Share camera", resp.status, body
                                 )
                 except HomeAssistantError:
                     raise
@@ -690,23 +680,11 @@ def _register_services(hass: HomeAssistant) -> None:
                                         "notification_id": "bosch_privacy_masks",
                                     },
                                 )
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="privacy_blocked",
-                                    translation_placeholders={
-                                        "action": "get_privacy_masks"
-                                    },
-                                )
+                                _raise_privacy_blocked("get_privacy_masks")
                             else:
                                 body = await resp.text()
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error_with_body",
-                                    translation_placeholders={
-                                        "action": "Get privacy masks",
-                                        "status": str(resp.status),
-                                        "body": body[:200],
-                                    },
+                                _raise_http_error_with_body(
+                                    "Get privacy masks", resp.status, body
                                 )
                 except HomeAssistantError:
                     raise
@@ -806,23 +784,11 @@ def _register_services(hass: HomeAssistant) -> None:
                                 )
                                 await coord.async_request_refresh()
                             elif resp.status == 443:
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="privacy_blocked",
-                                    translation_placeholders={
-                                        "action": "Set privacy masks"
-                                    },
-                                )
+                                _raise_privacy_blocked("Set privacy masks")
                             else:
                                 body = await resp.text()
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error_with_body",
-                                    translation_placeholders={
-                                        "action": "Set privacy masks",
-                                        "status": str(resp.status),
-                                        "body": body[:200],
-                                    },
+                                _raise_http_error_with_body(
+                                    "Set privacy masks", resp.status, body
                                 )
                 except HomeAssistantError:
                     raise
@@ -873,24 +839,12 @@ def _register_services(hass: HomeAssistant) -> None:
                             headers=headers,
                         ) as resp:
                             if resp.status != 200:
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error",
-                                    translation_placeholders={
-                                        "action": "delete_motion_zone fetch",
-                                        "status": str(resp.status),
-                                    },
+                                _raise_http_error(
+                                    "delete_motion_zone fetch", resp.status
                                 )
                             zones = await resp.json()
                     if zone_index >= len(zones):
-                        raise ServiceValidationError(
-                            translation_domain=DOMAIN,
-                            translation_key="index_out_of_range",
-                            translation_placeholders={
-                                "index": str(zone_index),
-                                "count": str(len(zones)),
-                            },
-                        )
+                        _raise_index_out_of_range(zone_index, len(zones))
                     removed = zones.pop(zone_index)
                     _LOGGER.info("Removing zone %d: %s", zone_index, removed)
                     async with asyncio.timeout(10):
@@ -907,13 +861,8 @@ def _register_services(hass: HomeAssistant) -> None:
                                 )
                                 await coord.async_request_refresh()
                             else:
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error",
-                                    translation_placeholders={
-                                        "action": "delete_motion_zone POST",
-                                        "status": str(resp.status),
-                                    },
+                                _raise_http_error(
+                                    "delete_motion_zone POST", resp.status
                                 )
                 except HomeAssistantError:
                     raise
@@ -965,13 +914,8 @@ def _register_services(hass: HomeAssistant) -> None:
                                 if resp.status == 200:
                                     data = await resp.json()
                                 else:
-                                    raise HomeAssistantError(
-                                        translation_domain=DOMAIN,
-                                        translation_key="http_error",
-                                        translation_placeholders={
-                                            "action": "get_lighting_schedule",
-                                            "status": str(resp.status),
-                                        },
+                                    _raise_http_error(
+                                        "get_lighting_schedule", resp.status
                                     )
                     sched = data.get("scheduleStatus", "?")
                     on_time = data.get("generalLightOnTime", "?")
@@ -1082,14 +1026,10 @@ def _register_services(hass: HomeAssistant) -> None:
                         ) as get_resp:
                             if get_resp.status != 200:
                                 body = await get_resp.text()
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error_with_body",
-                                    translation_placeholders={
-                                        "action": "Set lighting schedule (fetch current)",
-                                        "status": str(get_resp.status),
-                                        "body": body[:200],
-                                    },
+                                _raise_http_error_with_body(
+                                    "Set lighting schedule (fetch current)",
+                                    get_resp.status,
+                                    body,
                                 )
                             data = await get_resp.json()
                     if on_time:
@@ -1132,14 +1072,8 @@ def _register_services(hass: HomeAssistant) -> None:
                                 await coord.async_request_refresh()
                             else:
                                 body = await put_resp.text()
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error_with_body",
-                                    translation_placeholders={
-                                        "action": "Set lighting schedule",
-                                        "status": str(put_resp.status),
-                                        "body": body[:200],
-                                    },
+                                _raise_http_error_with_body(
+                                    "Set lighting schedule", put_resp.status, body
                                 )
                 except HomeAssistantError:
                     raise
@@ -1199,14 +1133,7 @@ def _register_services(hass: HomeAssistant) -> None:
                                 )
                                 await coord.async_request_refresh()
                             else:
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error",
-                                    translation_placeholders={
-                                        "action": "Rename",
-                                        "status": str(resp.status),
-                                    },
-                                )
+                                _raise_http_error("Rename", resp.status)
                 except HomeAssistantError:
                     raise
                 except Exception as err:
@@ -1276,15 +1203,7 @@ def _register_services(hass: HomeAssistant) -> None:
                                 )
                             else:
                                 body = await resp.text()
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error_with_body",
-                                    translation_placeholders={
-                                        "action": "Invite",
-                                        "status": str(resp.status),
-                                        "body": body[:200],
-                                    },
-                                )
+                                _raise_http_error_with_body("Invite", resp.status, body)
                 except HomeAssistantError:
                     raise
                 except Exception as err:
@@ -1350,14 +1269,7 @@ def _register_services(hass: HomeAssistant) -> None:
                                     },
                                 )
                             else:
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error",
-                                    translation_placeholders={
-                                        "action": "List friends",
-                                        "status": str(resp.status),
-                                    },
-                                )
+                                _raise_http_error("List friends", resp.status)
                 except HomeAssistantError:
                     raise
                 except Exception as err:
@@ -1403,14 +1315,7 @@ def _register_services(hass: HomeAssistant) -> None:
                             if resp.status in (200, 201, 204):
                                 _LOGGER.info("Friend %s removed", friend_id)
                             else:
-                                raise HomeAssistantError(
-                                    translation_domain=DOMAIN,
-                                    translation_key="http_error",
-                                    translation_placeholders={
-                                        "action": "Remove friend",
-                                        "status": str(resp.status),
-                                    },
-                                )
+                                _raise_http_error("Remove friend", resp.status)
                 except HomeAssistantError:
                     raise
                 except Exception as err:
@@ -1430,7 +1335,7 @@ def _register_services(hass: HomeAssistant) -> None:
         import re as _re
         import shutil
 
-        _PAT = _re.compile(
+        _pat = _re.compile(
             r"^(?:(?P<camera>.+?)_)?(?P<date>\d{4}-\d{2}-\d{2})_(?P<time>\d{2}-\d{2}-\d{2})_"
             r"(?P<etype>[A-Z_]+)_[0-9A-F]+\.(?P<ext>jpg|jpeg|mp4)$",
             _re.IGNORECASE,
@@ -1456,7 +1361,7 @@ def _register_services(hass: HomeAssistant) -> None:
                     for f in list(cam_dir.iterdir()):
                         if not f.is_file():
                             continue
-                        m = _PAT.match(f.name)
+                        m = _pat.match(f.name)
                         if not m:
                             continue
                         y, mo, d = m.group("date").split("-")
@@ -1515,7 +1420,7 @@ def _register_services(hass: HomeAssistant) -> None:
             def _delete(base: Path, file_path: str, camera: str, date: str) -> int:
                 import re as _re2
 
-                _PAT2 = _re2.compile(
+                _pat2 = _re2.compile(
                     r"^(?:(?P<cam>.+?)_)?(?P<date>\d{4}-\d{2}-\d{2})_",
                     _re2.IGNORECASE,
                 )
@@ -1550,7 +1455,7 @@ def _register_services(hass: HomeAssistant) -> None:
                 for f in cam_dir.rglob("*"):
                     if not f.is_file():
                         continue
-                    m = _PAT2.match(f.name)
+                    m = _pat2.match(f.name)
                     if not m:
                         continue
                     if date and m.group("date") != date:
@@ -1560,10 +1465,8 @@ def _register_services(hass: HomeAssistant) -> None:
                 # clean up empty dirs
                 for d in sorted(cam_dir.rglob("*"), reverse=True):
                     if d.is_dir():
-                        try:
+                        with contextlib.suppress(OSError):
                             d.rmdir()
-                        except OSError:
-                            pass
                 return count
 
             n = await hass.async_add_executor_job(

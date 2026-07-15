@@ -34,11 +34,10 @@ sockets and each relay is an asyncio task, all non-blocking. ``resolve_inner``
 is awaited on the same loop (no thread, no cross-loop bridging).
 """
 
-from __future__ import annotations
-
 import asyncio
 import base64
 from collections.abc import Callable, Coroutine
+import contextlib
 from dataclasses import dataclass, field
 import hmac
 import ipaddress
@@ -757,10 +756,8 @@ class _CameraServer:
             target = None
         if target is None:
             writer.write(b"RTSP/1.0 503 Service Unavailable\r\n\r\n")
-            try:
+            with contextlib.suppress(OSError):
                 await writer.drain()
-            except OSError:
-                pass
             await _close_writer(writer)
             return
 

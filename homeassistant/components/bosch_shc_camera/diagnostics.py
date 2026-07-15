@@ -8,8 +8,6 @@ Sensitive fields (bearer / refresh tokens, FCM IDs, SMB credentials, MAC
 addresses, cloud IDs) are redacted via homeassistant.diagnostics.async_redact_data.
 """
 
-from __future__ import annotations
-
 from collections.abc import Sized
 import json
 import pathlib

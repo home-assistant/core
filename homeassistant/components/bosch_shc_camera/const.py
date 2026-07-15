@@ -8,6 +8,11 @@ DOMAIN = "bosch_shc_camera"
 CARD_VERSION = "14.1.8"
 CLOUD_API = "https://residential.cbs.boschsecurity.com"
 
+# Default tmpfs cache dir for the Mini-NVR pre-roll ring buffer. Deliberately
+# in /dev/shm (RAM-backed) for write throughput, not a scratch temp file --
+# always user-overridable via the nvr_preroll_cache_dir option.
+NVR_PREROLL_CACHE_DIR_DEFAULT = "/dev/shm/bosch_nvr_cache"  # noqa: S108
+
 # Delivery-death detection (issue #36). When the periodic /v11/events poll finds
 # a genuinely NEW event while FCM is enabled+running+"healthy" yet no real push
 # has arrived in this window, push delivery is dead at the cloud/Google layer
@@ -199,7 +204,7 @@ DEFAULT_OPTIONS = {
     "nvr_quality": "auto",
     # Phase 4: pre-roll buffer — 0 = disabled; 10-60 s = keep rolling cache in tmpfs
     "nvr_preroll_seconds": 0,
-    "nvr_preroll_cache_dir": "/dev/shm/bosch_nvr_cache",  # default tmpfs cache dir, overridable via config options
+    "nvr_preroll_cache_dir": NVR_PREROLL_CACHE_DIR_DEFAULT,
     "nvr_postroll_seconds": 0,
     # Opt-in: stop-finalize the ring's actively-written segment (SIGTERM,
     # wait for moov atom) and re-attach it before dropping the newest
