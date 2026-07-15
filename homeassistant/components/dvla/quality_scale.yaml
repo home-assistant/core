@@ -32,7 +32,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: exempt
+    comment: Integration registers no custom actions.
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
