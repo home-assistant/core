@@ -56,6 +56,8 @@ from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 PRESET_FROST_GUARD = "frost_guard"
 PRESET_SCHEDULE = "schedule"
 PRESET_MANUAL = "manual"

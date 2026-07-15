@@ -17,8 +17,8 @@ _REMOVED_SENSOR_RE = re.compile(r"_\d+_(box_)?temperature$")
 
 async def async_setup_entry(hass: HomeAssistant, entry: DucoConfigEntry) -> bool:
     """Set up Duco from a config entry."""
-    # Remove entity registry entries for the temperature and box_temperature
-    # sensors that were removed when migrating to python-duco-connectivity.
+    # Clean up stale temperature registry entries so removed entities from the
+    # python-duco-connectivity migration do not linger after upgrade.
     entity_registry = er.async_get(hass)
     for entity_entry in er.async_entries_for_config_entry(
         entity_registry, entry.entry_id
@@ -32,6 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DucoConfigEntry) -> bool
     )
 
     coordinator = DucoCoordinator(hass, entry, client)
+
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
