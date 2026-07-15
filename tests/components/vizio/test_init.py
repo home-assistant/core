@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-
 from vizaio import VizioConnectionError, VizioNotFoundError
 
 from homeassistant.components.media_player import (

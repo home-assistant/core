@@ -190,6 +190,7 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             if sound_mode:
                 sound_mode_list = list(sound_mode.options)
 
+        current_input: str | None
         if state is not None:
             current_input = state.current_input
         else:
