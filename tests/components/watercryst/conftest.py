@@ -15,30 +15,6 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-# @pytest.fixture
-# def mock_config_entry() -> MockConfigEntry:
-#     """Mock config entry."""
-#     return MockConfigEntry(
-#         domain=DOMAIN,
-#         title="Schulungsgerät",
-#         data={
-#             CONF_BSN: "2025001395300149",
-#             CONF_API_KEY: "<api-key>",
-#             CONF_ESN: "2041730218",
-#             CONF_MODEL_ID: "12000273",
-#             CONF_LINE: "BIOCAT",
-#             CONF_SERIES: "KLS 3000-C",
-#             CONF_NAME: "Schulungsgerät",
-#             CONF_FW_VERSION: "V01.05.07",
-#             CONF_HW_VERSION: "2",
-#             CONF_LATEST_FW_VERSION: "V01.08.05",
-#             CONF_SYSTEM_MAC: "00:A2:FF:01:EE:DE",
-#             CONF_BLE_MAC: "CC:F9:57:8F:EE:C4",
-#         },
-#         unique_id="2025001395300149",
-#         version=1,
-#     )
-
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:

@@ -10,19 +10,8 @@ from homeassistant.components.watercryst.config_flow import (
     DeviceOffline,
     WrongDeviceSerial,
 )
-from homeassistant.components.watercryst.const import (
-    CONF_BLE_MAC,
-    CONF_BSN,
-    CONF_ESN,
-    CONF_FW_VERSION,
-    CONF_HW_VERSION,
-    CONF_LATEST_FW_VERSION,
-    CONF_LINE,
-    CONF_SERIES,
-    CONF_SYSTEM_MAC,
-    DOMAIN,
-)
-from homeassistant.const import CONF_API_KEY, CONF_MODEL_ID, CONF_NAME
+from homeassistant.components.watercryst.const import CONF_BSN, DOMAIN
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -54,20 +43,11 @@ async def test_form_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     assert result["data"] == {
         CONF_BSN: "2025001395300149",
         CONF_API_KEY: "<api-key>",
-        CONF_ESN: "2041730218",
-        CONF_MODEL_ID: "12000273",
-        CONF_LINE: "BIOCAT",
-        CONF_SERIES: "KLS 3000-C",
-        CONF_NAME: "Schulungsgerät",
-        CONF_FW_VERSION: "V01.05.07",
-        CONF_HW_VERSION: "2",
-        CONF_LATEST_FW_VERSION: "V01.08.05",
-        CONF_SYSTEM_MAC: "00:A2:FF:01:EE:DE",
-        CONF_BLE_MAC: "CC:F9:57:8F:EE:C4",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_api_client")
 async def test_duplicate_entry(hass: HomeAssistant) -> None:
     """Test duplicate entry handling."""
 

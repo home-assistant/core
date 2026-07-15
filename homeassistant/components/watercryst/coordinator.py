@@ -31,9 +31,6 @@ class MeasurementsUpdateCoordinator(DataUpdateCoordinator[MeasurementResponse]):
             name="Measurements update coordinator",
             config_entry=entry,
             update_interval=timedelta(seconds=60),
-            # Set always_update to `False` if the data returned from the
-            # api can be compared via `__eq__` to avoid duplicate updates
-            # being dispatched to listeners.
             always_update=False,
         )
         self._client = client
@@ -64,9 +61,6 @@ class StateUpdateCoordinator(DataUpdateCoordinator[StateResponse]):
             name="State update coordinator",
             config_entry=entry,
             update_interval=timedelta(seconds=30),
-            # Set always_update to `False` if the data returned from the
-            # api can be compared via `__eq__` to avoid duplicate updates
-            # being dispatched to listeners.
             always_update=False,
         )
         self._client = client

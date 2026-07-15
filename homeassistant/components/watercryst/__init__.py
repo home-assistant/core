@@ -2,11 +2,17 @@
 
 from dataclasses import dataclass
 
+from httpx import HTTPStatusError
 from pyocat import AsyncApiClient, AsyncAuth
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_MODEL_ID, CONF_NAME, Platform
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     CONNECTION_NETWORK_MAC,
@@ -14,18 +20,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import (
-    CONF_BLE_MAC,
-    CONF_BSN,
-    CONF_ESN,
-    CONF_FW_VERSION,
-    CONF_HW_VERSION,
-    CONF_LATEST_FW_VERSION,
-    CONF_LINE,
-    CONF_SERIES,
-    CONF_SYSTEM_MAC,
-    DOMAIN,
-)
+from .const import CONF_BSN, DOMAIN
 from .coordinator import MeasurementsUpdateCoordinator, StateUpdateCoordinator
 
 _PLATFORMS: list[Platform] = [
@@ -38,16 +33,6 @@ class RuntimeData:
     """Strongly typed runtime data container."""
 
     bsn: str
-    esn: str | None
-    device_type_number: str | None
-    line: str | None
-    series: str | None
-    name: str | None
-    fw_version: str | None
-    hw_version: str | None
-    latest_fw_version: str | None
-    system_mac: str | None
-    ble_mac: str | None
     device_info: DeviceInfo
     client: AsyncApiClient
     measurements: MeasurementsUpdateCoordinator
@@ -62,38 +47,54 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
 
     bsn: str = entry.data[CONF_BSN]
     key: str = entry.data[CONF_API_KEY]
-    esn: str | None = entry.data[CONF_ESN]
-    device_type_number: str | None = entry.data[CONF_MODEL_ID]
-    line: str | None = entry.data[CONF_LINE]
-    series: str | None = entry.data[CONF_SERIES]
-    name: str | None = entry.data[CONF_NAME]
-    fw_version: str | None = entry.data[CONF_FW_VERSION]
-    hw_version: str | None = entry.data[CONF_HW_VERSION]
-    latest_fw_version: str | None = entry.data[CONF_LATEST_FW_VERSION]
-    system_mac: str | None = entry.data[CONF_SYSTEM_MAC]
-    ble_mac: str | None = entry.data[CONF_BLE_MAC]
 
     auth = AsyncAuth(client=get_async_client(hass), api_key=key)
     client = AsyncApiClient(auth=auth)
 
+    try:
+        # Fetch device related information like the model ID,
+        # firmware version and user specified device name.
+        info = await client.get_device_info()
+
+        # BIOCAT serial entered by the user must match the
+        # serial associated with the given API key.
+        if info.biocat_serial != bsn:
+            raise ConfigEntryAuthFailed("BIOCAT serial number mismatch")
+
+        # Fetch the current device state to check if the
+        # device is online.
+        state = await client.get_state()
+
+        if not state.online:
+            raise ConfigEntryNotReady("Device is offline")
+
+    except HTTPStatusError as err:
+        match err.response.status_code:
+            case 401:
+                raise ConfigEntryAuthFailed("Invalid authentication") from err
+            case 403:
+                raise ConfigEntryError("API disabled") from err
+            case _:
+                raise ConfigEntryError("Unexpected error") from err
+
     connections: set[tuple[str, str]] = set()
 
-    if system_mac:
-        connections.add((CONNECTION_NETWORK_MAC, system_mac))
+    if info.system_mac_address:
+        connections.add((CONNECTION_NETWORK_MAC, info.system_mac_address))
 
-    if ble_mac:
-        connections.add((CONNECTION_BLUETOOTH, ble_mac))
+    if info.ble_mac_address:
+        connections.add((CONNECTION_BLUETOOTH, info.ble_mac_address))
 
     device_info = DeviceInfo(
         identifiers={(DOMAIN, bsn)},
         connections=connections,
         manufacturer="WATERCryst",
-        model=f"{line} {series}",
-        model_id=device_type_number,
-        name=name,
+        model=f"{info.line} {info.series}",
+        model_id=info.device_type_number,
+        name=info.name,
         serial_number=bsn,
-        sw_version=fw_version,
-        hw_version=hw_version,
+        sw_version=info.fw_version,
+        hw_version=info.hw_version,
         configuration_url=f"https://app.watercryst.com/devices/{bsn}",
     )
 
@@ -105,16 +106,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
 
     entry.runtime_data = RuntimeData(
         bsn=bsn,
-        esn=esn,
-        device_type_number=device_type_number,
-        line=line,
-        series=series,
-        name=name,
-        fw_version=fw_version,
-        hw_version=hw_version,
-        latest_fw_version=latest_fw_version,
-        system_mac=system_mac,
-        ble_mac=ble_mac,
         device_info=device_info,
         client=client,
         measurements=measurements,
