@@ -75,6 +75,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
                     entry,
                     data_updates={CONF_HOST: ip, CONF_MAC: raw_mac},
                     reason="already_configured",
+                    reload_even_if_entry_is_unchanged=False,
                 )
 
         try:
