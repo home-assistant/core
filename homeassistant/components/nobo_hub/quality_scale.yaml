@@ -48,7 +48,7 @@ rules:
     status: done
     comment: >
       Model name "Nobø Ecohub" under review for rename to "Nobø Hub".
-  diagnostics: todo
+  diagnostics: done
   discovery: done
   discovery-update-info: done
   docs-data-update: done
@@ -71,7 +71,7 @@ rules:
   repair-issues:
     status: exempt
     comment: This integration has no repair scenarios.
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done
