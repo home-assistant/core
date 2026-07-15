@@ -2,12 +2,14 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from aio_dvla_vehicle_enquiry import DVLAClient, DVLAError
 from aiohttp import ClientSession
 
-from homeassistant.config_entries import ConfigEntry
+if TYPE_CHECKING:
+    from . import DVLAConfigEntry
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -22,7 +24,7 @@ class DVLACoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry | None,
+        config_entry: DVLAConfigEntry,
         session: ClientSession,
         reg_number: str,
     ) -> None:
@@ -32,7 +34,7 @@ class DVLACoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=config_entry.title if config_entry else "DVLA",
+            name=config_entry.title,
             update_interval=timedelta(days=1),
         )
         self.client = DVLAClient(session, API_KEY)

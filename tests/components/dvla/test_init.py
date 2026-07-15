@@ -41,7 +41,8 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.runtime_data["coordinator"] is not None
+    assert entry.runtime_data is not None
+    assert entry.runtime_data.reg_number == "AB12CDE"
 
     entity_registry = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(

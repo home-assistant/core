@@ -2,14 +2,13 @@
 
 from contextlib import suppress
 from datetime import date
-from typing import Any, override
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfMass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -17,64 +16,121 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import DVLAConfigEntry
 from .const import CONF_REG_NUMBER, DOMAIN
 from .coordinator import DVLACoordinator
 
-ENTITY_METADATA: dict[str, dict[str, Any]] = {
-    "registrationNumber": {"icon": "mdi:ocr", "title": "Registration Number"},
-    "taxStatus": {"icon": "mdi:cash-clock", "title": "Tax Status"},
-    "taxDueDate": {
-        "icon": "mdi:calendar-clock",
-        "device_class": SensorDeviceClass.DATE,
-        "title": "Tax Due Date",
-    },
-    "artEndDate": {
-        "icon": "mdi:calendar-end",
-        "device_class": SensorDeviceClass.DATE,
-        "title": "Additional Rate of Tax End Date",
-    },
-    "motStatus": {"icon": "mdi:car-wrench"},
-    "make": {"icon": "mdi:car"},
-    "yearOfManufacture": {"icon": "mdi:calendar-month"},
-    "engineCapacity": {
-        "icon": "mdi:engine",
-        "native_unit_of_measurement": "cc",
-        "title": "Engine Capacity",
-    },
-    "co2Emissions": {
-        "icon": "mdi:molecule-co2",
-        "native_unit_of_measurement": "g/km",
-        "title": "CO2 Emissions",
-    },
-    "fuelType": {"icon": "mdi:gas-station", "title": "Fuel Type"},
-    "colour": {"icon": "mdi:spray"},
-    "typeApproval": {"icon": "mdi:car"},
-    "revenueWeight": {
-        "icon": "mdi:weight-kilogram",
-        "device_class": SensorDeviceClass.WEIGHT,
-        "native_unit_of_measurement": UnitOfMass.KILOGRAMS,
-        "title": "Revenue Weight",
-    },
-    "dateOfLastV5CIssued": {
-        "icon": "mdi:calendar",
-        "device_class": SensorDeviceClass.DATE,
-    },
-    "motExpiryDate": {
-        "icon": "mdi:calendar-check",
-        "device_class": SensorDeviceClass.DATE,
-    },
-    "wheelplan": {"icon": "mdi:tire"},
-    "monthOfFirstRegistration": {"icon": "mdi:calendar-month", "device_class": None},
-    "monthOfFirstDvlaRegistration": {
-        "icon": "mdi:calendar-month-outline",
-        "device_class": None,
-    },
-    "realDrivingEmissions": {
-        "icon": "mdi:gas-station-outline",
-        "title": "Real Driving Emissions",
-    },
-    "euroStatus": {"icon": "mdi:currency-eur", "title": "Euro Status"},
-}
+SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="registrationNumber",
+        icon="mdi:ocr",
+        name="Registration number",
+    ),
+    SensorEntityDescription(
+        key="taxStatus",
+        icon="mdi:cash-clock",
+        name="Tax status",
+    ),
+    SensorEntityDescription(
+        key="taxDueDate",
+        device_class=SensorDeviceClass.DATE,
+        icon="mdi:calendar-clock",
+        name="Tax due date",
+    ),
+    SensorEntityDescription(
+        key="artEndDate",
+        device_class=SensorDeviceClass.DATE,
+        icon="mdi:calendar-end",
+        name="Additional rate of tax end date",
+    ),
+    SensorEntityDescription(
+        key="motStatus",
+        icon="mdi:car-wrench",
+        name="MOT status",  # codespell:ignore
+    ),
+    SensorEntityDescription(
+        key="make",
+        icon="mdi:car",
+        name="Make",
+    ),
+    SensorEntityDescription(
+        key="yearOfManufacture",
+        icon="mdi:calendar-month",
+        name="Year of manufacture",
+    ),
+    SensorEntityDescription(
+        key="engineCapacity",
+        icon="mdi:engine",
+        name="Engine capacity",
+        native_unit_of_measurement="cc",
+    ),
+    SensorEntityDescription(
+        key="co2Emissions",
+        icon="mdi:molecule-co2",
+        name="CO2 emissions",
+        native_unit_of_measurement="g/km",
+    ),
+    SensorEntityDescription(
+        key="fuelType",
+        icon="mdi:gas-station",
+        name="Fuel type",
+    ),
+    SensorEntityDescription(
+        key="colour",
+        icon="mdi:spray",
+        name="Colour",
+    ),
+    SensorEntityDescription(
+        key="typeApproval",
+        icon="mdi:car",
+        name="Type approval",
+    ),
+    SensorEntityDescription(
+        key="revenueWeight",
+        device_class=SensorDeviceClass.WEIGHT,
+        icon="mdi:weight-kilogram",
+        name="Revenue weight",
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+    ),
+    SensorEntityDescription(
+        key="dateOfLastV5CIssued",
+        device_class=SensorDeviceClass.DATE,
+        icon="mdi:calendar",
+        name="Date of last V5C issued",
+    ),
+    SensorEntityDescription(
+        key="motExpiryDate",
+        device_class=SensorDeviceClass.DATE,
+        icon="mdi:calendar-check",
+        name="MOT expiry date",  # codespell:ignore
+    ),
+    SensorEntityDescription(
+        key="wheelplan",
+        icon="mdi:tire",
+        name="Wheelplan",
+    ),
+    SensorEntityDescription(
+        key="monthOfFirstRegistration",
+        icon="mdi:calendar-month",
+        name="Month of first registration",
+    ),
+    SensorEntityDescription(
+        key="monthOfFirstDvlaRegistration",
+        icon="mdi:calendar-month-outline",
+        name="Month of first DVLA registration",
+    ),
+    SensorEntityDescription(
+        key="realDrivingEmissions",
+        icon="mdi:gas-station-outline",
+        name="Real driving emissions",
+    ),
+    SensorEntityDescription(
+        key="euroStatus",
+        icon="mdi:currency-eur",
+        name="Euro status",
+    ),
+)
+
 SENSOR_KEYS: tuple[str, ...] = (
     "registrationNumber",
     "taxStatus",
@@ -123,30 +179,17 @@ ENTITY_DESCRIPTIONS: dict[str, str] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: DVLAConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors from a config entry created in the integrations UI."""
-    config = entry.runtime_data
-
-    coordinator: DVLACoordinator = config["coordinator"]
+    coordinator = entry.runtime_data
     name = entry.data[CONF_REG_NUMBER]
 
-    sensors: list[DVLASensor] = []
-
-    for key in SENSOR_KEYS:
-        metadata = ENTITY_METADATA.get(key, {})
-
-        description = SensorEntityDescription(
-            key=key,
-            name=metadata.get("title", ENTITY_DESCRIPTIONS[key]),
-            icon=metadata.get("icon", "mdi:car"),
-            device_class=metadata.get("device_class"),
-            native_unit_of_measurement=metadata.get("native_unit_of_measurement"),
-        )
-
-        sensors.append(DVLASensor(coordinator, name, description))
-    async_add_entities(sensors)
+    async_add_entities(
+        DVLASensor(coordinator, name, description)
+        for description in SENSOR_DESCRIPTIONS
+    )
 
 
 class DVLASensor(CoordinatorEntity[DVLACoordinator], SensorEntity):
