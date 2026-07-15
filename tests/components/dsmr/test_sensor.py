@@ -1819,12 +1819,7 @@ UPDATE_INTERVAL = 30
 
 
 def _create_power_and_energy_telegram(power: str, energy: str) -> Telegram:
-    """Create a telegram with a power and an energy reading.
-
-    The power reading (watts) is averaged over the update interval, while the
-    energy reading (kWh) keeps its last value, so a single telegram lets the
-    tests assert both behaviors at once.
-    """
+    """Create a telegram with a power and an energy readings."""
     telegram = Telegram()
     telegram.add(
         CURRENT_ELECTRICITY_USAGE,
