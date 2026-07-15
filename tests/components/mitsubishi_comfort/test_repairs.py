@@ -19,14 +19,12 @@ from tests.typing import ClientSessionGenerator
 
 pytestmark = pytest.mark.usefixtures("mock_setup_integration")
 
-
-@pytest.fixture(autouse=True)
-def ignore_missing_translations() -> list[str]:
-    """Allow the dynamic, MAC-keyed device IP fields."""
-    return [
-        "component.mitsubishi_comfort.issues.missing_address.fix_flow.step.addresses.data.",
-        "component.mitsubishi_comfort.issues.missing_address.fix_flow.step.addresses.data_description.",
-    ]
+# The per-device IP fields are keyed by formatted MAC (dynamic), so they have
+# no static label in strings.json; ignore that in the translation check.
+IGNORE_FORM_TRANSLATIONS = [
+    "component.mitsubishi_comfort.issues.missing_address.fix_flow.step.addresses.data.",
+    "component.mitsubishi_comfort.issues.missing_address.fix_flow.step.addresses.data_description.",
+]
 
 
 async def _setup_addressless_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -43,6 +41,7 @@ async def _setup_addressless_entry(hass: HomeAssistant) -> MockConfigEntry:
     return entry
 
 
+@pytest.mark.parametrize("ignore_missing_translations", [IGNORE_FORM_TRANSLATIONS])
 async def test_fix_flow_sets_missing_address(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -76,6 +75,7 @@ async def test_fix_flow_sets_missing_address(
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
+@pytest.mark.parametrize("ignore_missing_translations", [IGNORE_FORM_TRANSLATIONS])
 async def test_fix_flow_blank_field_keeps_issue(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -100,6 +100,7 @@ async def test_fix_flow_blank_field_keeps_issue(
     assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
 
+@pytest.mark.parametrize("ignore_missing_translations", [IGNORE_FORM_TRANSLATIONS])
 async def test_fix_flow_suggests_cached_ip(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -123,3 +124,31 @@ async def test_fix_flow_suggests_cached_ip(
 
     assert data["step_id"] == "addresses"
     assert data["data_schema"][0]["description"] == {"suggested_value": "10.0.0.5"}
+
+
+async def test_fix_flow_without_entry_falls_back_to_confirm(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an issue whose entry no longer exists gets a confirm flow."""
+    assert await async_setup_component(hass, "repairs", {})
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "missing_address_gone",
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="missing_address",
+        data={"entry_id": "nonexistent"},
+    )
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, "missing_address_gone")
+    assert data["step_id"] == "confirm"
+
+    data = await process_repair_fix_flow(client, data["flow_id"], json={})
+    assert data["type"] == "create_entry"
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, "missing_address_gone")

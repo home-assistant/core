@@ -6,7 +6,11 @@ from typing import cast
 import voluptuous as vol
 
 from homeassistant.components.dhcp import async_discovered_service_info
-from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
+from homeassistant.components.repairs import (
+    ConfirmRepairFlow,
+    RepairsFlow,
+    RepairsFlowResult,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -118,7 +122,8 @@ async def async_create_fix_flow(
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create a fix flow for a missing-address issue."""
-    assert data is not None
-    entry = hass.config_entries.async_get_entry(cast(str, data["entry_id"]))
-    assert entry is not None
-    return MissingAddressRepairFlow(entry)
+    if data is not None and (
+        entry := hass.config_entries.async_get_entry(cast(str, data["entry_id"]))
+    ):
+        return MissingAddressRepairFlow(entry)
+    return ConfirmRepairFlow()
