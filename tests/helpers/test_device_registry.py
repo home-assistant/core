@@ -6569,11 +6569,6 @@ async def test_identifiers_unique_per_config_entry(
         ).id
         == device_b.id
     )
-    # async_get_devices returns both
-    assert {d.id for d in device_registry.async_get_devices({("shared", "1")})} == {
-        device_a.id,
-        device_b.id,
-    }
 
 
 async def test_collision_only_within_same_config_entry(

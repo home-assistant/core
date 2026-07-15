@@ -1459,19 +1459,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         return None
 
     @callback
-    def async_get_devices(
-        self,
-        identifiers: set[tuple[str, str]] | None = None,
-        connections: set[tuple[str, str]] | None = None,
-    ) -> list[DeviceEntry]:
-        """Return all devices matching identifiers or connections.
-
-        Identifiers and connections are unique per config entry, so several devices
-        (one per config entry) may share an identifier or connection.
-        """
-        return self.devices.get_entries(identifiers, connections)
-
-    @callback
     def async_get_devices_for_composite_device_id(
         self, composite_device_id: str
     ) -> list[DeviceEntry]:
