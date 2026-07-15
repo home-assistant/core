@@ -110,6 +110,7 @@ from aioairzone_cloud.const import (
     API_WS_IDS,
     API_WS_TYPE,
     API_ZONE_NUMBER,
+    RAW_DEVICES_CONFIG,
 )
 from aioairzone_cloud.device import Device
 from aioairzone_cloud.webserver import WebServer
@@ -551,6 +552,19 @@ async def async_init_integration(
     )
     config_entry.add_to_hass(hass)
 
+    raw_data = {
+        RAW_DEVICES_CONFIG: {
+            "aidoo1": {
+                API_SLATS_V_CONF: "fixed",
+                API_SLATS_V_VALUES: ["swing", "fixed"],
+            },
+            "aidoo_pro": {
+                API_SLATS_V_CONF: "swing",
+                API_SLATS_V_VALUES: ["swing", "fixed"],
+            },
+        },
+    }
+
     with (
         patch(
             "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_get_device_config",
@@ -575,6 +589,10 @@ async def async_init_integration(
         patch(
             "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
             return_value=None,
+        ),
+        patch(
+            "homeassistant.components.airzone_cloud.AirzoneCloudApi.raw_data",
+            return_value=raw_data,
         ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
