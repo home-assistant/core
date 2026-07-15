@@ -140,8 +140,8 @@ class Control4Climate(Control4Entity, ClimateEntity):
         """
         return C4Climate(self.entry_data.director, self._idx)
 
-    @override
     @property
+    @override
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
         humidity = self._extra_state_attributes.get(ATTR_HUMIDITY)
@@ -150,16 +150,16 @@ class Control4Climate(Control4Entity, ClimateEntity):
         except ValueError, TypeError:
             return None
 
-    @override
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_unit == UnitOfTemperature.FAHRENHEIT:
             return self._extra_state_attributes.get(ATTR_TEMPERATURE_F)
         return self._extra_state_attributes.get(ATTR_TEMPERATURE_C)
 
-    @override
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Returns the current fan mode."""
         fan_mode = self._extra_state_attributes.get(ATTR_FAN_MODE)
@@ -167,8 +167,8 @@ class Control4Climate(Control4Entity, ClimateEntity):
             return None
         return fan_mode.lower()
 
-    @override
     @property
+    @override
     def fan_modes(self) -> list[str] | None:
         """Returns current fan modes supported."""
         fan_modes = self._extra_state_attributes.get(ATTR_FAN_MODES_LIST)
@@ -176,8 +176,8 @@ class Control4Climate(Control4Entity, ClimateEntity):
             return None
         return [m.strip().lower() for m in fan_modes.split(",") if m.strip()]
 
-    @override
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Returns current HVAC action."""
         hvac_state = (self._extra_state_attributes.get(ATTR_HVAC_STATE) or "").lower()
@@ -195,8 +195,8 @@ class Control4Climate(Control4Entity, ClimateEntity):
             return HVACAction.OFF
         return None
 
-    @override
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return current HVAC Mode."""
         hvac_mode = self._extra_state_attributes.get(ATTR_HVAC_MODE, "")
@@ -204,8 +204,8 @@ class Control4Climate(Control4Entity, ClimateEntity):
             return HVACMode.OFF
         return HVAC_MODES[hvac_mode]
 
-    @override
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Returns HVAC modes."""
         active_modes = []
@@ -244,8 +244,8 @@ class Control4Climate(Control4Entity, ClimateEntity):
                 return self._extra_state_attributes.get(ATTR_COOL_SETPOINT_C)
         return None
 
-    @override
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature currently set to be reached."""
         if self.hvac_mode == HVACMode.HEAT:
@@ -254,24 +254,24 @@ class Control4Climate(Control4Entity, ClimateEntity):
             return self._get_cool_setpoint()
         return None
 
-    @override
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
         if self.hvac_mode != HVACMode.HEAT_COOL:
             return None
         return self._get_cool_setpoint()
 
-    @override
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
         if self.hvac_mode != HVACMode.HEAT_COOL:
             return None
         return self._get_heat_setpoint()
 
-    @override
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         scale = self._extra_state_attributes.get(ATTR_SCALE) or ""
@@ -279,8 +279,8 @@ class Control4Climate(Control4Entity, ClimateEntity):
             return UnitOfTemperature.FAHRENHEIT
         return UnitOfTemperature.CELSIUS
 
-    @override
     @property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Flag supported features."""
         features = (

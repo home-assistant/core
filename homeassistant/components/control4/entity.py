@@ -3,8 +3,6 @@
 import logging
 from typing import Any, override
 
-from propcache.api import cached_property
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -48,12 +46,15 @@ class Control4Entity(Entity):
         self._attr_name = name
         self._attr_unique_id = str(idx)
         self._idx = idx
-        self._controller_unique_id = entry_data.controller_unique_id
-        self._device_name = device_name
-        self._device_manufacturer = device_manufacturer
-        self._device_model = device_model
         self._device_id = device_id
-        self._device_area = device_area
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(device_id))},
+            manufacturer=device_manufacturer,
+            model=device_model,
+            name=device_name,
+            via_device=(DOMAIN, entry_data.controller_unique_id),
+            suggested_area=device_area,
+        )
         self._extra_state_attributes: dict[str, Any] = device_attributes
         self._extra_state_attributes["item id"] = idx
         self._extra_state_attributes["parent item id"] = device_id
@@ -107,21 +108,8 @@ class Control4Entity(Entity):
                         None if value == "Undefined" else value
                     )
 
-    @override
-    @cached_property
-    def device_info(self) -> DeviceInfo:
-        """Return info of parent Control4 device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, str(self._device_id))},
-            manufacturer=self._device_manufacturer,
-            model=self._device_model,
-            name=self._device_name,
-            via_device=(DOMAIN, self._controller_unique_id),
-            suggested_area=self._device_area,
-        )
-
-    @override
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
         return self._extra_state_attributes
@@ -149,31 +137,20 @@ class Control4CoordinatorEntity(CoordinatorEntity[Any]):
         self._attr_name = name
         self._attr_unique_id = str(idx)
         self._idx = idx
-        self._controller_unique_id = entry_data.controller_unique_id
-        self._device_name = device_name
-        self._device_manufacturer = device_manufacturer
-        self._device_model = device_model
-        self._device_id = device_id
-        self._device_area = device_area
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(device_id))},
+            manufacturer=device_manufacturer,
+            model=device_model,
+            name=device_name,
+            via_device=(DOMAIN, entry_data.controller_unique_id),
+            suggested_area=device_area,
+        )
         self._extra_state_attributes: dict[str, Any] = device_attributes
         self._extra_state_attributes["item id"] = idx
         self._extra_state_attributes["parent item id"] = device_id
 
-    @override
-    @cached_property
-    def device_info(self) -> DeviceInfo:
-        """Return info of parent Control4 device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, str(self._device_id))},
-            manufacturer=self._device_manufacturer,
-            model=self._device_model,
-            name=self._device_name,
-            via_device=(DOMAIN, self._controller_unique_id),
-            suggested_area=self._device_area,
-        )
-
-    @override
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
         self._extra_state_attributes.update(self.coordinator.data.get(self._idx, {}))

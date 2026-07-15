@@ -107,8 +107,8 @@ class Control4Cover(Control4Entity, CoverEntity):
         """Create a pyControl4 blind object with the current director token."""
         return C4Blind(self.entry_data.director, self._idx)
 
-    @override
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current cover position (0-100)."""
         level = self._extra_state_attributes.get(CONTROL4_LEVEL)
@@ -118,8 +118,8 @@ class Control4Cover(Control4Entity, CoverEntity):
             return level
         return None
 
-    @override
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return whether cover is closed."""
         if (
@@ -131,8 +131,8 @@ class Control4Cover(Control4Entity, CoverEntity):
             return None
         return position == 0
 
-    @override
     @property
+    @override
     def is_closing(self) -> bool | None:
         """Return whether cover is closing."""
         closing = self._extra_state_attributes.get(CONTROL4_CLOSING)
@@ -140,8 +140,8 @@ class Control4Cover(Control4Entity, CoverEntity):
             return None
         return bool(closing)
 
-    @override
     @property
+    @override
     def is_opening(self) -> bool | None:
         """Return whether cover is opening."""
         opening = self._extra_state_attributes.get(CONTROL4_OPENING)

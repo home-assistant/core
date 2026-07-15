@@ -286,8 +286,8 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
             current_source = self._id_to_parent.get(current_source, None)
         return None
 
-    @override
     @cached_property
+    @override
     def device_class(self) -> MediaPlayerDeviceClass | None:
         """Return the class of this entity."""
         for avail_source in self._sources.values():
@@ -295,8 +295,8 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
                 return MediaPlayerDeviceClass.TV
         return MediaPlayerDeviceClass.SPEAKER
 
-    @override
     @property
+    @override
     def state(self):
         """Return whether this room is on or idle."""
 
@@ -308,8 +308,8 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
 
         return MediaPlayerState.IDLE
 
-    @override
     @property
+    @override
     def source(self):
         """Get the current source."""
         current_source = self._get_current_playing_device_id()
@@ -317,8 +317,8 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
             return None
         return self._sources[current_source].name
 
-    @override
     @property
+    @override
     def media_title(self) -> str | None:
         """Get the Media Title."""
         media_info = self._get_media_info()
@@ -331,8 +331,8 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
             return None
         return self._sources[current_source].name
 
-    @override
     @property
+    @override
     def media_content_type(self):
         """Get current content type if available."""
         current_source = self._get_current_playing_device_id()
@@ -353,20 +353,20 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
         if self._get_current_source_state():
             await super().async_media_play_pause()
 
-    @override
     @property
+    @override
     def source_list(self) -> list[str]:
         """Get the available source."""
         return [x.name for x in self._sources.values()]
 
-    @override
     @property
+    @override
     def volume_level(self):
         """Get the volume level."""
         return self.coordinator.data[self._idx][CONTROL4_VOLUME_STATE] / 100
 
-    @override
     @property
+    @override
     def is_volume_muted(self):
         """Check if the volume is muted."""
         return bool(self.coordinator.data[self._idx][CONTROL4_MUTED_STATE])

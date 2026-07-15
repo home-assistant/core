@@ -132,8 +132,8 @@ class Control4Light(Control4Entity, LightEntity):
         except TypeError, ValueError:
             return None
 
-    @override
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether this light is on."""
         attrs = self.extra_state_attributes
@@ -148,8 +148,8 @@ class Control4Light(Control4Entity, LightEntity):
                 return value is not None and value > 0
         return False
 
-    @override
     @property
+    @override
     def brightness(self) -> int | None:
         """Return brightness (0-255)."""
         attrs = self.extra_state_attributes
@@ -166,8 +166,8 @@ class Control4Light(Control4Entity, LightEntity):
         level = min(level, 100)
         return value_to_brightness(CONTROL4_BRIGHTNESS_SCALE, level)
 
-    @override
     @property
+    @override
     def supported_features(self) -> LightEntityFeature:
         """Return supported features."""
         if self._is_dimmer:
