@@ -192,8 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             entry.data[CONF_LOCATION_ID],
             entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
         )
-    except SmartThingsSinkError as err:
-        _LOGGER.exception("Couldn't create a new subscription")
+    except (SmartThingsConnectionError, SmartThingsSinkError) as err:
         raise ConfigEntryNotReady from err
     subscription_id = subscription.subscription_id
     _handle_new_subscription_identifier(subscription_id)
