@@ -5,9 +5,9 @@ rules:
   brands:
     status: todo
     comment: >-
-      The brand/ folder was removed from this Core tree. Actual brand
-      icons/logos must still be submitted to and accepted by the separate
-      home-assistant/brands repo — has not happened yet.
+      Companion PR opened 2026-07-15: home-assistant/brands#10770 (icon +
+      hDPI icon; no dark variant, it was byte-identical to the light one).
+      Kept todo rather than done since the PR is open, not yet merged.
   common-modules: done
   config-flow: done
   config-flow-test-coverage:
@@ -33,15 +33,19 @@ rules:
   docs-high-level-description:
     status: todo
     comment: >-
-      No page for this integration exists on home-assistant.io yet
-      (manifest documentation URL is a placeholder, not a submitted/merged
-      doc page). Applies to every docs-* rule in this file.
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864,
+      which covers this rule and every other docs-* rule in this file. Kept
+      todo rather than done since the PR is open, not yet merged.
   docs-installation-instructions:
     status: todo
-    comment: No home-assistant.io docs page exists yet.
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
   docs-removal-instructions:
     status: todo
-    comment: No home-assistant.io docs page exists yet.
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -55,10 +59,14 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters:
     status: todo
-    comment: No home-assistant.io docs page exists yet.
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
   docs-installation-parameters:
     status: todo
-    comment: No home-assistant.io docs page exists yet.
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -84,25 +92,39 @@ rules:
     comment: See discovery.
   docs-data-update:
     status: todo
-    comment: No home-assistant.io docs page exists yet.
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
   docs-examples:
     status: todo
-    comment: No home-assistant.io docs page exists yet.
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
   docs-known-limitations:
     status: todo
-    comment: No home-assistant.io docs page exists yet.
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
   docs-supported-devices:
     status: todo
-    comment: No home-assistant.io docs page exists yet.
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
   docs-supported-functions:
     status: todo
-    comment: No home-assistant.io docs page exists yet.
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
   docs-troubleshooting:
     status: todo
-    comment: No home-assistant.io docs page exists yet.
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
   docs-use-cases:
     status: todo
-    comment: No home-assistant.io docs page exists yet.
+    comment: >-
+      Companion PR opened 2026-07-15: home-assistant/home-assistant.io#46864.
+      Kept todo rather than done since the PR is open, not yet merged.
   dynamic-devices:
     status: todo
     comment: >-
