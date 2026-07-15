@@ -1,6 +1,6 @@
 """Test the Bosch Smart Home Camera light platform (Gen2 top/bottom LED + front light)."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -32,9 +32,9 @@ CAM_ID = "aabbccdd-1122-3344-5566-778899001122"
 
 
 @pytest.fixture(autouse=True)
-def _patch_light_module_session(
+async def _patch_light_module_session(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> Generator[None]:
+) -> AsyncGenerator[None]:
     """Work around a conftest.py test-infra gap for light.py's write paths.
 
     `light.py` does `from .cloud_ssl import async_get_bosch_cloud_session` — a
@@ -56,11 +56,14 @@ def _patch_light_module_session(
     light.py only and conftest.py is shared with sibling platform test files.
     """
     session = aioclient_mock.create_session(hass.loop)
-    with patch(
-        "homeassistant.components.bosch_shc_camera.light.async_get_bosch_cloud_session",
-        new=AsyncMock(return_value=session),
-    ):
-        yield
+    try:
+        with patch(
+            "homeassistant.components.bosch_shc_camera.light.async_get_bosch_cloud_session",
+            new=AsyncMock(return_value=session),
+        ):
+            yield
+    finally:
+        await session.close()
 
 
 TOP_LED_UNIQUE_ID = f"bosch_shc_camera_{CAM_ID}_top_led_light"

@@ -1,6 +1,7 @@
 """Fixtures for the Bosch Smart Home Camera integration tests."""
 
 from collections.abc import Generator
+import contextlib
 from unittest.mock import patch
 
 import pytest
@@ -54,12 +55,20 @@ def aioclient_mock(hass: HomeAssistant) -> Generator[AiohttpClientMocker]:
     ...) all resolve their session through it.
 
     It is imported by value (`from .cloud_ssl import
-    async_get_bosch_cloud_session`) into both `config_flow.py` and the
-    package's own `__init__.py` (re-exported for `coordinator.py`'s
-    call-time `from . import async_get_bosch_cloud_session`) — patching only
-    `cloud_ssl.async_get_bosch_cloud_session` would miss both of those
-    already-bound names, so all three call sites are patched to the same
-    mocked session.
+    async_get_bosch_cloud_session`) into every module that makes a Bosch
+    cloud/OAuth call: `config_flow.py`, the package's own `__init__.py`
+    (re-exported for `coordinator.py`'s call-time `from . import
+    async_get_bosch_cloud_session`), `camera.py`, `light.py`, `switch.py`,
+    `fcm.py`, `rcp.py`, and `shc.py`. Patching only a subset silently misses
+    the rest — a test exercising e.g. `light.py`'s write path would resolve
+    its session through the REAL (unpatched) `light.async_get_bosch_cloud_session`
+    unless that name is patched too, either attempting a real network call or
+    (if an earlier test in the same pytest process already imported the
+    module and created a real session) reusing that now-closed session
+    silently, with the current test's own mocker never seeing the request at
+    all. Found via a per-file workaround duplicated independently by two
+    sibling test files before being fixed here at the source — every module
+    that binds this name gets the same patched session.
     """
     mocker = AiohttpClientMocker()
     cached_session: list[object] = []
@@ -76,18 +85,23 @@ def aioclient_mock(hass: HomeAssistant) -> Generator[AiohttpClientMocker]:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, close_session)
         return session
 
-    with (
-        patch(
-            "homeassistant.components.bosch_shc_camera.cloud_ssl.async_get_bosch_cloud_session",
-            side_effect=create_session,
-        ),
-        patch(
-            "homeassistant.components.bosch_shc_camera.async_get_bosch_cloud_session",
-            side_effect=create_session,
-        ),
-        patch(
-            "homeassistant.components.bosch_shc_camera.config_flow.async_get_bosch_cloud_session",
-            side_effect=create_session,
-        ),
-    ):
+    _PATCHED_MODULES = (
+        "cloud_ssl",
+        "",  # package __init__.py re-export
+        "config_flow",
+        "camera",
+        "light",
+        "switch",
+        "fcm",
+        "rcp",
+        "shc",
+    )
+    with contextlib.ExitStack() as stack:
+        for module in _PATCHED_MODULES:
+            target = (
+                f"homeassistant.components.bosch_shc_camera.{module}.async_get_bosch_cloud_session"
+                if module
+                else "homeassistant.components.bosch_shc_camera.async_get_bosch_cloud_session"
+            )
+            stack.enter_context(patch(target, side_effect=create_session))
         yield mocker

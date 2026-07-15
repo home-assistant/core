@@ -1424,7 +1424,11 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         # ── 3. Cached image (fallback for cameras whose REMOTE snap.jpg needs auth) ──
         # For cameras like CAMERA_360 the cloud fetch above returns None;
         # _async_trigger_image_refresh keeps this cache warm via LOCAL connection.
-        if self.cached_image:
+        # The placeholder is a real (truthy) 1×1 black JPEG, so `if
+        # self.cached_image:` alone would intercept it here too, before tier 4
+        # (the actual last resort) ever runs on a genuine cold start — use the
+        # identity check too, mirroring the tier-2 guard above.
+        if self.cached_image and self.cached_image is not self._PLACEHOLDER_JPEG:
             return self.cached_image
 
         # ── 4. Latest event snapshot (last resort — first startup before cloud fetch runs) ──

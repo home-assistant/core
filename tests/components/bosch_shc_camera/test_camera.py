@@ -317,20 +317,12 @@ async def test_camera_image_last_resort_event_snapshot(
         "events": [{"timestamp": "2026-07-14T10:00:00Z", "imageUrl": event_image_url}],
     }
     coordinator.async_set_updated_data(new_data)
-    # BUG (camera.py:1427, not fixed here per instructions): tier 3's
-    # `if self.cached_image:` does not exclude the 1x1 placeholder identity
-    # the way tier 2's condition does (`self.cached_image is
-    # self._PLACEHOLDER_JPEG`) — so on a genuine cold start, where
-    # `cached_image` is still the placeholder set in `__init__` and every
-    # live/cloud fetch tier failed, tier 3 always intercepts and returns the
-    # placeholder BEFORE tier 4 (this test's actual target) is ever reached.
-    # That contradicts tier 4's own docstring ("last resort on very first
-    # startup"): as written, tier 4 is unreachable dead code on that exact
-    # scenario. Reproduced and confirmed by temporarily reverting this
-    # `cached_image = None` line — the assertion below then fails with the
-    # placeholder bytes instead of b"event-jpeg", matching the bug. Forcing
-    # `cached_image` to None here isolates tier 4's own logic (it does work
-    # once reached) from that separate, already-reported bug.
+    # Force cached_image to None to isolate tier 4's own logic from tier 3
+    # (fixed 2026-07-15: tier 3's `if self.cached_image:` now excludes the
+    # 1x1 placeholder identity the same way tier 2 already did, so a genuine
+    # cold start correctly falls through to tier 4 without this line too —
+    # kept for isolation/clarity, not because tier 4 is otherwise
+    # unreachable anymore).
     coordinator.camera_entities[CAM_TERRASSE].cached_image = None
 
     mocked_session = await cloud_ssl.async_get_bosch_cloud_session(hass)
