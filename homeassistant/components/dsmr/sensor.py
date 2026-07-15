@@ -862,8 +862,8 @@ async def async_setup_entry(
         if not min_time_between_updates or not telegram:
             _publish_updates()
 
-    # With an averaging window, publish on a fixed cadence that is independent of
-    # telegram arrival, so the window aligns with wall-clock time.
+    # With an averaging window, publish on a cadence independent of telegram
+    # arrival.
     if min_time_between_updates:
         entry.async_on_unload(
             async_track_time_interval(hass, _publish_updates, min_time_between_updates)
