@@ -55,6 +55,7 @@ from homeassistant.components.hassio import (
 from homeassistant.components.hassio.const import (
     DATA_HASSIO_SUPERVISOR_USER,
     DATA_KEY_SUPERVISOR_ISSUES,
+    DEFAULT_UPDATE_OPTIONS,
     ENTRY_DATA_USER,
     HASSIO_MAIN_UPDATE_INTERVAL,
     OPTION_ADD_ON_BACKUP_BEFORE_UPDATE,
@@ -301,7 +302,7 @@ async def test_setup_api_push_api_data_error(
     """Test setup with error while pushing core config data to API."""
     supervisor_client.homeassistant.set_options.side_effect = SupervisorError("boom")
     with patch.dict(os.environ, MOCK_ENVIRON):
-        result = await async_setup_component(hass, DOMAIN, {"http": {}, "hassio": {}})
+        result = await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
     assert result
@@ -337,7 +338,7 @@ async def test_setup_api_push_api_data_default(
 ) -> None:
     """Test setup with API push default data."""
     with patch.dict(os.environ, MOCK_ENVIRON):
-        result = await async_setup_component(hass, DOMAIN, {"http": {}, "hassio": {}})
+        result = await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
     assert result
@@ -463,6 +464,54 @@ async def test_setup_migrates_legacy_hassio_store_to_config_entry(
     assert entry.options[OPTION_CORE_BACKUP_BEFORE_UPDATE] is True
 
     assert len(supervisor_client.mock_calls) == 16
+    supervisor_client.homeassistant.set_options.assert_called_once_with(
+        HomeAssistantOptions(ssl=False, port=8123, refresh_token=token.token)
+    )
+
+
+async def test_setup_migrates_legacy_options_over_default_entry_options(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test legacy update options override default config entry options."""
+    user = await hass.auth.async_create_system_user("Hass.io test")
+    token = await hass.auth.async_create_refresh_token(user)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options=dict(DEFAULT_UPDATE_OPTIONS),
+        unique_id=DOMAIN,
+    )
+    config_entry.add_to_hass(hass)
+
+    hass_storage[DOMAIN] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": DOMAIN,
+        "data": {
+            "hassio_user": user.id,
+            "update_config": {
+                "add_on_backup_before_update": True,
+                "add_on_backup_retain_copies": 2,
+                "core_backup_before_update": True,
+            },
+        },
+    }
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, DOMAIN, {"http": {}, "hassio": {}})
+        await hass.async_block_till_done()
+
+    assert result
+    assert DOMAIN not in hass_storage
+
+    entry = hass.config_entries.async_entries(DOMAIN, include_ignore=False)[0]
+    assert entry.options[OPTION_ADD_ON_BACKUP_BEFORE_UPDATE] is True
+    assert entry.options[OPTION_ADD_ON_BACKUP_RETAIN_COPIES] == 2
+    assert entry.options[OPTION_CORE_BACKUP_BEFORE_UPDATE] is True
+
     supervisor_client.homeassistant.set_options.assert_called_once_with(
         HomeAssistantOptions(ssl=False, port=8123, refresh_token=token.token)
     )

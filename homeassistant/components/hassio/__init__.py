@@ -211,23 +211,35 @@ async def _async_get_or_create_supervisor_user(
 def _async_migrate_legacy_options(
     entry: ConfigEntry, legacy_data: StoredHassioConfig
 ) -> dict[str, bool | int]:
-    """Merge legacy update options into entry options without overriding existing values."""
+    """Merge legacy update options into entry options during migration.
+
+    While the legacy store exists, it is the source of truth for update options.
+    """
     if not (legacy_update_config := legacy_data.get("update_config")):
         return {}
 
     option_updates: dict[str, bool | int] = {}
 
-    if OPTION_ADD_ON_BACKUP_BEFORE_UPDATE not in entry.options:
+    if (
+        entry.options.get(OPTION_ADD_ON_BACKUP_BEFORE_UPDATE)
+        != legacy_update_config["add_on_backup_before_update"]
+    ):
         option_updates[OPTION_ADD_ON_BACKUP_BEFORE_UPDATE] = legacy_update_config[
             "add_on_backup_before_update"
         ]
 
-    if OPTION_ADD_ON_BACKUP_RETAIN_COPIES not in entry.options:
+    if (
+        entry.options.get(OPTION_ADD_ON_BACKUP_RETAIN_COPIES)
+        != legacy_update_config["add_on_backup_retain_copies"]
+    ):
         option_updates[OPTION_ADD_ON_BACKUP_RETAIN_COPIES] = legacy_update_config[
             "add_on_backup_retain_copies"
         ]
 
-    if OPTION_CORE_BACKUP_BEFORE_UPDATE not in entry.options:
+    if (
+        entry.options.get(OPTION_CORE_BACKUP_BEFORE_UPDATE)
+        != legacy_update_config["core_backup_before_update"]
+    ):
         option_updates[OPTION_CORE_BACKUP_BEFORE_UPDATE] = legacy_update_config[
             "core_backup_before_update"
         ]
