@@ -191,6 +191,7 @@ async def test_runtime_auth_error(
         dt_util.utcnow() + POLLING_INTERVAL + timedelta(seconds=1),
     )
     await hass.async_block_till_done()
+    # Yield to let untracked asyncio.gather tasks run
     await asyncio.sleep(0)
     await hass.async_block_till_done()
 
