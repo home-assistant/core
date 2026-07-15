@@ -48,7 +48,7 @@ rules:
     status: done
     comment: >
       Model name "Nobø Ecohub" under review for rename to "Nobø Hub".
-  diagnostics: todo
+  diagnostics: done
   discovery: done
   discovery-update-info: done
   docs-data-update: done
@@ -58,7 +58,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category: todo
   entity-device-class: done
   entity-disabled-by-default: todo
