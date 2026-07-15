@@ -167,14 +167,15 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: user_input.get(CONF_USERNAME),
                 }
             )
-            options = user_input.pop(SECTION_OPTIONS)
+            entry_data = user_input.copy()
+            options = entry_data.pop(SECTION_OPTIONS)
             errors = await self.hass.async_add_executor_job(
-                validate_input, {**user_input, **options}
+                validate_input, {**entry_data, **options}
             )
             if not errors:
                 return self.async_create_entry(
-                    title=user_input.get(CONF_SENDER_NAME, user_input[CONF_SENDER]),
-                    data=user_input,
+                    title=entry_data.get(CONF_SENDER_NAME, entry_data[CONF_SENDER]),
+                    data=entry_data,
                     options=options,
                 )
         return self.async_show_form(
