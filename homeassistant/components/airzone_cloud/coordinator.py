@@ -6,13 +6,23 @@ import logging
 from typing import Any, override
 
 from aioairzone_cloud.cloudapi import AirzoneCloudApi
+from aioairzone_cloud.const import AZD_AIDOOS, RAW_DEVICES_CONFIG
 from aioairzone_cloud.exceptions import AirzoneCloudError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import AIOAIRZONE_CLOUD_TIMEOUT_SEC, DOMAIN
+from .const import (
+    AIOAIRZONE_CLOUD_TIMEOUT_SEC,
+    API_SLATS_H_VALUES,
+    API_SLATS_V_CONF,
+    API_SLATS_V_VALUES,
+    AZD_SLATS_H_VALUES,
+    AZD_SLATS_V_CONF,
+    AZD_SLATS_V_VALUES,
+    DOMAIN,
+)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -52,4 +62,22 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 await self.airzone.update()
             except AirzoneCloudError as error:
                 raise UpdateFailed(error) from error
-            return self.airzone.data()
+            return self.data_with_slats()
+
+    def data_with_slats(self) -> dict[str, Any]:
+        """Return Airzone data with Aidoo slat fields from raw API config."""
+        data = self.airzone.data()
+        aidoos = data.get(AZD_AIDOOS, {})
+        raw_config = self.airzone.raw_data().get(RAW_DEVICES_CONFIG, {})
+
+        for aidoo_id, aidoo_data in aidoos.items():
+            if not (config := raw_config.get(aidoo_id)):
+                continue
+            if API_SLATS_V_CONF in config:
+                aidoo_data[AZD_SLATS_V_CONF] = config[API_SLATS_V_CONF]
+            if API_SLATS_V_VALUES in config:
+                aidoo_data[AZD_SLATS_V_VALUES] = config[API_SLATS_V_VALUES]
+            if API_SLATS_H_VALUES in config:
+                aidoo_data[AZD_SLATS_H_VALUES] = config[API_SLATS_H_VALUES]
+
+        return data

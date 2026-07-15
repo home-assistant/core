@@ -114,7 +114,11 @@ from aioairzone_cloud.const import (
 from aioairzone_cloud.device import Device
 from aioairzone_cloud.webserver import WebServer
 
-from homeassistant.components.airzone_cloud.const import DOMAIN
+from homeassistant.components.airzone_cloud.const import (
+    API_SLATS_V_CONF,
+    API_SLATS_V_VALUES,
+    DOMAIN,
+)
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -297,7 +301,14 @@ def mock_get_device_config(device: Device) -> dict[str, Any]:
             API_PC_UE: 0.15,
             API_PE_UE: 0.02,
             API_RETURN_TEMP: {API_CELSIUS: 26, API_FAH: 79},
+            API_SLATS_V_CONF: "swing",
+            API_SLATS_V_VALUES: ["swing", "fixed"],
             API_WORK_TEMP: {API_CELSIUS: 25, API_FAH: 77},
+        }
+    if device.get_id() == "aidoo1":
+        return {
+            API_SLATS_V_CONF: "fixed",
+            API_SLATS_V_VALUES: ["swing", "fixed"],
         }
     if device.get_id() == "system1":
         return {

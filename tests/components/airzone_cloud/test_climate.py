@@ -16,6 +16,8 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
+    ATTR_SWING_MODE,
+    ATTR_SWING_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
@@ -26,6 +28,7 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACAction,
     HVACMode,
@@ -69,6 +72,8 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_MIN_TEMP] == 15
+    assert state.attributes[ATTR_SWING_MODE] == "Off"
+    assert state.attributes[ATTR_SWING_MODES] == ["Vertical", "Off"]
     assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_DEFAULT_TEMP_STEP
     assert state.attributes[ATTR_TEMPERATURE] == 22.0
 
@@ -96,6 +101,8 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_MIN_TEMP] == 15
+    assert state.attributes[ATTR_SWING_MODE] == "Vertical"
+    assert state.attributes[ATTR_SWING_MODES] == ["Vertical", "Off"]
     assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_DEFAULT_TEMP_STEP
     assert state.attributes.get(ATTR_TEMPERATURE) == 22.0
 
@@ -341,6 +348,29 @@ async def test_airzone_climate_set_fan_mode(hass: HomeAssistant) -> None:
 
     state = hass.states.get("climate.bron_pro")
     assert state.attributes[ATTR_FAN_MODE] == FAN_AUTO
+
+
+async def test_airzone_climate_set_swing_mode(hass: HomeAssistant) -> None:
+    """Test setting the swing mode."""
+
+    await async_init_integration(hass)
+
+    with patch(
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
+        return_value=None,
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_SWING_MODE,
+            {
+                ATTR_ENTITY_ID: "climate.bron",
+                ATTR_SWING_MODE: "Vertical",
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("climate.bron")
+    assert state.attributes[ATTR_SWING_MODE] == "Vertical"
 
 
 async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
