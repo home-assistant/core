@@ -6,7 +6,7 @@ import logging
 from typing import Any, override
 
 import caldav
-from caldav.lib.error import DAVError
+from caldav.lib.error import DAVError, NotFoundError
 import requests
 import voluptuous as vol
 
@@ -38,8 +38,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import CalDavConfigEntry
 from .api import async_get_calendars
-from .const import TIMEOUT
+from .const import RANGE_THIS_AND_FUTURE, TIMEOUT
 from .coordinator import CalDavUpdateCoordinator
+from .recurrence import delete_event, update_event
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,10 +183,39 @@ async def async_setup_entry(
     )
 
 
+def _update_data(fields: dict[str, Any]) -> dict[str, Any]:
+    """Map the fields of an update, which replaces the event as a whole.
+
+    An absent rrule means the recurrence was removed, so it is passed on as
+    None rather than left out.
+    """
+    return {**_item_data(fields), "rrule": fields.get("rrule")}
+
+
+def _item_data(fields: dict[str, Any]) -> dict[str, Any]:
+    """Map the Home Assistant event fields onto caldav keyword arguments."""
+    item_data: dict[str, Any] = {
+        "summary": fields["summary"],
+        "dtstart": fields["dtstart"],
+        "dtend": fields["dtend"],
+    }
+    if description := fields.get("description"):
+        item_data["description"] = description
+    if location := fields.get("location"):
+        item_data["location"] = location
+    if rrule := fields.get("rrule"):
+        item_data["rrule"] = rrule
+    return item_data
+
+
 class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarEntity):
     """A device for getting the next Task from a WebDav Calendar."""
 
-    _attr_supported_features = CalendarEntityFeature.CREATE_EVENT
+    _attr_supported_features = (
+        CalendarEntityFeature.CREATE_EVENT
+        | CalendarEntityFeature.UPDATE_EVENT
+        | CalendarEntityFeature.DELETE_EVENT
+    )
 
     def __init__(
         self,
@@ -222,17 +252,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         """Create a new event in the calendar."""
         _LOGGER.debug("Event: %s", kwargs)
 
-        item_data: dict[str, Any] = {
-            "summary": kwargs["summary"],
-            "dtstart": kwargs["dtstart"],
-            "dtend": kwargs["dtend"],
-        }
-        if description := kwargs.get("description"):
-            item_data["description"] = description
-        if location := kwargs.get("location"):
-            item_data["location"] = location
-        if rrule := kwargs.get("rrule"):
-            item_data["rrule"] = rrule
+        item_data = _item_data(kwargs)
 
         _LOGGER.debug("ICS data %s", item_data)
 
@@ -242,6 +262,60 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
             )
         except (requests.ConnectionError, requests.Timeout, DAVError) as err:
             raise HomeAssistantError(f"CalDAV save error: {err}") from err
+
+    @override
+    async def async_update_event(
+        self,
+        uid: str,
+        event: dict[str, Any],
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Update an event on the calendar."""
+        await self._async_write(
+            partial(
+                update_event,
+                self.coordinator.calendar,
+                uid,
+                _update_data(event),
+                recurrence_id,
+                recurrence_range == RANGE_THIS_AND_FUTURE,
+            ),
+            "update",
+        )
+
+    @override
+    async def async_delete_event(
+        self,
+        uid: str,
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Delete an event on the calendar."""
+        await self._async_write(
+            partial(
+                delete_event,
+                self.coordinator.calendar,
+                uid,
+                recurrence_id,
+                recurrence_range == RANGE_THIS_AND_FUTURE,
+            ),
+            "delete",
+        )
+
+    async def _async_write(self, job: partial[None], action: str) -> None:
+        try:
+            await self.hass.async_add_executor_job(job)
+        except NotFoundError as err:
+            raise HomeAssistantError(f"Event not found on the server: {err}") from err
+        except (
+            requests.ConnectionError,
+            requests.Timeout,
+            DAVError,
+            ValueError,
+        ) as err:
+            raise HomeAssistantError(f"CalDAV {action} error: {err}") from err
+        await self.coordinator.async_request_refresh()
 
     @callback
     @override
