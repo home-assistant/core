@@ -511,9 +511,9 @@ async def test_subentry_add_authorized_client_fails(hass: HomeAssistant) -> None
             id="signed_read_rejects_unapproved_key",
         ),
         pytest.param(
-            {"status_error": PowerwallFaultError("MESSAGEFAULT_ERROR_UNKNOWN_KEY_ID")},
-            "key_not_approved",
-            id="signed_read_faults_on_unknown_key",
+            {"status_error": PowerwallFaultError("MESSAGEFAULT_ERROR_BUSY")},
+            "cannot_connect",
+            id="signed_read_generic_gateway_fault",
         ),
         pytest.param(
             {"status_error": PowerwallConnectionError()},
@@ -530,7 +530,9 @@ async def test_subentry_credentials_errors(
     """The credentials step reports each local verification failure distinctly.
 
     A key the gateway has not approved only fails the signed read, so it must
-    not be reported as a bad password.
+    not be reported as a bad password. A generic gateway fault (busy, timeout,
+    internal) is a different failure than a rejected key and must not be
+    reported as one.
     """
     entry = await _setup_energy_site_subentry(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
@@ -575,7 +577,8 @@ async def test_subentry_credentials_gateway_mismatch(
     """Pairing aborts when the local gateway is not the site's own gateway.
 
     The RSA key authorizes every gateway on the account, so without this the
-    subentry would command another site's house.
+    subentry would command another site's house. The mismatch is caught
+    before the signed read, so a gateway that isn't ours is never sent one.
     """
     entry = await _setup_energy_site_subentry(hass)
     subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)[0].subentry_id
@@ -607,6 +610,7 @@ async def test_subentry_credentials_gateway_mismatch(
         "actual": din,
     }
     assert CONF_HOST not in entry.subentries[subentry_id].data
+    client.get_status.assert_not_awaited()
 
 
 @pytest.mark.usefixtures("mock_rsa_key")

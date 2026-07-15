@@ -12,7 +12,6 @@ from aiopowerwall import (
     PowerwallAuthenticationError,
     PowerwallClient,
     PowerwallError,
-    PowerwallFaultError,
 )
 from tesla_fleet_api.const import (
     AuthorizedClientKeyType,
@@ -83,6 +82,21 @@ class PowerwallKeyRejectedError(Exception):
     Distinct from a bad gateway password: the login succeeded, but the key has
     not been approved on the gateway, so only signed requests fail.
     """
+
+
+class PowerwallGatewayMismatchError(Exception):
+    """Signal that the local gateway's DIN doesn't match the site's cloud DIN.
+
+    The RSA key is shared by every site, so it authorizes each of the
+    account's gateways: without this check a host pointed at the wrong
+    gateway would command another site's house.
+    """
+
+    def __init__(self, expected: str, actual: str) -> None:
+        """Store the mismatched DINs for the caller's abort placeholders."""
+        super().__init__(f"expected {expected}, got {actual}")
+        self.expected = expected
+        self.actual = actual
 
 
 _PENDING_STATES = (
@@ -427,11 +441,15 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
         ``connect()`` only performs the gateway password login and fetches the
         DIN over an unsigned endpoint, so it succeeds even when the gateway has
-        not approved our key. The signed read that follows is what an
-        unapproved key actually fails, and it raises
-        ``PowerwallKeyRejectedError`` when it does.
+        not approved our key. The DIN is checked against the site's cloud
+        gateway ID before the signed read that follows, so a host pointed at
+        the wrong gateway is rejected without issuing a signed request against
+        it. The signed read is what an unapproved key actually fails, and it
+        raises ``PowerwallAuthenticationError`` when it does; any other
+        protocol fault is a ``PowerwallFaultError`` and is not a rejected key.
         """
         assert self._key_pem is not None
+        assert self._energy_site is not None
         async with PowerwallClient(
             host=host,
             gateway_password=password,
@@ -439,9 +457,21 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             session=async_get_clientsession(self.hass),
         ) as client:
             din = await client.connect()
+            if self._gateway_id is None:
+                # Pairing proceeds: refusing over a missing comparand would
+                # block a valid gateway. Warn so a skipped identity check is
+                # never silent.
+                LOGGER.warning(
+                    "Energy site %s reports no gateway ID, so %s cannot be "
+                    "confirmed as this site's own gateway; pairing anyway",
+                    self._energy_site.energy_site_id,
+                    din,
+                )
+            elif not _din_matches(self._gateway_id, din):
+                raise PowerwallGatewayMismatchError(self._gateway_id, din)
             try:
                 await client.get_status()
-            except (PowerwallAuthenticationError, PowerwallFaultError) as err:
+            except PowerwallAuthenticationError as err:
                 raise PowerwallKeyRejectedError from err
             return din
 
@@ -458,7 +488,15 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             # the full string, so trim it to what the gateway will accept.
             password = user_input[CONF_PASSWORD].strip()[-5:]
             try:
-                din = await self._verify_local_gateway(host, password)
+                await self._verify_local_gateway(host, password)
+            except PowerwallGatewayMismatchError as err:
+                return self.async_abort(
+                    reason="gateway_mismatch",
+                    description_placeholders={
+                        "expected": err.expected,
+                        "actual": err.actual,
+                    },
+                )
             except PowerwallKeyRejectedError as err:
                 LOGGER.debug("Powerwall rejected the signed read: %s", err.__cause__)
                 errors["base"] = "key_not_approved"
@@ -468,27 +506,6 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 LOGGER.debug("Local Powerwall verify failed: %s", err)
                 errors["base"] = "cannot_connect"
             else:
-                # The RSA key is shared by every site, so it authorizes each of
-                # the account's gateways: without this check a host pointed at
-                # the wrong gateway would command another site's house.
-                if self._gateway_id is None:
-                    # Pairing proceeds: refusing over a missing comparand would
-                    # block a valid gateway. Warn so a skipped identity check is
-                    # never silent.
-                    LOGGER.warning(
-                        "Energy site %s reports no gateway ID, so %s cannot be "
-                        "confirmed as this site's own gateway; pairing anyway",
-                        self._energy_site.energy_site_id,
-                        din,
-                    )
-                elif not _din_matches(self._gateway_id, din):
-                    return self.async_abort(
-                        reason="gateway_mismatch",
-                        description_placeholders={
-                            "expected": self._gateway_id,
-                            "actual": din,
-                        },
-                    )
                 return self.async_update_reload_and_abort(
                     self._get_entry(),
                     self._get_reconfigure_subentry(),
