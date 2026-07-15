@@ -5,19 +5,18 @@ from typing import override
 from switchbot_api import BatteryCirculatorFanCommands, Device, Remote, SwitchBotAPI
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchBotCoordinator
+from . import SwitchbotCloudConfigEntry, SwitchBotCoordinator
 from .const import NIGHT_LIGHT_PARAMETERS_MAP
 from .entity import SwitchBotCloudEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config: SwitchbotCloudConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
@@ -53,8 +52,9 @@ class SwitchBotCloudStandingFanNightLight(SwitchBotCloudEntity, SelectEntity):
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
+        night_status = self.coordinator.data.get("nightStatus")
         for key, value in NIGHT_LIGHT_PARAMETERS_MAP.items():
-            if value == self.coordinator.data["nightStatus"]:
+            if value == night_status:
                 self._attr_current_option = key
                 return
         self._attr_current_option = None
