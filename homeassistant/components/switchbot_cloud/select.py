@@ -37,7 +37,7 @@ class SwitchBotCloudStandingFanNightLight(SwitchBotCloudEntity, SelectEntity):
 
     @override
     async def async_select_option(self, option: str) -> None:
-        """Show existed key & create key."""
+        """Select the night light mode."""
 
         await self.send_api_command(
             BatteryCirculatorFanCommands.SET_NIGHT_LIGHT_MODE,
