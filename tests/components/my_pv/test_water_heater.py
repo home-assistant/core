@@ -386,7 +386,7 @@ async def test_water_heater_set_temp_authentication_error(
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
 ) -> None:
-    """Test connection error when setting the target temperature."""
+    """Test authentication error when setting the target temperature."""
 
     mock_config_entry.add_to_hass(hass)
 
