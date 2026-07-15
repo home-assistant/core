@@ -74,7 +74,12 @@
     },
     "select": {
       "night_light_control": {
-        "name": "Night light"
+        "name": "Night light",
+        "state": {
+          "bright": "Bight",
+          "off": "[%key:common::state::off%]",
+          "soft": "Soft"
+        }
       }
     },
     "sensor": {

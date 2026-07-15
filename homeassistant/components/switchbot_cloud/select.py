@@ -6,6 +6,7 @@ from switchbot_api import BatteryCirculatorFanCommands, Device, Remote, SwitchBo
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -31,6 +32,7 @@ class SwitchBotCloudStandingFanNightLight(SwitchBotCloudEntity, SelectEntity):
     """SwitchBotCloud Standing Fan Night Light."""
 
     _attr_options = list(NIGHT_LIGHT_PARAMETERS_MAP)
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_current_option: str | None = None
 
     _attr_translation_key = "night_light_control"
