@@ -83,22 +83,6 @@ def build_resources(
     }
 
 
-def _find_translation_file(
-    integration: Integration, language: str
-) -> pathlib.Path | None:
-    """Resolve the translation source file for a language."""
-    translation_file = integration.file_path / "translations" / f"{language}.json"
-    if translation_file.is_file():
-        return translation_file
-
-    if language == LOCALE_EN:
-        strings_file = integration.file_path / "strings.json"
-        if strings_file.is_file():
-            return strings_file
-
-    return None
-
-
 async def _async_get_component_strings(
     hass: HomeAssistant,
     languages: Iterable[str],
@@ -112,14 +96,15 @@ async def _async_get_component_strings(
     loaded_translations_by_language: dict[str, dict[str, Any]] = {}
     has_files_to_load = False
     for language in languages:
-        files_to_load: dict[str, pathlib.Path] = {}
-        for domain in components:
-            if not (integration := integrations.get(domain)):
-                continue
-
-            if translation_file := _find_translation_file(integration, language):
-                files_to_load[domain] = translation_file
-
+        file_name = f"{language}.json"
+        files_to_load: dict[str, pathlib.Path] = {
+            domain: integration.file_path / "translations" / file_name
+            for domain in components
+            if (
+                (integration := integrations.get(domain))
+                and integration.has_translations
+            )
+        }
         files_to_load_by_language[language] = files_to_load
         has_files_to_load |= bool(files_to_load)
 
