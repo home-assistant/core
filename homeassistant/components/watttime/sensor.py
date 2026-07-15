@@ -9,10 +9,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
     CONF_SHOW_ON_MAP,
     PERCENTAGE,
+    EntityStateAttribute,
     UnitOfMass,
 )
 from homeassistant.core import HomeAssistant
@@ -97,11 +98,11 @@ class RealtimeEmissionsSensor(CoordinatorEntity[WattTimeCoordinator], SensorEnti
         # Conversely, we can hide the location on the map by using other keys, like
         # "lati" and "long".
         if self._entry.options.get(CONF_SHOW_ON_MAP) is not False:
-            attrs[ATTR_LATITUDE] = self._entry.data[ATTR_LATITUDE]
-            attrs[ATTR_LONGITUDE] = self._entry.data[ATTR_LONGITUDE]
+            attrs[EntityStateAttribute.LATITUDE] = self._entry.data[CONF_LATITUDE]
+            attrs[EntityStateAttribute.LONGITUDE] = self._entry.data[CONF_LONGITUDE]
         else:
-            attrs["lati"] = self._entry.data[ATTR_LATITUDE]
-            attrs["long"] = self._entry.data[ATTR_LONGITUDE]
+            attrs["lati"] = self._entry.data[CONF_LATITUDE]
+            attrs["long"] = self._entry.data[CONF_LONGITUDE]
 
         return attrs
 

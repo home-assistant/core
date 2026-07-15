@@ -347,7 +347,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'AA:AA:AA:AA:AA:AA_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[AA:AA:AA:AA:AA:AA][sensor.station_a_humidity-state]
@@ -358,7 +358,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station A Humidity',
       'last_measured': HAFakeDatetime(2023, 11, 8, 12, 12, 0, 914000, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_a_humidity',
@@ -1386,7 +1386,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'CC:CC:CC:CC:CC:CC_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[CC:CC:CC:CC:CC:CC][sensor.station_c_humidity-state]
@@ -1397,7 +1397,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station C Humidity',
       'last_measured': HAFakeDatetime(2024, 6, 6, 8, 28, 3, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_c_humidity',
@@ -2420,7 +2420,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'DD:DD:DD:DD:DD:DD_humidity',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_sensors[DD:DD:DD:DD:DD:DD][sensor.station_d_humidity-state]
@@ -2430,7 +2430,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station D Humidity',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.station_d_humidity',

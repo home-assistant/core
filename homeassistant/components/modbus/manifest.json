@@ -1,6 +1,6 @@
 {
   "domain": "modbus",
-  "name": "Modbus",
+  "name": "Manual Modbus",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/modbus",
   "iot_class": "local_polling",
