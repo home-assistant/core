@@ -163,9 +163,14 @@ class ImageExtraStoredData(ExtraStoredData):
         except KeyError:
             return None
 
+        try:
+            image_url = restored["image_url"]
+        except KeyError:
+            return None
+
         return cls(
             image_last_updated=image_last_updated,
-            image_url=restored["image_url"],
+            image_url=image_url,
             cached_image=cached_image,
         )
 

@@ -28,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
@@ -42,6 +43,7 @@ from .conftest import (
 from tests.common import (
     MockConfigEntry,
     assert_setup_component,
+    async_mock_restore_state_shutdown_restart,
     mock_restore_cache_with_extra_data,
 )
 from tests.typing import ClientSessionGenerator
@@ -613,6 +615,21 @@ async def test_device_id(
     assert template_entity.device_id == device_entry.id
 
 
+def _get_extra_saved_data(url: str, image_bytes: bytes) -> dict:
+    return {
+        "image_last_updated": {
+            "__type": "<class 'datetime.datetime'>",
+            "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+        },
+        "image_url": url,
+        "cached_image": {
+            "__type": "<class 'homeassistant.components.image.Image'>",
+            "content_type": "image/jpeg",
+            "content": base64.b64encode(image_bytes).decode("utf-8"),
+        },
+    }
+
+
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
@@ -622,29 +639,16 @@ async def test_restore_state(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     style: ConfigurationStyle,
-    imgbytes_jpg,
+    imgbytes_jpg: bytes,
+    imgbytes2_jpg: bytes,
 ) -> None:
     """Test restoring trigger template image."""
 
     respx.get("http://example.com").respond(
         stream=imgbytes_jpg, content_type="image/jpeg"
     )
-    buf = BytesIO()
-    Image.new("RGB", (1, 1), 100).save(buf, format="jpeg")
-    cached_image = bytes(buf.getbuffer())
 
-    saved_extra_data = {
-        "image_last_updated": {
-            "__type": "<class 'datetime.datetime'>",
-            "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
-        },
-        "image_url": "http://example2.com",
-        "cached_image": {
-            "__type": "<class 'homeassistant.components.image.Image'>",
-            "content_type": "image/jpeg",
-            "content": base64.b64encode(cached_image).decode("utf-8"),
-        },
-    }
+    saved_extra_data = _get_extra_saved_data("http://example2.com", imgbytes2_jpg)
 
     fake_state = State(
         TEST_IMAGE.entity_id,
@@ -667,7 +671,7 @@ async def test_restore_state(
         hass,
         hass_client,
         "2021-07-13T00:00:00+00:00",
-        cached_image,
+        imgbytes2_jpg,
         entity_id=TEST_IMAGE.entity_id,
     )
 
@@ -701,29 +705,16 @@ async def test_restore_bad_state_does_not_restore(
     style: ConfigurationStyle,
     saved_state: str,
     initial_state: str,
-    imgbytes_jpg,
+    imgbytes_jpg: bytes,
+    imgbytes2_jpg: bytes,
 ) -> None:
     """Test restore state does not restore."""
 
     respx.get("http://example.com").respond(
         stream=imgbytes_jpg, content_type="image/jpeg"
     )
-    buf = BytesIO()
-    Image.new("RGB", (1, 1), 100).save(buf, format="jpeg")
-    cached_image = bytes(buf.getbuffer())
 
-    saved_extra_data = {
-        "image_last_updated": {
-            "__type": "<class 'datetime.datetime'>",
-            "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
-        },
-        "image_url": "http://example2.com",
-        "cached_image": {
-            "__type": "<class 'homeassistant.components.image.Image'>",
-            "content_type": "image/jpeg",
-            "content": base64.b64encode(cached_image).decode("utf-8"),
-        },
-    }
+    saved_extra_data = _get_extra_saved_data("http://example2.com", imgbytes2_jpg)
 
     fake_state = State(TEST_IMAGE.entity_id, saved_state)
     mock_restore_cache_with_extra_data(hass, ((fake_state, saved_extra_data),))
@@ -743,6 +734,172 @@ async def test_restore_bad_state_does_not_restore(
         hass,
         TEST_IMAGE,
         initial_state,
+    )
+
+    await async_trigger(hass, "sensor.test_state", "http://example.com")
+
+    await _assert_state(
+        hass,
+        hass_client,
+        "2026-07-13T00:00:00+00:00",
+        imgbytes_jpg,
+        entity_id=TEST_IMAGE.entity_id,
+    )
+    assert respx.get("http://example.com").call_count == 1
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@respx.mock
+@pytest.mark.freeze_time("2021-07-13 00:00:00+00:00")
+async def test_saving_state(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    style: ConfigurationStyle,
+    imgbytes_jpg: bytes,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test restore saved state."""
+
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+
+    saved_extra_data = _get_extra_saved_data("http://example.com", imgbytes_jpg)
+
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        config={
+            "default_entity_id": TEST_IMAGE.entity_id,
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+    )
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, "http://example.com")
+
+    await _assert_state(
+        hass,
+        hass_client,
+        "2021-07-13T00:00:00+00:00",
+        imgbytes_jpg,
+        entity_id=TEST_IMAGE.entity_id,
+    )
+
+    await async_mock_restore_state_shutdown_restart(hass)
+
+    assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
+    state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
+    assert state["entity_id"] == TEST_IMAGE.entity_id
+
+    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
+    assert extra_data == saved_extra_data
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("saved_extra_data"),
+    [
+        {
+            "image_last_update": {
+                "__type": "<class 'datetime.datetime'>",
+                "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+            },
+            "image_url": "http://example.com",
+            "cached_image": {
+                "__type": "<class 'homeassistant.components.image.Image'>",
+                "content_type": "image/jpeg",
+                "content": "xxxx",
+            },
+        },
+        {
+            "image_last_updated": {
+                "__ty": "<class 'datetime.datetime'>",
+                "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+            },
+            "image_url": "http://example.com",
+            "cached_image": {
+                "__type": "<class 'homeassistant.components.image.Image'>",
+                "content_type": "image/jpeg",
+                "content": "xxxx",
+            },
+        },
+        {
+            "image_last_updated": {
+                "__type": "<class 'datetime.datetime'>",
+                "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+            },
+            "image_url": "http://example.com",
+            "cached_imag": {
+                "__type": "<class 'homeassistant.components.image.Image'>",
+                "content_type": "image/jpeg",
+                "content": "xxxx",
+            },
+        },
+        {
+            "image_last_updated": {
+                "__type": "<class 'datetime.datetime'>",
+                "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+            },
+            "image_url": "http://example.com",
+            "cached_image": {
+                "__ty": "<class 'homeassistant.components.image.Image'>",
+                "content_type": "image/jpeg",
+                "content": "xxxx",
+            },
+        },
+        {
+            "image_last_updated": {
+                "__type": "<class 'datetime.datetime'>",
+                "isoformat": datetime(2021, 7, 13, 0, 0, 0, tzinfo=UTC).isoformat(),
+            },
+            "image_ur": "http://example.com",
+            "cached_image": {
+                "__type": "<class 'homeassistant.components.image.Image'>",
+                "content_type": "image/jpeg",
+                "content": "xxxx",
+            },
+        },
+    ],
+)
+@respx.mock
+@pytest.mark.freeze_time("2026-07-13 00:00:00+00:00")
+async def test_restore_bad_extra_data_does_not_restore(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    style: ConfigurationStyle,
+    saved_extra_data: dict,
+    imgbytes_jpg: bytes,
+) -> None:
+    """Test restore state does not restore with bad extra data."""
+
+    respx.get("http://example.com").respond(
+        stream=imgbytes_jpg, content_type="image/jpeg"
+    )
+
+    fake_state = State(TEST_IMAGE.entity_id, "2021-07-13T00:00:00+00:00")
+    mock_restore_cache_with_extra_data(hass, ((fake_state, saved_extra_data),))
+
+    await setup_entity(
+        hass,
+        TEST_IMAGE,
+        style,
+        1,
+        config={
+            "default_entity_id": TEST_IMAGE.entity_id,
+            "url": "{{ states('sensor.test_state') if 'sensor.test_state' | has_value else none }}",
+        },
+    )
+
+    assert_state_and_attributes(
+        hass,
+        TEST_IMAGE,
+        STATE_UNKNOWN,
     )
 
     await async_trigger(hass, "sensor.test_state", "http://example.com")
