@@ -240,7 +240,6 @@ class XthingsCloudCamera(CoordinatorEntity[XthingsCloudCoordinator], Camera):
             # Clear candidates only after attempting to send them all
             self._pending_candidates.pop(session_id, None)
 
-            send_message(WebRTCAnswer(answer=answer_sdp))
 
         except KVS_EXCEPTIONS as err:
             if session_id not in self._open_sessions:
