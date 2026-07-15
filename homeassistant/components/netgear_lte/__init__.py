@@ -1,6 +1,5 @@
 """Support for Netgear LTE modems."""
 
-
 from aiohttp.cookiejar import CookieJar
 import eternalegypt
 from eternalegypt.eternalegypt import SMS
