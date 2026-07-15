@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 S400_ADDRESS = "04:AE:47:67:C6:7C"
 DATA_S400_IMPEDANCE_CACHE_PURGED = "s400_impedance_restore_cache_purged"
-DATA_S400_LOW_ONLY_MIGRATED = "s400_low_only_migration_occurred"
+DATA_S400_CONFIRMED_AT_MIGRATION = "s400_confirmed_at_migration"
 S400_MODEL = "MJTZC01YM"
 V1V2_MODEL = "XMTZC02HM/XMTZC05HM/NUN4049CN"
 
@@ -512,7 +512,7 @@ async def test_purge_stale_restore_cache_via_low_only_provenance(
 
     No generic "impedance" key ever existed for this device, so its
     presence can't prove staleness here. async_migrate_entry persists
-    DATA_S400_LOW_ONLY_MIGRATED at the moment of that specific rename,
+    DATA_S400_CONFIRMED_AT_MIGRATION at the moment of that specific rename,
     proving it instead.
     """
     entry = MockConfigEntry(
@@ -533,7 +533,7 @@ async def test_purge_stale_restore_cache_via_low_only_provenance(
     await hass.async_block_till_done()
 
     assert entry.minor_version == 2
-    assert entry.data[DATA_S400_LOW_ONLY_MIGRATED] is True
+    assert entry.data[DATA_S400_CONFIRMED_AT_MIGRATION] is True
     sensor_data = restore_data[Platform.SENSOR]
     assert "impedance_low___" not in sensor_data["entity_data"]
     assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True
@@ -550,7 +550,7 @@ async def test_purge_stale_restore_cache_low_only_marker_survives_entity_deletio
     If the user deletes the renamed "impedance_high" entity after a
     low-only migration, its previous_unique_id (the only other proof)
     is lost with it. The independently persisted
-    DATA_S400_LOW_ONLY_MIGRATED marker must still be enough to purge the
+    DATA_S400_CONFIRMED_AT_MIGRATION marker must still be enough to purge the
     stale cached value on a later setup.
     """
     entry = MockConfigEntry(
@@ -558,7 +558,7 @@ async def test_purge_stale_restore_cache_low_only_marker_survives_entity_deletio
         unique_id=S400_ADDRESS,
         version=1,
         minor_version=2,
-        data={DATA_S400_LOW_ONLY_MIGRATED: True},
+        data={DATA_S400_CONFIRMED_AT_MIGRATION: True},
     )
     entry.add_to_hass(hass)
     # No device, no entities: as if everything was deleted after the
@@ -568,6 +568,40 @@ async def test_purge_stale_restore_cache_low_only_marker_survives_entity_deletio
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
+    sensor_data = restore_data[Platform.SENSOR]
+    assert "impedance_low___" not in sensor_data["entity_data"]
+    assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_migrate_marks_confirmed_when_entities_deleted_before_upgrade(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test migration marks a device confirmed via model alone.
+
+    If both "-impedance" and "-impedance_low" were deleted before ever
+    upgrading, there's no entity-registry signal left at migration time
+    at all. The device-registry model fallback must still fire (not
+    gated on a legacy entity existing) so DATA_S400_CONFIRMED_AT_MIGRATION
+    gets persisted, letting a later purge clean up any residue the
+    bluetooth cache still holds.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=S400_ADDRESS, version=1, minor_version=1
+    )
+    entry.add_to_hass(hass)
+    _async_setup_device(device_registry, entry, model=S400_MODEL)
+    # No entities at all: as if everything was deleted before upgrading.
+    restore_data = _seed_restore_data(hass, entry, _low_only_stale_restore_data())
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+    assert entry.data[DATA_S400_CONFIRMED_AT_MIGRATION] is True
     sensor_data = restore_data[Platform.SENSOR]
     assert "impedance_low___" not in sensor_data["entity_data"]
     assert entry.data[DATA_S400_IMPEDANCE_CACHE_PURGED] is True

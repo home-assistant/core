@@ -38,7 +38,7 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SE
 _LOGGER = logging.getLogger(__name__)
 
 DATA_S400_IMPEDANCE_CACHE_PURGED = "s400_impedance_restore_cache_purged"
-DATA_S400_LOW_ONLY_MIGRATED = "s400_low_only_migration_occurred"
+DATA_S400_CONFIRMED_AT_MIGRATION = "s400_confirmed_at_migration"
 
 
 def process_service_info(
@@ -151,7 +151,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 Platform.SENSOR, DOMAIN, old_legacy_id
             )
 
-            if not is_s400 and legacy_entity_id is not None:
+            if not is_s400:
                 device_registry = dr.async_get(hass)
                 device_entry = device_registry.async_get_device(
                     identifiers={(BLUETOOTH_DOMAIN, address)}
@@ -159,6 +159,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 is_s400 = device_entry is not None and device_entry.model in S400_MODELS
 
             if is_s400:
+                # Persisted independently of any specific entity, which
+                # the user could delete (before or after this runs)
+                # along with the only other proof this happened -- see
+                # _purge_stale_sensor_restore_keys.
+                data_updates[DATA_S400_CONFIRMED_AT_MIGRATION] = True
+
                 if low_entity_id:
                     _LOGGER.debug("S400 migration: %s -> %s", old_low_id, new_high_id)
                     entity_registry.async_update_entity(
@@ -166,15 +172,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                         new_unique_id=new_high_id,
                         original_name="Impedance High",
                     )
-                    if legacy_entity_id is None:
-                        # Low-only migration: no generic "impedance" key
-                        # ever existed, so there's no legacy-residue
-                        # signal in the restore cache to prove staleness
-                        # later. Persist this independently of the
-                        # renamed entity's own previous_unique_id, which
-                        # could otherwise be lost if the user deletes
-                        # that row.
-                        data_updates[DATA_S400_LOW_ONLY_MIGRATED] = True
 
                 new_low_id = f"{address}-impedance_low"
                 if legacy_entity_id:
@@ -293,18 +290,19 @@ def _purge_stale_sensor_restore_keys(
     """Drop the stale "impedance" and "impedance_low" restore-cache entries.
 
     The generic "impedance" key's presence proves stale, pre-fix data --
-    only the old library ever wrote it. The low-only migration (a
-    device that only ever got the advertisement carrying that key) has
-    no such residue, so it's identified instead via migration
-    provenance: DATA_S400_LOW_ONLY_MIGRATED, persisted by
-    async_migrate_entry at the moment of that specific rename,
-    independent of the renamed entity itself -- which the user could
-    otherwise delete, along with the only other proof this happened
-    (its previous_unique_id), checked here too as a fallback for entries
-    already migrated before this marker existed. Neither signal present
-    means nothing to purge -- e.g. a fresh S400 from day one, whose
-    "impedance_low" already holds a real, correctly labeled value that
-    must be left alone.
+    only the old library ever wrote it. A device with no such residue,
+    but confirmed as S400 during the 1.1 migration
+    (DATA_S400_CONFIRMED_AT_MIGRATION, persisted then, independent of
+    any entity that may since be deleted -- either before or after that
+    point), is also presumed stale-only: no live, corrected data could
+    have reached the cache before that determination was made, so any
+    "impedance_low" residue still found now must predate it. Falls back
+    to migration provenance on an "impedance_high" entity's
+    previous_unique_id for entries migrated before this marker existed.
+    None of these signals present means nothing to purge -- e.g. a
+    fresh S400 from day one, which never went through that migration at
+    all, whose "impedance_low" already holds a real, correctly labeled
+    value that must be left alone.
     """
     sensor_restore_data = coordinator.restore_data.get(Platform.SENSOR)
     if sensor_restore_data is None:
@@ -317,8 +315,8 @@ def _purge_stale_sensor_restore_keys(
         "entity_data", {}
     ) or legacy_key in sensor_restore_data.get("entity_descriptions", {})
 
-    low_only_migrated = entry.data.get(DATA_S400_LOW_ONLY_MIGRATED, False)
-    if not low_only_migrated:
+    confirmed_stale = entry.data.get(DATA_S400_CONFIRMED_AT_MIGRATION, False)
+    if not confirmed_stale:
         address = entry.unique_id
         if address is not None:
             entity_registry = er.async_get(hass)
@@ -330,12 +328,12 @@ def _purge_stale_sensor_restore_keys(
                 if high_entity_id is not None
                 else None
             )
-            low_only_migrated = (
+            confirmed_stale = (
                 high_entity is not None
                 and high_entity.previous_unique_id == f"{address}-impedance_low"
             )
 
-    if not has_legacy_residue and not low_only_migrated:
+    if not has_legacy_residue and not confirmed_stale:
         return
 
     stale_keys = (legacy_key, low_key) if has_legacy_residue else (low_key,)
