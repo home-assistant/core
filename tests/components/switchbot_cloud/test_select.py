@@ -1,6 +1,6 @@
 """Test for the switchbot_cloud select."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from switchbot_api import Device, SwitchBotAPI
@@ -17,7 +17,7 @@ from . import configure_integration
 
 
 async def test_standing_fan_night_light_coordinator_data_is_none(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
+    hass: HomeAssistant, mock_list_devices: AsyncMock, mock_get_status: AsyncMock
 ) -> None:
     """Test coordinator data is none."""
 
@@ -48,10 +48,10 @@ async def test_standing_fan_night_light_coordinator_data_is_none(
 )
 async def test_standing_fan_night_light_options(
     hass: HomeAssistant,
-    mock_list_devices,
-    mock_get_status,
-    key_type,
-    expected,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
+    key_type: str,
+    expected: str,
 ) -> None:
     """Test standing fan night light options."""
     mock_list_devices.return_value = [
@@ -77,6 +77,9 @@ async def test_standing_fan_night_light_options(
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
     entity_id = "select.standing_fan_1_night_light"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == key_type
 
     with (
         patch.object(SwitchBotAPI, "send_command") as mocked_send_command,
@@ -88,7 +91,8 @@ async def test_standing_fan_night_light_options(
             blocking=True,
         )
 
-        mocked_send_command.assert_called_once()
+        mocked_send_command.assert_awaited_once()
+        assert mocked_send_command.await_args.args[3] == expected
 
     state = hass.states.get(entity_id)
     assert state.state == key_type
@@ -96,8 +100,8 @@ async def test_standing_fan_night_light_options(
 
 async def test_standing_fan_night_light_options_not_exist(
     hass: HomeAssistant,
-    mock_list_devices,
-    mock_get_status,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
 ) -> None:
     """Test standing fan night light options."""
     mock_list_devices.return_value = [
