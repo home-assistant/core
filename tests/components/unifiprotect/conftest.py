@@ -46,27 +46,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import _patch_discovery
-from .utils import MockUFPFixture, make_public_camera
+from .utils import MockUFPFixture, make_public_camera, public_rtsps_for
 
 from tests.common import MockConfigEntry, load_json_object_fixture
-
-
-def _public_rtsps_for(camera: Any) -> RTSPSStreams:
-    """Build a camera's primed RTSPS streams from its RTSP-enabled channels.
-
-    Mirrors what the library writes onto ``PublicCamera.rtsps_streams`` during
-    ``update_public()`` — only RTSP-enabled channels carry an active URL. The
-    server answers a successful read with ``null`` per inactive quality even
-    when nothing is enabled, so a read always yields a streams object;
-    ``None`` on the camera means the read itself failed (best-effort prime).
-    """
-    urls = {
-        channel.rtsps_quality: channel.rtsps_url
-        for channel in camera.channels
-        if channel.is_rtsp_enabled and channel.rtsps_quality is not None
-    }
-    return RTSPSStreams(**urls)
-
 
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
 
@@ -215,7 +197,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     ) -> RTSPSStreams | None:
         """Fetch a camera's RTSPS streams (used by the repair flow)."""
         camera = client.bootstrap.cameras.get(camera_id)
-        return _public_rtsps_for(camera) if camera is not None else None
+        return public_rtsps_for(camera) if camera is not None else None
 
     client.get_camera_rtsps_streams = AsyncMock(side_effect=get_camera_rtsps_streams)
     client.create_camera_rtsps_streams = AsyncMock(return_value=None)
@@ -287,7 +269,7 @@ def mock_entry(
             for camera in ufp_client.bootstrap.cameras.values():
                 public = make_public_camera(camera)
                 public.rtsps_streams = (
-                    _public_rtsps_for(camera)
+                    public_rtsps_for(camera)
                     if camera.state is StateType.CONNECTED
                     else None
                 )

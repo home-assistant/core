@@ -187,10 +187,7 @@ def _async_camera_entities(
         ):
             ir.async_delete_issue(hass, DOMAIN, issue_id)
         elif streams is None:
-            # The camera's streams could not be read (the library primes them
-            # best-effort): a repair offering to create a stream that may
-            # already exist would mislead, so leave the issue state alone and
-            # surface the read failure instead.
+            # None means the best-effort read failed, not that streams are absent.
             _LOGGER.warning(
                 (
                     "Could not read RTSPS streams for camera %s;"
