@@ -8,6 +8,8 @@ from datetime import datetime
 from enum import StrEnum
 from functools import lru_cache
 import logging
+import os
+import shutil
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, Unpack, override
 
@@ -55,8 +57,8 @@ EVENT_DEVICE_REGISTRY_UPDATED: EventType[EventDeviceRegistryUpdatedData] = Event
     "device_registry_updated"
 )
 STORAGE_KEY = "core.device_registry"
-STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 13
+STORAGE_VERSION_MAJOR = 3
+STORAGE_VERSION_MINOR = 1
 
 CLEANUP_DELAY = 10
 
@@ -720,6 +722,17 @@ class DeletedDeviceEntry:
         )
 
 
+def _copy_if_exists(source: str, destination: str) -> bool:
+    """Copy source to destination when source exists (runs in the executor).
+
+    Returns whether the file was copied.
+    """
+    if not os.path.isfile(source):
+        return False
+    shutil.copyfile(source, destination)
+    return True
+
+
 class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
@@ -731,10 +744,12 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
         old_data: dict[str, list[dict[str, Any]]],
     ) -> dict[str, Any]:
         """Migrate to the new version."""
-        # Support for a future major version bump to 2 added in HA Core 2025.2.
-        # Major versions 1 and 2 will be the same, except that version 2 will no
-        # longer store a list of config_entries.
+        # Note: There's no version 2, it was planned and supported by previous versions
+        # of the migrator which treated version 2 like version 1.
         if old_major_version < 3:
+            # Copy the store before the version 3 migrator rewrites every device, so a
+            # user can recover the pre-migration registry if the migration misbehaves.
+            await self._async_backup_store()
             if old_minor_version < 2:
                 # Version 1.2 implements migration and freezes the available keys,
                 # populate keys which were introduced before version 1.2
@@ -815,161 +830,176 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # of version 1.10
                 for device in old_data["deleted_devices"]:
                     device["disabled_by_undefined"] = old_minor_version < 10
-            if old_minor_version < 13:
-                # Version 1.13 restricts a device to a single config entry and subentry,
-                # introduced in 2026.8. Composite devices which belonged to several
-                # config entries (or several subentries of one entry) are split into one
-                # device per (config entry, subentry). Each split device keeps a copy of
-                # the identifiers and connections and a reference (composite_device_id) to the original
-                # composite device id, so that actions targeting the old id still reach
-                # all split devices. Entities are moved to the matching split device when
-                # the registries are loaded.
-                migrated_at = utcnow().isoformat()
-                split_devices: list[dict[str, Any]] = []
-                composite_splits: dict[str, dict[str, str]] = {}
-                migrated_active_splits: list[dict[str, Any]] = []
-                for device in old_data["devices"]:
-                    # One target per config entry. config_entries_subentries was a set, so
-                    # the old model allowed a device in several subentries of one config
-                    # entry, but the single-owner model keeps one. Multi-subentry devices
-                    # created by core integrations all come from broken subentry migrators
-                    # (which left a device in both None and its real subentry), so prefer
-                    # a real subentry over the main entry (None). Collapsing rather than
-                    # splitting avoids duplicate devices which, sharing identifiers and
-                    # connections within one config entry, would collide in the
-                    # per-config-entry identifier/connection index.
-                    pairs = [
-                        (
-                            config_entry_id,
-                            next((s for s in subentry_ids if s is not None), None),
-                        )
-                        for config_entry_id, subentry_ids in device[
-                            "config_entries_subentries"
-                        ].items()
+            # Version 3 restricts a device to a single config entry and subentry,
+            # introduced in 2026.8. Composite devices which belonged to several
+            # config entries (or several subentries of one entry) are split into one
+            # device per (config entry, subentry). Each split device keeps a copy of
+            # the identifiers and connections and a reference (composite_device_id) to the original
+            # composite device id, so that actions targeting the old id still reach
+            # all split devices. Entities are moved to the matching split device when
+            # the registries are loaded.
+            migrated_at = utcnow().isoformat()
+            split_devices: list[dict[str, Any]] = []
+            # old composite id -> {config entry id -> new split id}, to rewrite
+            # via_device_id links pointing at a split parent
+            composite_splits: dict[str, dict[str, str]] = {}
+            # Active splits whose copied disabled_by must be reconciled against their
+            # single config entry once the config entries are loaded
+            migrated_active_splits: list[dict[str, Any]] = []
+            for device in old_data["devices"]:
+                # One target per config entry. config_entries_subentries was a set, so
+                # the old model allowed a device in several subentries of one config
+                # entry, but the single-owner model keeps one. Multi-subentry devices
+                # created by core integrations all come from broken subentry migrators
+                # (which left a device in both None and its real subentry), so prefer
+                # a real subentry over the main entry (None). Collapsing rather than
+                # splitting avoids duplicate devices which, sharing identifiers and
+                # connections within one config entry, would collide in the
+                # per-config-entry identifier/connection index.
+                pairs = [
+                    (
+                        config_entry_id,
+                        next((s for s in subentry_ids if s is not None), None),
+                    )
+                    for config_entry_id, subentry_ids in device[
+                        "config_entries_subentries"
+                    ].items()
+                ]
+                if not pairs:
+                    # Drop devices that have no config entry / subentry pairs
+                    continue
+                if len(pairs) == 1:
+                    config_entry_id, subentry_id = pairs[0]
+                    device["config_entry_id"] = config_entry_id
+                    device["config_subentry_id"] = subentry_id
+                    device["composite_device_id"] = None
+                    device["composite_primary_config_entry"] = None
+                    device["split_at"] = None
+                    device["has_composite_identifiers"] = False
+                    split_devices.append(device)
+                    continue
+                old_id = device["id"]
+                composite_primary = device.get("primary_config_entry")
+                for config_entry_id, subentry_id in pairs:
+                    split = copy.deepcopy(device)
+                    split["id"] = uuid_util.random_uuid_hex()
+                    split["config_entry_id"] = config_entry_id
+                    split["config_subentry_id"] = subentry_id
+                    # Keep the deprecated multi-entry keys single so a downgrade
+                    # sees a consistent single-entry device
+                    split["config_entries"] = [config_entry_id]
+                    split["config_entries_subentries"] = {
+                        config_entry_id: [subentry_id]
+                    }
+                    split["primary_config_entry"] = config_entry_id
+                    split["composite_device_id"] = old_id
+                    split["composite_primary_config_entry"] = composite_primary
+                    split["split_at"] = migrated_at
+                    split["has_composite_identifiers"] = True
+                    split_devices.append(split)
+                    migrated_active_splits.append(split)
+                    composite_splits.setdefault(old_id, {})[config_entry_id] = split[
+                        "id"
                     ]
-                    if not pairs:
-                        # Drop devices that have no config entry / subentry pairs
-                        continue
-                    if len(pairs) == 1:
-                        config_entry_id, subentry_id = pairs[0]
-                        device["config_entry_id"] = config_entry_id
-                        device["config_subentry_id"] = subentry_id
-                        device["composite_device_id"] = None
-                        device["composite_primary_config_entry"] = None
-                        device["split_at"] = None
-                        device["has_composite_identifiers"] = False
-                        split_devices.append(device)
-                        continue
-                    old_id = device["id"]
-                    composite_primary = device.get("primary_config_entry")
-                    for config_entry_id, subentry_id in pairs:
-                        split = copy.deepcopy(device)
-                        split["id"] = uuid_util.random_uuid_hex()
-                        split["config_entry_id"] = config_entry_id
-                        split["config_subentry_id"] = subentry_id
-                        # Keep the deprecated multi-entry keys single so a downgrade
-                        # sees a consistent single-entry device
-                        split["config_entries"] = [config_entry_id]
-                        split["config_entries_subentries"] = {
-                            config_entry_id: [subentry_id]
-                        }
-                        split["primary_config_entry"] = config_entry_id
-                        split["composite_device_id"] = old_id
-                        split["composite_primary_config_entry"] = composite_primary
-                        split["split_at"] = migrated_at
-                        split["has_composite_identifiers"] = True
-                        split_devices.append(split)
-                        migrated_active_splits.append(split)
-                        composite_splits.setdefault(old_id, {})[config_entry_id] = (
-                            split["id"]
+            # Rewrite via_device_id links that pointed at a now-split composite parent
+            # to a live split: the parent's split in the child's own config entry when
+            # there is one, otherwise any of the parent's splits, so the link never
+            # dangles on the removed composite id. A link to an unsplit parent is left
+            # unchanged.
+            for device in split_devices:
+                if (
+                    splits := composite_splits.get(device["via_device_id"])
+                ) is not None:
+                    device["via_device_id"] = splits.get(
+                        device["config_entry_id"], next(iter(splits.values()))
+                    )
+            old_data["devices"] = split_devices
+            # A split inherited the composite's disabled_by, which may not match its
+            # single config entry (e.g. a split owned by an enabled entry must not stay
+            # CONFIG_ENTRY disabled). Config entries load concurrently, so wait for them
+            # and reconcile each split against its own entry.
+            if migrated_active_splits:
+                await self.hass.config_entries.async_wait_initialized()
+                for split in migrated_active_splits:
+                    config_entry = self.hass.config_entries.async_get_entry(
+                        split["config_entry_id"]
+                    )
+                    if config_entry is not None:
+                        _migrate_device_disabled_by(
+                            split, config_entry.disabled_by is not None
                         )
-                # Rewrite via_device_id links that pointed at a now-split composite parent
-                # to a live split: the parent's split in the child's own config entry when
-                # there is one, otherwise any of the parent's splits, so the link never
-                # dangles on the removed composite id. A link to an unsplit parent is left
-                # unchanged.
-                for device in split_devices:
-                    if (
-                        splits := composite_splits.get(device["via_device_id"])
-                    ) is not None:
-                        device["via_device_id"] = splits.get(
-                            device["config_entry_id"], next(iter(splits.values()))
-                        )
-                old_data["devices"] = split_devices
-                # A split inherited the composite's disabled_by, which may not match its
-                # single config entry (e.g. a split owned by an enabled entry must not stay
-                # CONFIG_ENTRY disabled). Wait for the config entry store to load, then
-                # reconcile each split against its own entry.
-                if migrated_active_splits:
-                    await self.hass.config_entries.async_wait_initialized()
-                    for split in migrated_active_splits:
-                        config_entry = self.hass.config_entries.async_get_entry(
-                            split["config_entry_id"]
-                        )
-                        if config_entry is not None:
-                            _migrate_device_disabled_by(
-                                split, config_entry.disabled_by is not None
-                            )
-                split_deleted_devices: list[dict[str, Any]] = []
-                for device in old_data["deleted_devices"]:
-                    # One target per config entry. config_entries_subentries was a set, so
-                    # the old model allowed a device in several subentries of one config
-                    # entry, but the single-owner model keeps one. The multi-subentry
-                    # devices seen in the wild come from the buggy 2025.7.0b0-b1 subentry
-                    # migration (it left a device in both None and its real subentry), so
-                    # prefer a real subentry over the main entry (None). Collapsing rather
-                    # than splitting avoids duplicate devices which, sharing identifiers
-                    # and connections within one config entry, would collide in the
-                    # per-config-entry identifier/connection index.
-                    pairs = [
-                        (
-                            config_entry_id,
-                            next((s for s in subentry_ids if s is not None), None),
-                        )
-                        for config_entry_id, subentry_ids in device[
-                            "config_entries_subentries"
-                        ].items()
-                    ]
-                    if len(pairs) <= 1:
-                        # Unlike active devices, config_entry_id=None is a valid
-                        # (orphaned) state for a deleted device, so a deleted device with
-                        # no config entries is kept rather than dropped.
-                        config_entry_id, subentry_id = (
-                            pairs[0] if pairs else (None, None)
-                        )
-                        device["config_entry_id"] = config_entry_id
-                        device["config_subentry_id"] = subentry_id
-                        device["composite_device_id"] = None
-                        device["composite_primary_config_entry"] = None
-                        device["split_at"] = None
-                        device["orphaned_domain"] = None
-                        split_deleted_devices.append(device)
-                        continue
-                    # A deleted device that belonged to several config entries or
-                    # subentries is split like an active one - each split keeps a copy of
-                    # the identifiers/connections and a reference to the original composite
-                    # device id - so every config entry can still restore its share, and
-                    # its composite lineage, when a matching device is re-registered.
-                    old_id = device["id"]
-                    for config_entry_id, subentry_id in pairs:
-                        split = copy.deepcopy(device)
-                        split["id"] = uuid_util.random_uuid_hex()
-                        split["config_entry_id"] = config_entry_id
-                        split["config_subentry_id"] = subentry_id
-                        split["config_entries"] = [config_entry_id]
-                        split["config_entries_subentries"] = {
-                            config_entry_id: [subentry_id]
-                        }
-                        split["composite_device_id"] = old_id
-                        split["composite_primary_config_entry"] = None
-                        split["split_at"] = migrated_at
-                        split["orphaned_domain"] = None
-                        split_deleted_devices.append(split)
-                old_data["deleted_devices"] = split_deleted_devices
+            split_deleted_devices: list[dict[str, Any]] = []
+            for device in old_data["deleted_devices"]:
+                # One target per config entry. config_entries_subentries was a set, so
+                # the old model allowed a device in several subentries of one config
+                # entry, but the single-owner model keeps one. The multi-subentry
+                # devices seen in the wild come from the buggy 2025.7.0b0-b1 subentry
+                # migration (it left a device in both None and its real subentry), so
+                # prefer a real subentry over the main entry (None). Collapsing rather
+                # than splitting avoids duplicate devices which, sharing identifiers
+                # and connections within one config entry, would collide in the
+                # per-config-entry identifier/connection index.
+                pairs = [
+                    (
+                        config_entry_id,
+                        next((s for s in subentry_ids if s is not None), None),
+                    )
+                    for config_entry_id, subentry_ids in device[
+                        "config_entries_subentries"
+                    ].items()
+                ]
+                if len(pairs) <= 1:
+                    # Unlike active devices, config_entry_id=None is a valid
+                    # (orphaned) state for a deleted device, so a deleted device with
+                    # no config entries is kept rather than dropped.
+                    config_entry_id, subentry_id = pairs[0] if pairs else (None, None)
+                    device["config_entry_id"] = config_entry_id
+                    device["config_subentry_id"] = subentry_id
+                    device["composite_device_id"] = None
+                    device["composite_primary_config_entry"] = None
+                    device["split_at"] = None
+                    device["orphaned_domain"] = None
+                    split_deleted_devices.append(device)
+                    continue
+                # A deleted device that belonged to several config entries or
+                # subentries is split like an active one - each split keeps a copy of
+                # the identifiers/connections and a reference to the original composite
+                # device id - so every config entry can still restore its share, and
+                # its composite lineage, when a matching device is re-registered.
+                old_id = device["id"]
+                for config_entry_id, subentry_id in pairs:
+                    split = copy.deepcopy(device)
+                    split["id"] = uuid_util.random_uuid_hex()
+                    split["config_entry_id"] = config_entry_id
+                    split["config_subentry_id"] = subentry_id
+                    split["config_entries"] = [config_entry_id]
+                    split["config_entries_subentries"] = {
+                        config_entry_id: [subentry_id]
+                    }
+                    split["composite_device_id"] = old_id
+                    split["composite_primary_config_entry"] = None
+                    split["split_at"] = migrated_at
+                    split["orphaned_domain"] = None
+                    split_deleted_devices.append(split)
+            old_data["deleted_devices"] = split_deleted_devices
 
-        if old_major_version > 2:
+        if old_major_version > 3:
             raise NotImplementedError
         return old_data
+
+    async def _async_backup_store(self) -> None:
+        """Copy the store file to a timestamped backup before migrating."""
+        source = self.path
+        backup = f"{source}.{utcnow().strftime('%Y%m%d_%H%M%S')}.migration_backup"
+        try:
+            copied = await self.hass.async_add_executor_job(
+                _copy_if_exists, source, backup
+            )
+        except OSError as err:
+            _LOGGER.warning("Could not back up %s before migration: %s", source, err)
+        else:
+            if copied:
+                _LOGGER.info("Backed up %s to %s before migration", source, backup)
 
 
 class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](

@@ -4,6 +4,8 @@ from collections.abc import Callable, Iterable
 from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime
 from functools import partial
+import json
+import pathlib
 import time
 from typing import Any
 from unittest.mock import ANY, patch
@@ -2041,6 +2043,36 @@ async def test_migration_from_1_12(
     assert collapsed.connections == {("mac", "34:56:78:cd:ef:12")}
     assert collapsed.composite_device_id is None
     assert collapsed.has_composite_identifiers is False
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_backs_up_store_file(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_tmp_config_dir: str,
+) -> None:
+    """The store file is copied to a timestamped backup before the version 3 migration."""
+    hass.config.config_dir = hass_tmp_config_dir
+    storage_dir = pathlib.Path(hass_tmp_config_dir) / ".storage"
+    storage_dir.mkdir(parents=True, exist_ok=True)
+    old_store = {
+        "version": 1,
+        "minor_version": 12,
+        "key": dr.STORAGE_KEY,
+        "data": {"devices": [], "deleted_devices": []},
+    }
+    (storage_dir / dr.STORAGE_KEY).write_text(json.dumps(old_store))
+    hass_storage[dr.STORAGE_KEY] = old_store
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+
+    # Exactly one timestamped copy of the pre-migration file was made
+    backups = list(storage_dir.glob(f"{dr.STORAGE_KEY}.*.migration_backup"))
+    assert len(backups) == 1
+    assert json.loads(backups[0].read_text()) == old_store
+    # The middle segment is a YYYYMMDD_HHMMSS timestamp (strptime raises if malformed)
+    datetime.strptime(backups[0].name.split(".")[-2], "%Y%m%d_%H%M%S")
 
 
 @pytest.mark.parametrize("load_registries", [False])
