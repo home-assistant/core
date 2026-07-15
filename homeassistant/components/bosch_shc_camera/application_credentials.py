@@ -33,9 +33,7 @@ from __future__ import annotations
 
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_entry_oauth2_flow import (
-    AbstractOAuth2Implementation,
-)
+from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2Implementation
 
 from .config_flow import BoschOAuth2Implementation
 

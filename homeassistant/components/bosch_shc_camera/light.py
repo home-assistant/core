@@ -32,12 +32,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import (
-    CLOUD_API,
-    DOMAIN,
-    BoschCameraConfigEntry,
-    BoschCameraCoordinator,
-)
+from . import CLOUD_API, DOMAIN, BoschCameraConfigEntry, BoschCameraCoordinator
 from .cloud_ssl import async_get_bosch_cloud_session
 from .guards import _warn_if_privacy_on
 

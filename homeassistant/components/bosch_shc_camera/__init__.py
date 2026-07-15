@@ -189,7 +189,7 @@ class _StreamWorkerErrorListener(logging.Handler):
     than hoping the 60 s tick catches a failing state.
     """
 
-    def __init__(self, coordinator: "BoschCameraCoordinator") -> None:
+    def __init__(self, coordinator: BoschCameraCoordinator) -> None:
         super().__init__(logging.ERROR)
         self._coordinator: BoschCameraCoordinator | None = coordinator
 
@@ -226,7 +226,7 @@ class _StreamWorkerErrorListener(logging.Handler):
             loop.call_soon_threadsafe(
                 self._coordinator.schedule_stream_worker_error, cam_id, msg
             )
-        except Exception:  # noqa: S110 # logging.emit handler must never raise; exception would recurse into logging itself
+        except Exception:  # logging.emit handler must never raise; exception would recurse into logging itself
             # Never let the log handler crash the event loop or the logger.
             # Intentionally broad: this runs inside logging.emit and any
             # exception here would be routed back to logging's own error path.
@@ -285,10 +285,10 @@ def _rehydrate_cams_from_registry(
         title: str | None = None
         if device and device.name_by_user:
             t = device.name_by_user
-            title = t[6:] if t.startswith("Bosch ") else t
+            title = t.removeprefix("Bosch ")
         elif device and device.name and not _looks_like_uuid_name(device.name):
             t = device.name
-            title = t[6:] if t.startswith("Bosch ") else t
+            title = t.removeprefix("Bosch ")
         else:
             cam_eid = ereg.async_get_entity_id(
                 "camera",
@@ -335,7 +335,7 @@ from .const import (
     CLOUD_API as CLOUD_API,  # re-export: mypy --no-implicit-reexport (services.py imports it via `from . import`)
     DEFAULT_OPTIONS as DEFAULT_OPTIONS,  # re-export: mypy --no-implicit-reexport (config_flow.py imports it via `from . import`)
     DOMAIN,
-    LIVE_SESSION_TTL,  # noqa: F401  # re-exported for tests
+    LIVE_SESSION_TTL,  # re-exported for tests
 )
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -1497,7 +1497,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) 
     return True
 
 
-async def _async_cancel_coordinator_tasks(coord: "BoschCameraCoordinator") -> None:
+async def _async_cancel_coordinator_tasks(coord: BoschCameraCoordinator) -> None:
     """Shared teardown for both config-entry unload and HA stop.
 
     Called from `async_unload_entry` (integration reload / removal) and from
@@ -1571,7 +1571,10 @@ async def _async_cancel_coordinator_tasks(coord: "BoschCameraCoordinator") -> No
         drain_task.cancel()
         try:
             await drain_task
-        except asyncio.CancelledError, Exception:  # noqa: S110 # drain_task cancelled intentionally on shutdown; any residual error is non-actionable
+        except (
+            asyncio.CancelledError,
+            Exception,
+        ):  # drain_task cancelled intentionally on shutdown; any residual error is non-actionable
             pass
         coord.nvr_drain_task = None
     # Stop all NVR recorders BEFORE the TLS proxies — once the proxies are

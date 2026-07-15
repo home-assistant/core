@@ -24,12 +24,12 @@ Failover layers:
 from __future__ import annotations
 
 import asyncio
-import logging
-import re
 from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from html import unescape
+import logging
+import re
 from typing import Any
 from xml.etree.ElementTree import Element as _ETElement  # type annotation only
 from zoneinfo import ZoneInfo

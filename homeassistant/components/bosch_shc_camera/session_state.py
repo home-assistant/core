@@ -467,7 +467,8 @@ class FloatFieldView:
 
     def __getitem__(self, cam_id: str) -> float:
         """Raise `KeyError` if unset — matches `dict[str, float][cam_id]` semantics
-        for the `cam_id in view and view[cam_id]` call-site pattern."""
+        for the `cam_id in view and view[cam_id]` call-site pattern.
+        """
         session = self._sessions.get(cam_id)
         value: float | None = (
             None if session is None else getattr(session, self._field_name)

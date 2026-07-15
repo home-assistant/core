@@ -7,6 +7,7 @@ All functions that previously used `self` now take a `coordinator` parameter.
 from __future__ import annotations
 
 import calendar
+from datetime import UTC
 import logging
 import os
 import re
@@ -14,11 +15,10 @@ import socket
 import ssl
 import threading
 import time
-import urllib.error
-import urllib.request
-from datetime import UTC
 from typing import TYPE_CHECKING, Any
+import urllib.error
 from urllib.parse import urlparse
+import urllib.request
 
 if TYPE_CHECKING:
     from . import BoschCameraCoordinator
@@ -78,8 +78,12 @@ def _http_get(
     _http_get_chunked() instead so memory stays bounded.
     If the request fails with a network error, raises urllib.error.URLError or OSError.
     """
-    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})  # noqa: S310 # Bosch cloud URL, https+bearer, caller must validate via _is_safe_bosch_url
-    with urllib.request.urlopen(req, context=_bosch_ssl_ctx(), timeout=timeout) as r:  # noqa: S310 # Bosch cloud URL, https+bearer, caller must validate via _is_safe_bosch_url
+    req = urllib.request.Request(
+        url, headers={"Authorization": f"Bearer {token}"}
+    )  # Bosch cloud URL, https+bearer, caller must validate via _is_safe_bosch_url
+    with (
+        urllib.request.urlopen(req, context=_bosch_ssl_ctx(), timeout=timeout) as r
+    ):  # Bosch cloud URL, https+bearer, caller must validate via _is_safe_bosch_url
         return r.status, r.read()
 
 
@@ -89,8 +93,12 @@ def _http_get_to_file(url: str, token: str, dest_path: str, timeout: int = 60) -
     Returns True on success (HTTP 200), False on non-200.
     Raises urllib.error.URLError / OSError on network failure.
     """
-    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})  # noqa: S310 # Bosch cloud URL, https+bearer, caller must validate via _is_safe_bosch_url
-    with urllib.request.urlopen(req, context=_bosch_ssl_ctx(), timeout=timeout) as r:  # noqa: S310 # Bosch cloud URL, https+bearer, caller must validate via _is_safe_bosch_url
+    req = urllib.request.Request(
+        url, headers={"Authorization": f"Bearer {token}"}
+    )  # Bosch cloud URL, https+bearer, caller must validate via _is_safe_bosch_url
+    with (
+        urllib.request.urlopen(req, context=_bosch_ssl_ctx(), timeout=timeout) as r
+    ):  # Bosch cloud URL, https+bearer, caller must validate via _is_safe_bosch_url
         if r.status != 200:
             return False
         with open(dest_path, "wb") as f:
@@ -111,8 +119,12 @@ def _http_get_chunked(url: str, token: str, timeout: int = 60) -> Any:
                 while chunk := r.read(65536):
                     ...
     """
-    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})  # noqa: S310 # Bosch cloud URL, https+bearer, caller must validate via _is_safe_bosch_url
-    return urllib.request.urlopen(req, context=_bosch_ssl_ctx(), timeout=timeout)  # noqa: S310 # Bosch cloud URL, https+bearer, caller must validate via _is_safe_bosch_url
+    req = urllib.request.Request(
+        url, headers={"Authorization": f"Bearer {token}"}
+    )  # Bosch cloud URL, https+bearer, caller must validate via _is_safe_bosch_url
+    return urllib.request.urlopen(
+        req, context=_bosch_ssl_ctx(), timeout=timeout
+    )  # Bosch cloud URL, https+bearer, caller must validate via _is_safe_bosch_url
 
 
 def smb_available() -> bool:
@@ -129,7 +141,7 @@ def smb_available() -> bool:
     without duplicating a bare ``try/except ImportError`` themselves.
     """
     try:
-        import smbclient  # noqa: F401
+        import smbclient
     except ImportError:
         return False
     return True
@@ -211,7 +223,7 @@ def sync_local_save(
                     started_at - ev_epoch,
                 )
                 return
-        except Exception:  # noqa: S110 # timestamp parse failure is non-actionable; event proceeds without age-filter
+        except Exception:  # timestamp parse failure is non-actionable; event proceeds without age-filter
             pass
 
     cam_safe = _safe_name(cam_name)
@@ -342,13 +354,7 @@ def sync_smb_upload(
         return
 
     try:
-        from smbclient import (
-            open_file,
-            register_session,
-        )
-        from smbclient import (
-            stat as smb_stat,
-        )
+        from smbclient import open_file, register_session, stat as smb_stat
     except ImportError:
         _LOGGER.warning(
             "smbprotocol not installed — SMB upload disabled. "
@@ -520,12 +526,14 @@ def _sync_smb_upload_events(
                 except OSError:
                     try:
                         total = 0
-                        req_obj = urllib.request.Request(  # noqa: S310 # Bosch cloud clip URL, https+bearer; guarded by _is_safe_bosch_url above
+                        req_obj = urllib.request.Request(  # Bosch cloud clip URL, https+bearer; guarded by _is_safe_bosch_url above
                             clip_url, headers={"Authorization": f"Bearer {token}"}
                         )
-                        with urllib.request.urlopen(  # noqa: S310 # Bosch cloud clip URL, https+bearer; from Bosch API response (not user-supplied)
-                            req_obj, context=_bosch_ssl_ctx(), timeout=60
-                        ) as r:
+                        with (
+                            urllib.request.urlopen(  # Bosch cloud clip URL, https+bearer; from Bosch API response (not user-supplied)
+                                req_obj, context=_bosch_ssl_ctx(), timeout=60
+                            ) as r
+                        ):
                             if r.status == 200:
                                 with open_file(smb_path, mode="wb") as f:
                                     while True:
@@ -553,8 +561,7 @@ def smb_makedirs(
     full_path: str, server: str, share: str, base_path: str, folder_parts: str
 ) -> None:
     """Create SMB directories recursively."""
-    from smbclient import mkdir
-    from smbclient import stat as smb_stat
+    from smbclient import mkdir, stat as smb_stat
 
     # Build path incrementally
     parts = [
@@ -583,8 +590,7 @@ def sync_smb_cleanup(coordinator: BoschCameraCoordinator) -> None:
         _sync_ftp_cleanup(coordinator)
         return
     try:
-        from smbclient import register_session, remove, scandir
-        from smbclient import stat as smb_stat
+        from smbclient import register_session, remove, scandir, stat as smb_stat
     except ImportError:
         return
 
@@ -703,7 +709,9 @@ def _ftp_connect(server: str, username: str, password: str) -> Any:
     """Open a passive-mode FTP connection. Caller closes via .quit()."""
     import ftplib
 
-    ftp = ftplib.FTP(server, timeout=30)  # noqa: S321 # FTP ist eine bewusst konfigurierbare Upload-Zieloption (smb.py FTP-Pfad)
+    ftp = ftplib.FTP(
+        server, timeout=30
+    )  # FTP ist eine bewusst konfigurierbare Upload-Zieloption (smb.py FTP-Pfad)
     ftp.login(username, password)
     ftp.set_pasv(True)
     return ftp
@@ -852,12 +860,14 @@ def _sync_ftp_upload(
                         _LOGGER.debug("FTP skip (exists): %s", fname)
                     else:
                         try:
-                            req_obj = urllib.request.Request(  # noqa: S310 # Bosch cloud clip URL, https+bearer, guarded by _is_safe_bosch_url above
+                            req_obj = urllib.request.Request(  # Bosch cloud clip URL, https+bearer, guarded by _is_safe_bosch_url above
                                 clip_url, headers={"Authorization": f"Bearer {token}"}
                             )
-                            with urllib.request.urlopen(  # noqa: S310 # Bosch cloud clip URL, https+bearer, guarded by _is_safe_bosch_url above
-                                req_obj, context=_bosch_ssl_ctx(), timeout=60
-                            ) as r:
+                            with (
+                                urllib.request.urlopen(  # Bosch cloud clip URL, https+bearer, guarded by _is_safe_bosch_url above
+                                    req_obj, context=_bosch_ssl_ctx(), timeout=60
+                                ) as r
+                            ):
                                 if r.status == 200:
                                     ftp.storbinary(f"STOR {fpath}", r)
                                     _LOGGER.info("FTP uploaded: %s", fname)
@@ -875,14 +885,14 @@ def _sync_ftp_upload(
         except Exception:
             try:
                 ftp.close()
-            except Exception:  # noqa: S110 # best-effort FTP teardown, failure non-actionable
+            except Exception:  # best-effort FTP teardown, failure non-actionable
                 pass
 
 
 def _sync_ftp_cleanup(coordinator: BoschCameraCoordinator) -> None:
     """Delete files on the FTP server older than smb_retention_days."""
-    import ftplib
     from datetime import datetime
+    import ftplib
 
     opts = coordinator.options
     server = opts.get("smb_server", "").strip()
@@ -940,7 +950,7 @@ def _sync_ftp_cleanup(coordinator: BoschCameraCoordinator) -> None:
                     .replace(tzinfo=UTC)
                     .timestamp()
                 )
-            except Exception:  # noqa: S112 # MDTM/parse failure → skip file, resilient cleanup loop
+            except Exception:  # MDTM/parse failure → skip file, resilient cleanup loop
                 continue
             if mt < cutoff:
                 try:
@@ -953,7 +963,9 @@ def _sync_ftp_cleanup(coordinator: BoschCameraCoordinator) -> None:
             _walk_and_delete(f"{path}/{sub}")
             try:
                 ftp.cwd(path)  # back up before next sibling
-            except Exception:  # noqa: S110 # best-effort cwd restore; sibling iteration proceeds regardless
+            except (
+                Exception
+            ):  # best-effort cwd restore; sibling iteration proceeds regardless
                 pass
 
     try:
@@ -962,7 +974,7 @@ def _sync_ftp_cleanup(coordinator: BoschCameraCoordinator) -> None:
     finally:
         try:
             ftp.quit()
-        except Exception:  # noqa: S110 # best-effort FTP cleanup teardown, failure non-actionable
+        except Exception:  # best-effort FTP cleanup teardown, failure non-actionable
             pass
 
     if deleted:

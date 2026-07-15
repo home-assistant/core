@@ -37,6 +37,7 @@ from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from bosch_shc_camera_client.cloud import cloud_put_json
+
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .cloud_ssl import async_get_bosch_cloud_session
@@ -461,7 +462,7 @@ async def _notify_write_failed(
                 "notification_id": f"bosch_{feature_key}_queued_{cam_id[:8]}",
             },
         )
-    except Exception:  # noqa: S110 # best-effort persistent_notification; HA service call non-critical after all write paths exhausted
+    except Exception:  # best-effort persistent_notification; HA service call non-critical after all write paths exhausted
         pass
 
 
@@ -533,7 +534,7 @@ async def async_cloud_set_privacy_mode(
             _LOGGER.info("cloud_set_privacy_mode: 401 -- refreshing token and retrying")
             try:
                 token = await coordinator.ensure_valid_token(token)
-            except Exception:  # noqa: S110 # token refresh failed; fall through to local SHC path
+            except Exception:  # token refresh failed; fall through to local SHC path
                 pass  # fall through to SHC
             else:
                 retry_result = await cloud_put_json(session, token, url, body)

@@ -39,10 +39,10 @@ which requires the method to keep existing on the class.
 from __future__ import annotations
 
 import asyncio
-import logging
-import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+import logging
+import time
 from typing import TYPE_CHECKING, cast
 
 import aiohttp

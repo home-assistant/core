@@ -45,10 +45,10 @@ passes a closure that does the exact same class-dispatch.
 from __future__ import annotations
 
 import asyncio
-import logging
-import time
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
+import time
 from typing import TYPE_CHECKING, Any
 
 import aiohttp
@@ -76,14 +76,15 @@ def _err_str(err: BaseException) -> str:
     Re-implementing the 3-line logic here avoids depending on either.
     """
     s = str(err)
-    return s if s else repr(err)
+    return s or repr(err)
 
 
 @dataclass
 class CamContext:
     """Per-camera values computed once per tick, shared by every
     slow-tier sub-function — avoids the original inline loop's
-    redundant re-derivation of `hw`/`is_gen2` at multiple points."""
+    redundant re-derivation of `hw`/`is_gen2` at multiple points.
+    """
 
     hw: str
     is_gen2: bool
@@ -106,7 +107,8 @@ def _compute_cam_context(
 ) -> CamContext:
     """Compute the per-camera context for the slow-tier pass, including
     the stream-contention defer-gate side effects (mutates
-    `coordinator.slow_tier_deferred`/`_slow_tier_defer_since`)."""
+    `coordinator.slow_tier_deferred`/`_slow_tier_defer_since`).
+    """
     cam_status = data[cam_id].get("status", "UNKNOWN")
     is_online = cam_status == "ONLINE"
 
@@ -321,7 +323,8 @@ async def _poll_cam_control(
     headers: dict[str, str],
 ) -> None:
     """Fetch pan position + Gen2 lighting/switch state — both polled
-    every tick (NOT slow-tier-gated), only gated on `ctx.is_online`."""
+    every tick (NOT slow-tier-gated), only gated on `ctx.is_online`.
+    """
     # Fetch pan position for cameras that support it (skip if offline)
     if ctx.pan_limit and ctx.is_online:
         try:

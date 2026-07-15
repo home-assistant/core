@@ -80,8 +80,7 @@ class TokenAuthCoordinatorMixin:
             return False
 
     async def ensure_valid_token(self: Any, observed_token: str | None = None) -> str:
-        """
-        Return a valid bearer token.
+        """Return a valid bearer token.
         Called ONLY when we get a 401 — not on every tick.
         Refreshes via refresh_token with retry logic:
           - Serialized via self._token_refresh_lock so two concurrent
@@ -120,12 +119,13 @@ class TokenAuthCoordinatorMixin:
         # same way it did before this method moved out of __init__.py —
         # those patches target the package's own namespace, not
         # token_auth.py's.
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
-
         # rename-reexport (issue_registry as ir): mypy --no-implicit-reexport
         # only recognizes identical-name re-export at the source; the alias
         # is intentional and correct at runtime.
-        from . import ir as ir
+        from . import (
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
+            ir as ir,
+        )
         from .config_flow import (
             AuthServerOutageError,
             RefreshTokenInvalidError,

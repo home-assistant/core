@@ -88,8 +88,8 @@ degradation mode, not a new bug this feature introduces.
 from __future__ import annotations
 
 import asyncio
-import logging
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from .frigate_endpoint import (
@@ -156,7 +156,8 @@ class _PathRewriteRelay:
 
     async def run(self) -> None:
         """Connect to the inner proxy, forward the first request rewritten,
-        then pipe both directions."""
+        then pipe both directions.
+        """
         ir, iw = await asyncio.wait_for(
             asyncio.open_connection("127.0.0.1", self._target.port),
             timeout=_INNER_CONNECT_TIMEOUT,
@@ -195,7 +196,8 @@ class _PathRewriteRelay:
         """Emit every complete request in ``buf`` (URI rewritten), return
         the unparsed tail. Mirrors `_Relay._drain_requests`'s framing —
         interleaved RTP/RTCP binary frames (`$`) are forwarded raw, never
-        parsed as RTSP."""
+        parsed as RTSP.
+        """
         assert self._iw is not None
         while buf:
             if buf[:1] == b"$":
@@ -222,7 +224,8 @@ class _PathRewriteRelay:
 
     async def _pipe_inner_to_client(self) -> None:
         """Forward inner->client verbatim (RTP frames, responses) — nothing
-        in a response needs rewriting."""
+        in a response needs rewriting.
+        """
         assert self._ir is not None
         try:
             while True:

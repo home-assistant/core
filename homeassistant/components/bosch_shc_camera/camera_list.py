@@ -28,6 +28,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 import aiohttp
+
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import CLOUD_API

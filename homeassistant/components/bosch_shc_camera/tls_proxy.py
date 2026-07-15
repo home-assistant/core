@@ -17,13 +17,13 @@ defensive module-level sweep.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import hashlib
 import logging
 import re
 import socket
 import ssl
 import time
-from collections.abc import Callable
 
 from .const import TIMEOUT_TLS_PROXY_CONNECT, TIMEOUT_TLS_PROXY_RTSP_READ
 
@@ -130,7 +130,8 @@ async def start_tls_proxy(
     ) -> None:
         """Forward bytes. If rewrite_transport=True, intercept RTSP SETUP
         requests and force TCP interleaved transport so FFmpeg doesn't try
-        UDP (which can't work through the TCP proxy)."""
+        UDP (which can't work through the TCP proxy).
+        """
         interleaved_counter = 0
         dbg_count = 0
         try:
@@ -327,7 +328,7 @@ async def stop_tls_proxy(
             server.close_clients()
             await server.wait_closed()
             _LOGGER.debug("TLS proxy for %s: server closed", cam_id[:8])
-        except Exception:  # noqa: S110 — best-effort server close during stop, failure non-actionable
+        except Exception:
             pass
 
 
@@ -382,7 +383,9 @@ async def rtsp_keepalive(
                 writer.close()
                 try:
                     await writer.wait_closed()
-                except Exception:  # noqa: S110 # best-effort writer close after keepalive, failure non-actionable
+                except (
+                    Exception
+                ):  # best-effort writer close after keepalive, failure non-actionable
                     pass
                 return True
             _LOGGER.debug(
@@ -391,7 +394,9 @@ async def rtsp_keepalive(
             writer.close()
             try:
                 await writer.wait_closed()
-            except Exception:  # noqa: S110 # best-effort writer close after keepalive, failure non-actionable
+            except (
+                Exception
+            ):  # best-effort writer close after keepalive, failure non-actionable
                 pass
             return False
 
@@ -413,7 +418,9 @@ async def rtsp_keepalive(
         writer.close()
         try:
             await writer.wait_closed()
-        except Exception:  # noqa: S110 # best-effort writer close after keepalive, failure non-actionable
+        except (
+            Exception
+        ):  # best-effort writer close after keepalive, failure non-actionable
             pass
 
         if "200 OK" in resp2_str:
@@ -432,7 +439,9 @@ async def rtsp_keepalive(
             try:
                 writer.close()
                 await writer.wait_closed()
-            except Exception:  # noqa: S110 # best-effort writer close on keepalive failure, failure non-actionable
+            except (
+                Exception
+            ):  # best-effort writer close on keepalive failure, failure non-actionable
                 pass
         return False
 
@@ -533,7 +542,9 @@ async def pre_warm_rtsp(
                 writer.close()
                 try:
                     await writer.wait_closed()
-                except Exception:  # noqa: S110 # best-effort writer close on pre-warm abort, failure non-actionable
+                except (
+                    Exception
+                ):  # best-effort writer close on pre-warm abort, failure non-actionable
                     pass
                 if attempt < max_attempts:
                     await asyncio.sleep(retry_wait)
@@ -571,7 +582,7 @@ async def pre_warm_rtsp(
             writer.close()
             try:
                 await writer.wait_closed()
-            except Exception:  # noqa: S110 # best-effort writer close after pre-warm DESCRIBE, failure non-actionable
+            except Exception:  # best-effort writer close after pre-warm DESCRIBE, failure non-actionable
                 pass
             # Wait for the camera to fully release the TLS connection.
             # The camera only allows ~2 concurrent RTSP sessions per
@@ -591,7 +602,7 @@ async def pre_warm_rtsp(
                 try:
                     writer.close()
                     await writer.wait_closed()
-                except Exception:  # noqa: S110 # best-effort writer close in pre-warm exception handler, failure non-actionable
+                except Exception:  # best-effort writer close in pre-warm exception handler, failure non-actionable
                     pass
             if attempt < max_attempts:
                 await asyncio.sleep(retry_wait)

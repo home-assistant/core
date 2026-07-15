@@ -184,5 +184,5 @@ async def fetch_mjpeg_snapshot(
                 pass
             try:
                 await proc.wait()
-            except Exception:  # noqa: S110 — best-effort reap; proc is already dead
+            except Exception:
                 pass

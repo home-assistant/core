@@ -38,12 +38,12 @@ from __future__ import annotations
 
 import asyncio
 import base64
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass, field
 import hmac
 import ipaddress
 import logging
 import socket
-from collections.abc import Callable, Coroutine
-from dataclasses import dataclass, field
 from typing import Any, Protocol, TypeVar
 from urllib.parse import quote as _urlquote
 
@@ -58,7 +58,7 @@ _T = TypeVar("_T")
 
 # Auth modes (mirrored in const.py CONF defaults + the options flow selector).
 AUTH_NONE = "none"
-AUTH_PATH_TOKEN = "path_token"  # noqa: S105 # auth-mode name, not a credential
+AUTH_PATH_TOKEN = "path_token"  # auth-mode name, not a credential
 AUTH_BASIC = "basic"
 
 # Quality selectors → Bosch RTSP ``inst`` query value. High = main encoder
@@ -672,7 +672,8 @@ class _CameraServer:
 
     async def _idle_linger(self) -> None:
         """Wait config.idle_timeout of continuous zero-client idle, then fire
-        on_idle. Cancelled and replaced the instant a new client connects."""
+        on_idle. Cancelled and replaced the instant a new client connects.
+        """
         try:
             if self.config.idle_timeout > 0:
                 await asyncio.sleep(self.config.idle_timeout)
@@ -917,7 +918,7 @@ class FrigateCoordinatorMixin:
         - An all-interfaces bind (0.0.0.0 / :: / empty) isn't routable, so we
           detect the HA host's primary outbound IPv4 (no packet is sent) instead.
         """
-        if bind_host not in ("0.0.0.0", "::", ""):  # noqa: S104 # all-interfaces sentinels
+        if bind_host not in ("0.0.0.0", "::", ""):  # all-interfaces sentinels
             return bind_host
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:

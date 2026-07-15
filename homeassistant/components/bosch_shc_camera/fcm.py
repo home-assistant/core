@@ -18,7 +18,7 @@ import logging
 import os
 import ssl
 import time
-from typing import Any, ClassVar, TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, ClassVar, override
 from urllib.parse import urlparse
 
 import aiohttp
@@ -295,7 +295,8 @@ class _QuietFcmPushClient:
     @staticmethod
     def _patch_class() -> type | None:
         """Return a patched FcmPushClient subclass, or None if the library is too
-        new/old for safe subclassing (i.e. ``_listen`` signature changed)."""
+        new/old for safe subclassing (i.e. ``_listen`` signature changed).
+        """
         try:
             from firebase_messaging import FcmPushClient, FcmPushClientRunState
         except ImportError:
@@ -492,7 +493,7 @@ async def async_stop_fcm_supervisor(coordinator: Any) -> None:
         sup.cancel()
         try:
             await sup
-        except asyncio.CancelledError, Exception:  # noqa: S110 — intentional silent cancel
+        except asyncio.CancelledError, Exception:
             pass
         coordinator.fcm_supervisor_task = None
     await async_stop_fcm_push(coordinator)
@@ -1435,7 +1436,7 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                     ) -> None:
                         try:
                             await async_mark_events_read(_coord, [_eid])
-                        except Exception:  # noqa: S110 # best-effort cloud housekeeping
+                        except Exception:  # best-effort cloud housekeeping
                             pass
 
                     _mr_task = coordinator.hass.async_create_task(_mark_read_bg())
@@ -1570,7 +1571,7 @@ async def async_send_alert(
     # Doing this early ensures all sub-lookups (Path B, Step 3, AI title-match)
     # use the stable ID rather than the mutable display title — fixes B04-BUG-2
     # and W-imageflip-BUG-2 (stale privacy / wrong cam on rename).
-    _resolved_cam_id: str | None = cam_id if cam_id else None
+    _resolved_cam_id: str | None = cam_id or None
     if not _resolved_cam_id:
         for _cid, _cdata in coordinator.data.items():
             if _cdata.get("info", {}).get("title", "") == cam_name:
@@ -1919,7 +1920,7 @@ async def async_send_alert(
                                 _LOGGER.debug(
                                     "Alert: direct clip.mp4 available for %s", cam_name
                                 )
-                except Exception:  # noqa: S110 # best-effort HEAD probe for direct clip URL; failure falls through to poll path
+                except Exception:  # best-effort HEAD probe for direct clip URL; failure falls through to poll path
                     pass
 
         if not found_clip_url and clip_status == "Unavailable":
@@ -1977,7 +1978,7 @@ async def async_send_alert(
                         break
                     if clip_unavailable:
                         break
-                except Exception:  # noqa: S112 # resilient poll loop, transient network error on one attempt should not abort all retries
+                except Exception:  # resilient poll loop, transient network error on one attempt should not abort all retries
                     continue
 
         if found_clip_url and _is_safe_bosch_url(found_clip_url):
@@ -2019,7 +2020,9 @@ async def async_send_alert(
         if event_id:
             try:
                 await async_mark_events_read(coordinator, [event_id])
-            except Exception:  # noqa: S110 # best-effort cloud housekeeping; alert delivery already complete
+            except (
+                Exception
+            ):  # best-effort cloud housekeeping; alert delivery already complete
                 pass
 
     # -- SMB upload (immediate, alongside alert) ---------------------------
@@ -2032,7 +2035,7 @@ async def async_send_alert(
                 "eventType": event_type,
                 "id": ev_id,
                 "imageUrl": image_url,
-                "videoClipUrl": found_clip_url if found_clip_url else "",
+                "videoClipUrl": found_clip_url or "",
                 "videoClipUploadStatus": "Done" if found_clip_url else "",
             }
             smb_data = {
@@ -2094,7 +2097,7 @@ async def async_send_alert(
                 "eventType": event_type,
                 "id": ev_id,
                 "imageUrl": image_url,
-                "videoClipUrl": found_clip_url if found_clip_url else "",
+                "videoClipUrl": found_clip_url or "",
                 "videoClipUploadStatus": "Done" if found_clip_url else "",
             }
             await asyncio.wait_for(
@@ -2151,7 +2154,9 @@ async def async_mark_events_read(coordinator: Any, event_ids: list[str]) -> bool
                 ) as resp:
                     if resp.status in (200, 201, 204):
                         success = True
-        except Exception:  # noqa: S110 # best-effort mark-read; caller logs success/failure via return value
+        except (
+            Exception
+        ):  # best-effort mark-read; caller logs success/failure via return value
             pass
 
     if success:

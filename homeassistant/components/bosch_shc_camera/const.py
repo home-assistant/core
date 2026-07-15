@@ -198,7 +198,7 @@ DEFAULT_OPTIONS = {
     "nvr_quality": "auto",
     # Phase 4: pre-roll buffer — 0 = disabled; 10-60 s = keep rolling cache in tmpfs
     "nvr_preroll_seconds": 0,
-    "nvr_preroll_cache_dir": "/dev/shm/bosch_nvr_cache",  # noqa: S108 # default tmpfs cache dir, overridable via config options
+    "nvr_preroll_cache_dir": "/dev/shm/bosch_nvr_cache",  # default tmpfs cache dir, overridable via config options
     "nvr_postroll_seconds": 0,
     # Opt-in: stop-finalize the ring's actively-written segment (SIGTERM,
     # wait for moov atom) and re-attach it before dropping the newest
@@ -321,11 +321,14 @@ CONF_FRIGATE_BIND_HOST = "frigate_bind_host"
 CONF_FRIGATE_BIND_PORT = "frigate_bind_port"
 CONF_FRIGATE_IP_ALLOWLIST = "frigate_ip_allowlist"
 CONF_FRIGATE_AUTH_MODE = "frigate_auth_mode"
-CONF_FRIGATE_TOKEN = "frigate_token"  # noqa: S105 # option key name, not a credential
+CONF_FRIGATE_TOKEN = "frigate_token"  # option key name, not a credential
 CONF_FRIGATE_BASIC_USER = "frigate_basic_user"
 CONF_FRIGATE_IDLE_TIMEOUT = "frigate_idle_timeout"
 CONF_FRIGATE_MAX_CONNECTIONS = "frigate_max_connections"
-FRIGATE_BIND_VALUES = ("127.0.0.1", "0.0.0.0")  # noqa: S104 # 0.0.0.0 is an explicit opt-in LAN-exposure choice
+FRIGATE_BIND_VALUES = (
+    "127.0.0.1",
+    "0.0.0.0",
+)  # 0.0.0.0 is an explicit opt-in LAN-exposure choice
 FRIGATE_AUTH_VALUES = ("none", "path_token", "basic")
 
 # ── Webhook delivery ──────────────────────────────────────────────────────────

@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import asyncio
 import datetime
+from datetime import UTC
 import logging
 import math
 import os
@@ -31,7 +32,6 @@ import re
 import shutil
 import signal
 import time
-from datetime import UTC
 from typing import TYPE_CHECKING, Any
 
 from .const import (
@@ -140,7 +140,7 @@ def _staging_dir(base_path: str, cam_name: str) -> str:
 
 
 def _staging_pattern(base_path: str, cam_name: str) -> str:
-    """ffmpeg ``-strftime`` output template inside the staging tree."""
+    """Ffmpeg ``-strftime`` output template inside the staging tree."""
     return os.path.join(
         _staging_dir(base_path, cam_name),
         "%Y-%m-%d",
@@ -271,14 +271,17 @@ def _preroll_cam_dir(coordinator: BoschCameraCoordinator, cam_id: str) -> str:
     """
     opts = coordinator.options
     cache_dir = (
-        opts.get("nvr_preroll_cache_dir") or "/dev/shm/bosch_nvr_cache"  # noqa: S108 # tmpfs NVR cache default, user-overridable via options
-    ).strip()
+        (
+            opts.get("nvr_preroll_cache_dir")
+            or "/dev/shm/bosch_nvr_cache"  # tmpfs NVR cache default, user-overridable via options
+        ).strip()
+    )
     cam_name = coordinator.data.get(cam_id, {}).get("info", {}).get("title", cam_id)
     return _preroll_dir(cache_dir, cam_name)
 
 
 def _preroll_pattern(cache_dir: str, cam_name: str) -> str:
-    """strftime pattern for pre-roll 10 s segments in tmpfs."""
+    """Strftime pattern for pre-roll 10 s segments in tmpfs."""
     return os.path.join(_preroll_dir(cache_dir, cam_name), "%H%M%S.mp4")
 
 
@@ -339,8 +342,9 @@ def _prune_and_count(cam_dir: str, max_segments: int) -> int:
 
 
 def _build_preroll_ffmpeg_args(rtsp_url: str, pattern: str) -> list[str]:
-    """ffmpeg args for 10 s segments to tmpfs. No -segment_atclocktime, no -strftime_mkdir.
-    No -reconnect* — those are HTTP-only and crash ffmpeg rc=8 on rtsp:// inputs."""
+    """Ffmpeg args for 10 s segments to tmpfs. No -segment_atclocktime, no -strftime_mkdir.
+    No -reconnect* — those are HTTP-only and crash ffmpeg rc=8 on rtsp:// inputs.
+    """
     return [
         "ffmpeg",
         "-hide_banner",
@@ -398,7 +402,7 @@ async def _watch_preroll_recorder(
                 max_segs,
             )
             coordinator.nvr_preroll_segment_counts[cam_id] = remaining
-        except Exception:  # best-effort prune-on-stop; non-fatal if cache dir missing  # noqa: S110 # best-effort cache prune, non-fatal if dir missing
+        except Exception:  # best-effort prune-on-stop; non-fatal if cache dir missing  # best-effort cache prune, non-fatal if dir missing
             pass
 
 
@@ -431,8 +435,11 @@ async def _spawn_preroll_recorder_locked(
 
     opts = coordinator.options
     cache_dir = (
-        opts.get("nvr_preroll_cache_dir") or "/dev/shm/bosch_nvr_cache"  # noqa: S108 # tmpfs NVR cache default, user-overridable via options
-    ).strip()
+        (
+            opts.get("nvr_preroll_cache_dir")
+            or "/dev/shm/bosch_nvr_cache"  # tmpfs NVR cache default, user-overridable via options
+        ).strip()
+    )
     cam_name = coordinator.data.get(cam_id, {}).get("info", {}).get("title", cam_id)
     cam_dir = _preroll_dir(cache_dir, cam_name)
     try:
@@ -477,7 +484,7 @@ async def _spawn_preroll_recorder_locked(
             max_segs,
         )
         coordinator.nvr_preroll_segment_counts[cam_id] = remaining
-    except Exception:  # best-effort prune-on-spawn; non-fatal if cache dir missing  # noqa: S110 # best-effort cache prune, non-fatal if dir missing
+    except Exception:  # best-effort prune-on-spawn; non-fatal if cache dir missing  # best-effort cache prune, non-fatal if dir missing
         pass
 
     # Start periodic prune watcher — keeps the ring buffer bounded while running.
@@ -577,7 +584,7 @@ async def stop_preroll_recorder(
     cam_dir = _preroll_cam_dir(coordinator, cam_id)
     try:
         await coordinator.hass.async_add_executor_job(prune_preroll_cache, cam_dir, 0)
-    except Exception:  # best-effort cleanup; non-fatal if cache dir missing  # noqa: S110 # best-effort ring cleanup on stop, non-fatal if dir missing
+    except Exception:  # best-effort cleanup; non-fatal if cache dir missing  # best-effort ring cleanup on stop, non-fatal if dir missing
         pass
     return clean_exit
 
@@ -671,8 +678,11 @@ async def finalize_and_restart_preroll_recorder(
 
         opts = coordinator.options
         cache_dir = (
-            opts.get("nvr_preroll_cache_dir") or "/dev/shm/bosch_nvr_cache"  # noqa: S108 # tmpfs NVR cache default, user-overridable via options
-        ).strip()
+            (
+                opts.get("nvr_preroll_cache_dir")
+                or "/dev/shm/bosch_nvr_cache"  # tmpfs NVR cache default, user-overridable via options
+            ).strip()
+        )
         cam_name = coordinator.data.get(cam_id, {}).get("info", {}).get("title", cam_id)
         finalized_dir = os.path.join(cache_dir, "_finalized_tmp", _safe_name(cam_name))
         finalized_path = os.path.join(finalized_dir, os.path.basename(newest))
@@ -849,7 +859,7 @@ async def create_motion_clip(
 def _build_postroll_capture_args(
     rtsp_url: str, output_path: str, duration_secs: int
 ) -> list[str]:
-    """ffmpeg argv for a single-shot fixed-duration live capture.
+    """Ffmpeg argv for a single-shot fixed-duration live capture.
 
     Used to record the post-roll window right after an FCM motion event —
     ``-t`` makes ffmpeg exit on its own once the window has elapsed, no
@@ -1015,8 +1025,11 @@ async def assemble_and_ship_motion_clip(
         postroll_attached = False
         if postroll_secs > 0:
             cache_dir = (
-                opts.get("nvr_preroll_cache_dir") or "/dev/shm/bosch_nvr_cache"  # noqa: S108 # tmpfs NVR cache default, user-overridable via options
-            ).strip()
+                (
+                    opts.get("nvr_preroll_cache_dir")
+                    or "/dev/shm/bosch_nvr_cache"  # tmpfs NVR cache default, user-overridable via options
+                ).strip()
+            )
             postroll_dir = os.path.join(
                 cache_dir, "_postroll_tmp", _safe_name(cam_name)
             )
@@ -1408,7 +1421,7 @@ async def _watch_recorder(
                 proc.stderr.read(2048), timeout=TIMEOUT_RECORDER_STDERR_DRAIN
             )
             err_tail = err_bytes.decode("utf-8", errors="replace").strip()
-        except (  # noqa: S110 # best-effort stderr drain before respawn, exit already logged
+        except (  # best-effort stderr drain before respawn, exit already logged
             TimeoutError,
             Exception,
         ):  # best-effort stderr drain before respawn; ffmpeg exit already logged
@@ -1468,7 +1481,7 @@ async def _watch_recorder(
                         },
                     )
                 )
-        except Exception:  # noqa: S110 # best-effort UI notification; error already logged
+        except Exception:  # best-effort UI notification; error already logged
             pass
         return
 
@@ -1636,10 +1649,7 @@ def _upload_smb(
     uploads stay in their own branch.
     """
     try:
-        from smbclient import (
-            open_file,
-            register_session,
-        )
+        from smbclient import open_file, register_session
     except ImportError:
         _LOGGER.warning(
             "NVR drain (smb): smbprotocol not installed — install or set "
@@ -1734,7 +1744,7 @@ def _upload_ftp(
         except Exception:  # best-effort graceful FTP quit; fallback to close below
             try:
                 ftp.close()
-            except (  # noqa: S110 # best-effort FTP teardown, failure non-actionable
+            except (  # best-effort FTP teardown, failure non-actionable
                 Exception
             ):  # best-effort FTP socket close on teardown, failure non-actionable
                 pass
@@ -1866,7 +1876,7 @@ def sync_drain_tick(
                             },
                         ),
                     )
-            except (  # noqa: S110 # best-effort UI notify; quarantine + error already logged
+            except (  # best-effort UI notify; quarantine + error already logged
                 Exception
             ):  # best-effort UI notification; quarantine + error log already done above
                 pass
@@ -1992,8 +2002,7 @@ def _sync_nvr_cleanup_local(coordinator: BoschCameraCoordinator) -> None:
 def _sync_nvr_cleanup_smb(coordinator: BoschCameraCoordinator) -> None:
     """Walk only the NVR subtree on the SMB share and unlink old files."""
     try:
-        from smbclient import register_session, remove, scandir
-        from smbclient import stat as smb_stat
+        from smbclient import register_session, remove, scandir, stat as smb_stat
     except ImportError:
         return
     opts = coordinator.options
@@ -2062,8 +2071,8 @@ def _sync_nvr_cleanup_smb(coordinator: BoschCameraCoordinator) -> None:
 
 def _sync_nvr_cleanup_ftp(coordinator: BoschCameraCoordinator) -> None:
     """Walk only the NVR subtree on the FTP server and unlink old files."""
-    import ftplib
     from datetime import datetime
+    import ftplib
 
     from .smb import _ftp_connect
 
@@ -2132,7 +2141,7 @@ def _sync_nvr_cleanup_ftp(coordinator: BoschCameraCoordinator) -> None:
                     .replace(tzinfo=UTC)
                     .timestamp()
                 )
-            except Exception:  # skip file if MDTM unavailable; resilient FTP walk loop  # noqa: S112 # skip file if MDTM unavailable, resilient walk
+            except Exception:  # skip file if MDTM unavailable; resilient FTP walk loop  # skip file if MDTM unavailable, resilient walk
                 continue
             if mt < cutoff:
                 try:
@@ -2146,7 +2155,7 @@ def _sync_nvr_cleanup_ftp(coordinator: BoschCameraCoordinator) -> None:
             _walk_and_delete(f"{path}/{sd}")
             try:
                 ftp.cwd(path)
-            except (  # noqa: S110 # best-effort cwd restore, sibling loop continues
+            except (  # best-effort cwd restore, sibling loop continues
                 Exception
             ):  # best-effort cwd back to parent after subdir walk; non-fatal
                 pass
@@ -2157,7 +2166,7 @@ def _sync_nvr_cleanup_ftp(coordinator: BoschCameraCoordinator) -> None:
     finally:
         try:
             ftp.quit()
-        except (  # noqa: S110 # best-effort FTP teardown, failure non-actionable
+        except (  # best-effort FTP teardown, failure non-actionable
             Exception
         ):  # best-effort FTP quit on cleanup teardown, failure non-actionable
             pass

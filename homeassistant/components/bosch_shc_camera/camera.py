@@ -1001,7 +1001,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         """
         try:
             result = await self._async_camera_image_impl(width, height)
-            jpeg = result if result else self._PLACEHOLDER_JPEG
+            jpeg = result or self._PLACEHOLDER_JPEG
         except asyncio.CancelledError:
             raise  # let cancellation propagate cleanly
         except Exception as err:
@@ -1024,8 +1024,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     async def _async_camera_image_impl(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
-        """
-        Return the best available JPEG snapshot, tried in order:
+        """Return the best available JPEG snapshot, tried in order:
 
         0. MJPEG inst=3 LAN snapshot (Gen2 opt-in) — when use_mjpeg_snapshot is
            enabled: FFmpeg subprocess captures one frame from RTSP inst=3.

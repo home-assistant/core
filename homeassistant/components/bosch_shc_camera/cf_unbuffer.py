@@ -54,12 +54,13 @@ Sources:
 
 from __future__ import annotations
 
+from functools import wraps
 import logging
 import time
-from functools import wraps
 from typing import Any, cast
 
 from aiohttp import web
+
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)

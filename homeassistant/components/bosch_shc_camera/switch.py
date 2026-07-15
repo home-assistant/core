@@ -350,7 +350,8 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
     async def async_added_to_hass(self) -> None:
         """Register with the coordinator so `_tear_down_live_stream` can
         push the cleared state to HA immediately. Without the registry the
-        UI shows a stale "on" until the next coordinator tick."""
+        UI shows a stale "on" until the next coordinator tick.
+        """
         await super().async_added_to_hass()
         self.coordinator.live_stream_entities[self._cam_id] = self
 

@@ -16,10 +16,7 @@ from typing import Any
 
 from bosch_shc_camera_client.rcp import fetch_rcp_camera_data
 
-from .cloud_ssl import (
-    async_get_bosch_cloud_session,
-    async_get_bosch_cloud_ssl_context,
-)
+from .cloud_ssl import async_get_bosch_cloud_session, async_get_bosch_cloud_ssl_context
 
 _LOGGER = logging.getLogger(__name__)
 

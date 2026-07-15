@@ -18,7 +18,7 @@ import logging
 import ssl
 import threading
 import time
-from typing import Any, TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlparse
 
 import aiohttp
@@ -220,7 +220,7 @@ def _parse_onvif_scopes(raw: bytes) -> dict[str, Any]:
             elif key == "Profile":
                 profiles: list[str] = result["profiles"]
                 profiles.append(val_decoded)
-    except Exception:  # noqa: S110 # pragma: no cover — defensive parse of raw camera bytes; partial result still returned
+    except Exception:  # pragma: no cover — defensive parse of raw camera bytes; partial result still returned
         pass
     return result
 
@@ -240,8 +240,7 @@ class BoschCameraCoordinator(
     SHCCoordinatorMixin,
     TokenAuthCoordinatorMixin,
 ):
-    """
-    Shared coordinator — fetches all camera data once per scan_interval.
+    """Shared coordinator — fetches all camera data once per scan_interval.
     All entity types (camera, sensor, button) read from coordinator.data
     rather than making independent API calls.
     """
@@ -1119,9 +1118,10 @@ class BoschCameraCoordinator(
         """Format an exception so empty-message types (TimeoutError, some
         aiohttp errors) still produce meaningful log output. Falls back to
         repr(err) when str(err) is empty — the original "fetch error: "
-        empty-tail bug shipped for months before this helper."""
+        empty-tail bug shipped for months before this helper.
+        """
         s = str(err)
-        return s if s else repr(err)
+        return s or repr(err)
 
     def _is_rcp_lan_denied(self, cam_id: str, opcode_hex: str) -> bool:
         """Return True if this (cam, opcode) is currently denied (24 h cache).
@@ -1148,7 +1148,8 @@ class BoschCameraCoordinator(
 
     def _clear_rcp_lan_denied(self, cam_id: str, opcode_hex: str) -> None:
         """Clear a denied entry after a successful 200 — permissions may have
-        changed (firmware upgrade, CBS user re-provision)."""
+        changed (firmware upgrade, CBS user re-provision).
+        """
         cache = getattr(self, "_rcp_lan_denied_until", None)
         if cache is not None:
             cache.pop((cam_id, opcode_hex), None)
@@ -1596,8 +1597,7 @@ class BoschCameraCoordinator(
     # ── Main update ───────────────────────────────────────────────────────────
     @override
     async def _async_update_data(self) -> dict[str, Any]:
-        """
-        Coordinator tick — runs every scan_interval seconds.
+        """Coordinator tick — runs every scan_interval seconds.
         Each data type (status, events) is only re-fetched when its own
         interval has elapsed, reducing unnecessary API traffic.
 
@@ -2209,7 +2209,7 @@ class BoschCameraCoordinator(
             )
             await self._async_maybe_announce_maintenance(result)
 
-    async def _async_maybe_announce_maintenance(self, mw: "MaintenanceWindow") -> None:
+    async def _async_maybe_announce_maintenance(self, mw: MaintenanceWindow) -> None:
         """Fire a user notification for a maintenance-window state transition.
 
         Triggers on state in {scheduled, active, past}, deduped by (link,
@@ -2314,7 +2314,8 @@ class BoschCameraCoordinator(
     def _persist_cloud_outage_flag(self) -> None:
         """Mirror the maintenance-key persistence for the cloud-state
         dedup flag, so a restart mid-outage doesn't re-fire "Cloud nicht
-        erreichbar"."""
+        erreichbar".
+        """
         store = getattr(self, "cloud_alert_store", None)
         if store is None:
             return
@@ -2954,7 +2955,8 @@ class BoschCameraCoordinator(
 
     def get_session(self, cam_id: str) -> CameraSessionState:
         """Get or create per-camera session bookkeeping (generation counter,
-        idle-reaper timestamp, stream-warmup timestamp — see session_state.py)."""
+        idle-reaper timestamp, stream-warmup timestamp — see session_state.py).
+        """
         return get_or_create_session(self._sessions, cam_id)
 
     def clear_stream_warming(self, cam_id: str) -> None:
@@ -3032,8 +3034,7 @@ class BoschCameraCoordinator(
     async def try_live_connection(
         self, cam_id: str, is_renewal: bool = False, force_reset: bool = False
     ) -> dict[str, Any] | None:
-        """
-        Open a live proxy connection via PUT /v11/video_inputs/{id}/connection.
+        """Open a live proxy connection via PUT /v11/video_inputs/{id}/connection.
         Uses "REMOTE" (confirmed working) → cloud proxy, fast (~1.5s).
         On success stores:
           - proxyUrl:  https://proxy-NN:42090/{hash}/snap.jpg  (current image, no auth)

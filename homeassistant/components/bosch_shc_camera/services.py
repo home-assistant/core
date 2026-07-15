@@ -12,9 +12,9 @@ move with no behavior change.
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC
 import logging
 import time
-from datetime import UTC
 
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -94,8 +94,8 @@ def _register_services(hass: HomeAssistant) -> None:
         # namespace, not services.py's.
         from . import (
             CLOUD_API as CLOUD_API,
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         cam_id = call.data.get("camera_id", "")
         if not cam_id:
@@ -166,8 +166,8 @@ def _register_services(hass: HomeAssistant) -> None:
         # namespace, not services.py's.
         from . import (
             CLOUD_API as CLOUD_API,
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         cam_id = call.data.get("camera_id", "")
         rule_id = call.data.get("rule_id", "")
@@ -221,8 +221,8 @@ def _register_services(hass: HomeAssistant) -> None:
         # namespace, not services.py's.
         from . import (
             CLOUD_API as CLOUD_API,
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         cam_id = call.data.get("camera_id", "")
         rule_id = call.data.get("rule_id", "")
@@ -329,8 +329,8 @@ def _register_services(hass: HomeAssistant) -> None:
         # namespace, not services.py's.
         from . import (
             CLOUD_API as CLOUD_API,
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         cam_id = call.data.get("camera_id", "")
         zones = call.data.get("zones", [])
@@ -446,8 +446,8 @@ def _register_services(hass: HomeAssistant) -> None:
         # namespace, not services.py's.
         from . import (
             CLOUD_API as CLOUD_API,
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         cam_id = call.data.get("camera_id", "")
         if not cam_id:
@@ -539,8 +539,8 @@ def _register_services(hass: HomeAssistant) -> None:
         # namespace, not services.py's.
         from . import (
             CLOUD_API as CLOUD_API,
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         friend_id = call.data.get("friend_id", "")
         camera_ids = call.data.get("camera_ids", [])
@@ -636,8 +636,8 @@ def _register_services(hass: HomeAssistant) -> None:
         # namespace, not services.py's.
         from . import (
             CLOUD_API as CLOUD_API,
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         cam_id = call.data.get("camera_id", "")
         if not cam_id:
@@ -731,8 +731,8 @@ def _register_services(hass: HomeAssistant) -> None:
         # namespace, not services.py's.
         from . import (
             CLOUD_API as CLOUD_API,
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         cam_id = call.data.get("camera_id", "")
         masks = call.data.get("masks", [])
@@ -847,8 +847,8 @@ def _register_services(hass: HomeAssistant) -> None:
         # namespace, not services.py's.
         from . import (
             CLOUD_API as CLOUD_API,
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         cam_id = call.data.get("camera_id", "")
         zone_index = call.data.get("zone_index", -1)
@@ -938,8 +938,8 @@ def _register_services(hass: HomeAssistant) -> None:
         # namespace, not services.py's.
         from . import (
             CLOUD_API as CLOUD_API,
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         cam_id = call.data.get("camera_id", "")
         if not cam_id:
@@ -1028,8 +1028,8 @@ def _register_services(hass: HomeAssistant) -> None:
         # namespace, not services.py's.
         from . import (
             CLOUD_API as CLOUD_API,
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         cam_id = call.data.get("camera_id", "")
         if not cam_id:
@@ -1164,8 +1164,8 @@ def _register_services(hass: HomeAssistant) -> None:
         # namespace, not services.py's.
         from . import (
             CLOUD_API as CLOUD_API,
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         cam_id = call.data.get("camera_id", "")
         new_name = call.data.get("new_name", "")
@@ -1230,8 +1230,8 @@ def _register_services(hass: HomeAssistant) -> None:
         # namespace, not services.py's.
         from . import (
             CLOUD_API as CLOUD_API,
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         email = call.data.get("email", "")
         if not email:
@@ -1308,8 +1308,8 @@ def _register_services(hass: HomeAssistant) -> None:
         # namespace, not services.py's.
         from . import (
             CLOUD_API as CLOUD_API,
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         for entry in hass.config_entries.async_loaded_entries(DOMAIN):
             coord = entry.runtime_data
@@ -1381,8 +1381,8 @@ def _register_services(hass: HomeAssistant) -> None:
         # namespace, not services.py's.
         from . import (
             CLOUD_API as CLOUD_API,
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
         )
-        from . import async_get_bosch_cloud_session as async_get_bosch_cloud_session
 
         friend_id = call.data.get("friend_id", "")
         if not friend_id:
@@ -1427,9 +1427,9 @@ def _register_services(hass: HomeAssistant) -> None:
 
     async def handle_migrate_flat_events(call: ServiceCall) -> None:
         """Move flat event files (camera/file) into date hierarchy (camera/year/month/day/file)."""
+        from pathlib import Path
         import re as _re
         import shutil
-        from pathlib import Path
 
         _PAT = _re.compile(
             r"^(?:(?P<camera>.+?)_)?(?P<date>\d{4}-\d{2}-\d{2})_(?P<time>\d{2}-\d{2}-\d{2})_"

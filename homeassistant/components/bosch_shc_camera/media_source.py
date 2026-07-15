@@ -18,15 +18,16 @@ so users land directly on the meaningful content.
 
 from __future__ import annotations
 
-import logging
-import mimetypes
-import re
 from collections.abc import Generator
 from dataclasses import dataclass
+import logging
+import mimetypes
 from pathlib import Path
+import re
 from typing import Any, override
 
 from aiohttp import web
+
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.error import Unresolvable
@@ -397,7 +398,9 @@ class _SmbBackend:
             from smbclient import delete_session
 
             delete_session(self.server, connection_cache=cache)
-        except Exception:  # noqa: S110 # pragma: no cover — best-effort SMB session cleanup, failure non-actionable
+        except (
+            Exception
+        ):  # pragma: no cover — best-effort SMB session cleanup, failure non-actionable
             pass
 
     def _path(self, *segments: str) -> str:
@@ -430,7 +433,7 @@ class _SmbBackend:
         *segments: str,
         want_dirs: bool,
         session: dict[str, Any] | None = None,
-    ) -> Generator[str, None, None]:
+    ) -> Generator[str]:
         """List one directory's entries.
 
         `session` lets a caller that is about to make several of these calls
@@ -460,9 +463,7 @@ class _SmbBackend:
                 # Skip NVR internal dirs (_staging, _failed, etc.)
                 if want_dirs and e.name.startswith("_"):
                     continue
-                if want_dirs and e.is_dir():
-                    yield e.name
-                elif not want_dirs and e.is_file():
+                if (want_dirs and e.is_dir()) or (not want_dirs and e.is_file()):
                     yield e.name
         finally:
             if owns_cache:
@@ -611,8 +612,7 @@ class _SmbBackend:
         streamer invokes it after fobj.close() so the per-request SMB session
         is torn down.
         """
-        from smbclient import open_file
-        from smbclient import stat as smb_stat
+        from smbclient import open_file, stat as smb_stat
 
         # Re-validate filename to block path traversal
         if (
@@ -683,8 +683,7 @@ class _SmbBackend:
 
     def open_flat_file(self, camera: str, filename: str) -> tuple[Any, int]:
         """Return (file-like, size) for a file directly in camera/ folder."""
-        from smbclient import open_file
-        from smbclient import stat as smb_stat
+        from smbclient import open_file, stat as smb_stat
 
         if (
             "/" in filename
@@ -1758,5 +1757,5 @@ class BoschCameraMediaView(HomeAssistantView):
                 if close_cache is not None:
                     try:
                         await self.hass.async_add_executor_job(close_cache)
-                    except Exception:  # noqa: S110 # pragma: no cover — best-effort async cache teardown, failure non-actionable
+                    except Exception:  # pragma: no cover — best-effort async cache teardown, failure non-actionable
                         pass

@@ -29,12 +29,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import (
-    DOMAIN,
-    BoschCameraConfigEntry,
-    BoschCameraCoordinator,
-    get_options,
-)
+from . import DOMAIN, BoschCameraConfigEntry, BoschCameraCoordinator, get_options
 from .models import get_display_name
 from .snapshot_store import load_snapshot
 

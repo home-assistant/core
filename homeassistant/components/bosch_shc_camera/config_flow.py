@@ -274,11 +274,7 @@ def _flatten_sections(user_input: dict[str, Any]) -> dict[str, Any]:
     return flat
 
 
-from . import (
-    DEFAULT_OPTIONS,
-    DOMAIN,
-    BoschCameraConfigEntry,
-)
+from . import DEFAULT_OPTIONS, DOMAIN, BoschCameraConfigEntry
 from .const import (
     CONF_AI_ACTIVE_CONDITION_ENTITY,
     CONF_AI_ACTIVE_CONDITION_STATE,
@@ -1367,7 +1363,7 @@ class BoschCameraOptionsFlow(config_entries.OptionsFlow):
                         description={
                             "suggested_value": opts.get(
                                 "nvr_preroll_cache_dir",
-                                "/dev/shm/bosch_nvr_cache",  # noqa: S108 # suggested default shown in UI, user can override via text field
+                                "/dev/shm/bosch_nvr_cache",  # suggested default shown in UI, user can override via text field
                             )
                         },
                     ): str,
@@ -1429,7 +1425,7 @@ class BoschCameraOptionsFlow(config_entries.OptionsFlow):
                                     label="Localhost only (127.0.0.1) — default",
                                 ),
                                 SelectOptionDict(
-                                    value="0.0.0.0",  # noqa: S104 # explicit opt-in LAN-exposure choice
+                                    value="0.0.0.0",  # explicit opt-in LAN-exposure choice
                                     label="All LAN interfaces (0.0.0.0) — credential-free, use allowlist/token",
                                 ),
                             ],

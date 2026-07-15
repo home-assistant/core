@@ -434,7 +434,7 @@ class BoschFirmwareVersionSensor(_BoschSensorBase):
     def native_value(self) -> str | None:
         info = self._cam_data.get("info", {})
         fw = info.get("firmwareVersion", "")
-        return fw if fw else None
+        return fw or None
 
     @property
     @override

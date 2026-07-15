@@ -42,14 +42,8 @@ async def try_live_connection_inner(
     # be a real circular import.
     from . import (
         _redact_creds as _redact_creds,
-    )
-    from . import (
         async_get_bosch_cloud_session as async_get_bosch_cloud_session,
-    )
-    from . import (
         nvr_recorder as nvr_recorder,
-    )
-    from . import (
         pre_warm_rtsp as pre_warm_rtsp,
     )
 

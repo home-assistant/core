@@ -81,7 +81,7 @@ class BoschFirmwareUpdate(_BoschEntityBase, UpdateEntity):
         fw: dict[str, Any] = self.coordinator.firmware_cache.get(self._cam_id, {})
         if not fw:
             return self.installed_version
-        up_to_date: bool | None = fw.get("upToDate", None)
+        up_to_date: bool | None = fw.get("upToDate")
         if up_to_date is None:
             # Partial payload: upToDate key absent — indeterminate, do not claim up-to-date
             return None

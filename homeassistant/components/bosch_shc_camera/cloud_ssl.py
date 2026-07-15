@@ -25,12 +25,13 @@ exception and is out of scope for this module.
 from __future__ import annotations
 
 import asyncio
-import ssl
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+import ssl
 from typing import Any, cast
 
 import aiohttp
+
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 
