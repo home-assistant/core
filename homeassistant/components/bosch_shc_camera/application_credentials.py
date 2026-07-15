@@ -29,8 +29,6 @@ support and a Bosch-specific display name — `BoschOAuth2Implementation`
 already provides both (see `config_flow.py`).
 """
 
-from __future__ import annotations
-
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2Implementation

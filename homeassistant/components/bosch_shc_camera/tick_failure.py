@@ -17,8 +17,6 @@ that don't define every announce/notify method) and the exact task-creation
 order — no reordering, no new side effects.
 """
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 

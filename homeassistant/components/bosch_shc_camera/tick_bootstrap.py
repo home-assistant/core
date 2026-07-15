@@ -18,8 +18,6 @@ since the outer `_async_update_data` try/except boundary is reserved for
 genuine camera-list/status/events failures.
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import TYPE_CHECKING

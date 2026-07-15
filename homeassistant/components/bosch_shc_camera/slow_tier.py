@@ -42,8 +42,6 @@ module is imported BY `__init__.py`). The caller in `__init__.py`
 passes a closure that does the exact same class-dispatch.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass

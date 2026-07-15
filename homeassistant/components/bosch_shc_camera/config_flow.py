@@ -242,7 +242,7 @@ def _flatten_sections(user_input: dict[str, Any]) -> dict[str, Any]:
     flat: dict[str, Any] = {}
     seen_section_keys: set[str] = set()
 
-    for section_key, _fields in OPTIONS_SECTIONS.items():
+    for section_key in OPTIONS_SECTIONS:
         seen_section_keys.add(section_key)
         sec_payload = user_input.get(section_key)
         if sec_payload is None:
@@ -298,6 +298,7 @@ from .const import (
     DEFAULT_MOTION_ACTIVE_WINDOW,
     MOTION_ACTIVE_WINDOW_MAX,
     MOTION_ACTIVE_WINDOW_MIN,
+    NVR_PREROLL_CACHE_DIR_DEFAULT,
 )
 from .smb import smb_available, smb_dependent_features
 
@@ -1363,7 +1364,7 @@ class BoschCameraOptionsFlow(config_entries.OptionsFlow):
                         description={
                             "suggested_value": opts.get(
                                 "nvr_preroll_cache_dir",
-                                "/dev/shm/bosch_nvr_cache",  # suggested default shown in UI, user can override via text field
+                                NVR_PREROLL_CACHE_DIR_DEFAULT,
                             )
                         },
                     ): str,

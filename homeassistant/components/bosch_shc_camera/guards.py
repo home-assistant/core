@@ -5,8 +5,6 @@ light). Extracted from switch.py to break the import cycle where those modules
 imported from switch at function-call time.
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import Any

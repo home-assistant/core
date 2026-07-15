@@ -37,10 +37,10 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     entities: list[Any] = []
     if opts.get("enable_snapshot_button", True):
-        for cam_id in coordinator.data:
-            entities.append(
-                BoschRefreshSnapshotButton(coordinator, cam_id, config_entry)
-            )
+        entities.extend(
+            BoschRefreshSnapshotButton(coordinator, cam_id, config_entry)
+            for cam_id in coordinator.data
+        )
     else:
         _LOGGER.debug("Snapshot button disabled in options — skipping")
     for cam_id in coordinator.data:

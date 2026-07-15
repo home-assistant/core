@@ -8,8 +8,6 @@ is never blocked. Writes are atomic: a temp file is written first, then
 renamed to the final path so a crash mid-write leaves the previous file intact.
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from pathlib import Path

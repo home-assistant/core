@@ -52,8 +52,6 @@ Sources:
 - knowledge-base/cloudflared-tunnel-hls-buffering.md (full diagnosis)
 """
 
-from __future__ import annotations
-
 from functools import wraps
 import logging
 import time
@@ -211,7 +209,7 @@ def _make_segment_wrapper(orig_handle: Any) -> Any:
 
 
 def register(hass: HomeAssistant) -> None:
-    global _PATCHED
+    global _PATCHED  # noqa: PLW0603 -- process-lifetime idempotent-patch guard
     if _PATCHED:
         return
     try:

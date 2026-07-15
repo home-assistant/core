@@ -85,8 +85,6 @@ until its owning module's teardown call catches up — an unchanged
 degradation mode, not a new bug this feature introduces.
 """
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 import logging

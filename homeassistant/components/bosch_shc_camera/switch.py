@@ -31,8 +31,6 @@ Creates switch entities per camera:
                            No SHC local API needed.
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
 import time
@@ -257,10 +255,16 @@ async def async_setup_entry(
         # Notification type toggles — person is cloud AI (all cameras);
         # audio gated on featureSupport.sound (API-reported, not hardcoded by model).
         has_sound = cam_info.get("featureSupport", {}).get("sound", False)
-        for ntype in ("movement", "person", "trouble", "cameraAlarm", "troubleEmail"):
-            entities.append(
-                BoschNotificationTypeSwitch(coordinator, cam_id, config_entry, ntype)
+        entities.extend(
+            BoschNotificationTypeSwitch(coordinator, cam_id, config_entry, ntype)
+            for ntype in (
+                "movement",
+                "person",
+                "trouble",
+                "cameraAlarm",
+                "troubleEmail",
             )
+        )
         if has_sound:
             entities.append(
                 BoschNotificationTypeSwitch(coordinator, cam_id, config_entry, "audio")

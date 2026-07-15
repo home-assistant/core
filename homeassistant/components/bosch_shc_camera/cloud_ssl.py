@@ -22,8 +22,6 @@ intentionally keep ``verify_ssl=False`` -- that is a documented local-network
 exception and is out of scope for this module.
 """
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -103,7 +101,7 @@ def _build_ssl_context() -> ssl.SSLContext:
 
 async def async_get_bosch_cloud_ssl_context(hass: HomeAssistant) -> ssl.SSLContext:
     """Return a cached SSL context for Bosch public cloud / OAuth hosts."""
-    global _SSL_CONTEXT, _SSL_CONTEXT_LOCK
+    global _SSL_CONTEXT, _SSL_CONTEXT_LOCK  # noqa: PLW0603 -- lazy process-lifetime singleton cache
     if _SSL_CONTEXT is not None:
         return _SSL_CONTEXT
     # Lazily create the lock on first call (must be on the event loop)
@@ -124,7 +122,7 @@ async def async_get_bosch_cloud_session(hass: HomeAssistant) -> aiohttp.ClientSe
     previous ``verify_ssl=False`` sessions that accepted any certificate
     (GHSA-6qh5-x5m5-vj6v / CWE-295).
     """
-    global _SESSION_LOCK
+    global _SESSION_LOCK  # noqa: PLW0603 -- lazy process-lifetime singleton cache
     existing = cast("aiohttp.ClientSession | None", hass.data.get(_SESSION_DATA_KEY))
     if existing is not None and not existing.closed:
         return existing

@@ -20,9 +20,8 @@ Architecture choice (`docs/mini-nvr-concept.md` §10): in-integration via
 4-cam Pi 4 setups choke.  `-c copy` only — no transcoding.
 """
 
-from __future__ import annotations
-
 import asyncio
+import contextlib
 import datetime
 from datetime import UTC
 import logging
@@ -35,6 +34,7 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from .const import (
+    NVR_PREROLL_CACHE_DIR_DEFAULT,
     TIMEOUT_RECORDER_FFMPEG_INIT,
     TIMEOUT_RECORDER_GRACE,
     TIMEOUT_RECORDER_KILL_WAIT,
@@ -271,11 +271,8 @@ def _preroll_cam_dir(coordinator: BoschCameraCoordinator, cam_id: str) -> str:
     """
     opts = coordinator.options
     cache_dir = (
-        (
-            opts.get("nvr_preroll_cache_dir")
-            or "/dev/shm/bosch_nvr_cache"  # tmpfs NVR cache default, user-overridable via options
-        ).strip()
-    )
+        opts.get("nvr_preroll_cache_dir") or NVR_PREROLL_CACHE_DIR_DEFAULT
+    ).strip()
     cam_name = coordinator.data.get(cam_id, {}).get("info", {}).get("title", cam_id)
     return _preroll_dir(cache_dir, cam_name)
 
@@ -435,11 +432,8 @@ async def _spawn_preroll_recorder_locked(
 
     opts = coordinator.options
     cache_dir = (
-        (
-            opts.get("nvr_preroll_cache_dir")
-            or "/dev/shm/bosch_nvr_cache"  # tmpfs NVR cache default, user-overridable via options
-        ).strip()
-    )
+        opts.get("nvr_preroll_cache_dir") or NVR_PREROLL_CACHE_DIR_DEFAULT
+    ).strip()
     cam_name = coordinator.data.get(cam_id, {}).get("info", {}).get("title", cam_id)
     cam_dir = _preroll_dir(cache_dir, cam_name)
     try:
@@ -567,25 +561,20 @@ async def stop_preroll_recorder(
                 await asyncio.wait_for(proc.wait(), timeout=_STOP_GRACE_SECONDS)
                 clean_exit = True
             except TimeoutError:
-                try:
+                with contextlib.suppress(ProcessLookupError):
                     proc.kill()
-                except ProcessLookupError:
-                    pass
-                try:
+                with contextlib.suppress(TimeoutError):
                     await asyncio.wait_for(
                         proc.wait(), timeout=TIMEOUT_RECORDER_KILL_WAIT
                     )
-                except TimeoutError:
-                    pass
 
     if not prune_cache:
         return clean_exit
 
     cam_dir = _preroll_cam_dir(coordinator, cam_id)
-    try:
+    # best-effort ring cleanup on stop, non-fatal if cache dir missing
+    with contextlib.suppress(Exception):
         await coordinator.hass.async_add_executor_job(prune_preroll_cache, cam_dir, 0)
-    except Exception:  # best-effort cleanup; non-fatal if cache dir missing  # best-effort ring cleanup on stop, non-fatal if dir missing
-        pass
     return clean_exit
 
 
@@ -678,11 +667,8 @@ async def finalize_and_restart_preroll_recorder(
 
         opts = coordinator.options
         cache_dir = (
-            (
-                opts.get("nvr_preroll_cache_dir")
-                or "/dev/shm/bosch_nvr_cache"  # tmpfs NVR cache default, user-overridable via options
-            ).strip()
-        )
+            opts.get("nvr_preroll_cache_dir") or NVR_PREROLL_CACHE_DIR_DEFAULT
+        ).strip()
         cam_name = coordinator.data.get(cam_id, {}).get("info", {}).get("title", cam_id)
         finalized_dir = os.path.join(cache_dir, "_finalized_tmp", _safe_name(cam_name))
         finalized_path = os.path.join(finalized_dir, os.path.basename(newest))
@@ -710,10 +696,8 @@ async def finalize_and_restart_preroll_recorder(
             # relocated but is unusable, clean it up rather than leaking it
             # in the tmpfs cache forever.
             if relocated is not None:
-                try:
+                with contextlib.suppress(OSError):
                     await coordinator.hass.async_add_executor_job(os.unlink, relocated)
-                except OSError:
-                    pass
             return None
         return relocated
 
@@ -828,18 +812,14 @@ async def create_motion_clip(
             proc.communicate(), timeout=TIMEOUT_RECORDER_FFMPEG_INIT
         )
     except TimeoutError:
-        try:
+        with contextlib.suppress(ProcessLookupError):
             proc.kill()
-        except ProcessLookupError:
-            pass
         _LOGGER.warning("NVR motion clip: ffmpeg timed out for %s", cam_id[:8])
         return False
 
     # Clean up concat file
-    try:
+    with contextlib.suppress(OSError):
         await coordinator.hass.async_add_executor_job(os.unlink, concat_file)
-    except OSError:
-        pass
 
     if proc.returncode != 0:
         tail = (stderr_bytes or b"").decode("utf-8", errors="replace").strip()[-300:]
@@ -929,10 +909,8 @@ async def _capture_postroll(
             timeout=duration_secs + TIMEOUT_RECORDER_POSTROLL_GRACE,
         )
     except TimeoutError:
-        try:
+        with contextlib.suppress(ProcessLookupError):
             proc.kill()
-        except ProcessLookupError:
-            pass
         _LOGGER.warning("NVR post-roll capture: ffmpeg timed out for %s", cam_id[:8])
         return False
 
@@ -1025,11 +1003,8 @@ async def assemble_and_ship_motion_clip(
         postroll_attached = False
         if postroll_secs > 0:
             cache_dir = (
-                (
-                    opts.get("nvr_preroll_cache_dir")
-                    or "/dev/shm/bosch_nvr_cache"  # tmpfs NVR cache default, user-overridable via options
-                ).strip()
-            )
+                opts.get("nvr_preroll_cache_dir") or NVR_PREROLL_CACHE_DIR_DEFAULT
+            ).strip()
             postroll_dir = os.path.join(
                 cache_dir, "_postroll_tmp", _safe_name(cam_name)
             )
@@ -1073,12 +1048,10 @@ async def assemble_and_ship_motion_clip(
             )
         finally:
             if postroll_tmp is not None:
-                try:
+                with contextlib.suppress(OSError):
                     await coordinator.hass.async_add_executor_job(
                         os.unlink, postroll_tmp
                     )
-                except OSError:
-                    pass
 
         if shipped:
             _LOGGER.info(
@@ -1359,10 +1332,8 @@ async def stop_recorder(
             _STOP_GRACE_SECONDS,
             cam_id[:8],
         )
-        try:
+        with contextlib.suppress(ProcessLookupError):
             proc.kill()
-        except ProcessLookupError:
-            pass
         try:
             await asyncio.wait_for(proc.wait(), timeout=TIMEOUT_RECORDER_KILL_WAIT)
         except TimeoutError:
@@ -1445,9 +1416,9 @@ async def _watch_recorder(
     # B13-4: Detect disk-full — ENOSPC causes ffmpeg rc=1 with a specific
     # stderr message.  Raise a persistent HA notification and skip respawn
     # (the drive is still full, retrying immediately loops forever).
-    _ENOSPC_MARKERS = ("no space left", "enospc", "disk quota exceeded")
+    _enospc_markers = ("no space left", "enospc", "disk quota exceeded")
     err_lower = err_tail.lower()
-    if any(marker in err_lower for marker in _ENOSPC_MARKERS):
+    if any(marker in err_lower for marker in _enospc_markers):
         _LOGGER.error(
             "NVR ffmpeg exited due to disk-full for %s — not respawning. "
             "Free space under %s and toggle the switch off+on to retry.",
@@ -1494,8 +1465,8 @@ async def _watch_recorder(
     # the NVR switch was toggled on shortly after a LOCAL session opened.
     # Keep retrying on the normal delay/backoff without touching the crash
     # counter or the give-up error state.
-    _AUTH_MARKERS = ("401", "unauthorized")
-    if any(marker in err_lower for marker in _AUTH_MARKERS):
+    _auth_markers = ("401", "unauthorized")
+    if any(marker in err_lower for marker in _auth_markers):
         retries = coordinator.nvr_auth_retry_count.get(cam_id, 0) + 1
         coordinator.nvr_auth_retry_count[cam_id] = retries
         if retries > _MAX_CONSECUTIVE_AUTH_RETRIES:
@@ -1633,10 +1604,11 @@ def _move_local(
         # ``shutil.move`` falls back to copy+unlink across filesystems
         # (e.g. if the user mounted a NAS at the base path).
         shutil.move(full, dest)
-        return True
     except OSError as err:
         _LOGGER.debug("NVR drain (local): move %s -> %s failed: %s", full, dest, err)
         return False
+    else:
+        return True
 
 
 def _upload_smb(
@@ -1694,10 +1666,11 @@ def _upload_smb(
         with open(full, "rb") as src, open_file(dest, mode="wb") as dst:
             for chunk in iter(lambda: src.read(65536), b""):
                 dst.write(chunk)
-        return True
     except Exception as err:
         _LOGGER.warning("NVR drain (smb): upload %s -> %s failed: %s", full, dest, err)
         return False
+    else:
+        return True
 
 
 def _upload_ftp(
@@ -1732,22 +1705,19 @@ def _upload_ftp(
         try:
             with open(full, "rb") as src:
                 ftp.storbinary(f"STOR {dest}", src)
-            return True
         except Exception as err:
             _LOGGER.warning(
                 "NVR drain (ftp): upload %s -> %s failed: %s", full, dest, err
             )
             return False
+        else:
+            return True
     finally:
         try:
             ftp.quit()
-        except Exception:  # best-effort graceful FTP quit; fallback to close below
-            try:
+        except Exception:  # fall back to close below
+            with contextlib.suppress(Exception):
                 ftp.close()
-            except (  # best-effort FTP teardown, failure non-actionable
-                Exception
-            ):  # best-effort FTP socket close on teardown, failure non-actionable
-                pass
 
 
 def _quarantine_failed(
@@ -2153,23 +2123,15 @@ def _sync_nvr_cleanup_ftp(coordinator: BoschCameraCoordinator) -> None:
                     )
         for sd in subdirs:
             _walk_and_delete(f"{path}/{sd}")
-            try:
+            with contextlib.suppress(Exception):  # sibling loop continues either way
                 ftp.cwd(path)
-            except (  # best-effort cwd restore, sibling loop continues
-                Exception
-            ):  # best-effort cwd back to parent after subdir walk; non-fatal
-                pass
 
     try:
         root = f"/{base_path}/{sub}"
         _walk_and_delete(root)
     finally:
-        try:
+        with contextlib.suppress(Exception):
             ftp.quit()
-        except (  # best-effort FTP teardown, failure non-actionable
-            Exception
-        ):  # best-effort FTP quit on cleanup teardown, failure non-actionable
-            pass
     if deadline_hit:
         _LOGGER.warning(
             "NVR cleanup (ftp): deadline (%.0fs) exceeded, walk stopped early — "

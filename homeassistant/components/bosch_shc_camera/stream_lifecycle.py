@@ -20,8 +20,6 @@ the method to keep existing on the class. Keeping the thin dispatch avoids
 rewriting that entire call surface for a purely structural move.
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
 import time
@@ -307,12 +305,12 @@ async def handle_stream_worker_error(
         # 1 (record_stream_success never fires when no HLS consumer is
         # connected) and the next legitimate 401 burst — typically 8–14
         # min later when Bosch rotates again — skips straight to REMOTE.
-        _LOCAL_RESCUE_TTL_SEC = 300
+        _local_rescue_ttl_sec = 300
         now_mono = time.monotonic()
         last_rescue = coordinator.local_rescue_at.get(cam_id, float("-inf"))
         if (
             last_rescue > float("-inf")
-            and (now_mono - last_rescue) > _LOCAL_RESCUE_TTL_SEC
+            and (now_mono - last_rescue) > _local_rescue_ttl_sec
         ):
             coordinator.local_rescue_attempts.pop(cam_id, None)
             coordinator.local_rescue_at.pop(cam_id, None)
@@ -322,7 +320,7 @@ async def handle_stream_worker_error(
             and coordinator.local_rescue_attempts.get(cam_id, 0) < 1
         ):
             # Claim the rescue burst (one per cam at a time; decays after
-            # _LOCAL_RESCUE_TTL_SEC). The burst itself retries internally.
+            # _local_rescue_ttl_sec). The burst itself retries internally.
             coordinator.local_rescue_attempts[cam_id] = 1
             coordinator.local_rescue_at[cam_id] = now_mono
             _LOGGER.warning(
@@ -346,10 +344,10 @@ async def handle_stream_worker_error(
             # no NEW stream-worker error fires to retrigger us — so the burst
             # must self-retry with backoff instead of relying on another
             # error to drive attempt 2.
-            _LOCAL_RESCUE_MAX_ATTEMPTS = 3
-            _LOCAL_RESCUE_RETRY_DELAY = 5
+            _local_rescue_max_attempts = 3
+            _local_rescue_retry_delay = 5
             result = None
-            for rescue_try in range(1, _LOCAL_RESCUE_MAX_ATTEMPTS + 1):
+            for rescue_try in range(1, _local_rescue_max_attempts + 1):
                 # force_reset: stop-old-proxy + rebuild happen atomically
                 # under the stream lock (no external _stop_tls_proxy that
                 # could race a concurrent renewal — 2026-06-01).
@@ -360,24 +358,24 @@ async def handle_stream_worker_error(
                         cam_id[:8],
                         result.get("_connection_type", "?"),
                         rescue_try,
-                        _LOCAL_RESCUE_MAX_ATTEMPTS,
+                        _local_rescue_max_attempts,
                     )
                     break
-                if rescue_try < _LOCAL_RESCUE_MAX_ATTEMPTS:
+                if rescue_try < _local_rescue_max_attempts:
                     _LOGGER.warning(
                         "LOCAL rescue attempt %d/%d failed for %s — camera "
                         "transiently unreachable; retrying in %ds",
                         rescue_try,
-                        _LOCAL_RESCUE_MAX_ATTEMPTS,
+                        _local_rescue_max_attempts,
                         cam_id[:8],
-                        _LOCAL_RESCUE_RETRY_DELAY,
+                        _local_rescue_retry_delay,
                     )
-                    await asyncio.sleep(_LOCAL_RESCUE_RETRY_DELAY)
+                    await asyncio.sleep(_local_rescue_retry_delay)
                 else:
                     _LOGGER.warning(
                         "LOCAL rescue exhausted %d attempts for %s — leaving "
                         "to health watchdog / next failure burst",
-                        _LOCAL_RESCUE_MAX_ATTEMPTS,
+                        _local_rescue_max_attempts,
                         cam_id[:8],
                     )
             return  # whatever try_live_connection produced is the new state

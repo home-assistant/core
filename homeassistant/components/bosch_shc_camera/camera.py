@@ -19,8 +19,6 @@ Stream session limit: Bosch enforces maxSessionDuration=3600 (60 minutes).
 After 60 minutes the stream stops and must be restarted manually.
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
 import time

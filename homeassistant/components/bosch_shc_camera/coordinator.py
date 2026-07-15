@@ -1900,8 +1900,6 @@ class BoschCameraCoordinator(
                     exc_info=True,
                 )
 
-            return data
-
         except UpdateFailed:
             await dispatch_update_failed(self)
             raise
@@ -1909,6 +1907,8 @@ class BoschCameraCoordinator(
             raise await dispatch_timeout(self) from None
         except aiohttp.ClientError as err:
             raise await dispatch_client_error(self, err) from err
+        else:
+            return data
 
     def _refresh_notifications_disabled_issues(self) -> None:
         """Create or clear Repairs issues for cameras with disabled movement/person notifications.

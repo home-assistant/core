@@ -11,9 +11,8 @@ Handles:
   - Event mark-as-read on Bosch cloud
 """
 
-from __future__ import annotations
-
 import asyncio
+import contextlib
 import logging
 import os
 import ssl
@@ -428,10 +427,10 @@ def _get_fcm_push_client_class() -> type | None:
         # Patch failed — fall back to vanilla
         try:
             from firebase_messaging import FcmPushClient
-
-            return FcmPushClient
         except ImportError:
             return None
+        else:
+            return FcmPushClient
     return result  # type: ignore[return-value]  # False-sentinel already replaced before this point
 
 
@@ -491,10 +490,8 @@ async def async_stop_fcm_supervisor(coordinator: Any) -> None:
     sup = getattr(coordinator, "fcm_supervisor_task", None)
     if sup is not None and not sup.done():
         sup.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError, Exception):
             await sup
-        except asyncio.CancelledError, Exception:
-            pass
         coordinator.fcm_supervisor_task = None
     await async_stop_fcm_push(coordinator)
 
@@ -519,7 +516,7 @@ async def _async_start_fcm_push_locked(coordinator: Any) -> bool:
     # Use our patched subclass that fixes the upstream state-machine bug (issue #33):
     # it sets run_state=RESETTING before the error-log decision so transient WAN
     # errors are routed to INFO-level rather than _logger.exception().
-    FcmPushClient = _get_fcm_push_client_class()
+    FcmPushClient = _get_fcm_push_client_class()  # noqa: N806 -- holds a class, not a constant
     if FcmPushClient is None:
         _LOGGER.warning("firebase-messaging not installed — FCM push disabled")
         return False
@@ -668,6 +665,12 @@ async def _async_start_fcm_push_locked(coordinator: Any) -> bool:
         # Start listening for pushes
         try:
             await coordinator.fcm_client.start()
+        except Exception as err:
+            _LOGGER.warning("FCM push listener failed to start: %s", err)
+            with coordinator.fcm_lock:
+                coordinator.fcm_client = None
+            return False
+        else:
             with coordinator.fcm_lock:
                 coordinator.fcm_running = True
                 coordinator.fcm_healthy = True
@@ -677,11 +680,6 @@ async def _async_start_fcm_push_locked(coordinator: Any) -> bool:
                 "FCM push listener started — near-instant event detection active"
             )
             return True
-        except Exception as err:
-            _LOGGER.warning("FCM push listener failed to start: %s", err)
-            with coordinator.fcm_lock:
-                coordinator.fcm_client = None
-            return False
 
     # Install once before any FCM client is created so the very first WAN
     # outage doesn't spam 12 k+ recursive-traceback lines at us.
@@ -1434,10 +1432,9 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
                     async def _mark_read_bg(
                         _coord: Any = coordinator, _eid: str = newest_id
                     ) -> None:
-                        try:
+                        # best-effort cloud housekeeping
+                        with contextlib.suppress(Exception):
                             await async_mark_events_read(_coord, [_eid])
-                        except Exception:  # best-effort cloud housekeeping
-                            pass
 
                     _mr_task = coordinator.hass.async_create_task(_mark_read_bg())
                     coordinator.bg_tasks.add(_mr_task)
@@ -1459,13 +1456,13 @@ async def async_handle_fcm_push(coordinator: Any, _attempt: int = 0) -> None:
     # B1 fix: only retry when ≥1 fetch succeeded (HTTP 200) — if ALL cameras
     # failed with TimeoutError/ClientError the cloud endpoint is down and
     # retrying wastes round-trips + adds 2+4 s of sleep on a dead endpoint.
-    _FCM_FETCH_RETRY_BACKOFFS = (2.0, 4.0)
+    _fcm_fetch_retry_backoffs = (2.0, 4.0)
     if (
         not _dispatched_new
         and _any_fetch_ok
-        and _attempt < len(_FCM_FETCH_RETRY_BACKOFFS)
+        and _attempt < len(_fcm_fetch_retry_backoffs)
     ):
-        await asyncio.sleep(_FCM_FETCH_RETRY_BACKOFFS[_attempt])
+        await asyncio.sleep(_fcm_fetch_retry_backoffs[_attempt])
         if getattr(coordinator, "fcm_running", False):
             await async_handle_fcm_push(coordinator, _attempt + 1)
 
@@ -2018,12 +2015,9 @@ async def async_send_alert(
     if _clip_cam_id and coordinator.options.get("mark_events_read", False):
         event_id = event_id or coordinator.last_event_ids.get(_clip_cam_id, "")
         if event_id:
-            try:
+            # best-effort cloud housekeeping; alert delivery already complete
+            with contextlib.suppress(Exception):
                 await async_mark_events_read(coordinator, [event_id])
-            except (
-                Exception
-            ):  # best-effort cloud housekeeping; alert delivery already complete
-                pass
 
     # -- SMB upload (immediate, alongside alert) ---------------------------
     if opts.get("enable_smb_upload") and opts.get("smb_server") and _clip_cam_id:
@@ -2115,10 +2109,8 @@ async def async_send_alert(
     if delete_after and files_to_cleanup:
         await asyncio.sleep(5)  # give Signal time to read the files
         for fpath in files_to_cleanup:
-            try:
+            with contextlib.suppress(OSError):
                 await coordinator.hass.async_add_executor_job(os.remove, fpath)
-            except OSError:
-                pass
 
 
 # ── Mark events as read ──────────────────────────────────────────────────────

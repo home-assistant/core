@@ -15,8 +15,6 @@ gate's computation depends on FCM-health/first-tick state that stays
 inline in `_async_update_data` (not this decomposition's concern).
 """
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import TYPE_CHECKING, Any

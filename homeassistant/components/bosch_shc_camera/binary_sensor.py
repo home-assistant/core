@@ -17,8 +17,6 @@ Device class:
   audio  binary sensor  → BinarySensorDeviceClass.SOUND
 """
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 import logging
 import time as _time

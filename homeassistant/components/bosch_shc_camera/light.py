@@ -14,6 +14,7 @@ Gen1 cameras use a different API (lighting_override) and are handled by switch.p
 """
 
 import asyncio
+import contextlib
 import logging
 import time
 from typing import Any, override
@@ -151,14 +152,12 @@ class _BoschLightBase(
         color_hex = self._color_hex or self._last_color_hex
         if color_hex:
             h = color_hex.lstrip("#")
-            try:
+            with contextlib.suppress(ValueError):
                 attrs["last_rgb_color"] = [
                     int(h[0:2], 16),
                     int(h[2:4], 16),
                     int(h[4:6], 16),
                 ]
-            except ValueError:
-                pass
         else:
             # Display-only warm-white default so the card's color dot isn't
             # grey before the user has ever picked a color. Never written to

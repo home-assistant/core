@@ -9,8 +9,6 @@ Provides:
     Disabled by default.
 """
 
-from __future__ import annotations
-
 import logging
 import time
 from typing import override
@@ -134,12 +132,12 @@ class BoschVideoQualitySelect(
         if last_state:
             saved = last_state.state
             # Backward compat: old states were display text like "Auto"
-            _LEGACY_MAP = {
+            _legacy_map = {
                 "Auto": "auto",
                 "Hoch (30 Mbps)": "high",
                 "Niedrig (1.9 Mbps)": "low",
             }
-            quality_key = _LEGACY_MAP.get(
+            quality_key = _legacy_map.get(
                 saved, saved if saved in QUALITY_OPTIONS else None
             )
             if quality_key:

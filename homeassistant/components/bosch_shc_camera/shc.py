@@ -27,9 +27,8 @@ Low-level helpers:
   async_update_shc_states(coordinator, data) -> None
 """
 
-from __future__ import annotations
-
 import asyncio
+import contextlib
 import logging
 import ssl
 import time
@@ -447,7 +446,7 @@ async def _notify_write_failed(
     failures during a real outage overwrite the same entry instead of
     spamming.
     """
-    try:
+    with contextlib.suppress(Exception):
         await coordinator.hass.services.async_call(
             "persistent_notification",
             "create",
@@ -462,8 +461,6 @@ async def _notify_write_failed(
                 "notification_id": f"bosch_{feature_key}_queued_{cam_id[:8]}",
             },
         )
-    except Exception:  # best-effort persistent_notification; HA service call non-critical after all write paths exhausted
-        pass
 
 
 async def async_cloud_set_privacy_mode(
@@ -481,10 +478,10 @@ async def async_cloud_set_privacy_mode(
     # freshly re-paired camera that is "online" for status but rejects writes) so
     # we go straight to the LAN/SHC fallback instead of re-hitting the cloud for
     # another 444. -inf = never (SENTINEL_RULE).
-    _CLOUD_444_COOLDOWN = 120
+    _cloud_444_cooldown = 120
     cloud_444_at = getattr(coordinator, "cloud_444_at", {})
     _recent_444 = (
-        cloud_444_at.get(cam_id, float("-inf")) > time.monotonic() - _CLOUD_444_COOLDOWN
+        cloud_444_at.get(cam_id, float("-inf")) > time.monotonic() - _cloud_444_cooldown
     )
     cam_offline = coordinator.cached_status.get(cam_id) == "OFFLINE" or _recent_444
     if cam_offline:

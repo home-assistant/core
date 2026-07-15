@@ -17,9 +17,8 @@ Auth: Digest credentials from PUT /v11/video_inputs/{id}/connection LOCAL.
   The rotating ~60 s TTL means snapshots must use a recently-fetched cred pair.
 """
 
-from __future__ import annotations
-
 import asyncio
+import contextlib
 import logging
 import time
 from urllib.parse import quote
@@ -144,14 +143,6 @@ async def fetch_mjpeg_snapshot(
             )
             return None
 
-        _LOGGER.debug(
-            "fetch_mjpeg_snapshot: %d bytes in %.1f ms for %s",
-            len(out),
-            elapsed_ms,
-            cam_host,
-        )
-        return out
-
     except TimeoutError:
         elapsed_ms = (time.monotonic() - t0) * 1000
         _LOGGER.warning(
@@ -169,20 +160,24 @@ async def fetch_mjpeg_snapshot(
     except OSError as err:
         _LOGGER.warning("fetch_mjpeg_snapshot: OS error spawning ffmpeg: %s", err)
         return None
+    else:
+        _LOGGER.debug(
+            "fetch_mjpeg_snapshot: %d bytes in %.1f ms for %s",
+            len(out),
+            elapsed_ms,
+            cam_host,
+        )
+        return out
     finally:
         # BUG-1 fix: always reap the subprocess on any exception path
         # (TimeoutError, CancelledError, BaseException, etc.) to prevent
         # zombie FFmpeg processes accumulating under HA task cancellation.
         # FileNotFoundError / OSError mean proc was never created → guard.
         if proc is not None:
-            try:
+            # ProcessLookupError (process already exited) is the common case.
+            # Broader OSError (e.g. PermissionError) is caught too so it never
+            # masks the original exception propagating from the try block.
+            with contextlib.suppress(OSError):
                 proc.kill()
-            except OSError:
-                # ProcessLookupError (process already exited) is the common case.
-                # Broader OSError (e.g. PermissionError) is caught too so it never
-                # masks the original exception propagating from the try block.
-                pass
-            try:
+            with contextlib.suppress(Exception):
                 await proc.wait()
-            except Exception:
-                pass

@@ -4,8 +4,6 @@ Provides the common __init__ (cam metadata) and device_info property that
 is repeated across number.py (Gen1 + Gen2), button.py, and update.py.
 """
 
-from __future__ import annotations
-
 from typing import Any, override
 
 from homeassistant.config_entries import ConfigEntry
