@@ -1,13 +1,12 @@
 """Test the my-PV init."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-from my_pv.exceptions import MyPVAuthenticationError
+from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
@@ -58,22 +57,17 @@ async def test_setup_entry_auth_error(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.usefixtures("mock_my_pv_client")
 async def test_setup_entry_failed_first_refresh(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
 ) -> None:
     """Test setup of a config entry when first refresh fails."""
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.my_pv.MyPVCoordinator._async_update_data",
-            side_effect=UpdateFailed(),
-        ),
-    ):
-        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_my_pv_client.fetch_data.side_effect = MyPVConnectionError()
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
