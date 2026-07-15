@@ -19,9 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 type RuuvitagBLEConfigEntry = ConfigEntry[PassiveBluetoothProcessorCoordinator]
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: RuuvitagBLEConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: RuuvitagBLEConfigEntry) -> bool:
     """Set up Ruuvi BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
