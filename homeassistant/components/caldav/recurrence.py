@@ -20,7 +20,13 @@ from typing import Any
 import caldav
 from caldav.lib.error import DAVError
 from dateutil.rrule import rrulestr
-from icalendar import Calendar as ICalCalendar, Event as ICalEvent, vDDDTypes, vRecur
+from icalendar import (
+    Calendar as ICalCalendar,
+    Event as ICalEvent,
+    vDDDLists,
+    vDDDTypes,
+    vRecur,
+)
 import requests
 
 from homeassistant.util import dt as dt_util
@@ -57,11 +63,17 @@ def update_event(
 
     if _utc(occurrence) <= _utc(master["DTSTART"].dt):
         _apply(master, data)
+        _drop_overrides(ical, occurrence, from_occurrence=True)
         _save(dav_event, ical, master)
         return
 
     if "RRULE" not in master and "RDATE" not in master:
         raise ValueError("Event is not a recurring series")
+
+    # A replayed command finds the head already capped and must not clone it
+    # over the valid tail.
+    if not _has_occurrences_from(master, occurrence):
+        return
 
     # RFC 4791 allows one UID per object; a derived UID makes retries
     # overwrite the tail instead of adding another one.
@@ -71,7 +83,15 @@ def update_event(
         _drop_overrides(ical, occurrence, from_occurrence=True)
         _save(dav_event, ical, master)
     except _WRITE_FAILURES:
-        _discard(tail)
+        # A timeout may hit after the server committed the capped head;
+        # deleting the tail then would drop every future occurrence.
+        if _head_uncapped(calendar, uid, occurrence):
+            _discard(tail)
+        else:
+            _LOGGER.warning(
+                "Keeping the split-off series; the head state could not be"
+                " verified after a failed update"
+            )
         raise
 
 
@@ -155,6 +175,9 @@ def _new_override(ical: Any, master: Any, occurrence: datetime | date) -> Any:
     override.add("UID", str(master["UID"]))
     override.add("DTSTAMP", dt_util.utcnow())
     override.add("RECURRENCE-ID", vDDDTypes(_align(master, occurrence)))
+    for key in ("DTSTART", "DTEND"):
+        if key in master:
+            override[key] = master[key]
     ical.add_component(override)
     return override
 
@@ -211,11 +234,11 @@ def _tail_uid(uid: str, occurrence: datetime | date) -> str:
 def _tail_rrule(master: Any, occurrence: datetime | date) -> vRecur | None:
     """Return the master's rule with COUNT reduced by the capped head."""
     rrule = master.get("RRULE")
-    if rrule is None:
+    if rrule is None or _ends_before(master, occurrence):
         return None
     recur = vRecur(dict(rrule))
     if count := recur.get("COUNT"):
-        recur["COUNT"] = [max(count[0] - _occurrences_before(master, occurrence), 1)]
+        recur["COUNT"] = [count[0] - _occurrences_before(master, occurrence)]
     return recur
 
 
@@ -227,6 +250,45 @@ def _occurrences_before(master: Any, occurrence: datetime | date) -> int:
         target = datetime.combine(target, time.min)
     rule = rrulestr(master["RRULE"].to_ical().decode("utf-8"), dtstart=dtstart)
     return sum(1 for moment in rule if moment < target)
+
+
+def _ends_before(master: Any, occurrence: datetime | date) -> bool:
+    """Return whether the rule's own occurrences all lie before the cutoff."""
+    recur = master["RRULE"]
+    if until := recur.get("UNTIL"):
+        return _utc(until[0]) < _utc(_align(master, occurrence))
+    if count := recur.get("COUNT"):
+        return _occurrences_before(master, occurrence) >= count[0]
+    return False
+
+
+def _has_occurrences_from(master: Any, occurrence: datetime | date) -> bool:
+    if master.get("RRULE") is not None and not _ends_before(master, occurrence):
+        return True
+    return _has_dates_from(master, "RDATE", occurrence)
+
+
+def _has_dates_from(component: Any, key: str, occurrence: datetime | date) -> bool:
+    if key not in component:
+        return False
+    entries = component[key]
+    if not isinstance(entries, list):
+        entries = [entries]
+    target = _utc(occurrence)
+    return any(
+        _utc(_start_of(item.dt)) >= target for entry in entries for item in entry.dts
+    )
+
+
+def _head_uncapped(
+    calendar: caldav.Calendar, uid: str, occurrence: datetime | date
+) -> bool:
+    """Return whether the head still holds occurrences from the cutoff on."""
+    try:
+        ical = calendar.event_by_uid(uid).icalendar_instance
+    except requests.ConnectionError, requests.Timeout, DAVError:
+        return False
+    return _has_occurrences_from(_master(ical), occurrence)
 
 
 def _discard(tail: Any) -> None:
@@ -244,7 +306,9 @@ def _cap_series(master: Any, occurrence: datetime | date) -> None:
     rrule = master.get("RRULE")
     if rrule is None and "RDATE" not in master:
         raise ValueError("Event is not a recurring series")
-    if rrule is not None:
+    # A rule that already ends before the cutoff must stay as it is; an UNTIL
+    # at the cutoff would add occurrences instead of removing them.
+    if rrule is not None and not _ends_before(master, occurrence):
         recur = vRecur(dict(rrule))
         recur.pop("COUNT", None)
         recur["UNTIL"] = [_until(master, occurrence)]
@@ -256,22 +320,33 @@ def _cap_series(master: Any, occurrence: datetime | date) -> None:
 def _keep_dates(
     component: Any, key: str, occurrence: datetime | date, before: bool
 ) -> None:
-    """Keep the RDATE or EXDATE values on one side of the occurrence."""
+    """Keep the RDATE or EXDATE values on one side of the occurrence.
+
+    Property lines are filtered one by one: merging them would force every
+    value under a single TZID and shift the instants of the others.
+    """
     if key not in component:
         return
     entries = component[key]
     if not isinstance(entries, list):
         entries = [entries]
     target = _utc(occurrence)
-    kept = [
-        item.dt
-        for entry in entries
-        for item in entry.dts
-        if (_utc(_start_of(item.dt)) < target) == before
-    ]
+    kept_entries = []
+    for entry in entries:
+        kept = [
+            item.dt
+            for item in entry.dts
+            if (_utc(_start_of(item.dt)) < target) == before
+        ]
+        if len(kept) == len(entry.dts):
+            kept_entries.append(entry)
+        elif kept:
+            rebuilt = vDDDLists(kept)
+            rebuilt.params = entry.params
+            kept_entries.append(rebuilt)
     del component[key]
-    if kept:
-        component.add(key, kept)
+    if kept_entries:
+        component[key] = kept_entries if len(kept_entries) > 1 else kept_entries[0]
 
 
 def _start_of(value: Any) -> datetime | date:
@@ -290,17 +365,35 @@ def _until(master: Any, occurrence: datetime | date) -> datetime | date:
 def _apply(component: Any, data: dict[str, Any]) -> None:
     _replace(component, "summary", data.get("summary"))
     if "dtstart" in data:
-        _replace(component, "dtstart", data["dtstart"])
+        _set_time(component, "dtstart", data["dtstart"])
     if "dtend" in data:
         # RFC 5545 forbids DURATION alongside DTEND.
         _replace(component, "duration", None)
-        _replace(component, "dtend", data["dtend"])
+        _set_time(component, "dtend", data["dtend"])
     _replace(component, "description", data.get("description"))
     _replace(component, "location", data.get("location"))
     # The frontend never sees the rule (expand strips RRULE), so an absent
     # rrule must not remove the recurrence.
     if rrule := data.get("rrule"):
         _replace(component, "rrule", vRecur.from_ical(rrule))
+
+
+def _set_time(component: Any, key: str, value: Any) -> None:
+    """Write a time in the anchor the component already uses.
+
+    Home Assistant normalizes times to its own zone; writing them as received
+    would re-anchor a UTC, TZID or floating series on a summary-only edit and
+    shift future occurrences across DST boundaries.
+    """
+    old = component[key].dt if key in component else None
+    if isinstance(old, datetime) and isinstance(value, datetime):
+        if _utc(old) == _utc(value):
+            return
+        if old.tzinfo is None:
+            value = dt_util.as_local(value).replace(tzinfo=None)
+        else:
+            value = value.astimezone(old.tzinfo)
+    _replace(component, key, value)
 
 
 def _save(dav_event: caldav.CalendarObjectResource, ical: Any, touched: Any) -> None:

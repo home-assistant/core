@@ -2102,6 +2102,8 @@ async def test_update_event_this_and_future_rolls_back_tail(
     """Test that a failure to cap the head removes the stored tail again."""
     await setup_platform_cb()
     event = _mock_dav_event(calendars[0])
+    fresh = Event(None, "rec-1.ics", RECURRING_ICS, calendars[0], "rec-1")
+    calendars[0].event_by_uid = MagicMock(side_effect=[event, fresh])
     tail = Mock()
     calendars[0].save_event = MagicMock(return_value=tail)
     event.save.side_effect = DAVError("boom")
@@ -2170,7 +2172,8 @@ async def test_delete_event_this_and_future_drops_future_rdates(
     )
 
     master = _master(event)
-    assert "UNTIL" in master["RRULE"]
+    # The rule ends before the cutoff; an UNTIL there would add occurrences.
+    assert master["RRULE"].to_ical().decode() == "FREQ=DAILY;COUNT=3"
     assert [item.dt for item in master["RDATE"].dts] == [
         datetime.datetime(2017, 12, 1, 17, 0, tzinfo=datetime.UTC)
     ]
@@ -2360,6 +2363,8 @@ async def test_update_event_this_and_future_rollback_failure(
     """Test that a failing rollback still reports the original error."""
     await setup_platform_cb()
     event = _mock_dav_event(calendars[0])
+    fresh = Event(None, "rec-1.ics", RECURRING_ICS, calendars[0], "rec-1")
+    calendars[0].event_by_uid = MagicMock(side_effect=[event, fresh])
     tail = Mock()
     tail.delete.side_effect = DAVError("still down")
     calendars[0].save_event = MagicMock(return_value=tail)
@@ -2380,3 +2385,218 @@ async def test_update_event_this_and_future_rollback_failure(
     assert not resp["success"]
     assert "boom" in resp["error"]["message"]
     assert "could not be removed" in caplog.text
+
+
+CAPPED_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART:20171127T170000Z
+DTEND:20171127T180000Z
+RRULE:FREQ=DAILY;UNTIL=20171129T165959Z
+SUMMARY:Daily standup
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_update_event_keeps_start_anchor(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a summary-only edit does not re-anchor the start time."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], RICH_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": {
+                "summary": "Renamed standup",
+                "dtstart": "2017-11-27T16:00:00+00:00",
+                "dtend": "2017-11-27T17:00:00+00:00",
+            },
+        },
+    )
+
+    dtstart = _master(event)["DTSTART"]
+    assert dtstart.dt == datetime.datetime(
+        2017, 11, 27, 17, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+    )
+    assert str(dtstart.dt.tzinfo) == "Europe/Berlin"
+
+
+@pytest.mark.parametrize("tz", [UTC])
+async def test_update_event_moves_floating_start(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a moved time on a floating series stays floating."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], FLOATING_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "event": {
+                "summary": "Floating standup",
+                "dtstart": "2017-11-27T18:00:00+00:00",
+                "dtend": "2017-11-27T19:00:00+00:00",
+            },
+        },
+    )
+
+    dtstart = _master(event)["DTSTART"].dt
+    assert dtstart == datetime.datetime(2017, 11, 27, 18, 0)
+    assert dtstart.tzinfo is None
+
+
+async def test_update_event_this_and_future_replayed(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that replaying a finished split does not clone the capped head."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], CAPPED_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    calendars[0].save_event.assert_not_called()
+    event.save.assert_not_called()
+
+
+async def test_update_event_first_occurrence_drops_overrides(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that an edit of every future occurrence clears old overrides."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], OVERRIDDEN_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-27 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    assert _master(event)["SUMMARY"] == "Renamed standup"
+    assert not _overrides(event)
+
+
+async def test_update_event_this_and_future_ambiguous_failure(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the tail survives when the head state cannot be verified."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0])
+    calendars[0].event_by_uid = MagicMock(side_effect=[event, DAVError("down")])
+    tail = Mock()
+    calendars[0].save_event = MagicMock(return_value=tail)
+    event.save.side_effect = DAVError("boom")
+
+    client = await ws_client()
+    resp = await client.cmd(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": UPDATED_EVENT,
+        },
+    )
+
+    assert not resp["success"]
+    tail.delete.assert_not_called()
+    assert "Keeping the split-off series" in caplog.text
+
+
+MIXED_TZ_EXDATE_ICS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VTIMEZONE
+TZID:Europe/Berlin
+BEGIN:STANDARD
+DTSTART:19701025T030000
+TZOFFSETFROM:+0200
+TZOFFSETTO:+0100
+RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU
+END:STANDARD
+END:VTIMEZONE
+BEGIN:VEVENT
+UID:rec-1
+DTSTAMP:20171125T000000Z
+DTSTART;TZID=Europe/Berlin:20171127T170000
+DTEND;TZID=Europe/Berlin:20171127T180000
+RRULE:FREQ=DAILY;COUNT=10
+EXDATE;TZID=Europe/Berlin:20171128T170000,20171204T170000
+EXDATE:20171129T160000Z
+SUMMARY:Daily standup
+END:VEVENT
+END:VCALENDAR
+"""
+
+
+async def test_delete_event_this_and_future_keeps_exdate_zones(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that filtering EXDATEs does not merge lines with different zones."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], MIXED_TZ_EXDATE_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "delete",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-12-01 16:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+        },
+    )
+
+    entries = _master(event)["EXDATE"]
+    assert isinstance(entries, list)
+    berlin, utc = entries
+    assert berlin.params["TZID"] == "Europe/Berlin"
+    assert [item.dt for item in berlin.dts] == [
+        datetime.datetime(
+            2017, 11, 28, 17, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+        )
+    ]
+    assert [item.dt for item in utc.dts] == [
+        datetime.datetime(2017, 11, 29, 16, 0, tzinfo=datetime.UTC)
+    ]
