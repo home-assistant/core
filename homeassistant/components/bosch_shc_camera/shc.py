@@ -1130,28 +1130,35 @@ class SHCCoordinatorMixin:
         return await async_update_shc_states(self, data)
 
     async def async_shc_set_camera_light(self: Any, cam_id: str, on: bool) -> bool:
+        """Turn the camera indicator LED on (True) or off (False) via SHC API."""
         return await async_shc_set_camera_light(self, cam_id, on)
 
     async def async_cloud_set_light_component(
         self: Any, cam_id: str, component: str, value: Any
     ) -> bool:
+        """Set an individual light component via the cloud API."""
         return await async_cloud_set_light_component(self, cam_id, component, value)
 
     async def async_shc_set_privacy_mode(self: Any, cam_id: str, enabled: bool) -> bool:
+        """Enable (True) or disable (False) privacy mode via SHC API (legacy fallback)."""
         return await async_shc_set_privacy_mode(self, cam_id, enabled)
 
     async def async_cloud_set_privacy_mode(
         self: Any, cam_id: str, enabled: bool
     ) -> bool:
+        """Enable (True) or disable (False) privacy mode via the cloud API."""
         return await async_cloud_set_privacy_mode(self, cam_id, enabled)
 
     async def async_cloud_set_camera_light(self: Any, cam_id: str, on: bool) -> bool:
+        """Turn the camera light on (True) or off (False) via the cloud API."""
         return await async_cloud_set_camera_light(self, cam_id, on)
 
     async def async_cloud_set_notifications(
         self: Any, cam_id: str, enabled: bool
     ) -> bool:
+        """Enable or disable notifications via the cloud API."""
         return await async_cloud_set_notifications(self, cam_id, enabled)
 
     async def async_cloud_set_pan(self: Any, cam_id: str, position: int) -> bool:
+        """Pan the 360 camera to an absolute position via the cloud API."""
         return await async_cloud_set_pan(self, cam_id, position)

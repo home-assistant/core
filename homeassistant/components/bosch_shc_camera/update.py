@@ -39,6 +39,7 @@ async def async_setup_entry(
     config_entry: BoschCameraConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up Bosch camera firmware update entities from a config entry."""
     coordinator = config_entry.runtime_data
     entities = []
     for cam_id in coordinator.data:
@@ -64,6 +65,7 @@ class BoschFirmwareUpdate(_BoschEntityBase, UpdateEntity):
     )
 
     def __init__(self, coordinator: Any, cam_id: str, entry: ConfigEntry) -> None:
+        """Initialize the firmware update entity."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_firmware_update"
         self._attr_translation_key = "firmware_update"

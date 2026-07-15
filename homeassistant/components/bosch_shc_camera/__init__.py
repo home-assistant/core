@@ -172,8 +172,9 @@ def _install_stream_support_noise_filter() -> None:
 
 
 class _StreamWorkerErrorListener(logging.Handler):
-    """Intercept `Error from stream worker` log records from HA's stream
-    component and route each one to the coordinator's stream-error handler.
+    """Intercept `Error from stream worker` log records from HA's stream component.
+
+    Routes each one to the coordinator's stream-error handler.
 
     HA's stream component runs an auto-restart loop on worker crashes
     (`stream.__init__.Stream._run_worker`): worker fails → `_set_state(False)`
@@ -349,6 +350,7 @@ OPTIONS_SNAPSHOT_KEY = f"{DOMAIN}_options_snapshot"
 
 
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
+    """Set up the Bosch Smart Home Camera integration (domain-level)."""
     # Register services at domain level — ensures they are available even when
     # the config entry is in setup_retry (e.g. token expired).
     # Without this, the Lovelace card shows "action not found" errors.
@@ -623,6 +625,7 @@ async def async_migrate_entry(
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BoschCameraConfigEntry) -> bool:
+    """Set up Bosch Smart Home Camera from a config entry."""
     coordinator = BoschCameraCoordinator(hass, entry)
 
     # Post-update feedback prompt — one-time per integration version. When the
@@ -1690,6 +1693,7 @@ async def _async_cancel_coordinator_tasks(coord: BoschCameraCoordinator) -> None
 async def async_unload_entry(
     hass: HomeAssistant, entry: BoschCameraConfigEntry
 ) -> bool:
+    """Unload a Bosch Smart Home Camera config entry."""
     coord = getattr(entry, "runtime_data", None)
     if coord:
         await _async_cancel_coordinator_tasks(coord)

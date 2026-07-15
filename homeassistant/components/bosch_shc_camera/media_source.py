@@ -404,7 +404,7 @@ class _SmbBackend:
             pass
 
     def _path(self, *segments: str) -> str:
-        """Build the UNC path, rejecting any traversal attempt in *segments*.
+        r"""Build the UNC path, rejecting any traversal attempt in *segments*.
 
         Regression (bug-hunt 2026-07-03): `camera` (and the other path
         segments from callers like list_years/list_months/list_days/
@@ -415,7 +415,7 @@ class _SmbBackend:
         attacker-influenceable) and `media_content_id` segments are
         reachable via any media_source.resolve_media call, not just this
         integration's own browse UI, so a crafted segment containing
-        "..\\" could escape `{share}\\{base}\\{camera}\\...` and read/list
+        "..\" could escape `{share}\{base}\{camera}\...` and read/list
         outside the intended NAS tree. Same reject pattern as filename
         validation elsewhere in this file, applied at the single choke
         point every segment passes through.
@@ -848,6 +848,7 @@ def _find_source(
 
 # ── media source ────────────────────────────────────────────────────────────
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
+    """Set up the Bosch camera media source."""
     if not hass.data.get(VIEW_REGISTERED_KEY):
         hass.http.register_view(BoschCameraMediaView(hass))
         hass.data[VIEW_REGISTERED_KEY] = True
@@ -884,6 +885,7 @@ class BoschCameraMediaSource(MediaSource):
     name = "Bosch Camera"
 
     def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the Bosch camera media source."""
         super().__init__(DOMAIN)
         self.hass = hass
 
@@ -1235,8 +1237,7 @@ class BoschCameraMediaSource(MediaSource):
         single_source: bool,
         root: bool = False,
     ) -> BrowseMediaSource:
-        """Render one SMB tree node, sharing ONE SMB session across every
-        directory-listing call this single browse step makes.
+        """Render one SMB tree node, sharing ONE SMB session across its listing calls.
 
         A single node can need 1-2 sequential `scandir` calls (e.g. the
         "years + flat dates" probe at the camera level tries both
@@ -1512,11 +1513,13 @@ class BoschCameraMediaView(HomeAssistantView):
     url = URL_PREFIX + "/{entry_id}/{location:.*}"
 
     def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the media view."""
         self.hass = hass
 
     async def get(
         self, request: web.Request, entry_id: str, location: str
     ) -> web.StreamResponse:
+        """Serve the requested event file, from local FS or via SMB."""
         parts = [p for p in location.split("/") if p]
         if not parts:
             raise web.HTTPNotFound

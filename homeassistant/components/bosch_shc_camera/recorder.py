@@ -154,9 +154,9 @@ def _failed_dir(base_path: str, cam_name: str) -> str:
 
 
 def _remote_smb_path(opts: dict[str, Any], cam_name: str, date: str, fname: str) -> str:
-    """Build the SMB destination path for one finalized segment.
+    r"""Build the SMB destination path for one finalized segment.
 
-    Layout: ``\\\\{server}\\{share}\\{smb_base_path}\\{nvr_smb_subpath}\\{cam}\\{date}\\{fname}``.
+    Layout: ``\\{server}\{share}\{smb_base_path}\{nvr_smb_subpath}\{cam}\{date}\{fname}``.
     Pure helper — no I/O. Called from the drain watcher per file.
     """
     server = (opts.get("smb_server") or "").strip()
@@ -257,7 +257,7 @@ def _build_ffmpeg_args(
 
 
 def _preroll_dir(cache_dir: str, cam_name: str) -> str:
-    """Return {cache_dir}/{safe_cam_name}/"""
+    """Return {cache_dir}/{safe_cam_name}/."""
     return os.path.join(cache_dir, _safe_name(cam_name))
 
 
@@ -342,8 +342,10 @@ def _prune_and_count(cam_dir: str, max_segments: int) -> int:
 
 
 def _build_preroll_ffmpeg_args(rtsp_url: str, pattern: str) -> list[str]:
-    """Ffmpeg args for 10 s segments to tmpfs. No -segment_atclocktime, no -strftime_mkdir.
-    No -reconnect* — those are HTTP-only and crash ffmpeg rc=8 on rtsp:// inputs.
+    """Build ffmpeg args for 10 s segments to tmpfs.
+
+    No -segment_atclocktime, no -strftime_mkdir. No -reconnect* — those are
+    HTTP-only and crash ffmpeg rc=8 on rtsp:// inputs.
     """
     return [
         "ffmpeg",
@@ -590,10 +592,9 @@ async def stop_preroll_recorder(
 
 
 def _known_cam_ids_for_shutdown(coordinator: BoschCameraCoordinator) -> set[str]:
-    """All camera IDs that could plausibly have (or soon get) an NVR/ring
-    ffmpeg process — used by the unload-time sweeps below.
+    """Return all camera IDs that could plausibly have an NVR/ring ffmpeg process.
 
-    A plain ``list(coordinator.nvr_processes.keys())`` snapshot (the
+    Used by the unload-time sweeps below. A plain ``list(coordinator.nvr_processes.keys())`` snapshot (the
     previous implementation) misses a camera whose ``start_recorder``/
     ``_spawn_preroll_recorder_locked`` call is still in flight and hasn't
     registered its process yet at snapshot time — issue #47's orphaned-
@@ -719,10 +720,10 @@ async def finalize_and_restart_preroll_recorder(
 
 
 def list_preroll_files(coordinator: BoschCameraCoordinator, cam_id: str) -> list[str]:
-    """Return list of pre-roll segment paths for cam_id, sorted oldest-first,
-    safe to hand to `create_motion_clip`'s concat demuxer.
+    """Return pre-roll segment paths for cam_id, sorted oldest-first.
 
-    The ring writer's ffmpeg `-f segment` process keeps exactly one file
+    Safe to hand to `create_motion_clip`'s concat demuxer. The ring
+    writer's ffmpeg `-f segment` process keeps exactly one file
     open at a time — the newest file on disk may still be mid-write with no
     finalized moov atom yet (it reaches the size threshold almost
     immediately after rotation, well before the 10 s segment period ends).
@@ -951,12 +952,11 @@ async def _capture_postroll(
 async def assemble_and_ship_motion_clip(
     coordinator: BoschCameraCoordinator, cam_id: str
 ) -> bool:
-    """On an FCM motion/person event, assemble a pre-roll(+post-roll) clip
-    for a camera running in `event_buffered` Mini-NVR mode and drop it into
-    the staging tree so the existing drain watcher promotes/uploads it like
-    any continuous-mode segment.
+    """Assemble a pre-roll(+post-roll) clip for an FCM motion/person event.
 
-    Guarded by a per-camera lock so overlapping FCM events don't race the
+    For a camera running in `event_buffered` Mini-NVR mode, drops the clip
+    into the staging tree so the existing drain watcher promotes/uploads
+    it like any continuous-mode segment. Guarded by a per-camera lock so overlapping FCM events don't race the
     concat-file write for the same camera; if an assembly is already in
     flight for this camera the new one is skipped rather than queued (a
     burst of events during one ongoing motion episode should not pile up
@@ -1097,7 +1097,7 @@ def should_record(
     *,
     switch_on: bool,
 ) -> bool:
-    """LAN-only gate. Returns True iff all three conditions hold:
+    """LAN-only gate. Returns True iff all three conditions hold.
 
     1. ``switch_on`` — user has toggled the per-camera NVR switch ON.
     2. The live session is LOCAL (NOT cloud relay).
@@ -1555,9 +1555,10 @@ async def _watch_recorder(
 def _list_staging_candidates(
     staging_root: str,
 ) -> list[tuple[str, str, str, float, int]]:
-    """Walk the staging tree and return ``(full_path, cam, date, mtime, size)``
-    tuples for every regular file. Pure helper so the watcher is testable
-    without spinning up an event loop.
+    """Walk the staging tree and return a tuple per regular file.
+
+    Each tuple is ``(full_path, cam, date, mtime, size)``. Pure helper so
+    the watcher is testable without spinning up an event loop.
     """
     out: list[tuple[str, str, str, float, int]] = []
     if not os.path.isdir(staging_root):
@@ -1955,8 +1956,10 @@ def sync_nvr_cleanup(coordinator: BoschCameraCoordinator) -> None:
 
 
 def _sync_nvr_cleanup_local(coordinator: BoschCameraCoordinator) -> None:
-    """Local-disk retention purge — covers ``local`` target plus the staging /
-    failed dirs (which exist no matter the target).
+    """Run the local-disk retention purge.
+
+    Covers the ``local`` target plus the staging / failed dirs (which
+    exist no matter the target).
     """
     opts = coordinator.options
     base_path = (opts.get("nvr_base_path") or DEFAULT_BASE_PATH).strip()

@@ -25,17 +25,20 @@ class FirmwareUpdateRepairFlow(RepairsFlow):
     """Confirm, then install the pending firmware update for one camera."""
 
     def __init__(self, coordinator: Any, cam_id: str) -> None:
+        """Initialize the firmware-update repair flow."""
         self._coordinator = coordinator
         self._cam_id = cam_id
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
+        """Handle the first step of the fix flow."""
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
+        """Handle the user confirming the firmware install."""
         if self._coordinator is None:
             return self.async_abort(reason="install_failed")
         if user_input is not None:

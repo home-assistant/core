@@ -128,9 +128,11 @@ async def start_tls_proxy(
         direction: str,
         idle_timeout: float | None,
     ) -> None:
-        """Forward bytes. If rewrite_transport=True, intercept RTSP SETUP
-        requests and force TCP interleaved transport so FFmpeg doesn't try
-        UDP (which can't work through the TCP proxy).
+        """Forward bytes.
+
+        If rewrite_transport=True, intercept RTSP SETUP requests and force
+        TCP interleaved transport so FFmpeg doesn't try UDP (which can't
+        work through the TCP proxy).
         """
         interleaved_counter = 0
         dbg_count = 0

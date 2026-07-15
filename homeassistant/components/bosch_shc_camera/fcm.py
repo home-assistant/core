@@ -184,8 +184,7 @@ class _FCMNoiseFilter(logging.Filter):
 
 
 def get_recent_fcm_creds_staleness_count(window_seconds: float = 600.0) -> int:
-    """How many `PHONE_REGISTRATION_ERROR`-class markers fired in the
-    last ``window_seconds``.
+    """Return how many `PHONE_REGISTRATION_ERROR`-class markers fired in the last ``window_seconds``.
 
     The two-stage self-heal uses this to decide soft vs hard:
       - count == 0 → creds likely valid, try soft-heal first (no purge)
@@ -258,8 +257,7 @@ def _install_fcm_noise_filter() -> None:
 
 
 class _QuietFcmPushClient:
-    """FcmPushClient subclass that fixes the upstream state-machine bug described in
-    github.com/sdb9696/firebase-messaging#33.
+    r"""FcmPushClient subclass that fixes the upstream state-machine bug described in github.com/sdb9696/firebase-messaging#33.
 
     Root cause (b — state-machine bug):
       In the library's ``_listen()`` while-loop, when an ``OSError``/``EOFError``
@@ -269,7 +267,7 @@ class _QuietFcmPushClient:
               and self.run_state == FcmPushClientRunState.RESETTING):
               <log quietly>
           else:
-              _logger.exception("Unexpected exception during read\\n")  # ← noise
+              _logger.exception("Unexpected exception during read\n")  # ← noise
 
       ``run_state`` is only set to ``RESETTING`` *inside* ``_reset()``, which is
       called **after** the logging decision.  So the very first connectivity error
@@ -294,8 +292,10 @@ class _QuietFcmPushClient:
     # the try/except there already handles ImportError.
     @staticmethod
     def _patch_class() -> type | None:
-        """Return a patched FcmPushClient subclass, or None if the library is too
-        new/old for safe subclassing (i.e. ``_listen`` signature changed).
+        """Return a patched FcmPushClient subclass, or None if unsafe to patch.
+
+        Returns None if the library is too new/old for safe subclassing
+        (i.e. ``_listen`` signature changed).
         """
         try:
             from firebase_messaging import FcmPushClient, FcmPushClientRunState

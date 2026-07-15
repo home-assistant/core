@@ -156,6 +156,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         cam_id: str,
         entry: ConfigEntry,
     ) -> None:
+        """Initialize the Bosch camera entity."""
         CoordinatorEntity.__init__(self, coordinator)
         Camera.__init__(self)
         # HA core's Camera.__init__ sets _supports_native_async_webrtc=True purely
@@ -569,10 +570,10 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
         return self._local_available_during_cloud_outage()
 
     def _local_available_during_cloud_outage(self) -> bool:
-        """True only when the cloud poll failed BUT this camera is still
-        locally serviceable inside a known active maintenance window.
+        """True only when the cloud poll failed but this camera is still locally serviceable.
 
-        Three guards, ALL required: an active camera-relevant Bosch maintenance
+        Only true inside a known active maintenance window. Three guards,
+        ALL required: an active camera-relevant Bosch maintenance
         window, a positive LAN-TCP reachability for this cam, and an established
         local live session (rtsps/rtsp URL ready). Anything unknown/absent →
         False, so we fall back to the cloud coordinator's availability. Must
@@ -802,10 +803,10 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     async def async_handle_async_webrtc_offer(
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:
-        """Auto-open a live connection, then wait for LOCAL pre-warm, before
-        delegating to the go2rtc provider.
+        """Auto-open a live connection and wait for LOCAL pre-warm before delegating.
 
-        Unlike async_create_stream() (Cast/HLS path), this native-WebRTC
+        Delegates to the go2rtc provider once pre-warm has settled. Unlike
+        async_create_stream() (Cast/HLS path), this native-WebRTC
         entry point never had an auto-open guard: a camera whose "Live
         Stream" switch was never turned on (e.g. right after first setup)
         has no active session, so stream_source() stays None and go2rtc
@@ -917,10 +918,10 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
             return None
 
     async def _async_rcp_thumbnail(self) -> bytes | None:
-        """Fetch a thumbnail via RCP — tries 320×180 JPEG (0x099e) first,
-        falls back to 320×180 YUV422 raw frame (0x0c98) converted to JPEG.
+        """Fetch a thumbnail via RCP, falling back from JPEG to raw YUV422.
 
-        Resolution confirmed via RCP 0x0a88 READ (returns 0x00000140/0x000000B4 = 320×180).
+        Tries 320×180 JPEG (0x099e) first, then falls back to 320×180
+        YUV422 raw frame (0x0c98) converted to JPEG. Resolution confirmed via RCP 0x0a88 READ (returns 0x00000140/0x000000B4 = 320×180).
         Uses the cached live proxy connection (if available) to reach the
         camera's RCP endpoint. Much faster than snap.jpg (~instant vs ~1.5 s)
         and used as a fallback when the proxy snap.jpg fetch fails.
@@ -987,11 +988,11 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
-        """Public entrypoint — wraps the implementation so that any uncaught
-        exception still returns a valid (placeholder) JPEG instead of letting
-        HA's camera proxy serve a textual `500: Internal Server Error` body
-        (26 bytes of plain text in place of an image).
+        """Public entrypoint wrapping the implementation to never let exceptions escape.
 
+        Any uncaught exception still returns a valid (placeholder) JPEG
+        instead of letting HA's camera proxy serve a textual `500: Internal
+        Server Error` body (26 bytes of plain text in place of an image).
         Observed 2026-04-27 on Gen1 cams during the pre-warm transition: while
         `_live_connections[cam_id]` had a partial entry but no proxyUrl yet,
         an unhandled exception path in `_async_camera_image_impl` propagated up
@@ -1024,7 +1025,7 @@ class BoschCamera(CoordinatorEntity[BoschCameraCoordinator], Camera):
     async def _async_camera_image_impl(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
-        """Return the best available JPEG snapshot, tried in order:
+        """Return the best available JPEG snapshot, tried in this order.
 
         0. MJPEG inst=3 LAN snapshot (Gen2 opt-in) — when use_mjpeg_snapshot is
            enabled: FFmpeg subprocess captures one frame from RTSP inst=3.

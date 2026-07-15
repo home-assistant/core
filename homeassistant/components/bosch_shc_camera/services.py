@@ -1,5 +1,4 @@
-"""HA service registrations (trigger_snapshot, rules, motion zones, privacy masks,
-camera sharing, event migration/deletion, …).
+"""HA service registrations (trigger_snapshot, rules, motion zones, privacy masks, camera sharing, event migration/deletion, …).
 
 Extracted from __init__.py's _register_services — a single ~1300-line function
 holding ~20 independent, low-coupling service handlers purely for registration.

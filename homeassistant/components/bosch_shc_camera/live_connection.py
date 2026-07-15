@@ -1,5 +1,4 @@
-"""Open a live proxy connection to a camera (LOCAL Digest / REMOTE cloud
-proxy), with TLS-proxy setup, go2rtc registration, and pre-warm.
+"""Open a live proxy connection to a camera (LOCAL Digest / REMOTE cloud proxy), with TLS-proxy setup, go2rtc registration, and pre-warm.
 
 Extracted from __init__.py's BoschCameraCoordinator._try_live_connection_inner
 — by far the largest/most complex single method in the coordinator (707

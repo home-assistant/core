@@ -61,6 +61,7 @@ class BoschRefreshSnapshotButton(_BoschEntityBase, ButtonEntity):
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: Any, cam_id: str, entry: ConfigEntry) -> None:
+        """Initialize the refresh-snapshot button."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_refresh_{cam_id.lower()}"
         self._attr_translation_key = "refresh_snapshot"
@@ -125,6 +126,7 @@ class BoschSoftResetButton(_BoschEntityBase, ButtonEntity):
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: Any, cam_id: str, entry: ConfigEntry) -> None:
+        """Initialize the soft-reset button."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_soft_reset_{cam_id.lower()}"
         self._attr_translation_key = "soft_reset"
@@ -152,6 +154,7 @@ class BoschHardResetButton(_BoschEntityBase, ButtonEntity):
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, coordinator: Any, cam_id: str, entry: ConfigEntry) -> None:
+        """Initialize the hard-reset button."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_hard_reset_{cam_id.lower()}"
         self._attr_translation_key = "hard_reset"

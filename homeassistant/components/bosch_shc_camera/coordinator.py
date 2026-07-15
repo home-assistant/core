@@ -245,6 +245,7 @@ class BoschCameraCoordinator(
     TokenAuthCoordinatorMixin,
 ):
     """Shared coordinator — fetches all camera data once per scan_interval.
+
     All entity types (camera, sensor, button) read from coordinator.data
     rather than making independent API calls.
     """
@@ -262,6 +263,7 @@ class BoschCameraCoordinator(
     SHC_RETRY_INTERVAL: int = SHC_RETRY_INTERVAL
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Initialize the coordinator and its per-camera caches."""
         self.entry = entry
         # Advanced diagnostic escape hatch (set via the manual-login/relogin
         # "Advanced" field) — NEVER defaulted to any specific host. Only ever
@@ -1119,10 +1121,11 @@ class BoschCameraCoordinator(
 
     @staticmethod
     def err_str(err: BaseException) -> str:
-        """Format an exception so empty-message types (TimeoutError, some
-        aiohttp errors) still produce meaningful log output. Falls back to
-        repr(err) when str(err) is empty — the original "fetch error: "
-        empty-tail bug shipped for months before this helper.
+        """Format an exception so empty-message types still produce meaningful log output.
+
+        Falls back to repr(err) when str(err) is empty (TimeoutError, some
+        aiohttp errors) — the original "fetch error: " empty-tail bug shipped
+        for months before this helper.
         """
         s = str(err)
         return s or repr(err)
@@ -1151,8 +1154,10 @@ class BoschCameraCoordinator(
         self._rcp_lan_denied_until[(cam_id, opcode_hex)] = time.monotonic()
 
     def _clear_rcp_lan_denied(self, cam_id: str, opcode_hex: str) -> None:
-        """Clear a denied entry after a successful 200 — permissions may have
-        changed (firmware upgrade, CBS user re-provision).
+        """Clear a denied entry after a successful 200.
+
+        Permissions may have changed (firmware upgrade, CBS user
+        re-provision).
         """
         cache = getattr(self, "_rcp_lan_denied_until", None)
         if cache is not None:
@@ -1250,8 +1255,10 @@ class BoschCameraCoordinator(
         generation: int,
         elapsed: float,
     ) -> None:
-        """Cache fresh LOCAL creds from a heartbeat PUT response and rebuild
-        the cached rtspsUrl so the next stream-worker restart picks them up.
+        """Cache fresh LOCAL creds from a heartbeat PUT response.
+
+        Rebuilds the cached rtspsUrl so the next stream-worker restart picks
+        them up.
 
         Thin dispatch to `session_renewal.refresh_local_creds_from_heartbeat`
         (Phase 3 step 2 coordinator-rewrite split, see
@@ -1602,6 +1609,7 @@ class BoschCameraCoordinator(
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Coordinator tick — runs every scan_interval seconds.
+
         Each data type (status, events) is only re-fetched when its own
         interval has elapsed, reducing unnecessary API traffic.
 
@@ -2303,11 +2311,12 @@ class BoschCameraCoordinator(
         getattr(self, "_persist_maint_notified_key", lambda: None)()
 
     def _persist_maint_notified_key(self) -> None:
-        """Write `_maintenance_notified_key` to disk so HA restarts mid-
-        window do not re-fire the active-state announcement on the next
-        coordinator tick. Bug 2026-05-20: ~20 duplicate alerts during a
-        single Bosch maintenance window because every restart wiped the
-        in-memory dedup key.
+        """Write `_maintenance_notified_key` to disk.
+
+        Ensures HA restarts mid-window do not re-fire the active-state
+        announcement on the next coordinator tick. Bug 2026-05-20: ~20
+        duplicate alerts during a single Bosch maintenance window because
+        every restart wiped the in-memory dedup key.
         """
         key = self.maintenance_notified_key
         store = getattr(self, "maint_notified_store", None)
@@ -2316,8 +2325,9 @@ class BoschCameraCoordinator(
         self.hass.async_create_task(store.async_save({"link": key[0], "state": key[1]}))
 
     def _persist_cloud_outage_flag(self) -> None:
-        """Mirror the maintenance-key persistence for the cloud-state
-        dedup flag, so a restart mid-outage doesn't re-fire "Cloud nicht
+        """Mirror the maintenance-key persistence for the cloud-state dedup flag.
+
+        Ensures a restart mid-outage doesn't re-fire "Cloud nicht
         erreichbar".
         """
         store = getattr(self, "cloud_alert_store", None)
@@ -2594,8 +2604,7 @@ class BoschCameraCoordinator(
         cam_id: str,
         cam_data: dict[str, Any] | None = None,
     ) -> str:
-        """Re-uses the BoschCameraStatusSensor logic so the announce path and
-        the sensor never drift apart.
+        """Re-use the BoschCameraStatusSensor logic so the announce path and the sensor never drift apart.
 
         Mirror of `sensor.BoschCameraStatusSensor.native_value`: cloud ONLINE
         + latest event TROUBLE_DISCONNECT → offline; otherwise the cloud
@@ -2958,8 +2967,10 @@ class BoschCameraCoordinator(
         return get_or_create_lock(self._nvr_clip_assembly_locks, cam_id)
 
     def get_session(self, cam_id: str) -> CameraSessionState:
-        """Get or create per-camera session bookkeeping (generation counter,
-        idle-reaper timestamp, stream-warmup timestamp — see session_state.py).
+        """Get or create per-camera session bookkeeping.
+
+        Covers the generation counter, idle-reaper timestamp, and
+        stream-warmup timestamp — see session_state.py.
         """
         return get_or_create_session(self._sessions, cam_id)
 
@@ -3039,6 +3050,7 @@ class BoschCameraCoordinator(
         self, cam_id: str, is_renewal: bool = False, force_reset: bool = False
     ) -> dict[str, Any] | None:
         """Open a live proxy connection via PUT /v11/video_inputs/{id}/connection.
+
         Uses "REMOTE" (confirmed working) → cloud proxy, fast (~1.5s).
         On success stores:
           - proxyUrl:  https://proxy-NN:42090/{hash}/snap.jpg  (current image, no auth)
@@ -4047,9 +4059,9 @@ class BoschCameraCoordinator(
                 )
 
     async def _ensure_go2rtc_schemes_fresh(self) -> None:
-        """Pre-emptive: re-fetch `_supported_schemes` directly on the existing
-        WebRTCProvider instance(s) so the very first stream activation finds
-        the right scheme set.
+        """Pre-emptively re-fetch `_supported_schemes` on the existing WebRTCProvider instance(s).
+
+        Ensures the very first stream activation finds the right scheme set.
 
         Thin dispatch to `go2rtc_client.ensure_go2rtc_schemes_fresh` (Phase 3
         step 3 coordinator-rewrite split, see
@@ -4229,8 +4241,7 @@ class BoschCameraCoordinator(
         await promote_to_local(self, cam_id)
 
     async def remote_session_terminator(self, cam_id: str, generation: int) -> None:
-        """Schedule a clean teardown of a REMOTE live session before the
-        relay-side lifetime cap.
+        """Schedule a clean teardown of a REMOTE live session before the relay-side lifetime cap.
 
         Thin dispatch to `session_renewal.remote_session_terminator` — kept
         as a bound method because this is called from `live_connection.py`

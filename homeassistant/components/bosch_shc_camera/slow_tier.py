@@ -1,5 +1,4 @@
-"""Slow-tier per-camera diagnostic pass (largest, most complex piece of
-the coordinator tick).
+"""Slow-tier per-camera diagnostic pass — the largest, most complex coordinator tick piece.
 
 Phase 2 step 7 of the coordinator-rewrite split (see
 .claude/plans/jiggly-moseying-peacock.md, project root). Extracted
@@ -63,11 +62,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _err_str(err: BaseException) -> str:
-    """Format an exception so empty-message types (TimeoutError, some
-    aiohttp errors) still produce meaningful log output. Falls back to
-    repr(err) when str(err) is empty.
+    """Format an exception so empty-message types still produce meaningful log output.
 
-    Deliberately NOT `coordinator.err_str(err)` — that is a
+    Covers TimeoutError and some aiohttp errors; falls back to repr(err)
+    when str(err) is empty. Deliberately NOT `coordinator.err_str(err)` — that is a
     `@staticmethod` on `BoschCameraCoordinator` called via CLASS
     dispatch (`BoschCameraCoordinator.err_str(err)`) in the original
     inline code specifically because unit-test fixtures across the
@@ -81,9 +79,10 @@ def _err_str(err: BaseException) -> str:
 
 @dataclass
 class CamContext:
-    """Per-camera values computed once per tick, shared by every
-    slow-tier sub-function — avoids the original inline loop's
-    redundant re-derivation of `hw`/`is_gen2` at multiple points.
+    """Per-camera values computed once per tick, shared by every slow-tier sub-function.
+
+    Avoids the original inline loop's redundant re-derivation of
+    `hw`/`is_gen2` at multiple points.
     """
 
     hw: str
@@ -105,8 +104,9 @@ def _compute_cam_context(
     opts: dict[str, Any],
     do_slow: bool,
 ) -> CamContext:
-    """Compute the per-camera context for the slow-tier pass, including
-    the stream-contention defer-gate side effects (mutates
+    """Compute the per-camera context for the slow-tier pass.
+
+    Includes the stream-contention defer-gate side effects (mutates
     `coordinator.slow_tier_deferred`/`_slow_tier_defer_since`).
     """
     cam_status = data[cam_id].get("status", "UNKNOWN")
@@ -208,9 +208,10 @@ def _poll_cam_info_caches(
     cam_id: str,
     cam_raw: dict[str, Any],
 ) -> None:
-    """Update `coordinator.shc_state_cache[cam_id]` from fields already
-    present in `cam_raw` (privacy mode, camera-light state, notifications
-    status) — no network I/O, unlike every later slow-tier sub-function.
+    """Update `coordinator.shc_state_cache[cam_id]` from fields already in `cam_raw`.
+
+    Covers privacy mode, camera-light state, and notifications status —
+    no network I/O, unlike every later slow-tier sub-function.
     """
     privacy_str = cam_raw.get("privacyMode", "")
     feat_support = cam_raw.get("featureSupport", {})
@@ -322,8 +323,10 @@ async def _poll_cam_control(
     session: aiohttp.ClientSession,
     headers: dict[str, str],
 ) -> None:
-    """Fetch pan position + Gen2 lighting/switch state — both polled
-    every tick (NOT slow-tier-gated), only gated on `ctx.is_online`.
+    """Fetch pan position and Gen2 lighting/switch state.
+
+    Both are polled every tick (NOT slow-tier-gated), only gated on
+    `ctx.is_online`.
     """
     # Fetch pan position for cameras that support it (skip if offline)
     if ctx.pan_limit and ctx.is_online:
@@ -375,8 +378,9 @@ async def _poll_slow_tier_endpoints(
     headers: dict[str, str],
     fire_intrusion_event: Callable[[str, str, dict[str, Any]], None],
 ) -> None:
-    """Slow-tier (~5-min interval) parallel endpoint fetch + result
-    dispatch: wifiinfo, ambient light, motion, firmware, recording
+    """Run the slow-tier (~5-min interval) parallel endpoint fetch and dispatch results.
+
+    Covers: wifiinfo, ambient light, motion, firmware, recording
     options, unread-events count, commissioned, timestamp,
     notifications, rules, zones/privateAreas or motion-sensitive-areas/
     privacy-masks, privacy-sound-override, autofollow, lighting-options,

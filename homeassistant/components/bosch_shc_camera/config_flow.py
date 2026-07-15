@@ -348,6 +348,7 @@ class BoschOAuth2Implementation(AbstractOAuth2Implementation):
         client_id: str = CLIENT_ID,
         client_secret: str = CLIENT_SECRET,
     ) -> None:
+        """Initialize the OAuth2 implementation."""
         self.hass = hass
         self._client_id = client_id
         self._client_secret = client_secret
@@ -365,6 +366,7 @@ class BoschOAuth2Implementation(AbstractOAuth2Implementation):
 
     @property
     def redirect_uri(self) -> str:
+        """Return the OAuth2 redirect URI."""
         return REDIRECT_URI
 
     @override
@@ -579,6 +581,7 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     VERSION = 3
 
     def __init__(self) -> None:
+        """Initialize the config flow."""
         super().__init__()
         self._manual_verifier: str | None = None
         self._manual_auth_url: str = ""
@@ -592,10 +595,10 @@ class BoschCameraConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
-        """Let the user pick a login method (the OAuth2 implementation itself
-        is supplied by HA-core's application_credentials platform).
+        """Let the user pick a login method.
 
-        Offers a manual copy/paste fallback (mirrors the options-flow relogin
+        The OAuth2 implementation itself is supplied by HA-core's
+        application_credentials platform. Offers a manual copy/paste fallback (mirrors the options-flow relogin
         path) alongside the automatic browser redirect: SingleKey ID's
         multi-hop redirect chain combined with the my.home-assistant.io relay
         (which tracks "last visited instance" client-side rather than being
@@ -828,6 +831,7 @@ class BoschCameraOptionsFlow(config_entries.OptionsFlow):
     """Handle options: feature toggles + optional re-login."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize the options flow."""
         self._config_entry = config_entry
         self._verifier: str = ""
         self._auth_url: str = ""
@@ -836,6 +840,7 @@ class BoschCameraOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
+        """Show the options form and handle feature-toggle/re-login submissions."""
         opts: dict[str, Any] = dict(DEFAULT_OPTIONS)
         opts.update(self._config_entry.options)
 

@@ -123,6 +123,7 @@ class MaintenanceWindow:
         return "unknown"
 
     def as_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable representation of this entry."""
         return {
             "title": self.title,
             "link": self.link,

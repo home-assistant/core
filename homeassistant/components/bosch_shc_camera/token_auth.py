@@ -36,6 +36,7 @@ class TokenAuthCoordinatorMixin:
     # ── Properties ────────────────────────────────────────────────────────────
     @property
     def token(self: Any) -> str:
+        """Return the current bearer token."""
         # Prefer in-memory refreshed token over config entry (avoids stale reads)
         return getattr(self, "_refreshed_token", None) or self.entry.data.get(  # type: ignore[no-any-return]  # value is correct at runtime; HA/external source is Any-typed
             "bearer_token", ""
@@ -43,12 +44,14 @@ class TokenAuthCoordinatorMixin:
 
     @property
     def refresh_token(self: Any) -> str:
+        """Return the current OAuth refresh token."""
         return getattr(self, "_refreshed_refresh", None) or self.entry.data.get(  # type: ignore[no-any-return]  # value is correct at runtime; HA/external source is Any-typed
             "refresh_token", ""
         )
 
     @property
     def options(self: Any) -> dict[str, Any]:
+        """Return the config entry's options snapshot."""
         # [S7] _options_snapshot is valid for this coordinator's lifetime:
         # _async_options_updated always calls async_reload on real option changes,
         # rebuilding the coordinator with fresh options. No stale-read risk.
@@ -81,6 +84,7 @@ class TokenAuthCoordinatorMixin:
 
     async def ensure_valid_token(self: Any, observed_token: str | None = None) -> str:
         """Return a valid bearer token.
+
         Called ONLY when we get a 401 — not on every tick.
         Refreshes via refresh_token with retry logic:
           - Serialized via self._token_refresh_lock so two concurrent

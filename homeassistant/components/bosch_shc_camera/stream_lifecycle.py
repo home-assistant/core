@@ -231,8 +231,9 @@ async def tear_down_live_stream(
 def schedule_stream_worker_error(
     coordinator: BoschCameraCoordinator, cam_id: str, msg: str
 ) -> None:
-    """Thread-safe entry point from the log listener. Coalesces identical
-    worker-error bursts and dispatches the async handler.
+    """Thread-safe entry point from the log listener.
+
+    Coalesces identical worker-error bursts and dispatches the async handler.
     """
     # Coalesce: skip if an unhandled dispatch for this cam is already
     # in flight. Prevents a flood of identical restart attempts when
