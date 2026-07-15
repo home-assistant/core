@@ -15,8 +15,19 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
-from .const import ADDRESS, CART_DATA, LAST_ORDER_DATA, NEXT_DELIVERY_DATA, SLOT_DATA
+from .const import (
+    ADDRESS,
+    CART_DATA,
+    DEFAULT_UPDATE_INTERVAL,
+    DELIVERY_UPDATE_INTERVAL,
+    DELIVERY_WINDOW_LAG_TIME,
+    DELIVERY_WINDOW_LEAD_TIME,
+    LAST_ORDER_DATA,
+    NEXT_DELIVERY_DATA,
+    SLOT_DATA,
+)
 
 type PicnicConfigEntry = ConfigEntry[PicnicUpdateCoordinator]
 
@@ -42,12 +53,18 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             logger,
             config_entry=config_entry,
             name="Picnic coordinator",
-            update_interval=timedelta(minutes=30),
+            update_interval=DEFAULT_UPDATE_INTERVAL,
         )
 
     @override
     async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
+        # Recompute up front so failed refreshes also relax the cadence
+        if self.data:
+            self.update_interval = self._get_update_interval(
+                self.data.get(NEXT_DELIVERY_DATA)
+            )
+
         try:
             async with asyncio.timeout(10):
                 data = await self.hass.async_add_executor_job(self.fetch_data)
@@ -63,8 +80,44 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
                 "Timeout while connecting to the Picnic API", retry_after=120
             ) from error
 
+        self.update_interval = self._get_update_interval(data.get(NEXT_DELIVERY_DATA))
+
         # Return the fetched data
         return data
+
+    @staticmethod
+    def _get_update_interval(next_delivery: dict | None) -> timedelta:
+        """Poll faster around the delivery so the live ETA is picked up in time."""
+        if not next_delivery:
+            return DEFAULT_UPDATE_INTERVAL
+
+        eta = next_delivery.get("eta")
+        slot = next_delivery.get("slot")
+
+        start = end = None
+        if eta:
+            start = dt_util.parse_datetime(str(eta.get("start")))
+            end = dt_util.parse_datetime(str(eta.get("end")))
+        if (start is None or end is None) and slot:
+            start = dt_util.parse_datetime(str(slot.get("window_start")))
+            end = dt_util.parse_datetime(str(slot.get("window_end")))
+
+        if start is None or end is None:
+            return DEFAULT_UPDATE_INTERVAL
+
+        now = dt_util.utcnow()
+        window_start = start - DELIVERY_WINDOW_LEAD_TIME
+
+        if window_start <= now <= end + DELIVERY_WINDOW_LAG_TIME:
+            return DELIVERY_UPDATE_INTERVAL
+
+        if now < window_start:
+            return max(
+                DELIVERY_UPDATE_INTERVAL,
+                min(DEFAULT_UPDATE_INTERVAL, window_start - now),
+            )
+
+        return DEFAULT_UPDATE_INTERVAL
 
     def fetch_data(self):
         """Fetch data from the Picnic API.
