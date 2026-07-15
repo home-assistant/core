@@ -12,10 +12,10 @@ from homeassistant.components.media_player import (
 from homeassistant.components.vizio.const import (
     CONF_ADDITIONAL_CONFIGS,
     CONF_APP_ID,
-    CONF_DEVICE_TYPE,
     CONF_APPS,
     CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
     CONF_CONFIG,
+    CONF_DEVICE_TYPE,
     CONF_INCLUDE_OR_EXCLUDE,
     CONF_MESSAGE,
     CONF_NAME_SPACE,

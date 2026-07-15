@@ -187,8 +187,8 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         ):
             current_app_config = await _optional(self.device.get_current_app_config())
 
-        battery_level = None
-        charging_status = None
+        battery_level: int | None = None
+        charging_status: ChargingStatus | None = None
         if self.device.profile.has_battery:
             battery_level = await _optional(self.device.get_battery_level())
             charging_status = await _optional(self.device.get_charging_status())

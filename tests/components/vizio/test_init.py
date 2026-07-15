@@ -7,7 +7,6 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from vizaio import ChargingStatus, DeviceType
 
-
 from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     MediaPlayerDeviceClass,

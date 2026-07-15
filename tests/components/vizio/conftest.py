@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     ACCESS_TOKEN,
-    MOCK_CRAVE_CONFIG,
     APP_RECORDS,
     CURRENT_APP_CONFIG_OBJ,
     CURRENT_EQ,
@@ -20,6 +19,7 @@ from .const import (
     EQ_LIST,
     INPUT_LIST,
     INPUT_LIST_WITH_APPS,
+    MOCK_CRAVE_CONFIG,
     MOCK_SPEAKER_CONFIG,
     MOCK_USER_VALID_TV_CONFIG,
     MODEL,
