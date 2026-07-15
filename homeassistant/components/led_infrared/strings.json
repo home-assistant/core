@@ -38,13 +38,31 @@
         "state_attributes": {
           "effect": {
             "state": {
+              "aqua": "Color: Aqua",
+              "auto": "[%key:common::state::auto%]",
               "blue": "Color: Blue",
               "cyan": "Color: Cyan",
               "dark_cyan": "Color: Dark cyan",
+              "deep_blue": "Color: Deep Blue",
+              "diy1": "DIY 1",
+              "diy2": "DIY 2",
+              "diy3": "DIY 3",
+              "diy4": "DIY 4",
+              "diy5": "DIY 5",
+              "diy6": "DIY 6",
               "fade": "Fade",
+              "fade3": "Fade 3",
+              "fade7": "Fade 7",
               "flash": "Flash",
+              "floral_white": "Color: Floral White",
+              "ghost_white": "Color: Ghost White",
               "green": "Color: Green",
+              "jump3": "Jump 3",
+              "jump7": "Jump 7",
+              "lavender_blush": "Color: Lavender Blush",
+              "light_cyan": "Color: Light Cyan",
               "light_green": "Color: Light green",
+              "magenta": "Color: Magenta",
               "mode_1": "Mode 1",
               "mode_2": "Mode 2",
               "mode_3": "Mode 3",
@@ -55,6 +73,7 @@
               "mode_8": "Mode 8",
               "orange": "Color: Orange",
               "orange_red": "Color: Orange red",
+              "pink": "Color: Pink",
               "plum": "Color: Plum",
               "purple": "Color: Purple",
               "rebecca_purple": "Color: Rebecca purple",
@@ -65,7 +84,8 @@
               "tomato": "Color: Tomato",
               "turquoise": "Color: Turquoise",
               "white": "Color: White",
-              "yellow": "Color: Yellow"
+              "yellow": "Color: Yellow",
+              "yellowish": "Color: Yellowish"
             }
           }
         }
@@ -76,7 +96,9 @@
     "device_type": {
       "options": {
         "generic_13_key": "13-key remote control",
-        "generic_24_key": "24-key remote control"
+        "generic_24_key": "24-key remote control",
+        "generic_40_key": "40-key remote control",
+        "generic_44_key": "44-key remote control"
       }
     }
   }
