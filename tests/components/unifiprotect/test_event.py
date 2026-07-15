@@ -25,7 +25,10 @@ from homeassistant.components.unifiprotect.const import (
     DEFAULT_ATTRIBUTION,
     EVENT_TYPE_PACKAGE_DETECTED,
 )
-from homeassistant.components.unifiprotect.event import EVENT_DESCRIPTIONS
+from homeassistant.components.unifiprotect.event import (
+    _MAX_TRACKED_EVENTS,
+    EVENT_DESCRIPTIONS,
+)
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, Platform
 from homeassistant.core import Event as HAEvent, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -190,9 +193,9 @@ async def test_package_detected(
     unsub = async_track_state_change_event(hass, entity_id, _capture_event)
 
     # Package detection arrives on the public events websocket as a
-    # smartDetectZone or smartDetectLine detection event with the package
-    # object type. Protect records it already-ended; the event entity fires on
-    # the detection start.
+    # smartDetectZone, smartDetectLine, or smartDetectLoiterZone detection
+    # event with the package object type. Protect records it already-ended;
+    # the event entity fires on the detection start.
     ufp.events_msg(
         ProtectEvent(
             id="test_package_event",
@@ -2174,6 +2177,62 @@ async def test_detection_event_dedup_is_bounded(
     unsub()
 
     assert len(events) == 20
+
+
+async def test_detection_event_dedup_evicts_oldest(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """Exceeding the dedup cap evicts the oldest event id, letting it refire.
+
+    An unbounded tracker would also pass ``test_detection_event_dedup_is_bounded``
+    (it only sends distinct ids), so this replays an id that should have aged out.
+    """
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_DESCRIPTIONS if d.key == "motion_detection")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, description
+    )
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+
+    def _send(index: int) -> None:
+        ufp.events_msg(
+            ProtectEvent(
+                id=f"motion-{index}",
+                type=EventType.MOTION,
+                channel=ProtectEventChannel.DETECTION,
+                device_id=doorbell.id,
+                device_mac=doorbell.mac,
+                start=fixed_now - timedelta(seconds=1),
+                end=fixed_now,
+            ),
+            EventChange.STARTED,
+        )
+
+    # A (cap + 1)th distinct id evicts the oldest tracked id ("motion-0").
+    for index in range(_MAX_TRACKED_EVENTS + 1):
+        _send(index)
+    await hass.async_block_till_done()
+    assert len(events) == _MAX_TRACKED_EVENTS + 1
+
+    # Replaying the evicted id fires again; a bug that never evicts would dedup it.
+    _send(0)
+    await hass.async_block_till_done()
+    unsub()
+
+    assert len(events) == _MAX_TRACKED_EVENTS + 2
 
 
 async def test_event_entities_unavailable_on_events_ws_disconnect(
