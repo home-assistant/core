@@ -39,6 +39,7 @@ from .const import (
     BOT_NAME,
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
+    CONF_MESSAGE_THREAD_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
     DEFAULT_API_ENDPOINT,
@@ -153,7 +154,14 @@ STEP_WEBHOOKS_DATA_SCHEMA: vol.Schema = vol.Schema(
         vol.Required(CONF_TRUSTED_NETWORKS): vol.Coerce(str),
     }
 )
-SUBENTRY_SCHEMA: vol.Schema = vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)})
+SUBENTRY_SCHEMA: vol.Schema = vol.Schema(
+    {
+        vol.Required(CONF_CHAT_ID): vol.Coerce(int),
+        vol.Optional(CONF_MESSAGE_THREAD_ID): vol.Any(
+            None, vol.All(vol.Coerce(int), vol.Range(min=1))
+        ),
+    }
+)
 OPTIONS_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Required(
@@ -592,6 +600,47 @@ class TelegramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
     """Handle a subentry flow for creating chat ID."""
 
+    async def _async_validate_chat(
+        self,
+        user_input: dict[str, Any],
+        errors: dict[str, str],
+        description_placeholders: dict[str, str],
+    ) -> ChatFullInfo | None:
+        """Validate the chat ID and return chat information."""
+        config_entry: TelegramBotConfigEntry = self._get_entry()
+        bot = config_entry.runtime_data.bot
+
+        chat_id: int = user_input[CONF_CHAT_ID]
+        try:
+            return await bot.get_chat(chat_id)
+        except BadRequest:
+            errors["base"] = "chat_not_found"
+        except TelegramError as err:
+            errors["base"] = "telegram_error"
+            description_placeholders[ERROR_MESSAGE] = str(err)
+        return None
+
+    def _entry_data(self, user_input: dict[str, Any]) -> dict[str, int]:
+        """Return subentry data."""
+        data = {CONF_CHAT_ID: user_input[CONF_CHAT_ID]}
+        if (message_thread_id := user_input.get(CONF_MESSAGE_THREAD_ID)) is not None:
+            data[CONF_MESSAGE_THREAD_ID] = message_thread_id
+        return data
+
+    def _unique_id(self, user_input: dict[str, Any]) -> str:
+        """Return subentry unique ID."""
+        chat_id = user_input[CONF_CHAT_ID]
+        if (message_thread_id := user_input.get(CONF_MESSAGE_THREAD_ID)) is None:
+            return str(chat_id)
+        return f"{chat_id}:{message_thread_id}"
+
+    def _title(self, chat_info: ChatFullInfo, user_input: dict[str, Any]) -> str:
+        """Return subentry title."""
+        title = chat_info.effective_name or str(user_input[CONF_CHAT_ID])
+        if (message_thread_id := user_input.get(CONF_MESSAGE_THREAD_ID)) is not None:
+            return f"{title} thread {message_thread_id}"
+        return title
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -607,24 +656,16 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         description_placeholders = DESCRIPTION_PLACEHOLDERS.copy()
 
         if user_input is not None:
-            config_entry: TelegramBotConfigEntry = self._get_entry()
-            bot = config_entry.runtime_data.bot
-
-            # validate chat id
-            chat_id: int = user_input[CONF_CHAT_ID]
-            try:
-                chat_info: ChatFullInfo = await bot.get_chat(chat_id)
-            except BadRequest:
-                errors["base"] = "chat_not_found"
-            except TelegramError as err:
-                errors["base"] = "telegram_error"
-                description_placeholders[ERROR_MESSAGE] = str(err)
+            chat_info = await self._async_validate_chat(
+                user_input, errors, description_placeholders
+            )
 
             if not errors:
+                assert chat_info is not None
                 return self.async_create_entry(
-                    title=chat_info.effective_name or str(chat_id),
-                    data={CONF_CHAT_ID: chat_id},
-                    unique_id=str(chat_id),
+                    title=self._title(chat_info, user_input),
+                    data=self._entry_data(user_input),
+                    unique_id=self._unique_id(user_input),
                 )
 
         service: TelegramNotificationService = self._get_entry().runtime_data
@@ -653,6 +694,39 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
             data_schema=self.add_suggested_values_to_schema(
                 SUBENTRY_SCHEMA,
                 suggested_values,
+            ),
+            description_placeholders=description_placeholders,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure allowed chat ID."""
+
+        errors: dict[str, str] = {}
+        description_placeholders = DESCRIPTION_PLACEHOLDERS.copy()
+
+        if user_input is not None:
+            chat_info = await self._async_validate_chat(
+                user_input, errors, description_placeholders
+            )
+
+            if not errors:
+                assert chat_info is not None
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    self._get_reconfigure_subentry(),
+                    title=self._title(chat_info, user_input),
+                    data=self._entry_data(user_input),
+                    unique_id=self._unique_id(user_input),
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                SUBENTRY_SCHEMA,
+                user_input or self._get_reconfigure_subentry().data,
             ),
             description_placeholders=description_placeholders,
             errors=errors,

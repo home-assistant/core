@@ -70,3 +70,55 @@ async def test_send_message(
 
     assert len(events) == 1
     assert events[0].context == context
+
+
+@pytest.mark.freeze_time("2025-01-09T12:00:00+00:00")
+async def test_send_message_with_message_thread(
+    hass: HomeAssistant,
+    webhook_bot_with_message_thread: None,
+) -> None:
+    """Test send message with message thread."""
+    context = Context()
+    events = async_capture_events(hass, "telegram_sent")
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.send_message",
+        AsyncMock(
+            return_value=Message(
+                message_id=12345,
+                date=datetime.now(),
+                chat=Chat(id=12345678, type=ChatType.SUPERGROUP),
+            )
+        ),
+    ) as mock_send_message:
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: "notify.mock_title_mock_chat_thread_987",
+                ATTR_MESSAGE: "mock message",
+                ATTR_TITLE: "mock title",
+            },
+            blocking=True,
+            context=context,
+        )
+        await hass.async_block_till_done()
+
+        mock_send_message.assert_called_once_with(
+            12345678,
+            "mock title\nmock message",
+            parse_mode=ParseMode.MARKDOWN,
+            disable_web_page_preview=None,
+            disable_notification=False,
+            reply_to_message_id=None,
+            reply_markup=None,
+            read_timeout=None,
+            message_thread_id=987,
+        )
+
+    state = hass.states.get("notify.mock_title_mock_chat_thread_987")
+    assert state
+    assert state.state == "2025-01-09T12:00:00+00:00"
+
+    assert len(events) == 1
+    assert events[0].context == context

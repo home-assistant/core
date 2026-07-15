@@ -24,6 +24,7 @@ from homeassistant.components.telegram_bot.const import (
     CONF_ALLOWED_CHAT_IDS,
     CONF_API_ENDPOINT,
     CONF_CHAT_ID,
+    CONF_MESSAGE_THREAD_ID,
     CONF_TRUSTED_NETWORKS,
     DEFAULT_API_ENDPOINT,
     DOMAIN,
@@ -343,6 +344,27 @@ def mock_broadcast_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_webhooks_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
+    return _mock_webhooks_config_entry()
+
+
+@pytest.fixture
+def mock_webhooks_config_entry_with_message_thread() -> MockConfigEntry:
+    """Return the default mocked config entry with a message thread."""
+    return _mock_webhooks_config_entry(message_thread_id=987)
+
+
+def _mock_webhooks_config_entry(
+    message_thread_id: int | None = None,
+) -> MockConfigEntry:
+    """Return a mocked webhooks config entry."""
+    subentry_data = {CONF_CHAT_ID: 12345678}
+    unique_id = "12345678"
+    title = "mock chat"
+    if message_thread_id is not None:
+        subentry_data[CONF_MESSAGE_THREAD_ID] = message_thread_id
+        unique_id = f"12345678:{message_thread_id}"
+        title = f"mock chat thread {message_thread_id}"
+
     return MockConfigEntry(
         unique_id="mock api key",
         domain=DOMAIN,
@@ -356,10 +378,10 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
         options={ATTR_PARSER: PARSER_MD},
         subentries_data=[
             ConfigSubentryData(
-                unique_id="12345678",
-                data={CONF_CHAT_ID: 12345678},
+                unique_id=unique_id,
+                data=subentry_data,
                 subentry_type=CONF_ALLOWED_CHAT_IDS,
-                title="mock chat",
+                title=title,
             )
         ],
         minor_version=2,
@@ -377,6 +399,22 @@ async def webhook_bot(
     """Fixture for setting up a webhook telegram bot."""
     mock_webhooks_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_webhooks_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def webhook_bot_with_message_thread(
+    hass: HomeAssistant,
+    mock_webhooks_config_entry_with_message_thread: MockConfigEntry,
+    mock_register_webhook: None,
+    mock_external_calls: None,
+    mock_generate_secret_token: str,
+) -> None:
+    """Fixture for setting up a webhook telegram bot with a message thread."""
+    mock_webhooks_config_entry_with_message_thread.add_to_hass(hass)
+    await hass.config_entries.async_setup(
+        mock_webhooks_config_entry_with_message_thread.entry_id
+    )
     await hass.async_block_till_done()
 
 
