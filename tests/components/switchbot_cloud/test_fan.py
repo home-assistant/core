@@ -1,6 +1,6 @@
 """Test for the Switchbot (Battery) Circulator Fan."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import switchbot_api
@@ -30,6 +30,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import (
     AIR_PURIFIER_INFO,
+    BATTERY_CIRCULATOR_FAN_2_PRO_INFO,
     BATTERY_CIRCULATOR_FAN_INFO,
     CIRCULATOR_FAN_INFO,
     STANDING_FAN_INFO,
@@ -42,9 +43,10 @@ from tests.common import async_load_json_object_fixture, snapshot_platform
 @pytest.mark.parametrize(
     ("device_info", "entry_id"),
     [
-        (AIR_PURIFIER_INFO, "fan.air_purifier_1"),
         (CIRCULATOR_FAN_INFO, "fan.fan_1"),
         (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
+        (STANDING_FAN_INFO, "fan.standing_fan_1"),
+        (BATTERY_CIRCULATOR_FAN_2_PRO_INFO, "fan.device_1"),
     ],
 )
 async def test_coordinator_data_is_none(
@@ -71,6 +73,7 @@ async def test_coordinator_data_is_none(
         (CIRCULATOR_FAN_INFO, "fan.fan_1"),
         (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
         (STANDING_FAN_INFO, "fan.standing_fan_1"),
+        (BATTERY_CIRCULATOR_FAN_2_PRO_INFO, "fan.device_1"),
     ],
 )
 async def test_turn_on(
@@ -113,6 +116,8 @@ async def test_turn_on(
     [
         (CIRCULATOR_FAN_INFO, "fan.fan_1"),
         (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
+        (STANDING_FAN_INFO, "fan.standing_fan_1"),
+        (BATTERY_CIRCULATOR_FAN_2_PRO_INFO, "fan.device_1"),
     ],
 )
 async def test_turn_off(
@@ -156,12 +161,13 @@ async def test_turn_off(
         (CIRCULATOR_FAN_INFO, "fan.fan_1"),
         (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
         (STANDING_FAN_INFO, "fan.standing_fan_1"),
+        (BATTERY_CIRCULATOR_FAN_2_PRO_INFO, "fan.device_1"),
     ],
 )
 async def test_power_state(
     hass: HomeAssistant,
-    mock_list_devices,
-    mock_get_status,
+    mock_list_devices: AsyncMock,
+    mock_get_status: AsyncMock,
     device_info: Device,
     entry_id: str,
 ) -> None:
@@ -199,6 +205,7 @@ async def test_power_state(
         (CIRCULATOR_FAN_INFO, "fan.fan_1"),
         (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
         (STANDING_FAN_INFO, "fan.standing_fan_1"),
+        (BATTERY_CIRCULATOR_FAN_2_PRO_INFO, "fan.device_1"),
     ],
 )
 async def test_set_percentage(
@@ -242,6 +249,7 @@ async def test_set_percentage(
         (CIRCULATOR_FAN_INFO, "fan.fan_1"),
         (BATTERY_CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
         (STANDING_FAN_INFO, "fan.standing_fan_1"),
+        (BATTERY_CIRCULATOR_FAN_2_PRO_INFO, "fan.device_1"),
     ],
 )
 async def test_set_preset_mode(
