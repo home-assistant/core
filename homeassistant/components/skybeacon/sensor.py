@@ -2,6 +2,7 @@
 
 import logging
 import threading
+from typing import override
 from uuid import UUID
 
 from pygatt import BLEAddressType
@@ -86,6 +87,7 @@ class SkybeaconHumid(SensorEntity):
         self._attr_name = name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the device."""
         return self.mon.data["humid"]
@@ -104,6 +106,7 @@ class SkybeaconTemp(SensorEntity):
         self._attr_name = name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the device."""
         return self.mon.data["temp"]
@@ -123,6 +126,7 @@ class Monitor(threading.Thread, SensorEntity):
         self.keep_going = True
         self.event = threading.Event()
 
+    @override
     def run(self):
         """Thread that keeps connection alive."""
         cached_char = Characteristic(BLE_TEMP_UUID, BLE_TEMP_HANDLE)

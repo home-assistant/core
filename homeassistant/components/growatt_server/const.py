@@ -1,4 +1,4 @@
-"""Define constants for the Growatt Server component."""
+"""Define constants for the Growatt Server integration."""
 
 from datetime import timedelta
 

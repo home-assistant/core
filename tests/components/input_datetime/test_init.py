@@ -344,7 +344,9 @@ async def test_set_datetime_date(hass: HomeAssistant) -> None:
     assert not state.attributes["has_time"]
     assert state.attributes["has_date"]
 
-    date_dt_obj = datetime.datetime(2017, 9, 7)
+    date_dt_obj = datetime.datetime(
+        2017, 9, 7, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    )
     assert state.attributes["timestamp"] == date_dt_obj.timestamp()
 
 
@@ -443,7 +445,7 @@ async def test_input_datetime_context(
 ) -> None:
     """Test that input_datetime context works."""
     assert await async_setup_component(
-        hass, "input_datetime", {"input_datetime": {"only_date": {"has_date": True}}}
+        hass, DOMAIN, {"input_datetime": {"only_date": {"has_date": True}}}
     )
 
     state = hass.states.get("input_datetime.only_date")

@@ -30,7 +30,7 @@
       "invalid_ws_url": "Invalid websocket URL",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "flow_title": "Network {home_id} at {host}:{port}",
+    "flow_title": "{name}",
     "progress": {
       "backup_nvm": "Please wait while the network backup completes",
       "install_addon": "Installation can take several minutes",
@@ -322,8 +322,8 @@
     "credential_rejected_wrong_uuid": {
       "message": "The device rejected the credential because the user unique identifier does not match."
     },
-    "credential_slot_out_of_range": {
-      "message": "Credential slot for {credential_type} must be between 1 and {max_slot}."
+    "credential_required": {
+      "message": "This device requires a credential when adding a user."
     },
     "credential_type_not_supported": {
       "message": "Credential type {credential_type} is not supported on this device"
@@ -458,7 +458,7 @@
           "name": "[%key:component::zwave_js::services::set_config_parameter::fields::value::name%]"
         }
       },
-      "name": "Bulk set partial configuration parameters (advanced)"
+      "name": "Bulk set partial configuration parameters"
     },
     "clear_lock_usercode": {
       "description": "Clears a user code from a lock.",
@@ -562,7 +562,7 @@
           "name": "Parameters"
         }
       },
-      "name": "Invoke a Command Class API on a node (advanced)"
+      "name": "Invoke a Command Class API on a node"
     },
     "multicast_set_value": {
       "description": "Changes any value that Z-Wave recognizes on multiple Z-Wave devices using multicast, so all devices receive the message simultaneously. This action has minimal validation so only use this action if you know what you are doing.",
@@ -608,7 +608,7 @@
           "name": "[%key:component::zwave_js::services::set_config_parameter::fields::value::name%]"
         }
       },
-      "name": "Set a value on multiple devices via multicast (advanced)"
+      "name": "Set a value on multiple devices via multicast"
     },
     "ping": {
       "description": "Forces Z-Wave to try to reach a node. This can be used to update the status of the node in Z-Wave when you think it doesn't accurately reflect reality, e.g. reviving a failed/dead node or marking the node as asleep.",
@@ -652,7 +652,7 @@
           "name": "Notification Type"
         }
       },
-      "name": "Refresh notifications on a node (advanced)"
+      "name": "Refresh notifications on a node"
     },
     "refresh_value": {
       "description": "Force updates the values of a Z-Wave entity.",
@@ -803,15 +803,27 @@
       "name": "Set lock user code"
     },
     "set_user": {
-      "description": "Creates or updates an access-control user on a lock entity. Returns the allocated user_id for each targeted lock entity.",
+      "description": "Creates or updates an access-control user on a lock entity. When no user_id is given, a new user is created. A credential (PIN code or password) can be written in the same call. Returns the allocated user_id, plus the credential_slot when a credential was written, for each targeted lock entity.",
       "fields": {
         "active": {
           "description": "Whether the user is active.",
           "name": "Active"
         },
+        "credential_data": {
+          "description": "The credential data (e.g. PIN digits or password string).",
+          "name": "Credential data"
+        },
         "credential_rule": {
           "description": "Credential rule for the user (single, dual, or triple).",
           "name": "Credential rule"
+        },
+        "credential_slot": {
+          "description": "Credential slot index. If not specified, the first available slot is used.",
+          "name": "Credential slot"
+        },
+        "credential_type": {
+          "description": "The type of credential (pin_code or password).",
+          "name": "Credential type"
         },
         "user_id": {
           "description": "User slot index. If not specified, the first available slot is used.",
@@ -872,7 +884,7 @@
           "name": "Wait for result"
         }
       },
-      "name": "Set a value (advanced)"
+      "name": "Set a value"
     }
   }
 }

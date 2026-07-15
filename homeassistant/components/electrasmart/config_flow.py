@@ -1,7 +1,7 @@
 """Config flow for Electra Air Conditioner integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from electrasmart.api import STATUS_SUCCESS, Attributes, ElectraAPI, ElectraApiError
 from electrasmart.api.utils import generate_imei
@@ -30,6 +30,7 @@ class ElectraSmartConfigFlow(ConfigFlow, domain=DOMAIN):
         self._token: str | None = None
         self._api: ElectraAPI | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

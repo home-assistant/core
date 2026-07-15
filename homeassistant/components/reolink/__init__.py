@@ -1,18 +1,23 @@
 """Reolink integration for HomeAssistant."""
 
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 import logging
 from random import uniform
 from time import time
 from typing import Any
 
 from reolink_aio.api import DUAL_LENS_DUAL_MOTION_MODELS, RETRY_ATTEMPTS
+from reolink_aio.const import UNKNOWN
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -21,6 +26,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 from .const import (
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
@@ -29,6 +35,7 @@ from .const import (
     CONF_BC_PORT,
     CONF_FIRMWARE_CHECK_TIME,
     CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_UID,
     CONF_USE_HTTPS,
     DOMAIN,
 )
@@ -95,6 +102,22 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)
     )
 
+    # do not allow changes to the UID
+    if (
+        config_entry.data.get(CONF_UID, host.api.uid) != host.api.uid
+        and config_entry.data.get(CONF_UID) != UNKNOWN
+    ):
+        await host.stop()
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="uid_mismatch",
+            translation_placeholders={
+                "name": host.api.nvr_name,
+                "conf_uid": config_entry.data.get(CONF_UID, ""),
+                "uid": host.api.uid,
+            },
+        )
+
     # update the config info if needed for the next time
     if (
         host.api.port != config_entry.data[CONF_PORT]
@@ -105,6 +128,7 @@ async def async_setup_entry(
         or host.api.baichuan_only != config_entry.data.get(CONF_BC_ONLY)
         or host.api.baichuan.connection_type.value
         != config_entry.data.get(CONF_BC_CONNECT)
+        or host.api.uid != config_entry.data.get(CONF_UID)
     ):
         if host.api.port != config_entry.data[CONF_PORT]:
             _LOGGER.warning(
@@ -130,6 +154,7 @@ async def async_setup_entry(
             CONF_BC_PORT: host.api.baichuan.port,
             CONF_BC_ONLY: host.api.baichuan_only,
             CONF_BC_CONNECT: host.api.baichuan.connection_type.value,
+            CONF_UID: host.api.uid,
             CONF_SUPPORTS_PRIVACY_MODE: host.api.supported(None, "privacy_mode"),
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
@@ -168,7 +193,7 @@ async def async_setup_entry(
         hass.config_entries.async_update_entry(config_entry, data=data)
 
     # If camera WAN blocked, firmware check fails and takes long, do not prevent setup
-    now = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
+    now = dt_util.utcnow()
     check_time = timedelta(seconds=check_time_sec)
     delta_midnight = now - now.replace(hour=0, minute=0, second=0, microsecond=0)
     firmware_check_delay = check_time - delta_midnight
@@ -261,7 +286,10 @@ async def register_callbacks(
         return async_camera_wake
 
     host.api.baichuan.register_callback(
-        "privacy_mode_change", async_privacy_mode_change, 623
+        "privacy_mode_change_623", async_privacy_mode_change, 623
+    )
+    host.api.baichuan.register_callback(
+        "privacy_mode_change_574", async_privacy_mode_change, 574
     )
     for channel in host.api.channels:
         if host.api.supported(channel, "battery"):
@@ -281,7 +309,8 @@ async def async_unload_entry(
 
     await host.stop()
 
-    host.api.baichuan.unregister_callback("privacy_mode_change")
+    host.api.baichuan.unregister_callback("privacy_mode_change_623")
+    host.api.baichuan.unregister_callback("privacy_mode_change_574")
     for channel in host.api.channels:
         if host.api.supported(channel, "battery"):
             host.api.baichuan.unregister_callback(f"camera_{channel}_wake")

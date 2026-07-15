@@ -187,7 +187,7 @@ async def async_process_advertisements(
         )
         stack.callback(unload)
 
-        if mode == BluetoothScanningMode.ACTIVE:
+        if mode is BluetoothScanningMode.ACTIVE:
             task = hass.async_create_task(manager.async_request_active_scan(timeout))
             stack.callback(task.cancel)
 
