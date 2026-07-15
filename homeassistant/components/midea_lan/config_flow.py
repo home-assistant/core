@@ -59,8 +59,9 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         # sort and assign supports
         self.supports = dict(sorted(unsorted.items(), key=itemgetter(1)))
 
-        # Try the preset account first, as this to most data (since most users are registered on a different server,
-        # their credentials may not be sufficient to retrieve the required key.
+        # Try the preset account first, as it is usually enough to retrieve most data.
+        # Users registered on a different server may not be able to retrieve the
+        # required key with their own credentials.
         # If this fails, fall back to user-provided credentials.
         self.preset_account = decode_preset_account(1)
         self.preset_password = decode_preset_account(2)
