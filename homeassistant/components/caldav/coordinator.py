@@ -1,12 +1,11 @@
 """Data update coordinator for caldav."""
 
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 import logging
 import re
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 import caldav
-from dateutil import rrule as dateutil_rrule
 import icalendar
 
 from homeassistant.components.calendar import CalendarEvent, extract_offset
@@ -30,67 +29,6 @@ def _get_vevent(event: caldav.CalendarObjectResource) -> icalendar.cal.Component
     if (instance := event.icalendar_instance) is None:
         return None
     return next(iter(instance.walk("VEVENT")), None)
-
-
-def _as_list(value: Any) -> list[Any]:
-    """Wrap a single icalendar property value in a list, or return it as-is."""
-    if value is None:
-        return []
-    return value if isinstance(value, list) else [value]
-
-
-def _as_datetime(value: Any) -> datetime | None:
-    """Return a date or datetime as a datetime, with dates at midnight."""
-    if isinstance(value, datetime):
-        return value
-    if isinstance(value, date):
-        return datetime.combine(value, time.min)
-    return None
-
-
-def _build_rrule(
-    recur: icalendar.prop.vRecur, dtstart: date | datetime
-) -> dateutil_rrule.rrule:
-    """Build a dateutil rrule from an icalendar RRULE/EXRULE value."""
-    if (
-        (until := recur.get("UNTIL"))
-        and isinstance(dtstart, datetime)
-        and dtstart.tzinfo is not None
-        and isinstance(until[0], datetime)
-        and until[0].tzinfo is None
-    ):
-        # dateutil requires UNTIL in UTC when DTSTART is timezone-aware. A naive
-        # UNTIL is interpreted in DTSTART's timezone (as vobject did), not UTC.
-        recur = icalendar.prop.vRecur(
-            {
-                **recur,
-                "UNTIL": [until[0].replace(tzinfo=dtstart.tzinfo).astimezone(UTC)],
-            }
-        )
-    rule = dateutil_rrule.rrulestr(recur.to_ical().decode(), dtstart=dtstart)
-    assert isinstance(rule, dateutil_rrule.rrule)
-    return rule
-
-
-def _rruleset(vevent: icalendar.cal.Component) -> dateutil_rrule.rruleset | None:
-    """Build the recurrence set for a VEVENT, or None if it does not recur."""
-    if "RRULE" not in vevent and "RDATE" not in vevent:
-        return None
-    dtstart = vevent["DTSTART"].dt
-    ruleset = dateutil_rrule.rruleset()
-    for rrule in _as_list(vevent.get("RRULE")):
-        ruleset.rrule(_build_rrule(rrule, dtstart))
-    for rdate in _as_list(vevent.get("RDATE")):
-        for value in _as_list(rdate.dts):
-            if (occurrence := _as_datetime(value.dt)) is not None:
-                ruleset.rdate(occurrence)
-    for exrule in _as_list(vevent.get("EXRULE")):
-        ruleset.exrule(_build_rrule(exrule, dtstart))
-    for exdate in _as_list(vevent.get("EXDATE")):
-        for value in _as_list(exdate.dts):
-            if (occurrence := _as_datetime(value.dt)) is not None:
-                ruleset.exdate(occurrence)
-    return ruleset
 
 
 class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
@@ -181,43 +119,20 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
             expand=True,
         )
 
-        # Create new events for each recurrence of an event that happens today.
-        # For recurring events, some servers return the original
-        # event with recurrence rules
-        # and they would not be properly parsed using their original start/end dates.
-        new_events = []
+        # Some servers return the recurring master unexpanded; expand it locally
+        # into the individual occurrences that fall within the window.
+        vevents = []
         for event in results:
             if (vevent := _get_vevent(event)) is None:
                 _LOGGER.warning("Skipped event with missing 'vevent' property")
                 continue
-            start_dt: date | datetime
-            for start_dt in _rruleset(vevent) or []:
-                _start_of_today: date | datetime
-                _start_of_tomorrow: datetime | date
-                if self.is_all_day(vevent):
-                    start_dt = start_dt.date()
-                    _start_of_today = start_of_today.date()
-                    _start_of_tomorrow = start_of_tomorrow.date()
-                else:
-                    _start_of_today = start_of_today
-                    _start_of_tomorrow = start_of_tomorrow
-                if _start_of_today <= start_dt < _start_of_tomorrow:
-                    new_event = event.copy()
-                    # The copy has a VEVENT because the source did (checked above)
-                    new_vevent = _get_vevent(new_event)
-                    assert new_vevent is not None
-                    if "DTEND" in new_vevent:
-                        dur = new_vevent["DTEND"].dt - new_vevent["DTSTART"].dt
-                        new_vevent["DTEND"] = icalendar.prop.vDDDTypes(start_dt + dur)
-                    new_vevent["DTSTART"] = icalendar.prop.vDDDTypes(start_dt)
-                    new_events.append(new_event)
-                elif _start_of_tomorrow <= start_dt:
-                    break
-        vevents = [
-            vevent
-            for event in results + new_events
-            if (vevent := _get_vevent(event)) is not None
-        ]
+            if "RRULE" in vevent or "RDATE" in vevent:
+                # Expand a copy so the fetched result is not mutated in place.
+                expanded = event.copy()
+                expanded.expand_rrule(start_of_today, start_of_tomorrow)
+                vevents.extend(expanded.icalendar_instance.walk("VEVENT"))
+            else:
+                vevents.append(vevent)
 
         # dtstart can be a date or datetime depending if the event lasts a
         # whole day. Convert everything to datetime to be able to sort it
