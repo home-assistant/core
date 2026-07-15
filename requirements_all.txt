@@ -1646,7 +1646,7 @@ mutesync==0.0.1
 mvg==1.4.0
 
 # homeassistant.components.my_pv
-my-pv==0.0.4
+my-pv==0.0.4.1
 
 # homeassistant.components.myuplink
 myuplink==0.7.0
