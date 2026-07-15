@@ -1,0 +1,90 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not provide any additional actions.
+  appropriate-polling:
+    status: exempt
+    comment: The integration is push-based over MQTT and does not poll.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not provide any additional actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration does not provide any additional actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: There is no options flow.
+  docs-installation-parameters: done
+  entity-unavailable: todo
+  integration-owner: done
+  log-when-unavailable: todo
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: The integration does not require authentication.
+  test-coverage: todo
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: A config entry maps to a single Prism device.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: All exposed entities are useful by default.
+  entity-translations: done
+  exception-translations:
+    status: exempt
+    comment: The integration does not raise translatable exceptions yet.
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: The integration has no repairable issues.
+  stale-devices:
+    status: exempt
+    comment: A config entry maps to a single Prism device, removed with the entry.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: The integration does not make HTTP requests.
+  strict-typing: todo

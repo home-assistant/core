@@ -1,0 +1,75 @@
+{
+  "config": {
+    "flow_title": "{serial}",
+    "step": {
+      "user": {
+        "title": "Connect your Silla Prism",
+        "description": "Enter the MQTT base topic configured on the Prism (in the Silla app, under the MQTT settings). The default is \"prism\".",
+        "data": {
+          "base_topic": "Base topic"
+        },
+        "data_description": {
+          "base_topic": "The MQTT topic prefix Prism publishes to, without a trailing slash."
+        }
+      },
+      "discovery_confirm": {
+        "title": "Set up Silla Prism",
+        "description": "Do you want to set up the discovered Prism {serial}?"
+      }
+    },
+    "error": {
+      "mqtt_unavailable": "The MQTT integration is not available. Set it up first.",
+      "no_device": "No messages were received on this base topic. Check that the topic matches the one configured in the Silla app and that Prism is online."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_discovery_info": "Invalid discovery information received."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status",
+        "state": {
+          "idle": "Idle",
+          "waiting": "Waiting",
+          "charging": "Charging",
+          "pause": "Paused"
+        }
+      },
+      "pilot": {
+        "name": "Pilot current"
+      },
+      "session_energy": {
+        "name": "Session energy"
+      },
+      "total_energy": {
+        "name": "Total energy"
+      },
+      "session_time": {
+        "name": "Session time"
+      },
+      "error": {
+        "name": "Error code"
+      },
+      "grid_power": {
+        "name": "Grid power"
+      }
+    },
+    "number": {
+      "user_current": {
+        "name": "Charging current"
+      }
+    },
+    "select": {
+      "charging_mode": {
+        "name": "Charging mode",
+        "state": {
+          "solar": "Solar",
+          "normal": "Normal",
+          "pause": "Paused"
+        }
+      }
+    }
+  }
+}
