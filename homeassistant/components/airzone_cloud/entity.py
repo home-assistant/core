@@ -21,7 +21,6 @@ from aioairzone_cloud.const import (
     AZD_WEBSERVER,
     AZD_WEBSERVERS,
     AZD_ZONES,
-    RAW_DEVICES_CONFIG,
 )
 from aioairzone_cloud.exceptions import AirzoneCloudError
 
@@ -30,7 +29,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import API_SLATS_V_CONF, DOMAIN, MANUFACTURER
+from .const import API_SLATS_V_CONF, AZD_SLATS_V_CONF, DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,13 +98,13 @@ class AirzoneAidooEntity(AirzoneEntity):
                 f"Failed to set {self.entity_id} params: {error}"
             ) from error
 
-        raw_config = self.coordinator.airzone.raw_data().get(RAW_DEVICES_CONFIG, {})
-        if aidoo_config := raw_config.get(self.aidoo_id):
+        updated_data = self.coordinator.data_with_slats()
+        if aidoo_config := updated_data.get(AZD_AIDOOS, {}).get(self.aidoo_id):
             for param, data in params.items():
                 if param == API_SLATS_V_CONF:
-                    aidoo_config[param] = data[API_VALUE]
+                    aidoo_config[AZD_SLATS_V_CONF] = data[API_VALUE]
 
-        self.coordinator.async_set_updated_data(self.coordinator.data_with_slats())
+        self.coordinator.async_set_updated_data(updated_data)
 
 
 class AirzoneGroupEntity(AirzoneEntity):

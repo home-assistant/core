@@ -541,6 +541,7 @@ def mock_get_webserver(webserver: WebServer, devices: bool) -> dict[str, Any]:
 
 async def async_init_integration(
     hass: HomeAssistant,
+    aidoo1_slats_supported: bool = True,
 ) -> None:
     """Set up the Airzone integration in Home Assistant."""
 
@@ -556,7 +557,6 @@ async def async_init_integration(
         RAW_DEVICES_CONFIG: {
             "aidoo1": {
                 API_SLATS_V_CONF: "fixed",
-                API_SLATS_V_VALUES: ["swing", "fixed"],
             },
             "aidoo_pro": {
                 API_SLATS_V_CONF: "swing",
@@ -564,6 +564,11 @@ async def async_init_integration(
             },
         },
     }
+    if aidoo1_slats_supported:
+        raw_data[RAW_DEVICES_CONFIG]["aidoo1"][API_SLATS_V_VALUES] = [
+            "swing",
+            "fixed",
+        ]
 
     with (
         patch(

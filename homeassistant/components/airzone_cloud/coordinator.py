@@ -10,7 +10,7 @@ from aioairzone_cloud.const import AZD_AIDOOS, RAW_DEVICES_CONFIG
 from aioairzone_cloud.exceptions import AirzoneCloudError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -44,7 +44,7 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         """Initialize."""
         self.airzone = airzone
-        self.airzone.set_update_callback(self.async_set_updated_data)
+        self.airzone.set_update_callback(self._async_set_updated_data)
 
         super().__init__(
             hass,
@@ -64,9 +64,15 @@ class AirzoneUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise UpdateFailed(error) from error
             return self.data_with_slats()
 
-    def data_with_slats(self) -> dict[str, Any]:
+    @callback
+    def _async_set_updated_data(self, data: dict[str, Any]) -> None:
+        """Enrich Airzone callback data before publishing it."""
+        self.async_set_updated_data(self.data_with_slats(data))
+
+    def data_with_slats(self, data: dict[str, Any] | None = None) -> dict[str, Any]:
         """Return Airzone data with Aidoo slat fields from raw API config."""
-        data = self.airzone.data()
+        if data is None:
+            data = self.airzone.data()
         aidoos = data.get(AZD_AIDOOS, {})
         raw_config = self.airzone.raw_data().get(RAW_DEVICES_CONFIG, {})
 

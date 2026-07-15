@@ -48,6 +48,8 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
     ClimateEntity,
     ClimateEntityFeature,
+    SWING_OFF,
+    SWING_VERTICAL,
     HVACAction,
     HVACMode,
 )
@@ -113,11 +115,9 @@ HVAC_MODE_HASS_TO_LIB: Final[dict[HVACMode, OperationMode]] = {
     HVACMode.DRY: OperationMode.DRY,
     HVACMode.HEAT_COOL: OperationMode.AUTO,
 }
-SWING_MODE_OFF: Final[str] = "Off"
-SWING_MODE_VERTICAL: Final[str] = "Vertical"
 SLATS_AIRZONE_TO_HASS: Final[dict[str, str]] = {
-    "fixed": SWING_MODE_OFF,
-    "swing": SWING_MODE_VERTICAL,
+    "fixed": SWING_OFF,
+    "swing": SWING_VERTICAL,
 }
 SLATS_HASS_TO_AIRZONE: Final[dict[str, str]] = {
     value: key for key, value in SLATS_AIRZONE_TO_HASS.items()

@@ -2,10 +2,16 @@
 
 from unittest.mock import patch
 
-from aioairzone_cloud.const import API_DEFAULT_TEMP_STEP
+from aioairzone_cloud.const import (
+    API_DEFAULT_TEMP_STEP,
+    API_INSTALLATION_ID,
+    API_PARAM,
+    API_VALUE,
+)
 from aioairzone_cloud.exceptions import AirzoneCloudError
 import pytest
 
+from homeassistant.components.airzone_cloud.const import API_SLATS_V_CONF
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
@@ -30,6 +36,8 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    SWING_OFF,
+    SWING_VERTICAL,
     HVACAction,
     HVACMode,
 )
@@ -72,8 +80,8 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_MIN_TEMP] == 15
-    assert state.attributes[ATTR_SWING_MODE] == "Off"
-    assert state.attributes[ATTR_SWING_MODES] == ["Vertical", "Off"]
+    assert state.attributes[ATTR_SWING_MODE] == SWING_OFF
+    assert state.attributes[ATTR_SWING_MODES] == [SWING_VERTICAL, SWING_OFF]
     assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_DEFAULT_TEMP_STEP
     assert state.attributes[ATTR_TEMPERATURE] == 22.0
 
@@ -101,8 +109,8 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_MIN_TEMP] == 15
-    assert state.attributes[ATTR_SWING_MODE] == "Vertical"
-    assert state.attributes[ATTR_SWING_MODES] == ["Vertical", "Off"]
+    assert state.attributes[ATTR_SWING_MODE] == SWING_VERTICAL
+    assert state.attributes[ATTR_SWING_MODES] == [SWING_VERTICAL, SWING_OFF]
     assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_DEFAULT_TEMP_STEP
     assert state.attributes.get(ATTR_TEMPERATURE) == 22.0
 
@@ -358,19 +366,36 @@ async def test_airzone_climate_set_swing_mode(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.api_patch_device",
         return_value=None,
-    ):
+    ) as patch_device:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_SWING_MODE,
             {
                 ATTR_ENTITY_ID: "climate.bron",
-                ATTR_SWING_MODE: "Vertical",
+                ATTR_SWING_MODE: SWING_VERTICAL,
             },
             blocking=True,
         )
 
+    patch_device.assert_called_once()
+    assert patch_device.call_args.args[1] == {
+        API_PARAM: API_SLATS_V_CONF,
+        API_VALUE: "swing",
+        API_INSTALLATION_ID: "inst1",
+    }
+
     state = hass.states.get("climate.bron")
-    assert state.attributes[ATTR_SWING_MODE] == "Vertical"
+    assert state.attributes[ATTR_SWING_MODE] == SWING_VERTICAL
+
+
+async def test_airzone_climate_without_swing_modes(hass: HomeAssistant) -> None:
+    """Test Aidoo climate without slat values does not expose swing mode."""
+
+    await async_init_integration(hass, aidoo1_slats_supported=False)
+
+    state = hass.states.get("climate.bron")
+    assert ATTR_SWING_MODE not in state.attributes
+    assert ATTR_SWING_MODES not in state.attributes
 
 
 async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
