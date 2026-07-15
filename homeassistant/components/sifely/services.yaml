@@ -1,0 +1,88 @@
+list_passcodes:
+  fields:
+    lock_id:
+      required: true
+      selector:
+        number:
+          mode: box
+          min: 1
+
+add_passcode:
+  fields:
+    lock_id:
+      required: true
+      selector:
+        number:
+          mode: box
+          min: 1
+    keyboard_pwd:
+      required: true
+      selector:
+        text:
+    keyboard_pwd_name:
+      required: true
+      selector:
+        text:
+    start_date:
+      required: true
+      selector:
+        number:
+          mode: box
+          min: 0
+    end_date:
+      required: true
+      selector:
+        number:
+          mode: box
+          min: 0
+    keyboard_pwd_type:
+      required: false
+      default: "3"
+      selector:
+        select:
+          options:
+            - label: "One-time passcode"
+              value: "1"
+            - label: "Permanent passcode"
+              value: "2"
+            - label: "Timed passcode"
+              value: "3"
+    add_type:
+      required: false
+      default: "2"
+      selector:
+        select:
+          options:
+            - label: "Gateway/WiFi remote"
+              value: "2"
+            - label: "App Bluetooth"
+              value: "1"
+            - label: "NB-IoT"
+              value: "3"
+
+delete_passcode:
+  fields:
+    lock_id:
+      required: true
+      selector:
+        number:
+          mode: box
+          min: 1
+    keyboard_pwd_id:
+      required: true
+      selector:
+        number:
+          mode: box
+          min: 1
+    delete_type:
+      required: false
+      default: "2"
+      selector:
+        select:
+          options:
+            - label: "Gateway/WiFi remote"
+              value: "2"
+            - label: "App Bluetooth"
+              value: "1"
+            - label: "NB-IoT"
+              value: "3"

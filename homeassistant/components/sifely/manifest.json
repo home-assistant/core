@@ -1,0 +1,11 @@
+{
+  "domain": "sifely",
+  "name": "Sifely Smart Lock",
+  "codeowners": ["@lifyfun-llc"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sifely",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["pysifely==0.1.0"]
+}

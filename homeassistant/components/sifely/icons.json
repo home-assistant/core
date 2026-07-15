@@ -1,0 +1,13 @@
+{
+  "services": {
+    "list_passcodes": {
+      "service": "mdi:format-list-bulleted"
+    },
+    "add_passcode": {
+      "service": "mdi:key-plus"
+    },
+    "delete_passcode": {
+      "service": "mdi:key-remove"
+    }
+  }
+}
