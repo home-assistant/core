@@ -97,6 +97,7 @@ class _BoschSwitchBase(CoordinatorEntity[BoschCameraCoordinator], SwitchEntity):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the _BoschSwitchBase."""
         super().__init__(coordinator)
         self._cam_id = cam_id
         self._entry = entry
@@ -342,15 +343,18 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschLiveStreamSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_live_{cam_id.lower()}"
         self._attr_translation_key = "live_stream"
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Register with the coordinator so `_tear_down_live_stream` can
-        push the cleared state to HA immediately. Without the registry the
-        UI shows a stale "on" until the next coordinator tick.
+        """Register with the coordinator so state updates reach HA immediately.
+
+        Without the registry, `_tear_down_live_stream` can't push the cleared
+        state to HA immediately and the UI shows a stale "on" until the next
+        coordinator tick.
         """
         await super().async_added_to_hass()
         self.coordinator.live_stream_entities[self._cam_id] = self
@@ -479,9 +483,9 @@ class BoschLiveStreamSwitch(_BoschSwitchBase):
         self.async_write_ha_state()
 
     async def _stream_health_watchdog(self, cam_id: str) -> None:
-        """Watchdog for a LOCAL stream: verify HA's stream component is
-        actually producing HLS output.
+        """Watchdog for a LOCAL stream.
 
+        Verifies HA's stream component is actually producing HLS output.
         Runs two checks (60s, 120s after the live URL was exposed). At each
         tick:
           * stop early if the stream was turned off or already switched to
@@ -632,6 +636,7 @@ class BoschAudioSwitch(_BoschSwitchBase, RestoreEntity):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschAudioSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_audio_{cam_id.lower()}"
         self._attr_translation_key = "audio"
@@ -689,6 +694,7 @@ class BoschCameraLightSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschCameraLightSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_light_{cam_id.lower()}"
         self._attr_translation_key = "camera_light"
@@ -743,6 +749,7 @@ class BoschFrontLightSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschFrontLightSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_front_light_{cam_id.lower()}"
         self._attr_translation_key = "front_light"
@@ -786,6 +793,7 @@ class BoschWallwasherSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschWallwasherSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_wallwasher_{cam_id.lower()}"
         self._attr_translation_key = "wallwasher"
@@ -826,6 +834,7 @@ class BoschPrivacyModeSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschPrivacyModeSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_privacy_{cam_id.lower()}"
         self._attr_translation_key = "privacy_mode"
@@ -1143,6 +1152,7 @@ class BoschNotificationsSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschNotificationsSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_notifications_{cam_id.lower()}"
         self._attr_translation_key = "notifications"
@@ -1218,6 +1228,7 @@ class BoschMotionEnabledSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschMotionEnabledSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_motion_enabled"
 
@@ -1275,6 +1286,7 @@ class BoschRecordSoundSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschRecordSoundSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_record_sound"
 
@@ -1318,6 +1330,7 @@ class BoschAutoFollowSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschAutoFollowSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_autofollow"
 
@@ -1374,6 +1387,7 @@ class BoschIntercomSwitch(_BoschSwitchBase, RestoreEntity):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschIntercomSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_intercom"
         self._is_on: bool = False
@@ -1453,6 +1467,7 @@ class BoschPrivacySoundSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschPrivacySoundSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_privacy_sound"
 
@@ -1506,6 +1521,7 @@ class BoschTimestampSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschTimestampSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_timestamp"
 
@@ -1558,6 +1574,7 @@ class BoschStatusLedSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschStatusLedSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_ledlights"
 
@@ -1608,6 +1625,7 @@ class BoschMotionLightSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschMotionLightSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_motion_light"
         self._attr_translation_key = "motion_light"
@@ -1699,6 +1717,7 @@ class BoschAmbientLightSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschAmbientLightSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_ambient_light"
         self._attr_translation_key = "ambient_light"
@@ -1773,6 +1792,7 @@ class BoschSoftLightFadingSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschSoftLightFadingSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_soft_light_fading"
 
@@ -1848,6 +1868,7 @@ class BoschIntrusionDetectionSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschIntrusionDetectionSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_intrusion_detection"
         self._attr_translation_key = "intrusion_detection"
@@ -2001,6 +2022,7 @@ class BoschGlassBreakDetectionSwitch(_BoschAudioDetectionSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschGlassBreakDetectionSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_glass_break_detection"
         self._attr_translation_key = "glass_break_detection"
@@ -2014,6 +2036,7 @@ class BoschFireAlarmDetectionSwitch(_BoschAudioDetectionSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschFireAlarmDetectionSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_fire_alarm_detection"
         self._attr_translation_key = "fire_alarm_detection"
@@ -2056,6 +2079,7 @@ class BoschNotificationTypeSwitch(_BoschSwitchBase):
         entry: ConfigEntry,
         ntype: str,
     ) -> None:
+        """Initialize the BoschNotificationTypeSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._ntype = ntype
         label = _NOTIF_TYPE_LABELS.get(ntype, ntype)
@@ -2121,6 +2145,7 @@ class BoschAlarmSystemArmSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschAlarmSystemArmSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_alarm_arm"
         self._attr_translation_key = "alarm_system_arm"
@@ -2220,6 +2245,7 @@ class BoschAlarmModeSwitch(_BoschAlarmSettingsSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschAlarmModeSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_alarm_mode"
         self._attr_translation_key = "alarm_mode"
@@ -2234,6 +2260,7 @@ class BoschPreAlarmSwitch(_BoschAlarmSettingsSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschPreAlarmSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_prealarm"
         self._attr_translation_key = "pre_alarm"
@@ -2266,6 +2293,7 @@ class BoschImageRotation180Switch(_BoschSwitchBase, RestoreEntity):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschImageRotation180Switch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_image_rotation_180"
         self._attr_translation_key = "image_rotation_180"
@@ -2331,6 +2359,7 @@ class BoschPanicAlarmSwitch(_BoschSwitchBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschPanicAlarmSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_panic_alarm"
         self._attr_translation_key = "panic_alarm"
@@ -2407,6 +2436,7 @@ class BoschNvrRecordingSwitch(_BoschSwitchBase, RestoreEntity):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschNvrRecordingSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_nvr_recording_{cam_id.lower()}"
         self._attr_translation_key = "nvr_recording"
@@ -2501,9 +2531,9 @@ class BoschNvrRecordingSwitch(_BoschSwitchBase, RestoreEntity):
 
 # ─────────────────────────────────────────────────────────────────────────────
 class BoschNvrEventClipSwitch(_BoschSwitchBase, RestoreEntity):
-    """Switch: ON (default) = assemble+ship a native clip on FCM motion/person
-    events while this camera is in ``event_buffered`` Mini-NVR mode.
+    """Switch: assemble+ship a native clip on FCM motion/person events.
 
+    ON (default) while this camera is in ``event_buffered`` Mini-NVR mode.
     Opt-out for installs that orchestrate their own clip-saving externally
     (e.g. HA automations driving a fork's own service) and don't want a
     second, native clip produced on top of theirs on every event (feature
@@ -2524,6 +2554,7 @@ class BoschNvrEventClipSwitch(_BoschSwitchBase, RestoreEntity):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschNvrEventClipSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_nvr_event_clip_{cam_id.lower()}"
         self._attr_translation_key = "nvr_event_clip"
@@ -2594,6 +2625,7 @@ class BoschExternalStreamSwitch(_BoschSwitchBase, RestoreEntity):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschExternalStreamSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_external_stream"
         self._attr_translation_key = "external_stream"
@@ -2710,6 +2742,7 @@ class BoschFrigateHighSwitch(_BoschFrigateEndpointSwitch):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschFrigateHighSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_frigate_high"
         self._attr_translation_key = "frigate_high"
@@ -2723,6 +2756,7 @@ class BoschFrigateLowSwitch(_BoschFrigateEndpointSwitch):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschFrigateLowSwitch."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_frigate_low"
         self._attr_translation_key = "frigate_low"

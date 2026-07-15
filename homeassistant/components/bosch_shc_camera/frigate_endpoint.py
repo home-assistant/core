@@ -116,7 +116,9 @@ class Relay(Protocol):
     structurally; `_CameraServer._serve` only ever calls `.run()`.
     """
 
-    async def run(self) -> None: ...
+    async def run(self) -> None:
+        """Run the relay until the client or camera connection closes."""
+        ...
 
 
 # relay_factory(cam_id, client_reader, client_writer, target, first_request)
@@ -152,7 +154,7 @@ class FrontDoorConfig:
 
 
 def find_rtsp_message_end(buf: bytes) -> int:
-    """Return the offset right after ``\\r\\n\\r\\n``, or -1 if not present."""
+    r"""Return the offset right after ``\r\n\r\n``, or -1 if not present."""
     i = buf.find(b"\r\n\r\n")
     return i + 4 if i >= 0 else -1
 
@@ -201,11 +203,11 @@ def content_length(buf: bytes) -> int:
 
 
 def inject_auth_header(request: bytes, auth_value: str) -> bytes:
-    """Insert ``Authorization: <value>`` before the blank line ending the head.
+    r"""Insert ``Authorization: <value>`` before the blank line ending the head.
 
     Any existing ``Authorization:`` line is dropped first so a client-supplied
     (gate) credential never reaches the camera alongside our injected Digest.
-    Caller has verified the buffer ends with ``\\r\\n\\r\\n``.
+    Caller has verified the buffer ends with ``\r\n\r\n``.
     """
     sep = request.find(b"\r\n\r\n")
     if sep < 0:
@@ -671,8 +673,9 @@ class _CameraServer:
                 self._idle_task = asyncio.create_task(self._idle_linger())
 
     async def _idle_linger(self) -> None:
-        """Wait config.idle_timeout of continuous zero-client idle, then fire
-        on_idle. Cancelled and replaced the instant a new client connects.
+        """Wait config.idle_timeout of continuous zero-client idle, then fire on_idle.
+
+        Cancelled and replaced the instant a new client connects.
         """
         try:
             if self.config.idle_timeout > 0:
@@ -809,6 +812,7 @@ class FrontDoorRunner:
     """
 
     def __init__(self) -> None:
+        """Initialize the runner with an empty per-camera server registry."""
         self._servers: dict[str, _CameraServer] = {}
 
     async def start_server(
@@ -843,17 +847,21 @@ class FrontDoorRunner:
             server.close()
 
     def active_count(self, cam_id: str) -> int:
+        """Return the number of currently connected clients for ``cam_id``."""
         server = self._servers.get(cam_id)
         return server.client_count if server is not None else 0
 
     def has_server(self, cam_id: str) -> bool:
+        """Return whether a front-door server is running for ``cam_id``."""
         return cam_id in self._servers
 
     def port(self, cam_id: str) -> int:
+        """Return the bound port for ``cam_id``'s front door, or 0 if not running."""
         server = self._servers.get(cam_id)
         return server.port if server is not None else 0
 
     def stop_all(self) -> None:
+        """Close every running front-door listener."""
         for cam_id in list(self._servers):
             self.stop_server(cam_id)
 
@@ -965,13 +973,15 @@ class FrigateCoordinatorMixin:
         )
 
     def _frigate_on_idle(self: Any, cam_id: str) -> None:
-        """Front-door for cam_id has had zero recorder clients for the configured
-        frigate_idle_timeout. Tear down the on-demand LOCAL session it opened —
-        but ONLY if no OTHER consumer (a live card view, Cast, Mini-NVR) is still
-        using it; otherwise do nothing and let the generic idle reaper handle
-        teardown when everyone leaves. Runs as a background task because on_idle
-        is a synchronous loop callback. (bug-hunt 2026-07-01 — wires the
-        previously-dead frigate_idle_timeout option.)
+        """Tear down cam_id's on-demand LOCAL session after frigate_idle_timeout.
+
+        Called once the front-door has had zero recorder clients for the
+        configured frigate_idle_timeout. Tears down the session it opened
+        ONLY if no OTHER consumer (a live card view, Cast, Mini-NVR) is
+        still using it; otherwise does nothing and lets the generic idle
+        reaper handle teardown when everyone leaves. Runs as a background
+        task because on_idle is a synchronous loop callback. (bug-hunt
+        2026-07-01 — wires the previously-dead frigate_idle_timeout option.)
         """
 
         async def _maybe_teardown() -> None:

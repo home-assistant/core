@@ -42,8 +42,9 @@ async def dispatch_update_failed(coordinator: BoschCameraCoordinator) -> None:
 
 
 async def dispatch_timeout(coordinator: BoschCameraCoordinator) -> UpdateFailed:
-    """Side effects for `except TimeoutError:`. Returns the `UpdateFailed`
-    the caller must `raise ... from None`.
+    """Run side effects for `except TimeoutError:`.
+
+    Returns the `UpdateFailed` the caller must `raise ... from None`.
     """
     _maint = getattr(coordinator, "_async_refresh_maintenance", None)
     if _maint is not None:
@@ -66,8 +67,9 @@ async def dispatch_timeout(coordinator: BoschCameraCoordinator) -> UpdateFailed:
 async def dispatch_client_error(
     coordinator: BoschCameraCoordinator, err: aiohttp.ClientError
 ) -> UpdateFailed:
-    """Side effects for `except aiohttp.ClientError as err:`. Returns the
-    `UpdateFailed` the caller must `raise ... from err`.
+    """Run side effects for `except aiohttp.ClientError as err:`.
+
+    Returns the `UpdateFailed` the caller must `raise ... from err`.
     """
     _cloud_alert = getattr(coordinator, "_async_maybe_announce_cloud_state", None)
     if _cloud_alert is not None:

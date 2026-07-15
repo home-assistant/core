@@ -1,6 +1,4 @@
-"""Post-tick housekeeping: SMB/NVR retention cleanup, stale-device
-pruning, availability-transition notify, LAN-IP/hw-version/local-creds
-persistence, maintenance-feed refresh, cloud-state notify.
+"""Post-tick housekeeping: SMB/NVR retention cleanup, stale-device pruning, availability-transition notify, LAN-IP/hw-version/local-creds persistence, maintenance-feed refresh, cloud-state notify.
 
 Phase 2 step 6 of the coordinator-rewrite split (see
 .claude/plans/jiggly-moseying-peacock.md, project root). Everything

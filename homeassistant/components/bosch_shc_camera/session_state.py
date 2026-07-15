@@ -370,21 +370,26 @@ class StreamWarmingView:
     """
 
     def __init__(self, sessions: dict[str, CameraSessionState]) -> None:
+        """Initialize the view over the shared per-camera session store."""
         self._sessions = sessions
 
     def __contains__(self, cam_id: str) -> bool:
+        """Return whether `cam_id` is currently warming."""
         session = self._sessions.get(cam_id)
         return session is not None and session.warming
 
     def add(self, cam_id: str) -> None:
+        """Mark `cam_id` as warming."""
         get_or_create_session(self._sessions, cam_id).warming = True
 
     def discard(self, cam_id: str) -> None:
+        """Clear the warming flag for `cam_id`, if present."""
         session = self._sessions.get(cam_id)
         if session is not None:
             session.warming = False
 
     def __len__(self) -> int:
+        """Return the number of cameras currently warming."""
         return sum(1 for session in self._sessions.values() if session.warming)
 
 
@@ -397,6 +402,7 @@ class LiveOpenedAtView:
     """
 
     def __init__(self, sessions: dict[str, CameraSessionState]) -> None:
+        """Initialize the view over the shared per-camera session store."""
         self._sessions = sessions
 
     @overload
@@ -406,12 +412,14 @@ class LiveOpenedAtView:
     @overload
     def get(self, cam_id: str, default: float | None) -> float | None: ...
     def get(self, cam_id: str, default: float | None = None) -> float | None:
+        """Return the opened-at timestamp for `cam_id`, or `default` if unset."""
         session = self._sessions.get(cam_id)
         if session is None or session.opened_at is None:
             return default
         return session.opened_at
 
     def pop(self, cam_id: str, default: float | None = None) -> float | None:
+        """Remove and return the opened-at timestamp for `cam_id`, or `default`."""
         session = self._sessions.get(cam_id)
         if session is None or session.opened_at is None:
             return default
@@ -420,9 +428,11 @@ class LiveOpenedAtView:
         return val
 
     def __setitem__(self, cam_id: str, value: float) -> None:
+        """Set the opened-at timestamp for `cam_id`."""
         get_or_create_session(self._sessions, cam_id).opened_at = value
 
     def __len__(self) -> int:
+        """Return the number of cameras with an opened-at timestamp set."""
         return sum(
             1 for session in self._sessions.values() if session.opened_at is not None
         )
@@ -442,6 +452,7 @@ class FloatFieldView:
     def __init__(
         self, sessions: dict[str, CameraSessionState], field_name: str
     ) -> None:
+        """Initialize the view over `field_name` of the shared session store."""
         self._sessions = sessions
         self._field_name = field_name
 
@@ -452,6 +463,7 @@ class FloatFieldView:
     @overload
     def get(self, cam_id: str, default: float | None) -> float | None: ...
     def get(self, cam_id: str, default: float | None = None) -> float | None:
+        """Return the field value for `cam_id`, or `default` if unset."""
         session = self._sessions.get(cam_id)
         if session is None:
             return default
@@ -459,15 +471,19 @@ class FloatFieldView:
         return default if value is None else value
 
     def __setitem__(self, cam_id: str, value: float) -> None:
+        """Set the field value for `cam_id`."""
         setattr(get_or_create_session(self._sessions, cam_id), self._field_name, value)
 
     def __contains__(self, cam_id: str) -> bool:
+        """Return whether the field is set for `cam_id`."""
         session = self._sessions.get(cam_id)
         return session is not None and getattr(session, self._field_name) is not None
 
     def __getitem__(self, cam_id: str) -> float:
-        """Raise `KeyError` if unset — matches `dict[str, float][cam_id]` semantics
-        for the `cam_id in view and view[cam_id]` call-site pattern.
+        """Return the field value for `cam_id`.
+
+        Raises `KeyError` if unset — matches `dict[str, float][cam_id]`
+        semantics for the `cam_id in view and view[cam_id]` call-site pattern.
         """
         session = self._sessions.get(cam_id)
         value: float | None = (
@@ -478,6 +494,7 @@ class FloatFieldView:
         return value
 
     def pop(self, cam_id: str, default: float | None = None) -> float | None:
+        """Remove and return the field value for `cam_id`, or `default`."""
         session = self._sessions.get(cam_id)
         if session is None:
             return default
@@ -488,6 +505,7 @@ class FloatFieldView:
         return value
 
     def __len__(self) -> int:
+        """Return the number of cameras with the field set."""
         return sum(
             1
             for session in self._sessions.values()
@@ -509,22 +527,27 @@ class BoolFieldView:
     def __init__(
         self, sessions: dict[str, CameraSessionState], field_name: str
     ) -> None:
+        """Initialize the view over `field_name` of the shared session store."""
         self._sessions = sessions
         self._field_name = field_name
 
     def __contains__(self, cam_id: str) -> bool:
+        """Return whether the field is truthy for `cam_id`."""
         session = self._sessions.get(cam_id)
         return session is not None and bool(getattr(session, self._field_name))
 
     def add(self, cam_id: str) -> None:
+        """Set the field to `True` for `cam_id`."""
         setattr(get_or_create_session(self._sessions, cam_id), self._field_name, True)
 
     def discard(self, cam_id: str) -> None:
+        """Set the field to `False` for `cam_id`, if present."""
         session = self._sessions.get(cam_id)
         if session is not None:
             setattr(session, self._field_name, False)
 
     def __len__(self) -> int:
+        """Return the number of cameras with the field truthy."""
         return sum(
             1
             for session in self._sessions.values()
@@ -533,9 +556,10 @@ class BoolFieldView:
 
 
 class CacheFieldView(MutableMapping[str, _T]):
-    """`MutableMapping[str, _T]` facade over a named per-camera cache field
-    of `CameraSessionState` (Session-State-Facade Slice 2 — see the module
-    docstring).
+    """`MutableMapping[str, _T]` facade over a named per-camera cache field.
+
+    Field of `CameraSessionState` (Session-State-Facade Slice 2 — see the
+    module docstring).
 
     Generalizes `FloatFieldView`/`BoolFieldView` (Slice 1) for Slice 2's
     heterogeneous cache value types (dict/list/int/str/float/bool, several
@@ -561,6 +585,7 @@ class CacheFieldView(MutableMapping[str, _T]):
     def __init__(
         self, sessions: dict[str, CameraSessionState], field_name: str
     ) -> None:
+        """Initialize the view over `field_name` of the shared session store."""
         self._sessions = sessions
         self._field_name = field_name
 

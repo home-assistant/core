@@ -70,6 +70,7 @@ async def async_setup_entry(
     config_entry: BoschCameraConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up select entities for each camera and the integration."""
     coordinator: BoschCameraCoordinator = config_entry.runtime_data
     entities: list[SelectEntity] = []
     for cam_id in coordinator.data:
@@ -116,6 +117,7 @@ class BoschVideoQualitySelect(
         cam_id: str,
         entry: ConfigEntry,
     ) -> None:
+        """Initialize the video quality select entity."""
         super().__init__(coordinator)
         self._cam_id = cam_id
         cam_data = coordinator.data.get(cam_id, {})
@@ -226,6 +228,7 @@ class BoschNvrModeSelect(
         cam_id: str,
         entry: ConfigEntry,
     ) -> None:
+        """Initialize the NVR mode select entity."""
         super().__init__(coordinator)
         self._cam_id = cam_id
         cam_data = coordinator.data.get(cam_id, {})
@@ -267,8 +270,7 @@ class BoschNvrModeSelect(
 
     @override
     async def async_select_option(self, option: str) -> None:
-        """Set the per-camera NVR mode override and apply it immediately
-        if a recorder is already running for this camera.
+        """Set the per-camera NVR mode override, applying it immediately if running.
 
         Bug-hunt finding (2026-07-11): an earlier version of this docstring
         claimed the change would "take effect on the next credential
@@ -314,6 +316,7 @@ class BoschMotionSensitivitySelect(
         cam_id: str,
         entry: ConfigEntry,
     ) -> None:
+        """Initialize the motion sensitivity select entity."""
         super().__init__(coordinator)
         self._cam_id = cam_id
         self._entry = entry
@@ -418,6 +421,7 @@ class BoschFcmPushModeSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEn
         cam_id: str,
         entry: ConfigEntry,
     ) -> None:
+        """Initialize the FCM push mode select entity."""
         super().__init__(coordinator)
         self._cam_id = cam_id
         self._entry = entry
@@ -501,6 +505,7 @@ class BoschStreamModeSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEnt
         cam_id: str,
         entry: ConfigEntry,
     ) -> None:
+        """Initialize the stream mode select entity."""
         super().__init__(coordinator)
         self._cam_id = cam_id
         self._entry = entry
@@ -560,6 +565,7 @@ class BoschDetectionModeSelect(CoordinatorEntity[BoschCameraCoordinator], Select
         cam_id: str,
         entry: ConfigEntry,
     ) -> None:
+        """Initialize the detection mode select entity."""
         super().__init__(coordinator)
         self._cam_id = cam_id
         self._entry = entry
@@ -657,6 +663,7 @@ class BoschPanPresetSelect(CoordinatorEntity[BoschCameraCoordinator], SelectEnti
         entry: ConfigEntry,
         pan_limit: int,
     ) -> None:
+        """Initialize the pan preset select entity."""
         super().__init__(coordinator)
         self._cam_id = cam_id
         self._entry = entry

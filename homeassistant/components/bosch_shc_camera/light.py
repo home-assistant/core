@@ -46,6 +46,7 @@ async def async_setup_entry(
     config_entry: BoschCameraConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
+    """Set up Bosch camera light entities from a config entry."""
     coordinator = config_entry.runtime_data
     entities: list[_BoschLightBase] = []
     for cam_id in coordinator.data:
@@ -520,6 +521,7 @@ class BoschTopLedLight(_BoschRgbLedLight):
     _led_key = "topLedLightSettings"
 
     def __init__(self, coordinator: Any, cam_id: str, entry: ConfigEntry) -> None:
+        """Initialize the top LED light."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_top_led_light"
         self._attr_translation_key = "top_led_light"
@@ -532,6 +534,7 @@ class BoschBottomLedLight(_BoschRgbLedLight):
     _led_key = "bottomLedLightSettings"
 
     def __init__(self, coordinator: Any, cam_id: str, entry: ConfigEntry) -> None:
+        """Initialize the bottom LED light."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_bottom_led_light"
         self._attr_translation_key = "bottom_led_light"
@@ -553,6 +556,7 @@ class BoschFrontLight(_BoschLightBase):
     _attr_max_color_temp_kelvin = 6500
 
     def __init__(self, coordinator: Any, cam_id: str, entry: ConfigEntry) -> None:
+        """Initialize the front light."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_front_light_entity"
         self._attr_translation_key = "front_light_entity"

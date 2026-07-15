@@ -136,10 +136,11 @@ async def _go2rtc_client_session(
 
 
 async def ensure_go2rtc_schemes_fresh(coordinator: BoschCameraCoordinator) -> None:
-    """Pre-emptive: re-fetch `_supported_schemes` directly on the existing
-    WebRTCProvider instance(s) so the very first stream activation finds
-    the right scheme set. Avoids the race where the card asks for
-    capabilities before the post-stream watchdog had a chance to fire.
+    """Pre-emptively re-fetch `_supported_schemes` directly on the existing WebRTCProvider instance(s).
+
+    This makes the very first stream activation find the right scheme set,
+    avoiding the race where the card asks for capabilities before the
+    post-stream watchdog had a chance to fire.
 
     Direct-refresh (private-API hack) instead of full config-entry reload,
     because reload was found to not actually populate the schemes set in

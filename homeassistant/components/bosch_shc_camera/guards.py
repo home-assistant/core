@@ -18,8 +18,7 @@ _INDOOR_HW = {"INDOOR", "CAMERA_360", "HOME_Eyes_Indoor", "CAMERA_INDOOR_GEN2"}
 
 
 def _get_cam_lock(coordinator: Any, lock_attr: str, cam_id: str) -> asyncio.Lock:
-    """Return (lazily creating) a per-camera asyncio.Lock stored on the
-    coordinator under ``lock_attr``, keyed by ``cam_id``.
+    """Return (lazily creating) a per-camera asyncio.Lock stored on the coordinator under ``lock_attr``, keyed by ``cam_id``.
 
     Several entity classes across switch.py/number.py/light.py can share one
     Bosch cloud endpoint that requires a full-body PUT (multiple sibling
@@ -51,9 +50,9 @@ def _is_gen2_indoor(entity: Any) -> bool:
 
 
 async def _warn_if_privacy_on(entity: Any, feature_name: str) -> bool:
-    """Show a persistent notification when the user tries to change a
-    privacy-gated setting while privacy mode is ON. Returns True if the
-    write was blocked.
+    """Show a persistent notification when the user tries to change a privacy-gated setting while privacy mode is ON.
+
+    Returns True if the write was blocked.
 
     The Bosch cloud API returns HTTP 443 "sh:camera.in.privacy.mode" on
     reads and writes to /intrusionDetectionConfig, /zones, /privateAreas,

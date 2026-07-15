@@ -174,6 +174,7 @@ class _BoschSensorBase(CoordinatorEntity[BoschCameraCoordinator], SensorEntity):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the _BoschSensorBase."""
         super().__init__(coordinator)
         self._cam_id = cam_id
         self._entry = entry
@@ -229,6 +230,7 @@ class BoschCameraStatusSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschCameraStatusSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_status_{cam_id.lower()}"
         self._attr_translation_key = "status"
@@ -284,6 +286,7 @@ class BoschCameraLastEventSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschCameraLastEventSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_last_event_{cam_id.lower()}"
         self._attr_device_class = SensorDeviceClass.TIMESTAMP
@@ -327,6 +330,7 @@ class BoschCameraEventsTodaySensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschCameraEventsTodaySensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_events_today_{cam_id.lower()}"
         self._attr_native_unit_of_measurement = "events"
@@ -367,6 +371,7 @@ class BoschWifiSignalSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschWifiSignalSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_wifi_signal_{cam_id.lower()}"
         # No device_class — Bosch API returns percentage (0-100), not dBm
@@ -425,6 +430,7 @@ class BoschFirmwareVersionSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschFirmwareVersionSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_firmware_{cam_id.lower()}"
         self._attr_translation_key = "firmware_version"
@@ -472,6 +478,7 @@ class BoschAmbientLightSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschAmbientLightSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_ambient_light_{cam_id.lower()}"
         self._attr_state_class = SensorStateClass.MEASUREMENT
@@ -508,6 +515,7 @@ class BoschLedDimmerSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschLedDimmerSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_led_dimmer_{cam_id.lower()}"
         self._attr_state_class = SensorStateClass.MEASUREMENT
@@ -541,6 +549,7 @@ class BoschClockOffsetSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschClockOffsetSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_clock_offset"
         self._attr_translation_key = "clock_offset"
@@ -860,6 +869,7 @@ class BoschUnreadEventsCountSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschUnreadEventsCountSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_unread_events"
         self._attr_translation_key = "unread_events"
@@ -893,6 +903,7 @@ class BoschCommissionedSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschCommissionedSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_commissioned"
         self._attr_translation_key = "commissioned"
@@ -950,6 +961,7 @@ class BoschRulesCountSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschRulesCountSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_rules_count"
         self._attr_translation_key = "schedule_rules"
@@ -1009,6 +1021,7 @@ class BoschAlarmCatalogSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschAlarmCatalogSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_alarm_catalog"
         self._attr_translation_key = "alarm_catalog"
@@ -1062,6 +1075,7 @@ class BoschMotionZonesSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschMotionZonesSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_motion_zones"
         self._attr_translation_key = "motion_zones"
@@ -1139,6 +1153,7 @@ class BoschTlsCertSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschTlsCertSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_tls_cert"
         self._attr_translation_key = "tls_cert"
@@ -1194,6 +1209,7 @@ class BoschNetworkServicesSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschNetworkServicesSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_network_services"
         self._attr_translation_key = "network_services"
@@ -1239,6 +1255,7 @@ class BoschIvaCatalogSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschIvaCatalogSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_iva_catalog"
         self._attr_translation_key = "iva_analytics"
@@ -1291,6 +1308,7 @@ class BoschPrivateAreasSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschPrivateAreasSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_privacy_masks"
         self._attr_translation_key = "privacy_masks"
@@ -1355,6 +1373,7 @@ class BoschAmbientLightScheduleSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschAmbientLightScheduleSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_ambient_schedule"
         self._attr_translation_key = "ambient_schedule"
@@ -1453,6 +1472,7 @@ class BoschAlarmStateSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschAlarmStateSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_alarm_state"
         self._attr_translation_key = "alarm_state"
@@ -1515,6 +1535,7 @@ class BoschStreamStatusSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschStreamStatusSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_stream_status_{cam_id.lower()}"
         self._attr_translation_key = "stream_status"
@@ -1590,6 +1611,7 @@ class BoschNvrStateSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschNvrStateSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_nvr_state_{cam_id.lower()}"
         self._attr_translation_key = "nvr_state"
@@ -1653,6 +1675,7 @@ class BoschCameraAiDescriptionSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschCameraAiDescriptionSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_ai_description_{cam_id.lower()}"
         self._attr_translation_key = "ai_description"
@@ -1741,6 +1764,7 @@ class BoschStreamUrlSensor(_BoschStreamUrlSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschStreamUrlSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_stream_url_{cam_id.lower()}"
         self._attr_translation_key = "stream_url"
@@ -1761,6 +1785,7 @@ class BoschStreamUrlSubSensor(_BoschStreamUrlSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschStreamUrlSubSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_stream_url_sub_{cam_id.lower()}"
         self._attr_translation_key = "stream_url_sub"
@@ -1797,6 +1822,7 @@ class BoschFrigateUrlHighSensor(_BoschFrigateUrlSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschFrigateUrlHighSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_frigate_url_high_{cam_id.lower()}"
         self._attr_translation_key = "frigate_url_high"
@@ -1811,6 +1837,7 @@ class BoschFrigateUrlLowSensor(_BoschFrigateUrlSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschFrigateUrlLowSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_frigate_url_low_{cam_id.lower()}"
         self._attr_translation_key = "frigate_url_low"
@@ -1845,6 +1872,7 @@ class BoschOnvifScopesSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschOnvifScopesSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_onvif_scopes"
         self._attr_translation_key = "onvif_scopes"
@@ -1901,6 +1929,7 @@ class BoschRcpVersionSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschRcpVersionSensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_rcp_version"
         self._attr_translation_key = "rcp_version"
@@ -1957,6 +1986,7 @@ class BoschCloudFeatureFlagsSensor(_BoschSensorBase):
     def __init__(
         self, coordinator: BoschCameraCoordinator, cam_id: str, entry: ConfigEntry
     ) -> None:
+        """Initialize the BoschCloudFeatureFlagsSensor."""
         super().__init__(coordinator, cam_id, entry)
         # Account-level unique_id — not per camera
         self._attr_unique_id = "bosch_shc_camera_cloud_feature_flags"

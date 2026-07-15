@@ -210,6 +210,7 @@ class BoschMotionBinarySensor(_BoschBinarySensorBase):
         cam_id: str,
         entry: ConfigEntry,
     ) -> None:
+        """Initialize the motion binary sensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_motion_binary"
         self._attr_translation_key = "motion"
@@ -246,6 +247,7 @@ class BoschAudioAlarmBinarySensor(_BoschBinarySensorBase):
         cam_id: str,
         entry: ConfigEntry,
     ) -> None:
+        """Initialize the audio alarm binary sensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_audio_alarm_binary"
         self._attr_translation_key = "audio_alarm_binary"
@@ -282,6 +284,7 @@ class BoschPersonDetectedBinarySensor(_BoschBinarySensorBase):
         cam_id: str,
         entry: ConfigEntry,
     ) -> None:
+        """Initialize the person-detected binary sensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_cam_{cam_id}_person_detected"
         self._attr_translation_key = "person_detected"
@@ -334,6 +337,7 @@ class BoschLanReachableBinarySensor(_BoschBinarySensorBase):
         cam_id: str,
         entry: ConfigEntry,
     ) -> None:
+        """Initialize the LAN-reachable binary sensor."""
         super().__init__(coordinator, cam_id, entry)
         self._attr_unique_id = f"bosch_shc_camera_{cam_id}_lan_reachable"
         # Use HA's auto-naming via translation_key + device_info — no `name`

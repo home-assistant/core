@@ -114,8 +114,10 @@ _MAX_HEAD_BYTES = 64 * 1024
 
 @dataclass(frozen=True)
 class RemoteTarget:
-    """What `remote_resolve_inner` returns: the live inner TLS-proxy port
-    plus the CURRENT session's hash-bearing path+query (e.g.
+    """What `remote_resolve_inner` returns.
+
+    The live inner TLS-proxy port plus the CURRENT session's hash-bearing
+    path+query (e.g.
     ``/{hash}/rtsp_tunnel?inst=1&enableaudio=1&fmtp=1&maxSessionDuration=3600``).
     """
 
@@ -124,8 +126,7 @@ class RemoteTarget:
 
 
 class _PathRewriteRelay:
-    """Relays one downstream client <-> inner-proxy connection, rewriting
-    every forwarded RTSP request's URI to the CURRENT session's hash path.
+    """Relays one downstream client <-> inner-proxy connection, rewriting every forwarded RTSP request's URI to the CURRENT session's hash path.
 
     No credential dance at all — unlike `frigate_endpoint._Relay`, there is
     no `Authorization:` challenge/response here. `target.path` already
@@ -155,8 +156,9 @@ class _PathRewriteRelay:
         return f"rtsp://127.0.0.1:{self._target.port}{self._target.path}"
 
     async def run(self) -> None:
-        """Connect to the inner proxy, forward the first request rewritten,
-        then pipe both directions.
+        """Connect to the inner proxy, forward the first request rewritten.
+
+        Then pipe both directions.
         """
         ir, iw = await asyncio.wait_for(
             asyncio.open_connection("127.0.0.1", self._target.port),
@@ -193,10 +195,10 @@ class _PathRewriteRelay:
                 await _close_writer(self._iw)
 
     async def _drain_requests(self, buf: bytes) -> bytes:
-        """Emit every complete request in ``buf`` (URI rewritten), return
-        the unparsed tail. Mirrors `_Relay._drain_requests`'s framing —
-        interleaved RTP/RTCP binary frames (`$`) are forwarded raw, never
-        parsed as RTSP.
+        """Emit every complete request in ``buf`` (URI rewritten), return the unparsed tail.
+
+        Mirrors `_Relay._drain_requests`'s framing — interleaved RTP/RTCP
+        binary frames (`$`) are forwarded raw, never parsed as RTSP.
         """
         assert self._iw is not None
         while buf:
@@ -223,8 +225,9 @@ class _PathRewriteRelay:
         return b""
 
     async def _pipe_inner_to_client(self) -> None:
-        """Forward inner->client verbatim (RTP frames, responses) — nothing
-        in a response needs rewriting.
+        """Forward inner->client verbatim (RTP frames, responses).
+
+        Nothing in a response needs rewriting.
         """
         assert self._ir is not None
         try:

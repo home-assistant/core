@@ -211,6 +211,7 @@ def _make_segment_wrapper(orig_handle: Any) -> Any:
 
 
 def register(hass: HomeAssistant) -> None:
+    """Patch the HLS segment view to unbuffer chunked responses, once."""
     global _PATCHED
     if _PATCHED:
         return

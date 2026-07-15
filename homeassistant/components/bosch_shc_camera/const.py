@@ -47,10 +47,11 @@ LIVE_SESSION_TTL = 55  # seconds — proxy sessions last ~60s, expire 5s early
 
 
 class _StreamStartSkipped(dict):
-    """Sentinel returned by ``try_live_connection`` when it declined to open a
-    new session because a non-renewal start for the same camera was already in
-    flight (opportunistic de-dup: ``lock.locked() and not is_renewal and not
-    force_reset``).
+    """Sentinel returned by ``try_live_connection`` when it declined to open a new session.
+
+    This happens because a non-renewal start for the same camera was already
+    in flight (opportunistic de-dup: ``lock.locked() and not is_renewal and
+    not force_reset``).
 
     This is **not** a failure — the in-flight start will publish the session.
 

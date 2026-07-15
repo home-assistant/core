@@ -38,8 +38,9 @@ async def refresh_local_creds_from_heartbeat(
     generation: int,
     elapsed: float,
 ) -> None:
-    """Cache fresh LOCAL creds from a heartbeat PUT response and rebuild
-    the cached rtspsUrl so the next stream-worker restart picks them up.
+    """Cache fresh LOCAL creds from a heartbeat PUT response and rebuild the cached rtspsUrl.
+
+    This ensures the next stream-worker restart picks them up.
 
     Bosch's PUT /v11/video_inputs/{id}/connection LOCAL returns a fresh
     digest user/password pair on every call; the previous pair stops
@@ -436,8 +437,7 @@ async def promote_to_local(coordinator: BoschCameraCoordinator, cam_id: str) -> 
 async def remote_session_terminator(
     coordinator: BoschCameraCoordinator, cam_id: str, generation: int
 ) -> None:
-    """Schedule a clean teardown of a REMOTE live session before the
-    relay-side lifetime cap.
+    """Schedule a clean teardown of a REMOTE live session before the relay-side lifetime cap.
 
     Background: when the session reaches `maxSessionDuration` the upstream
     relay drops the RTSP TCP with a hard reset. HA's stream_worker then

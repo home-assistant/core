@@ -82,6 +82,7 @@ class BoschCameraLastSnapshotImage(
         cam_id: str,
         entry: ConfigEntry,
     ) -> None:
+        """Initialize the last-snapshot image entity."""
         # ImageEntity.__init__ wires up hass, access_tokens, and calls async_update_token
         ImageEntity.__init__(self, hass)
         self._coordinator = coordinator
