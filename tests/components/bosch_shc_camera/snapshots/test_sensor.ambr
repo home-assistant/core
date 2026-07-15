@@ -1,0 +1,3530 @@
+# serializer version: 1
+# name: test_all_entities[sensor.bosch_terrasse_ai_snapshot_description-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_terrasse_ai_snapshot_description',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'AI snapshot description',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'AI snapshot description',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ai_description',
+    'unique_id': 'bosch_shc_ai_description_aabbccdd-1122-3344-5566-778899001122',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_ai_snapshot_description-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'ai_task_entity': None,
+      'description': None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer AI snapshot description',
+      'generated_at': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_ai_snapshot_description',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_alarm_catalog-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_alarm_catalog',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Alarm catalog',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarm catalog',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_catalog',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_alarm_catalog',
+    'unit_of_measurement': 'types',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_alarm_catalog-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Alarm catalog',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'types',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_alarm_catalog',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_ambient_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_terrasse_ambient_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ambient light',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ambient light',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ambient_light',
+    'unique_id': 'bosch_shc_ambient_light_aabbccdd-1122-3344-5566-778899001122',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_ambient_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Ambient light',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_ambient_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_bosch_cloud_maintenance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'active',
+        'scheduled',
+        'past',
+        'recent',
+        'unknown',
+        'idle',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_bosch_cloud_maintenance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bosch cloud maintenance',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Bosch cloud maintenance',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cloud_maintenance',
+    'unique_id': 'bosch_shc_camera_cloud_maintenance',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_bosch_cloud_maintenance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Bosch cloud maintenance',
+      'last_fetched_seconds_ago': 0,
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'active',
+        'scheduled',
+        'past',
+        'recent',
+        'unknown',
+        'idle',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_bosch_cloud_maintenance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_bosch_terrasse_audio_events_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_terrasse_bosch_terrasse_audio_events_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bosch Terrasse Audio Events Today',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bosch Terrasse Audio Events Today',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_events_today',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_audio_events_today',
+    'unit_of_measurement': 'events',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_bosch_terrasse_audio_events_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Bosch Terrasse Audio Events Today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'events',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_bosch_terrasse_audio_events_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_bosch_terrasse_last_event_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'movement',
+        'person',
+        'audio_alarm',
+        'trouble',
+        'trouble_disconnect',
+        'trouble_reconnect',
+        'trouble_connect',
+        'none',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_terrasse_bosch_terrasse_last_event_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bosch Terrasse Last Event Type',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Bosch Terrasse Last Event Type',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_event_type',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_last_event_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_bosch_terrasse_last_event_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Bosch Terrasse Last Event Type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'movement',
+        'person',
+        'audio_alarm',
+        'trouble',
+        'trouble_disconnect',
+        'trouble_reconnect',
+        'trouble_connect',
+        'none',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_bosch_terrasse_last_event_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_bosch_terrasse_motion_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_bosch_terrasse_motion_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bosch Terrasse Motion Sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bosch Terrasse Motion Sensitivity',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion_sensitivity',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_motion_sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_bosch_terrasse_motion_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Bosch Terrasse Motion Sensitivity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_bosch_terrasse_motion_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_bosch_terrasse_movement_events_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_terrasse_bosch_terrasse_movement_events_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bosch Terrasse Movement Events Today',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bosch Terrasse Movement Events Today',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'movement_events_today',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_movement_events_today',
+    'unit_of_measurement': 'events',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_bosch_terrasse_movement_events_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Bosch Terrasse Movement Events Today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'events',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_bosch_terrasse_movement_events_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_clock_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_clock_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Clock offset',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clock offset',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'clock_offset',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_clock_offset',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_clock_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Clock offset',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_clock_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_cloud_feature_flags-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_cloud_feature_flags',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cloud feature flags',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cloud feature flags',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cloud_feature_flags',
+    'unique_id': 'bosch_shc_camera_cloud_feature_flags',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_cloud_feature_flags-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Cloud feature flags',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_cloud_feature_flags',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_commissioned-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'commissioned',
+        'not_commissioned',
+        'not_connected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_commissioned',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Commissioned',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Commissioned',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'commissioned',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_commissioned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_commissioned-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Commissioned',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'commissioned',
+        'not_commissioned',
+        'not_connected',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_commissioned',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_events_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_terrasse_events_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Events today',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Events today',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'events_today',
+    'unique_id': 'bosch_shc_events_today_aabbccdd-1122-3344-5566-778899001122',
+    'unit_of_measurement': 'events',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_events_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'events_in_feed': 0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Events today',
+      'latest_timestamps': list([
+      ]),
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'events',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_events_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_fcm_push_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'fcm_push',
+        'polling',
+        'disabled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_fcm_push_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'FCM push status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'FCM push status',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'push_status',
+    'unique_id': 'bosch_shc_camera_fcm_push_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_fcm_push_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      'fcm_enabled': False,
+      'fcm_healthy': False,
+      'fcm_push_mode': 'unknown',
+      'fcm_push_mode_config': 'auto',
+      'fcm_running': False,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer FCM push status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'fcm_push',
+        'polling',
+        'disabled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_fcm_push_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_firmware_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_firmware_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Firmware version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Firmware version',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firmware_version',
+    'unique_id': 'bosch_shc_firmware_aabbccdd-1122-3344-5566-778899001122',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_firmware_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Firmware version',
+      'hardware_version': 'CAMERA_EYES',
+      'up_to_date': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_firmware_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9.40.104',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_frigate_rtsp_url_high-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_frigate_rtsp_url_high',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Frigate RTSP URL (high)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:cctv',
+    'original_name': 'Frigate RTSP URL (high)',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'frigate_url_high',
+    'unique_id': 'bosch_shc_frigate_url_high_aabbccdd-1122-3344-5566-778899001122',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_frigate_rtsp_url_high-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Frigate RTSP URL (high)',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cctv',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_frigate_rtsp_url_high',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_frigate_rtsp_url_low-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_frigate_rtsp_url_low',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Frigate RTSP URL (low)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:cctv',
+    'original_name': 'Frigate RTSP URL (low)',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'frigate_url_low',
+    'unique_id': 'bosch_shc_frigate_url_low_aabbccdd-1122-3344-5566-778899001122',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_frigate_rtsp_url_low-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Frigate RTSP URL (low)',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cctv',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_frigate_rtsp_url_low',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_iva_analytics-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_iva_analytics',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'IVA analytics',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IVA analytics',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'iva_analytics',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_iva_catalog',
+    'unit_of_measurement': 'modules',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_iva_analytics-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer IVA analytics',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'modules',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_iva_analytics',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_last_event-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_terrasse_last_event',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last event',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last event',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_event',
+    'unique_id': 'bosch_shc_last_event_aabbccdd-1122-3344-5566-778899001122',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_last_event-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'clip_status': '',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      'event_id': '',
+      'event_type': '',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Last event',
+      'has_clip': False,
+      'has_image': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_last_event',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_led_dimmer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_terrasse_led_dimmer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'LED dimmer',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'LED dimmer',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'led_dimmer',
+    'unique_id': 'bosch_shc_led_dimmer_aabbccdd-1122-3344-5566-778899001122',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_led_dimmer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer LED dimmer',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_led_dimmer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_mini_nvr_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'idle',
+        'recording',
+        'error',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_terrasse_mini_nvr_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mini-NVR state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Mini-NVR state',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'nvr_state',
+    'unique_id': 'bosch_shc_nvr_state_aabbccdd-1122-3344-5566-778899001122',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_mini_nvr_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      'error': '',
+      'failed_uploads': 0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Mini-NVR state',
+      'last_segment_age_s': None,
+      'last_tick_ts': None,
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'idle',
+        'recording',
+        'error',
+      ]),
+      'pending_uploads': 0,
+      'preroll_running': False,
+      'preroll_segments': 0,
+      'target': 'local',
+      'user_intent': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_mini_nvr_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_motion_zones-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_motion_zones',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motion zones',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motion zones',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion_zones',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_motion_zones',
+    'unit_of_measurement': 'zones',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_motion_zones-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Motion zones',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'zones',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_motion_zones',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_network_services-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_network_services',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network services',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Network services',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_services',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_network_services',
+    'unit_of_measurement': 'services',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_network_services-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Network services',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'services',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_network_services',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_onvif_scopes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'supported',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_onvif_scopes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ONVIF scopes',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'ONVIF scopes',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'onvif_scopes',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_onvif_scopes',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_onvif_scopes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer ONVIF scopes',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'supported',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_onvif_scopes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_privacy_masks-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_privacy_masks',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Privacy masks',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Privacy masks',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'privacy_masks',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_privacy_masks',
+    'unit_of_measurement': 'masks',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_privacy_masks-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Privacy masks',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'masks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_privacy_masks',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_rcp_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_rcp_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'RCP version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'RCP version',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rcp_version',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_rcp_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_rcp_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer RCP version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_rcp_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_schedule_rules-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_schedule_rules',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Schedule rules',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Schedule rules',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'schedule_rules',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_rules_count',
+    'unit_of_measurement': 'rules',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_schedule_rules-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Schedule rules',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'rules',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_schedule_rules',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'online',
+        'offline',
+        'updating',
+        'session_limit',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_terrasse_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'status',
+    'unique_id': 'bosch_shc_status_aabbccdd-1122-3344-5566-778899001122',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'camera_id': 'aabbccdd-1122-3344-5566-778899001122',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      'firmware': '9.40.104',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Status',
+      'mac': 'aa:bb:cc:dd:ee:ff',
+      'model': 'CAMERA_EYES',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'online',
+        'offline',
+        'updating',
+        'session_limit',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'online',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_stream_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'idle',
+        'warming_up',
+        'connecting',
+        'streaming',
+        'streaming_remote',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_stream_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stream status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Stream status',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stream_status',
+    'unique_id': 'bosch_shc_stream_status_aabbccdd-1122-3344-5566-778899001122',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_stream_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': '',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      'fell_back': False,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Stream status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'idle',
+        'warming_up',
+        'connecting',
+        'streaming',
+        'streaming_remote',
+      ]),
+      'stream_errors': 0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_stream_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_stream_url_main-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_stream_url_main',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stream URL (main)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:link-variant',
+    'original_name': 'Stream URL (main)',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stream_url',
+    'unique_id': 'bosch_shc_stream_url_aabbccdd-1122-3344-5566-778899001122',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_stream_url_main-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Stream URL (main)',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:link-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_stream_url_main',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_stream_url_sub-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_stream_url_sub',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stream URL (sub)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:link-variant',
+    'original_name': 'Stream URL (sub)',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stream_url_sub',
+    'unique_id': 'bosch_shc_stream_url_sub_aabbccdd-1122-3344-5566-778899001122',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_stream_url_sub-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Stream URL (sub)',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:link-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_stream_url_sub',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_tls_certificate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_tls_certificate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TLS certificate',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'TLS certificate',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tls_cert',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_tls_cert',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_tls_certificate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer TLS certificate',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_tls_certificate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_unread_events-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_terrasse_unread_events',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Unread events',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Unread events',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'unread_events',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_unread_events',
+    'unit_of_measurement': 'events',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_unread_events-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Unread events',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'events',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_unread_events',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_wifi_signal-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_terrasse_wifi_signal',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'WiFi signal',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'WiFi signal',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_signal',
+    'unique_id': 'bosch_shc_wifi_signal_aabbccdd-1122-3344-5566-778899001122',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_terrasse_wifi_signal-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer WiFi signal',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_terrasse_wifi_signal',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_ai_snapshot_description-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_wohnzimmer_ai_snapshot_description',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'AI snapshot description',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'AI snapshot description',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ai_description',
+    'unique_id': 'bosch_shc_ai_description_aabbccdd-1122-3344-5566-778899003344',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_ai_snapshot_description-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'ai_task_entity': None,
+      'description': None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer AI snapshot description',
+      'generated_at': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_ai_snapshot_description',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_alarm_catalog-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_alarm_catalog',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Alarm catalog',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarm catalog',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_catalog',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_alarm_catalog',
+    'unit_of_measurement': 'types',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_alarm_catalog-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Alarm catalog',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'types',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_alarm_catalog',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_alarm_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'active',
+        'inactive',
+        'unknown',
+        'system_managed_armed',
+        'system_managed_disarmed',
+        'armed_away',
+        'armed_stay',
+        'disarmed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_wohnzimmer_alarm_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Alarm state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Alarm state',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_state',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_alarm_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_alarm_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'activation_delay_s': None,
+      'alarm_mode': None,
+      'alarm_type': None,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Alarm state',
+      'intrusion_system': None,
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'active',
+        'inactive',
+        'unknown',
+        'system_managed_armed',
+        'system_managed_disarmed',
+        'armed_away',
+        'armed_stay',
+        'disarmed',
+      ]),
+      'pre_alarm_duration_s': None,
+      'pre_alarm_mode': None,
+      'siren_duration_s': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_alarm_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_ambient_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_wohnzimmer_ambient_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ambient light',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ambient light',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ambient_light',
+    'unique_id': 'bosch_shc_ambient_light_aabbccdd-1122-3344-5566-778899003344',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_ambient_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Ambient light',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_ambient_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_bosch_wohnzimmer_audio_events_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_wohnzimmer_bosch_wohnzimmer_audio_events_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bosch Wohnzimmer Audio Events Today',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bosch Wohnzimmer Audio Events Today',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_events_today',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_audio_events_today',
+    'unit_of_measurement': 'events',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_bosch_wohnzimmer_audio_events_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Bosch Wohnzimmer Audio Events Today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'events',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_bosch_wohnzimmer_audio_events_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_bosch_wohnzimmer_last_event_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'movement',
+        'person',
+        'audio_alarm',
+        'trouble',
+        'trouble_disconnect',
+        'trouble_reconnect',
+        'trouble_connect',
+        'none',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_wohnzimmer_bosch_wohnzimmer_last_event_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bosch Wohnzimmer Last Event Type',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Bosch Wohnzimmer Last Event Type',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_event_type',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_last_event_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_bosch_wohnzimmer_last_event_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Bosch Wohnzimmer Last Event Type',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'movement',
+        'person',
+        'audio_alarm',
+        'trouble',
+        'trouble_disconnect',
+        'trouble_reconnect',
+        'trouble_connect',
+        'none',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_bosch_wohnzimmer_last_event_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_bosch_wohnzimmer_motion_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_bosch_wohnzimmer_motion_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bosch Wohnzimmer Motion Sensitivity',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bosch Wohnzimmer Motion Sensitivity',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion_sensitivity',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_motion_sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_bosch_wohnzimmer_motion_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Bosch Wohnzimmer Motion Sensitivity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_bosch_wohnzimmer_motion_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_bosch_wohnzimmer_movement_events_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_wohnzimmer_bosch_wohnzimmer_movement_events_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Bosch Wohnzimmer Movement Events Today',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bosch Wohnzimmer Movement Events Today',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'movement_events_today',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_movement_events_today',
+    'unit_of_measurement': 'events',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_bosch_wohnzimmer_movement_events_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Bosch Wohnzimmer Movement Events Today',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'events',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_bosch_wohnzimmer_movement_events_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_clock_offset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_clock_offset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Clock offset',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clock offset',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'clock_offset',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_clock_offset',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_clock_offset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Clock offset',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_clock_offset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_commissioned-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'commissioned',
+        'not_commissioned',
+        'not_connected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_commissioned',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Commissioned',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Commissioned',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'commissioned',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_commissioned',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_commissioned-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Commissioned',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'commissioned',
+        'not_commissioned',
+        'not_connected',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_commissioned',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_events_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_wohnzimmer_events_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Events today',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Events today',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'events_today',
+    'unique_id': 'bosch_shc_events_today_aabbccdd-1122-3344-5566-778899003344',
+    'unit_of_measurement': 'events',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_events_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'events_in_feed': 0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Events today',
+      'latest_timestamps': list([
+      ]),
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'events',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_events_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_firmware_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_firmware_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Firmware version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Firmware version',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'firmware_version',
+    'unique_id': 'bosch_shc_firmware_aabbccdd-1122-3344-5566-778899003344',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_firmware_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Firmware version',
+      'hardware_version': 'HOME_Eyes_Indoor',
+      'up_to_date': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_firmware_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9.40.104',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_frigate_rtsp_url_high-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_frigate_rtsp_url_high',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Frigate RTSP URL (high)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:cctv',
+    'original_name': 'Frigate RTSP URL (high)',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'frigate_url_high',
+    'unique_id': 'bosch_shc_frigate_url_high_aabbccdd-1122-3344-5566-778899003344',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_frigate_rtsp_url_high-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Frigate RTSP URL (high)',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cctv',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_frigate_rtsp_url_high',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_frigate_rtsp_url_low-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_frigate_rtsp_url_low',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Frigate RTSP URL (low)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:cctv',
+    'original_name': 'Frigate RTSP URL (low)',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'frigate_url_low',
+    'unique_id': 'bosch_shc_frigate_url_low_aabbccdd-1122-3344-5566-778899003344',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_frigate_rtsp_url_low-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Frigate RTSP URL (low)',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cctv',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_frigate_rtsp_url_low',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_iva_analytics-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_iva_analytics',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'IVA analytics',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IVA analytics',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'iva_analytics',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_iva_catalog',
+    'unit_of_measurement': 'modules',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_iva_analytics-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer IVA analytics',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'modules',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_iva_analytics',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_last_event-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_wohnzimmer_last_event',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Last event',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last event',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_event',
+    'unique_id': 'bosch_shc_last_event_aabbccdd-1122-3344-5566-778899003344',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_last_event-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'clip_status': '',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      'event_id': '',
+      'event_type': '',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Last event',
+      'has_clip': False,
+      'has_image': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_last_event',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_mini_nvr_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'idle',
+        'recording',
+        'error',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_wohnzimmer_mini_nvr_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mini-NVR state',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Mini-NVR state',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'nvr_state',
+    'unique_id': 'bosch_shc_nvr_state_aabbccdd-1122-3344-5566-778899003344',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_mini_nvr_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      'error': '',
+      'failed_uploads': 0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Mini-NVR state',
+      'last_segment_age_s': None,
+      'last_tick_ts': None,
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'idle',
+        'recording',
+        'error',
+      ]),
+      'pending_uploads': 0,
+      'preroll_running': False,
+      'preroll_segments': 0,
+      'target': 'local',
+      'user_intent': False,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_mini_nvr_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_motion_zones-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_motion_zones',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motion zones',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motion zones',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion_zones',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_motion_zones',
+    'unit_of_measurement': 'zones',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_motion_zones-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Motion zones',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'zones',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_motion_zones',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_network_services-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_network_services',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Network services',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Network services',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_services',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_network_services',
+    'unit_of_measurement': 'services',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_network_services-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Network services',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'services',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_network_services',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_onvif_scopes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'supported',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_onvif_scopes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'ONVIF scopes',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'ONVIF scopes',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'onvif_scopes',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_onvif_scopes',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_onvif_scopes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer ONVIF scopes',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'supported',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_onvif_scopes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_privacy_masks-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_privacy_masks',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Privacy masks',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Privacy masks',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'privacy_masks',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_privacy_masks',
+    'unit_of_measurement': 'masks',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_privacy_masks-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Privacy masks',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'masks',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_privacy_masks',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_rcp_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_rcp_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'RCP version',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'RCP version',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rcp_version',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_rcp_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_rcp_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer RCP version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_rcp_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_schedule_rules-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_schedule_rules',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Schedule rules',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Schedule rules',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'schedule_rules',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_rules_count',
+    'unit_of_measurement': 'rules',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_schedule_rules-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Schedule rules',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'rules',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_schedule_rules',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'online',
+        'offline',
+        'updating',
+        'session_limit',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_wohnzimmer_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'status',
+    'unique_id': 'bosch_shc_status_aabbccdd-1122-3344-5566-778899003344',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'camera_id': 'aabbccdd-1122-3344-5566-778899003344',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      'firmware': '9.40.104',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Status',
+      'mac': 'aa:bb:cc:dd:ee:ff',
+      'model': 'HOME_Eyes_Indoor',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'online',
+        'offline',
+        'updating',
+        'session_limit',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'online',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_stream_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'idle',
+        'warming_up',
+        'connecting',
+        'streaming',
+        'streaming_remote',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_stream_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stream status',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Stream status',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stream_status',
+    'unique_id': 'bosch_shc_stream_status_aabbccdd-1122-3344-5566-778899003344',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_stream_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'connection_type': '',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      'fell_back': False,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Stream status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'idle',
+        'warming_up',
+        'connecting',
+        'streaming',
+        'streaming_remote',
+      ]),
+      'stream_errors': 0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_stream_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_stream_url_main-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_stream_url_main',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stream URL (main)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:link-variant',
+    'original_name': 'Stream URL (main)',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stream_url',
+    'unique_id': 'bosch_shc_stream_url_aabbccdd-1122-3344-5566-778899003344',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_stream_url_main-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Stream URL (main)',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:link-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_stream_url_main',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_stream_url_sub-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_stream_url_sub',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Stream URL (sub)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:link-variant',
+    'original_name': 'Stream URL (sub)',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'stream_url_sub',
+    'unique_id': 'bosch_shc_stream_url_sub_aabbccdd-1122-3344-5566-778899003344',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_stream_url_sub-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Stream URL (sub)',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:link-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_stream_url_sub',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_tls_certificate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_tls_certificate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'TLS certificate',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'TLS certificate',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tls_cert',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_tls_cert',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_tls_certificate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer TLS certificate',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_tls_certificate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_unread_events-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bosch_wohnzimmer_unread_events',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Unread events',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Unread events',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'unread_events',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899003344_unread_events',
+    'unit_of_measurement': 'events',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_unread_events-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer Unread events',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'events',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_unread_events',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_wifi_signal-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bosch_wohnzimmer_wifi_signal',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'WiFi signal',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'WiFi signal',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wifi_signal',
+    'unique_id': 'bosch_shc_wifi_signal_aabbccdd-1122-3344-5566-778899003344',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.bosch_wohnzimmer_wifi_signal-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Wohnzimmer WiFi signal',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bosch_wohnzimmer_wifi_signal',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---

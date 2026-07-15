@@ -1,0 +1,206 @@
+# serializer version: 1
+# name: test_all_entities[binary_sensor.bosch_terrasse_audio_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.bosch_terrasse_audio_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Audio alarm',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SOUND: 'sound'>,
+    'original_icon': None,
+    'original_name': 'Audio alarm',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'audio_alarm_binary',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_audio_alarm_binary',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.bosch_terrasse_audio_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sound',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Audio alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bosch_terrasse_audio_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.bosch_terrasse_lan_reachable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.bosch_terrasse_lan_reachable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'LAN reachable',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'LAN reachable',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'lan_reachable',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_lan_reachable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.bosch_terrasse_lan_reachable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'camera_id': 'aabbccdd-1122-3344-5566-778899001122',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse LAN reachable',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bosch_terrasse_lan_reachable',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[binary_sensor.bosch_terrasse_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.bosch_terrasse_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motion',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Motion',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion',
+    'unique_id': 'bosch_shc_camera_aabbccdd-1122-3344-5566-778899001122_motion_binary',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.bosch_terrasse_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bosch_terrasse_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.bosch_terrasse_person_detected-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.bosch_terrasse_person_detected',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Person detected',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
+    'original_icon': None,
+    'original_name': 'Person detected',
+    'platform': 'bosch_shc_camera',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'person_detected',
+    'unique_id': 'bosch_shc_cam_aabbccdd-1122-3344-5566-778899001122_person_detected',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.bosch_terrasse_person_detected-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'occupancy',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bosch Terrasse Person detected',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bosch_terrasse_person_detected',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
