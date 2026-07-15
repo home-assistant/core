@@ -1,7 +1,8 @@
 """Tests for the Mitsubishi Comfort repairs flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from mitsubishi_comfort import DeviceInfo
 import pytest
 
 from homeassistant.components.mitsubishi_comfort.const import CONF_ADDRESSES, DOMAIN
@@ -140,6 +141,58 @@ async def test_fix_flow_suggests_cached_ip(
 
     assert data["step_id"] == "addresses"
     assert data["data_schema"][0]["description"] == {"suggested_value": "10.0.0.5"}
+
+
+@pytest.mark.parametrize("ignore_missing_translations", [IGNORE_FORM_TRANSLATIONS])
+async def test_fix_flow_keeps_address_discovered_during_probe(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_setup_integration: tuple[AsyncMock, MagicMock],
+    mock_device_info: DeviceInfo,
+) -> None:
+    """Test an address stored by DHCP during the probe await is not erased."""
+    second = DeviceInfo(
+        serial="SERIAL002",
+        label="Bedroom",
+        address="",
+        mac="11:22:33:44:55:66",
+        unit_type="ductless",
+        password="dGVzdHBhc3M=",
+        crypto_serial="0102030405060708090a",
+    )
+    mock_account, _ = mock_setup_integration
+    mock_account.discover_devices.return_value = {
+        "SERIAL001": mock_device_info,
+        "SERIAL002": second,
+    }
+    entry = await _setup_addressless_entry(hass)
+    second_mac = dr.format_mac(second.mac)
+
+    async def _probe_with_concurrent_discovery(*args: object) -> dict[str, str]:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, CONF_ADDRESSES: {second_mac: "192.168.1.60"}},
+        )
+        return {MOCK_SERIAL: "192.168.1.50"}
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(
+        client, DOMAIN, f"missing_address_{entry.entry_id}"
+    )
+    with patch(
+        "homeassistant.components.mitsubishi_comfort.repairs.probe_candidate_ips",
+        side_effect=_probe_with_concurrent_discovery,
+    ):
+        data = await process_repair_fix_flow(
+            client, data["flow_id"], json={dr.format_mac(MOCK_MAC): "192.168.1.50"}
+        )
+    assert data["type"] == "create_entry"
+    await hass.async_block_till_done()
+
+    assert entry.data[CONF_ADDRESSES] == {
+        second_mac: "192.168.1.60",
+        dr.format_mac(MOCK_MAC): "192.168.1.50",
+    }
 
 
 @pytest.mark.parametrize("ignore_missing_translations", [IGNORE_FORM_TRANSLATIONS])

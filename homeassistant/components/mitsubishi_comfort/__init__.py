@@ -63,9 +63,9 @@ async def async_setup_entry(
     )
 
     # Replay cached per-device credentials so discover_devices() can skip the
-    # slow, rate-limited Socket.IO password fetch (and the status calls). The
-    # config flow seeds these; without them a second Socket.IO call right after
-    # the flow's own is throttled to empty, leaving devices unconfigurable.
+    # slow, rate-limited Socket.IO password fetch. The config flow seeds
+    # these; without them a second Socket.IO call right after the flow's own
+    # is throttled to empty, leaving devices unconfigurable.
     cached_credentials: dict[str, dict[str, str]] = entry.data.get(CONF_CREDENTIALS, {})
     try:
         await account.login()

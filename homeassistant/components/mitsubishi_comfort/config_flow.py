@@ -14,7 +14,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_ADDRESSES, CONF_CREDENTIALS, DOMAIN
-from .helpers import build_credentials
+from .helpers import build_credentials, is_fully_credentialed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,9 +72,10 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
                 credentials = build_credentials(devices)
                 if not devices:
                     errors["base"] = "no_devices"
-                elif not credentials:
-                    # Creating the entry now would just repeat the rate-limited
-                    # fetch and load zero devices without raising any repair.
+                elif not any(is_fully_credentialed(info) for info in devices.values()):
+                    # The cache may hold partial (MAC-less) records setup cannot
+                    # use; creating the entry with nothing settable-up would
+                    # load zero devices without raising any repair.
                     errors["base"] = "no_usable_devices"
                 else:
                     return self.async_create_entry(

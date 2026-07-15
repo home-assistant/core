@@ -147,6 +147,21 @@ async def test_user_step_skips_credential_less_devices(
             },
             "no_usable_devices",
         ),
+        (
+            None,
+            {
+                "SERIAL002": DeviceInfo(
+                    serial="SERIAL002",
+                    label="Bedroom",
+                    address="",
+                    mac="",
+                    unit_type="ductless",
+                    password="dGVzdHBhc3M=",
+                    crypto_serial="0102030405060708090a",
+                )
+            },
+            "no_usable_devices",
+        ),
     ],
     ids=[
         "invalid_auth",
@@ -154,6 +169,7 @@ async def test_user_step_skips_credential_less_devices(
         "unknown_error",
         "no_devices",
         "no_usable_devices",
+        "no_usable_devices_mac_less",
     ],
 )
 async def test_user_step_errors(

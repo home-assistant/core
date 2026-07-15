@@ -126,9 +126,12 @@ class MissingAddressRepairFlow(RepairsFlow):
                 if not all(reachable):
                     errors["base"] = "cannot_connect"
             if not errors:
+                # Re-read the cache: DHCP discovery may have stored another
+                # device's address while the probes above were awaited.
+                current: dict[str, str] = self.entry.data.get(CONF_ADDRESSES, {})
                 self.hass.config_entries.async_update_entry(
                     self.entry,
-                    data={**self.entry.data, CONF_ADDRESSES: {**stored, **entered}},
+                    data={**self.entry.data, CONF_ADDRESSES: {**current, **entered}},
                 )
                 # The repairs framework deletes the issue after this step
                 # returns; run the reload non-eagerly so it happens after that
