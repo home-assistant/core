@@ -41,41 +41,53 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     """Set up Control4 from a config entry."""
     runtime_data = await refresh_tokens(hass, entry)
 
-    controller_unique_id = entry.data[CONF_CONTROLLER_UNIQUE_ID]
-
     try:
-        controller_href = (await runtime_data.account.get_account_controllers())["href"]
-        director_sw_version = await runtime_data.account.get_controller_os_version(
-            controller_href
-        )
-    except (TimeoutError, client_exceptions.ClientError) as err:
-        raise ConfigEntryNotReady(err) from err
+        controller_unique_id = entry.data[CONF_CONTROLLER_UNIQUE_ID]
 
-    _, model, mac_address = controller_unique_id.split("_", 3)
-    director_model = model.upper()
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, controller_unique_id)},
-        connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
-        manufacturer="Control4",
-        name=controller_unique_id,
-        model=director_model,
-        sw_version=director_sw_version,
-    )
-
-    try:
-        director_all_items = await runtime_data.director.get_all_item_info()
-    except (TimeoutError, client_exceptions.ClientError) as err:
-        raise ConfigEntryNotReady(err) from err
-
-    # Control4 OS 2 controllers do not support the UI configuration endpoint.
-    ui_configuration = None
-    if int(director_sw_version.split(".")[0]) >= 3:
         try:
-            ui_configuration = await runtime_data.director.get_ui_configuration()
+            controller_href = (await runtime_data.account.get_account_controllers())[
+                "href"
+            ]
+            director_sw_version = await runtime_data.account.get_controller_os_version(
+                controller_href
+            )
         except (TimeoutError, client_exceptions.ClientError) as err:
             raise ConfigEntryNotReady(err) from err
+
+        _, model, mac_address = controller_unique_id.split("_", 3)
+        director_model = model.upper()
+        device_registry = dr.async_get(hass)
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, controller_unique_id)},
+            connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
+            manufacturer="Control4",
+            name=controller_unique_id,
+            model=director_model,
+            sw_version=director_sw_version,
+        )
+
+        try:
+            director_all_items = await runtime_data.director.get_all_item_info()
+        except (TimeoutError, client_exceptions.ClientError) as err:
+            raise ConfigEntryNotReady(err) from err
+
+        # Control4 OS 2 controllers do not support the UI configuration endpoint.
+        ui_configuration = None
+        if int(director_sw_version.split(".")[0]) >= 3:
+            try:
+                ui_configuration = await runtime_data.director.get_ui_configuration()
+            except (TimeoutError, client_exceptions.ClientError) as err:
+                raise ConfigEntryNotReady(err) from err
+    except BaseException:
+        # refresh_tokens() already connected the WebSocket and scheduled a
+        # refresh timer; async_unload_entry never runs for an entry that fails
+        # setup, so both have to be torn down here or they'd keep running
+        # orphaned while HA retries (or gives up retrying) this entry.
+        await runtime_data.websocket.sio_disconnect()
+        if runtime_data.cancel_token_refresh_callback is not None:
+            runtime_data.cancel_token_refresh_callback()
+        raise
 
     # All pieces gathered - fill in the rest of runtime_data now that we have them.
     runtime_data.controller_unique_id = controller_unique_id
@@ -150,10 +162,18 @@ async def refresh_tokens(
     # On the very first call (initial setup), there's no runtime_data yet and a
     # new WebSocket has to be created. On later calls (the scheduled refresh),
     # runtime_data already exists and its WebSocket connection is reused as-is,
-    # only the account/director tokens and refresh timer get replaced.
+    # only the account/director tokens and refresh timer get replaced. The fresh
+    # account/director must be in place on runtime_data *before* sio_connect() is
+    # called: it can invoke the reconnect callback synchronously before returning,
+    # and that callback reads entry.runtime_data.director expecting it to already
+    # be current (this matters for BadToken-triggered reconnects in particular).
     if hasattr(entry, "runtime_data"):
         runtime_data = entry.runtime_data
         websocket = runtime_data.websocket
+        if runtime_data.cancel_token_refresh_callback is not None:
+            runtime_data.cancel_token_refresh_callback()
+        runtime_data.account = account
+        runtime_data.director = director
     else:
         connection_tracker = C4WebsocketConnectionTracker(hass, entry)
         websocket = C4Websocket(
@@ -162,23 +182,15 @@ async def refresh_tokens(
             connection_tracker.connect_callback,
             connection_tracker.disconnect_callback,
         )
-        runtime_data = None
+        runtime_data = Control4RuntimeData(
+            account=account, director=director, websocket=websocket
+        )
+        entry.runtime_data = runtime_data
 
     try:
         await websocket.sio_connect(director.director_bearer_token)
     except Exception as err:
         raise ConfigEntryNotReady(err) from err
-
-    if runtime_data is None:
-        runtime_data = Control4RuntimeData(
-            account=account, director=director, websocket=websocket
-        )
-        entry.runtime_data = runtime_data
-    else:
-        if runtime_data.cancel_token_refresh_callback is not None:
-            runtime_data.cancel_token_refresh_callback()
-        runtime_data.account = account
-        runtime_data.director = director
 
     delay = max(
         director_token_dict["validSeconds"] - SCHEDULE_REFRESH_ADVANCE_SEC,

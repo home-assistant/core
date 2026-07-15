@@ -2,13 +2,13 @@
 
 from collections.abc import AsyncGenerator, Generator
 import json
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from homeassistant.components.control4.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -180,17 +180,17 @@ def mock_climate_variables() -> dict:
 @pytest.fixture
 def mock_climate_update_variables(
     mock_climate_variables: dict,
-) -> Generator[AsyncMock]:
-    """Mock director_get_entry_variables for climate platform."""
+    mock_c4_director: MagicMock,
+) -> None:
+    """Mock the Director API so tests exercise the real Undefined normalization and BadToken retry."""
 
-    async def _mock_get_entry_variables(hass: HomeAssistant | None, entry, item_id):
-        return mock_climate_variables.get(item_id)
+    async def _mock_get_item_variables(item_id: int) -> list[dict[str, Any]]:
+        item_data = mock_climate_variables.get(item_id, {})
+        return [{"varName": name, "value": value} for name, value in item_data.items()]
 
-    with patch(
-        "homeassistant.components.control4.climate.director_get_entry_variables",
-        new=_mock_get_entry_variables,
-    ) as mock_update:
-        yield mock_update
+    mock_c4_director.get_item_variables = AsyncMock(
+        side_effect=_mock_get_item_variables
+    )
 
 
 @pytest.fixture
