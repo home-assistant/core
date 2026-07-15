@@ -1711,6 +1711,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/solarman/ @solarmanpv
 /homeassistant/components/solax/ @squishykid @Darsstar
 /tests/components/solax/ @squishykid @Darsstar
+/homeassistant/components/solyx_energy/ @MartinaeyNL
+/tests/components/solyx_energy/ @MartinaeyNL
 /homeassistant/components/soma/ @ratsept
 /tests/components/soma/ @ratsept
 /homeassistant/components/sonarr/ @ctalkington

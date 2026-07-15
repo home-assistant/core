@@ -1,0 +1,9 @@
+{
+  "attributes": {
+    "powerBoiler": { "value": 1234.0 },
+    "energyBoiler": { "value": 5678.0 },
+    "operatingMode": { "value": "DIRECT" },
+    "gridPower": { "value": -100.0 },
+    "controlValue": { "value": 60.0 }
+  }
+}
