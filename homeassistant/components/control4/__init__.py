@@ -39,47 +39,50 @@ PLATFORMS = [Platform.CLIMATE, Platform.COVER, Platform.LIGHT, Platform.MEDIA_PL
 
 async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
     """Set up Control4 from a config entry."""
-    await refresh_tokens(hass, entry)
-    runtime_data = entry.runtime_data
+    runtime_data = await refresh_tokens(hass, entry)
 
-    runtime_data.controller_unique_id = entry.data[CONF_CONTROLLER_UNIQUE_ID]
+    controller_unique_id = entry.data[CONF_CONTROLLER_UNIQUE_ID]
 
     try:
         controller_href = (await runtime_data.account.get_account_controllers())["href"]
-        runtime_data.director_sw_version = (
-            await runtime_data.account.get_controller_os_version(controller_href)
+        director_sw_version = await runtime_data.account.get_controller_os_version(
+            controller_href
         )
     except (TimeoutError, client_exceptions.ClientError) as err:
         raise ConfigEntryNotReady(err) from err
 
-    _, model, mac_address = runtime_data.controller_unique_id.split("_", 3)
-    runtime_data.director_model = model.upper()
+    _, model, mac_address = controller_unique_id.split("_", 3)
+    director_model = model.upper()
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, runtime_data.controller_unique_id)},
+        identifiers={(DOMAIN, controller_unique_id)},
         connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
         manufacturer="Control4",
-        name=runtime_data.controller_unique_id,
-        model=runtime_data.director_model,
-        sw_version=runtime_data.director_sw_version,
+        name=controller_unique_id,
+        model=director_model,
+        sw_version=director_sw_version,
     )
 
     try:
-        runtime_data.director_all_items = (
-            await runtime_data.director.get_all_item_info()
-        )
+        director_all_items = await runtime_data.director.get_all_item_info()
     except (TimeoutError, client_exceptions.ClientError) as err:
         raise ConfigEntryNotReady(err) from err
 
     # Control4 OS 2 controllers do not support the UI configuration endpoint.
-    if int(runtime_data.director_sw_version.split(".")[0]) >= 3:
+    ui_configuration = None
+    if int(director_sw_version.split(".")[0]) >= 3:
         try:
-            runtime_data.ui_configuration = (
-                await runtime_data.director.get_ui_configuration()
-            )
+            ui_configuration = await runtime_data.director.get_ui_configuration()
         except (TimeoutError, client_exceptions.ClientError) as err:
             raise ConfigEntryNotReady(err) from err
+
+    # All pieces gathered - fill in the rest of runtime_data now that we have them.
+    runtime_data.controller_unique_id = controller_unique_id
+    runtime_data.director_sw_version = director_sw_version
+    runtime_data.director_model = director_model
+    runtime_data.director_all_items = director_all_items
+    runtime_data.ui_configuration = ui_configuration
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -116,7 +119,9 @@ async def get_items_of_category(
         return []
 
 
-async def refresh_tokens(hass: HomeAssistant, entry: Control4ConfigEntry) -> None:
+async def refresh_tokens(
+    hass: HomeAssistant, entry: Control4ConfigEntry
+) -> Control4RuntimeData:
     """Obtain fresh account + director tokens, start (or reuse) the WebSocket, and schedule the next refresh."""
     config = entry.data
     session = aiohttp_client.async_get_clientsession(hass)
@@ -183,6 +188,7 @@ async def refresh_tokens(hass: HomeAssistant, entry: Control4ConfigEntry) -> Non
     runtime_data.cancel_token_refresh_callback = async_call_later(
         hass=hass, delay=delay, action=obj.refresh_tokens
     )
+    return runtime_data
 
 
 class C4WebsocketConnectionTracker:
