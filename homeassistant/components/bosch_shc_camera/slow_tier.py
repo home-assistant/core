@@ -366,7 +366,7 @@ async def _poll_cam_control(
             )
 
 
-async def _poll_slow_tier_endpoints(
+async def _poll_slow_tier_endpoints(  # noqa: C901 -- linear per-endpoint dispatch over ~25 known slow-tier response types, splitting would scatter one coherent state machine
     coordinator: BoschCameraCoordinator,
     cam_id: str,
     cam_raw: dict[str, Any],

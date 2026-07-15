@@ -86,6 +86,7 @@ from .session_state import (
 )
 from .shc import SHCCoordinatorMixin
 from .slow_tier import (
+    CamContext,
     _compute_cam_context,
     _poll_cam_control,
     _poll_cam_info_caches,
@@ -1608,6 +1609,81 @@ class BoschCameraCoordinator(
             return (now - per_cam_last) >= self._OFFLINE_EXTENDED_INTERVAL
         return (now - per_cam_last) >= interval_status
 
+    async def _poll_rcp_slow_tier(
+        self, cam_id: str, ctx: CamContext, token: str
+    ) -> None:
+        """Fetch multiple RCP values via a cloud-proxy REMOTE connection (slow tier — every ~5 min).
+
+        Only when the camera is ONLINE and the slow-tier interval elapsed.
+        Skipped if a LOCAL stream is active — the RCP fetch opens a REMOTE
+        PUT /connection which would overwrite the LOCAL session and kill the
+        go2rtc stream. Skipped when Privacy is ON — the cloud proxy rejects
+        RCP session handshakes (invalid session 0x00000000) while privacy
+        blocks the camera's RCP endpoint (avoids noisy debug logs every 5 min).
+        """
+        is_online = ctx.is_online
+        do_slow_cam = ctx.do_slow_cam
+        local_stream_active = ctx.local_stream_active
+        privacy_on = ctx.privacy_on
+        if is_online and do_slow_cam and privacy_on:
+            _LOGGER.debug("RCP slow-tier skipped for %s (privacy ON)", cam_id)
+        if not (
+            is_online and do_slow_cam and not local_stream_active and not privacy_on
+        ):
+            return
+        # Local import (not top-level): keeps unittest.mock.patch(
+        # "custom_components.bosch_shc_camera.async_get_bosch_cloud_session",
+        # ...) working the same way it does for _async_update_data below.
+        from . import (  # noqa: PLC0415
+            async_get_bosch_cloud_session as async_get_bosch_cloud_session,
+        )
+
+        try:
+            # Pooled Bosch-cloud session (cloud_ssl.py) — this slow-tier RCP
+            # fetch used to open a fresh TCPConnector+ClientSession per camera
+            # on every tick (Work Package 1, stream-perf-stability-refactor).
+            # Must NOT be closed here: it's process-wide, shared with every
+            # other Bosch-cloud call, and closed exactly once on
+            # EVENT_HOMEASSISTANT_STOP.
+            rcp_session = await async_get_bosch_cloud_session(self.hass)
+            rcp_headers = {
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
+            try:
+                async with asyncio.timeout(TIMEOUT_PUT_CONNECTION):
+                    async with rcp_session.put(
+                        f"{CLOUD_API}/v11/video_inputs/{cam_id}/connection",
+                        json={
+                            "type": "REMOTE",
+                            "highQualityVideo": self.get_quality_params(cam_id)[0],
+                        },
+                        headers=rcp_headers,
+                    ) as conn_resp:
+                        if conn_resp.status in (200, 201):
+                            conn_data = await conn_resp.json(content_type=None)
+                            urls = conn_data.get("urls", [])
+                            if urls:
+                                # urls[0] = "proxy-NN.live.cbs.boschsecurity.com:42090/{hash}"
+                                parts = urls[0].split("/", 1)
+                                if len(parts) == 2:
+                                    proxy_host = parts[0]  # "proxy-NN:42090"
+                                    proxy_hash = parts[1]  # "{hash}"
+                                    await self._async_update_rcp_data(
+                                        cam_id, proxy_host, proxy_hash
+                                    )
+                        else:
+                            _LOGGER.debug(
+                                "RCP proxy connection HTTP %d for %s",
+                                conn_resp.status,
+                                cam_id,
+                            )
+            except (TimeoutError, aiohttp.ClientError) as err:
+                _LOGGER.debug("RCP proxy connect error for %s: %s", cam_id, err)
+        except Exception as err:  # noqa: BLE001 -- one camera's RCP update failure must not crash the whole coordinator tick
+            _LOGGER.debug("RCP update skipped for %s: %s", cam_id, err)
+
     # ── Main update ───────────────────────────────────────────────────────────
     @override
     async def _async_update_data(self) -> dict[str, Any]:
@@ -1773,85 +1849,7 @@ class BoschCameraCoordinator(
                     ),
                 )
 
-                # ── RCP data via cloud proxy (slow tier — every 5 min) ────────
-                # Opens a proxy connection and reads multiple RCP values.
-                # Only when camera is ONLINE and slow-tier interval elapsed.
-                # Skip RCP data fetch if a LOCAL stream is active — the RCP fetch
-                # opens a REMOTE PUT /connection which would overwrite the LOCAL
-                # session and kill the go2rtc stream.
-                # Skip when Privacy is ON — the cloud proxy rejects RCP session
-                # handshakes (invalid session 0x00000000) while privacy blocks the
-                # camera's RCP endpoint. Avoids noisy debug logs every 5 min.
-                local_stream_active = ctx.local_stream_active
-                privacy_on = ctx.privacy_on
-                if is_online and do_slow_cam and privacy_on:
-                    _LOGGER.debug(
-                        "RCP slow-tier skipped for %s (privacy ON)", cam_id_key
-                    )
-                if (
-                    is_online
-                    and do_slow_cam
-                    and not local_stream_active
-                    and not privacy_on
-                ):
-                    try:
-                        # Pooled Bosch-cloud session (cloud_ssl.py) — this
-                        # slow-tier RCP fetch used to open a fresh
-                        # TCPConnector+ClientSession per camera on every tick
-                        # (Work Package 1, stream-perf-stability-refactor).
-                        # Must NOT be closed here: it's process-wide, shared
-                        # with every other Bosch-cloud call, and closed
-                        # exactly once on EVENT_HOMEASSISTANT_STOP.
-                        rcp_session = await async_get_bosch_cloud_session(self.hass)
-                        rcp_headers = {
-                            "Authorization": f"Bearer {token}",
-                            "Content-Type": "application/json",
-                            "Accept": "application/json",
-                        }
-                        try:
-                            async with asyncio.timeout(TIMEOUT_PUT_CONNECTION):
-                                async with rcp_session.put(
-                                    f"{CLOUD_API}/v11/video_inputs/{cam_id_key}/connection",
-                                    json={
-                                        "type": "REMOTE",
-                                        "highQualityVideo": self.get_quality_params(
-                                            cam_id_key
-                                        )[0],
-                                    },
-                                    headers=rcp_headers,
-                                ) as conn_resp:
-                                    if conn_resp.status in (200, 201):
-                                        conn_data = await conn_resp.json(
-                                            content_type=None
-                                        )
-                                        urls = conn_data.get("urls", [])
-                                        if urls:
-                                            # urls[0] = "proxy-NN.live.cbs.boschsecurity.com:42090/{hash}"
-                                            parts = urls[0].split("/", 1)
-                                            if len(parts) == 2:
-                                                proxy_host = parts[
-                                                    0
-                                                ]  # "proxy-NN:42090"
-                                                proxy_hash = parts[1]  # "{hash}"
-                                                await self._async_update_rcp_data(
-                                                    cam_id_key,
-                                                    proxy_host,
-                                                    proxy_hash,
-                                                )
-                                    else:
-                                        _LOGGER.debug(
-                                            "RCP proxy connection HTTP %d for %s",
-                                            conn_resp.status,
-                                            cam_id_key,
-                                        )
-                        except (TimeoutError, aiohttp.ClientError) as err:
-                            _LOGGER.debug(
-                                "RCP proxy connect error for %s: %s",
-                                cam_id_key,
-                                err,
-                            )
-                    except Exception as err:  # noqa: BLE001 -- one camera's RCP update failure must not crash the whole coordinator tick
-                        _LOGGER.debug("RCP update skipped for %s: %s", cam_id_key, err)
+                await self._poll_rcp_slow_tier(cam_id_key, ctx, token)
 
                 # ── F4/F6 LAN diagnostic sensors (slow tier) ─────────────────
                 # Reads ONVIF scopes (0x0a98) and RCP version (0xff00) directly
@@ -4022,7 +4020,7 @@ class BoschCameraCoordinator(
                 "-inf"
             )  # force next _ensure_go2rtc_schemes_fresh past the 600s throttle
             await self._ensure_go2rtc_schemes_fresh()
-            cam_entity._invalidate_camera_capabilities_cache()
+            cam_entity._invalidate_camera_capabilities_cache()  # noqa: SLF001 -- HA-core's own Camera base class method
             caps2 = cam_entity.camera_capabilities
             if StreamType.WEB_RTC in caps2.frontend_stream_types:
                 _LOGGER.info(

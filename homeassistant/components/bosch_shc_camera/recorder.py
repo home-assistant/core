@@ -49,6 +49,18 @@ if TYPE_CHECKING:  # pragma: no cover — only for type hints
 
 _LOGGER = logging.getLogger(__name__)
 
+# Explicit `tuple[type[BaseException], ...]` annotation so mypy accepts these
+# as valid `except` tuples — a bare starred-unpack of `ftplib.all_errors`
+# directly inside an `except (...)` tuple display isn't recognized by mypy's
+# exception-tuple check (unlike the pre-existing `tuple + (...)` concatenation
+# pattern it replaced, RUF005 collection-literal-concatenation).
+_FTP_UPLOAD_ERRORS: tuple[type[BaseException], ...] = (OSError, *ftplib.all_errors)
+_FTP_MDTM_PARSE_ERRORS: tuple[type[BaseException], ...] = (
+    *ftplib.all_errors,
+    ValueError,
+    IndexError,
+)
+
 
 # Defaults — also exposed as config-flow options (`nvr_*`).
 DEFAULT_BASE_PATH = "/config/bosch_nvr"
@@ -388,10 +400,7 @@ async def _watch_preroll_recorder(
     when the process exits or is cancelled.
     """
     while True:
-        try:
-            await asyncio.sleep(_PREROLL_SEGMENT_SECONDS)
-        except asyncio.CancelledError:
-            raise
+        await asyncio.sleep(_PREROLL_SEGMENT_SECONDS)
         proc = coordinator.nvr_preroll_processes.get(cam_id)
         if proc is None or proc.returncode is not None:
             return
@@ -1184,8 +1193,15 @@ async def start_recorder(
     staging_cam = _staging_dir(base_path, cam_name)
     try:
         for day_offset in range(2):
+            # Deliberately the OS's local wall-clock date, not HA's configured
+            # timezone: ffmpeg's own `-strftime 1`/`-strftime_mkdir 1` names
+            # its date subdirectory via the system's local time too, and this
+            # loop must pre-create the exact directory ffmpeg will pick —
+            # dt_util.now() could disagree if HA's configured TZ ever differs
+            # from the host OS TZ.
             day = (
-                datetime.date.today() + datetime.timedelta(days=day_offset)
+                datetime.date.today()  # noqa: DTZ011
+                + datetime.timedelta(days=day_offset)
             ).strftime("%Y-%m-%d")
             await coordinator.hass.async_add_executor_job(
                 os.makedirs,
@@ -1702,7 +1718,7 @@ def _upload_ftp(
         try:
             with open(full, "rb") as src:
                 ftp.storbinary(f"STOR {dest}", src)
-        except (OSError,) + ftplib.all_errors as err:
+        except _FTP_UPLOAD_ERRORS as err:
             _LOGGER.warning(
                 "NVR drain (ftp): upload %s -> %s failed: %s", full, dest, err
             )
@@ -2112,9 +2128,8 @@ def _sync_nvr_cleanup_ftp(coordinator: BoschCameraCoordinator) -> None:
                     .replace(tzinfo=UTC)
                     .timestamp()
                 )
-            except ftplib.all_errors + (
-                ValueError,
-                IndexError,
+            except (
+                _FTP_MDTM_PARSE_ERRORS
             ):  # skip file if MDTM unavailable/unparseable, resilient walk
                 continue
             if mt < cutoff:

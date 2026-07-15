@@ -185,7 +185,7 @@ def _make_playlist_wrapper(orig_handle: Any) -> Any:
         response = await orig_handle(self, *args, **kwargs)
         return _wrap_playlist_response(response)
 
-    _wrapped._cf_wrapped = True  # type: ignore[attr-defined]
+    _wrapped._cf_wrapped = True  # type: ignore[attr-defined]  # noqa: SLF001 -- marker attribute on the wrapper closure itself, not the coordinator
     return _wrapped
 
 
@@ -208,7 +208,7 @@ def _make_segment_wrapper(orig_handle: Any) -> Any:
             _LOGGER.debug("CF unbuffer segment chunked emit failed: %s", exc)
             return response
 
-    _wrapped._cf_wrapped = True  # type: ignore[attr-defined]
+    _wrapped._cf_wrapped = True  # type: ignore[attr-defined]  # noqa: SLF001 -- marker attribute on the wrapper closure itself, not the coordinator
     return _wrapped
 
 

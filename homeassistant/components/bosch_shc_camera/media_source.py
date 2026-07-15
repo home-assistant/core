@@ -650,7 +650,9 @@ class _SmbBackend:
             self._close_session_cache(cache)
             raise
         else:
-            fobj._bosch_close_cache = lambda: self._close_session_cache(cache)
+            fobj._bosch_close_cache = lambda: self._close_session_cache(  # noqa: SLF001 -- marker attribute stashed on the smbclient file object, not the coordinator
+                cache
+            )
             return fobj, st.st_size
 
     # ── flat-file methods (files directly in camera/ folder on NAS) ──────────
@@ -724,7 +726,9 @@ class _SmbBackend:
             self._close_session_cache(cache)
             raise
         else:
-            fobj._bosch_close_cache = lambda: self._close_session_cache(cache)
+            fobj._bosch_close_cache = lambda: self._close_session_cache(  # noqa: SLF001 -- marker attribute stashed on the smbclient file object, not the coordinator
+                cache
+            )
             return fobj, st.st_size
 
 
@@ -903,6 +907,8 @@ def _node(
 
 
 class BoschCameraMediaSource(MediaSource):
+    """Browse recorded events, Mini-NVR segments, and SMB/FTP-stored clips for Bosch cameras."""
+
     name = "Bosch Camera"
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -1272,13 +1278,17 @@ class BoschCameraMediaSource(MediaSource):
         the cache is still closed at the end of this method — it never
         outlives a single browse step.
         """
-        session = backend._new_session_cache()
+        session = (
+            backend._new_session_cache()  # noqa: SLF001 -- _SmbBackend's own session-cache helper, not the coordinator
+        )
         try:
             return self._browse_smb_inner(
                 src, backend, rest, session, single_source=single_source, root=root
             )
         finally:
-            backend._close_session_cache(session)
+            backend._close_session_cache(  # noqa: SLF001 -- _SmbBackend's own session-cache helper, not the coordinator
+                session
+            )
 
     def _browse_smb_inner(
         self,

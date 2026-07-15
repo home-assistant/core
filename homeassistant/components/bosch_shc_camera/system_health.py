@@ -40,8 +40,7 @@ def _first_loaded_coordinator(hass: HomeAssistant) -> Any | None:
     entries = hass.config_entries.async_loaded_entries(DOMAIN)
     if not entries:
         return None
-    coord = getattr(entries[0], "runtime_data", None)
-    return coord
+    return getattr(entries[0], "runtime_data", None)
 
 
 def _format_ago(last_push: float) -> str:

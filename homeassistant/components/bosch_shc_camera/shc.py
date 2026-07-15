@@ -732,7 +732,7 @@ async def async_cloud_set_camera_light(
     return False
 
 
-async def async_cloud_set_light_component(
+async def async_cloud_set_light_component(  # noqa: C901 -- single per-component cloud-write path with a cache-then-cloud-then-LAN-RCP fallback ladder; splitting risks reordering the fallback tiers or the optimistic-cache/write-lock updates
     coordinator: BoschCameraCoordinator, cam_id: str, component: str, value: Any
 ) -> bool:
     """Set individual light component.
