@@ -69,8 +69,13 @@ class MissingAddressRepairFlow(RepairsFlow):
         credentials: dict[str, dict[str, str]] = self.entry.data.get(
             CONF_CREDENTIALS, {}
         )
+        # Only fully-credentialed devices (secrets plus MAC): a partial record
+        # cannot pass the authenticated probe, and setup counts its device as
+        # incomplete rather than addressless.
         owned = {
-            dr.format_mac(cred["mac"]) for cred in credentials.values() if cred["mac"]
+            dr.format_mac(cred["mac"])
+            for cred in credentials.values()
+            if cred["password"] and cred["crypto_serial"] and cred["mac"]
         }
         device_registry = dr.async_get(self.hass)
         # Map each addressless device's formatted MAC (the address cache key)

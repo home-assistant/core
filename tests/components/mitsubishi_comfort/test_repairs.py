@@ -225,6 +225,44 @@ async def test_fix_flow_rejects_unreachable_address(
 
 
 @pytest.mark.parametrize("ignore_missing_translations", [IGNORE_FORM_TRANSLATIONS])
+async def test_fix_flow_omits_devices_without_secrets(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_setup_integration: tuple[AsyncMock, MagicMock],
+    mock_device_info: DeviceInfo,
+) -> None:
+    """Test the form skips devices whose local secrets are missing.
+
+    A partial record can hold a MAC with no password or cryptoSerial; any
+    address entered for it is guaranteed to fail the authenticated probe,
+    and setup counts that device as incomplete rather than addressless.
+    """
+    secretless = DeviceInfo(
+        serial="SERIAL002",
+        label="Bedroom",
+        address="",
+        mac="11:22:33:44:55:66",
+        unit_type="ductless",
+        password="",
+        crypto_serial="",
+    )
+    mock_account, _ = mock_setup_integration
+    mock_account.discover_devices.return_value = {
+        "SERIAL001": mock_device_info,
+        "SERIAL002": secretless,
+    }
+    entry = await _setup_addressless_entry(hass)
+
+    client = await hass_client()
+    data = await start_repair_fix_flow(
+        client, DOMAIN, f"missing_address_{entry.entry_id}"
+    )
+
+    assert data["step_id"] == "addresses"
+    assert [field["name"] for field in data["data_schema"]] == [dr.format_mac(MOCK_MAC)]
+
+
+@pytest.mark.parametrize("ignore_missing_translations", [IGNORE_FORM_TRANSLATIONS])
 async def test_fix_flow_omits_devices_no_longer_on_account(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
