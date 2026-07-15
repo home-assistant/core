@@ -49,7 +49,7 @@ import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 
@@ -495,14 +495,12 @@ async def _poll_slow_tier_endpoints(
         if ep_status != 200 or ep_data is None:
             continue
         if ep == "wifiinfo":
-            # NOTE: unlike several sibling branches in this function (see
-            # e.g. "ambient_light_sensor_level"/"privacy_sound_override"),
-            # this endpoint has no isinstance(dict) guard against a
-            # malformed-but-200 cloud response -- same latent-crash class
-            # the v15.0.0 chaos-fault-injection suite found and fixed for
-            # 3 other endpoints, left open here. Flagged, not fixed here
-            # (a behavior change is out of scope for this mypy-only pass).
-            coordinator._wifiinfo_cache[cam_id] = cast(dict[str, Any], ep_data)
+            # isinstance guard — see the "ambient_light_sensor_level" branch
+            # below (chaos-fault-injection regression) for why this is
+            # required. A malformed-but-200 body is skipped rather than
+            # overwriting a previously-good cached value.
+            if isinstance(ep_data, dict):
+                coordinator._wifiinfo_cache[cam_id] = ep_data
         elif ep == "ambient_light_sensor_level":
             # isinstance guard (chaos-fault-injection regression,
             # tests/test_chaos_fault_injection.py): every sibling branch in
@@ -533,11 +531,13 @@ async def _poll_slow_tier_endpoints(
             # optimistic updating=True (before Bosch's backend has
             # actually flagged the install) reverts it to stale
             # "not updating" and a second install PUT could fire.
-            if not coordinator._is_write_locked(cam_id, coordinator._firmware_set_at):
-                # NOTE: no isinstance(dict) guard against a malformed-but-200
-                # cloud response here (see the "wifiinfo" branch above for
-                # the full note) -- flagged, not fixed in this mypy-only pass.
-                coordinator._firmware_cache[cam_id] = cast(dict[str, Any], ep_data)
+            # isinstance guard — see the "ambient_light_sensor_level" branch
+            # below (chaos-fault-injection regression) for why this is
+            # required.
+            if not coordinator._is_write_locked(
+                cam_id, coordinator._firmware_set_at
+            ) and isinstance(ep_data, dict):
+                coordinator._firmware_cache[cam_id] = ep_data
         elif ep == "recording_options":
             data[cam_id]["recordingOptions"] = ep_data
         elif ep == "unread_events_count":
@@ -559,8 +559,11 @@ async def _poll_slow_tier_endpoints(
                     ep_data.get("result", False) if isinstance(ep_data, dict) else False
                 )
         elif ep == "commissioned":
-            # NOTE: no isinstance(dict) guard (see "wifiinfo" branch above).
-            coordinator._commissioned_cache[cam_id] = cast(dict[str, Any], ep_data)
+            # isinstance guard — see the "ambient_light_sensor_level" branch
+            # above (chaos-fault-injection regression) for why this is
+            # required.
+            if isinstance(ep_data, dict):
+                coordinator._commissioned_cache[cam_id] = ep_data
         elif ep == "autofollow":
             data[cam_id]["autofollow"] = ep_data
         elif ep == "timestamp":
@@ -572,8 +575,11 @@ async def _poll_slow_tier_endpoints(
                     ep_data.get("result", False) if isinstance(ep_data, dict) else False
                 )
         elif ep == "notifications":
-            # NOTE: no isinstance(dict) guard (see "wifiinfo" branch above).
-            coordinator._notifications_cache[cam_id] = cast(dict[str, Any], ep_data)
+            # isinstance guard — see the "ambient_light_sensor_level" branch
+            # above (chaos-fault-injection regression) for why this is
+            # required.
+            if isinstance(ep_data, dict):
+                coordinator._notifications_cache[cam_id] = ep_data
         elif ep == "rules":
             coordinator._rules_cache[cam_id] = (
                 ep_data if isinstance(ep_data, list) else []
