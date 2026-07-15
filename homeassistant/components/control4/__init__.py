@@ -23,22 +23,14 @@ from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
-    CONF_ACCOUNT,
-    CONF_CANCEL_TOKEN_REFRESH_CALLBACK,
     CONF_CONTROLLER_UNIQUE_ID,
-    CONF_DIRECTOR,
-    CONF_DIRECTOR_ALL_ITEMS,
-    CONF_DIRECTOR_MODEL,
-    CONF_DIRECTOR_SW_VERSION,
-    CONF_UI_CONFIGURATION,
-    CONF_WEBSOCKET,
     DOMAIN,
     RETRY_BACKOFF_MAX_SEC,
     SCHEDULE_REFRESH_ADVANCE_SEC,
     Control4ConfigEntry,
+    Control4RuntimeData,
 )
 from .director_utils import director_get_entry_variables
-from .entity import Control4CoordinatorEntity, Control4Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,54 +39,45 @@ PLATFORMS = [Platform.CLIMATE, Platform.COVER, Platform.LIGHT, Platform.MEDIA_PL
 
 async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
     """Set up Control4 from a config entry."""
-    entry_data: dict[str, Any] = {}
-    entry.runtime_data = entry_data
-
     await refresh_tokens(hass, entry)
+    runtime_data = entry.runtime_data
 
-    entry_data[CONF_CONTROLLER_UNIQUE_ID] = entry.data[CONF_CONTROLLER_UNIQUE_ID]
+    runtime_data.controller_unique_id = entry.data[CONF_CONTROLLER_UNIQUE_ID]
 
     try:
-        controller_href = (await entry_data[CONF_ACCOUNT].get_account_controllers())[
-            "href"
-        ]
+        controller_href = (await runtime_data.account.get_account_controllers())["href"]
+        runtime_data.director_sw_version = (
+            await runtime_data.account.get_controller_os_version(controller_href)
+        )
     except (TimeoutError, client_exceptions.ClientError) as err:
         raise ConfigEntryNotReady(err) from err
 
-    try:
-        entry_data[CONF_DIRECTOR_SW_VERSION] = await entry_data[
-            CONF_ACCOUNT
-        ].get_controller_os_version(controller_href)
-    except (TimeoutError, client_exceptions.ClientError) as err:
-        raise ConfigEntryNotReady(err) from err
-
-    _, model, mac_address = entry_data[CONF_CONTROLLER_UNIQUE_ID].split("_", 3)
-    entry_data[CONF_DIRECTOR_MODEL] = model.upper()
+    _, model, mac_address = runtime_data.controller_unique_id.split("_", 3)
+    runtime_data.director_model = model.upper()
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry_data[CONF_CONTROLLER_UNIQUE_ID])},
+        identifiers={(DOMAIN, runtime_data.controller_unique_id)},
         connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
         manufacturer="Control4",
-        name=entry_data[CONF_CONTROLLER_UNIQUE_ID],
-        model=entry_data[CONF_DIRECTOR_MODEL],
-        sw_version=entry_data[CONF_DIRECTOR_SW_VERSION],
+        name=runtime_data.controller_unique_id,
+        model=runtime_data.director_model,
+        sw_version=runtime_data.director_sw_version,
     )
 
     try:
-        entry_data[CONF_DIRECTOR_ALL_ITEMS] = await entry_data[
-            CONF_DIRECTOR
-        ].get_all_item_info()
+        runtime_data.director_all_items = (
+            await runtime_data.director.get_all_item_info()
+        )
     except (TimeoutError, client_exceptions.ClientError) as err:
         raise ConfigEntryNotReady(err) from err
 
     # Control4 OS 2 controllers do not support the UI configuration endpoint.
-    entry_data[CONF_UI_CONFIGURATION] = None
-    if int(entry_data[CONF_DIRECTOR_SW_VERSION].split(".")[0]) >= 3:
+    if int(runtime_data.director_sw_version.split(".")[0]) >= 3:
         try:
-            entry_data[CONF_UI_CONFIGURATION] = await entry_data[
-                CONF_DIRECTOR
-            ].get_ui_configuration()
+            runtime_data.ui_configuration = (
+                await runtime_data.director.get_ui_configuration()
+            )
         except (TimeoutError, client_exceptions.ClientError) as err:
             raise ConfigEntryNotReady(err) from err
 
@@ -108,15 +91,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) ->
     if not unload_ok:
         return False
 
-    entry_data = entry.runtime_data
-    websocket = entry_data.get(CONF_WEBSOCKET)
-    if websocket is not None:
-        _LOGGER.debug("Disconnecting C4Websocket for config entry unload")
-        await websocket.sio_disconnect()
-    cancel_refresh = entry_data.get(CONF_CANCEL_TOKEN_REFRESH_CALLBACK)
-    if cancel_refresh is not None:
+    runtime_data = entry.runtime_data
+    _LOGGER.debug("Disconnecting C4Websocket for config entry unload")
+    await runtime_data.websocket.sio_disconnect()
+    if runtime_data.cancel_token_refresh_callback is not None:
         _LOGGER.debug("Cancelling scheduled token refresh for config entry unload")
-        cancel_refresh()
+        runtime_data.cancel_token_refresh_callback()
     return unload_ok
 
 
@@ -124,7 +104,7 @@ async def get_items_of_category(
     hass: HomeAssistant, entry: Control4ConfigEntry, category: str
 ) -> list[dict[str, Any]]:
     """Return a list of all Control4 items with the specified category."""
-    director = entry.runtime_data[CONF_DIRECTOR]
+    director = entry.runtime_data.director
     try:
         return await director.get_all_items_by_category(category)
     except InvalidCategory:
@@ -162,14 +142,14 @@ async def refresh_tokens(hass: HomeAssistant, entry: Control4ConfigEntry) -> Non
         config[CONF_HOST], director_token_dict[CONF_TOKEN], no_verify_session
     )
 
-    entry_data = entry.runtime_data
-    entry_data[CONF_ACCOUNT] = account
-    entry_data[CONF_DIRECTOR] = director
-
-    if not (
-        CONF_WEBSOCKET in entry_data
-        and isinstance(entry_data[CONF_WEBSOCKET], C4Websocket)
-    ):
+    # On the very first call (initial setup), there's no runtime_data yet and a
+    # new WebSocket has to be created. On later calls (the scheduled refresh),
+    # runtime_data already exists and its WebSocket connection is reused as-is,
+    # only the account/director tokens and refresh timer get replaced.
+    if hasattr(entry, "runtime_data"):
+        runtime_data = entry.runtime_data
+        websocket = runtime_data.websocket
+    else:
         connection_tracker = C4WebsocketConnectionTracker(hass, entry)
         websocket = C4Websocket(
             config[CONF_HOST],
@@ -177,23 +157,30 @@ async def refresh_tokens(hass: HomeAssistant, entry: Control4ConfigEntry) -> Non
             connection_tracker.connect_callback,
             connection_tracker.disconnect_callback,
         )
-        entry_data[CONF_WEBSOCKET] = websocket
+        runtime_data = None
 
     try:
-        await entry_data[CONF_WEBSOCKET].sio_connect(director.director_bearer_token)
+        await websocket.sio_connect(director.director_bearer_token)
     except Exception as err:
         raise ConfigEntryNotReady(err) from err
 
-    cancel_previous_refresh = entry_data.get(CONF_CANCEL_TOKEN_REFRESH_CALLBACK)
-    if cancel_previous_refresh is not None:
-        cancel_previous_refresh()
+    if runtime_data is None:
+        runtime_data = Control4RuntimeData(
+            account=account, director=director, websocket=websocket
+        )
+        entry.runtime_data = runtime_data
+    else:
+        if runtime_data.cancel_token_refresh_callback is not None:
+            runtime_data.cancel_token_refresh_callback()
+        runtime_data.account = account
+        runtime_data.director = director
 
     delay = max(
         director_token_dict["validSeconds"] - SCHEDULE_REFRESH_ADVANCE_SEC,
         SCHEDULE_REFRESH_ADVANCE_SEC,
     )
     obj = RefreshTokensObject(hass, entry)
-    entry_data[CONF_CANCEL_TOKEN_REFRESH_CALLBACK] = async_call_later(
+    runtime_data.cancel_token_refresh_callback = async_call_later(
         hass=hass, delay=delay, action=obj.refresh_tokens
     )
 
@@ -212,7 +199,7 @@ class C4WebsocketConnectionTracker:
         if not self._was_disconnected:
             return
         _LOGGER.info("WebSocket connection to Control4 re-established")
-        item_callbacks = self.entry.runtime_data[CONF_WEBSOCKET].item_callbacks
+        item_callbacks = self.entry.runtime_data.websocket.item_callbacks
         for item_id, callbacks in list(item_callbacks.items()):
             try:
                 item_attributes = await director_get_entry_variables(
@@ -238,7 +225,7 @@ class C4WebsocketConnectionTracker:
             "WebSocket connection to Control4 lost, attempting reconnection"
         )
         self._was_disconnected = True
-        item_callbacks = self.entry.runtime_data[CONF_WEBSOCKET].item_callbacks
+        item_callbacks = self.entry.runtime_data.websocket.item_callbacks
         for item_id, callbacks in list(item_callbacks.items()):
             for callback in list(callbacks):
                 await callback(item_id, False)
@@ -266,11 +253,6 @@ class RefreshTokensObject:
             self.retries += 1
             delay = random.uniform(0, min(2**self.retries, RETRY_BACKOFF_MAX_SEC))
             _LOGGER.warning("Token refresh failed, retrying in %.0f seconds", delay)
-            self.entry.runtime_data[CONF_CANCEL_TOKEN_REFRESH_CALLBACK] = (
-                async_call_later(
-                    hass=self.hass, delay=delay, action=self.refresh_tokens
-                )
+            self.entry.runtime_data.cancel_token_refresh_callback = async_call_later(
+                hass=self.hass, delay=delay, action=self.refresh_tokens
             )
-
-
-__all__ = ["Control4CoordinatorEntity", "Control4Entity"]

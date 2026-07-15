@@ -1,7 +1,6 @@
 """Provides data updates from the Control4 controller for platforms."""
 
 from collections import defaultdict
-from collections.abc import Set as AbstractSet
 import logging
 from typing import Any
 
@@ -9,13 +8,13 @@ from pyControl4.error_handling import BadToken
 
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_DIRECTOR, Control4ConfigEntry
+from .const import Control4ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def _get_entry_variables(entry: Control4ConfigEntry, item_id: int) -> dict:
-    director = entry.runtime_data[CONF_DIRECTOR]
+    director = entry.runtime_data.director
     data = await director.get_item_variables(item_id)
 
     result = {}
@@ -41,9 +40,9 @@ async def director_get_entry_variables(
 
 
 async def _update_variables_for_config_entry(
-    entry: Control4ConfigEntry, variable_names: AbstractSet[str]
+    entry: Control4ConfigEntry, variable_names: set[str]
 ) -> dict[int, dict[str, Any]]:
-    director = entry.runtime_data[CONF_DIRECTOR]
+    director = entry.runtime_data.director
     data = await director.get_all_item_variable_value(variable_names)
     result_dict: defaultdict[int, dict[str, Any]] = defaultdict(dict)
     for item in data:
@@ -52,7 +51,7 @@ async def _update_variables_for_config_entry(
 
 
 async def update_variables_for_config_entry(
-    hass: HomeAssistant, entry: Control4ConfigEntry, variable_names: AbstractSet[str]
+    hass: HomeAssistant, entry: Control4ConfigEntry, variable_names: set[str]
 ) -> dict[int, dict[str, Any]]:
     """Retrieve data from the Control4 director."""
     try:

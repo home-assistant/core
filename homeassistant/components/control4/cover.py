@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import get_items_of_category
-from .const import CONF_DIRECTOR, CONTROL4_ENTITY_TYPE, Control4ConfigEntry
+from .const import CONTROL4_ENTITY_TYPE, Control4ConfigEntry
 from .director_utils import director_get_entry_variables
 from .entity import Control4Entity
 
@@ -105,7 +105,7 @@ class Control4Cover(Control4Entity, CoverEntity):
 
     def _create_blind_api_object(self) -> C4Blind:
         """Create a pyControl4 blind object with the current director token."""
-        return C4Blind(self.entry_data[CONF_DIRECTOR], self._idx)
+        return C4Blind(self.entry_data.director, self._idx)
 
     @override
     @property

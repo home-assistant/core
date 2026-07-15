@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from . import get_items_of_category
-from .const import CONF_DIRECTOR, CONTROL4_ENTITY_TYPE, Control4ConfigEntry
+from .const import CONTROL4_ENTITY_TYPE, Control4ConfigEntry, Control4RuntimeData
 from .director_utils import director_get_entry_variables
 from .entity import Control4Entity
 
@@ -90,7 +90,7 @@ class Control4Light(Control4Entity, LightEntity):
 
     def __init__(
         self,
-        entry_data: dict[str, Any],
+        entry_data: Control4RuntimeData,
         entry: Any,
         name: str,
         idx: int,
@@ -123,7 +123,7 @@ class Control4Light(Control4Entity, LightEntity):
 
     def create_api_object(self) -> C4Light:
         """Create a pyControl4 device object with the current director token."""
-        return C4Light(self.entry_data[CONF_DIRECTOR], self._idx)
+        return C4Light(self.entry_data.director, self._idx)
 
     @staticmethod
     def _to_float(value: Any) -> float | None:

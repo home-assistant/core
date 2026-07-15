@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import CONF_CONTROLLER_UNIQUE_ID, CONF_WEBSOCKET, DOMAIN
+from .const import DOMAIN, Control4RuntimeData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,9 +25,12 @@ _EXCLUDED_COORDINATOR_ATTRIBUTES = {"CURRENT MEDIA INFO"}
 class Control4Entity(Entity):
     """Base entity for Control4 that receives state from WebSocket push events."""
 
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
     def __init__(
         self,
-        entry_data: dict[str, Any],
+        entry_data: Control4RuntimeData,
         entry: ConfigEntry,
         name: str,
         idx: int,
@@ -42,11 +45,10 @@ class Control4Entity(Entity):
         super().__init__()
         self.entry = entry
         self.entry_data = entry_data
-        self._attr_has_entity_name = True
         self._attr_name = name
         self._attr_unique_id = str(idx)
         self._idx = idx
-        self._controller_unique_id = entry_data[CONF_CONTROLLER_UNIQUE_ID]
+        self._controller_unique_id = entry_data.controller_unique_id
         self._device_name = device_name
         self._device_manufacturer = device_manufacturer
         self._device_model = device_model
@@ -55,13 +57,12 @@ class Control4Entity(Entity):
         self._extra_state_attributes: dict[str, Any] = device_attributes
         self._extra_state_attributes["item id"] = idx
         self._extra_state_attributes["parent item id"] = device_id
-        self._attr_should_poll = False
 
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to WebSocket push events for this item."""
         await super().async_added_to_hass()
-        websocket = self.entry_data[CONF_WEBSOCKET]
+        websocket = self.entry_data.websocket
         websocket.add_item_callback(self._idx, self._update_callback)
         websocket.add_item_callback(self._device_id, self._update_callback)
 
@@ -69,15 +70,9 @@ class Control4Entity(Entity):
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe WebSocket callbacks."""
         await super().async_will_remove_from_hass()
-        try:
-            self.entry_data[CONF_WEBSOCKET].remove_item_callback(
-                self._idx, self._update_callback
-            )
-            self.entry_data[CONF_WEBSOCKET].remove_item_callback(
-                self._device_id, self._update_callback
-            )
-        except KeyError:
-            return
+        websocket = self.entry_data.websocket
+        websocket.remove_item_callback(self._idx, self._update_callback)
+        websocket.remove_item_callback(self._device_id, self._update_callback)
 
     async def _update_callback(
         self, device: int, message: dict[str, Any] | bool
@@ -137,7 +132,7 @@ class Control4CoordinatorEntity(CoordinatorEntity[Any]):
 
     def __init__(
         self,
-        entry_data: dict[str, Any],
+        entry_data: Control4RuntimeData,
         coordinator: DataUpdateCoordinator[Any],
         name: str | None,
         idx: int,
@@ -154,7 +149,7 @@ class Control4CoordinatorEntity(CoordinatorEntity[Any]):
         self._attr_name = name
         self._attr_unique_id = str(idx)
         self._idx = idx
-        self._controller_unique_id = entry_data[CONF_CONTROLLER_UNIQUE_ID]
+        self._controller_unique_id = entry_data.controller_unique_id
         self._device_name = device_name
         self._device_manufacturer = device_manufacturer
         self._device_model = device_model

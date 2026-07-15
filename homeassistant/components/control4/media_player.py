@@ -21,13 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
-    CONF_DIRECTOR,
-    CONF_DIRECTOR_ALL_ITEMS,
-    CONF_UI_CONFIGURATION,
-    DEFAULT_SCAN_INTERVAL,
-    Control4ConfigEntry,
-)
+from .const import DEFAULT_SCAN_INTERVAL, Control4ConfigEntry, Control4RuntimeData
 from .director_utils import (
     director_get_entry_variables,
     update_variables_for_config_entry,
@@ -77,7 +71,7 @@ class _RoomSource:
 
 async def get_rooms(hass: HomeAssistant, entry: Control4ConfigEntry):
     """Return a list of all Control4 rooms."""
-    director_all_items = entry.runtime_data[CONF_DIRECTOR_ALL_ITEMS]
+    director_all_items = entry.runtime_data.director_all_items
     return [
         item
         for item in director_all_items
@@ -96,7 +90,7 @@ async def async_setup_entry(
         return
 
     entry_data = entry.runtime_data
-    if entry_data[CONF_UI_CONFIGURATION] is None:
+    if entry_data.ui_configuration is None:
         _LOGGER.debug(
             "No UI configuration available (Control4 OS 2 controller); "
             "skipping media player setup"
@@ -124,16 +118,14 @@ async def async_setup_entry(
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_refresh()
 
-    items_by_id = {
-        item["id"]: item for item in entry.runtime_data[CONF_DIRECTOR_ALL_ITEMS]
-    }
+    items_by_id = {item["id"]: item for item in entry.runtime_data.director_all_items}
     item_to_parent_map = {
         k: item["parentId"]
         for k, item in items_by_id.items()
         if "parentId" in item and k > 1
     }
 
-    ui_config = entry_data[CONF_UI_CONFIGURATION]
+    ui_config = entry_data.ui_configuration
 
     entity_list = []
     for room in all_rooms:
@@ -202,7 +194,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
 
     def __init__(
         self,
-        entry_data: dict,
+        entry_data: Control4RuntimeData,
         coordinator: DataUpdateCoordinator[dict[int, dict[str, Any]]],
         name: str,
         room_id: int,
@@ -243,7 +235,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
 
         This exists so the director token used is always the latest one, without needing to re-init the entire entity.
         """
-        return C4Room(self.entry_data[CONF_DIRECTOR], self._idx)
+        return C4Room(self.entry_data.director, self._idx)
 
     def _get_device_from_variable(self, var: str) -> int | None:
         current_device = self.coordinator.data[self._idx][var]
@@ -380,7 +372,7 @@ class Control4Room(Control4CoordinatorEntity, MediaPlayerEntity):
         return bool(self.coordinator.data[self._idx][CONTROL4_MUTED_STATE])
 
     @override
-    async def async_select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select a new source."""
         for avail_source in self._sources.values():
             if avail_source.name == source:

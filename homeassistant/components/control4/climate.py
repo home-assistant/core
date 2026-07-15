@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import get_items_of_category
-from .const import CONF_DIRECTOR, CONTROL4_ENTITY_TYPE, Control4ConfigEntry
+from .const import CONTROL4_ENTITY_TYPE, Control4ConfigEntry
 from .director_utils import director_get_entry_variables
 from .entity import Control4Entity
 
@@ -138,7 +138,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
         This exists so the director token used is always the
         latest one, without needing to re-init the entire entity.
         """
-        return C4Climate(self.entry_data[CONF_DIRECTOR], self._idx)
+        return C4Climate(self.entry_data.director, self._idx)
 
     @override
     @property
