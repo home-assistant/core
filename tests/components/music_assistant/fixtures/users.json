@@ -1,0 +1,52 @@
+{
+  "users": [
+    {
+      "user_id": "1jKp69KqXH3HlkOLUNgnrvYL_NjwxqtsPhCuVe6Mnpc",
+      "username": "party_guest",
+      "role": "guest",
+      "enabled": true,
+      "created_at": "2026-03-25T19:42:38.316796+00:00",
+      "display_name": "Party Guest",
+      "avatar_url": null,
+      "preferences": {},
+      "provider_filter": [],
+      "player_filter": []
+    },
+    {
+      "user_id": "W4SJjiCfzHeAHPjzy1IsXkdnIJHkzhLXu9Vp-V9u730",
+      "username": "user_admin",
+      "role": "admin",
+      "enabled": true,
+      "created_at": "2026-05-04T19:29:13.853819+00:00",
+      "display_name": "Admin",
+      "avatar_url": null,
+      "preferences": {},
+      "provider_filter": [],
+      "player_filter": []
+    },
+    {
+      "user_id": "aTn3wTtZi-Lznf_WxQQn4NKElrfpa00LV8ZDzIIF_uU",
+      "username": "user_user",
+      "role": "user",
+      "enabled": true,
+      "created_at": "2026-05-04T19:29:13.853819+00:00",
+      "display_name": "User",
+      "avatar_url": null,
+      "preferences": {},
+      "provider_filter": [],
+      "player_filter": []
+    },
+    {
+      "user_id": "bZc3wTtZi-Lznf_WxQRn4NRElrfra00LV9ZDzIIF_uU",
+      "username": "user_disabled",
+      "role": "user",
+      "enabled": false,
+      "created_at": "2026-05-03T19:29:13.853819+00:00",
+      "display_name": "Disabled user",
+      "avatar_url": null,
+      "preferences": {},
+      "provider_filter": [],
+      "player_filter": []
+    }
+  ]
+}

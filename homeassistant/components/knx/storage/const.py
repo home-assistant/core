@@ -19,6 +19,9 @@ CONF_GA_TIME: Final = "ga_time"
 
 CONF_GA_STEP: Final = "ga_step"
 
+# Button
+CONF_GA_SEND: Final = "ga_send"
+
 # Climate
 CONF_GA_TEMPERATURE_CURRENT: Final = "ga_temperature_current"
 CONF_GA_HUMIDITY_CURRENT: Final = "ga_humidity_current"

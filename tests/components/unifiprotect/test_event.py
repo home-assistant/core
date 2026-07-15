@@ -70,7 +70,18 @@ async def test_doorbell_ring(
     unadopted_camera: Camera,
     fixed_now: datetime,
 ) -> None:
-    """Test a doorbell ring event."""
+    """Test a doorbell ring event fired from the public events websocket."""
+
+    # Ring is delivered over the public events websocket, which is only
+    # subscribed once update_public() has primed the public bootstrap.
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = Mock(
+        spec=PublicBootstrap,
+        relays={},
+        sirens={},
+        arm_mode=None,
+        arm_profiles={},
+    )
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.EVENT, 5, 5)
@@ -85,95 +96,58 @@ async def test_doorbell_ring(
     )
 
     unsub = async_track_state_change_event(hass, entity_id, _capture_event)
-    event = Event(
-        model=ModelType.EVENT,
-        id="test_event_id",
-        type=EventType.RING,
-        start=fixed_now - timedelta(seconds=1),
-        end=None,
-        score=100,
-        smart_detect_types=[],
-        smart_detect_event_ids=[],
-        camera_id=doorbell.id,
-        api=ufp.api,
+
+    ufp.events_msg(
+        ProtectEvent(
+            id="test_ring_event",
+            type=EventType.RING,
+            channel=ProtectEventChannel.DETECTION,
+            device_id=doorbell.id,
+            device_mac=doorbell.mac,
+            start=fixed_now - timedelta(seconds=1),
+            end=fixed_now,
+        ),
+        EventChange.STARTED,
     )
-
-    new_camera = doorbell.model_copy()
-    new_camera.last_ring_event_id = "test_event_id"
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.api.bootstrap.events = {event.id: event}
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = event
-    ufp.ws_msg(mock_msg)
-
     await hass.async_block_till_done()
 
     assert len(events) == 1
     state = events[0].data["new_state"]
     assert state
-    timestamp = state.state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
-    assert state.attributes[ATTR_EVENT_ID] == "test_event_id"
+    assert state.attributes[ATTR_EVENT_ID] == "test_ring_event"
 
-    event = Event(
-        model=ModelType.EVENT,
-        id="test_event_id",
-        type=EventType.RING,
-        start=fixed_now - timedelta(seconds=1),
-        end=fixed_now + timedelta(seconds=1),
-        score=50,
-        smart_detect_types=[],
-        smart_detect_event_ids=[],
-        camera_id=doorbell.id,
-        api=ufp.api,
+    # A non-ring event on the same camera must not fire the doorbell entity.
+    ufp.events_msg(
+        ProtectEvent(
+            id="test_motion_event",
+            type=EventType.MOTION,
+            channel=ProtectEventChannel.DETECTION,
+            device_id=doorbell.id,
+            device_mac=doorbell.mac,
+            start=fixed_now,
+            end=None,
+        ),
+        EventChange.STARTED,
     )
-
-    new_camera = doorbell.model_copy()
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.api.bootstrap.events = {event.id: event}
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = event
-    ufp.ws_msg(mock_msg)
-
     await hass.async_block_till_done()
+    assert len(events) == 1
 
-    # Event is already seen and has end, should now be off
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == timestamp
-
-    # Now send an event that has an end right away
-    event = Event(
-        model=ModelType.EVENT,
-        id="new_event_id",
-        type=EventType.RING,
-        start=fixed_now - timedelta(seconds=1),
-        end=fixed_now + timedelta(seconds=1),
-        score=80,
-        smart_detect_types=[SmartDetectObjectType.PACKAGE],
-        smart_detect_event_ids=[],
-        camera_id=doorbell.id,
-        api=ufp.api,
+    # Only the start of an event is dispatched; an update must be ignored.
+    ufp.events_msg(
+        ProtectEvent(
+            id="test_ring_event",
+            type=EventType.RING,
+            channel=ProtectEventChannel.DETECTION,
+            device_id=doorbell.id,
+            device_mac=doorbell.mac,
+            start=fixed_now - timedelta(seconds=1),
+            end=fixed_now,
+        ),
+        EventChange.UPDATED,
     )
-
-    new_camera = doorbell.model_copy()
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.api.bootstrap.events = {event.id: event}
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = event
-
-    ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == timestamp
+    assert len(events) == 1
     unsub()
 
 
@@ -270,11 +244,13 @@ async def test_package_detected(
     await hass.async_block_till_done()
     assert len(events) == 1
 
-    # The camera is resolved by device_id, not by the public device_mac, so a
-    # missing device_mac must still dispatch.
+    # Subscriptions are keyed by device_id alone: an event still dispatches when
+    # it carries no device_mac and the device is absent from the private
+    # bootstrap, proving the public event path does not depend on it.
+    ufp.api.bootstrap.id_lookup.pop(doorbell.id, None)
     ufp.events_msg(
         ProtectEvent(
-            id="test_package_event_fallback",
+            id="test_package_event_no_private_device",
             type=EventType.SMART_DETECT,
             channel=ProtectEventChannel.DETECTION,
             device_id=doorbell.id,
@@ -288,10 +264,10 @@ async def test_package_detected(
     await hass.async_block_till_done()
     assert len(events) == 2
     assert events[1].data["new_state"].attributes[ATTR_EVENT_ID] == (
-        "test_package_event_fallback"
+        "test_package_event_no_private_device"
     )
 
-    # An event for a device absent from the private bootstrap is dropped.
+    # An event for a device without a matching subscription is dropped.
     ufp.events_msg(
         ProtectEvent(
             id="test_package_event_unknown",
@@ -299,6 +275,24 @@ async def test_package_detected(
             channel=ProtectEventChannel.DETECTION,
             device_id="does-not-exist",
             device_mac=None,
+            start=fixed_now,
+            end=fixed_now,
+            smart_detect_types=(SmartDetectObjectType.PACKAGE,),
+        ),
+        EventChange.STARTED,
+    )
+    await hass.async_block_till_done()
+    assert len(events) == 2
+
+    # A non-smart-detect event that happens to carry a matching object type is
+    # routed by type, so it must not reach the smart-detect entity.
+    ufp.events_msg(
+        ProtectEvent(
+            id="test_ring_with_package_types",
+            type=EventType.RING,
+            channel=ProtectEventChannel.DETECTION,
+            device_id=doorbell.id,
+            device_mac=doorbell.mac,
             start=fixed_now,
             end=fixed_now,
             smart_detect_types=(SmartDetectObjectType.PACKAGE,),

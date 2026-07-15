@@ -39,8 +39,8 @@
 # name: test_switch[2][switch.cms_sf2000_allow_grid_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'CMS-SF2000 Allow grid charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Allow grid charging',
     }),
     'context': <ANY>,
     'entity_id': 'switch.cms_sf2000_allow_grid_charging',
@@ -90,8 +90,8 @@
 # name: test_switch[2][switch.cms_sf2000_bypass_socket-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'CMS-SF2000 Bypass socket',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 Bypass socket',
     }),
     'context': <ANY>,
     'entity_id': 'switch.cms_sf2000_bypass_socket',
@@ -141,8 +141,8 @@
 # name: test_switch[2][switch.cms_sf2000_led_indicator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'CMS-SF2000 LED indicator',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CMS-SF2000 LED indicator',
     }),
     'context': <ANY>,
     'entity_id': 'switch.cms_sf2000_led_indicator',

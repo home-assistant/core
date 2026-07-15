@@ -2,7 +2,7 @@
 # name: test_switches[switch.frenck_energy_saving-energy_saving-key-light-mini]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Frenck Energy saving',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frenck Energy saving',
     }),
     'context': <ANY>,
     'entity_id': 'switch.frenck_energy_saving',
@@ -87,7 +87,7 @@
 # name: test_switches[switch.frenck_studio_mode-battery_bypass-key-light-mini]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Frenck Studio mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Frenck Studio mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.frenck_studio_mode',

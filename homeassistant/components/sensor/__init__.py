@@ -51,6 +51,8 @@ from .const import (  # noqa: F401
     UNIT_CONVERTERS,
     UNITS_PRECISION,
     SensorDeviceClass,
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
     SensorStateClass,
 )
 from .websocket_api import async_setup as async_setup_ws_api
@@ -77,7 +79,9 @@ __all__ = [
     "RestoreSensor",
     "SensorDeviceClass",
     "SensorEntity",
+    "SensorEntityCapabilityAttribute",
     "SensorEntityDescription",
+    "SensorEntityStateAttribute",
     "SensorExtraStoredData",
     "SensorStateClass",
 ]
@@ -184,7 +188,9 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     # Allow per-entity override of drift tolerance
     _attr_uptime_drift_tolerance: int = UPTIME_DEFAULT_TOLERANCE_SECONDS
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_OPTIONS})
+    _entity_component_unrecorded_attributes = frozenset(
+        {SensorEntityCapabilityAttribute.OPTIONS}
+    )
 
     entity_description: SensorEntityDescription
     _attr_device_class: SensorDeviceClass | None
@@ -372,10 +378,10 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes."""
         if state_class := self.state_class:
-            return {ATTR_STATE_CLASS: state_class}
+            return {SensorEntityCapabilityAttribute.STATE_CLASS: state_class}
 
         if options := self.options:
-            return {ATTR_OPTIONS: options}
+            return {SensorEntityCapabilityAttribute.OPTIONS: options}
 
         return None
 
@@ -475,7 +481,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 )
 
             if state_class == SensorStateClass.TOTAL:
-                return {ATTR_LAST_RESET: last_reset.isoformat()}
+                return {SensorEntityStateAttribute.LAST_RESET: last_reset.isoformat()}
 
         return None
 
