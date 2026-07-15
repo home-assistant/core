@@ -73,6 +73,7 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
             if entry_mac and format_mac(entry_mac) == formatted_mac:
                 return self.async_update_reload_and_abort(
                     entry,
+                    title=f"EARN-E P1 ({ip})",
                     data_updates={CONF_HOST: ip, CONF_MAC: raw_mac},
                     reason="already_configured",
                     reload_even_if_entry_is_unchanged=False,
@@ -90,9 +91,15 @@ class EarnEP1ConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(device.serial)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: ip, CONF_MAC: raw_mac},
-        )
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.unique_id == device.serial:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    title=f"EARN-E P1 ({ip})",
+                    data_updates={CONF_HOST: ip, CONF_MAC: raw_mac},
+                    reason="already_configured",
+                    reload_even_if_entry_is_unchanged=False,
+                )
 
         self._discovered_device = device
         self._discovered_mac = raw_mac

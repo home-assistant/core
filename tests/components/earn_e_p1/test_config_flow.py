@@ -396,6 +396,7 @@ async def test_dhcp_discovery_updates_ip_by_serial(
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_HOST] == new_ip
     assert mock_config_entry.data[CONF_MAC] == MOCK_MAC
+    assert mock_config_entry.title == f"EARN-E P1 ({new_ip})"
 
 
 @pytest.mark.parametrize(
@@ -454,4 +455,5 @@ async def test_dhcp_discovery_updates_ip_by_mac(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == new_ip
     assert entry.data[CONF_MAC] == MOCK_MAC
+    assert entry.title == f"EARN-E P1 ({new_ip})"
     mock_validate.assert_not_called()
