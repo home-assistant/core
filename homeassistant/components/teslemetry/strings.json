@@ -70,7 +70,7 @@
         "powerwall_unreachable": "There is a problem communicating with your Powerwall. Ensure it has a reliable network connection and try again later."
       },
       "initiate_flow": {
-        "reconfigure": "Set up local control",
+        "reconfigure": "Reconfigure energy site",
         "user": "Add energy site"
       },
       "step": {
