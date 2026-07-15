@@ -1163,11 +1163,11 @@
     }
   },
   "exceptions": {
-    "failed_to_connect_mqtt": {
-      "message": "Failed to connect MQTT: {error}"
-    },
     "connection_error": {
       "message": "Failed to connect to the LG ThinQ cloud. Please try again later."
+    },
+    "failed_to_connect_mqtt": {
+      "message": "Failed to connect MQTT: {error}"
     }
   },
   "issues": {
