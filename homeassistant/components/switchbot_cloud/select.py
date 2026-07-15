@@ -31,7 +31,7 @@ class SwitchBotCloudStandingFanNightLight(SwitchBotCloudEntity, SelectEntity):
     """SwitchBotCloud Standing Fan Night Light."""
 
     _attr_options = list(NIGHT_LIGHT_PARAMETERS_MAP)
-    _attr_current_option: str | None = _attr_options[0]
+    _attr_current_option: str | None = None
 
     _attr_translation_key = "night_light_control"
 
