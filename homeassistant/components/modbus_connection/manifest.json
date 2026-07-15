@@ -9,5 +9,5 @@
   "iot_class": "local_polling",
   "loggers": ["modbus_connection", "tmodbus"],
   "quality_scale": "bronze",
-  "requirements": ["modbus-connection[tmodbus]==3.4.1"]
+  "requirements": ["modbus-connection[tmodbus]==3.7.0"]
 }
