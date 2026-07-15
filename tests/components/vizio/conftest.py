@@ -4,7 +4,14 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from vizaio import AppConfig, InputInfo, SettingInfo, SettingType, VizioConnectionError
+from vizaio import (
+    AppConfig,
+    InputInfo,
+    SettingInfo,
+    SettingType,
+    VizioConnectionError,
+    VizioNotFoundError,
+)
 from vizaio.profiles import SOUNDBAR_PROFILE
 
 from homeassistant.components.vizio.const import DOMAIN
@@ -198,6 +205,10 @@ def vizio_bypass_update_fixture() -> Generator[None]:
     """Mock component update with minimal data."""
     with (
         patch(
+            "homeassistant.components.vizio.Vizio.get_state_extended",
+            side_effect=VizioNotFoundError("not supported"),
+        ),
+        patch(
             "homeassistant.components.vizio.Vizio.get_power_state",
             return_value=True,
         ),
@@ -252,6 +263,10 @@ def vizio_cant_connect_fixture() -> Generator[None]:
             side_effect=VizioConnectionError("cannot connect"),
         ),
         patch(
+            "homeassistant.components.vizio.Vizio.get_state_extended",
+            side_effect=VizioConnectionError("cannot connect"),
+        ),
+        patch(
             "homeassistant.components.vizio.Vizio.get_power_state",
             side_effect=VizioConnectionError("cannot connect"),
         ),
@@ -271,6 +286,10 @@ def vizio_cant_connect_fixture() -> Generator[None]:
 def vizio_update_fixture() -> Generator[None]:
     """Mock valid updates to vizio device."""
     with (
+        patch(
+            "homeassistant.components.vizio.Vizio.get_state_extended",
+            side_effect=VizioNotFoundError("not supported"),
+        ),
         patch(
             "homeassistant.components.vizio.Vizio.get_settings",
             return_value={

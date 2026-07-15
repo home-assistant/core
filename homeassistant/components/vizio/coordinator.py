@@ -12,8 +12,10 @@ from vizaio import (
     AppRecord,
     InputInfo,
     SettingInfo,
+    StateExtended,
     Vizio,
     VizioError,
+    VizioNotFoundError,
     fetch_app_availability,
     fetch_remote_app_catalog,
     is_app_input,
@@ -126,6 +128,10 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             update_interval=SCAN_INTERVAL,
         )
         self.device = device
+        # Modern firmware bundles power/input/app state into one endpoint;
+        # firmware without it never gains it, so probe only until the first
+        # URI_NOT_FOUND response.
+        self._use_state_extended = True
 
     @override
     async def _async_setup(self) -> None:
@@ -149,12 +155,26 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
     @override
     async def _async_update_data(self) -> VizioDeviceData:
         """Fetch all device data."""
-        try:
-            is_on = await self.device.get_power_state()
-        except VizioError as err:
-            raise UpdateFailed(
-                f"Unable to connect to {self.config_entry.data[CONF_HOST]}"
-            ) from err
+        state: StateExtended | None = None
+        if self._use_state_extended:
+            try:
+                state = await self.device.get_state_extended()
+            except VizioNotFoundError:
+                self._use_state_extended = False
+            except VizioError as err:
+                raise UpdateFailed(
+                    f"Unable to connect to {self.config_entry.data[CONF_HOST]}"
+                ) from err
+
+        if state is not None:
+            is_on = state.power_on
+        else:
+            try:
+                is_on = await self.device.get_power_state()
+            except VizioError as err:
+                raise UpdateFailed(
+                    f"Unable to connect to {self.config_entry.data[CONF_HOST]}"
+                ) from err
 
         if not is_on:
             return VizioDeviceData(is_on=False)
@@ -170,17 +190,25 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
             if sound_mode:
                 sound_mode_list = list(sound_mode.options)
 
-        current_input = await _optional(self.device.get_current_input())
+        if state is not None:
+            current_input = state.current_input
+        else:
+            current_input = await _optional(self.device.get_current_input())
         input_list = await _optional(self.device.get_inputs())
 
         current_app_config = None
-        # Only attempt to fetch app config if the device is a TV and supports apps
+        # Only report app config if the device is a TV and supports apps
         if (
             self.config_entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
             and input_list
             and any(is_app_input(input_item.name) for input_item in input_list)
         ):
-            current_app_config = await _optional(self.device.get_current_app_config())
+            if state is not None:
+                current_app_config = state.current_app
+            else:
+                current_app_config = await _optional(
+                    self.device.get_current_app_config()
+                )
 
         return VizioDeviceData(
             is_on=True,
