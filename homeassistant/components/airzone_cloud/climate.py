@@ -46,10 +46,10 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    ClimateEntity,
-    ClimateEntityFeature,
     SWING_OFF,
     SWING_VERTICAL,
+    ClimateEntity,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
