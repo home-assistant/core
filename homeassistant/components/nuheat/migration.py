@@ -89,6 +89,7 @@ class MigrationPlan:
     original_anchor_title: str
     original_anchor_unique_id: str | None
     original_anchor_version: int
+    anchor_was_loaded: bool
     redundant_entry_snapshots: tuple[ConfigEntrySnapshot, ...]
     entity_snapshots: tuple[EntityAssociationSnapshot, ...]
     device_snapshots: tuple[DeviceAssociationSnapshot, ...]
@@ -284,6 +285,7 @@ def build_migration_plan(
         original_anchor_title=anchor_entry.title,
         original_anchor_unique_id=anchor_entry.unique_id,
         original_anchor_version=anchor_entry.version,
+        anchor_was_loaded=anchor_entry.state is ConfigEntryState.LOADED,
         redundant_entry_snapshots=tuple(
             _entry_snapshot(entry) for entry in redundant_entries
         ),
@@ -418,6 +420,43 @@ async def rollback_migration_plan(hass: HomeAssistant, plan: MigrationPlan) -> b
             )
     except Exception:  # noqa: BLE001
         rollback_failed = True
+
+    try:
+        anchor = hass.config_entries.async_get_entry(plan.anchor_entry_id)
+        if anchor is None:
+            rollback_failed = True
+        else:
+            validate_registry_snapshots(
+                hass, plan.entity_snapshots, plan.device_snapshots
+            )
+            if (
+                dict(anchor.data) != dict(plan.original_anchor_data)
+                or anchor.title != plan.original_anchor_title
+                or anchor.unique_id != plan.original_anchor_unique_id
+                or anchor.version != plan.original_anchor_version
+            ):
+                rollback_failed = True
+            for snapshot in plan.redundant_entry_snapshots:
+                entry = hass.config_entries.async_get_entry(snapshot.entry_id)
+                if entry is None or (
+                    dict(entry.data) != dict(snapshot.data)
+                    or entry.title != snapshot.title
+                    or entry.unique_id != snapshot.unique_id
+                    or entry.version != snapshot.version
+                ):
+                    rollback_failed = True
+    except Exception:  # noqa: BLE001
+        rollback_failed = True
+
+    if plan.anchor_was_loaded:
+        try:
+            if not await hass.config_entries.async_setup(plan.anchor_entry_id):
+                rollback_failed = True
+            anchor = hass.config_entries.async_get_entry(plan.anchor_entry_id)
+            if anchor is None or anchor.state is not ConfigEntryState.LOADED:
+                rollback_failed = True
+        except Exception:  # noqa: BLE001
+            rollback_failed = True
 
     if rollback_failed:
         _LOGGER.error(
