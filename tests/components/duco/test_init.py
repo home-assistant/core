@@ -15,6 +15,7 @@ from duco_connectivity import (
     LanInfo,
     Node,
     NodeListActionItemList,
+    VentilationTemperatureInfo,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -158,6 +159,59 @@ async def test_setup_entry_ignores_lan_info_failures(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.parametrize(
+    "method",
+    [
+        pytest.param("async_get_ventilation_temperature_info", id="temperatures"),
+    ],
+)
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(DucoError("API error"), id="duco_error"),
+        pytest.param(DucoConnectionError("Connection refused"), id="connection_error"),
+    ],
+)
+async def test_setup_entry_ignores_optional_temperature_capability_failures(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    method: str,
+    exception: Exception,
+) -> None:
+    """Test setup succeeds when an optional temperature capability is unavailable."""
+    getattr(mock_duco_client, method).side_effect = exception
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_unsupported_ventilation_temperature_capability_is_not_repolled(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test unavailable ventilation temperatures are not polled after setup."""
+    mock_duco_client.async_get_ventilation_temperature_info.return_value = None
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_duco_client.async_get_ventilation_temperature_info.reset_mock()
+
+    freezer.tick(timedelta(days=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_duco_client.async_get_ventilation_temperature_info.assert_not_awaited()
+
+
 async def test_setup_entry_ignores_node_name_config_failures(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -280,6 +334,9 @@ async def test_setup_entry_creates_http_client(
         mock_client_class.return_value.async_get_node_actions.return_value = (
             mock_node_actions
         )
+        (
+            mock_client_class.return_value.async_get_ventilation_temperature_info.return_value
+        ) = VentilationTemperatureInfo()
         mock_client_class.return_value.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status="Ok")
         ]
