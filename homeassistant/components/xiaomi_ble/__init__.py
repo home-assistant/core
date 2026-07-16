@@ -357,29 +357,10 @@ def _async_recover_interrupted_s400_migration(
     entry: ConfigEntry,
     coordinator: XiaomiActiveBluetoothProcessorCoordinator,
 ) -> None:
-    """Finish the legacy "impedance" -> "impedance_low" rename, if safe.
+    """Recover the legacy impedance rename when the target is unoccupied.
 
-    HA never retries async_migrate_entry once minor_version already
-    reads as current, so an attempt interrupted between the config
-    entry's fast save and the entity registry's much slower one (see
-    _async_purge_phantom_s400_impedance_entity) would otherwise never
-    complete for this step. Runs after the coordinator exists so a
-    device unknown to both the entity and device registries can still
-    be identified from the restore cache's own descriptions, before
-    that evidence is cleared by the cache purge below.
-
-    Deliberately does not attempt the other step (an original,
-    un-renamed "impedance_low" awaiting promotion to "impedance_high"):
-    when that target is already occupied by a real "-impedance_low"
-    entity, the same crash can equally mean either a still-pending
-    rename, or an already-correct entity sitting next to a legacy
-    "-impedance" resurrected by a separate, unrelated save-timing race
-    (the entity registry's own 180s debounce racing the bluetooth
-    passive-processor's 15-minute one). Since those two states are
-    indistinguishable here, and guessing wrong would mislabel real,
-    accurate data, that case is left alone rather than guessed at --
-    the legacy entity then remains under its old name permanently,
-    rather than being recovered.
+    The low-to-high step cannot be safely recovered because an occupied low ID may
+    represent either legacy or already-correct data.
     """
     if entry.version != 1 or entry.minor_version < 2:
         return
