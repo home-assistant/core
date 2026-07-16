@@ -72,7 +72,7 @@ BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         value_fn=lambda d: d.get("production"),
     ),
     GridxSensorEntityDescription(
-        key="selfConsumption",
+        key="self_consumption",
         translation_key="self_consumption",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -80,7 +80,7 @@ BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         value_fn=lambda d: d.get("selfConsumption"),
     ),
     GridxSensorEntityDescription(
-        key="selfSupply",
+        key="self_supply",
         translation_key="self_supply",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -88,7 +88,7 @@ BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         value_fn=lambda d: d.get("selfSupply"),
     ),
     GridxSensorEntityDescription(
-        key="totalConsumption",
+        key="total_consumption",
         translation_key="total_consumption",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -96,7 +96,7 @@ BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         value_fn=lambda d: d.get("totalConsumption"),
     ),
     GridxSensorEntityDescription(
-        key="directConsumptionHousehold",
+        key="direct_consumption_household",
         translation_key="direct_consumption_household",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -104,7 +104,7 @@ BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         value_fn=lambda d: d.get("directConsumptionHousehold"),
     ),
     GridxSensorEntityDescription(
-        key="directConsumptionHeatPump",
+        key="direct_consumption_heat_pump",
         translation_key="direct_consumption_heat_pump",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -113,7 +113,7 @@ BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         value_fn=lambda d: d.get("directConsumptionHeatPump"),
     ),
     GridxSensorEntityDescription(
-        key="directConsumptionEV",
+        key="direct_consumption_ev",
         translation_key="direct_consumption_ev",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -122,7 +122,7 @@ BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         value_fn=lambda d: d.get("directConsumptionEV"),
     ),
     GridxSensorEntityDescription(
-        key="directConsumptionHeater",
+        key="direct_consumption_heater",
         translation_key="direct_consumption_heater",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -131,7 +131,7 @@ BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         value_fn=lambda d: d.get("directConsumptionHeater"),
     ),
     GridxSensorEntityDescription(
-        key="directConsumptionRate",
+        key="direct_consumption_rate",
         translation_key="direct_consumption_rate",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -143,7 +143,7 @@ BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         ),
     ),
     GridxSensorEntityDescription(
-        key="selfConsumptionRate",
+        key="self_consumption_rate",
         translation_key="self_consumption_rate",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -155,7 +155,7 @@ BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         ),
     ),
     GridxSensorEntityDescription(
-        key="selfSufficiencyRate",
+        key="self_sufficiency_rate",
         translation_key="self_sufficiency_rate",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -168,7 +168,7 @@ BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
     ),
     # Grid meter readings: API returns Ws (watt-seconds) — convert to Wh
     GridxSensorEntityDescription(
-        key="gridMeterReadingPositive",
+        key="grid_meter_reading_positive",
         translation_key="grid_meter_reading_positive",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -181,7 +181,7 @@ BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         ),
     ),
     GridxSensorEntityDescription(
-        key="gridMeterReadingNegative",
+        key="grid_meter_reading_negative",
         translation_key="grid_meter_reading_negative",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -197,7 +197,7 @@ BASE_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
 
 BATTERY_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
     GridxSensorEntityDescription(
-        key="battery_stateOfCharge",
+        key="battery_state_of_charge",
         translation_key="battery_state_of_charge",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
@@ -227,7 +227,7 @@ BATTERY_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         value_fn=lambda d: d["battery"].get("capacity") if d.get("battery") else None,
     ),
     GridxSensorEntityDescription(
-        key="battery_remainingCharge",
+        key="battery_remaining_charge",
         translation_key="battery_remaining_charge",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
@@ -269,7 +269,7 @@ EV_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         ),
     ),
     GridxSensorEntityDescription(
-        key="ev_stateOfCharge",
+        key="ev_state_of_charge",
         translation_key="ev_state_of_charge",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
@@ -284,7 +284,7 @@ EV_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         ),
     ),
     GridxSensorEntityDescription(
-        key="ev_currentL1",
+        key="ev_current_l1",
         translation_key="ev_current_phase",
         translation_placeholders={"phase": "L1"},
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -298,7 +298,7 @@ EV_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         ),
     ),
     GridxSensorEntityDescription(
-        key="ev_currentL2",
+        key="ev_current_l2",
         translation_key="ev_current_phase",
         translation_placeholders={"phase": "L2"},
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -312,7 +312,7 @@ EV_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         ),
     ),
     GridxSensorEntityDescription(
-        key="ev_currentL3",
+        key="ev_current_l3",
         translation_key="ev_current_phase",
         translation_placeholders={"phase": "L3"},
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -326,7 +326,7 @@ EV_DESCRIPTIONS: tuple[GridxSensorEntityDescription, ...] = (
         ),
     ),
     GridxSensorEntityDescription(
-        key="ev_readingTotal",
+        key="ev_reading_total",
         translation_key="ev_reading_total",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,

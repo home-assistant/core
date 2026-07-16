@@ -73,7 +73,7 @@ async def test_battery_sensor_present(
     entry = setup_integration
     registry = er.async_get(hass)
     entity = registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{entry.unique_id}_battery_stateOfCharge"
+        "sensor", DOMAIN, f"{entry.unique_id}_battery_state_of_charge"
     )
     assert entity is not None
     state = hass.states.get(entity)
@@ -104,7 +104,7 @@ async def test_battery_sensors_not_created_without_battery(
 
     registry = er.async_get(hass)
     entity = registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{entry.unique_id}_battery_stateOfCharge"
+        "sensor", DOMAIN, f"{entry.unique_id}_battery_state_of_charge"
     )
     assert entity is None
 
@@ -149,7 +149,7 @@ async def test_grid_meter_ws_to_wh_conversion(
     entry = setup_integration
     registry = er.async_get(hass)
     entity = registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{entry.unique_id}_gridMeterReadingPositive"
+        "sensor", DOMAIN, f"{entry.unique_id}_grid_meter_reading_positive"
     )
     assert entity is not None
     state = hass.states.get(entity)
@@ -170,7 +170,7 @@ async def test_live_sensor_value_fn_type_error(
 
     registry = er.async_get(hass)
     entity_id = registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{entry.unique_id}_gridMeterReadingPositive"
+        "sensor", DOMAIN, f"{entry.unique_id}_grid_meter_reading_positive"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
@@ -190,7 +190,7 @@ async def test_sensor_value_fn_value_error(
 
     registry = er.async_get(hass)
     entity_id = registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{entry.unique_id}_selfConsumptionRate"
+        "sensor", DOMAIN, f"{entry.unique_id}_self_consumption_rate"
     )
     assert entity_id is not None
     state = hass.states.get(entity_id)
