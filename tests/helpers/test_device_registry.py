@@ -3664,6 +3664,37 @@ async def test_via_device_falls_back_to_other_config_entry(
     assert device.via_device_id == via_1.id
 
 
+async def test_via_device_prefers_same_domain(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """The deprecated via_device prefers a via device from the same integration.
+
+    When no via device exists in the registering config entry, one from another config
+    entry of the same domain is preferred over an arbitrary other-domain match.
+    """
+    entry = MockConfigEntry(domain="hue")
+    entry.add_to_hass(hass)
+    other_domain_entry = MockConfigEntry(domain="deconz")
+    other_domain_entry.add_to_hass(hass)
+    same_domain_entry = MockConfigEntry(domain="hue")
+    same_domain_entry.add_to_hass(hass)
+
+    # No via device in `entry`; the other-domain candidate is indexed first
+    device_registry.async_get_or_create(
+        config_entry_id=other_domain_entry.entry_id, identifiers={("hue", "via")}
+    )
+    via_same_domain = device_registry.async_get_or_create(
+        config_entry_id=same_domain_entry.entry_id, identifiers={("hue", "via")}
+    )
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("hue", "device")},
+        via_device=("hue", "via"),
+    )
+    assert device.via_device_id == via_same_domain.id
+
+
 async def test_loading_saving_data(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:

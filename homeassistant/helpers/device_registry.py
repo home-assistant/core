@@ -1400,12 +1400,21 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # Otherwise they are independent devices sharing an identifier or connection.
         # Prefer one owned by the calling integration so the caller resolves to its own
         # device rather than an insertion-order-dependent one; fall back to the first.
-        if (domain := _current_integration_domain()) is not None:
-            for device in matches:
-                entry = self.hass.config_entries.async_get_entry(device.config_entry_id)
-                if entry is not None and entry.domain == domain:
-                    return device
+        if (domain := _current_integration_domain()) is not None and (
+            device := self._first_device_in_domain(matches, domain)
+        ) is not None:
+            return device
         return matches[0]
+
+    def _first_device_in_domain(
+        self, devices: Iterable[DeviceEntry], domain: str
+    ) -> DeviceEntry | None:
+        """Return the first device whose config entry belongs to domain."""
+        for device in devices:
+            entry = self.hass.config_entries.async_get_entry(device.config_entry_id)
+            if entry is not None and entry.domain == domain:
+                return device
+        return None
 
     @callback
     def _async_matching_devices(
@@ -1677,12 +1686,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if via_device is not None and via_device is not UNDEFINED:
             # Resolve the deprecated via_device to a device id. The identifier is not
             # unique across config entries, so prefer a via device in the same config
-            # entry, falling back to any config entry (a via device may legitimately
-            # belong to a different config entry). This ambiguity is why via_device is
-            # deprecated.
-            via = self.devices.get_entry(
-                identifiers={via_device}, config_entry_id=config_entry_id
-            ) or self.devices.get_entry(identifiers={via_device})
+            # entry, then one from the same integration (domain), falling back to any
+            # config entry (a via device may legitimately belong to a different config
+            # entry). This ambiguity is why via_device is deprecated.
+            via = (
+                self.devices.get_entry(
+                    identifiers={via_device}, config_entry_id=config_entry_id
+                )
+                or self._first_device_in_domain(
+                    self.devices.get_entries(identifiers={via_device}),
+                    config_entry.domain,
+                )
+                or self.devices.get_entry(identifiers={via_device})
+            )
             if via is None:
                 report_usage(
                     "calls `device_registry.async_get_or_create` referencing a "
