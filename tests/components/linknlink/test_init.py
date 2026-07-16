@@ -35,6 +35,24 @@ async def test_setup_updates_previous_display_name(
     assert entry.title == DISPLAY_MODEL
 
 
+async def test_setup_preserves_custom_title(
+    hass: HomeAssistant,
+    mock_linknlink_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test preserving a title customized by the user."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Living room presence",
+        data=mock_config_entry.data,
+        unique_id=mock_config_entry.unique_id,
+    )
+
+    await setup_integration(hass, entry)
+
+    assert entry.title == "Living room presence"
+
+
 async def test_setup_and_unload(
     hass: HomeAssistant,
     mock_linknlink_client: AsyncMock,
