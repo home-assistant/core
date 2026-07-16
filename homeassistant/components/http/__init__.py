@@ -229,7 +229,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except (HomeAssistantError, OSError) as err:
             store = await async_get_and_load_store(hass)
             trial_reverted = store.revert_deadline is not None
-            conf = await store.async_get_fallback_config(conf, err)
+            conf = await store.async_get_fallback_config(err)
             server = _make_server(conf)
             continue
         if trial_reverted:

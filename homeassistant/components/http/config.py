@@ -10,7 +10,7 @@ from typing import Any, Final, TypedDict, cast, override
 
 import voluptuous as vol
 
-from homeassistant.const import SERVER_PORT
+from homeassistant.const import CONF_ERROR, SERVER_PORT
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -68,12 +68,15 @@ def default_server_port() -> int:
 
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 2
+STORAGE_MINOR_VERSION: Final = 2
 
 KEY_STABLE: Final = "stable"
 KEY_PENDING: Final = "pending"
 KEY_YAML_MIGRATION_DONE: Final = "yaml_migration_done"
 
 AUTO_REVERT_DELAY: Final = timedelta(minutes=5)
+CONF_CREATED_AT: Final = "created_at"
+ERROR_NOT_PROMOTED: Final = "not_promoted"
 
 DATA_STORE: HassKey[HTTPConfigStore] = HassKey(STORAGE_KEY)
 
@@ -93,6 +96,8 @@ class ConfData(TypedDict, total=False):
     ip_ban_enabled: bool
     ssl_profile: str
     use_x_frame_options: bool
+    created_at: datetime
+    error: str | None
 
 
 class ActiveConfigType(StrEnum):
@@ -145,7 +150,17 @@ HTTP_STORAGE_SCHEMA: Final = vol.Schema(
         vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
     }
 )
-_DEFAULT_CONFIG: Final[ConfData] = cast(ConfData, HTTP_STORAGE_SCHEMA({}))
+_DEFAULT_CONFIG: Final[ConfData] = ConfData(
+    **HTTP_STORAGE_SCHEMA({}), created_at=dt_util.utcnow(), error=None
+)
+
+
+def _strip_meta(config: ConfData) -> ConfData:
+    """Return the config without its created_at/error metadata."""
+    return cast(
+        ConfData,
+        {k: v for k, v in config.items() if k not in (CONF_CREATED_AT, CONF_ERROR)},
+    )
 
 
 async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData:
@@ -250,10 +265,12 @@ class HTTPConfigStore:
             hass,
             STORAGE_VERSION,
             STORAGE_KEY,
+            minor_version=STORAGE_MINOR_VERSION,
             private=True,
             atomic_writes=True,
         )
-        self._stable: ConfData = _DEFAULT_CONFIG
+        # Copied so recording an error on stable never mutates the shared default.
+        self._stable: ConfData = _DEFAULT_CONFIG.copy()
         self._pending: ConfData | None = None
         self._active_config_type: ActiveConfigType = ActiveConfigType.DEFAULT
         self._yaml_migration_done = False
@@ -311,10 +328,13 @@ class HTTPConfigStore:
     async def async_set_pending(self, config: ConfData | None) -> None:
         """Set (or clear) the pending config."""
         await self.async_load()
-        if config == self.stable:
+        if config is not None and _strip_meta(config) == _strip_meta(self._stable):
             # No need to save a pending config that is the same as stable.
             config = None
         self._pending = config
+        if self._pending is not None:
+            self._pending[CONF_CREATED_AT] = dt_util.utcnow()
+            self._pending[CONF_ERROR] = None
         await self._async_persist()
 
     async def async_promote_pending(self) -> None:
@@ -325,13 +345,17 @@ class HTTPConfigStore:
         await self.async_load()
         if self._pending is None:
             raise HomeAssistantError("No pending HTTP config to promote")
+        if self._pending[CONF_ERROR] is not None:
+            raise HomeAssistantError(
+                f"Cannot promote pending HTTP config with error: {self._pending[CONF_ERROR]}"
+            )
         self._stable = self._pending
         self._pending = None
         if self._active_config_type is ActiveConfigType.PENDING:
             # The running config now lives in the stable slot.
             self._active_config_type = ActiveConfigType.STABLE
         # The config is now confirmed; no need to revert it anymore.
-        self._async_cancel_revert()
+        self.async_cancel_revert()
         await self._async_persist()
 
     @callback
@@ -343,7 +367,7 @@ class HTTPConfigStore:
         Assistant unreachable), automatically clear it and restart so the last
         known-good stable config is restored.
         """
-        self._async_cancel_revert()
+        self.async_cancel_revert()
         self._revert_deadline = dt_util.utcnow() + AUTO_REVERT_DELAY
         self._revert_unsub = async_call_later(
             self._hass,
@@ -356,7 +380,7 @@ class HTTPConfigStore:
         )
 
     @callback
-    def _async_cancel_revert(self) -> None:
+    def async_cancel_revert(self) -> None:
         """Cancel a scheduled revert, if any.
 
         Also clears the deadline so ``revert_deadline`` no longer reports a
@@ -368,8 +392,8 @@ class HTTPConfigStore:
         self._revert_deadline = None
 
     async def _async_revert_to_stable(self, _now: datetime) -> None:
-        """Clear the unconfirmed pending config and restart to apply stable."""
-        self._async_cancel_revert()
+        """Mark the unconfirmed pending config reverted and restart to apply stable."""
+        self.async_cancel_revert()
         if self._pending is None:
             return
         _LOGGER.warning(
@@ -377,7 +401,7 @@ class HTTPConfigStore:
             "stable config and restarting",
             AUTO_REVERT_DELAY,
         )
-        self._pending = None
+        self._pending[CONF_ERROR] = ERROR_NOT_PROMOTED
         await self._async_persist()
         # Imported here to avoid a circular import at module load time.
         from homeassistant.components.homeassistant import (  # noqa: PLC0415
@@ -387,22 +411,15 @@ class HTTPConfigStore:
 
         await self._hass.services.async_call(HASS_DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
 
-    async def async_abort_trial(self) -> None:
-        """Abort the running pending-config trial and reinstate stable.
-
-        Called during setup when the pending config cannot be applied at all
-        (its address cannot be bound or its SSL configuration is unusable).
-        Clears the pending config so this and future starts use stable.
-        """
-        await self.async_load()
-        self._async_cancel_revert()
-        await self._async_persist()
-
     async def async_migrate_yaml(self, config: ConfData) -> ConfData:
         """Migrate YAML config to storage as pending if not the same as the config used for recovery."""
         await self.async_load()
         validated_config = cast(ConfData, HTTP_STORAGE_SCHEMA(config))
-        self._pending = None if validated_config == self._stable else validated_config
+        self._pending = None
+        if validated_config != _strip_meta(self._stable):
+            self._pending = ConfData(
+                **validated_config, created_at=dt_util.utcnow(), error=None
+            )
         self._yaml_migration_done = True
         await self._async_persist()
         self._active_config_type = (
@@ -414,6 +431,9 @@ class HTTPConfigStore:
 
     async def _async_persist(self) -> None:
         """Write the current state to disk (or remove the file if empty)."""
+        # An error on the confirmed-working stable config is transient;
+        # never persist it.
+        self._stable[CONF_ERROR] = None
         await self._store.async_save(
             {
                 KEY_STABLE: self._stable,
@@ -425,22 +445,27 @@ class HTTPConfigStore:
     async def get_config(self) -> ConfData:
         """Resolve the config to use and record it as the active slot.
 
-        Normal mode prefers ``pending`` over ``stable``; recovery mode
-        always uses ``stable``.
+        Normal mode prefers ``pending`` over ``stable``, unless an error is
+        recorded on the pending config (it already failed a trial); recovery
+        mode always uses ``stable``.
         """
         await self.async_load()
-        if not self._hass.config.recovery_mode and self._pending is not None:
+        pending = self._pending
+        if (
+            not self._hass.config.recovery_mode
+            and pending is not None
+            and pending[CONF_ERROR] is None
+        ):
             self._active_config_type = ActiveConfigType.PENDING
-            return self._pending
+            return pending
         self._active_config_type = ActiveConfigType.STABLE
         return self._stable
 
     async def async_get_fallback_config(
         self,
-        current_config: ConfData,
         err: HomeAssistantError | OSError,
     ) -> ConfData:
-        """Return the next config to try after ``current_config`` could not be applied.
+        """Return the next config to try after the active one could not be applied.
 
         Implements the fallback chain pending -> stable -> default config, where
         the last step is only taken in recovery mode. Raises when there is no
@@ -449,37 +474,47 @@ class HTTPConfigStore:
         to the outside (e.g. the Supervisor rolls back a Core update whose API
         does not come up).
         """
-        if self._revert_deadline is not None:
+        failed_type = self._active_config_type
+        if failed_type is ActiveConfigType.DEFAULT:
+            # Never record the error on the shared default config.
+            failed_config = _DEFAULT_CONFIG
+        else:
+            failed_config = await self.get_config()
+            failed_config[CONF_ERROR] = str(err)
+
+        if failed_type is ActiveConfigType.PENDING:
             # An unconfirmed pending config is under trial and cannot even be
-            # applied, so it is known to be bad: revert to the stable config
-            # right away and continue this same start with it, instead of
-            # waiting out the trial window and restarting.
+            # applied, so it is known to be bad: record the error on it, revert
+            # to the stable config right away and continue this same start with
+            # it, instead of waiting out the trial window and restarting.
             _LOGGER.error(
                 "The new HTTP configuration could not be applied, reverting to "
                 "the previous configuration: %s",
                 err,
             )
-            await self.async_abort_trial()
+            self.async_cancel_revert()
+            # Store the pending config with the error to prevent it from being used again.
+            await self._async_persist()
             self._active_config_type = ActiveConfigType.STABLE
-            return self.stable
+            return self._stable
 
         if (
             # In normal mode, fail setup so recovery mode can take over with a
             # reachable configuration.
             not self._hass.config.recovery_mode
             # The chain is exhausted; nothing left to fall back to.
-            or current_config is _DEFAULT_CONFIG
+            or failed_type is ActiveConfigType.DEFAULT
             # With peer certificate verification configured, connections must
             # never be accepted without a verified client certificate; there is
             # no acceptable fallback config.
-            or CONF_SSL_PEER_CERTIFICATE in current_config
+            or CONF_SSL_PEER_CERTIFICATE in failed_config
         ):
             # An unusable SSL configuration already carries a descriptive
             # HomeAssistantError.
             if isinstance(err, HomeAssistantError):
                 raise err
             raise HomeAssistantError(
-                f"Failed to create HTTP server at port {current_config[CONF_SERVER_PORT]}: {err}"
+                f"Failed to create HTTP server at port {failed_config[CONF_SERVER_PORT]}: {err}"
             ) from err
 
         # The config cannot be applied in recovery mode; fall back to the
@@ -515,9 +550,22 @@ class _HTTPStore(Store[_HTTPStoreData]):
                     "falling back to defaults"
                 )
                 stable = _DEFAULT_CONFIG
-            return {
+            old_data = {
                 KEY_STABLE: stable,
                 KEY_PENDING: None,
                 KEY_YAML_MIGRATION_DONE: False,
             }
+        if old_minor_version < 2:
+            # 2.2 added `error` and `created_at` to the config slots
+            old_data[KEY_STABLE] = {
+                **old_data[KEY_STABLE],
+                CONF_CREATED_AT: dt_util.utcnow(),
+                CONF_ERROR: None,
+            }
+            if old_data[KEY_PENDING] is not None:
+                old_data[KEY_PENDING] = {
+                    **old_data[KEY_PENDING],
+                    CONF_CREATED_AT: dt_util.utcnow(),
+                    CONF_ERROR: None,
+                }
         return old_data
