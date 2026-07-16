@@ -92,8 +92,6 @@ async def test_updating_state(
     assert state is not None
     assert state.state == LockState.LOCKED.value
 
-    # Update with locked: True and is_locked: False
-    # should show UNLOCKED because is_locked takes priority
     mock_websocket.call_args[1]["on_device_status"](
         "dev_lock_001",
         {
@@ -105,42 +103,6 @@ async def test_updating_state(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("lock.front_door_lock")
-    assert state is not None
-    assert state.state == LockState.UNLOCKED.value
-
-
-async def test_updating_state_fallback(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_api_client: AsyncMock,
-    mock_websocket: AsyncMock,
-) -> None:
-    """Test updating state falls back to locked when is_locked is missing."""
-    # Remove is_locked from status before integration setup to test fallback during load
-    get_device_by_id(mock_api_client, "dev_lock_001")["status"].pop("is_locked", None)
-
-    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.LOCK]):
-        await setup_integration(hass, mock_config_entry)
-
-    # Verify initial state of lock using locked fallback
-    # In XT-LK50.json, locked is True
-    state = hass.states.get("lock.front_door_lock")
-    assert state is not None
-    assert state.state == LockState.LOCKED.value
-
-    # Update with locked: False (no is_locked in update either)
-    mock_websocket.call_args[1]["on_device_status"](
-        "dev_lock_001",
-        {
-            "locked": False,
-            "jammed": False,
-            "battery": 80,
-        },
-    )
-    await hass.async_block_till_done()
-
-    # State should update to UNLOCKED using locked fallback
     state = hass.states.get("lock.front_door_lock")
     assert state is not None
     assert state.state == LockState.UNLOCKED.value
