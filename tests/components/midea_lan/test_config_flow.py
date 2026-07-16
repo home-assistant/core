@@ -376,42 +376,18 @@ async def test_manual_step_errors(
             id="no_devices",
         ),
         pytest.param(
-            {
-                TEST_DEVICE_ID: {
-                    **BASE_DATA,
-                    CONF_TYPE: TEST_TYPE,
-                    CONF_PROTOCOL: ProtocolVersion.V2,
-                },
-            },
-            {"login": True},
-            FlowResultType.CREATE_ENTRY,
-            None,
-            id="v2_success",
-        ),
-        pytest.param(
-            {
-                TEST_DEVICE_ID: {
-                    **BASE_DATA,
-                    CONF_TYPE: TEST_TYPE,
-                    CONF_PROTOCOL: ProtocolVersion.V2,
-                },
-            },
+            {TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE}},
             {"login": False},
             FlowResultType.FORM,
             "preset_login_failed",
             id="cached_credentials_fail",
         ),
         pytest.param(
-            {
-                TEST_DEVICE_ID: {
-                    **BASE_DATA,
-                    CONF_TYPE: TEST_TYPE,
-                    CONF_PROTOCOL: ProtocolVersion.V2,
-                },
-            },
+            {TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE}},
             {
                 "login": True,
                 "device_info": {"name": "Cloud Device Name", "model_number": "XYZ123"},
+                "cloud_keys": {"method": {"token": TEST_TOKEN, "key": TEST_KEY}},
             },
             FlowResultType.CREATE_ENTRY,
             None,
@@ -569,6 +545,71 @@ async def test_search_and_auto_flow(
         assert result["errors"] == {"base": expected_error}
     else:
         assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
+
+
+@pytest.mark.parametrize(
+    "protocol",
+    [
+        pytest.param(ProtocolVersion.V1, id="v1"),
+        pytest.param(ProtocolVersion.V2, id="v2"),
+    ],
+)
+async def test_auto_flow_v1_v2_success_when_cloud_down(
+    hass: HomeAssistant,
+    protocol: ProtocolVersion,
+) -> None:
+    """Test v1/v2 devices are added without ever using the cloud, even if it is down."""
+    mock_devices = {
+        TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE, CONF_PROTOCOL: protocol},
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.MENU
+    flow_id = result["flow_id"]
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id,
+        user_input={"next_step_id": "search"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "search"
+
+    dm = MagicMock()
+    dm.connect.return_value = True
+
+    with (
+        patch(
+            "homeassistant.components.midea_lan.config_flow.discover",
+            return_value=mock_devices,
+        ),
+        patch(
+            "homeassistant.components.midea_lan.config_flow.MideaDevice",
+            return_value=dm,
+        ),
+        patch.object(
+            MideaLanConfigFlow,
+            "_check_cloud_login",
+            AsyncMock(side_effect=AssertionError("cloud must not be used")),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={CONF_IP_ADDRESS: "auto"},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "auto"
+
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={CONF_DEVICE: TEST_DEVICE_ID},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
+    assert result["data"][CONF_PROTOCOL] == protocol
 
 
 async def test_login_credentials_step_renders_with_cloud_servers(
@@ -947,11 +988,7 @@ async def test_login_credentials_step_success_resumes_auto_flow(
     assert result["step_id"] == "search"
 
     discovered_device = {
-        TEST_DEVICE_ID: {
-            **BASE_DATA,
-            CONF_TYPE: TEST_TYPE,
-            CONF_PROTOCOL: ProtocolVersion.V2,
-        }
+        TEST_DEVICE_ID: {**BASE_DATA, CONF_TYPE: TEST_TYPE},
     }
     with patch(
         "homeassistant.components.midea_lan.config_flow.discover",
@@ -981,6 +1018,9 @@ async def test_login_credentials_step_success_resumes_auto_flow(
     cloud = MagicMock()
     cloud.login = AsyncMock(return_value=True)
     cloud.get_device_info = AsyncMock(return_value=None)
+    cloud.get_cloud_keys = AsyncMock(
+        return_value={"method": {"token": TEST_TOKEN, "key": TEST_KEY}}
+    )
 
     dm = MagicMock()
     dm.connect.return_value = True
@@ -995,6 +1035,10 @@ async def test_login_credentials_step_success_resumes_auto_flow(
             "homeassistant.components.midea_lan.config_flow.get_midea_cloud",
             return_value=cloud,
         ) as mock_get_midea_cloud,
+        patch(
+            "homeassistant.components.midea_lan.config_flow.MideaCloud.get_default_keys",
+            AsyncMock(return_value={}),
+        ),
         patch(
             "homeassistant.components.midea_lan.config_flow.MideaDevice",
             return_value=dm,

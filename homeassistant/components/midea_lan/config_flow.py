@@ -392,8 +392,6 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             device_id = user_input[CONF_DEVICE]
             device = self.devices[device_id]
-            # set device args with protocol decode data
-            # then get subtype from cloud, get v3 device token/key from cloud
             self.found_device = {
                 CONF_DEVICE_ID: device_id,
                 CONF_NAME: self.supports.get(device.get(CONF_TYPE), str(device_id)),
@@ -403,19 +401,20 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: device.get(CONF_PORT),
                 CONF_MODEL: device.get(CONF_MODEL),
             }
-            # check login cache, show login web if no cache
-            if self._login_data is None or self.cloud is None:
-                return await self.async_step_auth_method()
-
-            # get subtype from cloud
-            if device_info := await self.cloud.get_device_info(device_id):
-                # set subtype with model_number
-                if cloud_name := device_info.get("name"):
-                    self.found_device[CONF_NAME] = cloud_name
-                self.found_device[CONF_SUBTYPE] = device_info.get("model_number")
 
             # MUST get a auth passed token/key for v3 device, disable add before pass
             if device.get(CONF_PROTOCOL) == ProtocolVersion.V3:
+                # check login cache, show login web if no cache
+                if self._login_data is None or self.cloud is None:
+                    return await self.async_step_auth_method()
+
+                # get subtype from cloud
+                if device_info := await self.cloud.get_device_info(device_id):
+                    # set subtype with model_number
+                    if cloud_name := device_info.get("name"):
+                        self.found_device[CONF_NAME] = cloud_name
+                    self.found_device[CONF_SUBTYPE] = device_info.get("model_number")
+
                 # phase 1, try with user input login data
                 keys = await self._check_key_from_cloud(device_id)
 
@@ -453,7 +452,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self._async_create_midea_entry(
                     self._found_device_to_user_input(),
                 )
-            # v1/v2 device add without token/key
+            # v1/v2 device add without token/key, no cloud interaction needed
             self._clear_login_state()
             return await self._async_create_midea_entry(
                 self._found_device_to_user_input(),
