@@ -606,7 +606,14 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="api_error",
                 translation_placeholders={"error": str(err)},
             ) from err
-        return response.get("obj", {}).get("mixBean", {})
+        settings = response.get("obj", {}).get("mixBean", {})
+        if not settings:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(response)},
+            )
+        return settings
 
     def _parse_ac_time_periods(self, settings: dict, time_type: str) -> list[dict]:
         """Parse AC charge/discharge time periods from classic Mix settings data."""

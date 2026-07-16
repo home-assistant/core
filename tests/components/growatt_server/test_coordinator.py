@@ -475,3 +475,24 @@ async def test_read_ac_charge_times_classic_settings_request_exception_raises(
 
     with pytest.raises(HomeAssistantError):
         await coordinator.read_ac_charge_times()
+
+
+async def test_read_ac_charge_times_classic_empty_settings_raises(
+    hass: HomeAssistant,
+    mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api: MagicMock,
+) -> None:
+    """Test a failure response with no mixBean settings raises HomeAssistantError.
+
+    A missing/empty obj.mixBean (e.g. a failure payload) must not be silently
+    treated as all-zero settings — that would let a partial write merge in
+    0/100/disabled defaults and overwrite every omitted schedule field.
+    """
+    coordinator = await _get_mix_coordinator(
+        hass, mock_config_entry_classic, mock_growatt_classic_api
+    )
+
+    mock_growatt_classic_api.get_mix_inverter_settings.return_value = {"success": False}
+
+    with pytest.raises(HomeAssistantError):
+        await coordinator.read_ac_charge_times()
