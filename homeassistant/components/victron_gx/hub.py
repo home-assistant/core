@@ -34,8 +34,6 @@ from .const import CONF_INSTALLATION_ID, CONF_SERIAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_INTERVAL_SECONDS = 1
-
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
 type VictronGxConfigEntry = ConfigEntry[Hub]
@@ -76,7 +74,7 @@ class Hub:
             model_name=config.get(CONF_MODEL) or None,
             serial=config.get(CONF_SERIAL) or None,
             operation_mode=OperationMode.FULL,
-            update_frequency_seconds=UPDATE_INTERVAL_SECONDS,
+            update_frequency_seconds="auto",
         )
         self._hub.on_new_metric = self._on_new_metric
         self.new_metric_callbacks: dict[MetricKind, NewMetricCallback] = {}
