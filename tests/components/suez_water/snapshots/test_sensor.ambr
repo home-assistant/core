@@ -43,6 +43,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by toutsurmoneau.fr',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Suez mock device Water price',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '€/m³',
     }),
     'context': <ANY>,
