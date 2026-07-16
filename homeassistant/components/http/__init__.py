@@ -20,6 +20,7 @@ from aiohttp.hdrs import (
     ACCESS_CONTROL_ALLOW_CREDENTIALS,
     ACCESS_CONTROL_ALLOW_ORIGIN,
     ORIGIN,
+    VARY,
 )
 from aiohttp.http_parser import RawRequestMessage
 from aiohttp.streams import StreamReader
@@ -90,7 +91,6 @@ from .const import (  # noqa: F401
     CONF_USE_X_FRAME_OPTIONS,
     DEFAULT_CORS,
     DOMAIN,
-    ENV_SUPERVISOR,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
     NO_LOGIN_ATTEMPT_THRESHOLD,
@@ -294,6 +294,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ],
             ssl_profile=conf[CONF_SSL_PROFILE],
             supervisor_unix_socket_path=supervisor_unix_socket_path,
+            # Bridge the previous default port only for the unconfigured
+            # default config on a new default port (a fresh install under
+            # Supervisor). Any user-configured HTTP config means onboarding is
+            # over, so the transition does not apply.
+            port_transition=(
+                conf is _DEFAULT_CONFIG and conf[CONF_SERVER_PORT] != SERVER_PORT
+            ),
         )
 
     server = _make_server(conf)
@@ -476,6 +483,7 @@ class HomeAssistantHTTP:
         trusted_proxies: list[IPv4Network | IPv6Network],
         ssl_profile: str,
         supervisor_unix_socket_path: Path | None = None,
+        port_transition: bool = False,
     ) -> None:
         """Initialize the HTTP Home Assistant server."""
         self.app = HomeAssistantApplication(
@@ -498,12 +506,13 @@ class HomeAssistantHTTP:
         self.runner: web.AppRunner | None = None
         self.supervisor_site: HomeAssistantUnixSite | None = None
         self.context: ssl.SSLContext | None = None
-        # Under Supervisor the server listens on port 80. Redirect the previous
-        # default port (SERVER_PORT) to the active one and relax CORS for
-        # same-host requests so already-flashed devices and bookmarks keep
-        # working, until onboarding completes.
-        self._port_transition = ENV_SUPERVISOR in os.environ
-        self._port_transition_cors = self._port_transition
+        # The legacy-port transition (redirect the previous default port to the
+        # active one, plus same-host CORS so a followed redirect isn't blocked)
+        # only applies to the unconfigured default config that moved off the
+        # previous default port, i.e. a fresh install on the new default port.
+        # It stays active for as long as the redirect server is bound; the CORS
+        # relaxation keys off that server so the two can never get out of sync.
+        self._port_transition = port_transition
         self._legacy_redirect_runner: web.AppRunner | None = None
         self._legacy_redirect_server: asyncio.Server | None = None
         self._server: asyncio.Server | None = None
@@ -832,14 +841,15 @@ class HomeAssistantHTTP:
     async def _async_add_transition_cors(
         self, request: web.Request, response: web.StreamResponse
     ) -> None:
-        """Echo a same-host Origin during the port transition.
+        """Echo a same-host Origin while the legacy-port redirect is active.
 
         A cross-origin fetch that follows the legacy-port redirect stays in
         CORS mode, so the final response on the active port also needs CORS
         headers. Scope this to our own host (the redirect is only ever same
-        host, different port) and only until onboarding completes.
+        host, different port). Keying off the redirect server means the
+        relaxation is never left enabled without a redirect to justify it.
         """
-        if not self._port_transition_cors:
+        if self._legacy_redirect_server is None:
             return
         origin = request.headers.get(ORIGIN)
         if not origin:
@@ -851,9 +861,11 @@ class HomeAssistantHTTP:
         if origin_host and origin_host == request.url.host:
             response.headers[ACCESS_CONTROL_ALLOW_ORIGIN] = origin
             response.headers[ACCESS_CONTROL_ALLOW_CREDENTIALS] = "true"
+            # The response varies by Origin, so caches must not share it.
+            response.headers[VARY] = ORIGIN
 
     async def _async_start_legacy_redirect(self) -> None:
-        """Redirect the previous default port to the active port until onboarded."""
+        """Redirect the previous default port to the active port."""
         target_port = self.server_port
 
         async def _redirect(request: web.Request) -> web.StreamResponse:
@@ -873,37 +885,18 @@ class HomeAssistantHTTP:
             self._legacy_redirect_runner = None
             return
 
-        _LOGGER.info(
-            "Redirecting legacy port %d to port %d until onboarding completes",
-            SERVER_PORT,
-            target_port,
-        )
-        async_when_setup_or_start(
-            self.hass, "onboarding", self._async_register_onboarding_teardown
-        )
+        _LOGGER.info("Redirecting legacy port %d to port %d", SERVER_PORT, target_port)
 
     async def _async_create_redirect_server(self) -> asyncio.Server:
         """Bind the legacy redirect server on the previous default port."""
         assert self._legacy_redirect_runner is not None
+        server_factory = self._legacy_redirect_runner.server
+        assert server_factory is not None
         return await self.hass.loop.create_server(
-            self._legacy_redirect_runner.server,
+            server_factory,
             self.server_host if self.server_host is not None else _DEFAULT_BIND,
             SERVER_PORT,
         )
-
-    async def _async_register_onboarding_teardown(self, *_: Any) -> None:
-        """Tear down the port transition once onboarding completes.
-
-        async_add_listener no-ops if onboarding isn't loaded yet, so register
-        only once the onboarding component is available.
-        """
-        from homeassistant.components import onboarding  # noqa: PLC0415
-
-        @callback
-        def _end_transition() -> None:
-            self.hass.async_create_task(self._async_end_port_transition())
-
-        onboarding.async_add_listener(self.hass, _end_transition)
 
     async def _async_stop_legacy_redirect(self) -> None:
         """Stop the legacy redirect server and free its port."""
@@ -914,16 +907,6 @@ class HomeAssistantHTTP:
         if self._legacy_redirect_runner is not None:
             await self._legacy_redirect_runner.cleanup()
             self._legacy_redirect_runner = None
-
-    async def _async_end_port_transition(self) -> None:
-        """Stop the legacy redirect and CORS relaxation."""
-        self._port_transition_cors = False
-        if self._legacy_redirect_runner is None:
-            return
-        await self._async_stop_legacy_redirect()
-        _LOGGER.info(
-            "Onboarding complete; stopped legacy port %d redirect", SERVER_PORT
-        )
 
     async def stop(self) -> None:
         """Stop the aiohttp server."""

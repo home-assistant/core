@@ -1,7 +1,8 @@
 """The tests for the Home Assistant HTTP component."""
 
 import asyncio
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Iterator
+from contextlib import contextmanager
 import errno
 from http import HTTPStatus
 import logging
@@ -104,6 +105,35 @@ async def _bind_redirect_ephemeral(self: http.HomeAssistantHTTP) -> asyncio.Serv
     return await self.hass.loop.create_server(
         self._legacy_redirect_runner.server, "127.0.0.1", 0, start_serving=False
     )
+
+
+# A port-80 default config, standing in for _DEFAULT_CONFIG under Supervisor
+# (which is frozen at import to port 8123 in the test process).
+DEFAULT_80_CONFIG = HTTP_STORAGE_SCHEMA({"server_port": 80})
+
+
+@contextmanager
+def _supervisor_default_config() -> Iterator[None]:
+    """Simulate a fresh Supervisor install: the default config on port 80.
+
+    _DEFAULT_CONFIG is frozen at import (port 8123 without Supervisor in the
+    test process), so both references are patched to a port-80 default to
+    reproduce production, where SUPERVISOR is set before the module is
+    imported. The redirect binds an ephemeral localhost port instead of 8123.
+    """
+    with (
+        patch.dict(os.environ, {ENV_SUPERVISOR: "core"}),
+        patch("homeassistant.components.http._DEFAULT_CONFIG", DEFAULT_80_CONFIG),
+        patch(
+            "homeassistant.components.http.config._DEFAULT_CONFIG", DEFAULT_80_CONFIG
+        ),
+        patch(
+            "homeassistant.components.http.HomeAssistantHTTP._async_create_redirect_server",
+            autospec=True,
+            side_effect=_bind_redirect_ephemeral,
+        ),
+    ):
+        yield
 
 
 def _setup_broken_ssl_pem_files(tmp_path: Path) -> tuple[Path, Path]:
@@ -1345,98 +1375,112 @@ async def test_setup_port_env_var_used_as_default(
     assert hass_storage["http"]["data"]["pending"]["server_port"] == 80
 
 
-async def test_supervisor_defaults_to_port_80(
+async def test_default_config_under_supervisor_starts_redirect(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test that under Supervisor the server uses port 80 and starts the redirect."""
-    with (
-        patch.dict(os.environ, {ENV_SUPERVISOR: "core"}),
-        patch(
-            "homeassistant.components.http.HomeAssistantHTTP._async_create_redirect_server",
-            autospec=True,
-            side_effect=_bind_redirect_ephemeral,
-        ),
-    ):
+    """Test the default config under Supervisor uses port 80 and redirects 8123."""
+    with _supervisor_default_config():
         assert await async_setup_component(hass, "http", {})
         await hass.async_start()
         await hass.async_block_till_done()
 
     assert hass.config.api.port == 80
-    assert hass_storage[DOMAIN]["data"]["pending"]["server_port"] == 80
     assert hass.http._legacy_redirect_server is not None
 
 
-async def test_no_legacy_redirect_without_supervisor(
+async def test_no_redirect_without_supervisor(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test that no legacy redirect is started when not running under Supervisor."""
-    with patch.dict(os.environ, {ENV_SETUP_PORT: "80"}):
-        assert await async_setup_component(hass, "http", {})
-        await hass.async_start()
-        await hass.async_block_till_done()
+    """Test no redirect is started for the default config outside Supervisor."""
+    assert await async_setup_component(hass, "http", {})
+    await hass.async_start()
+    await hass.async_block_till_done()
 
-    assert hass.config.api.port == 80
+    assert hass.config.api.port == 8123
     assert hass.http._legacy_redirect_runner is None
     assert hass.http._legacy_redirect_server is None
 
 
+async def test_no_redirect_when_http_configured(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test no redirect is started once HTTP is configured (onboarding is over).
+
+    A stored (user-configured) config is not the default config, so even under
+    Supervisor on port 80 the transition must not apply.
+    """
+    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
+
+    with _supervisor_default_config():
+        assert await async_setup_component(hass, "http", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert hass.config.api.port == 80
+    assert hass.http._legacy_redirect_server is None
+
+
 @pytest.mark.parametrize(
-    ("origin", "cors_enabled", "expect_header"),
+    ("origin", "redirect_active", "expect_header"),
     [
         pytest.param("http://homeassistant.local:8123", True, True, id="same-host"),
         pytest.param("http://evil.example.com", True, False, id="foreign-host"),
-        pytest.param("http://homeassistant.local:8123", False, False, id="onboarded"),
+        pytest.param(
+            "http://homeassistant.local:8123", False, False, id="redirect-stopped"
+        ),
     ],
 )
 async def test_transition_cors_header(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     origin: str,
-    cors_enabled: bool,
+    redirect_active: bool,
     expect_header: bool,
 ) -> None:
-    """Test the transition CORS hook only echoes same-host origins while active."""
-    with (
-        patch.dict(os.environ, {ENV_SUPERVISOR: "core"}),
-        patch(
-            "homeassistant.components.http.HomeAssistantHTTP._async_create_redirect_server",
-            autospec=True,
-            side_effect=_bind_redirect_ephemeral,
-        ),
-    ):
+    """Test the CORS hook echoes same-host origins only while the redirect runs."""
+    with _supervisor_default_config():
         assert await async_setup_component(hass, "http", {})
         await hass.async_start()
         await hass.async_block_till_done()
 
-    server = hass.http
-    server._port_transition_cors = cors_enabled
-    request = Mock()
-    request.headers = {"Origin": origin}
-    request.url = URL("http://homeassistant.local/manifest.json")
-    response = Mock()
-    response.headers = {}
+        server = hass.http
+        assert server._legacy_redirect_server is not None
+        if not redirect_active:
+            await server._async_stop_legacy_redirect()
 
-    await server._async_add_transition_cors(request, response)
+        request = Mock()
+        request.headers = {"Origin": origin}
+        request.url = URL("http://homeassistant.local/manifest.json")
+        response = Mock()
+        response.headers = {}
+
+        await server._async_add_transition_cors(request, response)
 
     assert ("Access-Control-Allow-Origin" in response.headers) is expect_header
     if expect_header:
         assert response.headers["Access-Control-Allow-Origin"] == origin
         assert response.headers["Access-Control-Allow-Credentials"] == "true"
+        assert response.headers["Vary"] == "Origin"
 
 
-async def test_port_transition_ends_on_onboarding(
+async def test_redirect_bind_failure_disables_cors(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test the legacy redirect and CORS relaxation stop once onboarded."""
+    """Test CORS stays off when the legacy redirect server cannot bind."""
     with (
         patch.dict(os.environ, {ENV_SUPERVISOR: "core"}),
+        patch("homeassistant.components.http._DEFAULT_CONFIG", DEFAULT_80_CONFIG),
+        patch(
+            "homeassistant.components.http.config._DEFAULT_CONFIG", DEFAULT_80_CONFIG
+        ),
         patch(
             "homeassistant.components.http.HomeAssistantHTTP._async_create_redirect_server",
             autospec=True,
-            side_effect=_bind_redirect_ephemeral,
+            side_effect=OSError(errno.EADDRINUSE, "Address already in use"),
         ),
     ):
         assert await async_setup_component(hass, "http", {})
@@ -1444,14 +1488,17 @@ async def test_port_transition_ends_on_onboarding(
         await hass.async_block_till_done()
 
         server = hass.http
-        assert server._legacy_redirect_server is not None
-        assert server._port_transition_cors is True
-
-        await server._async_end_port_transition()
-
         assert server._legacy_redirect_server is None
         assert server._legacy_redirect_runner is None
-        assert server._port_transition_cors is False
+
+        request = Mock()
+        request.headers = {"Origin": "http://homeassistant.local:8123"}
+        request.url = URL("http://homeassistant.local/manifest.json")
+        response = Mock()
+        response.headers = {}
+        await server._async_add_transition_cors(request, response)
+
+    assert "Access-Control-Allow-Origin" not in response.headers
 
 
 async def test_websocket_http_config(
