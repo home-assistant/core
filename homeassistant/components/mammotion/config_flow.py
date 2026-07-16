@@ -150,6 +150,12 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the user step to pick discovered device."""
 
         if user_input is not None:
+            if address := user_input.get(CONF_ADDRESS):
+                self._config = {
+                    CONF_BLE_DEVICES: {
+                        self._discovered_devices[address]: format_mac(address)
+                    }
+                }
             return await self.async_step_wifi()
 
         current_addresses = self._async_current_ids()
