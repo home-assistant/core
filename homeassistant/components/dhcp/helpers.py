@@ -4,7 +4,9 @@ from collections.abc import Callable
 from functools import partial
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from .const import HOSTNAME, IP_ADDRESS
 from .models import DATA_DHCP, DHCPAddressData
 
 
@@ -33,3 +35,16 @@ def async_get_address_data_internal(
     This is not intended for use by integrations.
     """
     return hass.data[DATA_DHCP].address_data
+
+
+@callback
+def async_discovered_service_info(hass: HomeAssistant) -> list[DhcpServiceInfo]:
+    """Return the discovered DHCP devices."""
+    return [
+        DhcpServiceInfo(
+            ip=data[IP_ADDRESS],
+            hostname=data[HOSTNAME].lower(),
+            macaddress=mac_address,
+        )
+        for mac_address, data in async_get_address_data_internal(hass).items()
+    ]
