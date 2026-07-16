@@ -59,7 +59,9 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry represents one device.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -72,7 +74,9 @@ rules:
   repair-issues:
     status: exempt
     comment: The integration does not raise repair issues.
-  stale-devices: todo
+  stale-devices:
+    status: exempt
+    comment: The integration does not dynamically add or remove devices.
 
   # Platinum
   async-dependency: done

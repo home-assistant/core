@@ -63,11 +63,22 @@ async def test_hostname_is_resolved_before_storage(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    "error",
+    [
+        UltraConnectionError("offline"),
+        OSError("network unreachable"),
+        TimeoutError(),
+        ValueError("invalid response"),
+    ],
+)
 async def test_connection_error_can_recover(
-    hass: HomeAssistant, mock_linknlink_client: AsyncMock
+    hass: HomeAssistant,
+    mock_linknlink_client: AsyncMock,
+    error: Exception,
 ) -> None:
     """Test a connection error and recovery."""
-    mock_linknlink_client.discover_host.side_effect = UltraConnectionError("offline")
+    mock_linknlink_client.discover_host.side_effect = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -194,6 +205,9 @@ async def test_reconfigure(
     ("error", "expected_error"),
     [
         (UltraConnectionError("offline"), "cannot_connect"),
+        (OSError("network unreachable"), "cannot_connect"),
+        (TimeoutError(), "cannot_connect"),
+        (ValueError("invalid response"), "cannot_connect"),
         (RuntimeError("unexpected"), "unknown"),
     ],
 )
