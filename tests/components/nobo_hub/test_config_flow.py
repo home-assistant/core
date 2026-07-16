@@ -475,6 +475,37 @@ async def test_configure_cannot_connect(
     mock_setup_entry.assert_awaited_once()
 
 
+async def test_configure_plain_os_error_not_caught(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """A plain OSError is not mapped to cannot_connect_ip; only PynoboConnectionError is."""
+    with patch(
+        "homeassistant.components.nobo_hub.config_flow.nobo.async_discover_hubs",
+        return_value=[("1.1.1.1", "123456789")],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"device": "1.1.1.1"},
+    )
+
+    with (
+        patch(
+            "homeassistant.components.nobo_hub.config_flow.nobo.async_connect_hub",
+            side_effect=OSError("boom"),
+        ),
+        pytest.raises(OSError, match="boom"),
+    ):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"serial_suffix": "012"},
+        )
+
+
 async def test_dhcp_discovery_new_hub(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
