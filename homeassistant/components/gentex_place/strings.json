@@ -59,7 +59,6 @@
           "critical_alarm": "Critical alarm",
           "hushed": "Hushed",
           "idle": "Idle",
-          "not_present": "Not present",
           "pre_alarm": "Pre-alarm",
           "test": "Test"
         }
@@ -71,7 +70,6 @@
           "critical_alarm": "Critical alarm",
           "hushed": "Hushed",
           "idle": "Idle",
-          "not_present": "Not present",
           "pre_alarm": "Pre-alarm",
           "test": "Test"
         }
@@ -83,7 +81,6 @@
           "critical_alarm": "Critical alarm",
           "hushed": "Hushed",
           "idle": "Idle",
-          "not_present": "Not present",
           "pre_alarm": "Pre-alarm",
           "test": "Test"
         }
