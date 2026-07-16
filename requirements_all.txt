@@ -1781,7 +1781,7 @@ open-meteo==0.3.2
 openai==2.45.0
 
 # homeassistant.components.openaq
-openaq==1.0.3
+openaq==1.1.0
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
