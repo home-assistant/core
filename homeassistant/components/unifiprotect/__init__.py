@@ -6,6 +6,7 @@ import logging
 from aiohttp.client_exceptions import ServerDisconnectedError
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import Bootstrap
+from uiprotect.data.public_devices import PublicDeviceModel, PublicNVR
 from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 
 # Import the test_util.anonymize module from the uiprotect package
@@ -348,17 +349,13 @@ async def async_remove_config_entry_device(
     }
     api = config_entry.runtime_data.api
     if api.is_public_only:
-        # No private bootstrap: judge against the public cache instead.
-        pb = api.public_bootstrap
-        if (
-            pb.nvr is not None
-            and pb.nvr.mac
-            and (_async_unifi_mac_from_hass(pb.nvr.mac) in unifi_macs)
-        ):
-            return False
+        # No private bootstrap: judge against the public cache. all_devices()
+        # walks every public device family (and the NVR), so new families are
+        # covered without changes here.
         return not any(
-            camera.mac and _async_unifi_mac_from_hass(camera.mac) in unifi_macs
-            for camera in pb.cameras.values()
+            device.mac and _async_unifi_mac_from_hass(device.mac) in unifi_macs
+            for device in api.public_bootstrap.all_devices(include_nvr=True)
+            if isinstance(device, PublicDeviceModel | PublicNVR)
         )
     if api.bootstrap.nvr.mac in unifi_macs:
         return False

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import web
@@ -15,7 +15,7 @@ from uiprotect.data import (
     PublicBootstrap,
     Version,
 )
-from uiprotect.data.public_devices import PublicNVR
+from uiprotect.data.public_devices import PublicCamera, PublicNVR
 from uiprotect.exceptions import (
     BadRequest,
     ClientError,
@@ -120,6 +120,13 @@ def _public_client() -> Mock:
     pb.nvr = nvr
     pb.arm_mode = arm_mode
     pb.cameras = {}
+
+    def _all_devices(*, include_nvr: bool = False) -> Iterator[Mock]:
+        if include_nvr and pb.nvr is not None:
+            yield pb.nvr
+        yield from pb.cameras.values()
+
+    pb.all_devices = _all_devices
     pb.get = Mock(
         side_effect=lambda model, obj_id: (
             pb.cameras.get(obj_id) if model is ModelType.CAMERA else None
@@ -499,7 +506,7 @@ async def test_public_only_device_removal(
 
     # A live camera must refuse removal even if its public mac is not in the
     # registry's normalized (uppercase, no separator) format.
-    camera = Mock()
+    camera = Mock(spec=PublicCamera)
     camera.mac = "aa:bb:cc:dd:ee:01"
     client.public_bootstrap.cameras = {"cam-id": camera}
     camera_device = device_registry.async_get_or_create(
