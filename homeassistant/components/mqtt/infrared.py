@@ -55,8 +55,8 @@ MQTT_INFRARED_ATTRIBUTES_BLOCKED: frozenset[str] = frozenset()
 
 SIGNAL_SCHEMA = vol.Schema(
     {
-        vol.Required("timings"): [int],
-        vol.Required("modulation"): int,
+        vol.Required("timings"): vol.All([int], vol.Length(min=1)),
+        vol.Optional("modulation"): vol.Any(int, None),
     }
 )
 
@@ -73,11 +73,9 @@ def validate_mqtt_infrared_config(config_value: dict[str, Any]) -> ConfigType:
 
 def validate_mqtt_infrared_discovery(config_value: dict[str, Any]) -> ConfigType:
     """Validate MQTT infrared entity discovery schema."""
-    schemas: dict[str, VolSchemaType] = {
-        "emitter": EMITTER_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA),
-        "receiver": RECEIVER_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA),
-    }
-    config: ConfigType = schemas[config_value[CONF_SCHEMA]](config_value)
+    config: ConfigType = DISCOVERY_SCHEMA_MAPPING[config_value[CONF_SCHEMA]](
+        config_value
+    )
     return config
 
 
@@ -104,6 +102,13 @@ RECEIVER_SCHEMA = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_NAME): vol.Any(cv.string, None),
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+
+
+DISCOVERY_SCHEMA_MAPPING: dict[str, VolSchemaType] = {
+    "emitter": EMITTER_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA),
+    "receiver": RECEIVER_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA),
+}
+
 
 PLATFORM_SCHEMA_MODERN = vol.All(
     INFRARED_BASE_SCHEMA,
@@ -234,8 +239,8 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
         else:
             self._handle_received_signal(
                 InfraredReceivedSignal(
-                    modulation=payload_dict["modulation"],
                     timings=payload_dict["timings"],
+                    modulation=payload_dict.get("modulation"),
                 )
             )
 

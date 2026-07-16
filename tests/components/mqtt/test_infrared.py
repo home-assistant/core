@@ -15,6 +15,7 @@ from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from .common import (
+    help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,
     help_test_discovery_removal,
@@ -60,18 +61,89 @@ DEFAULT_CONFIG_RECEIVER = {
 TEST_COMMAND = NECCommand(address=0x04FB, command=0x08F7, modulation=38000)
 
 
+@pytest.mark.parametrize(
+    "payload_data",
+    [
+        {
+            "timings": TEST_COMMAND.get_raw_timings(),
+            "modulation": TEST_COMMAND.modulation,
+        },
+        {
+            "timings": TEST_COMMAND.get_raw_timings(),
+        },
+        {
+            "timings": TEST_COMMAND.get_raw_timings(),
+            "modulation": None,
+        },
+    ],
+)
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG_RECEIVER])
 async def test_receiving_command_success(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     freezer: FrozenDateTimeFactory,
+    payload_data: dict[str, Any],
 ) -> None:
     """Test receiving an infrared command via subscription is successful."""
-    payload_data = {
-        "timings": TEST_COMMAND.get_raw_timings(),
-        "modulation": TEST_COMMAND.modulation,
-    }
     payload = orjson.dumps(payload_data).decode()
+    timings: list[int] = payload_data["timings"]
+    modulation: int | None = payload_data.get("modulation")
+
+    now = dt_util.utcnow()
+    freezer.move_to(now)
+
+    await mqtt_mock_entry()
+
+    received_signals: list[infrared.InfraredReceivedSignal] = []
+
+    def _handle_received_signal(signal: infrared.InfraredReceivedSignal) -> None:
+        """Handle the infrared signal."""
+        received_signals.append(signal)
+
+    unsubscribe = infrared.async_subscribe_receiver(
+        hass, "infrared.test", _handle_received_signal
+    )
+    async_fire_mqtt_message(hass, "test-topic", payload, 0, False)
+    await hass.async_block_till_done()
+
+    assert len(received_signals) == 1
+    signal = received_signals[0]
+    assert signal.modulation == modulation
+    assert signal.timings == timings
+
+    state = hass.states.get("infrared.test")
+    assert state is not None
+    assert state.state == now.isoformat(timespec="milliseconds")
+
+    unsubscribe()
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            infrared.DOMAIN,
+            DEFAULT_CONFIG_RECEIVER,
+            (
+                {
+                    "value_template": '{% set modulation_timings=value.split(";") %}'
+                    '{"modulation": {{ modulation_timings[0] }}, '
+                    '"timings":[{{",".join(modulation_timings[1::]) }}]}'
+                },
+            ),
+        )
+    ],
+)
+async def test_receiving_command_success_using_value_template(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test receiving an infrared command via subscription and value template is successful."""
+    payload = (
+        f"{TEST_COMMAND.modulation};"
+        f"{';'.join([str(timing) for timing in TEST_COMMAND.get_raw_timings()])}"
+    )
 
     now = dt_util.utcnow()
     freezer.move_to(now)
@@ -131,7 +203,17 @@ async def test_receiving_command_success(
             logging.WARNING,
         ),
         (
+            '{"timings":[],"modulation":38000}',
+            "Invalid message received for infrared.test on topic test-topic, with template None",
+            logging.WARNING,
+        ),
+        (
             '{"timings":["1","2"],"modulation":38000}',
+            "Invalid message received for infrared.test on topic test-topic, with template None",
+            logging.WARNING,
+        ),
+        (
+            '{"timings":["1","2"]}',
             "Invalid message received for infrared.test on topic test-topic, with template None",
             logging.WARNING,
         ),
@@ -191,6 +273,48 @@ async def test_async_send_command_success(
         "repeat_count": TEST_COMMAND.repeat_count,
     }
     expected_payload = orjson.dumps(expected_payload_data).decode()
+
+    await infrared.async_send_command(hass, "infrared.test", TEST_COMMAND)
+
+    mqtt_mock.async_publish.assert_called_with(
+        "test-topic", expected_payload, 0, False, message_expiry_interval=None
+    )
+
+    state = hass.states.get("infrared.test")
+    assert state is not None
+    assert state.state == now.isoformat(timespec="milliseconds")
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            infrared.DOMAIN,
+            DEFAULT_CONFIG_EMITTER,
+            (
+                {
+                    "command_template": "{{ modulation }};{{ repeat_count }};"
+                    "{{ timings | join(';') }}"
+                },
+            ),
+        )
+    ],
+)
+async def test_async_send_command_success_with_command_template(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test sending command via async_send_command using a template helper."""
+    now = dt_util.utcnow()
+    freezer.move_to(now)
+
+    mqtt_mock = await mqtt_mock_entry()
+
+    expected_payload = (
+        f"{TEST_COMMAND.modulation};{TEST_COMMAND.repeat_count};"
+        f"{';'.join([str(timing) for timing in TEST_COMMAND.get_raw_timings()])}"
+    )
 
     await infrared.async_send_command(hass, "infrared.test", TEST_COMMAND)
 
