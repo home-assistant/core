@@ -29,6 +29,7 @@ from .migration import (
     OAUTH_CONFIG_ENTRY_VERSION,
     MigrationAccountMismatchError,
     async_consolidate_legacy_entries,
+    async_resume_migration_cleanup,
     is_legacy_entry,
 )
 
@@ -98,7 +99,7 @@ class NuHeatConfigFlow(
             entry = self._get_reauth_entry()
             if is_legacy_entry(entry):
                 try:
-                    await async_consolidate_legacy_entries(
+                    migration_result = await async_consolidate_legacy_entries(
                         self.hass,
                         entry,
                         oauth_data=data,
@@ -110,7 +111,17 @@ class NuHeatConfigFlow(
                     return self.async_abort(reason="migration_account_mismatch")
                 except Exception:  # noqa: BLE001
                     return self.async_abort(reason="migration_failed")
-                return self.async_abort(reason="migration_successful")
+                result = self.async_abort(reason="migration_successful")
+                if migration_result.pending_cleanup_entry_ids:
+                    migration_result.anchor_entry.async_create_task(
+                        self.hass,
+                        async_resume_migration_cleanup(
+                            self.hass, migration_result.anchor_entry
+                        ),
+                        "deferred NuHeat migration cleanup",
+                        eager_start=False,
+                    )
+                return result
 
             if entry.unique_id != unique_id:
                 try:
@@ -180,6 +191,4 @@ class NuHeatConfigFlow(
                 data_schema=vol.Schema({}),
                 description_placeholders={"account": entry.title},
             )
-        return await self.async_step_pick_implementation(
-            {"implementation": entry.data["auth_implementation"]}
-        )
+        return await self.async_step_user()

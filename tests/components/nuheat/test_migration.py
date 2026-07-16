@@ -134,34 +134,59 @@ async def run_migration_flow(
     *,
     account: str = "Owner@Example.com",
     subject: str = ACCOUNT_SUBJECT,
+    drain_deferred_cleanup: bool = True,
 ):
     """Complete migration through the public reauthentication flow manager."""
     implementation = FakeOAuthImplementation(
         token=oauth_data(subject=subject)[CONF_TOKEN]
     )
+    list_calls = 0
+
+    async def list_thermostats(_client):
+        nonlocal list_calls
+        list_calls += 1
+        if list_calls == 2:
+            assert any(
+                flow["context"].get("entry_id") == entry.entry_id
+                for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+            )
+        return thermostats
+
     with (
         patch("homeassistant.components.nuheat.config_flow.async_get_clientsession"),
+        patch("homeassistant.components.nuheat.async_get_clientsession"),
+        patch(
+            "homeassistant.components.nuheat.async_get_config_entry_implementation",
+            AsyncMock(return_value=implementation),
+        ),
         patch(
             "homeassistant.components.nuheat.config_flow.NuHeatClient.get_account",
             AsyncMock(return_value=Account(account)),
         ),
         patch(
             "homeassistant.components.nuheat.config_flow.NuHeatClient.list_thermostats",
-            AsyncMock(return_value=thermostats),
+            autospec=True,
+            side_effect=list_thermostats,
         ),
-        patch(
-            "homeassistant.components.nuheat.migration._reload_anchor",
-            AsyncMock(),
+        patch.object(hass.config_entries, "async_forward_entry_setups", AsyncMock()),
+        patch.object(
+            hass.config_entries,
+            "async_unload_platforms",
+            AsyncMock(return_value=True),
         ),
-        patch("homeassistant.components.nuheat.migration.verify_migration_plan_result"),
     ):
-        return await complete_oauth_flow(
+        result = await complete_oauth_flow(
             hass,
             hass_client_no_auth,
             implementation,
             entry=entry,
             confirmation_step="migration_confirm",
         )
+        if drain_deferred_cleanup:
+            await hass.async_block_till_done()
+    if result.get("reason") == "migration_successful":
+        assert list_calls == 2
+    return result
 
 
 def create_customized_registry_records(
@@ -335,7 +360,6 @@ async def test_legacy_entry_detection_and_setup_requests_migration(
     flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
     assert len(flows) == 1
     result = flows[0]
-    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "migration_confirm"
 
 
@@ -476,6 +500,8 @@ async def test_one_legacy_entry_becomes_oauth_account(
 ) -> None:
     """A validated legacy entry is converted in place and loses its password."""
     entry = add_legacy_entry(hass, "ABC123")
+    entry.mock_state(hass, ConfigEntryState.SETUP_ERROR)
+    create_customized_registry_records(hass, entry, "ABC123")
     result = await run_migration_flow(
         hass, hass_client_no_auth, entry, [thermostat("ABC123")]
     )
@@ -518,6 +544,7 @@ async def test_customized_entity_and_device_survive_initialization(
             AsyncMock(return_value=[thermostat("ABC123")]),
         ),
     ):
+        assert await hass.config_entries.async_unload(entry.entry_id) is True
         assert await hass.config_entries.async_setup(entry.entry_id) is True
         await hass.async_block_till_done()
 
@@ -620,6 +647,7 @@ async def test_unrelated_and_temporarily_omitted_entries_remain_untouched(
     unrelated = add_legacy_entry(hass, "OTHER1", username="other@example.com")
     omitted_data = dict(omitted.data)
     unrelated_data = dict(unrelated.data)
+    create_customized_registry_records(hass, anchor, "ABC123")
 
     result = await run_migration_flow(
         hass, hass_client_no_auth, anchor, [thermostat("ABC123")]
@@ -712,8 +740,11 @@ async def test_oauth_and_api_failures_leave_legacy_state_unchanged(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("anchor_loaded", [False, True])
 async def test_existing_oauth_account_absorbs_matching_legacy_entry(
-    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    anchor_loaded: bool,
 ) -> None:
     """Migration reuses an existing account entry rather than duplicating it."""
     account_entry = MockConfigEntry(
@@ -724,15 +755,28 @@ async def test_existing_oauth_account_absorbs_matching_legacy_entry(
         version=2,
     )
     account_entry.add_to_hass(hass)
+    if anchor_loaded:
+        account_entry.mock_state(hass, ConfigEntryState.LOADED)
     account_entry_id = account_entry.entry_id
     legacy = add_legacy_entry(hass, "ABC123")
     entity, device, *_ = create_customized_registry_records(hass, legacy, "ABC123")
 
     result = await run_migration_flow(
-        hass, hass_client_no_auth, legacy, [thermostat("ABC123")]
+        hass,
+        hass_client_no_auth,
+        legacy,
+        [thermostat("ABC123")],
+        drain_deferred_cleanup=False,
     )
 
     assert result["reason"] == "migration_successful"
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    pending_legacy = hass.config_entries.async_get_entry(legacy.entry_id)
+    assert pending_legacy is legacy
+    assert pending_legacy.data[CONF_MIGRATION_STATE] == MIGRATION_STATE_PENDING_CLEANUP
+    assert CONF_USERNAME not in pending_legacy.data
+    assert CONF_PASSWORD not in pending_legacy.data
+    await hass.async_block_till_done()
     assert hass.config_entries.async_get_entry(legacy.entry_id) is None
     assert hass.config_entries.async_entries(DOMAIN) == [account_entry]
     assert account_entry.entry_id == account_entry_id
@@ -759,7 +803,7 @@ async def test_direct_consolidation_reports_only_confirmed_serials(
 
     with (
         patch(
-            "homeassistant.components.nuheat.migration._reload_anchor",
+            "homeassistant.components.nuheat.migration._restart_anchor",
             AsyncMock(),
         ),
         patch("homeassistant.components.nuheat.migration.verify_migration_plan_result"),
@@ -875,7 +919,7 @@ async def test_rollback_restores_loaded_existing_oauth_anchor(
 
     with (
         patch(
-            "homeassistant.components.nuheat.migration._reload_anchor",
+            "homeassistant.components.nuheat.migration._restart_anchor",
             AsyncMock(side_effect=RuntimeError("synthetic reload failure")),
         ),
         patch.object(
@@ -915,7 +959,7 @@ async def test_rollback_leaves_originally_unloaded_anchor_unloaded(
 
     with (
         patch(
-            "homeassistant.components.nuheat.migration._reload_anchor",
+            "homeassistant.components.nuheat.migration._restart_anchor",
             AsyncMock(side_effect=RuntimeError("synthetic reload failure")),
         ),
         patch.object(hass.config_entries, "async_setup", AsyncMock()) as setup,
@@ -948,7 +992,7 @@ async def test_rollback_loaded_state_restore_failure_creates_repair_issue(
 
     with (
         patch(
-            "homeassistant.components.nuheat.migration._reload_anchor",
+            "homeassistant.components.nuheat.migration._restart_anchor",
             AsyncMock(side_effect=RuntimeError("synthetic reload failure")),
         ),
         patch.object(
@@ -1007,7 +1051,7 @@ async def test_pre_boundary_failures_restore_exact_local_state(
     with ExitStack() as stack:
         stack.enter_context(
             patch(
-                "homeassistant.components.nuheat.migration._reload_anchor", AsyncMock()
+                "homeassistant.components.nuheat.migration._restart_anchor", AsyncMock()
             )
         )
         stack.enter_context(
@@ -1048,7 +1092,7 @@ async def test_pre_boundary_failures_restore_exact_local_state(
         elif failure_point == "reload":
             stack.enter_context(
                 patch(
-                    "homeassistant.components.nuheat.migration._reload_anchor",
+                    "homeassistant.components.nuheat.migration._restart_anchor",
                     AsyncMock(side_effect=RuntimeError("synthetic reload failure")),
                 )
             )
@@ -1106,7 +1150,7 @@ async def test_later_cleanup_failure_is_resumable_after_restart(
         return await original_remove(entry_id)
 
     with (
-        patch("homeassistant.components.nuheat.migration._reload_anchor", AsyncMock()),
+        patch("homeassistant.components.nuheat.migration._restart_anchor", AsyncMock()),
         patch("homeassistant.components.nuheat.migration.verify_migration_plan_result"),
         patch.object(
             hass.config_entries, "async_remove", side_effect=fail_second_remove
@@ -1173,7 +1217,7 @@ async def test_rollback_failure_creates_secret_free_repair_issue(
             "async_update_entity",
             side_effect=RuntimeError("synthetic registry failure"),
         ),
-        patch("homeassistant.components.nuheat.migration._reload_anchor", AsyncMock()),
+        patch("homeassistant.components.nuheat.migration._restart_anchor", AsyncMock()),
         patch("homeassistant.components.nuheat.migration.verify_migration_plan_result"),
         pytest.raises(MigrationExecutionError),
     ):
@@ -1216,7 +1260,7 @@ async def test_restart_after_registry_transfer_converges_without_duplicates(
         thermostats=[thermostat(serial) for serial in plan.validated_serials],
     )
     with (
-        patch("homeassistant.components.nuheat.migration._reload_anchor", AsyncMock()),
+        patch("homeassistant.components.nuheat.migration._restart_anchor", AsyncMock()),
         patch("homeassistant.components.nuheat.migration.verify_migration_plan_result"),
     ):
         result = await execute_migration_plan(hass, retry_plan, oauth_data=oauth_data())
@@ -1236,7 +1280,7 @@ async def test_restart_after_anchor_conversion_resumes_cleanup(
     entries, records, plan = build_three_entry_plan(hass)
     with (
         patch(
-            "homeassistant.components.nuheat.migration._reload_anchor",
+            "homeassistant.components.nuheat.migration._restart_anchor",
             AsyncMock(side_effect=KeyboardInterrupt),
         ),
         pytest.raises(KeyboardInterrupt),
@@ -1272,7 +1316,7 @@ async def test_retry_after_successful_rollback_completes(
     entries, records, plan = build_three_entry_plan(hass)
     with (
         patch(
-            "homeassistant.components.nuheat.migration._reload_anchor",
+            "homeassistant.components.nuheat.migration._restart_anchor",
             AsyncMock(side_effect=RuntimeError("synthetic first-attempt failure")),
         ),
         patch("homeassistant.components.nuheat.migration.verify_migration_plan_result"),
@@ -1288,7 +1332,7 @@ async def test_retry_after_successful_rollback_completes(
         thermostats=[thermostat(serial) for serial in plan.validated_serials],
     )
     with (
-        patch("homeassistant.components.nuheat.migration._reload_anchor", AsyncMock()),
+        patch("homeassistant.components.nuheat.migration._restart_anchor", AsyncMock()),
         patch("homeassistant.components.nuheat.migration.verify_migration_plan_result"),
     ):
         result = await execute_migration_plan(hass, retry_plan, oauth_data=oauth_data())

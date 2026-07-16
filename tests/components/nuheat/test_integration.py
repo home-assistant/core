@@ -105,7 +105,10 @@ def oauth_data(
 
 
 def oauth_implementation(
-    access_token: str | None = None, *, subject: str = ACCOUNT_SUBJECT
+    access_token: str | None = None,
+    *,
+    subject: str = ACCOUNT_SUBJECT,
+    domain: str = "test",
 ) -> FakeOAuthImplementation:
     """Return a synthetic implementation with a valid OAuth token response."""
     return FakeOAuthImplementation(
@@ -115,7 +118,8 @@ def oauth_implementation(
             ),
             "refresh_token": "synthetic-refresh-token",
             "expires_in": 3600,
-        }
+        },
+        domain=domain,
     )
 
 
@@ -326,10 +330,13 @@ async def test_account_lookup_failures(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("implementation_domain", ["test", "alternate"])
 async def test_successful_reauthentication(
-    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    implementation_domain: str,
 ) -> None:
-    """Test successful reauthentication updates the existing entry."""
+    """Reauth can use the stored implementation or an available replacement."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=oauth_data(subject=ACCOUNT_SUBJECT),
@@ -352,19 +359,59 @@ async def test_successful_reauthentication(
         result = await complete_oauth_flow(
             hass,
             hass_client_no_auth,
-            oauth_implementation(subject=ACCOUNT_SUBJECT),
+            oauth_implementation(subject=ACCOUNT_SUBJECT, domain=implementation_domain),
             entry=entry,
             confirmation_step="reauth_confirm",
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert entry.data["auth_implementation"] == "test"
+    assert entry.data["auth_implementation"] == implementation_domain
     assert entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN] == jwt_access_token(
         ACCOUNT_SUBJECT
     )
     assert entry.title == "Renamed@Example.com"
     assert entry.unique_id == ACCOUNT_SUBJECT
     assert entry.version == OAUTH_CONFIG_ENTRY_VERSION
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("implementations", "reason"),
+    [
+        ({}, "missing_oauth_credentials"),
+        (
+            ImplementationUnavailableError("synthetic implementation outage"),
+            "oauth_implementation_unavailable",
+        ),
+    ],
+)
+async def test_reauthentication_without_available_implementation(
+    hass: HomeAssistant,
+    implementations: dict[str, FakeOAuthImplementation] | Exception,
+    reason: str,
+) -> None:
+    """Reauth reports unavailable implementations without indexing stored data."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=oauth_data(subject=ACCOUNT_SUBJECT),
+        unique_id=ACCOUNT_SUBJECT,
+        title="Owner@Example.com",
+    )
+    entry.add_to_hass(hass)
+    effect = (
+        {"return_value": implementations}
+        if isinstance(implementations, dict)
+        else {"side_effect": implementations}
+    )
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
+        AsyncMock(**effect),
+    ):
+        result = await entry.start_reauth_flow(hass)
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
 
 
 @pytest.mark.asyncio
