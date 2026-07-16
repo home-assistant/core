@@ -868,6 +868,9 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
             # the registries are loaded.
             migrated_at = utcnow().isoformat()
             split_devices: list[dict[str, Any]] = []
+            # Ids of active devices dropped for lacking a config entry; a retained
+            # child's via_device_id pointing at one is detached below.
+            dropped_device_ids: set[str] = set()
             # old composite id -> {config entry id -> new split id}, to rewrite
             # via_device_id links pointing at a split parent
             composite_splits: dict[str, dict[str, str]] = {}
@@ -895,6 +898,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 ]
                 if not pairs:
                     # Drop devices that have no config entry / subentry pairs
+                    dropped_device_ids.add(device["id"])
                     continue
                 if len(pairs) == 1:
                     config_entry_id, subentry_id = pairs[0]
@@ -932,8 +936,8 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
             # Rewrite via_device_id links that pointed at a now-split composite parent
             # to a live split: the parent's split in the child's own config entry when
             # there is one, otherwise any of the parent's splits, so the link never
-            # dangles on the removed composite id. A link to an unsplit parent is left
-            # unchanged.
+            # dangles on the removed composite id. A link to a retained unsplit parent is
+            # left unchanged; a link to a dropped parent is detached below.
             for device in split_devices:
                 if (
                     splits := composite_splits.get(device["via_device_id"])
@@ -941,6 +945,10 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     device["via_device_id"] = splits.get(
                         device["config_entry_id"], next(iter(splits.values()))
                     )
+                elif device["via_device_id"] in dropped_device_ids:
+                    # The parent was dropped (no config entries); detach the link as
+                    # async_remove_device would, so it does not dangle on a removed id.
+                    device["via_device_id"] = None
             old_data["devices"] = split_devices
             # A split inherited the composite's disabled_by, which may not match its
             # single config entry (e.g. a split owned by an enabled entry must not stay

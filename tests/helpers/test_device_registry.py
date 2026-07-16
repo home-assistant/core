@@ -2076,6 +2076,81 @@ async def test_migration_backs_up_store_file(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+async def test_migration_detaches_via_device_of_dropped_parent(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """A child of an ownerless parent dropped by the migration has its link detached.
+
+    The migration drops an active device with no config entry; normally
+    async_remove_device would clear via_device_id links to it, so the migration must too.
+    """
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    def _device(**overrides: Any) -> dict[str, Any]:
+        device = {
+            "area_id": None,
+            "config_entries": [entry.entry_id],
+            "config_entries_subentries": {entry.entry_id: [None]},
+            "configuration_url": None,
+            "connections": [],
+            "created_at": "1970-01-01T00:00:00+00:00",
+            "disabled_by": None,
+            "entry_type": None,
+            "hw_version": None,
+            "id": "device0000000000000000000000000",
+            "identifiers": [["test", "1"]],
+            "labels": [],
+            "manufacturer": None,
+            "model": None,
+            "name": None,
+            "model_id": None,
+            "modified_at": "1970-01-01T00:00:00+00:00",
+            "name_by_user": None,
+            "primary_config_entry": entry.entry_id,
+            "serial_number": None,
+            "sw_version": None,
+            "via_device_id": None,
+        }
+        return device | overrides
+
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 12,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                # Ownerless parent (no config entries) -> dropped by the migration
+                _device(
+                    id="orphan0000000000000000000000000",
+                    config_entries=[],
+                    config_entries_subentries={},
+                    identifiers=[["test", "orphan"]],
+                    primary_config_entry=None,
+                ),
+                # Child linked to the orphan via via_device_id
+                _device(
+                    id="child00000000000000000000000000",
+                    identifiers=[["test", "child"]],
+                    via_device_id="orphan0000000000000000000000000",
+                ),
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = dr.async_get(hass)
+
+    # The ownerless parent was dropped; the child survives with its link detached
+    assert registry.async_get("orphan0000000000000000000000000") is None
+    child = registry.async_get("child00000000000000000000000000")
+    assert child is not None
+    assert child.via_device_id is None
+
+
+@pytest.mark.parametrize("load_registries", [False])
 async def test_migration_collapses_multi_subentry_device(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
