@@ -15,11 +15,10 @@ PLATFORMS: Final = [Platform.CLIMATE]
 # restarts.
 CONF_ADDRESSES: Final = "addresses"
 
-# Config entry data key holding per-device credentials (the Socket.IO-fetched
+# Config entry data key holding per-device discovery fields (the Socket.IO-fetched
 # password, plus the cryptoSerial and MAC read from the device status endpoint),
-# keyed by serial. Seeded by the config flow and replayed via
-# discover_devices(cached_credentials=...) so a setup never has to repeat the
-# slow, rate-limited Socket.IO password fetch.
+# keyed by serial and replayed via discover_devices(cached_credentials=...) so
+# later setup attempts can reuse every field already recovered.
 CONF_CREDENTIALS: Final = "credentials"
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
