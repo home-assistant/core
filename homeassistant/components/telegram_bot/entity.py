@@ -1,25 +1,8 @@
 """Base entity for Telegram bot integration."""
 
-import telegram
-
-from homeassistant.const import CONF_PLATFORM
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from . import TelegramBotConfigEntry
-from .const import DOMAIN
-
-
-def bot_device_info(config_entry: TelegramBotConfigEntry, bot_id: int) -> DeviceInfo:
-    """Return device info for the shared bot device."""
-    return DeviceInfo(
-        name=config_entry.title,
-        entry_type=DeviceEntryType.SERVICE,
-        manufacturer="Telegram",
-        model=config_entry.data[CONF_PLATFORM].capitalize(),
-        sw_version=telegram.__version__,
-        identifiers={(DOMAIN, f"{bot_id}")},
-    )
+from . import TelegramBotConfigEntry, bot_device_info
 
 
 class TelegramBotEntity(Entity):

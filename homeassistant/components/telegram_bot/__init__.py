@@ -3,6 +3,7 @@
 import logging
 from typing import Protocol, cast
 
+import telegram
 from telegram import Bot
 from telegram.constants import InputMediaType
 from telegram.error import InvalidToken, TelegramError
@@ -952,11 +953,20 @@ def _warn_chat_id_migration(service: ServiceCall) -> set[int]:
     return chat_ids
 
 
+def bot_device_info(config_entry: TelegramBotConfigEntry, bot_id: int) -> dr.DeviceInfo:
+    """Return device info for the shared bot device."""
+    return dr.DeviceInfo(
+        name=config_entry.title,
+        entry_type=dr.DeviceEntryType.SERVICE,
+        manufacturer="Telegram",
+        model=config_entry.data[CONF_PLATFORM].capitalize(),
+        sw_version=telegram.__version__,
+        identifiers={(DOMAIN, f"{bot_id}")},
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
     """Create the Telegram bot from config entry."""
-    # Imported here because entity.py imports this module
-    from .entity import bot_device_info  # noqa: PLC0415
-
     bot: Bot = await hass.async_add_executor_job(initialize_bot, hass, entry.data)
     try:
         await bot.get_me()
