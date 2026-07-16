@@ -329,6 +329,9 @@ async def test_main_invalid_source_raises(
         pytest.param("8750", ("TF", "008750"), id="lowest_frequency"),
         pytest.param("10800", ("TF", "010800"), id="highest_frequency"),
         pytest.param("9930", ("TF", "009930"), id="frequency"),
+        pytest.param("009930", ("TF", "009930"), id="padded_frequency"),
+        pytest.param("00009930", ("TF", "009930"), id="overpadded_frequency"),
+        pytest.param("0000008750", ("TF", "008750"), id="overpadded_lowest_frequency"),
     ],
 )
 async def test_main_tuner_play_media(

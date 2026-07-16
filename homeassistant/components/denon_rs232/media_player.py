@@ -294,9 +294,9 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
         if TUNER_PRESET_PATTERN.fullmatch(media_id):
             await player.set_tuner_preset(media_id)
         elif TUNER_FREQUENCY_PATTERN.fullmatch(media_id) and (
-            TUNER_FREQUENCY_MIN <= int(media_id) <= TUNER_FREQUENCY_MAX
+            TUNER_FREQUENCY_MIN <= (frequency := int(media_id)) <= TUNER_FREQUENCY_MAX
         ):
-            await player.set_tuner_frequency(media_id.zfill(TUNER_FREQUENCY_LENGTH))
+            await player.set_tuner_frequency(f"{frequency:0{TUNER_FREQUENCY_LENGTH}d}")
         else:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
