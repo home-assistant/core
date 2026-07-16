@@ -139,6 +139,7 @@ class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Senso
     async def _async_update_data(self) -> dict[int, Sensor]:
         """Update sensor data."""
         try:
+            await self.sensors_api.async_refresh()
             await self.sensors_api.async_update()
         except aiohttp.ClientConnectionError as ex:
             raise UpdateFailed(
