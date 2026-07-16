@@ -3,34 +3,20 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field as dc_field
-from datetime import timedelta
-from decimal import Decimal
-from enum import Enum
-from operator import attrgetter
-from typing import Any, cast, override
+from typing import Any, override
 
 import slugify as unicode_slug
 import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
 
-from homeassistant.components.calendar import (
-    DOMAIN as CALENDAR_DOMAIN,
-    SERVICE_GET_EVENTS,
-)
-from homeassistant.components.homeassistant import async_should_expose
-from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
-from homeassistant.components.sensor import async_rounded_state
-from homeassistant.components.todo import DOMAIN as TODO_DOMAIN, TodoServices
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_SERVICE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED,
-    EntityStateAttribute,
 )
-from homeassistant.core import Context, Event, HomeAssistant, callback, split_entity_id
+from homeassistant.core import Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import dt as dt_util, yaml as yaml_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 from homeassistant.util.ulid import ulid_now
@@ -39,12 +25,12 @@ from . import (
     area_registry as ar,
     config_validation as cv,
     device_registry as dr,
-    entity_registry as er,
     floor_registry as fr,
     intent,
     selector,
     service,
 )
+from .deprecation import deprecated_function
 from .singleton import singleton
 
 ACTION_PARAMETERS_CACHE: HassKey[
@@ -66,12 +52,8 @@ Answer questions about the world truthfully.
 Answer in plain text. Keep it simple and to the point.
 """
 
-NO_ENTITIES_PROMPT = (
-    "Only if the user wants to control a device, tell them to expose entities "
-    "to their voice assistant in Home Assistant."
-)
 
-
+@deprecated_function("an empty string", breaks_in_ha_version="2027.2")
 @callback
 def async_render_no_api_prompt(hass: HomeAssistant) -> str:
     """Return the prompt to be used when no API is configured.
@@ -422,119 +404,6 @@ class MergedAPI(API):
         return merged
 
 
-def _get_exposed_entities(
-    hass: HomeAssistant,
-    assistant: str,
-    include_state: bool = True,
-) -> dict[str, dict[str, dict[str, Any]]]:
-    """Get exposed entities.
-
-    Splits out calendars and scripts.
-    """
-    area_registry = ar.async_get(hass)
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-    interesting_attributes = {
-        "temperature",
-        "current_temperature",
-        "temperature_unit",
-        "brightness",
-        "humidity",
-        "unit_of_measurement",
-        "device_class",
-        "current_position",
-        "percentage",
-        "volume_level",
-        "media_title",
-        "media_artist",
-        "media_album_name",
-    }
-
-    entities = {}
-    data: dict[str, dict[str, Any]] = {
-        SCRIPT_DOMAIN: {},
-        CALENDAR_DOMAIN: {},
-    }
-
-    for state in sorted(hass.states.async_all(), key=attrgetter("name")):
-        if not async_should_expose(hass, assistant, state.entity_id):
-            continue
-
-        entity_entry = entity_registry.async_get(state.entity_id)
-        device_entry = (
-            device_registry.async_get(entity_entry.device_id)
-            if entity_entry is not None and entity_entry.device_id is not None
-            else None
-        )
-        names = intent.async_get_entity_aliases(hass, entity_entry, state=state)
-        area_names = []
-
-        if entity_entry is not None:
-            if (
-                entity_entry.area_id is not None
-                and (area_entry := area_registry.async_get_area(entity_entry.area_id))
-                is not None
-            ):
-                # Entity is in area
-                area_names.append(area_entry.name)
-                area_names.extend(sorted(area_entry.aliases))
-            elif device_entry is not None:
-                # Check device area
-                if (
-                    device_entry.area_id is not None
-                    and (
-                        area_entry := area_registry.async_get_area(device_entry.area_id)
-                    )
-                    is not None
-                ):
-                    area_names.append(area_entry.name)
-                    area_names.extend(sorted(area_entry.aliases))
-
-        info: dict[str, Any] = {
-            "names": ", ".join(names),
-            "domain": state.domain,
-        }
-
-        if include_state:
-            info["state"] = state.state
-
-            # Format numeric states with configured display precision
-            if state.domain == "sensor":
-                info["state"] = async_rounded_state(hass, state.entity_id, state)
-
-            # Convert timestamp device_class states from UTC to local time
-            if (
-                state.attributes.get(EntityStateAttribute.DEVICE_CLASS) == "timestamp"
-                and state.state
-            ):
-                if (parsed_utc := dt_util.parse_datetime(state.state)) is not None:
-                    info["state"] = dt_util.as_local(parsed_utc).isoformat()
-
-        if area_names:
-            info["areas"] = ", ".join(area_names)
-
-        if include_state and (
-            attributes := {
-                str(attr_name): (
-                    str(attr_value)
-                    if isinstance(attr_value, (Enum, Decimal, int))
-                    else attr_value
-                )
-                for attr_name, attr_value in state.attributes.items()
-                if attr_name in interesting_attributes
-            }
-        ):
-            info["attributes"] = attributes
-
-        if state.domain in data:
-            data[state.domain][state.entity_id] = info
-        else:
-            entities[state.entity_id] = info
-
-    data["entities"] = entities
-    return data
-
-
 def selector_serializer(schema: Any) -> Any:  # noqa: C901
     """Convert selectors into OpenAPI schema."""
     if not isinstance(schema, selector.Selector):
@@ -732,20 +601,6 @@ def _get_cached_action_parameters(
 
         parameters = vol.Schema(schema)
 
-        if domain == SCRIPT_DOMAIN:
-            entity_registry = er.async_get(hass)
-            if (
-                entity_id := entity_registry.async_get_entity_id(domain, domain, action)
-            ) is not None and (
-                entity_entry := entity_registry.async_get(entity_id)
-            ) is not None:
-                aliases = er.async_get_entity_aliases(hass, entity_entry)
-                if aliases:
-                    if description:
-                        description = description + ". Aliases: " + str(sorted(aliases))
-                    else:
-                        description = "Aliases: " + str(sorted(aliases))
-
         parameters_cache.setdefault(domain, {})[action] = (description, parameters)
 
     return description, parameters
@@ -819,330 +674,3 @@ class ActionTool(Tool):
         )
 
         return {"success": True, "result": result}
-
-
-class ScriptTool(ActionTool):
-    """LLM Tool representing a Script."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        script_entity_id: str,
-    ) -> None:
-        """Init the class."""
-        script_name = split_entity_id(script_entity_id)[1]
-
-        action = script_name
-        entity_registry = er.async_get(hass)
-        entity_entry = entity_registry.async_get(script_entity_id)
-        if entity_entry and entity_entry.unique_id:
-            action = entity_entry.unique_id
-
-        super().__init__(hass, SCRIPT_DOMAIN, action)
-
-        self.name = script_name
-        if self.name[0].isdigit():
-            self.name = "_" + self.name
-
-
-class CalendarGetEventsTool(Tool):
-    """LLM Tool allowing querying a calendar."""
-
-    name = "calendar_get_events"
-    description = (
-        "Get events from a calendar. "
-        "When asked if something happens, search the whole week. "
-        "Results are RFC 5545 which means 'end' is exclusive."
-    )
-
-    def __init__(self, calendars: list[str]) -> None:
-        """Init the get events tool."""
-        self.parameters = vol.Schema(
-            {
-                vol.Required("calendar"): vol.In(calendars),
-                vol.Required("range"): vol.In(["today", "week"]),
-            }
-        )
-
-    @override
-    async def async_call(
-        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
-        """Query a calendar."""
-        data = self.parameters(tool_input.tool_args)
-        result = intent.async_match_targets(
-            hass,
-            intent.MatchTargetsConstraints(
-                name=data["calendar"],
-                domains=[CALENDAR_DOMAIN],
-                assistant=llm_context.assistant,
-            ),
-        )
-        if not result.is_match:
-            return {"success": False, "error": "Calendar not found"}
-
-        entity_id = result.states[0].entity_id
-        if data["range"] == "today":
-            start = dt_util.now()
-            end = dt_util.start_of_local_day() + timedelta(days=1)
-        elif data["range"] == "week":
-            start = dt_util.now()
-            end = dt_util.start_of_local_day() + timedelta(days=7)
-
-        service_data = {
-            "entity_id": entity_id,
-            "start_date_time": start.isoformat(),
-            "end_date_time": end.isoformat(),
-        }
-
-        service_result = await hass.services.async_call(
-            CALENDAR_DOMAIN,
-            SERVICE_GET_EVENTS,
-            service_data,
-            context=llm_context.context,
-            blocking=True,
-            return_response=True,
-        )
-
-        events = [
-            event if "T" in event["start"] else {**event, "all_day": True}
-            for event in cast(dict, service_result)[entity_id]["events"]
-        ]
-
-        return {"success": True, "result": events}
-
-
-class TodoGetItemsTool(Tool):
-    """LLM Tool allowing querying a to-do list."""
-
-    name = "todo_get_items"
-    description = (
-        "Query a to-do list to find out what items are on it. "
-        "Use this to answer questions like "
-        "'What's on my task list?' or "
-        "'Read my grocery list'. "
-        "Filters items by status (needs_action, completed, all)."
-    )
-
-    def __init__(self, todo_lists: list[str]) -> None:
-        """Init the get items tool."""
-        self.parameters = vol.Schema(
-            {
-                vol.Required("todo_list"): vol.In(todo_lists),
-                vol.Optional(
-                    "status",
-                    description=(
-                        "Filter returned items by status,"
-                        " by default returns incomplete"
-                        " items"
-                    ),
-                    default="needs_action",
-                ): vol.In(["needs_action", "completed", "all"]),
-            }
-        )
-
-    @override
-    async def async_call(
-        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
-        """Query a to-do list."""
-        data = self.parameters(tool_input.tool_args)
-        result = intent.async_match_targets(
-            hass,
-            intent.MatchTargetsConstraints(
-                name=data["todo_list"],
-                domains=[TODO_DOMAIN],
-                assistant=llm_context.assistant,
-            ),
-        )
-        if not result.is_match:
-            return {"success": False, "error": "To-do list not found"}
-        entity_id = result.states[0].entity_id
-        service_data: dict[str, Any] = {"entity_id": entity_id}
-        if status := data.get("status"):
-            if status == "all":
-                service_data["status"] = ["needs_action", "completed"]
-            else:
-                service_data["status"] = [status]
-        service_result = await hass.services.async_call(
-            TODO_DOMAIN,
-            TodoServices.GET_ITEMS,
-            service_data,
-            context=llm_context.context,
-            blocking=True,
-            return_response=True,
-        )
-        if not service_result:
-            return {"success": False, "error": "To-do list not found"}
-        items = cast(dict, service_result)[entity_id]["items"]
-        return {"success": True, "result": items}
-
-
-def _live_context_match_error(
-    match_result: intent.MatchTargetsResult,
-    name_filter: str | None,
-    area_filter: str | None,
-    domain_filter: list[str] | None,
-) -> str:
-    """Build an actionable error message for a failed GetLiveContext match."""
-    reason = match_result.no_match_reason
-    if reason is intent.MatchFailedReason.INVALID_AREA:
-        return f"Area '{match_result.no_match_name}' does not exist"
-    if reason is intent.MatchFailedReason.NAME:
-        return f"No exposed entities matched name '{name_filter}'"
-    if reason is intent.MatchFailedReason.AREA:
-        return f"No exposed entities found in area '{area_filter}'"
-    if reason is intent.MatchFailedReason.DOMAIN:
-        domains = ", ".join(domain_filter) if domain_filter else ""
-        return f"No exposed entities found in domain(s): {domains}"
-    return "No entities matched the provided filter"
-
-
-class GetLiveContextTool(Tool):
-    """Tool for getting the current state of exposed entities.
-
-    This returns state for all entities that have been exposed to
-    the assistant. This is different than the GetState intent, which
-    returns state for entities based on intent parameters.
-    """
-
-    name = "GetLiveContext"
-    description = (
-        "Provides real-time information about the"
-        " CURRENT state, value, or mode of devices,"
-        " sensors, entities, or areas. "
-        "Use this tool for: "
-        "1. Answering questions about current"
-        " conditions (e.g., 'Is the light on?'). "
-        "2. As the first step in conditional actions"
-        " (e.g., 'If the weather is rainy, turn off"
-        " sprinklers' requires checking the weather"
-        " first). "
-        "You may filter for devices by name, domain,"
-        " and area, including combining those"
-        " filters. "
-        "Prefer filtering by domain when searching"
-        " for multiple devices of the same type."
-    )
-    parameters = vol.Schema(
-        {
-            vol.Optional(
-                "name",
-                description="Filter entities by name or alias (case-insensitive).",
-            ): cv.string,
-            vol.Optional(
-                "domain",
-                description=(
-                    "Filter entities by domain"
-                    " (e.g. 'light', 'sensor')."
-                    " Accepts a single domain or a list."
-                ),
-            ): vol.Any(cv.string, [cv.string]),
-            vol.Optional(
-                "area",
-                description="Filter entities by area name or alias (case-insensitive).",
-            ): cv.string,
-        }
-    )
-
-    @override
-    async def async_call(
-        self,
-        hass: HomeAssistant,
-        tool_input: ToolInput,
-        llm_context: LLMContext,
-    ) -> JsonObjectType:
-        """Get the current state of exposed entities."""
-        args = self.parameters(tool_input.tool_args)
-        exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
-
-        if not exposed_entities["entities"]:
-            return {"success": False, "error": NO_ENTITIES_PROMPT}
-
-        name_filter = args.get("name")
-        area_filter = args.get("area")
-        domain_filter = args.get("domain")
-
-        if isinstance(domain_filter, str):
-            domain_filter = [domain_filter]
-
-        if domain_filter is not None:
-            domain_filter = [
-                normalized_domain
-                for domain in domain_filter
-                if (normalized_domain := domain.strip().lower())
-            ]
-
-        if name_filter or area_filter or domain_filter:
-            exposed_states = [
-                state
-                for entity_id in exposed_entities["entities"]
-                if (state := hass.states.get(entity_id)) is not None
-            ]
-            match_result = intent.async_match_targets(
-                hass,
-                intent.MatchTargetsConstraints(
-                    name=name_filter,
-                    area_name=area_filter,
-                    domains=domain_filter,
-                    # This tool only returns context, so multiple entities
-                    # sharing a name (e.g. "AC" in two areas) should all be
-                    # returned rather than failing as an ambiguous match.
-                    allow_duplicate_names=True,
-                ),
-                states=exposed_states,
-            )
-
-            if not match_result.is_match:
-                return {
-                    "success": False,
-                    "error": _live_context_match_error(
-                        match_result, name_filter, area_filter, domain_filter
-                    ),
-                }
-
-            matched_ids = {state.entity_id for state in match_result.states}
-            entities = [
-                info
-                for entity_id, info in exposed_entities["entities"].items()
-                if entity_id in matched_ids
-            ]
-        else:
-            entities = list(exposed_entities["entities"].values())
-
-        prompt = [
-            "Live Context: An overview of the areas"
-            " and the devices in this smart home:",
-            yaml_util.dump(entities),
-        ]
-        return {
-            "success": True,
-            "result": "\n".join(prompt),
-        }
-
-
-class GetDateTimeTool(Tool):
-    """Tool for getting the current date and time."""
-
-    name = "GetDateTime"
-    description = "Provides the current date and time."
-
-    @override
-    async def async_call(
-        self,
-        hass: HomeAssistant,
-        tool_input: ToolInput,
-        llm_context: LLMContext,
-    ) -> JsonObjectType:
-        """Get the current date and time."""
-        now = dt_util.now()
-
-        return {
-            "success": True,
-            "result": {
-                "date": now.strftime("%Y-%m-%d"),
-                "time": now.strftime("%H:%M:%S"),
-                "timezone": now.strftime("%Z"),
-                "weekday": now.strftime("%A"),
-            },
-        }
