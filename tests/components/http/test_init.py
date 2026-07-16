@@ -23,6 +23,7 @@ from homeassistant.components.http.config import (
     _DEFAULT_CONFIG,
     AUTO_REVERT_DELAY,
     HTTP_STORAGE_SCHEMA,
+    ActiveConfigType,
     async_get_and_load_store,
     default_server_port,
 )
@@ -1170,6 +1171,8 @@ async def test_setup_uses_stable_config_when_no_yaml(
     await hass.async_block_till_done()
 
     assert hass.config.api.port == 9876
+    store = await async_get_and_load_store(hass)
+    assert store.active_config_type is ActiveConfigType.STABLE
 
     assert issue_registry.async_get_issue(DOMAIN, "deprecated_yaml") is None
     assert (
@@ -1191,6 +1194,8 @@ async def test_setup_prefers_pending_over_stable_in_normal_mode(
     await hass.async_block_till_done()
 
     assert hass.config.api.port == 9999
+    store = await async_get_and_load_store(hass)
+    assert store.active_config_type is ActiveConfigType.PENDING
 
 
 async def test_recovery_mode_falls_back_to_stable(
@@ -1208,6 +1213,8 @@ async def test_recovery_mode_falls_back_to_stable(
     await hass.async_block_till_done()
 
     assert hass.config.api.port == 9876
+    store = await async_get_and_load_store(hass)
+    assert store.active_config_type is ActiveConfigType.STABLE
 
 
 async def test_recovery_mode_with_no_storage(
@@ -1350,6 +1357,8 @@ async def test_websocket_http_config(
         "stable": _DEFAULT_CONFIG,
         "pending": None,
         "revert_at": None,
+        "active_config_type": "stable",
+        "default": _DEFAULT_CONFIG,
     }
 
     new_config = {
@@ -1375,7 +1384,8 @@ async def test_websocket_http_config(
     assert len(restart_calls) == 1
 
     # Stable is unchanged until the user promotes, but the pending config is
-    # now returned alongside it.
+    # now returned alongside it. The staged config is not active yet: the
+    # restart that would apply it is mocked in this test.
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
     assert response["success"]
@@ -1383,6 +1393,8 @@ async def test_websocket_http_config(
         "stable": _DEFAULT_CONFIG,
         "pending": new_config,
         "revert_at": None,
+        "active_config_type": "stable",
+        "default": _DEFAULT_CONFIG,
     }
 
     # Promote: pending becomes stable, pending is cleared.
@@ -1399,6 +1411,8 @@ async def test_websocket_http_config(
         "stable": new_config,
         "pending": None,
         "revert_at": None,
+        "active_config_type": "stable",
+        "default": _DEFAULT_CONFIG,
     }
 
     # Promoting again with no pending is rejected.
@@ -1471,6 +1485,8 @@ async def test_pending_config_auto_reverts_to_stable(
         "stable": HTTP_STORAGE_SCHEMA({"server_port": 9876}),
         "pending": HTTP_STORAGE_SCHEMA({"server_port": 9999}),
         "revert_at": revert_at.isoformat(),
+        "active_config_type": "pending",
+        "default": _DEFAULT_CONFIG,
     }
 
     # After the delay elapses without a promotion, pending is dropped and a
@@ -1534,6 +1550,7 @@ async def test_pending_config_reverted_in_place_on_bind_failure(
     assert len(restart_calls) == 0
     store = await async_get_and_load_store(hass)
     assert store.revert_deadline is None
+    assert store.active_config_type is ActiveConfigType.STABLE
     assert "could not be applied, reverting" in caplog.text
     assert "previous HTTP configuration has been restored (server port 9876)" in (
         caplog.text
@@ -1788,6 +1805,8 @@ async def test_recovery_mode_bind_failure_falls_back_to_default_config(
     assert hass_storage["http"]["data"]["stable"] == HTTP_STORAGE_SCHEMA(
         {"server_port": 80}
     )
+    store = await async_get_and_load_store(hass)
+    assert store.active_config_type is ActiveConfigType.DEFAULT
     default_server.close()
     await default_server.wait_closed()
 
@@ -1841,7 +1860,8 @@ async def test_pending_config_promote_cancels_revert(
     response = await ws_client.receive_json()
     assert response["success"]
 
-    # The deadline is cleared once the config is confirmed.
+    # The deadline is cleared once the config is confirmed, and the running
+    # config is now reported as stable since promotion moved it to that slot.
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
     assert response["success"]
@@ -1849,6 +1869,8 @@ async def test_pending_config_promote_cancels_revert(
         "stable": HTTP_STORAGE_SCHEMA({"server_port": 9999}),
         "pending": None,
         "revert_at": None,
+        "active_config_type": "stable",
+        "default": _DEFAULT_CONFIG,
     }
 
     # The cancelled revert must not fire after the delay.

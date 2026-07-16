@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
+from enum import StrEnum
 from ipaddress import ip_network
 import logging
 import os
@@ -94,6 +95,14 @@ class ConfData(TypedDict, total=False):
     use_x_frame_options: bool
 
 
+class ActiveConfigType(StrEnum):
+    """The config slot the running HTTP server was started with."""
+
+    STABLE = "stable"
+    PENDING = "pending"
+    DEFAULT = "default"
+
+
 class _HTTPStoreData(TypedDict):
     """Data structure for HTTP config storage."""
 
@@ -152,9 +161,10 @@ async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData
     - Normal mode: prefer ``pending`` if set, otherwise ``stable``.
     """
     store = await async_get_and_load_store(hass)
+    conf = await store.get_config()
     if hass.config.recovery_mode:
         _LOGGER.info("Recovery mode active; using stable HTTP config")
-        return store.stable
+        return conf
 
     yaml_conf: ConfData | None = config.get(DOMAIN)
     if store.yaml_migration_done:
@@ -183,7 +193,7 @@ async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData
             yaml_conf = cast(ConfData, HTTP_STORAGE_SCHEMA({}))
 
         try:
-            await store.async_migrate_yaml(yaml_conf)
+            conf = await store.async_migrate_yaml(yaml_conf)
         except Exception:
             _LOGGER.exception("Failed to migrate HTTP YAML configuration to storage")
             ir.async_create_issue(
@@ -206,13 +216,12 @@ async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData
                     translation_key="deprecated_yaml",
                 )
 
-    if store.pending is not None:
+    if store.active_config_type is ActiveConfigType.PENDING:
         _LOGGER.info("Using pending HTTP config")
         store.async_schedule_revert_to_stable()
-        return store.pending
-
-    _LOGGER.info("Using stable HTTP config")
-    return store.stable
+    else:
+        _LOGGER.info("Using stable HTTP config")
+    return conf
 
 
 async def async_get_and_load_store(hass: HomeAssistant) -> HTTPConfigStore:
@@ -246,6 +255,7 @@ class HTTPConfigStore:
         )
         self._stable: ConfData = _DEFAULT_CONFIG
         self._pending: ConfData | None = None
+        self._active_config_type: ActiveConfigType = ActiveConfigType.DEFAULT
         self._yaml_migration_done = False
         self._loaded = False
         self._load_lock = asyncio.Lock()
@@ -261,6 +271,16 @@ class HTTPConfigStore:
     def pending(self) -> ConfData | None:
         """Return the unconfirmed config awaiting promotion, if any."""
         return self._pending
+
+    @property
+    def default(self) -> ConfData:
+        """Return the built-in default config."""
+        return _DEFAULT_CONFIG
+
+    @property
+    def active_config_type(self) -> ActiveConfigType:
+        """Return the slot the running server was started with, if setup ran."""
+        return self._active_config_type
 
     @property
     def revert_deadline(self) -> datetime | None:
@@ -307,6 +327,9 @@ class HTTPConfigStore:
             raise HomeAssistantError("No pending HTTP config to promote")
         self._stable = self._pending
         self._pending = None
+        if self._active_config_type is ActiveConfigType.PENDING:
+            # The running config now lives in the stable slot.
+            self._active_config_type = ActiveConfigType.STABLE
         # The config is now confirmed; no need to revert it anymore.
         self._async_cancel_revert()
         await self._async_persist()
@@ -376,13 +399,19 @@ class HTTPConfigStore:
         self._pending = None
         await self._async_persist()
 
-    async def async_migrate_yaml(self, config: ConfData) -> None:
+    async def async_migrate_yaml(self, config: ConfData) -> ConfData:
         """Migrate YAML config to storage as pending if not the same as the config used for recovery."""
         await self.async_load()
         validated_config = cast(ConfData, HTTP_STORAGE_SCHEMA(config))
         self._pending = None if validated_config == self._stable else validated_config
         self._yaml_migration_done = True
         await self._async_persist()
+        self._active_config_type = (
+            ActiveConfigType.PENDING
+            if self._pending is not None
+            else ActiveConfigType.STABLE
+        )
+        return validated_config
 
     async def _async_persist(self) -> None:
         """Write the current state to disk (or remove the file if empty)."""
@@ -393,6 +422,76 @@ class HTTPConfigStore:
                 KEY_YAML_MIGRATION_DONE: self._yaml_migration_done,
             }
         )
+
+    async def get_config(self) -> ConfData:
+        """Resolve the config to use and record it as the active slot.
+
+        Normal mode prefers ``pending`` over ``stable``; recovery mode
+        always uses ``stable``.
+        """
+        await self.async_load()
+        if not self._hass.config.recovery_mode and self._pending is not None:
+            self._active_config_type = ActiveConfigType.PENDING
+            return self._pending
+        self._active_config_type = ActiveConfigType.STABLE
+        return self._stable
+
+    async def async_get_fallback_config(
+        self,
+        current_config: ConfData,
+        err: HomeAssistantError | OSError,
+    ) -> ConfData:
+        """Return the next config to try after ``current_config`` could not be applied.
+
+        Implements the fallback chain pending -> stable -> default config, where
+        the last step is only taken in recovery mode. Raises when there is no
+        (acceptable) fallback left, failing setup: on a normal boot this
+        activates recovery mode, in recovery mode it makes the failure visible
+        to the outside (e.g. the Supervisor rolls back a Core update whose API
+        does not come up).
+        """
+        if self._revert_deadline is not None:
+            # An unconfirmed pending config is under trial and cannot even be
+            # applied, so it is known to be bad: revert to the stable config
+            # right away and continue this same start with it, instead of
+            # waiting out the trial window and restarting.
+            _LOGGER.error(
+                "The new HTTP configuration could not be applied, reverting to "
+                "the previous configuration: %s",
+                err,
+            )
+            await self.async_abort_trial()
+            self._active_config_type = ActiveConfigType.STABLE
+            return self.stable
+
+        if (
+            # In normal mode, fail setup so recovery mode can take over with a
+            # reachable configuration.
+            not self._hass.config.recovery_mode
+            # The chain is exhausted; nothing left to fall back to.
+            or current_config is _DEFAULT_CONFIG
+            # With peer certificate verification configured, connections must
+            # never be accepted without a verified client certificate; there is
+            # no acceptable fallback config.
+            or CONF_SSL_PEER_CERTIFICATE in current_config
+        ):
+            # An unusable SSL configuration already carries a descriptive
+            # HomeAssistantError.
+            if isinstance(err, HomeAssistantError):
+                raise err
+            raise HomeAssistantError(
+                f"Failed to create HTTP server at port {current_config[CONF_SERVER_PORT]}: {err}"
+            ) from err
+
+        # The config cannot be applied in recovery mode; fall back to the
+        # default config so the recovery UI stays reachable.
+        _LOGGER.error(
+            "The HTTP configuration could not be applied in recovery mode, "
+            "falling back to the default configuration: %s",
+            err,
+        )
+        self._active_config_type = ActiveConfigType.DEFAULT
+        return _DEFAULT_CONFIG
 
 
 class _HTTPStore(Store[_HTTPStoreData]):
