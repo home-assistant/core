@@ -5,6 +5,7 @@ import datetime as dt
 import growattServer
 from growattServer import GrowattV1ApiErrorCode
 import pytest
+from requests import RequestException
 
 from homeassistant.components.growatt_server.coordinator import GrowattCoordinator
 from homeassistant.core import HomeAssistant
@@ -218,6 +219,97 @@ async def test_update_ac_charge_times_classic_api_exception_raises(
             ]
             * 3,
         )
+
+
+async def test_update_ac_charge_times_classic_missing_success_key_raises(
+    hass: HomeAssistant,
+    mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api,
+) -> None:
+    """Test a classic write response missing the success key raises HomeAssistantError."""
+    coordinator = await _get_mix_coordinator(
+        hass, mock_config_entry_classic, mock_growatt_classic_api
+    )
+
+    mock_growatt_classic_api.update_mix_inverter_setting.return_value = {
+        "msg": "malformed response"
+    }
+
+    with pytest.raises(HomeAssistantError):
+        await coordinator.update_ac_charge_times(
+            100,
+            100,
+            True,
+            [
+                {
+                    "start_time": dt.time(0, 0),
+                    "end_time": dt.time(0, 0),
+                    "enabled": False,
+                }
+            ]
+            * 3,
+        )
+
+
+async def test_update_ac_charge_times_classic_request_exception_raises(
+    hass: HomeAssistant,
+    mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api,
+) -> None:
+    """Test a classic write raising a transport error surfaces as HomeAssistantError."""
+    coordinator = await _get_mix_coordinator(
+        hass, mock_config_entry_classic, mock_growatt_classic_api
+    )
+
+    mock_growatt_classic_api.update_mix_inverter_setting.side_effect = RequestException(
+        "connection reset"
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await coordinator.update_ac_charge_times(
+            100,
+            100,
+            True,
+            [
+                {
+                    "start_time": dt.time(0, 0),
+                    "end_time": dt.time(0, 0),
+                    "enabled": False,
+                }
+            ]
+            * 3,
+        )
+
+
+async def test_update_ac_discharge_times_classic_updates_cache(
+    hass: HomeAssistant,
+    mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api,
+) -> None:
+    """Test a successful classic discharge write updates the coordinator cache."""
+    coordinator = await _get_mix_coordinator(
+        hass, mock_config_entry_classic, mock_growatt_classic_api
+    )
+
+    await coordinator.update_ac_discharge_times(
+        60,
+        20,
+        [
+            {
+                "start_time": dt.time(16, 0),
+                "end_time": dt.time(20, 30),
+                "enabled": True,
+            },
+            {"start_time": dt.time(0, 0), "end_time": dt.time(0, 0), "enabled": False},
+            {"start_time": dt.time(0, 0), "end_time": dt.time(0, 0), "enabled": False},
+        ],
+    )
+
+    assert coordinator.data["disChargePowerCommand"] == 60
+    assert coordinator.data["wdisChargeSOCLowLimit"] == 20
+    assert coordinator.data["forcedDischargeTimeStart1"] == "16:00"
+    assert coordinator.data["forcedDischargeTimeStop1"] == "20:30"
+    assert coordinator.data["forcedDischargeStopSwitch1"] == 1
 
 
 async def test_update_ac_charge_times_v1_calls_sph_api(

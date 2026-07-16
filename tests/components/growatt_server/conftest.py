@@ -348,6 +348,31 @@ def mock_growatt_classic_api():
         mock_classic_api.mix_detail.return_value = {
             "deviceSn": "MIX123456",
             "chartData": {"06:00": {}},  # At least one time entry needed
+            # Charge settings (also used by classic read_ac_charge_times)
+            "chargePowerCommand": 100,
+            "wchargeSOCLowLimit": 90,
+            "acChargeEnable": 1,
+            "forcedChargeTimeStart1": "01:00",
+            "forcedChargeTimeStop1": "05:00",
+            "forcedChargeStopSwitch1": 1,
+            "forcedChargeTimeStart2": "00:00",
+            "forcedChargeTimeStop2": "00:00",
+            "forcedChargeStopSwitch2": 0,
+            "forcedChargeTimeStart3": "00:00",
+            "forcedChargeTimeStop3": "00:00",
+            "forcedChargeStopSwitch3": 0,
+            # Discharge settings (also used by classic read_ac_discharge_times)
+            "disChargePowerCommand": 100,
+            "wdisChargeSOCLowLimit": 10,
+            "forcedDischargeTimeStart1": "10:00",
+            "forcedDischargeTimeStop1": "16:00",
+            "forcedDischargeStopSwitch1": 1,
+            "forcedDischargeTimeStart2": "00:00",
+            "forcedDischargeTimeStop2": "00:00",
+            "forcedDischargeStopSwitch2": 0,
+            "forcedDischargeTimeStart3": "00:00",
+            "forcedDischargeTimeStop3": "00:00",
+            "forcedDischargeStopSwitch3": 0,
         }
 
         mock_classic_api.tlx_detail.return_value = {
