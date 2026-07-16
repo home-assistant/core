@@ -33,6 +33,7 @@ async def async_setup_entry(
 class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
     """Representation of a telegram bot notification entity."""
 
+    _attr_name = None
     _attr_supported_features = NotifyEntityFeature.TITLE
 
     def __init__(
@@ -50,6 +51,7 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
         device_info = self._attr_device_info
         assert device_info is not None
         device_info["identifiers"] = {(DOMAIN, f"{self.bot_id}_{self.chat_id}")}
+        device_info["name"] = subentry.title
         device_info["via_device"] = (DOMAIN, f"{self.bot_id}")
 
     @override

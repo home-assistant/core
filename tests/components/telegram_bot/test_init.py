@@ -1,5 +1,7 @@
 """Init tests for the Telegram Bot integration."""
 
+import pytest
+
 from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
     CONF_ALLOWED_CHAT_IDS,
@@ -72,11 +74,19 @@ async def test_migrate_entry_from_1_1(
     }
 
 
+@pytest.mark.parametrize(
+    "chats_without_notify_entity",
+    [
+        pytest.param((), id="notify entities intact"),
+        pytest.param((654321,), id="notify entity deleted"),
+    ],
+)
 async def test_migrate_entry_to_per_chat_devices(
     hass: HomeAssistant,
     mock_external_calls: None,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    chats_without_notify_entity: tuple[int, ...],
 ) -> None:
     """Test migrating chats sharing one bot device to per-chat devices.
 
@@ -85,8 +95,12 @@ async def test_migrate_entry_to_per_chat_devices(
     subentries. The migration must move each chat's notify entity onto its own per-chat
     device (linked to the bot device) and leave the bot device associated with only
     (entry, None), so the future device-registry redesign keeps it at None.
+
+    A chat's notify entity may have been deleted while the bot device keeps that chat's
+    subentry association, so the migration must strip the association either way.
     """
     bot_id = 123456  # test_user id from mock_external_calls
+    chat_ids = (123456, 654321)
     config_entry = MockConfigEntry(
         unique_id="mock api key",
         domain=DOMAIN,
@@ -138,22 +152,18 @@ async def test_migrate_entry_to_per_chat_devices(
         config_entry=config_entry,
         device_id=bot_device.id,
     )
-    notify_1 = entity_registry.async_get_or_create(
-        "notify",
-        DOMAIN,
-        f"{bot_id}_123456",
-        config_entry=config_entry,
-        config_subentry_id=subentry_ids[0],
-        device_id=bot_device.id,
-    )
-    notify_2 = entity_registry.async_get_or_create(
-        "notify",
-        DOMAIN,
-        f"{bot_id}_654321",
-        config_entry=config_entry,
-        config_subentry_id=subentry_ids[1],
-        device_id=bot_device.id,
-    )
+    notify_entities = {
+        chat_id: entity_registry.async_get_or_create(
+            "notify",
+            DOMAIN,
+            f"{bot_id}_{chat_id}",
+            config_entry=config_entry,
+            config_subentry_id=subentry_id,
+            device_id=bot_device.id,
+        )
+        for subentry_id, chat_id in zip(subentry_ids, chat_ids, strict=True)
+        if chat_id not in chats_without_notify_entity
+    }
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -161,26 +171,28 @@ async def test_migrate_entry_to_per_chat_devices(
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.minor_version == 3
 
-    # Each chat's notify entity is on its own per-chat device, owned by that chat's subentry
-    # and linked to the bot device.
-    device_1 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{bot_id}_123456")}
-    )
-    device_2 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{bot_id}_654321")}
-    )
-    assert device_1 is not None
-    assert device_2 is not None
-    assert device_1.config_entries_subentries == {
-        config_entry.entry_id: {subentry_ids[0]}
+    # Each chat has its own device, owned by that chat's subentry and linked to the bot
+    # device.
+    chat_devices = {
+        chat_id: device_registry.async_get_device(
+            identifiers={(DOMAIN, f"{bot_id}_{chat_id}")}
+        )
+        for chat_id in chat_ids
     }
-    assert device_2.config_entries_subentries == {
-        config_entry.entry_id: {subentry_ids[1]}
-    }
-    assert device_1.via_device_id == bot_device.id
-    assert device_2.via_device_id == bot_device.id
-    assert entity_registry.async_get(notify_1.entity_id).device_id == device_1.id
-    assert entity_registry.async_get(notify_2.entity_id).device_id == device_2.id
+    for subentry_id, chat_id in zip(subentry_ids, chat_ids, strict=True):
+        chat_device = chat_devices[chat_id]
+        assert chat_device is not None
+        assert chat_device.config_entries_subentries == {
+            config_entry.entry_id: {subentry_id}
+        }
+        assert chat_device.via_device_id == bot_device.id
+
+    # Every notify entity that survived is moved onto its chat's device
+    for chat_id, notify_entity in notify_entities.items():
+        assert (
+            entity_registry.async_get(notify_entity.entity_id).device_id
+            == chat_devices[chat_id].id
+        )
 
     # The bot device ends up associated with only (entry, None), keeping the event entity
     bot_device = device_registry.async_get(bot_device.id)
@@ -207,8 +219,9 @@ async def test_per_chat_devices(
     bot_device = device_registry.async_get_device(identifiers={(DOMAIN, "123456")})
     assert bot_device is not None
     assert bot_device.config_entries_subentries == {entry_id: {None}}
+    assert bot_device.name == "Mock Title"
 
-    for chat_id in (123456, 654321):
+    for chat_id, chat_name in ((123456, "mock chat 1"), (654321, "mock chat 2")):
         subentry_id = next(
             sid
             for sid, subentry in mock_broadcast_config_entry.subentries.items()
@@ -220,11 +233,14 @@ async def test_per_chat_devices(
         assert chat_device is not None
         assert chat_device.config_entries_subentries == {entry_id: {subentry_id}}
         assert chat_device.via_device_id == bot_device.id
+        # The device is named after the chat, and its notify entity takes the device name
+        assert chat_device.name == chat_name
         notify_entity_id = entity_registry.async_get_entity_id(
             "notify", DOMAIN, f"123456_{chat_id}"
         )
         assert notify_entity_id is not None
         assert entity_registry.async_get(notify_entity_id).device_id == chat_device.id
+        assert hass.states.get(notify_entity_id).name == chat_name
 
 
 async def test_remove_chat_subentry_removes_per_chat_device(

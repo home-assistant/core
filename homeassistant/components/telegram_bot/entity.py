@@ -10,6 +10,18 @@ from . import TelegramBotConfigEntry
 from .const import DOMAIN
 
 
+def bot_device_info(config_entry: TelegramBotConfigEntry, bot_id: int) -> DeviceInfo:
+    """Return device info for the shared bot device."""
+    return DeviceInfo(
+        name=config_entry.title,
+        entry_type=DeviceEntryType.SERVICE,
+        manufacturer="Telegram",
+        model=config_entry.data[CONF_PLATFORM].capitalize(),
+        sw_version=telegram.__version__,
+        identifiers={(DOMAIN, f"{bot_id}")},
+    )
+
+
 class TelegramBotEntity(Entity):
     """Base entity."""
 
@@ -28,11 +40,4 @@ class TelegramBotEntity(Entity):
         self.service = config_entry.runtime_data
 
         self._attr_unique_id = f"{self.bot_id}_{entity_description.key}"
-        self._attr_device_info = DeviceInfo(
-            name=config_entry.title,
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer="Telegram",
-            model=config_entry.data[CONF_PLATFORM].capitalize(),
-            sw_version=telegram.__version__,
-            identifiers={(DOMAIN, f"{self.bot_id}")},
-        )
+        self._attr_device_info = bot_device_info(config_entry, self.bot_id)
