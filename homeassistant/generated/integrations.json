@@ -2319,6 +2319,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "fuelprices_dk": {
+      "name": "Fuelprices.dk",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "fujitsu": {
       "name": "Fujitsu",
       "integrations": {
@@ -2379,6 +2385,12 @@
     "gardena_bluetooth": {
       "name": "Gardena Bluetooth",
       "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "gatus": {
+      "name": "Gatus",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2756,6 +2768,12 @@
       "name": "Harman Kardon AVR",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "harman_luxury": {
+      "name": "Harman Luxury Audio",
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "harvey": {
@@ -3488,6 +3506,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "karakeep": {
+      "name": "Karakeep",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "keba": {
       "name": "Keba Charging Station",
       "integration_type": "hub",
@@ -3703,6 +3727,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "led_infrared": {
+      "name": "LED Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
     },
     "legrand": {
       "name": "Legrand",
@@ -4032,6 +4062,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "lyngdorf": {
+      "name": "Lyngdorf",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "madeco": {
       "name": "Madeco",
@@ -4380,12 +4416,6 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "modbus_connection": {
-      "name": "Modbus Connection",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "modem_callerid": {
       "name": "Phone Modem",
       "integration_type": "device",
@@ -4652,7 +4682,8 @@
       "name": "Netatmo",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
     },
     "netdata": {
       "name": "Netdata",
@@ -5313,7 +5344,7 @@
     "permobil": {
       "name": "MyPermobil",
       "integration_type": "device",
-      "config_flow": true,
+      "config_flow": false,
       "iot_class": "cloud_polling"
     },
     "pge": {
@@ -6183,6 +6214,12 @@
       "name": "Seattle City Light (SCL)",
       "integration_type": "virtual",
       "supported_by": "opower"
+    },
+    "scorpiontrack": {
+      "name": "ScorpionTrack",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "scrape": {
       "name": "Scrape",

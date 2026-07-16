@@ -438,3 +438,91 @@ async def test_atw_turn_on_off(
     mock_melcloud_client.control_atw_unit.assert_called_once_with(
         "atw-unit-uuid-1", **expected_kwargs
     )
+
+
+@pytest.mark.parametrize(
+    ("operation_mode", "expected_min", "expected_max"),
+    [
+        pytest.param("Cool", 16.0, 31.0, id="cool"),
+        pytest.param("Automatic", 16.0, 31.0, id="auto"),
+        pytest.param("Fan", 7, 35, id="fan_only"),
+    ],
+)
+async def test_ata_temperature_range_by_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_melcloud_client: AsyncMock,
+    operation_mode: str,
+    expected_min: float,
+    expected_max: float,
+) -> None:
+    """Test ATA min/max temperature for cool, auto, and fallback HVAC modes."""
+    context: dict[str, Any] = await async_load_json_object_fixture(
+        hass, "context.json", DOMAIN
+    )
+    next(
+        setting
+        for setting in context["buildings"][0]["airToAirUnits"][0]["settings"]
+        if setting["name"] == "OperationMode"
+    )["value"] = operation_mode
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ATA_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["min_temp"] == expected_min
+    assert state.attributes["max_temp"] == expected_max
+
+
+async def test_ata_no_capabilities_temperature_range(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_melcloud_client: AsyncMock,
+) -> None:
+    """Test fallback temperature range and hvac_modes when ATA unit has no capabilities."""
+    context: dict[str, Any] = await async_load_json_object_fixture(
+        hass, "context.json", DOMAIN
+    )
+    context["buildings"][0]["airToAirUnits"][0]["capabilities"] = None
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ATA_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["min_temp"] == 7
+    assert state.attributes["max_temp"] == 35
+    assert HVACMode.FAN_ONLY in state.attributes["hvac_modes"]
+
+
+async def test_atw_zone_temperature_range(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_melcloud_client: AsyncMock,
+) -> None:
+    """Test ATW zone min/max temperature read from unit capabilities."""
+    context: dict[str, Any] = await async_load_json_object_fixture(
+        hass, "context.json", DOMAIN
+    )
+    context["buildings"][0]["airToWaterUnits"][0]["capabilities"].update(
+        {
+            "minSetTemperatureZone1": 10.0,
+            "maxSetTemperatureZone1": 30.0,
+            "minSetTemperatureZone2": 12.0,
+            "maxSetTemperatureZone2": 28.0,
+        }
+    )
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
+
+    await setup_integration(hass, mock_config_entry)
+
+    state1 = hass.states.get(ATW_ZONE1_ENTITY_ID)
+    assert state1 is not None
+    assert state1.attributes["min_temp"] == 10.0
+    assert state1.attributes["max_temp"] == 30.0
+
+    state2 = hass.states.get(ATW_ZONE2_ENTITY_ID)
+    assert state2 is not None
+    assert state2.attributes["min_temp"] == 12.0
+    assert state2.attributes["max_temp"] == 28.0

@@ -19,6 +19,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
@@ -235,6 +236,28 @@ async def test_mode(hass: HomeAssistant) -> None:
     state = hass.states.get("input_number.test_explicit_slider")
     assert state
     assert state.attributes["mode"] == "slider"
+
+
+async def test_unit_of_measurement(hass: HomeAssistant) -> None:
+    """Test unit of measurement is exposed in the state attributes."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "with_unit": {"min": 0, "max": 100, "unit_of_measurement": "°C"},
+                "without_unit": {"min": 0, "max": 100},
+            }
+        },
+    )
+
+    state = hass.states.get("input_number.with_unit")
+    assert state
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+
+    state = hass.states.get("input_number.without_unit")
+    assert state
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
 
 
 async def test_restore_state(hass: HomeAssistant) -> None:

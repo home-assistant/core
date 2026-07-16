@@ -136,24 +136,21 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     async def _async_setup(self) -> None:
         """Set up the Portainer Data Update Coordinator."""
         try:
-            await self.portainer.get_endpoints()
+            await self.portainer.portainer_system_status()
         except PortainerAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except PortainerConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except PortainerTimeoutError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
     @abstractmethod
@@ -169,19 +166,16 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except PortainerConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except PortainerTimeoutError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
 
@@ -221,13 +215,11 @@ class PortainerCoordinator(
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except PortainerConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}

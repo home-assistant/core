@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
-from ipaddress import IPv4Network, IPv6Network, ip_network
+from ipaddress import ip_network
 import logging
 import os
 from typing import Any, Final, TypedDict, cast, override
@@ -87,7 +87,7 @@ class ConfData(TypedDict, total=False):
     ssl_key: str
     cors_allowed_origins: list[str]
     use_x_forwarded_for: bool
-    trusted_proxies: list[IPv4Network | IPv6Network]
+    trusted_proxies: list[str]
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
@@ -363,6 +363,18 @@ class HTTPConfigStore:
         )
 
         await self._hass.services.async_call(HASS_DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
+
+    async def async_abort_trial(self) -> None:
+        """Abort the running pending-config trial and reinstate stable.
+
+        Called during setup when the pending config cannot be applied at all
+        (its address cannot be bound or its SSL configuration is unusable).
+        Clears the pending config so this and future starts use stable.
+        """
+        await self.async_load()
+        self._async_cancel_revert()
+        self._pending = None
+        await self._async_persist()
 
     async def async_migrate_yaml(self, config: ConfData) -> None:
         """Migrate YAML config to storage as pending if not the same as the config used for recovery."""
