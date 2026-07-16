@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration, trigger_shadow_callback
@@ -123,9 +124,9 @@ async def test_sensor_unknown_device_returns_unknown(
         pytest.param(3, "alarm", id="alarm"),
         pytest.param(4, "critical_alarm", id="critical_alarm"),
         pytest.param(5, "hushed", id="hushed"),
-        pytest.param(6, "not_present", id="not_present"),
-        pytest.param(None, "not_present", id="null_value"),
-        pytest.param(99, "not_present", id="out_of_range_value"),
+        pytest.param(6, STATE_UNAVAILABLE, id="not_present"),
+        pytest.param(None, STATE_UNAVAILABLE, id="null_value"),
+        pytest.param(99, STATE_UNAVAILABLE, id="out_of_range_value"),
     ],
 )
 async def test_sensor_all_alarm_states(

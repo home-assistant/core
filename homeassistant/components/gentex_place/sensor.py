@@ -20,7 +20,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import PlaceConfigEntry, PlaceCoordinator
 
-ALARM_STATUS_OPTIONS = [status.name.lower() for status in AlarmStatus]
+PARALLEL_UPDATES = 0
+
+ALARM_STATUS_OPTIONS = [
+    status.name.lower()
+    for status in AlarmStatus
+    if status is not AlarmStatus.NOT_PRESENT
+]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -103,15 +109,31 @@ class PlaceAlarmSensorEntity(CoordinatorEntity[PlaceCoordinator], SensorEntity):
             sw_version=device.firmware_version,
         )
 
+    def _shadow(self) -> PlaceDeviceShadow | None:
+        """Return the current shadow for this device, if any."""
+        if not self.coordinator.data:
+            return None
+        return self.coordinator.data.get(self._thing_name)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Unavailable when the device does not have this alarm type."""
+        if not super().available:
+            return False
+        shadow = self._shadow()
+        if shadow is None:
+            return True
+        return self.entity_description.value_fn(shadow) is not AlarmStatus.NOT_PRESENT
+
     @property
     @override
     def native_value(self) -> str | None:
         """Return the current alarm status as a lowercase enum name."""
-        shadow = (
-            self.coordinator.data.get(self._thing_name)
-            if self.coordinator.data
-            else None
-        )
+        shadow = self._shadow()
         if shadow is None:
             return None
-        return self.entity_description.value_fn(shadow).name.lower()
+        value = self.entity_description.value_fn(shadow)
+        if value is AlarmStatus.NOT_PRESENT:
+            return None
+        return value.name.lower()
