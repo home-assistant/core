@@ -3,6 +3,7 @@
 import asyncio
 from dataclasses import dataclass, field
 import logging
+from typing import Final
 
 import aiohttp
 from aiohttp.client_exceptions import ClientError
@@ -36,6 +37,8 @@ from .coordinator import (
 from .services import async_setup_services
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.NOTIFY, Platform.SENSOR]
+
+DISCONNECT_TIMEOUT: Final = 10
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -88,7 +91,7 @@ async def _async_disconnect_client(client: tibber.Tibber | None) -> None:
     if client is None:
         return
     try:
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(DISCONNECT_TIMEOUT):
             await client.rt_disconnect()
     except Exception:  # noqa: BLE001
         _LOGGER.warning(
