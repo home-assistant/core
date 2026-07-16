@@ -11,7 +11,6 @@ from fritzconnection.core.exceptions import (
 from fritzconnection.lib.fritzwlan import DEFAULT_PASSWORD_LENGTH
 import voluptuous as vol
 
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -22,7 +21,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
-    async_get_config_entry,
     async_register_admin_service,
 )
 
@@ -51,7 +49,7 @@ SERVICE_SCHEMA_DIAL = vol.Schema(
 SERVICE_GET_MESH_INFO = "get_mesh_info"
 SERVICE_SCHEMA_GET_MESH_INFO = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Required("device_id"): str,
     }
 )
 
@@ -134,12 +132,26 @@ async def _async_dial(service_call: ServiceCall) -> None:
 
 async def _async_get_mesh_info(service_call: ServiceCall) -> ServiceResponse:
     """Return the most recent mesh info for targeted config entry."""
-    config_entry: FritzConfigEntry = async_get_config_entry(
-        service_call.hass, DOMAIN, service_call.data[ATTR_CONFIG_ENTRY_ID]
-    )
+    target_entry_ids = await async_extract_config_entry_ids(service_call)
+    target_entries: list[FritzConfigEntry] = [
+        loaded_entry
+        for loaded_entry in service_call.hass.config_entries.async_loaded_entries(
+            DOMAIN
+        )
+        if loaded_entry.entry_id in target_entry_ids
+    ]
+
+    if not target_entries:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_found",
+            translation_placeholders={"service": service_call.service},
+        )
+
+    target_entry = target_entries[0]
     return {
-        "mesh_topology": config_entry.runtime_data.mesh_topology_raw,
-        "hosts_attributes": config_entry.runtime_data.hosts_attributes_raw,
+        "mesh_topology": target_entry.runtime_data.mesh_topology_raw,
+        "hosts_attributes": target_entry.runtime_data.hosts_attributes_raw,
     }
 
 

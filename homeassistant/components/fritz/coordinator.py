@@ -457,7 +457,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                         self.fritz_hosts.get_hosts_attributes
                     ),
                 )
-                # store raw hosts_attributes result for service access
                 self._hosts_attributes_raw = cast(JsonArrayType, hosts_attributes)
             except FritzActionError:
                 hosts_info = cast(
@@ -625,7 +624,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 )
             ) or not isinstance(topology, dict):
                 raise Exception("Mesh supported but empty topology reported")  # noqa: TRY002
-            # store raw topology result for service access
             self._mesh_topology_raw = cast(JsonObjectType, topology)
         except FritzActionError:
             self.mesh_role = MeshRoles.SLAVE

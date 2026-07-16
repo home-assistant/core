@@ -258,9 +258,9 @@
     "get_mesh_info": {
       "description": "Returns the last mesh information reported by the FRITZ!Box.",
       "fields": {
-        "config_entry_id": {
-          "description": "The config entry to use for this action.",
-          "name": "Config entry"
+        "device_id": {
+          "description": "Select the FRITZ!Box to get mesh info from.",
+          "name": "FRITZ!Box device"
         }
       },
       "name": "Get mesh info"

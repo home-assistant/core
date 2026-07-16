@@ -17,7 +17,6 @@ from homeassistant.components.fritz.services import (
     SERVICE_SET_GUEST_WIFI_PW,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -366,6 +365,7 @@ async def test_service_dial_unloaded(
 
 async def test_get_mesh_info_service_returns_stored_values(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     fc_class_mock,
     fh_class_mock,
     fs_class_mock,
@@ -379,10 +379,15 @@ async def test_get_mesh_info_service_returns_stored_values(
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
 
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    )
+    assert device
+
     result = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_MESH_INFO,
-        {ATTR_CONFIG_ENTRY_ID: entry.entry_id},
+        {"device_id": device.id},
         blocking=True,
         return_response=True,
     )
@@ -396,16 +401,15 @@ async def test_get_mesh_info_service_returns_stored_values(
 async def test_get_mesh_info_service_raises_on_invalid_entry(
     hass: HomeAssistant,
 ) -> None:
-    """Service should raise when invalid config entry is targeted."""
+    """Service should raise when no matching device target is found."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    # call with invalid config entry id; should raise ServiceValidationError
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_MESH_INFO,
-            {ATTR_CONFIG_ENTRY_ID: "non_existent_entry_id"},
+            {"device_id": "non_existent_device_id"},
             blocking=True,
             return_response=True,
         )
