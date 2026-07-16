@@ -11,7 +11,7 @@ rules:
   dependency-transparency: done
   docs-actions:
     status: exempt
-    comment: Integration does not register custom actions.
+    comment: This integration does not register custom actions.
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.
@@ -59,21 +59,27 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: done
-  entity-category: todo
+  entity-category:
+    status: exempt
+    comment: >
+      All entities are primary controls or measurements; none are configuration
+      or diagnostic entities that need a non-default entity category.
   entity-device-class: done
-  entity-disabled-by-default: todo
-  entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
+  entity-disabled-by-default:
+    status: exempt
+    comment: This integration has no entities that should be disabled by default.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt
-    comment: Integration has no repair scenarios.
+    comment: This integration has no repair scenarios.
   stale-devices: done
 
   # Platinum
   async-dependency: done
   inject-websession:
     status: exempt
-    comment: Integration uses a local TCP socket (via pynobo); no HTTP client is used.
+    comment: This integration uses a local TCP socket (via pynobo); no HTTP client is used.
   strict-typing: todo
