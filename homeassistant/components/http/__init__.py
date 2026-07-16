@@ -59,7 +59,14 @@ from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .config import async_load_config, default_server_port
+from .config import (
+    _DEFAULT_CONFIG,
+    ConfData,
+    HTTPConfigStore,
+    async_get_and_load_store,
+    async_load_config,
+    default_server_port,
+)
 from .const import (  # noqa: F401
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,
@@ -89,7 +96,7 @@ from .headers import setup_headers
 from .request_context import setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
-from .web_runner import HomeAssistantTCPSite, HomeAssistantUnixSite
+from .web_runner import HomeAssistantUnixSite
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -167,6 +174,63 @@ class ApiConfig:
         self.use_ssl = use_ssl
 
 
+async def _async_fallback_config(
+    hass: HomeAssistant,
+    store: HTTPConfigStore,
+    conf: ConfData,
+    err: HomeAssistantError | OSError,
+) -> ConfData:
+    """Return the next config to try after ``conf`` could not be applied.
+
+    Implements the fallback chain pending -> stable -> default config, where
+    the last step is only taken in recovery mode. Raises when there is no
+    (acceptable) fallback left, failing setup: on a normal boot this
+    activates recovery mode, in recovery mode it makes the failure visible
+    to the outside (e.g. the Supervisor rolls back a Core update whose API
+    does not come up).
+    """
+    if store.revert_deadline is not None:
+        # An unconfirmed pending config is under trial and cannot even be
+        # applied, so it is known to be bad: revert to the stable config
+        # right away and continue this same start with it, instead of
+        # waiting out the trial window and restarting.
+        _LOGGER.error(
+            "The new HTTP configuration could not be applied, reverting to "
+            "the previous configuration: %s",
+            err,
+        )
+        await store.async_abort_trial()
+        return store.stable
+
+    if (
+        # In normal mode, fail setup so recovery mode can take over with a
+        # reachable configuration.
+        not hass.config.recovery_mode
+        # The chain is exhausted; nothing left to fall back to.
+        or conf is _DEFAULT_CONFIG
+        # With peer certificate verification configured, connections must
+        # never be accepted without a verified client certificate; there is
+        # no acceptable fallback config.
+        or CONF_SSL_PEER_CERTIFICATE in conf
+    ):
+        # An unusable SSL configuration already carries a descriptive
+        # HomeAssistantError.
+        if isinstance(err, HomeAssistantError):
+            raise err
+        raise HomeAssistantError(
+            f"Failed to create HTTP server at port {conf[CONF_SERVER_PORT]}: {err}"
+        ) from err
+
+    # The config cannot be applied in recovery mode; fall back to the
+    # default config so the recovery UI stays reachable.
+    _LOGGER.error(
+        "The HTTP configuration could not be applied in recovery mode, "
+        "falling back to the default configuration: %s",
+        err,
+    )
+    return _DEFAULT_CONFIG
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HTTP API and debug interface."""
     # Late import to ensure isal is updated before
@@ -187,6 +251,67 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     websocket_api_module.async_register_websocket_commands(hass)
 
+    supervisor_unix_socket_path: Path | None = None
+    if socket_env := os.environ.get("SUPERVISOR_CORE_API_SOCKET"):
+        socket_path = Path(socket_env)
+        if socket_path.is_absolute():
+            supervisor_unix_socket_path = socket_path
+        else:
+            _LOGGER.error(
+                "Invalid Supervisor Unix socket path %s: path must be absolute",
+                socket_env,
+            )
+
+    def _make_server(conf: ConfData) -> HomeAssistantHTTP:
+        return HomeAssistantHTTP(
+            hass,
+            server_host=conf.get(CONF_SERVER_HOST, _DEFAULT_BIND),
+            server_port=conf[CONF_SERVER_PORT],
+            ssl_certificate=conf.get(CONF_SSL_CERTIFICATE),
+            ssl_peer_certificate=conf.get(CONF_SSL_PEER_CERTIFICATE),
+            ssl_key=conf.get(CONF_SSL_KEY),
+            # The loaded config stores trusted proxies as strings
+            # (JSON-serializable); the forwarded middleware needs
+            # IPv4Network/IPv6Network objects.
+            trusted_proxies=[
+                ip_network(proxy) for proxy in conf.get(CONF_TRUSTED_PROXIES) or []
+            ],
+            ssl_profile=conf[CONF_SSL_PROFILE],
+            supervisor_unix_socket_path=supervisor_unix_socket_path,
+        )
+
+    server = _make_server(conf)
+    trial_reverted = False
+    while True:
+        try:
+            await server.async_bind()
+        except (HomeAssistantError, OSError) as err:
+            store = await async_get_and_load_store(hass)
+            trial_reverted = store.revert_deadline is not None
+            conf = await _async_fallback_config(hass, store, conf, err)
+            server = _make_server(conf)
+            continue
+        if trial_reverted:
+            _LOGGER.warning(
+                "The previous HTTP configuration has been restored (server port %d)",
+                conf[CONF_SERVER_PORT],
+            )
+        break
+
+    # Created only after the fallback chain succeeded: if setup fails above,
+    # an already running task would be left behind unawaited.
+    source_ip_task = create_eager_task(async_get_source_ip(hass))
+
+    async def stop_server(event: Event) -> None:
+        """Stop the server."""
+        await server.stop()
+
+    # Register the stop listener right away, not only once serving starts:
+    # sockets are already bound, and if the remainder of startup fails the
+    # recovery-mode teardown (which fires the stop event) must release them,
+    # or the recovery boot cannot bind the same address again.
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
+
     if CONF_SERVER_HOST in conf and is_hassio(hass):
         issue_id = "server_host_deprecated_hassio"
         ir.async_create_issue(
@@ -202,60 +327,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     server_host = conf.get(CONF_SERVER_HOST, _DEFAULT_BIND)
     server_port = conf[CONF_SERVER_PORT]
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
-    ssl_peer_certificate = conf.get(CONF_SSL_PEER_CERTIFICATE)
-    ssl_key = conf.get(CONF_SSL_KEY)
-    cors_origins = conf[CONF_CORS_ORIGINS]
-    use_x_forwarded_for = conf.get(CONF_USE_X_FORWARDED_FOR, False)
-    use_x_frame_options = conf[CONF_USE_X_FRAME_OPTIONS]
-    # The loaded config stores trusted proxies as strings (JSON-serializable);
-    # the forwarded middleware needs IPv4Network/IPv6Network objects.
-    trusted_proxies = [
-        ip_network(proxy) for proxy in conf.get(CONF_TRUSTED_PROXIES) or []
-    ]
-    is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
-    login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
-    ssl_profile = conf[CONF_SSL_PROFILE]
 
-    source_ip_task = create_eager_task(async_get_source_ip(hass))
-
-    supervisor_unix_socket_path: Path | None = None
-    if socket_env := os.environ.get("SUPERVISOR_CORE_API_SOCKET"):
-        socket_path = Path(socket_env)
-        if socket_path.is_absolute():
-            supervisor_unix_socket_path = socket_path
-        else:
-            _LOGGER.error(
-                "Invalid Supervisor Unix socket path %s: path must be absolute",
-                socket_env,
-            )
-
-    server = HomeAssistantHTTP(
-        hass,
-        server_host=server_host,
-        server_port=server_port,
-        ssl_certificate=ssl_certificate,
-        ssl_peer_certificate=ssl_peer_certificate,
-        ssl_key=ssl_key,
-        trusted_proxies=trusted_proxies,
-        ssl_profile=ssl_profile,
-        supervisor_unix_socket_path=supervisor_unix_socket_path,
-    )
     await server.async_initialize(
-        cors_origins=cors_origins,
-        use_x_forwarded_for=use_x_forwarded_for,
-        login_threshold=login_threshold,
-        is_ban_enabled=is_ban_enabled,
-        use_x_frame_options=use_x_frame_options,
+        cors_origins=conf[CONF_CORS_ORIGINS],
+        use_x_forwarded_for=conf.get(CONF_USE_X_FORWARDED_FOR, False),
+        login_threshold=conf[CONF_LOGIN_ATTEMPTS_THRESHOLD],
+        is_ban_enabled=conf[CONF_IP_BAN_ENABLED],
+        use_x_frame_options=conf[CONF_USE_X_FRAME_OPTIONS],
     )
-
-    async def stop_server(event: Event) -> None:
-        """Stop the server."""
-        await server.stop()
 
     async def start_server(*_: Any) -> None:
         """Start the server."""
         with async_start_setup(hass, integration="http", phase=SetupPhases.SETUP):
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
             await server.start()
 
     async_when_setup_or_start(hass, "frontend", start_server)
@@ -397,9 +480,51 @@ class HomeAssistantHTTP:
         self.ssl_profile = ssl_profile
         self.supervisor_unix_socket_path = supervisor_unix_socket_path
         self.runner: web.AppRunner | None = None
-        self.site: HomeAssistantTCPSite | None = None
         self.supervisor_site: HomeAssistantUnixSite | None = None
         self.context: ssl.SSLContext | None = None
+        self._server: asyncio.Server | None = None
+
+    async def async_bind(self) -> None:
+        """Create the SSL context and the server, binding its sockets.
+
+        Called during setup so that an unusable configuration surfaces before
+        it is applied; serving starts later in ``start()``. Raises
+        ``HomeAssistantError`` if the SSL configuration is unusable and
+        ``OSError`` if the configured address cannot be bound.
+        """
+        if self.ssl_certificate:
+            self.context = await self.hass.async_add_executor_job(
+                self._create_ssl_context
+            )
+        self._server = await self._async_create_server()
+
+    async def _async_create_server(self) -> asyncio.Server:
+        """Create the (not yet serving) HTTP server, binding its sockets."""
+        try:
+            return await self.hass.loop.create_server(
+                self._make_protocol,
+                self.server_host if self.server_host is not None else _DEFAULT_BIND,
+                self.server_port,
+                ssl=self.context,
+                backlog=128,
+                start_serving=False,
+            )
+        except UnicodeError as err:
+            # create_server() raises UnicodeError for hosts the IDNA codec
+            # cannot encode (e.g. a label longer than 63 characters);
+            # normalize to OSError so callers only need to handle one error
+            # type.
+            raise OSError(f"error while resolving host: {err}") from err
+
+    def _make_protocol(self) -> RequestHandler:
+        """Create a protocol instance for an accepted connection.
+
+        Connections are only accepted once ``start()`` has run, so the
+        runner is set up by the time this is called.
+        """
+        runner = self.runner
+        assert runner is not None and runner.server is not None
+        return runner.server()
 
     async def async_initialize(
         self,
@@ -429,11 +554,6 @@ class HomeAssistantHTTP:
 
         setup_headers(self.app, use_x_frame_options)
         setup_cors(self.app, cors_origins)
-
-        if self.ssl_certificate:
-            self.context = await self.hass.async_add_executor_job(
-                self._create_ssl_context
-            )
 
     def register_view(self, view: HomeAssistantView | type[HomeAssistantView]) -> None:
         """Register a view with the WSGI server.
@@ -555,12 +675,13 @@ class HomeAssistantHTTP:
                 )
                 context = None
             else:
+                # Fall through: a configured peer certificate must still be
+                # enforced on the emergency context.
                 _LOGGER.critical(
                     "Home Assistant is running in recovery mode with an emergency self"
                     " signed ssl certificate because the configured SSL certificate was"
                     " not usable"
                 )
-                return context
 
         if self.ssl_peer_certificate:
             if context is None:
@@ -570,7 +691,15 @@ class HomeAssistantHTTP:
                 )
 
             context.verify_mode = ssl.CERT_REQUIRED
-            context.load_verify_locations(self.ssl_peer_certificate)
+            try:
+                context.load_verify_locations(self.ssl_peer_certificate)
+            except OSError as error:
+                # Raise HomeAssistantError so the caller can tell an unusable
+                # SSL configuration apart from a socket bind failure (OSError).
+                raise HomeAssistantError(
+                    f"Could not use SSL peer certificate from"
+                    f" {self.ssl_peer_certificate}: {error}"
+                ) from error
 
         return context
 
@@ -663,15 +792,10 @@ class HomeAssistantHTTP:
         )
         await self.runner.setup()
 
-        self.site = HomeAssistantTCPSite(
-            self.runner, self.server_host, self.server_port, ssl_context=self.context
-        )
-        try:
-            await self.site.start()
-        except OSError as error:
-            _LOGGER.error(
-                "Failed to create HTTP server at port %d: %s", self.server_port, error
-            )
+        # Setup either binds the server or fails, so it is always available
+        # here.
+        assert self._server is not None
+        await self._server.start_serving()
 
         _LOGGER.info("Now listening on port %d", self.server_port)
 
@@ -690,7 +814,8 @@ class HomeAssistantHTTP:
                         self.supervisor_unix_socket_path,
                         err,
                     )
-        if self.site is not None:
-            await self.site.stop()
+        if self._server is not None:
+            self._server.close()
+            await self._server.wait_closed()
         if self.runner is not None:
             await self.runner.cleanup()
