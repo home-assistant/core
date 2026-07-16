@@ -4,7 +4,10 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
+from aiohttp import web
+
 from homeassistant.components import websocket_api
+from homeassistant.components.http import KEY_HASS, KEY_HASS_USER, HomeAssistantView
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -21,6 +24,7 @@ CACHE_DURATION = timedelta(hours=24)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the usage prediction integration."""
+    hass.http.register_view(CommonControlView)
     websocket_api.async_register_command(hass, ws_common_control)
     hass.data[DATA_CACHE] = {}
     return True
@@ -42,6 +46,20 @@ async def ws_common_control(
             "entities": getattr(result, time_category),
         },
     )
+
+
+class CommonControlView(HomeAssistantView):
+    """View to get common control usage predictions for the current user."""
+
+    url = f"/api/{DOMAIN}/common_control"
+    name = f"api:{DOMAIN}:common_control"
+
+    async def get(self, request: web.Request) -> web.Response:
+        """Return common control usage predictions for the current user."""
+        hass = request.app[KEY_HASS]
+        result = await get_cached_common_control(hass, request[KEY_HASS_USER].id)
+        time_category = common_control.time_category(dt_util.now().hour)
+        return self.json({"entities": getattr(result, time_category)})
 
 
 async def get_cached_common_control(
