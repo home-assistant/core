@@ -3,6 +3,7 @@
 from datetime import timedelta
 from functools import partial
 from time import time
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
@@ -119,7 +120,7 @@ async def test_setup_component_with_config(
     """Test setup of the netatmo component with dev account."""
     fake_post_hits = 0
 
-    async def fake_post(*args, **kwargs):
+    async def fake_post(*args: Any, **kwargs: Any):
         """Fake error during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
@@ -717,7 +718,7 @@ async def test_entity_unavailable_when_device_unreachable(
             if module.get("id") == module_id:
                 module["reachable"] = reachable
 
-    async def fake_post(*args, **kwargs):
+    async def fake_post(*args: Any, **kwargs: Any):
         return await fake_post_request(
             hass, *args, msg_callback=set_reachable, **kwargs
         )

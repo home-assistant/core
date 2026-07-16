@@ -1,6 +1,7 @@
 """The tests for Netatmo switch."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -109,7 +110,7 @@ async def test_switch_unavailable_on_fetch_error(
     """Test the switch becomes unavailable when the data cannot be fetched."""
     raise_error = False
 
-    async def fake_post(*args, **kwargs):
+    async def fake_post(*args: Any, **kwargs: Any):
         if raise_error:
             raise error
         return await fake_post_request(hass, *args, **kwargs)
