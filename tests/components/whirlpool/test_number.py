@@ -11,7 +11,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration, snapshot_whirlpool_entities, trigger_attr_callback
@@ -103,6 +103,26 @@ async def test_set_target_temperature_failure(
     await init_integration(hass)
 
     with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: 220},
+            blocking=True,
+        )
+
+
+async def test_set_target_temperature_value_error(
+    hass: HomeAssistant,
+    oven_number_entity: tuple[str, str, whirlpool.oven.Cavity],
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test a ValueError while setting the temperature raises ServiceValidationError."""
+    entity_id, mock_fixture, _ = oven_number_entity
+    mock = request.getfixturevalue(mock_fixture)
+    mock.set_cook.side_effect = ValueError
+    await init_integration(hass)
+
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,

@@ -7,9 +7,11 @@ from whirlpool.oven import Cavity as OvenCavity, CookMode, Oven
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WhirlpoolConfigEntry
+from .const import DOMAIN
 from .entity import WhirlpoolOvenEntity
 
 PARALLEL_UPDATES = 1
@@ -64,8 +66,14 @@ class WhirlpoolOvenTargetTemperature(WhirlpoolOvenEntity, NumberEntity):
         mode = self._appliance.get_cook_mode(self.cavity)
         if mode is None or mode == CookMode.Standby:
             mode = CookMode.Bake
-        WhirlpoolOvenTargetTemperature._check_service_request(
-            await self._appliance.set_cook(
-                target_temp=value, mode=mode, cavity=self.cavity
+        try:
+            WhirlpoolOvenTargetTemperature._check_service_request(
+                await self._appliance.set_cook(
+                    target_temp=value, mode=mode, cavity=self.cavity
+                )
             )
-        )
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_value_set",
+            ) from err
