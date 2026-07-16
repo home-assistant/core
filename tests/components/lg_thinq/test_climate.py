@@ -90,9 +90,9 @@ async def test_fan_mode_service_calls(
 
 
 @pytest.mark.parametrize("device_fixture", ["air_conditioner"])
+@pytest.mark.usefixtures("devices")
 async def test_service_call_connection_error_raises_home_assistant_error(
     hass: HomeAssistant,
-    devices: AsyncMock,
     mock_thinq_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
