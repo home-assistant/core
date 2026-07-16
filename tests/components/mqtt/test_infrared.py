@@ -488,7 +488,7 @@ async def test_discovery_removal_infrared_entity(
     config: dict[str, Any],
 ) -> None:
     """Test removal of discovered infrared entity."""
-    data = orjson.dumps(config[mqtt.DOMAIN][infrared.DOMAIN])
+    data = orjson.dumps(config[mqtt.DOMAIN][infrared.DOMAIN]).decode()
     await help_test_discovery_removal(hass, mqtt_mock_entry, infrared.DOMAIN, data)
 
 
