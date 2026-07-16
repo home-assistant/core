@@ -48,17 +48,17 @@ rules:
     status: done
     comment: >
       Model name "Nobø Ecohub" under review for rename to "Nobø Hub".
-  diagnostics: todo
+  diagnostics: done
   discovery: done
   discovery-update-info: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
-  dynamic-devices: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
   entity-category: todo
   entity-device-class: done
   entity-disabled-by-default: todo
@@ -69,7 +69,7 @@ rules:
   repair-issues:
     status: exempt
     comment: Integration has no repair scenarios.
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: done

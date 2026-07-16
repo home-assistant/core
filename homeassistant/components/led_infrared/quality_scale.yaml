@@ -65,7 +65,7 @@ rules:
   test-coverage: todo
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |
@@ -97,7 +97,7 @@ rules:
     comment: |
       This integration does not raise exceptions.
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
