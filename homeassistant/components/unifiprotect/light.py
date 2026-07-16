@@ -70,8 +70,6 @@ async def async_setup_entry(
     )
 
     entities: list[ProtectLight] = []
-    # Public-master enumeration: iterate the public light list; the private
-    # light is paired by shared id (fill) and is None in public-only mode.
     for public, private in data.get_public_lights():
         if private is None:
             # Hybrid: a light not yet in the private bootstrap (adopt race) is
@@ -186,25 +184,14 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         else:
             _LOGGER.debug("Turning on light")
 
-        # Copy the device's own settings type (private in hybrid, public in
-        # public-only — each serializes its own units) with the new LED level.
-        await self.device.api.update_light_public(
-            self.device.id,
-            is_light_force_enabled=True,
-            light_device_settings=(
-                self.device.light_device_settings.model_copy(
-                    update={"led_level": led_level}
-                )
-                if led_level is not None
-                else None
-            ),
-        )
+        # Commands are only reachable while available, which requires the public
+        # object; the setter copies the light's own current settings (write-through,
+        # never stale), validates the LED level, and serializes the write.
+        await cast(PublicLight, self._ufp_public_obj).set_light(True, led_level)
 
     @async_ufp_instance_command
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         _LOGGER.debug("Turning off light")
-        await self.device.api.update_light_public(
-            self.device.id, is_light_force_enabled=False
-        )
+        await cast(PublicLight, self._ufp_public_obj).set_light(False)

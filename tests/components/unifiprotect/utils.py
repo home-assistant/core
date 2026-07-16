@@ -499,8 +499,12 @@ def setup_public_light(ufp: MockUFPFixture) -> None:
     pb.arm_profiles = {}
 
     def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
+        # Cache one public mock per id so the object the entity holds stays the
+        # same instance across calls (a fresh mock each call would break command
+        # assertions on the entity's cached public object).
         if (
             model is ModelType.LIGHT
+            and obj_id not in public_bootstrap.lights
             and (private := ufp.api.bootstrap.lights.get(obj_id)) is not None
         ):
             public_bootstrap.lights[obj_id] = make_public_light(private)

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from uiprotect.data import DeviceState, Light, Permission, WSAction
-from uiprotect.data.public_devices import PublicLightDeviceSettings
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
@@ -144,23 +144,18 @@ async def test_light_brightness_none(
 async def test_light_turn_on(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
 ) -> None:
-    """Test light entity turn on."""
-
-    light._api = ufp.api
-    light.api.update_light_public = AsyncMock()
+    """Test light entity turn on (routes through the public setter)."""
 
     setup_public_light(ufp)
     await init_entry(hass, ufp, [light, unadopted_light])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
 
-    entity_id = "light.test_light"
     await hass.services.async_call(
-        "light", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        "light", "turn_on", {ATTR_ENTITY_ID: "light.test_light"}, blocking=True
     )
 
-    assert light.api.update_light_public.called
-    light.api.update_light_public.assert_called_once_with(
-        light.id, is_light_force_enabled=True, light_device_settings=None
+    ufp.api.public_bootstrap.lights[light.id].set_light.assert_awaited_once_with(
+        True, None
     )
 
 
@@ -169,26 +164,21 @@ async def test_light_turn_on_with_brightness(
 ) -> None:
     """Test light entity turn on with brightness."""
 
-    light._api = ufp.api
-    light.api.update_light_public = AsyncMock()
-
     setup_public_light(ufp)
     await init_entry(hass, ufp, [light, unadopted_light])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
 
-    entity_id = "light.test_light"
     await hass.services.async_call(
         "light",
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+        {ATTR_ENTITY_ID: "light.test_light", ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
 
-    assert light.api.update_light_public.called
-    call_kwargs = light.api.update_light_public.call_args[1]
-    assert call_kwargs["is_light_force_enabled"] is True
-    assert call_kwargs["light_device_settings"] is not None
-    assert call_kwargs["light_device_settings"].led_level == 3  # 128/255 * 6 ≈ 3
+    # 128/255 * 6 ≈ 3
+    ufp.api.public_bootstrap.lights[light.id].set_light.assert_awaited_once_with(
+        True, 3
+    )
 
 
 async def test_light_turn_off(
@@ -196,22 +186,15 @@ async def test_light_turn_off(
 ) -> None:
     """Test light entity turn off."""
 
-    light._api = ufp.api
-    light.api.update_light_public = AsyncMock()
-
     setup_public_light(ufp)
     await init_entry(hass, ufp, [light, unadopted_light])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
 
-    entity_id = "light.test_light"
     await hass.services.async_call(
-        "light", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        "light", "turn_off", {ATTR_ENTITY_ID: "light.test_light"}, blocking=True
     )
 
-    assert light.api.update_light_public.called
-    light.api.update_light_public.assert_called_once_with(
-        light.id, is_light_force_enabled=False
-    )
+    ufp.api.public_bootstrap.lights[light.id].set_light.assert_awaited_once_with(False)
 
 
 async def test_light_setup_public_only(
@@ -296,19 +279,59 @@ async def test_light_added_after_setup_public_only(
     assert "already exists" not in caplog.text
 
 
+async def test_light_added_during_gap_public_only(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """A light added while the websocket was down enumerates on reconnect.
+
+    No add frame arrives for a light that appeared during the gap, so the
+    reconnect resync must dispatch it for enumeration itself.
+    """
+
+    first = make_public_light(light)
+    ufp.api.is_public_only = True
+
+    async def _prime_one() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        pb.lights = {light.id: first}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_one)
+
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+
+    # A second light appears during the gap; the reconnect resync includes it.
+    second = make_public_light(light)
+    second.id = "gap-light"
+    second.mac = "FFEEDDCCBB02"
+    second.name = "Gap Light"
+    second.display_name = "Gap Light"
+
+    async def _prime_two() -> Any:
+        pb = ufp.api.public_bootstrap
+        pb.cameras = {}
+        pb.lights = {light.id: first, second.id: second}
+        return pb
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime_two)
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.LIGHT, 2, 2)
+    assert hass.states.get("light.gap_light") is not None
+
+
 async def test_light_turn_on_with_brightness_public_only(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light
 ) -> None:
-    """Turning on with brightness sends the public settings type in public-only.
-
-    The settings payload is copied from the device's own settings object, so in
-    public-only mode it must be the public type (millisecond units), not a
-    field-by-field rebuild into the private type.
-    """
+    """Turning on with brightness routes through the public setter in public-only."""
 
     public = make_public_light(light)
     public.api = ufp.api
-    ufp.api.update_light_public = AsyncMock()
     ufp.api.is_public_only = True
 
     async def _prime_public_only() -> Any:
@@ -329,12 +352,8 @@ async def test_light_turn_on_with_brightness_public_only(
         blocking=True,
     )
 
-    call_kwargs = ufp.api.update_light_public.call_args[1]
-    assert call_kwargs["is_light_force_enabled"] is True
-    settings = call_kwargs["light_device_settings"]
-    assert isinstance(settings, PublicLightDeviceSettings)
-    assert settings.led_level == 3  # 128/255 * 6 ≈ 3
-    assert settings.pir_duration == public.light_device_settings.pir_duration
+    # 128/255 * 6 ≈ 3
+    public.set_light.assert_awaited_once_with(True, 3)
 
 
 async def test_light_setup_no_perm(

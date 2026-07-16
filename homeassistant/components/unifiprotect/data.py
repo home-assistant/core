@@ -405,12 +405,17 @@ class ProtectData:
             _LOGGER.debug("Public refresh after reconnect failed: %s", err)
             return
         self._async_process_public_updates()
-        # Existing subscriptions are refreshed above, but a camera that
-        # appeared (or gained streams) during the gap still needs its
-        # entities; the platform adds only the missing ones.
+        # Existing subscriptions are refreshed above, but a device that
+        # appeared during the gap still needs its entities; the platform adds
+        # only the missing ones. Cameras re-enumerate via the channels signal;
+        # in public-only mode there is no private adopt path, so public-master
+        # families (lights) that appeared are re-dispatched here too.
         if self.api.has_public_bootstrap:
             for public in list(self.api.public_bootstrap.cameras.values()):
                 async_dispatcher_send(self._hass, self.channels_signal, public)
+            if self.api.is_public_only:
+                for light in list(self.api.public_bootstrap.lights.values()):
+                    async_dispatcher_send(self._hass, self.public_add_signal, light)
 
     @callback
     def _async_process_public_updates(self) -> None:
