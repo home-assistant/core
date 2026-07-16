@@ -20,6 +20,7 @@ from duco_connectivity import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.duco.const import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -160,33 +161,39 @@ async def test_setup_entry_ignores_lan_info_failures(
 
 
 @pytest.mark.parametrize(
-    "method",
-    [
-        pytest.param("async_get_ventilation_temperature_info", id="temperatures"),
-    ],
-)
-@pytest.mark.parametrize(
     "exception",
     [
         pytest.param(DucoError("API error"), id="duco_error"),
         pytest.param(DucoConnectionError("Connection refused"), id="connection_error"),
     ],
 )
-async def test_setup_entry_ignores_optional_temperature_capability_failures(
+async def test_setup_entry_recovers_from_optional_temperature_capability_failure(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
-    method: str,
     exception: Exception,
 ) -> None:
-    """Test setup succeeds when an optional temperature capability is unavailable."""
-    getattr(mock_duco_client, method).side_effect = exception
+    """Test an optional temperature capability is retried after a setup failure."""
+    mock_duco_client.async_get_ventilation_temperature_info.side_effect = [
+        exception,
+        VentilationTemperatureInfo(temp_oda=5.5),
+    ]
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.living_outdoor_air_temperature") is None
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.living_outdoor_air_temperature")
+    assert state is not None
+    assert state.state == "5.5"
 
 
 async def test_unsupported_ventilation_temperature_capability_is_not_repolled(
