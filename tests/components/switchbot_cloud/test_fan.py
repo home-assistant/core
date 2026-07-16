@@ -260,7 +260,7 @@ async def test_power_state(
     device_info: Device,
     entry_id: str,
 ) -> None:
-    """Test set preset mode."""
+    """Test handling of powerState in status payloads."""
     mock_list_devices.return_value = [
         device_info,
     ]
