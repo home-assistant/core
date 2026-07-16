@@ -13,11 +13,12 @@
       "migration_successful": "NuHeat was reconnected successfully and matching legacy thermostats were consolidated.",
       "missing_oauth_credentials": "OAuth application credentials are required for this development build. A future official Home Assistant integration should use centrally managed credentials.",
       "oauth_implementation_unavailable": "The NuHeat OAuth service is temporarily unavailable. Try again later.",
-      "reauth_account_mismatch": "The linked NuHeat account does not match the existing account."
+      "reauth_account_mismatch": "The linked NuHeat account does not match the existing account.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "step": {
       "migration_confirm": {
-        "description": "{thermostat} uses the obsolete username/password API. Continue to sign in to NuHeat with OAuth. Stored legacy credentials are retained until the account and thermostat are validated.",
+        "description": "{thermostat} uses the obsolete username/password API. Create a Home Assistant backup before continuing. Stored legacy credentials are retained until the NuHeat account and thermostat are validated, then removed after successful migration.",
         "title": "Reconnect NuHeat"
       },
       "reauth_confirm": {

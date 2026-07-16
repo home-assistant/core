@@ -353,12 +353,23 @@ def _pending_cleanup_data(anchor_entry_id: str, serial_number: str) -> dict[str,
     }
 
 
-async def _reload_anchor(hass: HomeAssistant, plan: MigrationPlan) -> None:
-    """Reload the OAuth anchor while suppressing automatic cleanup."""
+async def _restart_anchor(hass: HomeAssistant, plan: MigrationPlan) -> None:
+    """Restart the OAuth anchor without aborting its active reauth flow."""
     token = _MIGRATION_RELOAD_ACTIVE.set(True)
     try:
-        if not await hass.config_entries.async_reload(plan.anchor_entry_id):
-            raise MigrationExecutionError("NuHeat anchor reload failed")
+        anchor = hass.config_entries.async_get_entry(plan.anchor_entry_id)
+        if anchor is None:
+            raise MigrationExecutionError("NuHeat anchor disappeared before restart")
+        if (
+            anchor.state is not ConfigEntryState.NOT_LOADED
+            and not await hass.config_entries.async_unload(plan.anchor_entry_id)
+        ):
+            raise MigrationExecutionError("NuHeat anchor unload failed")
+        if not await hass.config_entries.async_setup(plan.anchor_entry_id):
+            raise MigrationExecutionError("NuHeat anchor setup failed")
+        anchor = hass.config_entries.async_get_entry(plan.anchor_entry_id)
+        if anchor is None or anchor.state is not ConfigEntryState.LOADED:
+            raise MigrationExecutionError("NuHeat anchor did not load")
     finally:
         _MIGRATION_RELOAD_ACTIVE.reset(token)
 
@@ -474,7 +485,12 @@ async def _cleanup_plan_entries(
     hass: HomeAssistant, plan: MigrationPlan
 ) -> _CleanupFailure | None:
     removed: list[str] = []
-    for entry_id in plan.redundant_entry_ids:
+    cleanup_entry_ids = tuple(
+        entry_id
+        for entry_id in plan.redundant_entry_ids
+        if entry_id != plan.initiating_entry_id
+    )
+    for entry_id in cleanup_entry_ids:
         entry = hass.config_entries.async_get_entry(entry_id)
         if entry is None:
             removed.append(entry_id)
@@ -484,7 +500,7 @@ async def _cleanup_plan_entries(
         except Exception:  # noqa: BLE001
             pending = tuple(
                 pending_id
-                for pending_id in plan.redundant_entry_ids
+                for pending_id in cleanup_entry_ids
                 if hass.config_entries.async_get_entry(pending_id) is not None
             )
             return _CleanupFailure(tuple(removed), pending)
@@ -569,13 +585,18 @@ async def execute_migration_plan(
                 version=OAUTH_CONFIG_ENTRY_VERSION,
             )
 
-        await _reload_anchor(hass, plan)
+        await _restart_anchor(hass, plan)
         verify_migration_plan_result(hass, plan)
         _finish_anchor_data(hass, anchor, oauth_data, plan)
     except Exception as err:
         await rollback_migration_plan(hass, plan)
         raise MigrationExecutionError("NuHeat migration was rolled back") from err
 
+    deferred_entry_ids = tuple(
+        entry_id
+        for entry_id in plan.redundant_entry_ids
+        if entry_id == plan.initiating_entry_id
+    )
     cleanup_failure = await _cleanup_plan_entries(hass, plan)
     if cleanup_failure is not None and not cleanup_failure.removed_entry_ids:
         await rollback_migration_plan(hass, plan)
@@ -587,7 +608,24 @@ async def execute_migration_plan(
         return MigrationResult(
             anchor_entry=anchor,
             removed_entry_ids=cleanup_failure.removed_entry_ids,
-            pending_cleanup_entry_ids=cleanup_failure.pending_entry_ids,
+            pending_cleanup_entry_ids=(
+                *cleanup_failure.pending_entry_ids,
+                *deferred_entry_ids,
+            ),
+            migrated_serials=plan.migrated_serials,
+            cleanup_complete=False,
+        )
+
+    if deferred_entry_ids:
+        _create_repair_issue(hass, plan.anchor_entry_id, ISSUE_CLEANUP_INCOMPLETE)
+        return MigrationResult(
+            anchor_entry=anchor,
+            removed_entry_ids=tuple(
+                entry_id
+                for entry_id in plan.redundant_entry_ids
+                if entry_id not in deferred_entry_ids
+            ),
+            pending_cleanup_entry_ids=deferred_entry_ids,
             migrated_serials=plan.migrated_serials,
             cleanup_complete=False,
         )
