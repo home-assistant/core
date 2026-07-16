@@ -213,20 +213,16 @@ async def test_store_init_timeout_retries_and_succeeds(
         telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
         issue_registry = ir.async_get(hass)
 
-        # First attempt timed out: no store yet and a repair issue is raised,
-        # but init is not abandoned - a background retry is scheduled.
         assert telegrams_module.store is None
         assert (
             issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
-            is not None
+            is None
         )
 
-        # Advance past the first backoff so the scheduled retry fires.
         freezer.tick(STORE_INIT_RETRY_BACKOFF[0] + 1)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-        # Retry succeeded: store initialized and the repair issue cleared.
         assert telegrams_module.store is not None
         assert (
             issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
@@ -253,15 +249,12 @@ async def test_store_init_timeout_exhausts_retries_and_aborts(
         telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
         issue_registry = ir.async_get(hass)
 
-        # First timeout: retry scheduled, repair raised, no store yet.
         assert telegrams_module.store is None
         assert (
             issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
-            is not None
+            is None
         )
 
-        # Fire the retry; it times out again and, the budget being spent,
-        # the store is abandoned.
         freezer.tick(STORE_INIT_RETRY_BACKOFF[0] + 1)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()

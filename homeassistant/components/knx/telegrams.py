@@ -63,8 +63,9 @@ STORE_INIT_TIMEOUT = 10
 
 # When store initialization times out during startup (busy event loop, cold or large
 # database on low-power hardware), the failure is usually transient. Instead of giving
-# up until the next reload, retry in the background with a capped backoff. The store is
-# only disabled after this many consecutive timeouts.
+# up until the next reload, retry in the background with a capped backoff. This many
+# retries are allowed on top of the initial attempt, i.e. the store is only disabled
+# after STORE_INIT_MAX_RETRIES + 1 consecutive timeouts.
 STORE_INIT_RETRY_BACKOFF = (15, 30, 60, 120, 300, 300)
 STORE_INIT_MAX_RETRIES = len(STORE_INIT_RETRY_BACKOFF)
 
@@ -119,6 +120,7 @@ class Telegrams:
         ) = None
         self._evict_expired_unsub: CALLBACK_TYPE | None = None
         self._store_init_retry_unsub: CALLBACK_TYPE | None = None
+        self._store_init_retry_task: asyncio.Task[None] | None = None
         self._store_init_attempts = 0
 
         if self.backend == KNX_TELEGRAM_BACKEND_POSTGRES:
@@ -197,7 +199,6 @@ class Telegrams:
                 self._store_init_attempts,
                 delay,
             )
-            async_create_telegram_storage_issue(self.hass)
             self._store_init_retry_unsub = async_call_later(
                 self.hass, delay, self._async_retry_load_history
             )
@@ -255,7 +256,11 @@ class Telegrams:
     async def _async_retry_load_history(self, now: datetime) -> None:
         """Retry telegram store initialization after a transient timeout."""
         self._store_init_retry_unsub = None
-        await self.load_history()
+        self._store_init_retry_task = asyncio.current_task()
+        try:
+            await self.load_history()
+        finally:
+            self._store_init_retry_task = None
 
     async def _abort_store_init(self) -> None:
         """Create a repair issue and tear down a store that failed to init."""
@@ -281,6 +286,14 @@ class Telegrams:
         if self._store_init_retry_unsub is not None:
             self._store_init_retry_unsub()
             self._store_init_retry_unsub = None
+        if self._store_init_retry_task is not None:
+            self._store_init_retry_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._store_init_retry_task
+        if self._uninitialized_store is not None:
+            with contextlib.suppress(Exception):
+                await self._uninitialized_store.close()
+            self._uninitialized_store = None
         if self._evict_expired_unsub is not None:
             self._evict_expired_unsub()
             self._evict_expired_unsub = None
