@@ -4,12 +4,12 @@ import dataclasses
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 
 from .coordinator import EnergieleserConfigEntry
 
-TO_REDACT = {CONF_DEVICE_ID, CONF_HOST, "fabrication_number"}
+TO_REDACT = {CONF_DEVICE_ID, "fabrication_number"}
 
 
 async def async_get_config_entry_diagnostics(
@@ -22,7 +22,4 @@ async def async_get_config_entry_diagnostics(
 
     device_data_dict = dataclasses.asdict(device_data)
 
-    return {
-        "info": async_redact_data(entry.data, TO_REDACT),
-        "data": async_redact_data(device_data_dict, TO_REDACT),
-    }
+    return async_redact_data(device_data_dict, TO_REDACT)
