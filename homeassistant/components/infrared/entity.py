@@ -7,6 +7,7 @@ from enum import StrEnum
 import logging
 from typing import final, override
 
+from infrared_protocols.commands import Command as InfraredCommand
 from propcache.api import cached_property
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -15,7 +16,6 @@ from homeassistant.helpers.deprecation import deprecated_class
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
-from infrared_protocols.commands import Command as InfraredCommand
 
 _LOGGER = logging.getLogger(__name__)
 

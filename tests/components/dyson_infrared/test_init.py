@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.dyson_infrared import PLATFORMS, async_unload_entry
+from homeassistant.components.dyson_infrared import PLATFORMS
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -27,10 +27,13 @@ async def test_async_unload_entry(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain="dyson_infrared")
     entry.add_to_hass(hass)
 
+    with patch.object(hass.config_entries, "async_forward_entry_setups"):
+        await hass.config_entries.async_setup(entry.entry_id)
+
     with patch.object(
         hass.config_entries, "async_unload_platforms", return_value=True
     ) as mock_unload:
-        result = await async_unload_entry(hass, entry)
+        result = await hass.config_entries.async_unload(entry.entry_id)
 
         assert result is True
         mock_unload.assert_called_once_with(entry, PLATFORMS)

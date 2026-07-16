@@ -1,7 +1,7 @@
 """Support for Dyson infrared fans."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from infrared_protocols.codes.dyson.cool import DysonCoolCode
 
@@ -53,6 +53,7 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the fan is on."""
         return self._attr_is_on or False
@@ -61,6 +62,7 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
         command = code.to_command()
         await self._send_command(command)
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -75,12 +77,14 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._async_send_dyson_action(DysonCoolCode.OFF)
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the fan speed percentage."""
         if percentage == 0:
@@ -104,6 +108,7 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set the oscillation state of the fan."""
         await self._async_send_dyson_action(DysonCoolCode.SWING)
