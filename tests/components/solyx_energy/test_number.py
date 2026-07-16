@@ -66,6 +66,7 @@ async def test_number_api_failure(
     entity_id = entity_registry.async_get_entity_id(
         "number", DOMAIN, f"{NYMO_DEVICE_ID}-controlValue"
     )
+    assert entity_id is not None
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(

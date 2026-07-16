@@ -67,6 +67,7 @@ async def test_select_api_failure(
     entity_id = entity_registry.async_get_entity_id(
         "select", DOMAIN, f"{NYMO_DEVICE_ID}-operatingMode"
     )
+    assert entity_id is not None
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
