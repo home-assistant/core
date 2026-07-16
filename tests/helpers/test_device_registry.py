@@ -1515,12 +1515,6 @@ async def test_migration_from_1_10(
                     "area_id": None,
                     "config_entries": [mock_config_entry.entry_id],
                     "config_entries_subentries": {mock_config_entry.entry_id: [None]},
-                    "config_entry_id": mock_config_entry.entry_id,
-                    "config_subentry_id": None,
-                    "composite_device_id": None,
-                    "composite_primary_config_entry": None,
-                    "split_at": None,
-                    "has_composite_identifiers": False,
                     "configuration_url": None,
                     "connections": [["mac", "123456ABCDEF"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -1547,8 +1541,6 @@ async def test_migration_from_1_10(
                     "area_id": None,
                     "config_entries": ["234567"],
                     "config_entries_subentries": {"234567": [None]},
-                    "config_entry_id": "234567",
-                    "config_subentry_id": None,
                     "connections": [["mac", "123456ABCDAB"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
@@ -1666,12 +1658,6 @@ async def test_migration_from_1_11(
                     "area_id": None,
                     "config_entries": [mock_config_entry.entry_id],
                     "config_entries_subentries": {mock_config_entry.entry_id: [None]},
-                    "config_entry_id": mock_config_entry.entry_id,
-                    "config_subentry_id": None,
-                    "composite_device_id": None,
-                    "composite_primary_config_entry": None,
-                    "split_at": None,
-                    "has_composite_identifiers": False,
                     "configuration_url": None,
                     "connections": [["mac", "123456ABCDEF"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -1698,8 +1684,6 @@ async def test_migration_from_1_11(
                     "area_id": None,
                     "config_entries": ["234567"],
                     "config_entries_subentries": {"234567": [None]},
-                    "config_entry_id": "234567",
-                    "config_subentry_id": None,
                     "connections": [["mac", "123456ABCDAB"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
@@ -2979,6 +2963,10 @@ async def test_async_get_device_composite_reuses_pre_migration_id(
         pytest.param(
             {"merge_identifiers": {("test", "extra")}}, id="merge_identifiers"
         ),
+        pytest.param(
+            {"merge_connections": {("mac", "12:34:56:ab:cd:ef")}},
+            id="merge_connections",
+        ),
     ],
 )
 async def test_async_update_device_composite_drops_identity_args(
@@ -3054,6 +3042,51 @@ async def test_async_update_device_composite_drops_only_disallowed_args(
     # Disallowed arg dropped: identities untouched
     assert device_registry.async_get(device_1.id).identifiers == {("test", "1")}
     assert device_registry.async_get(device_2.id).identifiers == {("test", "2")}
+
+
+async def test_async_update_device_composite_drops_move_args(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """new_config_entry_id / new_config_subentry_id are dropped on the composite path.
+
+    A forwarded move can't be caught by the identifier/connection checks - the splits have
+    distinct identities and would move without colliding - so assert each split keeps its
+    original (config entry, subentry).
+    """
+    entry_1 = MockConfigEntry(
+        domain="test",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={}, subentry_type="test", title="Sub", unique_id=None
+            )
+        ],
+    )
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    subentry_id = next(iter(entry_1.subentries))
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    old_id = "composite00000000000000000000ab"
+    device_registry.devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry.devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+
+    # Targets are valid, so a forwarded move would land silently - only the owner
+    # assertions below catch it.
+    device_registry.async_update_device(old_id, new_config_entry_id=entry_2.entry_id)
+    device_registry.async_update_device(old_id, new_config_subentry_id=subentry_id)
+
+    assert device_registry.async_get(device_1.id).config_entry_id == entry_1.entry_id
+    assert device_registry.async_get(device_1.id).config_subentry_id is None
+    assert device_registry.async_get(device_2.id).config_entry_id == entry_2.entry_id
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -7222,6 +7255,8 @@ async def test_reregistration_replaces_composite_identifiers(
     )
     assert reregistered.id == split_a.id
     assert reregistered.identifiers == {("domain_a", "1")}  # domain_b copy pruned
+    # assert the copied composite connection is cleared
+    assert reregistered.connections == set()
     assert reregistered.has_composite_identifiers is False
 
 
