@@ -290,6 +290,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             elif self._attr_preset_mode in [PRESET_SCHEDULE, PRESET_HOME]:
                 self.async_update_callback()
                 self.data_handler.async_force_update(self._signal_name)
+                return
             self.async_write_ha_state()
             return
 
@@ -325,7 +326,6 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                     self._attr_preset_mode = PRESET_MAP_NETATMO[PRESET_SCHEDULE]
 
                 self.async_update_callback()
-                self.async_write_ha_state()
                 return
 
     @property
