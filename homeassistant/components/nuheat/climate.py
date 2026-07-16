@@ -6,12 +6,10 @@ from chemelex_nuheat import ScheduleMode, Thermostat
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    ClimateEntity,
-    ClimateEntityFeature,
-)
-from homeassistant.components.climate.const import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
+    ClimateEntity,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )

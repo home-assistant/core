@@ -2,7 +2,7 @@
 
 from chemelex_nuheat import ScheduleMode, ThermostatMode
 
-from homeassistant.components.climate.const import HVACMode
+from homeassistant.components.climate import HVACMode
 
 from .const import PRESET_PERMANENT_HOLD, PRESET_RUN, PRESET_TEMPORARY_HOLD
 
