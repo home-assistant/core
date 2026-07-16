@@ -74,9 +74,9 @@
   "selector": {
     "web_search_modes": {
       "options": {
-        "off": "Off",
-        "plugin": "Plugin (configured in OpenRouter plugin settings, deprecated)",
-        "tool": "Auto (Native if supported by model, else Exa)",
+        "off": "[%key:common::state::off%]",
+        "plugin": "Plugin (deprecated)",
+        "tool": "[%key:common::state::auto%]",
         "tool_exa": "Exa",
         "tool_firecrawl": "Firecrawl",
         "tool_native": "Model native",
