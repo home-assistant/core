@@ -188,10 +188,11 @@ class MideaClimate(MideaEntity, ClimateEntity):
     @override
     def hvac_mode(self) -> HVACMode | None:
         """Midea Climate hvac mode."""
-        if self._device.get_attribute("power"):
-            mode = self._device.get_attribute("mode")
-            if isinstance(mode, int):
-                return self._protocol_mode_to_hvac(mode)
+        if not self._device.get_attribute("power"):
+            return HVACMode.OFF
+        mode = self._device.get_attribute("mode")
+        if isinstance(mode, int):
+            return self._protocol_mode_to_hvac(mode)
         return None
 
     def _protocol_mode_to_hvac(self, mode: int) -> HVACMode | None:
@@ -596,12 +597,10 @@ class MideaC3Climate(MideaClimate):
     @override
     def hvac_mode(self) -> HVACMode | None:
         """Midea C3 Climate hvac mode."""
+        if not self._device.get_attribute(self._power_attr):
+            return HVACMode.OFF
         mode = self._device.get_attribute(C3Attributes.mode)
-        if (
-            self._device.get_attribute(self._power_attr)
-            and isinstance(mode, int)
-            and 0 <= mode < len(self.hvac_modes)
-        ):
+        if isinstance(mode, int) and 0 <= mode < len(self.hvac_modes):
             return self.hvac_modes[mode]
         return None
 

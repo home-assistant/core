@@ -3,7 +3,12 @@
 from operator import itemgetter
 from typing import Any, override
 
-from midealocal.cloud import MideaCloud, get_default_cloud, get_midea_cloud
+from midealocal.cloud import (
+    MideaCloud,
+    get_default_cloud,
+    get_midea_cloud,
+    get_preset_account_cloud,
+)
 from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.device import AuthException, MideaDevice
 from midealocal.discover import discover
@@ -28,7 +33,6 @@ from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import _LOGGER, CONF_ACCOUNT, CONF_KEY, CONF_SERVER, CONF_SUBTYPE, DOMAIN
 from .device_catalog import MIDEA_DEVICE_NAMES
-from .utils import decode_preset_account
 
 DEFAULT_CLOUD: str = get_default_cloud()
 
@@ -63,9 +67,10 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
         # Users registered on a different server may not be able to retrieve the
         # required key with their own credentials.
         # If this fails, fall back to user-provided credentials.
-        self.preset_account = decode_preset_account(1)
-        self.preset_password = decode_preset_account(2)
-        self.preset_cloud_name: str = DEFAULT_CLOUD
+        preset_account = get_preset_account_cloud()
+        self.preset_account: str = preset_account["username"]
+        self.preset_password: str = preset_account["password"]
+        self.preset_cloud_name: str = preset_account["cloud_name"]
 
     def _clear_login_state(self) -> None:
         """Clear flow-scoped credentials and cloud."""

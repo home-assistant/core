@@ -3,9 +3,7 @@ rules:
   action-setup:
     status: exempt
     comment: no action
-  appropriate-polling:
-    status: exempt
-    comment: Integration does not poll.
+  appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done

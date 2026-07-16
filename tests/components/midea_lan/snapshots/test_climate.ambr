@@ -264,7 +264,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_climate_state_snapshot[cc][climate.bedroom_ac_thermostat-entry]
