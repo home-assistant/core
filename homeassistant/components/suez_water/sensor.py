@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import CURRENCY_EURO, UnitOfVolume
 from homeassistant.core import HomeAssistant
@@ -42,6 +43,7 @@ SENSORS: tuple[SuezWaterSensorEntityDescription, ...] = (
         key="water_price",
         translation_key="water_price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda suez_data: suez_data.price,
     ),
 )
