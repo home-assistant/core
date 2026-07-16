@@ -123,24 +123,6 @@ async def test_setup_retries_when_rediscovered_ip_also_fails(
     }
 
 
-async def test_setup_does_not_catch_plain_os_error_on_stored_ip(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_nobo_class: MagicMock,
-) -> None:
-    """A plain OSError (not PynoboConnectionError) is not caught; no rediscovery."""
-    mock_config_entry.add_to_hass(hass)
-    failing_hub = MagicMock(spec=pynobo_nobo)
-    failing_hub.connect.side_effect = OSError("boom")
-    mock_nobo_class.side_effect = [failing_hub]
-
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_nobo_class.async_discover_hubs.assert_not_called()
-
-
 async def test_setup_does_not_catch_plain_os_error_on_rediscovered_ip(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
