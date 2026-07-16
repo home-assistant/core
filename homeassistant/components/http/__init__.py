@@ -67,6 +67,7 @@ from .auth import async_setup_auth
 from .ban import setup_bans
 from .config import (
     _DEFAULT_CONFIG,
+    _DEFAULT_CONFIG_LEGACY_PORT,
     ConfData,
     HTTPConfigStore,
     async_get_and_load_store,
@@ -209,33 +210,41 @@ async def _async_fallback_config(
         await store.async_abort_trial()
         return store.stable
 
-    if (
+    # In recovery mode, walk the default-config fallback chain so the recovery
+    # UI stays reachable: the default port first, then the previous default
+    # port (8123) when they differ (i.e. running under Supervisor on port 80),
+    # before giving up.
+    next_conf: ConfData | None = None
+    if hass.config.recovery_mode and CONF_SSL_PEER_CERTIFICATE not in conf:
+        if conf is not _DEFAULT_CONFIG and conf is not _DEFAULT_CONFIG_LEGACY_PORT:
+            next_conf = _DEFAULT_CONFIG
+        elif (
+            conf is _DEFAULT_CONFIG and _DEFAULT_CONFIG[CONF_SERVER_PORT] != SERVER_PORT
+        ):
+            next_conf = _DEFAULT_CONFIG_LEGACY_PORT
+
+    if next_conf is None:
         # In normal mode, fail setup so recovery mode can take over with a
-        # reachable configuration.
-        not hass.config.recovery_mode
-        # The chain is exhausted; nothing left to fall back to.
-        or conf is _DEFAULT_CONFIG
-        # With peer certificate verification configured, connections must
-        # never be accepted without a verified client certificate; there is
-        # no acceptable fallback config.
-        or CONF_SSL_PEER_CERTIFICATE in conf
-    ):
-        # An unusable SSL configuration already carries a descriptive
-        # HomeAssistantError.
+        # reachable configuration. In recovery mode, the default-config chain
+        # is exhausted. With peer certificate verification configured,
+        # connections must never be accepted without a verified client
+        # certificate, so no fallback is acceptable. An unusable SSL
+        # configuration already carries a descriptive HomeAssistantError.
         if isinstance(err, HomeAssistantError):
             raise err
         raise HomeAssistantError(
             f"Failed to create HTTP server at port {conf[CONF_SERVER_PORT]}: {err}"
         ) from err
 
-    # The config cannot be applied in recovery mode; fall back to the
-    # default config so the recovery UI stays reachable.
     _LOGGER.error(
         "The HTTP configuration could not be applied in recovery mode, "
-        "falling back to the default configuration: %s",
+        "falling back to %s: %s",
+        "the default configuration"
+        if next_conf is _DEFAULT_CONFIG
+        else f"the previous default port {SERVER_PORT}",
         err,
     )
-    return _DEFAULT_CONFIG
+    return next_conf
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

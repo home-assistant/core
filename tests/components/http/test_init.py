@@ -1945,6 +1945,45 @@ async def test_recovery_mode_default_config_bind_failure_fails_setup(
     )
 
 
+async def test_recovery_mode_default_port_falls_back_to_legacy_port(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    mock_create_server: Mock,
+) -> None:
+    """Under Supervisor, an unbindable default port 80 falls back to 8123.
+
+    _DEFAULT_CONFIG is frozen at import (port 8123 without Supervisor), so the
+    module constants are patched to simulate the Supervisor default of port 80.
+    """
+    default_80 = HTTP_STORAGE_SCHEMA({"server_port": 80})
+    default_8123 = HTTP_STORAGE_SCHEMA({"server_port": 8123})
+    hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
+    hass.config.recovery_mode = True
+
+    legacy_server = await _ephemeral_server(hass)
+    # stable (80) and default (80) fail; the legacy default (8123) binds.
+    mock_create_server.side_effect = [
+        OSError(errno.EADDRINUSE, "Address already in use"),
+        OSError(errno.EADDRINUSE, "Address already in use"),
+        legacy_server,
+    ]
+
+    with (
+        patch("homeassistant.components.http._DEFAULT_CONFIG", default_80),
+        patch(
+            "homeassistant.components.http._DEFAULT_CONFIG_LEGACY_PORT", default_8123
+        ),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    assert "falling back to the previous default port 8123" in caplog.text
+    assert hass.config.api.port == 8123
+    assert mock_create_server.call_args_list[2].args[0].server_port == 8123
+    legacy_server.close()
+    await legacy_server.wait_closed()
+
+
 async def test_pending_config_promote_cancels_revert(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

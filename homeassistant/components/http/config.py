@@ -142,6 +142,14 @@ HTTP_STORAGE_SCHEMA: Final = vol.Schema(
 )
 _DEFAULT_CONFIG: Final[ConfData] = cast(ConfData, HTTP_STORAGE_SCHEMA({}))
 
+# Last-resort fallback on the previous default port, tried when the default
+# config (port 80 under Supervisor) cannot be bound. Identical to
+# _DEFAULT_CONFIG apart from the port, and only distinct from it when the
+# default port differs from SERVER_PORT (i.e. running under Supervisor).
+_DEFAULT_CONFIG_LEGACY_PORT: Final[ConfData] = cast(
+    ConfData, {**_DEFAULT_CONFIG, CONF_SERVER_PORT: SERVER_PORT}
+)
+
 
 async def async_load_config(hass: HomeAssistant, config: ConfigType) -> ConfData:
     """Load the HTTP config to apply on this startup.
