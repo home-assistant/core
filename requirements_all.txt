@@ -3320,7 +3320,7 @@ vilfo-api-client==0.5.0
 visionpluspython==1.1.0
 
 # homeassistant.components.vizio
-vizaio==0.3.1
+vizaio==0.3.2
 
 # homeassistant.components.caldav
 vobject==0.9.9
