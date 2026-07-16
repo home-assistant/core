@@ -60,6 +60,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
     LocalOAuth2ImplementationWithPkce,
 )
+from homeassistant.util.json import load_json
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .helpers import FakeOAuthImplementation, complete_oauth_flow, jwt_access_token
@@ -185,19 +186,51 @@ async def test_oauth_implementation_temporarily_unavailable(
     assert result["reason"] == "oauth_implementation_unavailable"
 
 
+def test_oauth_translation_structure() -> None:
+    """Test all OAuth aborts and the implementation picker are translated."""
+    strings = load_json("homeassistant/components/nuheat/strings.json")["config"]
+    expected_abort_references = {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+        "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+        "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+        "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+        "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+        "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+        "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+        "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+        "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
+        "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+        "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+        "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+        "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+    }
+    assert {
+        key: strings["abort"][key] for key in expected_abort_references
+    } == expected_abort_references
+    assert strings["step"]["pick_implementation"] == {
+        "data": {"implementation": "[%key:common::config_flow::data::implementation%]"},
+        "data_description": {
+            "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
+    }
+
+
 @pytest.mark.asyncio
 async def test_config_flow_accepts_future_cloud_implementation(
     hass: HomeAssistant,
 ) -> None:
     """Test a centrally managed OAuth implementation can be selected."""
+    local = FakeOAuthImplementation(domain="local")
     cloud = FakeOAuthImplementation(domain="cloud")
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.async_get_implementations",
-        AsyncMock(return_value={"cloud": cloud}),
+        AsyncMock(return_value={"local": local, "cloud": cloud}),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "pick_implementation"
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"implementation": "cloud"}
