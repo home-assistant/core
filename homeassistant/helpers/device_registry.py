@@ -2618,12 +2618,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
             self.async_remove_device(device.id)
         # A split device records the composite's former primary config entry; when that
-        # config entry is removed, clear the now-dangling reference so a restored
-        # composite no longer points at a config entry that no longer exists
+        # config entry is removed, clear the now-dangling reference - on active devices
+        # and on deleted ones (including splits removed just above) - so a restored
+        # composite no longer points at a config entry that no longer exists.
         for device in list(self.devices.values()):
             if device.composite_primary_config_entry == config_entry_id:
                 self.devices[device.id] = attr.evolve(
                     device, composite_primary_config_entry=None
+                )
+                self.async_schedule_save()
+        for deleted_device in list(self.deleted_devices.values()):
+            if deleted_device.composite_primary_config_entry == config_entry_id:
+                self.deleted_devices[deleted_device.id] = attr.evolve(
+                    deleted_device, composite_primary_config_entry=None
                 )
                 self.async_schedule_save()
         # A device owned by another config entry may hold a transient pending move

@@ -7346,6 +7346,40 @@ async def test_clear_config_entry_clears_composite_primary_config_entry(
 
 
 @pytest.mark.parametrize("load_registries", [False])
+async def test_clear_config_entry_clears_composite_primary_on_deleted_split(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Clearing the former primary entry also clears the ref on its removed split.
+
+    The split owned by the cleared entry is moved to deleted_devices; its dangling
+    composite_primary_config_entry must be cleared too, so a restore does not resurrect
+    it pointing at a config entry that no longer exists.
+    """
+    entry_a = MockConfigEntry(domain="domain_a")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="domain_b")
+    entry_b.add_to_hass(hass)
+    # The composite's former primary is entry_a
+    hass_storage[dr.STORAGE_KEY] = _composite_device_storage(entry_a, entry_b)
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    device_registry = dr.async_get(hass)
+
+    split_a = _get_device_for_config_entry(
+        device_registry, entry_a.entry_id, identifiers={("domain_a", "1")}
+    )
+    assert split_a.composite_primary_config_entry == entry_a.entry_id
+
+    # Clearing entry_a removes its split (moving it to deleted_devices)
+    device_registry.async_clear_config_entry(entry_a.entry_id)
+
+    assert device_registry.async_get(split_a.id) is None
+    deleted_split_a = device_registry.deleted_devices[split_a.id]
+    assert deleted_split_a.composite_primary_config_entry is None
+
+
+@pytest.mark.parametrize("load_registries", [False])
 async def test_clear_non_primary_config_entry_keeps_composite_primary_config_entry(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
