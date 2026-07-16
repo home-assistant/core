@@ -18,7 +18,7 @@ import pytest
 from yarl import URL
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
-from homeassistant.components import cloud, http
+from homeassistant.components import cloud, http, onboarding
 from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.http import DOMAIN
 from homeassistant.components.http.config import (
@@ -134,6 +134,31 @@ def _supervisor_default_config() -> Iterator[None]:
         ),
     ):
         yield
+
+
+async def _setup_http_with_onboarding(
+    hass: HomeAssistant, *, onboarded: bool = False
+) -> None:
+    """Set up http and onboarding, then start Home Assistant.
+
+    The legacy-port transition is bound to onboarding, so onboarding must be
+    set up (as it always is via frontend in production) for the redirect to
+    start.
+    """
+    assert await async_setup_component(hass, "http", {})
+    assert await async_setup_component(hass, "onboarding", {})
+    if onboarded:
+        hass.data[onboarding.DOMAIN].onboarded = True
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
+def _complete_onboarding(hass: HomeAssistant) -> None:
+    """Mark onboarding complete and fire its listeners, as the views do."""
+    data = hass.data[onboarding.DOMAIN]
+    data.onboarded = True
+    for listener in list(data.listeners):
+        listener()
 
 
 def _setup_broken_ssl_pem_files(tmp_path: Path) -> tuple[Path, Path]:
@@ -1381,9 +1406,7 @@ async def test_default_config_under_supervisor_starts_redirect(
 ) -> None:
     """Test the default config under Supervisor uses port 80 and redirects 8123."""
     with _supervisor_default_config():
-        assert await async_setup_component(hass, "http", {})
-        await hass.async_start()
-        await hass.async_block_till_done()
+        await _setup_http_with_onboarding(hass)
 
     assert hass.config.api.port == 80
     assert hass.http._legacy_redirect_server is not None
@@ -1401,12 +1424,39 @@ async def test_persisted_default_config_starts_redirect(
     hass_storage[DOMAIN] = _stable_http_storage({"server_port": 80})
 
     with _supervisor_default_config():
-        assert await async_setup_component(hass, "http", {})
-        await hass.async_start()
-        await hass.async_block_till_done()
+        await _setup_http_with_onboarding(hass)
 
     assert hass.config.api.port == 80
     assert hass.http._legacy_redirect_server is not None
+
+
+async def test_no_redirect_when_already_onboarded(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the redirect is not started when onboarding is already complete."""
+    with _supervisor_default_config():
+        await _setup_http_with_onboarding(hass, onboarded=True)
+
+    assert hass.http._legacy_redirect_server is None
+
+
+async def test_redirect_stops_on_onboarding_complete(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the redirect is torn down once onboarding completes."""
+    with _supervisor_default_config():
+        await _setup_http_with_onboarding(hass)
+
+        server = hass.http
+        assert server._legacy_redirect_server is not None
+
+        _complete_onboarding(hass)
+        await hass.async_block_till_done()
+
+        assert server._legacy_redirect_server is None
+        assert server._legacy_redirect_runner is None
 
 
 async def test_no_redirect_without_supervisor(
@@ -1484,9 +1534,7 @@ async def test_transition_cors_header(
 ) -> None:
     """Test the CORS hook echoes same-host origins only while the redirect runs."""
     with _supervisor_default_config():
-        assert await async_setup_component(hass, "http", {})
-        await hass.async_start()
-        await hass.async_block_till_done()
+        await _setup_http_with_onboarding(hass)
 
         server = hass.http
         assert server._legacy_redirect_server is not None
@@ -1526,6 +1574,7 @@ async def test_redirect_bind_failure_disables_cors(
         ),
     ):
         assert await async_setup_component(hass, "http", {})
+        assert await async_setup_component(hass, "onboarding", {})
         await hass.async_start()
         await hass.async_block_till_done()
 
@@ -1549,9 +1598,7 @@ async def test_transition_cors_preserves_existing_vary(
 ) -> None:
     """Test the CORS hook appends Origin to an existing Vary header."""
     with _supervisor_default_config():
-        assert await async_setup_component(hass, "http", {})
-        await hass.async_start()
-        await hass.async_block_till_done()
+        await _setup_http_with_onboarding(hass)
 
         server = hass.http
         request = Mock()

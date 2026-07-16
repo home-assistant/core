@@ -58,6 +58,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import (
     SetupPhases,
     async_start_setup,
+    async_when_setup,
     async_when_setup_or_start,
 )
 from homeassistant.util import dt as dt_util, ssl as ssl_util
@@ -515,8 +516,9 @@ class HomeAssistantHTTP:
         # active one, plus same-host CORS so a followed redirect isn't blocked)
         # only applies to the unconfigured default config that moved off the
         # previous default port, i.e. a fresh install on the new default port.
-        # It stays active for as long as the redirect server is bound; the CORS
-        # relaxation keys off that server so the two can never get out of sync.
+        # It is bound to onboarding: it starts only while onboarding is pending
+        # and is torn down when onboarding completes. The CORS relaxation keys
+        # off the redirect server, so the two can never get out of sync.
         self._port_transition = port_transition
         self._legacy_redirect_runner: web.AppRunner | None = None
         self._legacy_redirect_server: asyncio.Server | None = None
@@ -841,7 +843,29 @@ class HomeAssistantHTTP:
         _LOGGER.info("Now listening on port %d", self.server_port)
 
         if self._port_transition:
-            await self._async_start_legacy_redirect()
+            # Defer to onboarding setup so async_is_onboarded and
+            # async_add_listener see loaded onboarding data. onboarding is a
+            # dependency of frontend, so it is always set up here.
+            async_when_setup(
+                self.hass, "onboarding", self._async_manage_port_transition
+            )
+
+    async def _async_manage_port_transition(
+        self, hass: HomeAssistant, _component: str
+    ) -> None:
+        """Start the legacy-port redirect until onboarding completes."""
+        from homeassistant.components import onboarding  # noqa: PLC0415
+
+        if onboarding.async_is_onboarded(hass):
+            return
+        await self._async_start_legacy_redirect()
+        if self._legacy_redirect_server is not None:
+            onboarding.async_add_listener(hass, self._on_onboarding_complete)
+
+    @callback
+    def _on_onboarding_complete(self) -> None:
+        """Tear down the transition once onboarding completes."""
+        self.hass.async_create_task(self._async_stop_legacy_redirect())
 
     async def _async_add_transition_cors(
         self, request: web.Request, response: web.StreamResponse
