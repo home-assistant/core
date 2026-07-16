@@ -22,7 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .APIClient import PapouchApiClient
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, WEB_MODE_INDEX
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +39,7 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialization of the config flow."""
         self.discovered_ip: str | None = None
+        self._saved_input = None
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
@@ -55,20 +56,32 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
-        """Handle the initial step where the user enters the device IP."""
+        """Handle the initial step where the user enters the device IP and scan interval."""
         errors = {}
 
         if user_input is not None:
             ip_address = user_input["ip_address"]
 
             if not re.match(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", ip_address):
-                errors["ip_address"] = "invalid_ip_address"
+                errors["ip_address"] = "Invalid format of the IP address (IPv4)"
             else:
                 session = async_get_clientsession(self.hass)
                 client = PapouchApiClient(ip_address, session)
 
                 try:
                     await client.fetch_info()
+                    mode_device = await client.get_device_mode()
+
+                    _LOGGER.error("Mode of the device: %s", mode_device)
+
+                    self._saved_input = user_input
+
+                    if mode_device == -1:
+                        self.async_abort(reason="mode_is_missing")
+
+                    if mode_device != WEB_MODE_INDEX:
+                        return await self.async_step_web_mode()
+
                     return self.async_create_entry(
                         title=f"Papouch {ip_address}", data=user_input
                     )
@@ -89,6 +102,39 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    async def async_step_web_mode(self, user_input=None) -> ConfigFlowResult:
+        """Step where user can change the device into WEB mode."""
+        errors = {}
+
+        if user_input is not None:
+            if user_input["switch_mode"]:
+                session = async_get_clientsession(self.hass)
+                client = PapouchApiClient(self._saved_input["ip_address"], session)
+
+                try:
+                    await client.switch_to_web_mode()
+
+                    return self.async_create_entry(
+                        title=f"Papouch {self._saved_input['ip_address']}",
+                        data=self._saved_input,
+                    )
+                except aiohttp.ClientError:
+                    errors["base"] = "cannot_connect"
+            else:
+                return self.async_abort(reason="web_mode_required")
+
+        schema = vol.Schema(
+            {
+                vol.Required("switch_mode", default=True): bool,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="web_mode",
+            data_schema=schema,
+            errors=errors,
+        )
 
 
 # Options are unused for now

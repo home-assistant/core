@@ -18,11 +18,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the switch platform."""
     coordinator = entry.runtime_data
-    entities = []
+    device = coordinator.device
 
-    # TODO: refactor into new class because this is only for Quido
-    for item_id in coordinator.data.get("dout", {}):
-        entities.append(PapouchSwitch(coordinator, entry, item_id))  # noqa: PERF401
+    entities = [
+        PapouchSwitch(coordinator, entry, switch_data["item_id"])
+        for switch_data in device.get_supported_switches()
+    ]
 
     async_add_entities(entities)
 

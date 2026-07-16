@@ -15,11 +15,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the binary sensor platform."""
     coordinator = entry.runtime_data
-    entities = []
+    device = coordinator.device
 
-    for item_id in coordinator.data.get("din", {}):
-        entities.append(PapouchBinarySensor(coordinator, entry, item_id))  # noqa: PERF401
-
+    entities = [
+        PapouchBinarySensor(coordinator, entry, sensor_data["item_id"])
+        for sensor_data in device.get_supported_binary_sensors()
+    ]
     async_add_entities(entities)
 
 

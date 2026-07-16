@@ -42,38 +42,46 @@ class PapouchApiClient:
         """Fetching settings about a device."""
         return await self._fetch(SETTINGS_URL)
 
-    async def send_command(
-        self,
-        cmd_type: str,
-        item_id: str | None = None,
-        counter: str | None = None,
-        # sts: str | None = None
-    ) -> None:
-        """Universal command for communicating with any device by using GET request."""
-        # TODO: write into the documentation that HA doesn't support massive setting.
-
-        raw_params = {
-            "type": cmd_type,
-            "id": item_id,
-            "cnt": counter,
-            # "sts": sts,
-        }
-
-        # adding the optional parameters
-        params = {key: value for key, value in raw_params.items() if value is not None}
+    async def send_command_GET(self, params: dict) -> None:
+        """Command for communicating with any device by using GET request."""
 
         async with self.session.get(self.base_url + SET_URL, params=params) as response:
             if response.status != 200:
-                _LOGGER.error("Failed to send command to Quido: %s", response.status)
+                _LOGGER.error("Failed to send command: %s", response.status)
 
-            raw_xml = await response.text(encoding=ENCODING)
-            root = ET.fromstring(raw_xml)
+            self._check_response(await response.text(encoding=ENCODING))
 
-            result_tag = root.find("result")
+    def _check_response(self, raw_xml):
+        """Supposingly every device will use same response status."""
+        root = ET.fromstring(raw_xml)
 
-            if result_tag is not None:
-                status = result_tag.attrib.get("status")
+        result_tag = root.find("result")
 
-                if status == "0":
-                    _LOGGER.error("Quido returned an error: %s", raw_xml)
-                    return
+        if result_tag is not None:
+            status = result_tag.attrib.get("status")
+
+            # binary status
+            if status == "0":
+                # TODO: maybe it would be better to specify what device
+                _LOGGER.error("Device returned an error: %s", raw_xml)
+                return
+        else:
+            _LOGGER.error("Response doesn't have result tag!")
+
+    async def get_device_mode(self):
+        """Function is used for the resolving the mode of the device."""
+        info_xml = await self.fetch_info()
+        heartbeat_tag = ET.fromstring(info_xml).find("heartbeat")
+        if heartbeat_tag is not None:
+            return heartbeat_tag.attrib.get("mode")
+
+        _LOGGER.error("Response doesn't have heartbeat tag!")
+        return -1
+
+    async def switch_to_web_mode(self) -> bool:
+        """Function that enables WEB mode in the device."""
+
+        raw_xml_info = await self.fetch_info()
+        root = ET.fromstring(raw_xml_info)
+
+        # TODO: dodělat

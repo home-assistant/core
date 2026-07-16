@@ -15,36 +15,17 @@ async def async_setup_entry(
 ) -> None:
     """Entry for Home Assistant."""
     coordinator = entry.runtime_data
-
-    # TODO: create a signpost for various devices for now its hard-coded for Quido
-    # Place for creating a new button:
-    # First and second parameter should be the same
-    # third - name visible in HA
-    # forth - function that will be looked up in APIClient
-    # fifth - suffix for item id, should be unique and describes the button
+    device = coordinator.device
 
     entities = [
         PapouchCommandButton(
-            coordinator,
-            entry,
-            "Reset all counters",
-            "reset_all_counters",
-            "reset_all_counters",
-        ),
-        PapouchCommandButton(
-            coordinator,
-            entry,
-            "Connect all coils",
-            "connect_all_coils",
-            "connect_all_coils",
-        ),
-        PapouchCommandButton(
-            coordinator,
-            entry,
-            "Disconnect all coils",
-            "disconnect_all_coils",
-            "disconnect_all_coils",
-        ),
+            coordinator=coordinator,
+            entry=entry,
+            name=btn_data["name"],
+            id_suffix=btn_data["cmd"],
+            cmd_type=btn_data["cmd"],
+        )
+        for btn_data in device.get_supported_buttons()
     ]
 
     async_add_entities(entities)
@@ -59,7 +40,7 @@ class PapouchCommandButton(PapouchEntity, ButtonEntity):
         """Constructor of the button.
 
         Note that it needs the command type that
-        will be later used to call that function in the APIClient.
+        will be later used to call that function in the proper device.
 
         ID suffix is not optional and should be unique.
         """
@@ -73,9 +54,9 @@ class PapouchCommandButton(PapouchEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Home Assistant function for pressing the button.
 
-        Note that this function uses dynamic lookup, make sure that function in
-        APIClient.py and function that was provided to the ctor of the button is the same.
-        This is done for readability of the
+        Note that this function uses dynamic lookup, make sure method in proper device
+        and function that was provided to the ctor of the button is the same.
+        This is done for the readability of the code.
         """
 
         command_method = getattr(self.coordinator.device, self.cmd_type)
