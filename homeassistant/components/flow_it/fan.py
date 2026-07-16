@@ -55,6 +55,7 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
     )
 
     _attr_preset_modes = list(PRESET_MODES)
+    _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
 
     def __init__(self, coordinator: FlowItCoordinator, vmc: FlowItVMCMachine) -> None:
         """Initialize the fan."""
@@ -81,12 +82,6 @@ class FlowItVmcFan(FlowItVmcEntity, FanEntity):
         if speed in ORDERED_NAMED_FAN_SPEEDS:
             return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, speed)
         return None
-
-    @override
-    @property
-    def speed_count(self) -> int:
-        """Return the number of speeds the fan supports."""
-        return len(ORDERED_NAMED_FAN_SPEEDS)
 
     @override
     @property
