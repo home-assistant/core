@@ -117,13 +117,11 @@ async def test_updating_state_fallback(
     mock_websocket: AsyncMock,
 ) -> None:
     """Test updating state falls back to locked when is_locked is missing."""
+    # Remove is_locked from status before integration setup to test fallback during load
+    get_device_by_id(mock_api_client, "dev_lock_001")["status"].pop("is_locked", None)
+
     with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.LOCK]):
         await setup_integration(hass, mock_config_entry)
-
-    # First, make sure is_locked is not in status
-    coordinator = mock_config_entry.runtime_data
-    coordinator.data["dev_lock_001"]["status"].pop("is_locked", None)
-    await hass.async_block_till_done()
 
     # Verify initial state of lock using locked fallback
     # In XT-LK50.json, locked is True
