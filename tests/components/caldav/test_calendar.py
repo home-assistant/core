@@ -2871,3 +2871,61 @@ async def test_update_event_new_rrule_drops_exdates(
     master = _master(event)
     assert "EXDATE" not in master
     assert master["RRULE"].to_ical().decode() == "FREQ=WEEKLY"
+
+
+async def test_update_event_first_occurrence_new_rule_drops_exdates(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that rescheduling every future occurrence clears old exceptions."""
+    await setup_platform_cb()
+    event = _mock_dav_event(calendars[0], MIXED_TZ_EXDATE_ICS)
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-27 16:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Renamed standup",
+                "dtstart": "2017-11-27T17:00:00+00:00",
+                "dtend": "2017-11-27T18:00:00+00:00",
+            },
+        },
+    )
+
+    assert "EXDATE" not in _master(event)
+
+
+async def test_update_event_moved_tail_drops_exdates(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that a moved tail does not carry dates of the old schedule."""
+    await setup_platform_cb()
+    _mock_dav_event(calendars[0], MIXED_TZ_EXDATE_ICS)
+    calendars[0].save_event = MagicMock(return_value=Mock())
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-12-01 16:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Renamed standup",
+                "dtstart": "2017-12-01T18:00:00+00:00",
+                "dtend": "2017-12-01T19:00:00+00:00",
+            },
+        },
+    )
+
+    tail = _saved_tail(calendars[0])
+    assert "EXDATE" not in tail

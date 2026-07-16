@@ -59,9 +59,7 @@ def update_event(
             _drop_overrides(
                 ical, master, old_start, from_occurrence=False, all_overrides=True
             )
-            for key in ("EXDATE", "RDATE"):
-                if key in master:
-                    del master[key]
+            _clear_dates(master)
         _save(dav_event, ical, master)
         return
 
@@ -74,8 +72,12 @@ def update_event(
         return
 
     if _utc(occurrence) <= _utc(master["DTSTART"].dt):
+        old_start = _utc(master["DTSTART"].dt)
+        old_rule = _rule_string(master)
         _apply(master, data)
         _drop_overrides(ical, master, occurrence, from_occurrence=True)
+        if _rule_string(master) != old_rule or _utc(master["DTSTART"].dt) != old_start:
+            _clear_dates(master)
         _save(dav_event, ical, master)
         return
 
@@ -261,11 +263,21 @@ def _tail_ics(
     _replace(vevent, "uid", _tail_uid(str(master["UID"]), occurrence))
     _replace(vevent, "dtstamp", dt_util.utcnow())
     _replace(vevent, "sequence", None)
-    _apply(vevent, data)
-    if "rrule" not in data:
+    _apply(vevent, {**data, "rrule": None})
+    rule_changed = False
+    if (supplied := data.get("rrule")) and vRecur.from_ical(
+        supplied
+    ).to_ical() != master["RRULE"].to_ical():
+        _replace(vevent, "rrule", vRecur.from_ical(supplied))
+        rule_changed = True
+    else:
         _replace(vevent, "rrule", _tail_rrule(master, occurrence))
-    _keep_dates(vevent, "RDATE", occurrence, before=False)
-    _keep_dates(vevent, "EXDATE", occurrence, before=False)
+    # Dates anchored to the old schedule are meaningless on a moved tail.
+    if rule_changed or _utc(data["dtstart"]) != _utc(occurrence):
+        _clear_dates(vevent)
+    else:
+        _keep_dates(vevent, "RDATE", occurrence, before=False)
+        _keep_dates(vevent, "EXDATE", occurrence, before=False)
     return tail.to_ical().decode("utf-8")
 
 
@@ -362,6 +374,12 @@ def _cap_series(master: Any, occurrence: datetime | date) -> None:
         _replace(master, "rrule", recur)
     _keep_dates(master, "RDATE", occurrence, before=True)
     _keep_dates(master, "EXDATE", occurrence, before=True)
+
+
+def _clear_dates(component: Any) -> None:
+    for key in ("EXDATE", "RDATE"):
+        if key in component:
+            del component[key]
 
 
 def _keep_dates(
