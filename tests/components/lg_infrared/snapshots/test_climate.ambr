@@ -57,7 +57,7 @@
 # name: test_entities[climate.lg_ac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'assumed_state': True,
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: None,
       <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'auto',
       <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
@@ -69,7 +69,7 @@
         'medium_high',
         'high',
       ]),
-      'friendly_name': 'LG AC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG AC',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
@@ -77,7 +77,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16.0,
-      'supported_features': <ClimateEntityFeature: 9>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 9>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 16.0,
     }),
