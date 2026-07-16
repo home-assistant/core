@@ -1,6 +1,6 @@
 """Config flow to configure StarLine component."""
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from starline import StarlineAuth
 import voluptuous as vol
@@ -192,13 +192,18 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Authenticate application."""
         try:
-            self._app_code = await self.hass.async_add_executor_job(
-                self._auth.get_app_code, self._app_id, self._app_secret
-            )
-            # pylint: disable-next=home-assistant-sequential-executor-jobs
-            self._app_token = await self.hass.async_add_executor_job(
-                self._auth.get_app_token, self._app_id, self._app_secret, self._app_code
-            )
+
+            def _get_app_token() -> str:
+                if TYPE_CHECKING:
+                    assert self._app_id is not None
+                    assert self._app_secret is not None
+
+                app_code = self._auth.get_app_code(self._app_id, self._app_secret)
+                return self._auth.get_app_token(
+                    self._app_id, self._app_secret, app_code
+                )
+
+            self._app_token = await self.hass.async_add_executor_job(_get_app_token)
             return self._async_form_auth_user(error)
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Error auth StarLine: %s", err)
