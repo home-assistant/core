@@ -302,7 +302,7 @@ async def test_stop_cancels_in_flight_retry_task(
         nonlocal attempts
         attempts += 1
         if attempts == 1:
-            raise TimeoutError()
+            raise TimeoutError
         await asyncio.Event().wait()
 
     with patch(
