@@ -1807,11 +1807,12 @@ async def test_migration_from_1_12(
 ) -> None:
     """Test migration from version 1.12.
 
-    Version 1.13 restricts a device to a single config entry and subentry: a composite
-    device belonging to several config entries, or to several subentries of one config
-    entry, is split into one device per (config entry, subentry) pair (each keeping a
-    copy of the identifiers/connections and a legacy reference to the composite id),
-    while a device already tied to a single config entry and subentry keeps its id.
+    Version 3.1 restricts a device to a single config entry and subentry: a device
+    belonging to several config entries is split into one device per config entry (each
+    keeping a copy of the identifiers/connections and a legacy reference to the composite
+    id), while a device in several subentries of one config entry is collapsed onto a
+    single subentry (preferring a real subentry over the main entry). A device already
+    tied to a single config entry and subentry keeps its id.
     """
     config_entry_2 = MockConfigEntry()
     config_entry_2.add_to_hass(hass)
@@ -2719,6 +2720,30 @@ async def test_orphaned_domain_survives_store_round_trip(
     await registry2.async_load()
 
     assert registry2.deleted_devices[device.id].domain == "hue"
+
+
+async def test_orphan_keeps_domain_when_config_entry_removed(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """An orphan keeps its domain when its config entry is removed via the normal flow.
+
+    config_entries deletes the entry from the registry before calling
+    async_clear_config_entry, so async_remove_device can no longer look up the domain and
+    records None; the domain passed to async_clear_config_entry is what preserves it on
+    the orphan. Without it the orphan would have domain=None and, with the domain-less
+    restore fallback gone, could never be restored.
+    """
+    entry = MockConfigEntry(domain="hue")
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("hue", "1")}
+    )
+
+    await hass.config_entries.async_remove(entry.entry_id)
+
+    orphan = device_registry.deleted_devices[device.id]
+    assert orphan.config_entry_id is None
+    assert orphan.domain == "hue"
 
 
 async def test_cross_domain_orphans_do_not_shadow(

@@ -1672,6 +1672,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     breaks_in_ha_version="2025.12.0",
                 )
             via_device_id = via.id if via else UNDEFINED
+        elif via_device is None:
+            # An explicit `via_device=None` means "no via device"; clear any
+            # `via_device_id` passed alongside the deprecated argument.
+            via_device_id = None
 
         # On the owning integration's first re-registration of a device created by
         # splitting a pre-migration composite device, replace the identifiers and
@@ -2358,11 +2362,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             return
         self.hass.verify_event_loop_thread("device_registry.async_remove_device")
         device = self.devices.pop(device_id)
-        config_entry = (
-            self.hass.config_entries.async_get_entry(device.config_entry_id)
-            if device.config_entry_id is not None
-            else None
-        )
+        config_entry = self.hass.config_entries.async_get_entry(device.config_entry_id)
         self.deleted_devices[device_id] = DeletedDeviceEntry(
             area_id=device.area_id,
             config_entry_id=device.config_entry_id,
