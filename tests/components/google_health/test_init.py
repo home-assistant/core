@@ -1,5 +1,6 @@
 """Tests for Google Health integration lifecycle (init/unloading)."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
@@ -111,9 +112,13 @@ async def test_setup_missing_activity_scope(
 
     assert hass.states.get("sensor.google_health_steps") is None
     assert hass.states.get("sensor.google_health_distance") is None
+    assert hass.states.get("sensor.google_health_active_calories") is None
+    assert hass.states.get("sensor.google_health_total_calories") is None
+    assert hass.states.get("sensor.google_health_floors") is None
 
     assert hass.states.get("sensor.google_health_weight") is not None
     assert hass.states.get("sensor.google_health_resting_heart_rate") is not None
+    assert hass.states.get("sensor.google_health_body_fat") is not None
 
 
 @pytest.mark.usefixtures("mock_google_health_client")
@@ -137,9 +142,13 @@ async def test_setup_missing_measurements_scope(
 
     assert hass.states.get("sensor.google_health_weight") is None
     assert hass.states.get("sensor.google_health_resting_heart_rate") is None
+    assert hass.states.get("sensor.google_health_body_fat") is None
 
     assert hass.states.get("sensor.google_health_steps") is not None
     assert hass.states.get("sensor.google_health_distance") is not None
+    assert hass.states.get("sensor.google_health_active_calories") is not None
+    assert hass.states.get("sensor.google_health_total_calories") is not None
+    assert hass.states.get("sensor.google_health_floors") is not None
 
 
 async def test_setup_oauth_implementation_unavailable(
@@ -181,6 +190,9 @@ async def test_runtime_auth_error(
         hass,
         dt_util.utcnow() + POLLING_INTERVAL + timedelta(seconds=1),
     )
+    await hass.async_block_till_done()
+    # Yield to let untracked asyncio.gather tasks run
+    await asyncio.sleep(0)
     await hass.async_block_till_done()
 
     # Verify that the flow was initiated
