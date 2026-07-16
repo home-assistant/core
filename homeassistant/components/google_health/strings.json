@@ -35,12 +35,24 @@
   },
   "entity": {
     "sensor": {
+      "active_calories": {
+        "name": "Active calories"
+      },
+      "body_fat": {
+        "name": "Body fat"
+      },
+      "floors": {
+        "name": "Floors"
+      },
       "resting_heart_rate": {
         "name": "Resting heart rate"
       },
       "steps": {
         "name": "Steps",
         "unit_of_measurement": "steps"
+      },
+      "total_calories": {
+        "name": "Total calories"
       }
     }
   },

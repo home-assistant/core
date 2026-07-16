@@ -9,9 +9,6 @@ on:
         default: "dev"
         required: true
 
-env:
-  STARTUP_TIMEOUT_SECONDS: 300
-
 permissions: {}
 
 concurrency:
@@ -33,35 +30,20 @@ jobs:
           - arch: aarch64
             runs-on: ubuntu-24.04-arm
     env:
-      IMAGE: ghcr.io/home-assistant/home-assistant${{ startsWith(inputs.version, 'sha256:') && '@' || ':' }}${{ inputs.version }}
       BASE_URL: http://localhost:8123
       CURL_OPTS: --silent --max-time 10
+    services:
+      homeassistant:
+        image: ghcr.io/home-assistant/home-assistant${{ startsWith(inputs.version, 'sha256:') && '@' || ':' }}${{ inputs.version }} # zizmor: ignore[unpinned-images]
+        ports:
+          - 8123:8123
+        # Gate steps until Home Assistant answers (60 x 5s ≈ 300s startup budget)
+        options: >-
+          --health-cmd="curl --fail --silent --max-time 10 --output /dev/null http://127.0.0.1:8123/"
+          --health-start-period=10s
+          --health-interval=5s
+          --health-retries=60
     steps:
-      - name: Pull image
-        id: pull
-        run: |
-          docker pull "$IMAGE"
-          docker image inspect -f 'Testing {{index .RepoDigests 0}} ({{.Os}}/{{.Architecture}}), created {{.Created}}' "$IMAGE"
-
-      - name: Start container
-        run: |
-          docker run -d --name homeassistant -p 8123:8123 "$IMAGE"
-
-      - name: Wait for Home Assistant to start
-        run: |
-          timeout=$((SECONDS + STARTUP_TIMEOUT_SECONDS))
-          while ! curl $CURL_OPTS --fail --output /dev/null "$BASE_URL/"; do
-            if [ "$(docker inspect -f '{{.State.Running}}' homeassistant)" != "true" ]; then
-              echo "::error::Container exited before Home Assistant started"
-              exit 1
-            fi
-            if [ "$SECONDS" -ge "$timeout" ]; then
-              echo "::error::Home Assistant did not respond on port 8123 within ${STARTUP_TIMEOUT_SECONDS}s"
-              exit 1
-            fi
-            sleep 5
-          done
-
       - name: Check frontend is served
         run: |
           # Pre-onboarding, / redirects to /onboarding.html; --location follows it
@@ -77,18 +59,22 @@ jobs:
             | jq -e 'type == "array" and length > 0'
 
       - name: Check container is still running
+        env:
+          CONTAINER: ${{ job.services.homeassistant.id }}
         run: |
-          if [ "$(docker inspect -f '{{.State.Running}}' homeassistant)" != "true" ]; then
+          if [ "$(docker inspect -f '{{.State.Running}}' "$CONTAINER")" != "true" ]; then
             echo "::error::Container is no longer running after checks"
             exit 1
           fi
 
       - name: Dump container logs
-        if: always() && steps.pull.outcome == 'success'
-        run: docker logs homeassistant > homeassistant.log 2>&1 || true
+        if: always()
+        env:
+          CONTAINER: ${{ job.services.homeassistant.id }}
+        run: docker logs "$CONTAINER" > homeassistant.log 2>&1 || true
 
       - name: Upload container logs
-        if: always() && steps.pull.outcome == 'success'
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: container-logs-${{ matrix.arch }}

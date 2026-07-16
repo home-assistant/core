@@ -70,6 +70,16 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "input": { "name": "Input" }
+    },
+    "button": {
+      "close": { "name": "Close" },
+      "down": { "name": "Down" },
+      "fav": { "name": "Favorite" },
+      "open": { "name": "Open" },
+      "up": { "name": "Up" }
+    },
     "light": { "channel": { "name": "Channel {index}" } },
     "sensor": {
       "active_power": { "name": "Active power" },
