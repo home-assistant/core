@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["aiomelcloudhome"],
   "quality_scale": "bronze",
-  "requirements": ["aiomelcloudhome==0.1.9"]
+  "requirements": ["aiomelcloudhome==0.2.1"]
 }
