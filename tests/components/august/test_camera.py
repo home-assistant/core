@@ -53,7 +53,7 @@ async def test_doorbell_refresh_content_token_recover(
         await _create_august_with_devices(
             hass,
             [doorbell_two],
-            brand=Brand.YALE_HOME,
+            brand=Brand.YALE_AUGUST,
         )
         url = hass.states.get(
             "camera.k98gidt45gul_name_k98gidt45gul_name_camera"
@@ -80,7 +80,7 @@ async def test_doorbell_refresh_content_token_fail(
         await _create_august_with_devices(
             hass,
             [doorbell_two],
-            brand=Brand.YALE_HOME,
+            brand=Brand.YALE_AUGUST,
         )
         url = hass.states.get(
             "camera.k98gidt45gul_name_k98gidt45gul_name_camera"
