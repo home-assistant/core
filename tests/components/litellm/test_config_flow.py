@@ -331,6 +331,7 @@ async def test_reconfigure_conversation_agent(
     assert result["reason"] == "reconfigure_successful"
 
     subentry = mock_config_entry.subentries[subentry_id]
+    assert subentry.title == "gpt-4"
     assert subentry.data[CONF_MODEL] == "gpt-4"
     assert subentry.data[CONF_PROMPT] == "updated prompt"
     assert subentry.data[CONF_LLM_HASS_API] == ["assist"]
