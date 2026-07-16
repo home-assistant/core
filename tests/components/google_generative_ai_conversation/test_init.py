@@ -755,7 +755,7 @@ async def test_migration_from_v1_with_same_keys(
         (
             {"add_config_entry_id": "mock_entry_id", "add_config_subentry_id": None},
             [],
-            {"mock_entry_id": {None, "mock_id_1"}},
+            {"mock_entry_id": {"mock_id_1"}},
         ),
         # Scenario where we have a v2.1 config entry migrated by HA Core 2025.7.0b1:
         # Wrong device registry, TTS subentry created
@@ -770,7 +770,7 @@ async def test_migration_from_v1_with_same_keys(
                     unique_id=None,
                 )
             ],
-            {"mock_entry_id": {None, "mock_id_1"}},
+            {"mock_entry_id": {"mock_id_1"}},
         ),
         # Scenario where we have a v2.1 config entry migrated by HA Core 2025.7.0b2
         # or later: Correct device registry, TTS subentry created

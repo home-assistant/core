@@ -1,6 +1,6 @@
 {
   "common": {
-    "advanced_options": "Advanced options",
+    "additional_options": "Additional options",
     "availability": "Availability template",
     "availability_description": "Defines a template to get the `available` state of the entity. If the template either fails to render or returns `True`, `\"1\"`, `\"true\"`, `\"yes\"`, `\"on\"`, `\"enable\"`, or a non-zero number, the entity will be `available`. If the template returns any other value, the entity will be `unavailable`. If not configured, the entity will always be `available`. Note that the string comparison is not case sensitive; `\"TrUe\"` and `\"yEs\"` are allowed.",
     "code_format": "Code format",
@@ -42,14 +42,14 @@
           "value_template": "Defines a template to set the state of the alarm panel. Valid output values from the template are `armed_away`, `armed_home`, `armed_night`, `armed_vacation`, `arming`, `disarmed`, `pending`, and `triggered`."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template alarm control panel"
@@ -66,14 +66,14 @@
           "state": "The sensor is `on` if the template evaluates as `True`, `yes`, `on`, `enable` or a positive number. Any other value will render it as `off`."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template binary sensor"
@@ -90,14 +90,14 @@
           "press": "Defines actions to run when button is pressed."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template button"
@@ -124,14 +124,14 @@
           "stop_cover": "Defines actions to run when the cover is stopped."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template cover"
@@ -152,7 +152,7 @@
           "name": "[%key:common::config_flow::data::name%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]",
               "location_accuracy": "Location accuracy"
@@ -161,7 +161,7 @@
               "availability": "[%key:component::template::common::availability_description%]",
               "location_accuracy": "Defines a template to get the accuracy of the device tracker's location in meters. Valid values are numbers greater than or equal to `0`."
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template device tracker"
@@ -180,14 +180,14 @@
           "event_types": "Defines a template for a list of available event types."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template event"
@@ -213,14 +213,14 @@
           "turn_on": "Defines actions to run when the fan is turned on. Receives variables `percentage` and/or `preset_mode`."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template fan"
@@ -238,14 +238,14 @@
           "verify_ssl": "Enable or disable SSL certificate verification. Disable to use an http URL, or if you have a self-signed SSL certificate and haven’t installed the CA certificate to enable verification."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template image"
@@ -277,14 +277,14 @@
           "turn_on": "Defines actions to run when the light is turned on."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template light"
@@ -308,14 +308,14 @@
           "unlock": "Defines actions to run when the lock is unlocked."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template lock"
@@ -342,14 +342,14 @@
           "unit_of_measurement": "Defines the unit of measurement of the number, if any."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template number"
@@ -369,14 +369,14 @@
           "state": "Template for the select’s current value."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template select"
@@ -396,14 +396,14 @@
           "unit_of_measurement": "Defines the unit of measurement for the sensor, if any. This will also display the value based on the number format setting in the user profile and influence the graphical presentation in the history visualization as a continuous value."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template sensor"
@@ -423,14 +423,14 @@
           "value_template": "Defines a template to set the state of the switch. If not defined, the switch will optimistically assume all commands are successful."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template switch"
@@ -465,14 +465,14 @@
           "update_percentage": "Defines a template to get the update completion percentage."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template update"
@@ -529,14 +529,14 @@
           "stop": "Defines actions to run when the vacuum is stopped."
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template vacuum"
@@ -562,11 +562,11 @@
           "temperature_unit": "The temperature unit"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template weather"
@@ -621,14 +621,14 @@
           "value_template": "[%key:component::template::config::step::alarm_control_panel::data_description::value_template%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::alarm_control_panel::title%]"
@@ -644,14 +644,14 @@
           "state": "[%key:component::template::config::step::binary_sensor::data_description::state%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::binary_sensor::title%]"
@@ -666,14 +666,14 @@
           "press": "[%key:component::template::config::step::button::data_description::press%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::button::title%]"
@@ -698,14 +698,14 @@
           "stop_cover": "[%key:component::template::config::step::cover::data_description::stop_cover%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::cover::title%]"
@@ -724,16 +724,16 @@
           "longitude": "[%key:component::template::config::step::device_tracker::data_description::longitude%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]",
-              "location_accuracy": "[%key:component::template::config::step::device_tracker::sections::advanced_options::data::location_accuracy%]"
+              "location_accuracy": "[%key:component::template::config::step::device_tracker::sections::additional_options::data::location_accuracy%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]",
-              "location_accuracy": "[%key:component::template::config::step::device_tracker::sections::advanced_options::data_description::location_accuracy%]"
+              "location_accuracy": "[%key:component::template::config::step::device_tracker::sections::additional_options::data_description::location_accuracy%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::device_tracker::title%]"
@@ -751,14 +751,14 @@
           "event_types": "[%key:component::template::config::step::event::data_description::event_types%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::event::title%]"
@@ -783,14 +783,14 @@
           "turn_on": "[%key:component::template::config::step::fan::data_description::turn_on%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::fan::title%]"
@@ -807,14 +807,14 @@
           "verify_ssl": "[%key:component::template::config::step::image::data_description::verify_ssl%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::image::title%]"
@@ -846,14 +846,14 @@
           "turn_on": "[%key:component::template::config::step::light::data_description::turn_on%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::light::title%]"
@@ -876,14 +876,14 @@
           "unlock": "[%key:component::template::config::step::lock::data_description::unlock%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::lock::title%]"
@@ -908,14 +908,14 @@
           "step": "[%key:component::template::config::step::number::data_description::step%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::number::title%]"
@@ -935,14 +935,14 @@
           "state": "[%key:component::template::config::step::select::data_description::state%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::select::title%]"
@@ -961,14 +961,14 @@
           "unit_of_measurement": "[%key:component::template::config::step::sensor::data_description::unit_of_measurement%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::sensor::title%]"
@@ -988,14 +988,14 @@
           "value_template": "[%key:component::template::config::step::switch::data_description::value_template%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::switch::title%]"
@@ -1030,14 +1030,14 @@
           "update_percentage": "[%key:component::template::config::step::update::data_description::update_percentage%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "Template update"
@@ -1071,14 +1071,14 @@
           "stop": "[%key:component::template::config::step::vacuum::data_description::stop%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
             "data_description": {
               "availability": "[%key:component::template::common::availability_description%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::vacuum::title%]"
@@ -1104,11 +1104,11 @@
           "temperature_unit": "[%key:component::template::config::step::weather::data_description::temperature_unit%]"
         },
         "sections": {
-          "advanced_options": {
+          "additional_options": {
             "data": {
               "availability": "[%key:component::template::common::availability%]"
             },
-            "name": "[%key:component::template::common::advanced_options%]"
+            "name": "[%key:component::template::common::additional_options%]"
           }
         },
         "title": "[%key:component::template::config::step::weather::title%]"

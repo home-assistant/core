@@ -2388,6 +2388,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "gatus": {
+      "name": "Gatus",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "gaviota": {
       "name": "Gaviota",
       "integration_type": "virtual",
@@ -2762,6 +2768,12 @@
       "name": "Harman Kardon AVR",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "harman_luxury": {
+      "name": "Harman Luxury Audio",
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "harvey": {
@@ -3494,6 +3506,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "karakeep": {
+      "name": "Karakeep",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "keba": {
       "name": "Keba Charging Station",
       "integration_type": "hub",
@@ -3709,6 +3727,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "led_infrared": {
+      "name": "LED Infrared",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
     },
     "legrand": {
       "name": "Legrand",
@@ -4388,14 +4412,9 @@
       "iot_class": "local_polling"
     },
     "modbus": {
+      "name": "Modbus",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_polling"
-    },
-    "modbus_connection": {
-      "name": "Modbus Connection",
-      "integration_type": "hub",
-      "config_flow": true,
       "iot_class": "local_polling"
     },
     "modem_callerid": {
@@ -8530,7 +8549,6 @@
     "local_todo",
     "min_max",
     "mobile_app",
-    "modbus",
     "moehlenhoff_alpha2",
     "mold_indicator",
     "moon",

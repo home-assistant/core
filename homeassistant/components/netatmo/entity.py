@@ -7,7 +7,7 @@ from pyatmo import DeviceType, Home, Module, Room
 from pyatmo.modules.base_class import NetatmoBase, Place
 from pyatmo.modules.device_types import DEVICE_DESCRIPTION_MAP
 
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -198,8 +198,8 @@ class NetatmoWeatherModuleEntity(NetatmoModuleEntity):
             if hasattr(place, "location") and place.location is not None:
                 self._attr_extra_state_attributes.update(
                     {
-                        ATTR_LATITUDE: place.location.latitude,
-                        ATTR_LONGITUDE: place.location.longitude,
+                        EntityStateAttribute.LATITUDE: place.location.latitude,
+                        EntityStateAttribute.LONGITUDE: place.location.longitude,
                     }
                 )
 
