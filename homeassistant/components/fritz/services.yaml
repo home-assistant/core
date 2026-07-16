@@ -40,8 +40,10 @@ dial:
           unit_of_measurement: seconds
 get_mesh_info:
   fields:
-    config_entry_id:
+    device_id:
       required: true
       selector:
-        config_entry:
-          integration: fritz
+        device:
+          entity:
+            integration: fritz
+            domain: update
