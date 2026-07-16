@@ -543,7 +543,8 @@ class SolarEdgeEnergyDetailsSensor(SolarEdgeSensorEntity):
         """Initialize the power flow sensor."""
         super().__init__(sensor_type, data_service)
 
-        self._attr_native_unit_of_measurement = data_service.unit
+        if data_service.unit is not None:
+            self._attr_native_unit_of_measurement = data_service.unit
 
     @property
     @override
@@ -571,7 +572,8 @@ class SolarEdgePowerFlowSensor(SolarEdgeSensorEntity):
         """Initialize the power flow sensor."""
         super().__init__(description, data_service)
 
-        self._attr_native_unit_of_measurement = data_service.unit
+        if data_service.unit is not None:
+            self._attr_native_unit_of_measurement = data_service.unit
 
     @property
     @override

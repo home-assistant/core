@@ -3,6 +3,7 @@
   "name": "EDL21",
   "codeowners": [],
   "config_flow": true,
+  "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/edl21",
   "integration_type": "device",
   "iot_class": "local_push",

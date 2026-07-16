@@ -42,6 +42,11 @@ MODE_CONDITION = DEVICE_CONDITION_BASE_SCHEMA.extend(
 
 CONDITION_SCHEMA = vol.Any(TOGGLE_CONDITION, MODE_CONDITION)
 
+# Maps a state attribute to the condition config key used to compare against it.
+_STATE_ATTRIBUTE_TO_CONFIG_KEY = {
+    const.HumidifierEntityStateAttribute.MODE: ATTR_MODE,
+}
+
 
 async def async_get_conditions(
     hass: HomeAssistant, device_id: str
@@ -77,7 +82,7 @@ def async_condition_from_config(
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
     if config[CONF_TYPE] == "is_mode":
-        attribute = ATTR_MODE
+        attribute = const.HumidifierEntityStateAttribute.MODE
     else:
         return toggle_entity.async_condition_from_config(hass, config)
 
@@ -89,7 +94,8 @@ def async_condition_from_config(
         return (
             entity_id is not None
             and (state := hass.states.get(entity_id)) is not None
-            and state.attributes.get(attribute) == config[attribute]
+            and state.attributes.get(attribute)
+            == config[_STATE_ATTRIBUTE_TO_CONFIG_KEY[attribute]]
         )
 
     return test_is_state
@@ -109,7 +115,12 @@ async def async_get_condition_capabilities(
                 hass, config[CONF_ENTITY_ID]
             )
             modes = (
-                get_capability(hass, entry.entity_id, const.ATTR_AVAILABLE_MODES) or []
+                get_capability(
+                    hass,
+                    entry.entity_id,
+                    const.HumidifierEntityCapabilityAttribute.AVAILABLE_MODES,
+                )
+                or []
             )
         except HomeAssistantError:
             modes = []
