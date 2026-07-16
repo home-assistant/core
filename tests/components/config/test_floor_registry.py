@@ -1,6 +1,7 @@
 """Test floor registry API."""
 
 from datetime import datetime
+from http import HTTPStatus
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
@@ -10,9 +11,14 @@ from pytest_unordered import unordered
 from homeassistant.components.config import floor_registry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import floor_registry as fr
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 
 @pytest.fixture(name="client")
@@ -20,6 +26,7 @@ async def client_fixture(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> MockHAClientWebSocket:
     """Fixture that can interact with the config manager API."""
+    assert await async_setup_component(hass, "http", {})
     floor_registry.async_setup(hass)
     return await hass_ws_client(hass)
 
@@ -451,3 +458,46 @@ async def test_reorder_floors_persistence(
 
     floor_ids = [floor.floor_id for floor in floor_registry.async_list_floors()]
     assert floor_ids == [floor2.floor_id, floor3.floor_id, floor1.floor_id]
+
+
+async def test_rest_list_requires_auth(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test the REST list endpoint requires authentication."""
+    assert await async_setup_component(hass, "http", {})
+    floor_registry.async_setup(hass)
+
+    client = await hass_client_no_auth()
+    resp = await client.get("/api/config/floor_registry/list")
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_rest_list_floors_matches_websocket(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the REST list endpoint returns the same payload as the websocket command."""
+    assert await async_setup_component(hass, "http", {})
+    floor_registry.async_setup(hass)
+    registry = fr.async_get(hass)
+    registry.async_create("First floor")
+    registry.async_create(
+        name="Second floor",
+        aliases={"top floor", "attic"},
+        icon="mdi:home-floor-2",
+        level=2,
+    )
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id({"type": "config/floor_registry/list"})
+    ws_msg = await ws_client.receive_json()
+    assert ws_msg["success"]
+
+    client = await hass_client()
+    resp = await client.get("/api/config/floor_registry/list")
+
+    assert resp.status == HTTPStatus.OK
+    assert await resp.json() == ws_msg["result"]

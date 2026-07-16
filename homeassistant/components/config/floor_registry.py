@@ -1,10 +1,12 @@
-"""Websocket API to interact with the floor registry."""
+"""HTTP views and websocket API to interact with the floor registry."""
 
 from typing import Any
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import floor_registry as fr
@@ -13,7 +15,8 @@ from homeassistant.helpers.floor_registry import FloorEntry
 
 @callback
 def async_setup(hass: HomeAssistant) -> bool:
-    """Register the floor registry WS commands."""
+    """Register the floor registry views and WS commands."""
+    hass.http.register_view(FloorRegistryListView)
     websocket_api.async_register_command(hass, websocket_list_floors)
     websocket_api.async_register_command(hass, websocket_create_floor)
     websocket_api.async_register_command(hass, websocket_delete_floor)
@@ -37,6 +40,19 @@ def websocket_list_floors(
         msg["id"],
         [_entry_dict(entry) for entry in registry.async_list_floors()],
     )
+
+
+class FloorRegistryListView(HomeAssistantView):
+    """View to list the floor registry entries."""
+
+    url = "/api/config/floor_registry/list"
+    name = "api:config:floor_registry:list"
+
+    @callback
+    def get(self, request: web.Request) -> web.Response:
+        """Return the floor registry entries."""
+        registry = fr.async_get(request.app[KEY_HASS])
+        return self.json([_entry_dict(entry) for entry in registry.async_list_floors()])
 
 
 @websocket_api.websocket_command(
