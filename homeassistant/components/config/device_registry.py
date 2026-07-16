@@ -2,27 +2,61 @@
 
 from typing import Any, cast
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components import websocket_api
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.websocket_api import require_admin
+from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryDisabler
+from homeassistant.helpers.http import MIN_COMPRESSED_RESPONSE_SIZE
 
 
 @callback
 def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Device Registry views."""
 
+    hass.http.register_view(DeviceRegistryListView)
     websocket_api.async_register_command(hass, websocket_list_devices)
     websocket_api.async_register_command(hass, websocket_update_device)
     websocket_api.async_register_command(
         hass, websocket_remove_config_entry_from_device
     )
     return True
+
+
+class DeviceRegistryListView(HomeAssistantView):
+    """View to list the device registry entries."""
+
+    url = "/api/config/device_registry/list"
+    name = "api:config:device_registry:list"
+
+    @callback
+    def get(self, request: web.Request) -> web.Response:
+        """Return the device registry entries."""
+        registry = dr.async_get(request.app[KEY_HASS])
+        # Concatenate cached device registry item JSON serializations
+        inner = b",".join(
+            [
+                entry.json_repr
+                for entry in registry.devices.values()
+                if entry.json_repr is not None
+            ]
+        )
+        body = b"".join((b"[", inner, b"]"))
+        response = web.Response(
+            body=body,
+            content_type=CONTENT_TYPE_JSON,
+            zlib_executor_size=32768,
+        )
+        if len(body) > MIN_COMPRESSED_RESPONSE_SIZE:
+            response.enable_compression()
+        return response
 
 
 @callback

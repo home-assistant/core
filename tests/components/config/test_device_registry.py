@@ -1,6 +1,7 @@
 """Test device_registry API."""
 
 from datetime import datetime
+from http import HTTPStatus
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -14,7 +15,11 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 
 @pytest.fixture(name="client")
@@ -22,6 +27,7 @@ async def client_fixture(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> MockHAClientWebSocket:
     """Fixture that can interact with the config manager API."""
+    assert await async_setup_component(hass, "http", {})
     device_registry.async_setup(hass)
     return await hass_ws_client(hass)
 
@@ -558,3 +564,56 @@ async def test_remove_config_entry_from_device_if_integration_remove(
     assert device_registry.async_get(device_entry_1.id).config_entries == {
         entry_1.entry_id
     }
+
+
+async def test_rest_list_requires_auth(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test the REST list endpoint requires authentication."""
+    assert await async_setup_component(hass, "http", {})
+    device_registry.async_setup(hass)
+
+    client = await hass_client_no_auth()
+    resp = await client.get("/api/config/device_registry/list")
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_rest_list_devices_matches_websocket(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the REST list endpoint returns the same payload as the websocket command."""
+    assert await async_setup_component(hass, "http", {})
+    device_registry.async_setup(hass)
+    registry = dr.async_get(hass)
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+    registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("bridgeid", "1234")},
+        manufacturer="manufacturer",
+        model="model",
+        via_device=("bridgeid", "0123"),
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id({"type": "config/device_registry/list"})
+    ws_msg = await ws_client.receive_json()
+    assert ws_msg["success"]
+
+    client = await hass_client()
+    resp = await client.get("/api/config/device_registry/list")
+
+    assert resp.status == HTTPStatus.OK
+    assert await resp.json() == ws_msg["result"]
