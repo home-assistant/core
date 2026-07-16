@@ -175,52 +175,67 @@ async def test_receiving_command_success_using_value_template(
 
 
 @pytest.mark.parametrize(
-    ("payload", "log_message", "level"),
+    ("payload", "log_message", "level", "retain"),
     [
         (
             "",
             "Ignoring payload for infrared.test on topic test-topic, with template None",
             logging.DEBUG,
+            False,
         ),
         (
             "None",
             "Ignoring payload for infrared.test on topic test-topic, with template None",
             logging.DEBUG,
+            False,
         ),
         (
             "invalid",
             "Invalid message received for infrared.test on topic test-topic, with template None",
             logging.WARNING,
+            False,
         ),
         (
             "[9000,-300,800,-300, 9000]",
             "Invalid message received for infrared.test on topic test-topic, with template None",
             logging.WARNING,
+            False,
         ),
         (
             '{"timings":null}',
             "Invalid message received for infrared.test on topic test-topic, with template None",
             logging.WARNING,
+            False,
         ),
         (
             '{"timings":[]}',
             "Invalid message received for infrared.test on topic test-topic, with template None",
             logging.WARNING,
+            False,
         ),
         (
             '{"timings":[],"modulation":38000}',
             "Invalid message received for infrared.test on topic test-topic, with template None",
             logging.WARNING,
+            False,
         ),
         (
             '{"timings":["1","2"],"modulation":38000}',
             "Invalid message received for infrared.test on topic test-topic, with template None",
             logging.WARNING,
+            False,
         ),
         (
             '{"timings":["1","2"]}',
             "Invalid message received for infrared.test on topic test-topic, with template None",
             logging.WARNING,
+            False,
+        ),
+        (
+            '{"timings":[1,2],"modulation":38000}',
+            "Ignoring retained infrared signal on topic test-topic",
+            logging.DEBUG,
+            True,
         ),
     ],
 )
@@ -232,6 +247,7 @@ async def test_receiving_command_unsuccessful(
     payload: str,
     log_message: str,
     level: int,
+    retain: bool,
 ) -> None:
     """Test receiving an infrared command via subscription fails."""
     await mqtt_mock_entry()
@@ -247,7 +263,7 @@ async def test_receiving_command_unsuccessful(
     )
 
     with caplog.at_level(level):
-        async_fire_mqtt_message(hass, "test-topic", payload, 0, False)
+        async_fire_mqtt_message(hass, "test-topic", payload, 0, retain)
         await hass.async_block_till_done()
         assert log_message in caplog.text
 

@@ -216,6 +216,9 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
     @callback
     def _handle_state_message_received(self, msg: ReceiveMessage) -> None:
         """Handle receiving state message via MQTT."""
+        if msg.retain:
+            _LOGGER.debug("Ignoring retained infrared signal on topic %s", msg.topic)
+            return
         payload = self._value_template(msg.payload)
         if not payload or payload == PAYLOAD_NONE:
             _LOGGER.debug(
