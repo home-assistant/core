@@ -1,8 +1,12 @@
 """Tests for midea_lan __init__.py."""
 
+from collections.abc import Callable
 from unittest.mock import patch
 
 from midealocal.const import DeviceType, ProtocolVersion
+from midealocal.device import AuthException
+from midealocal.exceptions import SocketException
+import pytest
 
 from homeassistant.components.midea_lan.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -70,3 +74,30 @@ async def test_async_setup_entry_paths(hass: HomeAssistant) -> None:
     ):
         await hass.config_entries.async_setup(entry2.entry_id)
     assert entry2.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize(
+    "connect_side_effect",
+    [
+        pytest.param(lambda: False, id="returns_false"),
+        pytest.param(SocketException, id="socket_exception"),
+        pytest.param(AuthException, id="auth_exception"),
+    ],
+)
+async def test_setup_entry_not_ready_on_connect_failure(
+    hass: HomeAssistant,
+    connect_side_effect: Callable[[], bool] | type[Exception],
+) -> None:
+    """Test async_setup_entry raises ConfigEntryNotReady when connect fails."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_ENTRY_DATA)
+    entry.add_to_hass(hass)
+    device = DummyDevice(DeviceType.AC)
+    with (
+        patch(
+            "homeassistant.components.midea_lan.device_selector",
+            return_value=device,
+        ),
+        patch.object(device, "connect", side_effect=connect_side_effect),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.SETUP_RETRY

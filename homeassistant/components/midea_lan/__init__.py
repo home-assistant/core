@@ -1,7 +1,9 @@
 """The Midea LAN integration."""
 
 from midealocal.const import DeviceType, ProtocolVersion
+from midealocal.device import AuthException
 from midealocal.devices import device_selector
+from midealocal.exceptions import SocketException
 
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -15,7 +17,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .const import CONF_KEY, CONF_SUBTYPE
 from .entity import MideaLanConfigEntry
@@ -45,6 +47,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaLanConfigEntry) -> 
     )
     if device is None:
         raise ConfigEntryError("Unable to initialize device")
+
+    try:
+        connected = await hass.async_add_executor_job(device.connect)
+    except (SocketException, AuthException) as err:
+        raise ConfigEntryNotReady(f"Unable to connect to device {device_id}") from err
+    if not connected:
+        raise ConfigEntryNotReady(f"Unable to connect to device {device_id}")
 
     await hass.async_add_executor_job(device.open)
     entry.runtime_data = device

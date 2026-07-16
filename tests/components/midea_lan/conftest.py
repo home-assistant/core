@@ -74,6 +74,11 @@ class DummyDevice:
         """Record set mode call."""
         self.calls.append(("set_mode", zone, mode))
 
+    def connect(self) -> bool:
+        """Record connect call."""
+        self.calls.append(("connect",))
+        return True
+
     def open(self) -> None:
         """Record open call."""
         self.calls.append(("open",))
