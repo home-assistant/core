@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from json.decoder import JSONDecodeError
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohttp import ClientSession
 from aiovodafone import exceptions
@@ -123,6 +123,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         return None, False
 
+    @override
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update router data."""
         _LOGGER.debug("Polling Vodafone Station host: %s", self.api.base_url.host)
@@ -144,13 +145,13 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 translation_placeholders={"error": repr(err)},
             ) from err
         except (
-            exceptions.CannotConnect,
-            exceptions.AlreadyLogged,
-            exceptions.GenericLoginError,
+            exceptions.VodafoneError,
             JSONDecodeError,
         ) as err:
             if isinstance(err, JSONDecodeError):
-                # Plain html response (usually occurs after a firmware update), requiring session reinitialization
+                # Plain html response (usually occurs after
+                # a firmware update), requiring session
+                # reinitialization
                 _LOGGER.info("Stale session detected, reinitializing API session")
                 await self.initialize_api()
             raise UpdateFailed(

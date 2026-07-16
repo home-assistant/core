@@ -362,7 +362,7 @@ async def test_user_flow_ssl_context(
     verify_ssl: bool,
     expected_ssl_context_type: type,
 ) -> None:
-    """Test that a pre-warmed no-verify SSL context is passed when verify_ssl is False."""
+    """Test no-verify SSL context is passed when verify_ssl is False."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -803,7 +803,7 @@ async def test_discovery_ignored_entry(
 async def test_discovery_fallback_name_from_mac(
     hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
-    """Test discovery confirm uses MAC-based name when hostname and platform are absent."""
+    """Test discovery uses MAC-based name when hostname and platform are absent."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_INTEGRATION_DISCOVERY},
@@ -820,3 +820,40 @@ async def test_discovery_fallback_name_from_mac(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
     assert result["description_placeholders"]["name"] == "Access DDEEFF"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.parametrize(
+    ("extra_info", "expected_name"),
+    [
+        (
+            {"name": "Front Gate", "hostname": "unvr", "product_name": "UNVR"},
+            "Front Gate",
+        ),
+        ({"hostname": "unvr", "product_name": "UNVR"}, "unvr"),
+        ({"product_name": "UniFi Dream Machine"}, "UniFi Dream Machine"),
+    ],
+    ids=["console-name", "hostname", "product-name"],
+)
+async def test_discovery_name_resolution(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    extra_info: dict[str, str],
+    expected_name: str,
+) -> None:
+    """Test the discovered-device name prefers the console name over raw codes."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            "source_ip": "10.0.0.5",
+            "hw_addr": "aa:bb:cc:dd:ee:ff",
+            "services": {"Access": True},
+            "direct_connect_domain": "x.ui.direct",
+            **extra_info,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"]["name"] == expected_name

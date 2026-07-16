@@ -286,7 +286,7 @@ async def test_set_invalid(hass: HomeAssistant) -> None:
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
-            "input_datetime",
+            DOMAIN,
             "set_datetime",
             {"entity_id": entity_id, "time": time_portion},
             blocking=True,
@@ -316,7 +316,7 @@ async def test_set_invalid_2(hass: HomeAssistant) -> None:
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
-            "input_datetime",
+            DOMAIN,
             "set_datetime",
             {"entity_id": entity_id, "time": time_portion, "datetime": dt_obj},
             blocking=True,
@@ -344,7 +344,9 @@ async def test_set_datetime_date(hass: HomeAssistant) -> None:
     assert not state.attributes["has_time"]
     assert state.attributes["has_date"]
 
-    date_dt_obj = datetime.datetime(2017, 9, 7)
+    date_dt_obj = datetime.datetime(
+        2017, 9, 7, tzinfo=dt_util.get_time_zone(hass.config.time_zone)
+    )
     assert state.attributes["timestamp"] == date_dt_obj.timestamp()
 
 
@@ -443,14 +445,14 @@ async def test_input_datetime_context(
 ) -> None:
     """Test that input_datetime context works."""
     assert await async_setup_component(
-        hass, "input_datetime", {"input_datetime": {"only_date": {"has_date": True}}}
+        hass, DOMAIN, {"input_datetime": {"only_date": {"has_date": True}}}
     )
 
     state = hass.states.get("input_datetime.only_date")
     assert state is not None
 
     await hass.services.async_call(
-        "input_datetime",
+        DOMAIN,
         "set_datetime",
         {"entity_id": state.entity_id, "date": "2018-01-02"},
         blocking=True,
@@ -758,7 +760,8 @@ async def test_timestamp(hass: HomeAssistant) -> None:
     # initial has been converted to the set timezone
     state_with_tz = hass.states.get("input_datetime.test_datetime_initial_with_tz")
     assert state_with_tz is not None
-    # Timezone LA is UTC-8 => timestamp carries +01:00 => delta is -9 => 10:00 - 09:00 => 01:00
+    # Timezone LA is UTC-8 => timestamp carries +01:00
+    # => delta is -9 => 10:00 - 09:00 => 01:00
     assert state_with_tz.state == "2020-12-13 01:00:00"
     assert (
         dt_util.as_local(
@@ -773,7 +776,8 @@ async def test_timestamp(hass: HomeAssistant) -> None:
     )
     assert state_without_tz is not None
     assert state_without_tz.state == "2020-12-13 10:00:00"
-    # Timezone LA is UTC-8 => timestamp has no zone (= assumed local) => delta to UTC is +8 => 10:00 + 08:00 => 18:00
+    # Timezone LA is UTC-8 => timestamp has no zone (= assumed local)
+    # => delta to UTC is +8 => 10:00 + 08:00 => 18:00
     assert (
         dt_util.utc_from_timestamp(
             state_without_tz.attributes[ATTR_TIMESTAMP]

@@ -400,12 +400,13 @@ def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture() -> dict[
     ),
     scope="package",
 )
-def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state_fixture() -> (
-    dict[str, Any]
-):
-    """Load climate device w/ mode+setpoint on diff endpoints node state fixture data."""
+def climate_radio_thermostat_ct100_mode_setpoint_diff_endpoints_state_fixture() -> dict[
+    str, Any
+]:
+    """Load climate with mode+setpoint on different endpoints."""
     return load_json_object_fixture(
-        "climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_state.json",
+        "climate_radio_thermostat_ct100_mode_and_setpoint"
+        "_on_different_endpoints_state.json",
         DOMAIN,
     )
 
@@ -540,7 +541,7 @@ def basic_cc_sensor_state_fixture() -> dict[str, Any]:
 
 @pytest.fixture(name="window_covering_outbound_bottom_state", scope="package")
 def window_covering_outbound_bottom_state_fixture() -> dict[str, Any]:
-    """Load node with Window Covering CC fixture data, with only the outbound bottom position supported."""
+    """Load node with Window Covering CC and outbound bottom only."""
     return load_json_object_fixture("window_covering_outbound_bottom.json", DOMAIN)
 
 
@@ -986,7 +987,7 @@ async def integration_fixture(
 ) -> MockConfigEntry:
     """Set up the zwave_js integration."""
     entry = MockConfigEntry(
-        domain="zwave_js",
+        domain=DOMAIN,
         data={"url": "ws://test.org"},
         unique_id=str(client.driver.controller.home_id),
     )
@@ -1445,7 +1446,7 @@ def basic_cc_sensor_fixture(client, basic_cc_sensor_state) -> Node:
 def window_covering_outbound_bottom_fixture(
     client, window_covering_outbound_bottom_state
 ) -> Node:
-    """Load node with Window Covering CC fixture data, with only the outbound bottom position supported."""
+    """Load node with Window Covering CC and outbound bottom only."""
     node = Node(client, copy.deepcopy(window_covering_outbound_bottom_state))
     client.driver.controller.nodes[node.node_id] = node
     return node

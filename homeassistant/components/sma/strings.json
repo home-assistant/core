@@ -67,6 +67,14 @@
       }
     }
   },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to SMA device"
+    },
+    "invalid_auth": {
+      "message": "Invalid authentication for SMA device"
+    }
+  },
   "selector": {
     "group": {
       "options": {

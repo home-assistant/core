@@ -98,7 +98,7 @@ async def test_availability(
     mock_ituran: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test ICE sensor is marked as unavailable when we can't reach the Ituran service."""
+    """Test ICE sensor unavailable when Ituran service unreachable."""
     await __test_availability(hass, freezer, mock_ituran, mock_config_entry)
 
 
@@ -110,7 +110,7 @@ async def test_ev_availability(
     mock_ituran: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test EV sensor is marked as unavailable when we can't reach the Ituran service."""
+    """Test EV sensor unavailable when Ituran service unreachable."""
     ev_entities = [
         "sensor.mock_model_battery",
         "sensor.mock_model_remaining_range",

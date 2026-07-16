@@ -1,4 +1,4 @@
-"""Tests for the diagnostics data provided by the Home Assistant Connect ZBT-2 integration."""
+"""Tests for the Home Assistant Connect ZBT-2 diagnostics data."""
 
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props

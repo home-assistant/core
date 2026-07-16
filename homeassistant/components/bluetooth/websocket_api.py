@@ -94,8 +94,8 @@ def serialize_service_info(
         "address": service_info.address,
         "rssi": service_info.rssi,
         "manufacturer_data": {
-            str(manufacturer_id): manufacturer_data.hex()
-            for manufacturer_id, manufacturer_data in service_info.manufacturer_data.items()
+            str(manufacturer_id): data.hex()
+            for manufacturer_id, data in service_info.manufacturer_data.items()
         },
         "service_data": {
             service_uuid: service_data.hex()
@@ -273,7 +273,7 @@ async def ws_subscribe_scanner_details(
 
     def _async_registration_changed(registration: HaScannerRegistration) -> None:
         added_event = HaScannerRegistrationEvent.ADDED
-        event_type = "add" if registration.event == added_event else "remove"
+        event_type = "add" if registration.event is added_event else "remove"
         _async_event_message({event_type: [registration.scanner.details]})
 
     manager = _get_manager(hass)

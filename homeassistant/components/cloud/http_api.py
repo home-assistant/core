@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from contextlib import suppress
 import dataclasses
+from datetime import timedelta
 from functools import wraps
 from http import HTTPStatus
 import json
@@ -24,12 +25,12 @@ from homeassistant.components.alexa import (
     entities as alexa_entities,
     errors as alexa_errors,
 )
+from homeassistant.components.frontend import DATA_THEMES
 from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.system_health import get_info as get_system_health_info
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -39,6 +40,7 @@ from homeassistant.loader import (
     async_get_custom_components,
     async_get_loaded_integration,
 )
+from homeassistant.util import dt as dt_util
 from homeassistant.util.location import async_detect_location_info
 from homeassistant.util.package import async_get_installed_packages
 
@@ -50,6 +52,7 @@ from .const import (
     DATA_CLOUD_LOG_HANDLER,
     EVENT_CLOUD_EVENT,
     LOGIN_MFA_TIMEOUT,
+    ONBOARDING_ITEMS,
     PREF_ALEXA_REPORT_STATE,
     PREF_DISABLE_2FA,
     PREF_ENABLE_ALEXA,
@@ -99,6 +102,8 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_remote_connect)
     websocket_api.async_register_command(hass, websocket_remote_disconnect)
     websocket_api.async_register_command(hass, websocket_webrtc_ice_servers)
+    websocket_api.async_register_command(hass, websocket_cloud_onboarding_postpone)
+    websocket_api.async_register_command(hass, websocket_cloud_onboarding_complete)
 
     websocket_api.async_register_command(hass, google_assistant_get)
     websocket_api.async_register_command(hass, google_assistant_list)
@@ -509,6 +514,15 @@ class DownloadSupportPackageView(HomeAssistantView):
             "custom_integrations": custom_integrations,
         }
 
+    @callback
+    def _get_themes_info(self, hass: HomeAssistant) -> dict[str, Any]:
+        """Collect information about user-installed custom themes."""
+        themes: dict[str, Any] = hass.data.get(DATA_THEMES, {})
+        return {
+            "count": len(themes),
+            "themes": sorted(themes),
+        }
+
     async def _generate_markdown(
         self,
         hass: HomeAssistant,
@@ -568,6 +582,25 @@ class DownloadSupportPackageView(HomeAssistantView):
                         f"{integration['version']} | "
                         f"{doc_url}\n"
                     )
+                markdown += "\n</details>\n\n"
+
+        # Add custom themes information
+        try:
+            themes_info = self._get_themes_info(hass)
+        except Exception:  # noqa: BLE001
+            # Broad exception catch for robustness in support package generation
+            markdown += "## Custom Themes\n\n"
+            markdown += "Unable to collect themes information\n\n"
+        else:
+            markdown += "## Custom Themes\n\n"
+            markdown += f"Custom themes: {themes_info['count']}\n\n"
+
+            if themes_info["themes"]:
+                markdown += "<details><summary>Custom themes</summary>\n\n"
+                markdown += "Name\n"
+                markdown += "---\n"
+                for theme in themes_info["themes"]:
+                    markdown += f"{theme}\n"
                 markdown += "\n</details>\n\n"
 
         for domain, domain_info in domains_info.items():
@@ -818,6 +851,48 @@ async def websocket_update_prefs(
 
 @websocket_api.require_admin
 @_require_cloud_login
+@websocket_api.websocket_command({vol.Required("type"): "cloud/onboarding/postpone"})
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def websocket_cloud_onboarding_postpone(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle request to postpone onboarding."""
+    cloud = hass.data[DATA_CLOUD]
+    postponed_until = (dt_util.utcnow() + timedelta(hours=24)).isoformat()
+    await cloud.client.prefs.async_update(onboarding_postponed_until=postponed_until)
+    connection.send_result(msg["id"], await _account_data(hass, cloud))
+
+
+@websocket_api.require_admin
+@_require_cloud_login
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "cloud/onboarding/complete",
+        vol.Required("items"): [vol.In(ONBOARDING_ITEMS)],
+    }
+)
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def websocket_cloud_onboarding_complete(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle request to complete onboarding items."""
+    cloud = hass.data[DATA_CLOUD]
+    onboarded_items = list(cloud.client.prefs.onboarded_items)
+    new_items = [item for item in msg["items"] if item not in onboarded_items]
+    if new_items:
+        onboarded_items.extend(dict.fromkeys(new_items))
+        await cloud.client.prefs.async_update(onboarded_items=onboarded_items)
+    connection.send_result(msg["id"], await _account_data(hass, cloud))
+
+
+@websocket_api.require_admin
+@_require_cloud_login
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "cloud/cloudhook/create",
@@ -902,6 +977,8 @@ async def _account_data(
         "google_local_connected": google_config.is_local_connected,
         "logged_in": True,
         "prefs": client.prefs.as_dict(),
+        "onboarding_completed": client.prefs.onboarding_completed,
+        "onboarding_postponed": client.prefs.onboarding_postponed,
         "remote_certificate": certificate,
         "remote_certificate_status": remote.certificate_status,
         "remote_connected": remote.is_connected,
@@ -973,7 +1050,7 @@ async def google_assistant_get(
         return
 
     entity = google_helpers.GoogleEntity(hass, gconf, state)
-    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity.is_supported():
+    if not entity.is_supported():
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_SUPPORTED,
@@ -1075,9 +1152,7 @@ async def alexa_get(
     """Get data for a single alexa entity."""
     entity_id: str = msg["entity_id"]
 
-    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity_supported_by_alexa(
-        hass, entity_id
-    ):
+    if not entity_supported_by_alexa(hass, entity_id):
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_SUPPORTED,

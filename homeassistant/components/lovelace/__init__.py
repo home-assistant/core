@@ -127,10 +127,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Reload yaml resources."""
         try:
             conf = await async_hass_config_yaml(hass)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HomeAssistantError as err:
-            _LOGGER.error(err)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_reload",
+            ) from err
 
         integration = await async_get_integration(hass, DOMAIN)
 

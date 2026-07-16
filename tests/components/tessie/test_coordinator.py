@@ -215,7 +215,7 @@ async def test_coordinator_energy_history_invalid_data(
 async def test_coordinator_energy_history_cold_start_invalid_data(
     hass: HomeAssistant, mock_energy_history, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Tests cold-start fallback when the very first energy history fetch has invalid data."""
+    """Tests cold-start fallback when first energy history fetch has invalid data."""
 
     mock_energy_history.side_effect = lambda *a, **kw: {"response": {}}
     entry = await setup_platform(hass, [Platform.SENSOR])

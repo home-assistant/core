@@ -1,7 +1,7 @@
 """Config flow for the Teleinfo integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import serial
 from teleinfo import decode, read_frame
@@ -57,6 +57,7 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
             return errors, None
         return errors, decoded_data
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -83,22 +84,13 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB discovery."""
         # Resolve stable /dev/serial/by-id/ path
         dev_path = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, discovery_info.device
         )
-
-        # Validate by reading a real Teleinfo frame — silent abort on failure
-        errors, decoded_data = await self._validate_serial_port(dev_path)
-        if errors or decoded_data is None:
-            return self.async_abort(reason="not_teleinfo_device")
-
-        # Use ADCO (meter serial number) as unique_id — same as manual entry
-        adco = decoded_data["ADCO"]
-        await self.async_set_unique_id(adco)
-        self._abort_if_unique_id_configured(updates={CONF_SERIAL_PORT: dev_path})
 
         self._discovered_device = dev_path
         self.context["title_placeholders"] = {
@@ -120,6 +112,20 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert self._discovered_device is not None
         if user_input is not None:
+            # Validate by reading a real Teleinfo frame — silent abort on failure
+            errors, decoded_data = await self._validate_serial_port(
+                self._discovered_device
+            )
+            if errors or decoded_data is None:
+                return self.async_abort(reason="not_teleinfo_device")
+
+            # Use ADCO (meter serial number) as unique_id — same as manual entry
+            adco = decoded_data["ADCO"]
+            await self.async_set_unique_id(adco)
+            self._abort_if_unique_id_configured(
+                updates={CONF_SERIAL_PORT: self._discovered_device}
+            )
+
             return self.async_create_entry(
                 title=f"Teleinfo ({self._discovered_device})",
                 data={CONF_SERIAL_PORT: self._discovered_device},

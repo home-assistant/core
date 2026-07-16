@@ -328,7 +328,7 @@ async def test_change_device_source(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test remove the device registry configuration entry when the source entity changes."""
+    """Test remove device registry config entry when source entity changes."""
     # Configure source entity 1 (with a linked device)
     source_config_entry_1 = MockConfigEntry()
     source_config_entry_1.add_to_hass(hass)
@@ -403,7 +403,8 @@ async def test_change_device_source(
     assert await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Confirm that the configuration entry has not been added to the source entity 1 (current) device registry
+    # Confirm that the configuration entry has not been added
+    # to the source entity 1 (current) device registry
     current_device = device_registry.async_get(
         device_id=current_entity_source.device_id
     )
@@ -417,7 +418,8 @@ async def test_change_device_source(
     ):
         assert utility_meter_entity.device_id == source_entity_1.device_id
 
-    # Change configuration options to use source entity 2 (with a linked device) and reload the integration
+    # Change configuration options to use source entity 2
+    # (with a linked device) and reload the integration
     previous_entity_source = source_entity_1
     current_entity_source = source_entity_2
 
@@ -435,13 +437,15 @@ async def test_change_device_source(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
-    # Confirm that the configuration entry is not in the source entity 1 (previous) device registry
+    # Confirm that the configuration entry is not in the
+    # source entity 1 (previous) device registry
     previous_device = device_registry.async_get(
         device_id=previous_entity_source.device_id
     )
     assert utility_meter_config_entry.entry_id not in previous_device.config_entries
 
-    # Confirm that the configuration entry is not in to the source entity 2 (current) device registry
+    # Confirm that the configuration entry is not in
+    # the source entity 2 (current) device registry
     current_device = device_registry.async_get(
         device_id=current_entity_source.device_id
     )
@@ -455,7 +459,8 @@ async def test_change_device_source(
     ):
         assert utility_meter_entity.device_id == source_entity_2.device_id
 
-    # Change configuration options to use source entity 3 (without a device) and reload the integration
+    # Change configuration options to use source entity 3
+    # (without a device) and reload the integration
     previous_entity_source = source_entity_2
     current_entity_source = source_entity_3
 
@@ -473,7 +478,8 @@ async def test_change_device_source(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
-    # Confirm that the configuration entry has is not in the source entity 2 (previous) device registry
+    # Confirm that the configuration entry is not in the
+    # source entity 2 (previous) device registry
     previous_device = device_registry.async_get(
         device_id=previous_entity_source.device_id
     )
@@ -495,7 +501,8 @@ async def test_change_device_source(
         == []
     )
 
-    # Change configuration options to use source entity 2 (with a linked device) and reload the integration
+    # Change configuration options to use source entity 2
+    # (with a linked device) and reload the integration
     previous_entity_source = source_entity_3
     current_entity_source = source_entity_2
 
@@ -513,7 +520,8 @@ async def test_change_device_source(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
-    # Confirm that the configuration entry is not in the source entity 2 (current) device registry
+    # Confirm that the configuration entry is not in the
+    # source entity 2 (current) device registry
     current_device = device_registry.async_get(
         device_id=current_entity_source.device_id
     )

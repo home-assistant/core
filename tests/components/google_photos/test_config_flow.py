@@ -48,7 +48,7 @@ def mock_patch_api(mock_api: Mock) -> Generator[None]:
 
 @pytest.fixture(name="updated_token_entry", autouse=True)
 def mock_updated_token_entry() -> dict[str, Any]:
-    """Fixture to provide any test specific overrides to token data from the oauth token endpoint."""
+    """Fixture to provide test specific overrides to token data."""
     return {}
 
 

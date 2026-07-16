@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from visionpluspython.client import WattsVisionClient
 from visionpluspython.exceptions import (
@@ -64,9 +64,10 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self.last_discovery: datetime | None = None
         self.previous_devices: set[str] = set()
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch data and periodic device discovery."""
-        now = datetime.now()
+        now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         is_first_refresh = self.last_discovery is None
         discovery_interval_elapsed = (
             self.last_discovery is not None
@@ -202,9 +203,10 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
             self.last_update_success = True
             self.async_update_listeners()
 
+    @override
     async def _async_update_data(self) -> WattsVisionDeviceData:
         """Refresh specific device."""
-        if self.fast_polling_until and datetime.now() > self.fast_polling_until:
+        if self.fast_polling_until and datetime.now() > self.fast_polling_until:  # pylint: disable=home-assistant-enforce-naive-now
             self.fast_polling_until = None
             self.update_interval = None
             _LOGGER.debug(
@@ -242,7 +244,7 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[WattsVisionDeviceData])
 
     def trigger_fast_polling(self, duration: int = 60) -> None:
         """Activate fast polling for a specified duration after a command."""
-        self.fast_polling_until = datetime.now() + timedelta(seconds=duration)
+        self.fast_polling_until = datetime.now() + timedelta(seconds=duration)  # pylint: disable=home-assistant-enforce-naive-now
         self.update_interval = timedelta(seconds=FAST_POLLING_INTERVAL_SECONDS)
         _LOGGER.debug(
             "Device %s: Activated fast polling for %d seconds", self.device_id, duration

@@ -293,7 +293,8 @@ async def test_xiaomi_hhccjcy01(hass: HomeAssistant) -> None:
 async def test_xiaomi_hhccjcy01_not_connectable(hass: HomeAssistant) -> None:
     """Test HHCCJCY01 when sensors are not connectable.
 
-    This device has multiple advertisements before all sensors are visible but not connectable.
+    This device has multiple advertisements before all sensors are
+    visible but not connectable.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,

@@ -24,7 +24,7 @@ CONFIG_DATA = {
 async def test_config_flow_success(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_touchlinesl_client: AsyncMock
 ) -> None:
-    """Test the happy path where the provided username/password result in a new entry."""
+    """Test the happy path where username/password result in a new entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -58,7 +58,7 @@ async def test_config_flow_failure_api_exceptions(
     mock_setup_entry: AsyncMock,
     mock_touchlinesl_client: AsyncMock,
 ) -> None:
-    """Test for invalid credentials or API connection errors, and that the form can recover."""
+    """Test for invalid credentials or API errors, and form recovery."""
     mock_touchlinesl_client.user_id.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(

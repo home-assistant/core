@@ -572,6 +572,19 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "repairs": [
+        ClassTypeHintMatch(
+            base_class="RepairsFlow",
+            matches=[
+                TypeHintMatch(
+                    function_name="async_step_*",
+                    arg_types={},
+                    return_type="RepairsFlowResult",
+                    mandatory=True,
+                ),
+            ],
+        ),
+    ],
 }
 
 

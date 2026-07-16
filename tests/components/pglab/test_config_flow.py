@@ -33,9 +33,12 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     discovery_info = MqttServiceInfo(
         topic="pglab/discovery/E-Board-DD53AC85/config",
         payload=(
-            '{"ip":"192.168.1.16", "mac":"80:34:28:1B:18:5A", "name":"e-board-office",'
-            '"hw":"255.255.255", "fw":"255.255.255", "type":"E-Board", "id":"E-Board-DD53AC85",'
-            '"manufacturer":"PG LAB Electronics", "params":{"shutters":0, "boards":"10000000" } }'
+            '{"ip":"192.168.1.16", "mac":"80:34:28:1B:18:5A",'
+            ' "name":"e-board-office",'
+            '"hw":"255.255.255", "fw":"255.255.255",'
+            ' "type":"E-Board", "id":"E-Board-DD53AC85",'
+            '"manufacturer":"PG LAB Electronics",'
+            ' "params":{"shutters":0, "boards":"10000000" } }'
         ),
         qos=0,
         retain=False,
@@ -60,9 +63,12 @@ async def test_mqtt_abort_invalid_topic(
     discovery_info = MqttServiceInfo(
         topic="pglab/discovery/E-Board-DD53AC85/wrong_topic",
         payload=(
-            '{"ip":"192.168.1.16", "mac":"80:34:28:1B:18:5A", "name":"e-board-office",'
-            '"hw":"255.255.255", "fw":"255.255.255", "type":"E-Board", "id":"E-Board-DD53AC85",'
-            '"manufacturer":"PG LAB Electronics", "params":{"shutters":0, "boards":"10000000" } }'
+            '{"ip":"192.168.1.16", "mac":"80:34:28:1B:18:5A",'
+            ' "name":"e-board-office",'
+            '"hw":"255.255.255", "fw":"255.255.255",'
+            ' "type":"E-Board", "id":"E-Board-DD53AC85",'
+            '"manufacturer":"PG LAB Electronics",'
+            ' "params":{"shutters":0, "boards":"10000000" } }'
         ),
         qos=0,
         retain=False,

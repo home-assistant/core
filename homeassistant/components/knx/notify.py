@@ -1,5 +1,7 @@
 """Support for KNX notify entities."""
 
+from typing import override
+
 from xknx import XKNX
 from xknx.devices import Notification as XknxNotification
 
@@ -52,6 +54,7 @@ class KNXNotify(KnxYamlEntity, NotifyEntity):
             entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a notification to knx bus."""
         await self._device.set(message)

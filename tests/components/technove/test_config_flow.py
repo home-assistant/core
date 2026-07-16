@@ -75,7 +75,7 @@ async def test_connection_error(hass: HomeAssistant, mock_technove: MagicMock) -
 async def test_full_user_flow_with_error(
     hass: HomeAssistant, mock_technove: MagicMock
 ) -> None:
-    """Test the full manual user flow from start to finish with some errors in the middle."""
+    """Test the full manual user flow with some errors in the middle."""
     mock_technove.update.side_effect = TechnoVEConnectionError
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

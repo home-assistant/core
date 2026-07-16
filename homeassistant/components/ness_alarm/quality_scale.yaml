@@ -8,12 +8,18 @@ rules:
   config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
-  has-entity-name: done
+  has-entity-name: todo
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -66,7 +72,7 @@ rules:
   entity-translations:
     status: exempt
     comment: Entities use device name as entity name.
-  exception-translations: done
+  exception-translations: todo
   icon-translations:
     status: exempt
     comment: No entity icons are used.

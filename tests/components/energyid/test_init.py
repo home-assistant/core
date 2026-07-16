@@ -4,14 +4,10 @@ from datetime import timedelta
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError, ClientResponseError
+import pytest
 
-from homeassistant.components.energyid import (
-    DOMAIN,
-    _async_handle_state_change,
-    async_unload_entry,
-)
+from homeassistant.components.energyid import DOMAIN, _async_handle_state_change
 from homeassistant.components.energyid.const import (
-    CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_ENERGYID_KEY,
     CONF_HA_ENTITY_UUID,
@@ -19,7 +15,7 @@ from homeassistant.components.energyid.const import (
     CONF_PROVISIONING_SECRET,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import CONF_DEVICE_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
@@ -96,7 +92,7 @@ async def test_setup_auth_error_401_triggers_reauth(
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
 ) -> None:
-    """Test 401 authentication error triggers reauth flow (covers __init__.py lines 85-86)."""
+    """Test 401 authentication error triggers reauth flow."""
     mock_webhook_client.authenticate.side_effect = ClientResponseError(
         request_info=MagicMock(),
         history=(),
@@ -122,7 +118,7 @@ async def test_setup_auth_error_403_triggers_reauth(
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
 ) -> None:
-    """Test 403 authentication error triggers reauth flow (covers __init__.py lines 85-86)."""
+    """Test 403 authentication error triggers reauth flow."""
     mock_webhook_client.authenticate.side_effect = ClientResponseError(
         request_info=MagicMock(),
         history=(),
@@ -1075,7 +1071,7 @@ async def test_config_entry_update_listener_called(hass: HomeAssistant) -> None:
 async def test_initial_state_conversion_error_valueerror(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test ValueError/TypeError during initial state float conversion (lines 212-213)."""
+    """Test ValueError/TypeError during initial state float conversion."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1144,7 +1140,8 @@ async def test_state_change_untracked_entity_explicit(hass: HomeAssistant) -> No
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Change state of a completely unrelated entity that doesn't exist in any mapping
+        # Change state of a completely unrelated entity that
+        # doesn't exist in any mapping
         hass.states.async_set("sensor.random_unrelated_entity", "100")
         await hass.async_block_till_done()
 
@@ -1228,7 +1225,8 @@ async def test_entry_unloading_flag_state_change(hass: HomeAssistant) -> None:
         del entry.runtime_data
 
         # Try to trigger state change handler - should hit the check at line 305
-        # Since we can't easily trigger the actual callback, we'll just ensure the entry is cleaned up properly
+        # Since we can't easily trigger the actual callback,
+        # we'll just ensure the entry is cleaned up properly
 
         assert not hasattr(entry, "runtime_data")
 
@@ -1283,7 +1281,7 @@ async def test_initial_state_conversion_error(
     mock_webhook_client: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test ValueError/TypeError during initial state float conversion (lines 212-213)."""
+    """Test ValueError/TypeError during initial state float conversion."""
     # Create entity with non-numeric state that will cause conversion error
     entity_entry = entity_registry.async_get_or_create(
         "sensor",
@@ -1379,6 +1377,7 @@ async def test_direct_state_change_handler(
     _async_handle_state_change(hass, mock_config_entry.entry_id, event)
 
 
+@pytest.mark.usefixtures("mock_webhook_client")
 async def test_subentry_unload_during_entry_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -1388,6 +1387,7 @@ async def test_subentry_unload_during_entry_unload(
     # Setup the entry
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Create a subentry with the correct attribute
     sub_entry = MockConfigEntry(
@@ -1414,12 +1414,12 @@ async def test_subentry_unload_during_entry_unload(
     # Replace the async_unload method
     hass.config_entries.async_unload = mock_async_unload
 
-    # ACT: Directly call the unload function
-    result = await async_unload_entry(hass, mock_config_entry)
+    # ACT: Unload the main entry through the normal pipeline
+    result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # ASSERT: Line 363 should have been executed
+    # ASSERT: async_unload should have been called for the subentry
     assert subentry_unload_called, (
-        "async_unload should have been called for the subentry (line 363)"
+        "async_unload should have been called for the subentry"
     )
     assert result is True

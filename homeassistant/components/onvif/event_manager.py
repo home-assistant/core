@@ -127,8 +127,8 @@ class EventManager:
     def started(self) -> bool:
         """Return True if event manager is started."""
         return (
-            self.webhook_manager.state == WebHookManagerState.STARTED
-            or self.pullpoint_manager.state == PullPointManagerState.STARTED
+            self.webhook_manager.state is WebHookManagerState.STARTED
+            or self.pullpoint_manager.state is PullPointManagerState.STARTED
         )
 
     @callback
@@ -260,7 +260,7 @@ class EventManager:
     @callback
     def async_webhook_failed(self) -> None:
         """Mark webhook as failed."""
-        if self.pullpoint_manager.state != PullPointManagerState.PAUSED:
+        if self.pullpoint_manager.state is not PullPointManagerState.PAUSED:
             return
         LOGGER.debug("%s: Switching to PullPoint for events", self.name)
         self.pullpoint_manager.async_resume()
@@ -268,7 +268,7 @@ class EventManager:
     @callback
     def async_webhook_working(self) -> None:
         """Mark webhook as working."""
-        if self.pullpoint_manager.state != PullPointManagerState.STARTED:
+        if self.pullpoint_manager.state is not PullPointManagerState.STARTED:
             return
         LOGGER.debug("%s: Switching to webhook for events", self.name)
         self.pullpoint_manager.async_pause()
@@ -308,7 +308,7 @@ class PullPointManager:
 
     async def async_start(self) -> bool:
         """Start pullpoint subscription."""
-        assert self.state == PullPointManagerState.STOPPED, (
+        assert self.state is PullPointManagerState.STOPPED, (
             "PullPoint manager already started"
         )
         LOGGER.debug("%s: Starting PullPoint manager", self._name)
@@ -462,7 +462,7 @@ class PullPointManager:
         finally:
             self.async_schedule_pull_messages(next_pull_delay)
 
-        if self.state != PullPointManagerState.STARTED:
+        if self.state is not PullPointManagerState.STARTED:
             # If the webhook became started working during the long poll,
             # and we got paused, our data is stale and we should not process it.
             LOGGER.debug(
@@ -507,7 +507,7 @@ class PullPointManager:
         Must not check if the webhook is working.
         """
         self.async_cancel_pull_messages()
-        if self.state != PullPointManagerState.STARTED:
+        if self.state is not PullPointManagerState.STARTED:
             return
         if self._pullpoint_manager:
             when = delay if delay is not None else PULLPOINT_COOLDOWN_TIME
@@ -566,7 +566,7 @@ class WebHookManager:
     async def async_start(self) -> bool:
         """Start polling events."""
         LOGGER.debug("%s: Starting webhook manager", self._name)
-        assert self.state == WebHookManagerState.STOPPED, (
+        assert self.state is WebHookManagerState.STOPPED, (
             "Webhook manager already started"
         )
         assert self._webhook_url is None, "Webhook already registered"
