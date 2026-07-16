@@ -441,8 +441,9 @@ class ProtectData:
             self._entry.async_start_reauth(self._hass)
             return
         except (TimeoutError, ClientError, ServerDisconnectedError) as err:
-            # Transport errors retry on the next reconnect.
-            _LOGGER.debug("Public refresh after reconnect failed: %s", err)
+            # Retried on the next reconnect, but this now gates discovery of
+            # devices that appeared during the gap, so make it visible.
+            _LOGGER.warning("Public refresh after reconnect failed: %s", err)
             return
         self._async_process_public_updates()
         # A device that appeared during the gap gets no add frame, so re-offer

@@ -23,6 +23,7 @@ from uiprotect.data import (
     Liveview,
     ModelType,
     ProtectModelWithId,
+    PublicBootstrap,
     Sensor,
     SmartDetectObjectType,
     StateType,
@@ -173,7 +174,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     # them in ``update_public()``; the integration reads them synchronously. Start
     # with empty collections; the ``update_public`` side effect (see ``mock_entry``)
     # primes the cameras from the private bootstrap.
-    client.public_bootstrap = Mock()
+    client.public_bootstrap = Mock(spec=PublicBootstrap)
     client.public_bootstrap.cameras = {}
     client.public_bootstrap.lights = {}
     client.public_bootstrap.relays = {}
