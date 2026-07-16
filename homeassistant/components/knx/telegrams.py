@@ -262,10 +262,7 @@ class Telegrams:
     async def _async_retry_load_history(self, now: datetime) -> None:
         """Retry telegram store initialization after a transient timeout."""
         self._store_init_retry_unsub = None
-        # asyncio.current_task() is safe here only because HassJob coroutine
-        # functions are scheduled via create_eager_task(), which runs the task
-        # synchronously up to its first suspension point - so by the time this
-        # line executes, the Task object already exists and is "current".
+        # Relies on eager task start so this task is already "current" here.
         self._store_init_retry_task = asyncio.current_task()
         try:
             await self.load_history()

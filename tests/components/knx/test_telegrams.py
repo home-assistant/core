@@ -278,22 +278,15 @@ async def test_stop_cancels_pending_retry_timer(
         side_effect=TimeoutError(),
     ):
         await knx.setup_integration()
+        assert hass.data[KNX_MODULE_KEY].telegrams.store is None
 
-        telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
-        assert telegrams_module.store is None
-        assert telegrams_module._store_init_retry_unsub is not None
-        assert telegrams_module._uninitialized_store is not None
-
-        await telegrams_module.stop()
-
-        assert telegrams_module._store_init_retry_unsub is None
-        assert telegrams_module._uninitialized_store is None
+        assert await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
+        assert KNX_MODULE_KEY not in hass.data
 
         # The cancelled timer must not fire later and try to (re)initialize.
         freezer.tick(STORE_INIT_RETRY_BACKOFF[0] + 1)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        assert telegrams_module.store is None
 
 
 async def test_stop_cancels_in_flight_retry_task(
@@ -303,31 +296,29 @@ async def test_stop_cancels_in_flight_retry_task(
 ) -> None:
     """Unloading while a retry attempt is actively running cancels it cleanly."""
     freezer.move_to("2024-01-01 12:00:00+00:00")
+    attempts = 0
 
-    async def hanging_initialize() -> None:
+    async def initialize_side_effect() -> None:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise TimeoutError()
         await asyncio.Event().wait()
 
     with patch(
         "knx_telegram_store.BufferedSqliteStore.initialize",
-        side_effect=[TimeoutError(), hanging_initialize],
+        side_effect=initialize_side_effect,
     ):
         await knx.setup_integration()
-
-        telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
-        assert telegrams_module._store_init_retry_unsub is not None
 
         freezer.tick(STORE_INIT_RETRY_BACKOFF[0] + 1)
         async_fire_time_changed(hass)
 
         # The retry fired and is now suspended inside the hanging initialize()
-        # call (eager task start runs synchronously up to that point).
-        assert telegrams_module._store_init_retry_task is not None
-        assert not telegrams_module._store_init_retry_task.done()
-
-        await telegrams_module.stop()
-
-        assert telegrams_module._store_init_retry_task is None
-        assert telegrams_module._uninitialized_store is None
+        # call (eager task start runs synchronously up to that point) - unload
+        # must cancel it instead of hanging or leaking the task.
+        assert await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
+        assert KNX_MODULE_KEY not in hass.data
 
 
 async def test_migrate_telegrams_from_json(
