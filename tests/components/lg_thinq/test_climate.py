@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from thinqconnect.integration import HABridge
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -101,10 +100,9 @@ async def test_service_call_connection_error_raises_home_assistant_error(
     with patch("homeassistant.components.lg_thinq.PLATFORMS", [Platform.CLIMATE]):
         await setup_integration(hass, mock_config_entry)
 
-    with (
-        patch.object(HABridge, "async_set_fan_mode", side_effect=TimeoutError),
-        pytest.raises(HomeAssistantError),
-    ):
+    mock_thinq_api.async_post_device_control.side_effect = TimeoutError
+
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
