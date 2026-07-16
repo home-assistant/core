@@ -2921,6 +2921,106 @@ async def test_remove_config_entry_from_device_removes_entities_2(
     assert entity_registry.async_get(entry_2.entity_id).device_id is None
 
 
+async def test_move_device_config_entry_removes_old_entry_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Moving a device to another config entry removes the old entry's entities."""
+    entry_a = MockConfigEntry(domain="hue")
+    entry_a.add_to_hass(hass)
+    entry_b = MockConfigEntry(domain="tado")
+    entry_b.add_to_hass(hass)
+    entry_c = MockConfigEntry(domain="some_helper")
+    entry_c.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry_a.entry_id, identifiers={("hue", "1")}
+    )
+    # An entity owned by the departing entry A, and a helper entity of a third entry C
+    entry_a_entity = entity_registry.async_get_or_create(
+        "light", "hue", "a", config_entry=entry_a, device_id=device_entry.id
+    )
+    entry_c_entity = entity_registry.async_get_or_create(
+        "sensor", "some_helper", "c", config_entry=entry_c, device_id=device_entry.id
+    )
+
+    # Move the device from entry A to entry B (an update, not a removal)
+    device_registry.async_update_device(
+        device_entry.id, new_config_entry_id=entry_b.entry_id
+    )
+    await hass.async_block_till_done()
+
+    # A no longer owns the device, so A's entity is removed; C's helper is untouched
+    assert not entity_registry.async_is_registered(entry_a_entity.entity_id)
+    assert entity_registry.async_is_registered(entry_c_entity.entity_id)
+
+
+@pytest.mark.parametrize("old_subentry_id", [None, "sub-1"])
+async def test_move_device_config_subentry_removes_old_subentry_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    old_subentry_id: str | None,
+) -> None:
+    """Moving a device to another subentry removes the old subentry's entities.
+
+    Includes a departing subentry of None (the main entry): the change is detected by the
+    old config_subentry_id being present in the event, not by its truthiness.
+    """
+    config_entry = MockConfigEntry(
+        domain="hue",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="sub-1",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+            config_entries.ConfigSubentryData(
+                data={},
+                subentry_id="sub-2",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+        ],
+    )
+    config_entry.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        config_subentry_id=old_subentry_id,
+        identifiers={("hue", "1")},
+    )
+    # Entity on the departing subentry, and one on the destination subentry sub-2
+    old_entity = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "old",
+        config_entry=config_entry,
+        config_subentry_id=old_subentry_id,
+        device_id=device_entry.id,
+    )
+    sub2_entity = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "2",
+        config_entry=config_entry,
+        config_subentry_id="sub-2",
+        device_id=device_entry.id,
+    )
+
+    # Move the device to subentry sub-2 (an update, not a removal)
+    device_registry.async_update_device(device_entry.id, new_config_subentry_id="sub-2")
+    await hass.async_block_till_done()
+
+    # The departing subentry's entity is removed; sub-2's entity is kept
+    assert not entity_registry.async_is_registered(old_entity.entity_id)
+    assert entity_registry.async_is_registered(sub2_entity.entity_id)
+
+
 async def test_remove_config_subentry_from_device_removes_entities(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

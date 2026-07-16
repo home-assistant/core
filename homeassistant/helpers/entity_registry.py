@@ -1665,36 +1665,32 @@ class EntityRegistry(BaseRegistry):
 
         changes = event.data["changes"]
 
-        # Remove entities which belong to config entries no longer associated with the
-        # device
-        if old_config_entries := changes.get("config_entries"):
+        # Remove entities which belong to the config entry the device no longer belongs
+        # to. changes carries the old config_entry_id only when it changed (a move).
+        if "config_entry_id" in changes:
+            old_config_entry_id = changes["config_entry_id"]
             entities = async_entries_for_device(
                 self, event.data["device_id"], include_disabled_entities=True
             )
             for entity in entities:
-                config_entry_id = entity.config_entry_id
                 if (
-                    entity.config_entry_id in old_config_entries
-                    and entity.config_entry_id not in device.config_entries
+                    entity.config_entry_id == old_config_entry_id
+                    and entity.config_entry_id != device.config_entry_id
                 ):
                     self.async_remove(entity.entity_id)
 
-        # Remove entities which belong to config subentries no longer
-        # associated with the device
-        if old_config_entries_subentries := changes.get("config_entries_subentries"):
+        # Remove entities which belong to the config subentry the device no longer
+        # belongs to. changes carries the old config_subentry_id only when it changed.
+        if "config_subentry_id" in changes:
+            old_config_subentry_id = changes["config_subentry_id"]
             entities = async_entries_for_device(
                 self, event.data["device_id"], include_disabled_entities=True
             )
             for entity in entities:
-                config_entry_id = entity.config_entry_id
-                config_subentry_id = entity.config_subentry_id
                 if (
-                    config_entry_id in device.config_entries
-                    and config_entry_id in old_config_entries_subentries
-                    and config_subentry_id
-                    in old_config_entries_subentries[config_entry_id]
-                    and config_subentry_id
-                    not in device.config_entries_subentries[config_entry_id]
+                    entity.config_entry_id == device.config_entry_id
+                    and entity.config_subentry_id == old_config_subentry_id
+                    and entity.config_subentry_id != device.config_subentry_id
                 ):
                     self.async_remove(entity.entity_id)
 
