@@ -56,6 +56,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'receiver',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'AVR-3805',
       <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'STEREO',
       <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'cd',
       <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'cd',

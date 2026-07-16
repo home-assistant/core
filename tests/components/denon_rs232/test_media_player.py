@@ -14,6 +14,7 @@ from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_SOUND_MODE,
     DOMAIN as MP_DOMAIN,
     SERVICE_SELECT_SOURCE,
 )
@@ -308,6 +309,28 @@ async def test_main_invalid_source_raises(
             },
             blocking=True,
         )
+
+
+async def test_main_surround_mode_reported_as_sound_mode(
+    hass: HomeAssistant, mock_receiver: MockReceiver
+) -> None:
+    """Test the main zone surround mode is reported and updates on push."""
+    assert hass.states.get(MAIN_ENTITY_ID).attributes[ATTR_SOUND_MODE] == "STEREO"
+
+    state = _default_state()
+    state.main_zone.surround_mode = "DOLBY DIGITAL"
+    mock_receiver.mock_state(state)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get(MAIN_ENTITY_ID).attributes[ATTR_SOUND_MODE] == "DOLBY DIGITAL"
+    )
+
+
+@pytest.mark.parametrize("entity_id", [ZONE_2_ENTITY_ID, ZONE_3_ENTITY_ID])
+async def test_zones_have_no_sound_mode(hass: HomeAssistant, entity_id: str) -> None:
+    """Test surround mode is a main-zone-only attribute."""
+    assert ATTR_SOUND_MODE not in hass.states.get(entity_id).attributes
 
 
 def test_input_source_translation_keys_cover_all_enum_members() -> None:

@@ -188,6 +188,7 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
 
         if self._is_main:
             self._attr_is_volume_muted = cast(MainPlayer, self._player).mute
+            self._attr_sound_mode = self._receiver.state.main_zone.surround_mode
 
     @override
     async def async_turn_on(self) -> None:
