@@ -4412,14 +4412,9 @@
       "iot_class": "local_polling"
     },
     "modbus": {
+      "name": "Modbus",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "local_polling"
-    },
-    "modbus_connection": {
-      "name": "Modbus Connection",
-      "integration_type": "hub",
-      "config_flow": true,
       "iot_class": "local_polling"
     },
     "modem_callerid": {
@@ -8554,7 +8549,6 @@
     "local_todo",
     "min_max",
     "mobile_app",
-    "modbus",
     "moehlenhoff_alpha2",
     "mold_indicator",
     "moon",
