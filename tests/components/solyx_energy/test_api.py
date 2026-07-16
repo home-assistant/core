@@ -54,9 +54,6 @@ def client(mock_session):
     return client
 
 
-# --- Token refresh ---
-
-
 async def test_token_refresh_success(
     aioclient_mock: AiohttpClientMocker, mock_session
 ) -> None:
@@ -85,9 +82,6 @@ async def test_token_refresh_token_error(
     client = SolyxEnergyApiClient(mock_session, "test-id", "test-secret")
     with pytest.raises(SolyxEnergyTokenError):
         await client._async_update_access_token()
-
-
-# --- async_get_asset_data ---
 
 
 async def test_get_asset_data_success(
@@ -121,9 +115,6 @@ async def test_get_asset_data_auth_error(
     assert client._access_token is None
 
 
-# --- async_set_asset_attribute ---
-
-
 async def test_set_asset_attribute_success(
     aioclient_mock: AiohttpClientMocker, client: SolyxEnergyApiClient
 ) -> None:
@@ -152,9 +143,6 @@ async def test_set_asset_attribute_auth_error(
     with pytest.raises(SolyxEnergyAuthError):
         await client.async_set_asset_attribute(DEVICE_ID, ATTRIBUTE_NAME, "DIRECT")
     assert client._access_token is None
-
-
-# --- async_test_connection ---
 
 
 async def test_test_connection_success(

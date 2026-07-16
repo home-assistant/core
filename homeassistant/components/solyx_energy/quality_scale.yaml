@@ -21,7 +21,9 @@ rules:
   docs-triggers:
     status: exempt
     comment: The integration does not provide triggers.
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: Entities use DataUpdateCoordinator and do not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
