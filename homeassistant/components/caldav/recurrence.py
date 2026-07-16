@@ -265,19 +265,22 @@ def _tail_ics(
     _replace(vevent, "sequence", None)
     _apply(vevent, {**data, "rrule": None})
     rule_changed = False
-    if (supplied := data.get("rrule")) and vRecur.from_ical(
-        supplied
-    ).to_ical() != master["RRULE"].to_ical():
+    if (supplied := data.get("rrule")) and (
+        "RRULE" not in master
+        or vRecur.from_ical(supplied).to_ical() != master["RRULE"].to_ical()
+    ):
         _replace(vevent, "rrule", vRecur.from_ical(supplied))
         rule_changed = True
     else:
         _replace(vevent, "rrule", _tail_rrule(master, occurrence))
-    # Dates anchored to the old schedule are meaningless on a moved tail.
-    if rule_changed or _utc(data["dtstart"]) != _utc(occurrence):
+    if rule_changed:
+        # Dates anchored to the replaced rule are meaningless on the tail.
         _clear_dates(vevent)
     else:
         _keep_dates(vevent, "RDATE", occurrence, before=False)
         _keep_dates(vevent, "EXDATE", occurrence, before=False)
+        if delta := _utc(data["dtstart"]) - _utc(occurrence):
+            _shift_dates(vevent, delta)
     return tail.to_ical().decode("utf-8")
 
 
@@ -374,6 +377,30 @@ def _cap_series(master: Any, occurrence: datetime | date) -> None:
         _replace(master, "rrule", recur)
     _keep_dates(master, "RDATE", occurrence, before=True)
     _keep_dates(master, "EXDATE", occurrence, before=True)
+
+
+def _shift_dates(component: Any, delta: timedelta) -> None:
+    """Move retained RDATE/EXDATE values along with a moved DTSTART."""
+    for key in ("RDATE", "EXDATE"):
+        if key not in component:
+            continue
+        entries = component[key]
+        if not isinstance(entries, list):
+            entries = [entries]
+        shifted = []
+        for entry in entries:
+            rebuilt = vDDDLists([_shifted(item.dt, delta) for item in entry.dts])
+            rebuilt.params = entry.params
+            shifted.append(rebuilt)
+        del component[key]
+        component[key] = shifted if len(shifted) > 1 else shifted[0]
+
+
+def _shifted(value: Any, delta: timedelta) -> Any:
+    if isinstance(value, tuple):
+        end = value[1] + delta if isinstance(value[1], datetime) else value[1]
+        return (value[0] + delta, end)
+    return value + delta
 
 
 def _clear_dates(component: Any) -> None:

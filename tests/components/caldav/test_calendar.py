@@ -2906,7 +2906,7 @@ async def test_update_event_moved_tail_drops_exdates(
     calendars: list[Mock],
     ws_client: ClientFixture,
 ) -> None:
-    """Test that a moved tail does not carry dates of the old schedule."""
+    """Test that a moved tail shifts retained dates along with it."""
     await setup_platform_cb()
     _mock_dav_event(calendars[0], MIXED_TZ_EXDATE_ICS)
     calendars[0].save_event = MagicMock(return_value=Mock())
@@ -2928,4 +2928,74 @@ async def test_update_event_moved_tail_drops_exdates(
     )
 
     tail = _saved_tail(calendars[0])
-    assert "EXDATE" not in tail
+    assert tail["EXDATE"].dts[0].dt == datetime.datetime(
+        2017, 12, 4, 19, 0, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")
+    )
+
+
+async def test_update_rdate_only_event_with_new_rule(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that supplying a rule to an RDATE-only series does not crash."""
+    await setup_platform_cb()
+    _mock_dav_event(calendars[0], RDATE_ONLY_ICS)
+    calendars[0].save_event = MagicMock(return_value=Mock())
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-12-01 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Renamed session",
+                "dtstart": "2017-12-01T17:00:00+00:00",
+                "dtend": "2017-12-01T18:00:00+00:00",
+                "rrule": "FREQ=WEEKLY",
+            },
+        },
+    )
+
+    tail = _saved_tail(calendars[0])
+    assert tail["RRULE"].to_ical().decode() == "FREQ=WEEKLY"
+    assert "RDATE" not in tail
+
+
+async def test_update_moved_rdate_only_tail_shifts_dates(
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    ws_client: ClientFixture,
+) -> None:
+    """Test that moving an RDATE-only tail moves its dates too."""
+    await setup_platform_cb()
+    _mock_dav_event(calendars[0], RDATE_ONLY_ICS)
+    calendars[0].save_event = MagicMock(return_value=Mock())
+
+    client = await ws_client()
+    await client.cmd_result(
+        "update",
+        {
+            "entity_id": TEST_ENTITY,
+            "uid": "rec-1",
+            "recurrence_id": "2017-11-29 17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Renamed session",
+                "dtstart": "2017-11-29T18:00:00+00:00",
+                "dtend": "2017-11-29T19:00:00+00:00",
+            },
+        },
+    )
+
+    tail = _saved_tail(calendars[0])
+    entries = tail["RDATE"]
+    if not isinstance(entries, list):
+        entries = [entries]
+    assert [item.dt for entry in entries for item in entry.dts] == [
+        datetime.datetime(2017, 11, 29, 18, 0, tzinfo=datetime.UTC),
+        datetime.datetime(2017, 12, 1, 18, 0, tzinfo=datetime.UTC),
+    ]
