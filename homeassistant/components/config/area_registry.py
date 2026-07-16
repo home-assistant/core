@@ -2,9 +2,11 @@
 
 from typing import Any
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar
 
@@ -12,6 +14,7 @@ from homeassistant.helpers import area_registry as ar
 @callback
 def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Area Registry views."""
+    hass.http.register_view(AreaRegistryListView)
     websocket_api.async_register_command(hass, websocket_list_areas)
     websocket_api.async_register_command(hass, websocket_create_area)
     websocket_api.async_register_command(hass, websocket_delete_area)
@@ -33,6 +36,19 @@ def websocket_list_areas(
         msg["id"],
         [entry.json_fragment for entry in registry.async_list_areas()],
     )
+
+
+class AreaRegistryListView(HomeAssistantView):
+    """View to list the area registry entries."""
+
+    url = "/api/config/area_registry/list"
+    name = "api:config:area_registry:list"
+
+    @callback
+    def get(self, request: web.Request) -> web.Response:
+        """Return the area registry entries."""
+        registry = ar.async_get(request.app[KEY_HASS])
+        return self.json([entry.json_fragment for entry in registry.async_list_areas()])
 
 
 @websocket_api.websocket_command(

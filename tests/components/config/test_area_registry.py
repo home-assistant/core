@@ -1,6 +1,7 @@
 """Test area_registry API."""
 
 from datetime import datetime
+from http import HTTPStatus
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
@@ -17,10 +18,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import ANY
-from tests.typing import MockHAClientWebSocket, WebSocketGenerator
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 
 @pytest.fixture(name="client")
@@ -28,6 +34,7 @@ async def client_fixture(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> MockHAClientWebSocket:
     """Fixture that can interact with the config manager API."""
+    assert await async_setup_component(hass, "http", {})
     area_registry.async_setup(hass)
     return await hass_ws_client(hass)
 
@@ -503,3 +510,41 @@ async def test_reorder_areas_persistence(
 
     area_ids = [area.id for area in area_registry.async_list_areas()]
     assert area_ids == [area2.id, area3.id, area1.id]
+
+
+async def test_rest_list_requires_auth(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test the REST list endpoint requires authentication."""
+    assert await async_setup_component(hass, "http", {})
+    area_registry.async_setup(hass)
+
+    client = await hass_client_no_auth()
+    resp = await client.get("/api/config/area_registry/list")
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_rest_list_areas_matches_websocket(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the REST list endpoint returns the same payload as the websocket command."""
+    assert await async_setup_component(hass, "http", {})
+    area_registry.async_setup(hass)
+    registry = ar.async_get(hass)
+    registry.async_create("mock 1")
+    registry.async_create("mock 2", aliases={"alias 1", "alias 2"})
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id({"type": "config/area_registry/list"})
+    ws_msg = await ws_client.receive_json()
+    assert ws_msg["success"]
+
+    client = await hass_client()
+    resp = await client.get("/api/config/area_registry/list")
+
+    assert resp.status == HTTPStatus.OK
+    assert await resp.json() == ws_msg["result"]
