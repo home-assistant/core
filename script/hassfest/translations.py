@@ -45,7 +45,6 @@ ALLOW_NAME_TRANSLATION = {
     "local_calendar",
     "local_ip",
     "local_todo",
-    "modbus",
     "nmap_tracker",
     "remote_calendar",
     "rpi_power",
