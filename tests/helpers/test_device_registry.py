@@ -3649,6 +3649,52 @@ async def test_get_or_create_via_device_and_via_device_id_not_allowed(
     assert device_2.via_device_id == via.id
 
 
+async def test_get_or_create_via_device_none(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """`via_device=None` means "no via device"; combining it with via_device_id raises."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    via = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("hue", "via")}
+    )
+
+    # `via_device=None` alongside a via_device_id is contradictory and rejected
+    with pytest.raises(
+        HomeAssistantError,
+        match="Passing both `via_device` and `via_device_id` is not allowed",
+    ):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("hue", "device")},
+            via_device=None,
+            via_device_id=via.id,
+        )
+
+    # `via_device=None` on its own means no via device
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("hue", "device")},
+        via_device=None,
+    )
+    assert device.via_device_id is None
+
+    # ... and it clears an existing via device on re-registration
+    linked = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("hue", "linked")},
+        via_device_id=via.id,
+    )
+    assert linked.via_device_id == via.id
+    relinked = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("hue", "linked")},
+        via_device=None,
+    )
+    assert relinked.id == linked.id
+    assert relinked.via_device_id is None
+
+
 async def test_via_device_prefers_same_config_entry(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:

@@ -1511,12 +1511,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"Can't link device to unknown config entry {config_entry_id}"
             )
 
-        # Validate before mutating the registry below
-        if (
-            via_device is not None
-            and via_device is not UNDEFINED
-            and via_device_id is not UNDEFINED
-        ):
+        # Validate before mutating the registry below. `via_device=None` (an explicit
+        # "no via device") alongside a via_device_id is contradictory, so reject it too.
+        if via_device is not UNDEFINED and via_device_id is not UNDEFINED:
             raise HomeAssistantError(
                 "Passing both `via_device` and `via_device_id` is not allowed; "
                 "`via_device` is deprecated, pass `via_device_id` only"
@@ -1673,8 +1670,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 )
             via_device_id = via.id if via else UNDEFINED
         elif via_device is None:
-            # An explicit `via_device=None` means "no via device"; clear any
-            # `via_device_id` passed alongside the deprecated argument.
+            # An explicit `via_device=None` means "no via device" (a via_device_id
+            # alongside it is rejected above).
             via_device_id = None
 
         # On the owning integration's first re-registration of a device created by
