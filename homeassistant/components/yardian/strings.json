@@ -22,6 +22,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "freeze_prevent": {
+        "name": "Freeze prevent"
+      },
       "standby": {
         "name": "Standby"
       },
@@ -30,11 +33,6 @@
       },
       "zone_enabled": {
         "name": "Enabled"
-      }
-    },
-    "button": {
-      "stop_irrigation": {
-        "name": "Stop irrigation"
       }
     },
     "sensor": {
