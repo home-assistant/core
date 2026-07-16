@@ -42,7 +42,7 @@ class LinknLinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_HOST: host})
             try:
                 session = await self._async_connect_host(host)
-            except UltraError:
+            except OSError, TimeoutError, UltraError, ValueError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception while connecting to LinknLink")
@@ -86,7 +86,7 @@ class LinknLinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._async_abort_entries_match({CONF_HOST: host})
             try:
                 session = await self._async_connect_host(host)
-            except UltraError:
+            except OSError, TimeoutError, UltraError, ValueError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception while reconnecting to LinknLink")
