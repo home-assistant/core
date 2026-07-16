@@ -227,7 +227,7 @@ class MqttInfraredReceiverEntity(MqttEntity, InfraredReceiverEntity):
             return
         try:
             payload_dict = SIGNAL_SCHEMA(json_loads_object(payload))
-        except (*JSON_DECODE_EXCEPTIONS, vol.Invalid, TypeError):
+        except (*JSON_DECODE_EXCEPTIONS, vol.Invalid, TypeError, ValueError):
             _LOGGER.warning(
                 "Invalid message received for %s on topic %s, with template %s. "
                 "Message is not a valid signal JSON message. Got %s",

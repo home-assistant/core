@@ -193,6 +193,11 @@ async def test_receiving_command_success_using_value_template(
             logging.WARNING,
         ),
         (
+            "[9000,-300,800,-300, 9000]",
+            "Invalid message received for infrared.test on topic test-topic, with template None",
+            logging.WARNING,
+        ),
+        (
             '{"timings":null}',
             "Invalid message received for infrared.test on topic test-topic, with template None",
             logging.WARNING,
