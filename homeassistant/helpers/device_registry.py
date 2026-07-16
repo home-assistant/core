@@ -557,13 +557,6 @@ class DeviceEntry:
             json_bytes(
                 {
                     "area_id": self.area_id,
-                    # config_entries and config_entries_subentries are deprecated and
-                    # kept for backwards compatibility, they can be removed from the
-                    # storage representation in HA Core 2027.8
-                    "config_entries": [self.config_entry_id],
-                    "config_entries_subentries": {
-                        self.config_entry_id: [self.config_subentry_id]
-                    },
                     "config_entry_id": self.config_entry_id,
                     "config_subentry_id": self.config_subentry_id,
                     "configuration_url": self.configuration_url,
@@ -647,11 +640,10 @@ class DeletedDeviceEntry:
     composite_device_id: str | None = attr.ib(default=None)
     composite_primary_config_entry: str | None = attr.ib(default=None)
     split_at: datetime | None = attr.ib(default=None)
-    # Domain of the config entry that owned this device, set when the device is
-    # orphaned (its config entry removed) so a re-added config entry only restores
-    # an orphan from the same integration. None for non-orphaned deleted devices
-    # and legacy stores.
-    orphaned_domain: str | None = attr.ib(default=None)
+    # Domain of the config entry that owns (or owned) this device, recorded when the
+    # device is deleted so a re-added config entry only restores an orphan from the same
+    # integration. None for legacy stores.
+    domain: str | None = attr.ib(default=None)
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @property
@@ -715,16 +707,6 @@ class DeletedDeviceEntry:
             json_bytes(
                 {
                     "area_id": self.area_id,
-                    # config_entries and config_entries_subentries are deprecated and
-                    # kept for backwards compatibility, they can be removed from the
-                    # storage representation in HA Core 2027.8
-                    "config_entries": list(self.config_entries),
-                    "config_entries_subentries": {
-                        config_entry_id: list(subentries)
-                        for config_entry_id, subentries in (
-                            self.config_entries_subentries.items()
-                        )
-                    },
                     "config_entry_id": self.config_entry_id,
                     "config_subentry_id": self.config_subentry_id,
                     "connections": list(self.connections),
@@ -744,7 +726,7 @@ class DeletedDeviceEntry:
                     "modified_at": self.modified_at,
                     "name_by_user": self.name_by_user,
                     "orphaned_timestamp": self.orphaned_timestamp,
-                    "orphaned_domain": self.orphaned_domain,
+                    "domain": self.domain,
                 }
             )
         )
@@ -867,7 +849,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
             # all split devices. Entities are moved to the matching split device when
             # the registries are loaded.
             migrated_at = utcnow().isoformat()
-            split_devices: list[dict[str, Any]] = []
+            devices: list[dict[str, Any]] = []
             # Ids of active devices dropped for lacking a config entry; a retained
             # child's via_device_id pointing at one is detached below.
             dropped_device_ids: set[str] = set()
@@ -908,7 +890,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     device["composite_primary_config_entry"] = None
                     device["split_at"] = None
                     device["has_composite_identifiers"] = False
-                    split_devices.append(device)
+                    devices.append(device)
                     continue
                 old_id = device["id"]
                 composite_primary = device.get("primary_config_entry")
@@ -917,18 +899,12 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     split["id"] = uuid_util.random_uuid_hex()
                     split["config_entry_id"] = config_entry_id
                     split["config_subentry_id"] = subentry_id
-                    # Keep the deprecated multi-entry keys single so a downgrade
-                    # sees a consistent single-entry device
-                    split["config_entries"] = [config_entry_id]
-                    split["config_entries_subentries"] = {
-                        config_entry_id: [subentry_id]
-                    }
                     split["primary_config_entry"] = config_entry_id
                     split["composite_device_id"] = old_id
                     split["composite_primary_config_entry"] = composite_primary
                     split["split_at"] = migrated_at
                     split["has_composite_identifiers"] = True
-                    split_devices.append(split)
+                    devices.append(split)
                     migrated_active_splits.append(split)
                     composite_splits.setdefault(old_id, {})[config_entry_id] = split[
                         "id"
@@ -938,7 +914,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
             # there is one, otherwise any of the parent's splits, so the link never
             # dangles on the removed composite id. A link to a retained unsplit parent is
             # left unchanged; a link to a dropped parent is detached below.
-            for device in split_devices:
+            for device in devices:
                 if (
                     splits := composite_splits.get(device["via_device_id"])
                 ) is not None:
@@ -949,7 +925,7 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     # The parent was dropped (no config entries); detach the link as
                     # async_remove_device would, so it does not dangle on a removed id.
                     device["via_device_id"] = None
-            old_data["devices"] = split_devices
+            old_data["devices"] = devices
             # A split inherited the composite's disabled_by, which may not match its
             # single config entry (e.g. a split owned by an enabled entry must not stay
             # CONFIG_ENTRY disabled). Config entries load concurrently, so wait for them
@@ -964,16 +940,16 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                         _migrate_device_disabled_by(
                             split, config_entry.disabled_by is not None
                         )
-            split_deleted_devices: list[dict[str, Any]] = []
+            deleted_devices: list[dict[str, Any]] = []
             for device in old_data["deleted_devices"]:
                 # One target per config entry. config_entries_subentries was a set, so
                 # the old model allowed a device in several subentries of one config
-                # entry, but the single-owner model keeps one. The multi-subentry
-                # devices seen in the wild come from the buggy 2025.7.0b0-b1 subentry
-                # migration (it left a device in both None and its real subentry), so
-                # prefer a real subentry over the main entry (None). Collapsing rather
-                # than splitting avoids duplicate devices which, sharing identifiers
-                # and connections within one config entry, would collide in the
+                # entry, but the single-owner model keeps one. Multi-subentry devices
+                # created by core integrations all come from broken subentry migrators
+                # (which left a device in both None and its real subentry), so prefer
+                # a real subentry over the main entry (None). Collapsing rather than
+                # splitting avoids duplicate devices which, sharing identifiers and
+                # connections within one config entry, would collide in the
                 # per-config-entry identifier/connection index.
                 pairs = [
                     (
@@ -994,8 +970,8 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     device["composite_device_id"] = None
                     device["composite_primary_config_entry"] = None
                     device["split_at"] = None
-                    device["orphaned_domain"] = None
-                    split_deleted_devices.append(device)
+                    device["domain"] = None
+                    deleted_devices.append(device)
                     continue
                 # A deleted device that belonged to several config entries or
                 # subentries is split like an active one - each split keeps a copy of
@@ -1008,16 +984,18 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     split["id"] = uuid_util.random_uuid_hex()
                     split["config_entry_id"] = config_entry_id
                     split["config_subentry_id"] = subentry_id
-                    split["config_entries"] = [config_entry_id]
-                    split["config_entries_subentries"] = {
-                        config_entry_id: [subentry_id]
-                    }
                     split["composite_device_id"] = old_id
                     split["composite_primary_config_entry"] = None
                     split["split_at"] = migrated_at
-                    split["orphaned_domain"] = None
-                    split_deleted_devices.append(split)
-            old_data["deleted_devices"] = split_deleted_devices
+                    split["domain"] = None
+                    deleted_devices.append(split)
+            old_data["deleted_devices"] = deleted_devices
+            # config_entries and config_entries_subentries are deprecated; v3 stores only
+            # the singular config_entry_id / config_subentry_id (single-entry devices kept
+            # the old keys, splits copied them via deepcopy).
+            for migrated in (*devices, *deleted_devices):
+                migrated.pop("config_entries", None)
+                migrated.pop("config_entries_subentries", None)
 
         if old_major_version > 3:
             raise NotImplementedError
@@ -1295,7 +1273,7 @@ class DeletedDeviceRegistryItems(DeviceRegistryItems[DeletedDeviceEntry]):
             orphans.update(self._orphaned_connections.get(connection, {}))
         if domain is not None:
             for entry in orphans.values():
-                if entry.orphaned_domain == domain:
+                if entry.domain == domain:
                     return entry
         wanted_identifiers = identifiers or set()
         wanted_connections = connections or set()
@@ -1303,7 +1281,7 @@ class DeletedDeviceRegistryItems(DeviceRegistryItems[DeletedDeviceEntry]):
         best_overlap = 0
         # Sort by id so the choice is stable when several orphans overlap equally.
         for entry in sorted(orphans.values(), key=lambda entry: entry.id):
-            if entry.orphaned_domain is not None:
+            if entry.domain is not None:
                 continue
             overlap = len(entry.identifiers & wanted_identifiers) + len(
                 entry.connections & wanted_connections
@@ -2119,9 +2097,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         new = attr.evolve(old, **new_values)
         self.devices[device_id] = new
 
-        # NOTE: Once we solve the broader issue of duplicated devices, we might
-        # want to revisit it. Instead of simply removing the duplicated deleted device,
-        # we might want to merge the information from it into the non-deleted device.
         # On a move, the device's whole retained identity newly appears in the target
         # config entry; added_identifiers/added_connections are empty on a retained-
         # identity move, so match the target entry's deleted device by the full identity.
@@ -2403,6 +2378,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             return
         self.hass.verify_event_loop_thread("device_registry.async_remove_device")
         device = self.devices.pop(device_id)
+        config_entry = (
+            self.hass.config_entries.async_get_entry(device.config_entry_id)
+            if device.config_entry_id is not None
+            else None
+        )
         self.deleted_devices[device_id] = DeletedDeviceEntry(
             area_id=device.area_id,
             config_entry_id=device.config_entry_id,
@@ -2416,6 +2396,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             modified_at=utcnow(),
             name_by_user=device.name_by_user,
             orphaned_timestamp=None,
+            domain=config_entry.domain if config_entry is not None else None,
             composite_device_id=device.composite_device_id,
             composite_primary_config_entry=device.composite_primary_config_entry,
             split_at=device.split_at,
@@ -2527,7 +2508,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     modified_at=datetime.fromisoformat(device["modified_at"]),
                     name_by_user=device["name_by_user"],
                     orphaned_timestamp=device["orphaned_timestamp"],
-                    orphaned_domain=device["orphaned_domain"],
+                    domain=device["domain"],
                     composite_device_id=device["composite_device_id"],
                     composite_primary_config_entry=device[
                         "composite_primary_config_entry"
@@ -2592,7 +2573,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             for existing in list(self.deleted_devices.values()):
                 if (
                     existing.config_entry_id is None
-                    and existing.orphaned_domain == domain
+                    and existing.domain == domain
                     and (
                         existing.connections & deleted_device.connections
                         or existing.identifiers & deleted_device.identifiers
@@ -2604,7 +2585,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             config_entry_id=None,
             config_subentry_id=None,
             orphaned_timestamp=now_time,
-            orphaned_domain=domain,
+            domain=domain,
         )
         self.async_schedule_save()
 

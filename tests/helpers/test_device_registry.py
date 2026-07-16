@@ -357,7 +357,7 @@ async def test_loading_from_storage(
                     "modified_at": modified_at,
                     "name_by_user": "Test Friendly Name",
                     "orphaned_timestamp": None,
-                    "orphaned_domain": None,
+                    "domain": None,
                 }
             ],
         },
@@ -533,8 +533,6 @@ async def test_migration_from_1_1(
             "devices": [
                 {
                     "area_id": None,
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -563,8 +561,6 @@ async def test_migration_from_1_1(
                 },
                 {
                     "area_id": None,
-                    "config_entries": ["234567"],
-                    "config_entries_subentries": {"234567": [None]},
                     "config_entry_id": "234567",
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -595,8 +591,6 @@ async def test_migration_from_1_1(
             "deleted_devices": [
                 {
                     "area_id": None,
-                    "config_entries": ["123456"],
-                    "config_entries_subentries": {"123456": [None]},
                     "config_entry_id": "123456",
                     "config_subentry_id": None,
                     "connections": [],
@@ -612,7 +606,7 @@ async def test_migration_from_1_1(
                     "modified_at": "1970-01-01T00:00:00+00:00",
                     "name_by_user": None,
                     "orphaned_timestamp": None,
-                    "orphaned_domain": None,
+                    "domain": None,
                 }
             ],
         },
@@ -704,8 +698,6 @@ async def test_migration_from_1_2(
             "devices": [
                 {
                     "area_id": None,
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -734,8 +726,6 @@ async def test_migration_from_1_2(
                 },
                 {
                     "area_id": None,
-                    "config_entries": ["234567"],
-                    "config_entries_subentries": {"234567": [None]},
                     "config_entry_id": "234567",
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -853,8 +843,6 @@ async def test_migration_fom_1_3(
             "devices": [
                 {
                     "area_id": None,
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -883,8 +871,6 @@ async def test_migration_fom_1_3(
                 },
                 {
                     "area_id": None,
-                    "config_entries": ["234567"],
-                    "config_entries_subentries": {"234567": [None]},
                     "config_entry_id": "234567",
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -1004,8 +990,6 @@ async def test_migration_from_1_4(
             "devices": [
                 {
                     "area_id": None,
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -1034,8 +1018,6 @@ async def test_migration_from_1_4(
                 },
                 {
                     "area_id": None,
-                    "config_entries": ["234567"],
-                    "config_entries_subentries": {"234567": [None]},
                     "config_entry_id": "234567",
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -1157,8 +1139,6 @@ async def test_migration_from_1_5(
             "devices": [
                 {
                     "area_id": None,
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -1187,8 +1167,6 @@ async def test_migration_from_1_5(
                 },
                 {
                     "area_id": None,
-                    "config_entries": ["234567"],
-                    "config_entries_subentries": {"234567": [None]},
                     "config_entry_id": "234567",
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -1312,8 +1290,6 @@ async def test_migration_from_1_6(
             "devices": [
                 {
                     "area_id": None,
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -1342,8 +1318,6 @@ async def test_migration_from_1_6(
                 },
                 {
                     "area_id": None,
-                    "config_entries": ["234567"],
-                    "config_entries_subentries": {"234567": [None]},
                     "config_entry_id": "234567",
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -1469,8 +1443,6 @@ async def test_migration_from_1_7(
             "devices": [
                 {
                     "area_id": None,
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -1499,8 +1471,6 @@ async def test_migration_from_1_7(
                 },
                 {
                     "area_id": None,
-                    "config_entries": ["234567"],
-                    "config_entries_subentries": {"234567": [None]},
                     "config_entry_id": "234567",
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -1635,8 +1605,6 @@ async def test_migration_from_1_10(
             "devices": [
                 {
                     "area_id": None,
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -1667,14 +1635,12 @@ async def test_migration_from_1_10(
             "deleted_devices": [
                 {
                     "area_id": None,
-                    "config_entries": ["234567"],
-                    "config_entries_subentries": {"234567": [None]},
                     "config_entry_id": "234567",
                     "config_subentry_id": None,
                     "composite_device_id": None,
                     "composite_primary_config_entry": None,
                     "split_at": None,
-                    "orphaned_domain": None,
+                    "domain": None,
                     "connections": [["mac", "12:34:56:ab:cd:ab"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
@@ -1792,8 +1758,6 @@ async def test_migration_from_1_11(
             "devices": [
                 {
                     "area_id": None,
-                    "config_entries": [mock_config_entry.entry_id],
-                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "config_entry_id": mock_config_entry.entry_id,
                     "config_subentry_id": None,
                     "composite_device_id": None,
@@ -1824,14 +1788,12 @@ async def test_migration_from_1_11(
             "deleted_devices": [
                 {
                     "area_id": None,
-                    "config_entries": ["234567"],
-                    "config_entries_subentries": {"234567": [None]},
                     "config_entry_id": "234567",
                     "config_subentry_id": None,
                     "composite_device_id": None,
                     "composite_primary_config_entry": None,
                     "split_at": None,
-                    "orphaned_domain": None,
+                    "domain": None,
                     "connections": [["mac", "12:34:56:ab:cd:ab"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "disabled_by": None,
@@ -2667,7 +2629,7 @@ async def test_reregister_restores_orphan(
     device_registry.async_clear_config_entry(entry.entry_id, clear_domain)
     orphan = device_registry.deleted_devices[device.id]
     assert orphan.config_entry_id is None
-    assert orphan.orphaned_domain == "light"
+    assert orphan.domain == "light"
 
     # Re-add the integration under a new config entry and re-register the device
     new_entry = MockConfigEntry(domain="light")
@@ -2696,7 +2658,7 @@ async def test_orphan_not_restored_for_other_domain(
         config_entry_id=entry.entry_id, identifiers={("light", "1")}
     )
     device_registry.async_clear_config_entry(entry.entry_id, entry.domain)
-    assert device_registry.deleted_devices[device.id].orphaned_domain == "light"
+    assert device_registry.deleted_devices[device.id].domain == "light"
 
     # A different integration registering a device with the same identifiers gets a fresh
     # device, and the orphan is left intact for its own integration to restore later
@@ -2768,7 +2730,7 @@ async def test_orphaned_domain_survives_store_round_trip(
     await flush_store(device_registry._store)
     await registry2.async_load()
 
-    assert registry2.deleted_devices[device.id].orphaned_domain == "hue"
+    assert registry2.deleted_devices[device.id].domain == "hue"
 
 
 async def test_cross_domain_orphans_do_not_shadow(
@@ -2842,8 +2804,8 @@ async def test_domainless_orphans_matched_by_overlap(
     with patch.object(hass.config_entries, "async_get_entry", return_value=None):
         device_registry.async_clear_config_entry(entry_1.entry_id)
         device_registry.async_clear_config_entry(entry_2.entry_id)
-    assert device_registry.deleted_devices[device_1.id].orphaned_domain is None
-    assert device_registry.deleted_devices[device_2.id].orphaned_domain is None
+    assert device_registry.deleted_devices[device_1.id].domain is None
+    assert device_registry.deleted_devices[device_2.id].domain is None
 
     # Both orphans share the identifier, but device_1 also matches the connection - it is
     # restored rather than the one shadowing it on the identifier
